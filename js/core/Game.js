@@ -17,6 +17,7 @@ export class Game {
         this.clock = new THREE.Clock();
         this.isRunning = false;
         this.loadingManager = new THREE.LoadingManager();
+        this.debugMode = false; // Set to true to enable debug logging
         
         // Set up loading manager events
         this.setupLoadingManager();

@@ -24,6 +24,14 @@ export class World {
         this.visibleTerrainChunks = {}; // Store currently visible terrain chunks
         this.terrainChunkViewDistance = 3; // How many terrain chunks to show in each direction
         
+        // For terrain buffering (pre-rendering)
+        this.terrainBuffer = {}; // Store pre-generated terrain chunks that aren't yet visible
+        this.terrainBufferDistance = 6; // How far ahead to buffer terrain (larger than view distance)
+        this.terrainGenerationQueue = []; // Queue for prioritized terrain generation
+        this.isProcessingTerrainQueue = false; // Flag to prevent multiple queue processing
+        this.lastPlayerChunk = { x: 0, z: 0 }; // Last player chunk for movement prediction
+        this.playerMovementDirection = new THREE.Vector3(0, 0, 0); // Track player movement direction for prediction
+        
         // For persistent environment objects
         this.environmentObjects = {}; // Store environment objects by chunk key
         this.environmentObjectTypes = ['tree', 'rock', 'bush', 'flower']; // Types of environment objects
@@ -158,7 +166,7 @@ export class World {
         this.updateWorldForPlayer(new THREE.Vector3(0, 0, 0));
     }
     
-    // Create a terrain chunk at the specified coordinates
+    // Create a terrain chunk at the specified coordinates (for immediate display)
     createTerrainChunk(chunkX, chunkZ) {
         const chunkKey = `${chunkX},${chunkZ}`;
         
@@ -224,11 +232,91 @@ export class World {
         this.generateStructuresForChunk(chunkX, chunkZ);
     }
     
+    // Create a terrain chunk for the buffer (not immediately visible)
+    createBufferedTerrainChunk(chunkX, chunkZ) {
+        const chunkKey = `${chunkX},${chunkZ}`;
+        
+        // Skip if this chunk already exists in any collection
+        if (this.terrainChunks[chunkKey] || this.terrainBuffer[chunkKey]) {
+            return;
+        }
+        
+        // Check if this chunk was saved previously
+        const shouldCreateChunk = !this.savedTerrainChunks || 
+                                 this.savedTerrainChunks[chunkKey] || 
+                                 Object.keys(this.savedTerrainChunks).length === 0;
+        
+        if (!shouldCreateChunk) {
+            return; // Skip creating this chunk as it wasn't in the saved state
+        }
+        
+        // Calculate world coordinates for this chunk
+        const worldX = chunkX * this.terrainChunkSize;
+        const worldZ = chunkZ * this.terrainChunkSize;
+        
+        // Create terrain geometry
+        const geometry = new THREE.PlaneGeometry(
+            this.terrainChunkSize,
+            this.terrainChunkSize,
+            16, // Lower resolution for better performance
+            16
+        );
+        
+        // Create terrain material
+        const grassTexture = this.createProceduralTexture(0x2d572c, 0x1e3b1e, 512);
+        
+        // Create terrain material with grass texture
+        const material = new THREE.MeshStandardMaterial({
+            map: grassTexture,
+            roughness: 0.8,
+            metalness: 0.2,
+            vertexColors: true
+        });
+        
+        // Create terrain mesh
+        const terrain = new THREE.Mesh(geometry, material);
+        terrain.rotation.x = -Math.PI / 2;
+        terrain.receiveShadow = true;
+        
+        // Apply uniform grass coloring with slight variations
+        this.colorTerrainUniform(terrain);
+        
+        // Position the terrain chunk - ensure y=0 exactly to prevent vibration
+        terrain.position.set(
+            worldX + this.terrainChunkSize / 2,
+            0,
+            worldZ + this.terrainChunkSize / 2
+        );
+        
+        // Store in buffer but don't add to scene yet
+        this.terrainBuffer[chunkKey] = terrain;
+        
+        // Pre-generate structures for this chunk
+        if (!this.structuresPlaced[chunkKey]) {
+            this.generateStructuresForChunk(chunkX, chunkZ);
+        }
+        
+        // Log buffered chunk creation
+        console.log(`Buffered terrain chunk created: ${chunkKey}`);
+    }
+    
     // Clear all world objects for a clean reload
     clearWorldObjects() {
         // Clear terrain chunks
         for (const chunkKey in this.terrainChunks) {
             this.removeTerrainChunk(chunkKey);
+        }
+        
+        // Clear buffered terrain chunks
+        for (const chunkKey in this.terrainBuffer) {
+            const terrain = this.terrainBuffer[chunkKey];
+            if (terrain) {
+                if (terrain.parent) {
+                    this.scene.remove(terrain);
+                }
+                terrain.geometry.dispose();
+                terrain.material.dispose();
+            }
         }
         
         // Clear environment objects
@@ -251,8 +339,11 @@ export class World {
         // Reset object collections
         this.terrainChunks = {};
         this.visibleTerrainChunks = {};
+        this.terrainBuffer = {};
+        this.terrainGenerationQueue = [];
         this.environmentObjects = {};
         this.visibleChunks = {};
+        this.isProcessingTerrainQueue = false;
         
         console.log("World objects cleared for reload");
     }
@@ -262,34 +353,151 @@ export class World {
         // Track which terrain chunks should be visible
         const newVisibleTerrainChunks = {};
         
-        // Generate terrain chunks in view distance
+        // Calculate player movement direction for predictive loading
+        if (this.lastPlayerChunk.x !== centerX || this.lastPlayerChunk.z !== centerZ) {
+            // Calculate movement direction vector
+            this.playerMovementDirection.x = centerX - this.lastPlayerChunk.x;
+            this.playerMovementDirection.z = centerZ - this.lastPlayerChunk.z;
+            
+            // Normalize the direction vector if it's not zero
+            if (this.playerMovementDirection.x !== 0 || this.playerMovementDirection.z !== 0) {
+                const length = Math.sqrt(
+                    this.playerMovementDirection.x * this.playerMovementDirection.x + 
+                    this.playerMovementDirection.z * this.playerMovementDirection.z
+                );
+                if (length > 0) {
+                    this.playerMovementDirection.x /= length;
+                    this.playerMovementDirection.z /= length;
+                }
+            }
+            
+            // Update last player chunk
+            this.lastPlayerChunk = { x: centerX, z: centerZ };
+        }
+        
+        // Generate terrain chunks in view distance (these need to be immediately visible)
         for (let x = centerX - this.terrainChunkViewDistance; x <= centerX + this.terrainChunkViewDistance; x++) {
             for (let z = centerZ - this.terrainChunkViewDistance; z <= centerZ + this.terrainChunkViewDistance; z++) {
                 const chunkKey = `${x},${z}`;
                 newVisibleTerrainChunks[chunkKey] = true;
                 
-                // If this terrain chunk doesn't exist yet, create it
-                if (!this.terrainChunks[chunkKey]) {
+                // If this terrain chunk doesn't exist yet, create it immediately
+                // First check if it's in the buffer
+                if (this.terrainBuffer[chunkKey]) {
+                    // Move from buffer to active chunks
+                    this.terrainChunks[chunkKey] = this.terrainBuffer[chunkKey];
+                    delete this.terrainBuffer[chunkKey];
+                    console.log(`Chunk ${chunkKey} moved from buffer to active`);
+                } 
+                // If not in buffer, create it immediately
+                else if (!this.terrainChunks[chunkKey]) {
                     this.createTerrainChunk(x, z);
                 }
                 
                 // Always ensure structures are generated for this chunk
-                // This ensures structures appear even when moving far away
                 if (!this.structuresPlaced[chunkKey]) {
                     this.generateStructuresForChunk(x, z);
                 }
             }
         }
         
-        // Remove terrain chunks that are no longer visible
+        // Queue terrain chunks in buffer distance (prioritize in the direction of movement)
+        this.queueTerrainChunksForBuffering(centerX, centerZ);
+        
+        // Process a chunk from the queue if we're not already processing
+        if (!this.isProcessingTerrainQueue) {
+            this.processTerrainGenerationQueue();
+        }
+        
+        // Remove terrain chunks that are no longer visible but keep them in buffer
         for (const chunkKey in this.visibleTerrainChunks) {
             if (!newVisibleTerrainChunks[chunkKey]) {
-                this.removeTerrainChunk(chunkKey);
+                // Instead of removing, move to buffer if within buffer distance
+                const [x, z] = chunkKey.split(',').map(Number);
+                const distX = Math.abs(x - centerX);
+                const distZ = Math.abs(z - centerZ);
+                
+                if (distX <= this.terrainBufferDistance && distZ <= this.terrainBufferDistance) {
+                    // Move to buffer instead of removing
+                    this.terrainBuffer[chunkKey] = this.terrainChunks[chunkKey];
+                    delete this.terrainChunks[chunkKey];
+                    
+                    // Hide the chunk but don't destroy it
+                    const chunk = this.terrainBuffer[chunkKey];
+                    if (chunk && chunk.parent) {
+                        this.scene.remove(chunk);
+                    }
+                } else {
+                    // If outside buffer distance, remove completely
+                    this.removeTerrainChunk(chunkKey);
+                }
             }
         }
         
         // Update the visible terrain chunks
         this.visibleTerrainChunks = newVisibleTerrainChunks;
+    }
+    
+    // Queue terrain chunks for buffering with priority based on player movement direction
+    queueTerrainChunksForBuffering(centerX, centerZ) {
+        // Clear existing queue to avoid duplicates
+        this.terrainGenerationQueue = [];
+        
+        // Calculate buffer area (larger than view distance)
+        for (let x = centerX - this.terrainBufferDistance; x <= centerX + this.terrainBufferDistance; x++) {
+            for (let z = centerZ - this.terrainBufferDistance; z <= centerZ + this.terrainBufferDistance; z++) {
+                const chunkKey = `${x},${z}`;
+                
+                // Skip if already in visible chunks or already in buffer
+                if (this.visibleTerrainChunks[chunkKey] || this.terrainBuffer[chunkKey] || this.terrainChunks[chunkKey]) {
+                    continue;
+                }
+                
+                // Calculate distance from center
+                const distX = x - centerX;
+                const distZ = z - centerZ;
+                
+                // Calculate dot product with movement direction to prioritize chunks in that direction
+                let priority = 0;
+                if (this.playerMovementDirection.x !== 0 || this.playerMovementDirection.z !== 0) {
+                    const dotProduct = distX * this.playerMovementDirection.x + distZ * this.playerMovementDirection.z;
+                    // Higher dot product means the chunk is more in the direction of movement
+                    priority = dotProduct;
+                }
+                
+                // Add to queue with priority
+                this.terrainGenerationQueue.push({
+                    x: x,
+                    z: z,
+                    priority: priority,
+                    chunkKey: chunkKey
+                });
+            }
+        }
+        
+        // Sort queue by priority (higher priority first)
+        this.terrainGenerationQueue.sort((a, b) => b.priority - a.priority);
+    }
+    
+    // Process the terrain generation queue asynchronously
+    processTerrainGenerationQueue() {
+        if (this.terrainGenerationQueue.length === 0) {
+            this.isProcessingTerrainQueue = false;
+            return;
+        }
+        
+        this.isProcessingTerrainQueue = true;
+        
+        // Get the highest priority chunk
+        const nextChunk = this.terrainGenerationQueue.shift();
+        
+        // Create the chunk in the buffer (not visible yet)
+        this.createBufferedTerrainChunk(nextChunk.x, nextChunk.z);
+        
+        // Process next chunk in the queue after a small delay to avoid blocking the main thread
+        setTimeout(() => {
+            this.processTerrainGenerationQueue();
+        }, 10); // Small delay to keep the game responsive
     }
     
     // Remove a terrain chunk
@@ -1336,12 +1544,33 @@ export class World {
         const terrainChunkX = Math.floor(playerPosition.x / this.terrainChunkSize);
         const terrainChunkZ = Math.floor(playerPosition.z / this.terrainChunkSize);
         
+        // Calculate player velocity for predictive loading
+        let playerVelocity = new THREE.Vector3(0, 0, 0);
+        if (this.game && this.game.player) {
+            // Try to get player velocity from the player object if available
+            if (this.game.player.state && this.game.player.state.isMoving) {
+                // If player is moving, use their rotation to predict movement direction
+                const rotation = this.game.player.rotation.y;
+                playerVelocity.x = Math.sin(rotation);
+                playerVelocity.z = Math.cos(rotation);
+            }
+        }
+        
         // If player has moved to a new chunk
         if (chunkX !== this.currentChunk.x || chunkZ !== this.currentChunk.z) {
             this.currentChunk = { x: chunkX, z: chunkZ };
             
             // Generate objects in the new chunks around the player
             this.updateVisibleChunks(chunkX, chunkZ);
+            
+            // Update player movement direction for predictive loading
+            if (this.lastPlayerPosition) {
+                const direction = new THREE.Vector3().subVectors(playerPosition, this.lastPlayerPosition).normalize();
+                // Only update if there's significant movement
+                if (direction.length() > 0.1) {
+                    this.playerMovementDirection.copy(direction);
+                }
+            }
         }
         
         // Update terrain chunks around the player
@@ -1364,6 +1593,11 @@ export class World {
             console.log("Saved world data processed, clearing temporary storage");
             this.savedEnvironmentObjects = null;
             this.savedTerrainChunks = null;
+        }
+        
+        // Debug info about buffered chunks
+        if (this.game && this.game.debugMode) {
+            console.log(`Active chunks: ${Object.keys(this.terrainChunks).length}, Buffered chunks: ${Object.keys(this.terrainBuffer).length}, Queue: ${this.terrainGenerationQueue.length}`);
         }
     }
     

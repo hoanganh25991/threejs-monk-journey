@@ -1,2 +1,0 @@
-- Review the `functional-requirement/readme.md` for key features and functionalities.
-- [] Complete all features.
