@@ -709,6 +709,9 @@ export class Player {
         // Start cooldown
         skill.startCooldown();
         
+        // Pass game reference to skill
+        skill.game = this.game;
+        
         // Create skill effect
         const skillEffect = skill.createEffect(this.position, this.rotation);
         
@@ -730,6 +733,9 @@ export class Player {
                     break;
                 case 'Inner Sanctuary':
                     this.game.audioManager.playSound('skillInnerSanctuary');
+                    break;
+                case 'Exploding Palm':
+                    this.game.audioManager.playSound('skillExplodingPalm');
                     break;
                 default:
                     // Generic skill sound

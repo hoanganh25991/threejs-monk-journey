@@ -2605,194 +2605,187 @@ export class Skill {
         
         // Special handling for Exploding Palm
         if (this.name === 'Exploding Palm') {
-            // Create a more complex and visually impressive effect for Exploding Palm
+            // Create a flying palm effect that moves forward from the player
             
-            // Create the main mark effect
-            const markGroup = new THREE.Group();
+            // Create the main palm group
+            const palmGroup = new THREE.Group();
             
-            // Create the base mark (blood-like symbol on the ground)
-            const markGeometry = new THREE.CircleGeometry(this.radius * 0.3, 32);
-            const markMaterial = new THREE.MeshStandardMaterial({
-                color: 0xff0000, // Blood red
-                transparent: true,
-                opacity: 0.7,
-                side: THREE.DoubleSide,
-                emissive: 0xff0000,
-                emissiveIntensity: 0.5
-            });
+            // Create a 3D palm model with fingers
+            const handGroup = new THREE.Group();
             
-            const mark = new THREE.Mesh(markGeometry, markMaterial);
-            mark.rotation.x = -Math.PI / 2;
-            mark.position.y = 0.01;
-            markGroup.add(mark);
-            
-            // Create blood splatter effect around the mark
-            const splatterCount = 8;
-            for (let i = 0; i < splatterCount; i++) {
-                const angle = (i / splatterCount) * Math.PI * 2;
-                const distance = this.radius * (0.4 + Math.random() * 0.3);
-                
-                // Create splatter shape
-                const splatterShape = new THREE.Shape();
-                
-                // Random splatter shape
-                const points = 5 + Math.floor(Math.random() * 3);
-                const innerRadius = 0.05 + Math.random() * 0.05;
-                const outerRadius = innerRadius + 0.05 + Math.random() * 0.1;
-                
-                for (let j = 0; j < points * 2; j++) {
-                    const a = (j / (points * 2)) * Math.PI * 2;
-                    const r = j % 2 === 0 ? outerRadius : innerRadius;
-                    const x = Math.cos(a) * r;
-                    const y = Math.sin(a) * r;
-                    
-                    if (j === 0) splatterShape.moveTo(x, y);
-                    else splatterShape.lineTo(x, y);
-                }
-                
-                const splatterGeometry = new THREE.ShapeGeometry(splatterShape);
-                const splatterMaterial = new THREE.MeshStandardMaterial({
-                    color: 0xff0000, // Blood red
-                    transparent: true,
-                    opacity: 0.6 + Math.random() * 0.3,
-                    side: THREE.DoubleSide
-                });
-                
-                const splatter = new THREE.Mesh(splatterGeometry, splatterMaterial);
-                splatter.position.set(
-                    Math.cos(angle) * distance,
-                    0.02,
-                    Math.sin(angle) * distance
-                );
-                splatter.rotation.x = -Math.PI / 2;
-                splatter.rotation.z = Math.random() * Math.PI * 2;
-                
-                // Store animation data
-                splatter.userData = {
-                    pulseSpeed: 1 + Math.random() * 2,
-                    fadeSpeed: 0.5 + Math.random() * 0.5
-                };
-                
-                markGroup.add(splatter);
-            }
-            
-            // Create the palm symbol (stylized hand print)
-            const palmShape = new THREE.Shape();
-            
-            // Create a hand shape
-            // Palm center
-            palmShape.moveTo(0, 0);
-            palmShape.absarc(0, 0, 0.15, 0, Math.PI * 2, false);
-            
-            // Fingers (5 elongated shapes)
-            const fingerCount = 5;
-            for (let i = 0; i < fingerCount; i++) {
-                const angle = ((i / fingerCount) * Math.PI * 1.2) - Math.PI * 0.1;
-                const length = 0.2 + (i === 2 ? 0.1 : 0); // Middle finger longer
-                
-                const fingerShape = new THREE.Shape();
-                fingerShape.moveTo(0, 0);
-                fingerShape.absellipse(
-                    Math.cos(angle) * 0.15,
-                    Math.sin(angle) * 0.15,
-                    0.05,
-                    length,
-                    0,
-                    Math.PI * 2,
-                    false,
-                    angle
-                );
-                
-                palmShape.holes.push(fingerShape);
-            }
-            
-            const palmGeometry = new THREE.ShapeGeometry(palmShape);
-            const palmMaterial = new THREE.MeshStandardMaterial({
+            // Create palm base (hand)
+            const palmBaseGeometry = new THREE.BoxGeometry(0.8, 0.2, 1);
+            const palmBaseMaterial = new THREE.MeshStandardMaterial({
                 color: 0xff3333,
-                emissive: 0xff0000,
+                emissive: 0xff3333,
                 emissiveIntensity: 1,
                 transparent: true,
                 opacity: 0.9,
-                side: THREE.DoubleSide
             });
             
-            const palm = new THREE.Mesh(palmGeometry, palmMaterial);
-            palm.rotation.x = -Math.PI / 2;
-            palm.position.y = 0.03;
+            const palmBase = new THREE.Mesh(palmBaseGeometry, palmBaseMaterial);
+            palmBase.position.y = 0;
+            handGroup.add(palmBase);
             
-            // Store animation data
-            palm.userData = {
-                pulseSpeed: 3,
-                rotationSpeed: 0.2
-            };
+            // Create fingers (5 elongated shapes)
+            const fingerCount = 5;
+            const fingerPositions = [
+                { x: -0.3, z: 0.4 },  // Thumb
+                { x: -0.15, z: 0.5 },  // Index
+                { x: 0, z: 0.55 },     // Middle
+                { x: 0.15, z: 0.5 },   // Ring
+                { x: 0.3, z: 0.4 }     // Pinky
+            ];
             
-            markGroup.add(palm);
+            const fingerLengths = [0.3, 0.4, 0.5, 0.4, 0.3]; // Different lengths for each finger
             
-            // Create pulsing energy ring around the mark
-            const ringGeometry = new THREE.RingGeometry(this.radius * 0.35, this.radius * 0.4, 32);
-            const ringMaterial = new THREE.MeshStandardMaterial({
-                color: 0xff0000,
-                emissive: 0xff0000,
+            for (let i = 0; i < fingerCount; i++) {
+                // Create finger
+                const fingerGeometry = new THREE.BoxGeometry(0.12, 0.15, fingerLengths[i]);
+                const fingerMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xff3333,
+                    emissive: 0xff3333,
+                    emissiveIntensity: 1,
+                    transparent: true,
+                    opacity: 0.9,
+                });
+                
+                const finger = new THREE.Mesh(fingerGeometry, fingerMaterial);
+                
+                // Position finger
+                finger.position.set(
+                    fingerPositions[i].x,
+                    0.05,
+                    fingerPositions[i].z + (fingerLengths[i] / 2)
+                );
+                
+                // Add finger joints (knuckles)
+                const knuckleGeometry = new THREE.SphereGeometry(0.07, 8, 8);
+                const knuckleMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xff4444,
+                    emissive: 0xff4444,
+                    emissiveIntensity: 1,
+                    transparent: true,
+                    opacity: 0.9,
+                });
+                
+                const knuckle = new THREE.Mesh(knuckleGeometry, knuckleMaterial);
+                knuckle.position.set(
+                    fingerPositions[i].x,
+                    0.05,
+                    fingerPositions[i].z
+                );
+                
+                handGroup.add(finger);
+                handGroup.add(knuckle);
+                
+                // Add fingernails
+                const nailGeometry = new THREE.BoxGeometry(0.1, 0.05, 0.1);
+                const nailMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xffdddd,
+                    emissive: 0xffaaaa,
+                    emissiveIntensity: 0.5,
+                    transparent: true,
+                    opacity: 0.9,
+                });
+                
+                const nail = new THREE.Mesh(nailGeometry, nailMaterial);
+                nail.position.set(
+                    fingerPositions[i].x,
+                    0.1,
+                    fingerPositions[i].z + fingerLengths[i]
+                );
+                
+                handGroup.add(nail);
+            }
+            
+            // Add energy aura around the hand
+            const auraGeometry = new THREE.SphereGeometry(1, 16, 16);
+            const auraMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff5500,
+                emissive: 0xff5500,
                 emissiveIntensity: 1,
                 transparent: true,
-                opacity: 0.7,
-                side: THREE.DoubleSide
+                opacity: 0.3,
+                side: THREE.DoubleSide,
+                wireframe: true
             });
             
-            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-            ring.rotation.x = -Math.PI / 2;
-            ring.position.y = 0.04;
+            const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+            aura.scale.set(1, 0.5, 1.2);
+            handGroup.add(aura);
             
-            // Store animation data
-            ring.userData = {
-                pulseSpeed: 2,
-                rotationSpeed: 0.5
-            };
-            
-            markGroup.add(ring);
-            
-            // Create floating blood particles
-            const particleCount = 20;
+            // Add energy particles around the hand
+            const particleCount = 30;
             const particles = [];
             
             for (let i = 0; i < particleCount; i++) {
-                // Random position around the mark
-                const angle = Math.random() * Math.PI * 2;
-                const radius = this.radius * (0.1 + Math.random() * 0.3);
-                const height = 0.05 + Math.random() * 0.3;
+                // Random position around the hand
+                const phi = Math.random() * Math.PI * 2;
+                const theta = Math.random() * Math.PI;
+                const radius = 0.8 + Math.random() * 0.4;
+                
+                const x = radius * Math.sin(theta) * Math.cos(phi);
+                const y = radius * Math.sin(theta) * Math.sin(phi) * 0.5; // Flatten in Y
+                const z = radius * Math.cos(theta);
                 
                 // Create particle
-                const particleSize = 0.02 + Math.random() * 0.03;
+                const particleSize = 0.03 + Math.random() * 0.05;
                 const particleGeometry = new THREE.SphereGeometry(particleSize, 8, 8);
                 const particleMaterial = new THREE.MeshStandardMaterial({
-                    color: 0xff0000,
-                    emissive: 0xff0000,
-                    emissiveIntensity: 0.5,
+                    color: 0xff3300,
+                    emissive: 0xff3300,
+                    emissiveIntensity: 1,
                     transparent: true,
                     opacity: 0.7 + Math.random() * 0.3
                 });
                 
                 const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-                particle.position.set(
-                    Math.cos(angle) * radius,
-                    height,
-                    Math.sin(angle) * radius
-                );
+                particle.position.set(x, y, z);
                 
                 // Store particle animation data
                 particle.userData = {
-                    orbitSpeed: 0.2 + Math.random() * 0.5,
-                    orbitRadius: radius,
-                    orbitAngle: angle,
-                    verticalSpeed: 0.1 + Math.random() * 0.3,
-                    initialHeight: height,
-                    maxHeight: height + 0.1 + Math.random() * 0.2,
-                    minHeight: Math.max(0.05, height - 0.1)
+                    orbitSpeed: 0.5 + Math.random() * 1.5,
+                    orbitRadius: new THREE.Vector3(x, y, z).length(),
+                    orbitAxis: new THREE.Vector3(
+                        Math.random() - 0.5,
+                        Math.random() - 0.5,
+                        Math.random() - 0.5
+                    ).normalize(),
+                    orbitAngle: Math.random() * Math.PI * 2,
+                    initialPosition: new THREE.Vector3(x, y, z)
                 };
                 
-                markGroup.add(particle);
+                handGroup.add(particle);
                 particles.push(particle);
             }
+            
+            // Add trailing energy effect
+            const trailCount = 5;
+            const trails = [];
+            
+            for (let i = 0; i < trailCount; i++) {
+                const trailGeometry = new THREE.PlaneGeometry(0.8, 0.8);
+                const trailMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xff3300,
+                    transparent: true,
+                    opacity: 0.5 - (i * 0.1),
+                    side: THREE.DoubleSide
+                });
+                
+                const trail = new THREE.Mesh(trailGeometry, trailMaterial);
+                trail.position.z = -0.5 - (i * 0.3);
+                trail.rotation.x = Math.PI / 2;
+                
+                handGroup.add(trail);
+                trails.push(trail);
+            }
+            
+            // Rotate hand to face forward
+            handGroup.rotation.x = Math.PI / 2;
+            handGroup.position.y = 1; // Position at player's height
+            
+            palmGroup.add(handGroup);
             
             // Create explosion effect (initially hidden)
             const explosionGroup = new THREE.Group();
@@ -2937,20 +2930,27 @@ export class Skill {
                 explosionGroup.add(particle);
             }
             
-            markGroup.add(explosionGroup);
+            palmGroup.add(explosionGroup);
             
-            // Add mark group to effect group
-            effectGroup.add(markGroup);
+            // Add palm group to effect group
+            effectGroup.add(palmGroup);
             
             // Store animation state
             this.explodingPalmState = {
                 age: 0,
-                phase: 'marking', // 'marking', 'pulsing', 'exploding', 'fading'
+                phase: 'flying', // 'flying', 'exploding', 'fading'
                 particles: particles,
+                trails: trails,
+                handGroup: handGroup,
                 explosionGroup: explosionGroup,
-                markGroup: markGroup,
+                palmGroup: palmGroup,
                 exploded: false,
-                explosionTime: this.duration * 0.8 // Explode at 80% of duration
+                explosionTime: this.duration * 0.8, // Explode at 80% of duration
+                flyingSpeed: 15, // Speed of the flying palm
+                maxDistance: this.range, // Maximum distance the palm can travel
+                distanceTraveled: 0, // Current distance traveled
+                hitTarget: false, // Whether the palm has hit a target
+                targetPosition: null // Position where the palm hit a target
             };
         } else {
             // Default mark effect implementation
@@ -2986,159 +2986,126 @@ export class Skill {
             // Update state
             this.explodingPalmState.age += delta;
             
-            // Get the mark group
-            const markGroup = this.explodingPalmState.markGroup;
+            // Get the palm group
+            const palmGroup = this.explodingPalmState.palmGroup;
+            const handGroup = this.explodingPalmState.handGroup;
             
-            // Handle different phases
-            if (!this.explodingPalmState.exploded && this.elapsedTime >= this.explodingPalmState.explosionTime) {
-                // Transition to exploding phase
+            // Check for explosion triggers
+            const shouldExplode = 
+                // Explode if reached max distance
+                this.explodingPalmState.distanceTraveled >= this.explodingPalmState.maxDistance ||
+                // Explode if hit a target
+                this.explodingPalmState.hitTarget ||
+                // Explode if reached explosion time
+                this.elapsedTime >= this.explodingPalmState.explosionTime;
+                
+            // Transition to exploding phase if needed
+            if (this.explodingPalmState.phase === 'flying' && shouldExplode) {
                 this.explodingPalmState.phase = 'exploding';
                 this.explodingPalmState.exploded = true;
                 this.explodingPalmState.explosionGroup.visible = true;
                 
-                // Hide the mark elements
-                for (let i = 0; i < markGroup.children.length; i++) {
-                    const child = markGroup.children[i];
-                    if (child !== this.explodingPalmState.explosionGroup) {
-                        child.visible = false;
-                    }
+                // Hide the flying hand
+                if (handGroup) {
+                    handGroup.visible = false;
                 }
             }
             
-            // Handle marking/pulsing phase
-            if (this.explodingPalmState.phase === 'marking' || this.explodingPalmState.phase === 'pulsing') {
-                // After a short time, transition to pulsing
-                if (this.explodingPalmState.phase === 'marking' && this.elapsedTime > this.duration * 0.1) {
-                    this.explodingPalmState.phase = 'pulsing';
-                }
+            // Handle flying phase
+            if (this.explodingPalmState.phase === 'flying') {
+                // Move the palm forward
+                const moveDistance = this.explodingPalmState.flyingSpeed * delta;
+                this.explodingPalmState.distanceTraveled += moveDistance;
                 
-                // Find the palm symbol
-                const palm = markGroup.children.find(child => 
-                    child.geometry && child.geometry.type === 'ShapeGeometry' && 
-                    child.position.y > 0.02
+                // Calculate new position
+                const newPosition = new THREE.Vector3(
+                    this.position.x + this.direction.x * moveDistance,
+                    this.position.y,
+                    this.position.z + this.direction.z * moveDistance
                 );
                 
-                if (palm && palm.userData) {
-                    // Rotate the palm symbol slowly
-                    palm.rotation.z += palm.userData.rotationSpeed * delta;
-                    
-                    // Pulse the palm
-                    const palmPulse = 0.9 + Math.sin(this.explodingPalmState.age * palm.userData.pulseSpeed) * 0.1;
-                    palm.scale.set(palmPulse, palmPulse, palmPulse);
-                    
-                    // Increase emissive intensity as we get closer to explosion
-                    if (this.explodingPalmState.phase === 'pulsing') {
-                        const explosionProgress = this.elapsedTime / this.explodingPalmState.explosionTime;
-                        palm.material.emissiveIntensity = 1 + explosionProgress * 2;
-                        
-                        // Make pulse more intense as we approach explosion
-                        const pulseIntensity = 0.1 + (explosionProgress * 0.3);
-                        const fastPulse = 0.9 + Math.sin(this.explodingPalmState.age * 10) * pulseIntensity;
-                        palm.scale.set(palmPulse * fastPulse, palmPulse * fastPulse, palmPulse * fastPulse);
-                    }
-                }
-                
-                // Find the energy ring
-                const ring = markGroup.children.find(child => 
-                    child.geometry && child.geometry.type === 'RingGeometry'
+                // Update palm position
+                palmGroup.position.set(
+                    palmGroup.position.x + this.direction.x * moveDistance,
+                    palmGroup.position.y,
+                    palmGroup.position.z + this.direction.z * moveDistance
                 );
                 
-                if (ring && ring.userData) {
-                    // Rotate the ring
-                    ring.rotation.z += ring.userData.rotationSpeed * delta;
+                // Animate hand rotation
+                if (handGroup) {
+                    // Rotate the hand for a spinning effect
+                    handGroup.rotation.z += delta * 5; // Spin around forward axis
                     
-                    // Pulse the ring
-                    const ringPulse = 0.9 + Math.sin(this.explodingPalmState.age * ring.userData.pulseSpeed) * 0.1;
-                    ring.scale.set(ringPulse, ringPulse, ringPulse);
+                    // Add slight wobble
+                    const wobbleAmount = 0.1;
+                    const wobbleSpeed = 10;
+                    handGroup.rotation.y = Math.sin(this.explodingPalmState.age * wobbleSpeed) * wobbleAmount;
                     
-                    // In pulsing phase, make the ring more active
-                    if (this.explodingPalmState.phase === 'pulsing') {
-                        const explosionProgress = this.elapsedTime / this.explodingPalmState.explosionTime;
-                        
-                        // Increase rotation speed
-                        ring.rotation.z += ring.userData.rotationSpeed * delta * explosionProgress * 3;
-                        
-                        // Increase emissive intensity
-                        ring.material.emissiveIntensity = 1 + explosionProgress * 3;
-                        
-                        // Add secondary fast pulse
-                        const pulseIntensity = 0.1 + (explosionProgress * 0.4);
-                        const fastPulse = 0.9 + Math.sin(this.explodingPalmState.age * 15) * pulseIntensity;
-                        ring.scale.set(ringPulse * fastPulse, ringPulse * fastPulse, ringPulse * fastPulse);
-                    }
+                    // Pulse the hand slightly
+                    const pulseFactor = 1 + Math.sin(this.explodingPalmState.age * 8) * 0.05;
+                    handGroup.scale.set(pulseFactor, pulseFactor, pulseFactor);
                 }
                 
-                // Animate blood splatters
-                const splatters = markGroup.children.filter(child => 
-                    child.geometry && 
-                    child.geometry.type === 'ShapeGeometry' && 
-                    child.position.y < 0.03
-                );
-                
-                for (const splatter of splatters) {
-                    if (splatter.userData) {
-                        // Subtle pulse
-                        const splatterPulse = 0.95 + Math.sin(this.explodingPalmState.age * splatter.userData.pulseSpeed) * 0.05;
-                        splatter.scale.set(splatterPulse, splatterPulse, splatterPulse);
-                        
-                        // In pulsing phase, make splatters more active
-                        if (this.explodingPalmState.phase === 'pulsing') {
-                            const explosionProgress = this.elapsedTime / this.explodingPalmState.explosionTime;
-                            
-                            // Increase color intensity
-                            if (splatter.material) {
-                                const color = new THREE.Color(0xff0000);
-                                color.lerp(new THREE.Color(0xff8800), explosionProgress);
-                                splatter.material.color = color;
-                                splatter.material.emissive = color;
-                                splatter.material.emissiveIntensity = explosionProgress * 2;
-                            }
-                        }
-                    }
-                }
-                
-                // Animate floating particles
+                // Animate particles
                 for (const particle of this.explodingPalmState.particles) {
                     if (particle.userData) {
-                        // Update orbit position
-                        particle.userData.orbitAngle += particle.userData.orbitSpeed * delta;
+                        // Update orbit position using quaternion rotation
+                        const rotationAxis = particle.userData.orbitAxis;
+                        const rotationAngle = particle.userData.orbitSpeed * delta;
                         
-                        // Calculate new position
-                        const newX = Math.cos(particle.userData.orbitAngle) * particle.userData.orbitRadius;
-                        const newZ = Math.sin(particle.userData.orbitAngle) * particle.userData.orbitRadius;
+                        // Create quaternion for rotation
+                        const quaternion = new THREE.Quaternion();
+                        quaternion.setFromAxisAngle(rotationAxis, rotationAngle);
                         
-                        // Update vertical position
-                        particle.userData.verticalDirection = particle.userData.verticalDirection || 1;
-                        particle.position.y += particle.userData.verticalSpeed * delta * particle.userData.verticalDirection;
-                        
-                        // Reverse direction if reaching min/max height
-                        if (particle.position.y > particle.userData.maxHeight) {
-                            particle.userData.verticalDirection = -1;
-                        } else if (particle.position.y < particle.userData.minHeight) {
-                            particle.userData.verticalDirection = 1;
-                        }
+                        // Get initial position and apply rotation
+                        const position = particle.userData.initialPosition.clone();
+                        position.applyQuaternion(quaternion);
                         
                         // Update particle position
-                        particle.position.x = newX;
-                        particle.position.z = newZ;
+                        particle.position.copy(position);
                         
-                        // In pulsing phase, make particles more active
-                        if (this.explodingPalmState.phase === 'pulsing') {
-                            const explosionProgress = this.elapsedTime / this.explodingPalmState.explosionTime;
+                        // Store the updated position as the new initial position
+                        particle.userData.initialPosition.copy(position);
+                    }
+                }
+                
+                // Animate trailing effect
+                for (let i = 0; i < this.explodingPalmState.trails.length; i++) {
+                    const trail = this.explodingPalmState.trails[i];
+                    
+                    // Fade out trails based on distance
+                    const trailFade = 1 - (i / this.explodingPalmState.trails.length);
+                    trail.material.opacity = 0.5 * trailFade;
+                    
+                    // Scale trails for a motion blur effect
+                    const trailScale = 0.8 + (i * 0.1);
+                    trail.scale.set(trailScale, trailScale, 1);
+                }
+                
+                // Check for collision with enemies
+                if (this.game && this.game.enemies) {
+                    const palmPosition = new THREE.Vector3(
+                        palmGroup.position.x,
+                        palmGroup.position.y,
+                        palmGroup.position.z
+                    );
+                    
+                    // Check each enemy for collision
+                    for (const enemy of this.game.enemies) {
+                        if (enemy && enemy.position && !enemy.state.isDead) {
+                            const distance = palmPosition.distanceTo(enemy.position);
                             
-                            // Increase orbit speed
-                            particle.userData.orbitSpeed = 0.2 + Math.random() * 0.5 + explosionProgress;
-                            
-                            // Increase vertical speed
-                            particle.userData.verticalSpeed = 0.1 + Math.random() * 0.3 + explosionProgress;
-                            
-                            // Change color to more orange/yellow as explosion approaches
-                            if (particle.material) {
-                                const color = new THREE.Color(0xff0000);
-                                color.lerp(new THREE.Color(0xff8800), explosionProgress);
-                                particle.material.color = color;
-                                particle.material.emissive = color;
-                                particle.material.emissiveIntensity = 0.5 + explosionProgress;
+                            // If palm is close enough to enemy, mark it for explosion
+                            if (distance < enemy.collisionRadius + 1) {
+                                this.explodingPalmState.hitTarget = true;
+                                this.explodingPalmState.targetPosition = enemy.position.clone();
+                                
+                                // Apply mark to enemy
+                                if (enemy.applyMark) {
+                                    enemy.applyMark('explodingPalm', this.damage);
+                                }
+                                
+                                break;
                             }
                         }
                     }
@@ -3151,7 +3118,7 @@ export class Skill {
                 
                 // Calculate explosion progress (0 to 1)
                 const explosionDuration = this.duration * 0.2; // Last 20% of total duration
-                const explosionProgress = (this.elapsedTime - this.explodingPalmState.explosionTime) / explosionDuration;
+                const explosionProgress = (this.elapsedTime - (this.duration - explosionDuration)) / explosionDuration;
                 
                 // Find the giant palm
                 const giantPalm = explosionGroup.children.find(child => 
@@ -3289,6 +3256,40 @@ export class Skill {
                     }
                 }
                 
+                // Apply damage to nearby enemies during explosion
+                if (this.game && this.game.enemies && explosionProgress > 0.2 && explosionProgress < 0.4) {
+                    // Only apply damage once during the explosion
+                    if (!this.explodingPalmState.damageApplied) {
+                        this.explodingPalmState.damageApplied = true;
+                        
+                        // Get explosion position
+                        const explosionPosition = new THREE.Vector3(
+                            palmGroup.position.x,
+                            palmGroup.position.y,
+                            palmGroup.position.z
+                        );
+                        
+                        // Check each enemy for being in explosion radius
+                        for (const enemy of this.game.enemies) {
+                            if (enemy && enemy.position && !enemy.state.isDead) {
+                                const distance = explosionPosition.distanceTo(enemy.position);
+                                
+                                // If enemy is within explosion radius, damage it
+                                if (distance < this.radius) {
+                                    // Calculate damage based on distance (more damage closer to center)
+                                    const damageMultiplier = 1 - (distance / this.radius);
+                                    const finalDamage = this.damage * (1 + damageMultiplier);
+                                    
+                                    // Apply damage to enemy
+                                    if (enemy.takeDamage) {
+                                        enemy.takeDamage(finalDamage);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 // Transition to fading phase at the end of explosion
                 if (explosionProgress >= 1) {
                     this.explodingPalmState.phase = 'fading';
@@ -3297,7 +3298,7 @@ export class Skill {
             // Handle fading phase
             else if (this.explodingPalmState.phase === 'fading') {
                 // Fade out all remaining elements
-                markGroup.traverse(child => {
+                palmGroup.traverse(child => {
                     if (child.material) {
                         if (Array.isArray(child.material)) {
                             child.material.forEach(mat => {
