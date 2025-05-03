@@ -255,6 +255,11 @@ export class Player {
     }
     
     update(delta) {
+        // Check for keyboard movement input
+        if (this.game && this.game.inputHandler) {
+            this.handleKeyboardMovement(delta);
+        }
+        
         // Update movement
         this.updateMovement(delta);
         
@@ -272,6 +277,46 @@ export class Player {
         
         // Regenerate resources
         this.regenerateResources(delta);
+    }
+    
+    handleKeyboardMovement(delta) {
+        // Get movement direction from input handler
+        const direction = this.game.inputHandler.getMovementDirection();
+        
+        // If there's keyboard input, move the player
+        if (direction.length() > 0) {
+            // Calculate movement step
+            const step = this.stats.movementSpeed * delta;
+            
+            // Calculate new position (only update X and Z)
+            const newPosition = new THREE.Vector3(
+                this.position.x + direction.x * step,
+                this.position.y,
+                this.position.z + direction.z * step
+            );
+            
+            // Update position
+            this.position.x = newPosition.x;
+            this.position.z = newPosition.z;
+            
+            // Update model position
+            if (this.modelGroup) {
+                this.modelGroup.position.x = this.position.x;
+                this.modelGroup.position.z = this.position.z;
+            }
+            
+            // Update rotation to face movement direction
+            this.rotation.y = Math.atan2(direction.x, direction.z);
+            if (this.modelGroup) {
+                this.modelGroup.rotation.y = this.rotation.y;
+            }
+            
+            // Set moving state
+            this.state.isMoving = true;
+            
+            // Update target position to current position to prevent mouse movement overriding
+            this.targetPosition.copy(this.position);
+        }
     }
     
     updateTerrainHeight() {
