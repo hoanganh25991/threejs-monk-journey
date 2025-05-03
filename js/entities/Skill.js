@@ -49,6 +49,10 @@ export class Skill {
                 return this.createBuffEffect();
             case 'wave':
                 return this.createWaveEffect();
+            case 'summon':
+                return this.createSummonEffect();
+            case 'mark':
+                return this.createMarkEffect();
             default:
                 return this.createDefaultEffect();
         }
@@ -500,29 +504,278 @@ export class Skill {
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
-        // Create multiple strike effects
-        for (let i = 0; i < this.hits; i++) {
-            const angle = (i / this.hits) * Math.PI * 2;
-            const radius = this.range * 0.5;
+        // Special handling for Seven-Sided Strike
+        if (this.name === 'Seven-Sided Strike') {
+            // Create a more complex and visually impressive effect for Seven-Sided Strike
             
-            const strikeGeometry = new THREE.BoxGeometry(0.3, 1, 0.3);
-            const strikeMaterial = new THREE.MeshBasicMaterial({
+            // Create the main monk figure (will be cloned for each strike)
+            const monkGroup = new THREE.Group();
+            
+            // Monk body (simplified)
+            const bodyGeometry = new THREE.CylinderGeometry(0.2, 0.3, 0.8, 8);
+            const bodyMaterial = new THREE.MeshStandardMaterial({
+                color: 0xcc8844, // Monk robe color
+                metalness: 0.2,
+                roughness: 0.8
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.4;
+            monkGroup.add(body);
+            
+            // Monk head
+            const headGeometry = new THREE.SphereGeometry(0.15, 12, 12);
+            const headMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffcc88, // Skin color
+                metalness: 0.1,
+                roughness: 0.9
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 0.9;
+            monkGroup.add(head);
+            
+            // Monk arms in striking pose
+            const armGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8);
+            const armMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffcc88, // Skin color
+                metalness: 0.1,
+                roughness: 0.9
+            });
+            
+            // Right arm in striking position
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.position.set(0.2, 0.6, 0.2);
+            rightArm.rotation.x = Math.PI / 4;
+            rightArm.rotation.z = -Math.PI / 4;
+            monkGroup.add(rightArm);
+            
+            // Left arm in balance position
+            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+            leftArm.position.set(-0.2, 0.6, -0.1);
+            leftArm.rotation.x = -Math.PI / 6;
+            leftArm.rotation.z = Math.PI / 3;
+            monkGroup.add(leftArm);
+            
+            // Monk legs in dynamic pose
+            const legGeometry = new THREE.CylinderGeometry(0.06, 0.06, 0.4, 8);
+            const legMaterial = new THREE.MeshStandardMaterial({
+                color: 0x555555, // Dark pants
+                metalness: 0.1,
+                roughness: 0.9
+            });
+            
+            // Right leg forward
+            const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+            rightLeg.position.set(0.1, 0.1, 0.1);
+            rightLeg.rotation.x = Math.PI / 6;
+            monkGroup.add(rightLeg);
+            
+            // Left leg back
+            const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+            leftLeg.position.set(-0.1, 0.1, -0.1);
+            leftLeg.rotation.x = -Math.PI / 6;
+            monkGroup.add(leftLeg);
+            
+            // Add strike effect (energy around fist)
+            const strikeEffectGeometry = new THREE.SphereGeometry(0.15, 12, 12);
+            const strikeEffectMaterial = new THREE.MeshStandardMaterial({
                 color: this.color,
+                emissive: this.color,
+                emissiveIntensity: 2,
                 transparent: true,
                 opacity: 0.8
             });
+            const strikeEffect = new THREE.Mesh(strikeEffectGeometry, strikeEffectMaterial);
+            strikeEffect.position.set(0.3, 0.6, 0.3);
+            monkGroup.add(strikeEffect);
             
-            const strike = new THREE.Mesh(strikeGeometry, strikeMaterial);
-            strike.position.set(
-                Math.cos(angle) * radius,
-                0.5,
-                Math.sin(angle) * radius
-            );
+            // Add motion blur trail
+            const trailGeometry = new THREE.PlaneGeometry(0.8, 0.4);
+            const trailMaterial = new THREE.MeshBasicMaterial({
+                color: this.color,
+                transparent: true,
+                opacity: 0.5,
+                side: THREE.DoubleSide
+            });
+            const trail = new THREE.Mesh(trailGeometry, trailMaterial);
+            trail.position.set(0.1, 0.5, 0.1);
+            trail.rotation.y = Math.PI / 4;
+            monkGroup.add(trail);
             
-            // Rotate strike to face center
-            strike.lookAt(new THREE.Vector3(0, 0.5, 0));
+            // Create the seven strike positions
+            const strikePositions = [];
+            const radius = this.range * 0.8;
             
-            effectGroup.add(strike);
+            // Create a pattern of positions for the seven strikes
+            for (let i = 0; i < this.hits; i++) {
+                // Create a more dynamic pattern than just a circle
+                let angle;
+                let distance;
+                
+                if (i === 0) {
+                    // First strike at center
+                    angle = 0;
+                    distance = 0;
+                } else if (i === this.hits - 1) {
+                    // Last strike at center
+                    angle = 0;
+                    distance = 0;
+                } else {
+                    // Other strikes in a pattern
+                    angle = ((i - 1) / (this.hits - 2)) * Math.PI * 2;
+                    distance = radius;
+                }
+                
+                strikePositions.push({
+                    position: new THREE.Vector3(
+                        Math.cos(angle) * distance,
+                        0,
+                        Math.sin(angle) * distance
+                    ),
+                    rotation: new THREE.Euler(0, angle + Math.PI, 0)
+                });
+            }
+            
+            // Create a monk figure at each strike position
+            for (let i = 0; i < strikePositions.length; i++) {
+                const strikeClone = monkGroup.clone();
+                
+                // Position and rotate the strike
+                strikeClone.position.copy(strikePositions[i].position);
+                strikeClone.rotation.copy(strikePositions[i].rotation);
+                
+                // Add a number indicator for the strike
+                const textGeometry = new THREE.PlaneGeometry(0.3, 0.3);
+                const textCanvas = document.createElement('canvas');
+                textCanvas.width = 64;
+                textCanvas.height = 64;
+                const textContext = textCanvas.getContext('2d');
+                textContext.fillStyle = 'rgba(0, 0, 0, 0)';
+                textContext.fillRect(0, 0, 64, 64);
+                textContext.font = 'bold 48px Arial';
+                textContext.textAlign = 'center';
+                textContext.textBaseline = 'middle';
+                textContext.fillStyle = '#ffffff';
+                textContext.fillText((i + 1).toString(), 32, 32);
+                
+                const textTexture = new THREE.CanvasTexture(textCanvas);
+                const textMaterial = new THREE.MeshBasicMaterial({
+                    map: textTexture,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                
+                const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                textMesh.position.y = 1.2;
+                textMesh.rotation.x = -Math.PI / 2;
+                
+                strikeClone.add(textMesh);
+                
+                // Store the original scale for animation
+                strikeClone.userData = {
+                    index: i,
+                    originalScale: strikeClone.scale.clone(),
+                    active: false,
+                    activationTime: i * (this.duration / this.hits)
+                };
+                
+                // Initially set scale to zero (will be animated in)
+                strikeClone.scale.set(0, 0, 0);
+                
+                effectGroup.add(strikeClone);
+            }
+            
+            // Create connecting energy lines between strikes
+            for (let i = 0; i < strikePositions.length - 1; i++) {
+                const start = strikePositions[i].position;
+                const end = strikePositions[i + 1].position;
+                
+                // Calculate distance and direction
+                const direction = new THREE.Vector3().subVectors(end, start);
+                const distance = direction.length();
+                
+                // Create line geometry
+                const lineGeometry = new THREE.CylinderGeometry(0.03, 0.03, distance, 8);
+                const lineMaterial = new THREE.MeshBasicMaterial({
+                    color: this.color,
+                    transparent: true,
+                    opacity: 0.4
+                });
+                
+                const line = new THREE.Mesh(lineGeometry, lineMaterial);
+                
+                // Position at midpoint
+                const midpoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+                line.position.copy(midpoint);
+                
+                // Orient towards end point
+                line.lookAt(end);
+                line.rotation.x = Math.PI / 2;
+                
+                // Store indices for animation
+                line.userData = {
+                    startIndex: i,
+                    endIndex: i + 1,
+                    originalOpacity: 0.4
+                };
+                
+                effectGroup.add(line);
+            }
+            
+            // Create central energy vortex
+            const vortexGeometry = new THREE.TorusGeometry(0.5, 0.1, 16, 32);
+            const vortexMaterial = new THREE.MeshStandardMaterial({
+                color: this.color,
+                emissive: this.color,
+                emissiveIntensity: 1,
+                transparent: true,
+                opacity: 0.7
+            });
+            
+            const vortex = new THREE.Mesh(vortexGeometry, vortexMaterial);
+            vortex.rotation.x = Math.PI / 2;
+            vortex.position.y = 0.1;
+            
+            // Store for animation
+            vortex.userData = {
+                rotationSpeed: 5,
+                pulseSpeed: 3
+            };
+            
+            effectGroup.add(vortex);
+            
+            // Store animation state
+            this.sevenSidedStrikeState = {
+                currentStrike: -1,
+                strikeDuration: this.duration / this.hits,
+                strikeTimer: 0,
+                vortex: vortex
+            };
+        } else {
+            // Default multi-effect implementation
+            // Create multiple strike effects
+            for (let i = 0; i < this.hits; i++) {
+                const angle = (i / this.hits) * Math.PI * 2;
+                const radius = this.range * 0.5;
+                
+                const strikeGeometry = new THREE.BoxGeometry(0.3, 1, 0.3);
+                const strikeMaterial = new THREE.MeshBasicMaterial({
+                    color: this.color,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const strike = new THREE.Mesh(strikeGeometry, strikeMaterial);
+                strike.position.set(
+                    Math.cos(angle) * radius,
+                    0.5,
+                    Math.sin(angle) * radius
+                );
+                
+                // Rotate strike to face center
+                strike.lookAt(new THREE.Vector3(0, 0.5, 0));
+                
+                effectGroup.add(strike);
+            }
         }
         
         // Position effect
@@ -539,41 +792,346 @@ export class Skill {
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
-        // Create a cylinder for the buff area
-        const cylinderGeometry = new THREE.CylinderGeometry(this.radius, this.radius, 0.1, 32);
-        const cylinderMaterial = new THREE.MeshBasicMaterial({
-            color: this.color,
-            transparent: true,
-            opacity: 0.3
-        });
-        
-        const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
-        cylinder.position.y = 0.05;
-        
-        // Add cylinder to group
-        effectGroup.add(cylinder);
-        
-        // Create particles
-        const particleCount = 30;
-        for (let i = 0; i < particleCount; i++) {
-            const angle = (i / particleCount) * Math.PI * 2;
-            const radius = Math.random() * this.radius;
+        // Special handling for Inner Sanctuary
+        if (this.name === 'Inner Sanctuary') {
+            // Create a more complex and visually impressive effect for Inner Sanctuary
             
-            const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-            const particleMaterial = new THREE.MeshBasicMaterial({
+            // Create the main sanctuary area
+            const sanctuaryGroup = new THREE.Group();
+            
+            // Create the base sanctuary circle
+            const baseGeometry = new THREE.CylinderGeometry(this.radius, this.radius, 0.05, 32);
+            const baseMaterial = new THREE.MeshStandardMaterial({
                 color: this.color,
                 transparent: true,
-                opacity: 0.7
+                opacity: 0.4,
+                metalness: 0.2,
+                roughness: 0.8,
+                side: THREE.DoubleSide
             });
             
-            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-            particle.position.set(
-                Math.cos(angle) * radius,
-                Math.random() * 2,
-                Math.sin(angle) * radius
-            );
+            const base = new THREE.Mesh(baseGeometry, baseMaterial);
+            base.position.y = 0.025;
+            sanctuaryGroup.add(base);
             
-            effectGroup.add(particle);
+            // Create a glowing edge ring
+            const edgeGeometry = new THREE.TorusGeometry(this.radius, 0.1, 16, 64);
+            const edgeMaterial = new THREE.MeshStandardMaterial({
+                color: this.color,
+                emissive: this.color,
+                emissiveIntensity: 1,
+                transparent: true,
+                opacity: 0.8,
+                metalness: 0.3,
+                roughness: 0.7
+            });
+            
+            const edge = new THREE.Mesh(edgeGeometry, edgeMaterial);
+            edge.rotation.x = Math.PI / 2;
+            edge.position.y = 0.05;
+            sanctuaryGroup.add(edge);
+            
+            // Create protective dome (hemisphere)
+            const domeGeometry = new THREE.SphereGeometry(this.radius, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            const domeMaterial = new THREE.MeshStandardMaterial({
+                color: this.color,
+                transparent: true,
+                opacity: 0.2,
+                metalness: 0.1,
+                roughness: 0.9,
+                side: THREE.DoubleSide
+            });
+            
+            const dome = new THREE.Mesh(domeGeometry, domeMaterial);
+            dome.position.y = 0;
+            sanctuaryGroup.add(dome);
+            
+            // Create protective runes around the sanctuary
+            const runeCount = 8;
+            for (let i = 0; i < runeCount; i++) {
+                const angle = (i / runeCount) * Math.PI * 2;
+                const runeRadius = this.radius * 0.9;
+                
+                // Create rune base
+                const runeGroup = new THREE.Group();
+                
+                // Position rune around the circle
+                runeGroup.position.set(
+                    Math.cos(angle) * runeRadius,
+                    0.1,
+                    Math.sin(angle) * runeRadius
+                );
+                
+                // Rotate rune to face center
+                runeGroup.lookAt(new THREE.Vector3(0, 0.1, 0));
+                runeGroup.rotation.y += Math.PI / 2; // Adjust to face outward
+                
+                // Create rune symbol using custom geometry
+                // We'll create a simple glyph shape
+                const runeShape = new THREE.Shape();
+                runeShape.moveTo(-0.1, -0.15);
+                runeShape.lineTo(0.1, -0.15);
+                runeShape.lineTo(0.15, 0);
+                runeShape.lineTo(0.1, 0.15);
+                runeShape.lineTo(-0.1, 0.15);
+                runeShape.lineTo(-0.15, 0);
+                runeShape.lineTo(-0.1, -0.15);
+                
+                const runeGeometry = new THREE.ShapeGeometry(runeShape);
+                const runeMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    emissive: this.color,
+                    emissiveIntensity: 1.5,
+                    transparent: true,
+                    opacity: 0.9,
+                    side: THREE.DoubleSide
+                });
+                
+                const rune = new THREE.Mesh(runeGeometry, runeMaterial);
+                rune.rotation.x = Math.PI / 2;
+                
+                // Store animation data
+                rune.userData = {
+                    pulseSpeed: 2 + (i * 0.5),
+                    hoverSpeed: 1 + (i * 0.3),
+                    rotationSpeed: 0.5 + (i * 0.2),
+                    initialY: 0.1
+                };
+                
+                runeGroup.add(rune);
+                sanctuaryGroup.add(runeGroup);
+            }
+            
+            // Create energy pillars at cardinal points
+            const pillarCount = 4;
+            for (let i = 0; i < pillarCount; i++) {
+                const angle = (i / pillarCount) * Math.PI * 2;
+                const pillarRadius = this.radius * 0.7;
+                
+                // Create pillar
+                const pillarGeometry = new THREE.CylinderGeometry(0.1, 0.1, 2, 8);
+                const pillarMaterial = new THREE.MeshStandardMaterial({
+                    color: this.color,
+                    emissive: this.color,
+                    emissiveIntensity: 0.8,
+                    transparent: true,
+                    opacity: 0.5
+                });
+                
+                const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+                pillar.position.set(
+                    Math.cos(angle) * pillarRadius,
+                    1,
+                    Math.sin(angle) * pillarRadius
+                );
+                
+                // Store animation data
+                pillar.userData = {
+                    pulseSpeed: 3 + (i * 0.5),
+                    heightFactor: 0.5 + (i * 0.2)
+                };
+                
+                sanctuaryGroup.add(pillar);
+            }
+            
+            // Create central mandala pattern
+            const mandalaGroup = new THREE.Group();
+            mandalaGroup.position.y = 0.06;
+            
+            // Create concentric circles
+            const circleCount = 3;
+            for (let i = 0; i < circleCount; i++) {
+                const circleRadius = (this.radius * 0.6) * ((circleCount - i) / circleCount);
+                const circleGeometry = new THREE.RingGeometry(
+                    circleRadius - 0.05,
+                    circleRadius,
+                    32
+                );
+                const circleMaterial = new THREE.MeshBasicMaterial({
+                    color: this.color,
+                    transparent: true,
+                    opacity: 0.5 - (i * 0.1),
+                    side: THREE.DoubleSide
+                });
+                
+                const circle = new THREE.Mesh(circleGeometry, circleMaterial);
+                circle.rotation.x = -Math.PI / 2;
+                
+                // Store animation data
+                circle.userData = {
+                    rotationSpeed: 0.2 + (i * 0.3),
+                    direction: i % 2 === 0 ? 1 : -1 // Alternate directions
+                };
+                
+                mandalaGroup.add(circle);
+            }
+            
+            // Create radial lines
+            const lineCount = 12;
+            for (let i = 0; i < lineCount; i++) {
+                const angle = (i / lineCount) * Math.PI * 2;
+                const lineLength = this.radius * 0.6;
+                
+                const lineGeometry = new THREE.PlaneGeometry(0.02, lineLength);
+                const lineMaterial = new THREE.MeshBasicMaterial({
+                    color: this.color,
+                    transparent: true,
+                    opacity: 0.6,
+                    side: THREE.DoubleSide
+                });
+                
+                const line = new THREE.Mesh(lineGeometry, lineMaterial);
+                line.position.set(
+                    Math.cos(angle) * (lineLength / 2),
+                    0,
+                    Math.sin(angle) * (lineLength / 2)
+                );
+                line.rotation.x = -Math.PI / 2;
+                line.rotation.z = angle;
+                
+                mandalaGroup.add(line);
+            }
+            
+            // Create central lotus symbol
+            const petalCount = 8;
+            for (let i = 0; i < petalCount; i++) {
+                const angle = (i / petalCount) * Math.PI * 2;
+                
+                // Create petal shape
+                const petalShape = new THREE.Shape();
+                petalShape.moveTo(0, 0);
+                petalShape.quadraticCurveTo(0.1, 0.1, 0.2, 0);
+                petalShape.quadraticCurveTo(0.1, -0.1, 0, 0);
+                
+                const petalGeometry = new THREE.ShapeGeometry(petalShape);
+                const petalMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.8,
+                    side: THREE.DoubleSide
+                });
+                
+                const petal = new THREE.Mesh(petalGeometry, petalMaterial);
+                petal.position.set(
+                    Math.cos(angle) * 0.15,
+                    0,
+                    Math.sin(angle) * 0.15
+                );
+                petal.rotation.x = -Math.PI / 2;
+                petal.rotation.z = angle;
+                
+                // Store animation data
+                petal.userData = {
+                    pulseSpeed: 2 + (i * 0.3)
+                };
+                
+                mandalaGroup.add(petal);
+            }
+            
+            // Create central core
+            const coreGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+            const coreMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                emissive: this.color,
+                emissiveIntensity: 2,
+                transparent: true,
+                opacity: 0.9
+            });
+            
+            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            mandalaGroup.add(core);
+            
+            sanctuaryGroup.add(mandalaGroup);
+            
+            // Add floating particles inside the sanctuary
+            const particleCount = 50;
+            const particles = [];
+            
+            for (let i = 0; i < particleCount; i++) {
+                // Random position within the sanctuary
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * this.radius * 0.9;
+                const height = Math.random() * this.radius;
+                
+                // Create particle
+                const particleSize = 0.02 + (Math.random() * 0.04);
+                const particleGeometry = new THREE.SphereGeometry(particleSize, 8, 8);
+                const particleMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    emissive: this.color,
+                    emissiveIntensity: 1,
+                    transparent: true,
+                    opacity: 0.6 + (Math.random() * 0.4)
+                });
+                
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                particle.position.set(
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                );
+                
+                // Store particle animation data
+                particle.userData = {
+                    orbitSpeed: 0.1 + (Math.random() * 0.3),
+                    orbitRadius: radius,
+                    orbitAngle: angle,
+                    verticalSpeed: 0.05 + (Math.random() * 0.1),
+                    initialHeight: height,
+                    amplitude: 0.1 + (Math.random() * 0.2)
+                };
+                
+                sanctuaryGroup.add(particle);
+                particles.push(particle);
+            }
+            
+            // Add sanctuary to effect group
+            effectGroup.add(sanctuaryGroup);
+            
+            // Store animation state
+            this.sanctuaryState = {
+                age: 0,
+                particles: particles,
+                mandala: mandalaGroup
+            };
+        } else {
+            // Default buff effect implementation
+            // Create a cylinder for the buff area
+            const cylinderGeometry = new THREE.CylinderGeometry(this.radius, this.radius, 0.1, 32);
+            const cylinderMaterial = new THREE.MeshBasicMaterial({
+                color: this.color,
+                transparent: true,
+                opacity: 0.3
+            });
+            
+            const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+            cylinder.position.y = 0.05;
+            
+            // Add cylinder to group
+            effectGroup.add(cylinder);
+            
+            // Create particles
+            const particleCount = 30;
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (i / particleCount) * Math.PI * 2;
+                const radius = Math.random() * this.radius;
+                
+                const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+                const particleMaterial = new THREE.MeshBasicMaterial({
+                    color: this.color,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                particle.position.set(
+                    Math.cos(angle) * radius,
+                    Math.random() * 2,
+                    Math.sin(angle) * radius
+                );
+                
+                effectGroup.add(particle);
+            }
         }
         
         // Position effect
@@ -761,6 +1319,12 @@ export class Skill {
                 break;
             case 'wave':
                 this.updateWaveEffect(delta);
+                break;
+            case 'summon':
+                this.updateSummonEffect(delta);
+                break;
+            case 'mark':
+                this.updateMarkEffect(delta);
                 break;
             default:
                 this.updateDefaultEffect(delta);
@@ -1053,46 +1617,464 @@ export class Skill {
     }
     
     updateMultiEffect(delta) {
-        // Rotate strikes around center
-        const rotationSpeed = 2;
-        this.effect.rotation.y += rotationSpeed * delta;
-        
-        // Scale strikes based on elapsed time
-        const scalePattern = Math.sin(this.elapsedTime * 10) * 0.2 + 0.8;
-        
-        for (let i = 0; i < this.effect.children.length; i++) {
-            const strike = this.effect.children[i];
-            strike.scale.set(scalePattern, scalePattern, scalePattern);
+        // Special handling for Seven-Sided Strike
+        if (this.name === 'Seven-Sided Strike' && this.sevenSidedStrikeState) {
+            // Update the strike timer
+            this.sevenSidedStrikeState.strikeTimer += delta;
+            
+            // Calculate which strike should be active
+            const newStrikeIndex = Math.floor(this.elapsedTime / this.sevenSidedStrikeState.strikeDuration);
+            
+            // If we've moved to a new strike
+            if (newStrikeIndex !== this.sevenSidedStrikeState.currentStrike && newStrikeIndex < this.hits) {
+                // Update current strike index
+                this.sevenSidedStrikeState.currentStrike = newStrikeIndex;
+                this.sevenSidedStrikeState.strikeTimer = 0;
+                
+                // Find all monk figures (they're the ones with userData.index)
+                const monkFigures = [];
+                const connectingLines = [];
+                
+                for (let i = 0; i < this.effect.children.length; i++) {
+                    const child = this.effect.children[i];
+                    
+                    if (child.userData && child.userData.index !== undefined) {
+                        monkFigures.push(child);
+                    } else if (child.userData && child.userData.startIndex !== undefined) {
+                        connectingLines.push(child);
+                    }
+                }
+                
+                // Activate the current strike
+                for (const figure of monkFigures) {
+                    if (figure.userData.index === newStrikeIndex) {
+                        // Activate this figure
+                        figure.userData.active = true;
+                        
+                        // Animate scale from 0 to original
+                        figure.scale.set(1, 1, 1);
+                        
+                        // Add a flash effect
+                        const flashGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+                        const flashMaterial = new THREE.MeshBasicMaterial({
+                            color: this.color,
+                            transparent: true,
+                            opacity: 0.8
+                        });
+                        
+                        const flash = new THREE.Mesh(flashGeometry, flashMaterial);
+                        flash.position.copy(figure.position);
+                        flash.position.y += 0.5;
+                        flash.userData = { type: 'flash', age: 0 };
+                        
+                        this.effect.add(flash);
+                    } else if (figure.userData.index < newStrikeIndex) {
+                        // Deactivate previous figures
+                        figure.userData.active = false;
+                        figure.scale.set(0, 0, 0);
+                    }
+                }
+                
+                // Highlight the connecting line to the next strike
+                for (const line of connectingLines) {
+                    if (line.userData.startIndex === newStrikeIndex) {
+                        // Highlight this line
+                        line.material.opacity = 0.9;
+                        line.material.emissive = new THREE.Color(this.color);
+                        line.material.emissiveIntensity = 1;
+                    } else {
+                        // Reset other lines
+                        line.material.opacity = line.userData.originalOpacity;
+                        line.material.emissive = undefined;
+                    }
+                }
+            }
+            
+            // Update active monk figure
+            for (let i = 0; i < this.effect.children.length; i++) {
+                const child = this.effect.children[i];
+                
+                if (child.userData && child.userData.index !== undefined && child.userData.active) {
+                    // Animate the active monk
+                    
+                    // Calculate animation progress (0 to 1)
+                    const progress = this.sevenSidedStrikeState.strikeTimer / this.sevenSidedStrikeState.strikeDuration;
+                    
+                    // Pulse the strike effect (energy around fist)
+                    const strikeEffect = child.children.find(c => 
+                        c.geometry && c.geometry.type === 'SphereGeometry' && 
+                        c.position.x > 0 && c.position.y > 0
+                    );
+                    
+                    if (strikeEffect) {
+                        const pulseScale = 0.8 + Math.sin(progress * Math.PI * 4) * 0.4;
+                        strikeEffect.scale.set(pulseScale, pulseScale, pulseScale);
+                        
+                        if (strikeEffect.material) {
+                            strikeEffect.material.opacity = Math.max(0.5, 1 - progress);
+                        }
+                    }
+                    
+                    // Animate the motion blur trail
+                    const trail = child.children.find(c => 
+                        c.geometry && c.geometry.type === 'PlaneGeometry'
+                    );
+                    
+                    if (trail) {
+                        // Fade out the trail as the strike progresses
+                        if (trail.material) {
+                            trail.material.opacity = Math.max(0.1, 0.5 - (progress * 0.5));
+                        }
+                        
+                        // Stretch the trail for motion effect
+                        const stretchFactor = 1 + (Math.sin(progress * Math.PI) * 0.5);
+                        trail.scale.set(stretchFactor, 1, 1);
+                    }
+                    
+                    // Rotate the monk slightly for dynamic pose
+                    child.rotation.y += Math.sin(progress * Math.PI) * 0.1;
+                    
+                    // If near the end of this strike's duration, start fading it out
+                    if (progress > 0.8) {
+                        const fadeOutFactor = (progress - 0.8) / 0.2;
+                        child.scale.set(
+                            1 - fadeOutFactor,
+                            1 - fadeOutFactor,
+                            1 - fadeOutFactor
+                        );
+                    }
+                }
+            }
+            
+            // Update flash effects
+            const flashesToRemove = [];
+            
+            for (let i = 0; i < this.effect.children.length; i++) {
+                const child = this.effect.children[i];
+                
+                if (child.userData && child.userData.type === 'flash') {
+                    // Update flash age
+                    child.userData.age += delta;
+                    
+                    // Expand and fade out flash
+                    const flashProgress = child.userData.age / 0.3; // 0.3 seconds duration
+                    const flashScale = 1 + (flashProgress * 2);
+                    
+                    child.scale.set(flashScale, flashScale, flashScale);
+                    
+                    if (child.material) {
+                        child.material.opacity = Math.max(0, 0.8 - (flashProgress * 0.8));
+                    }
+                    
+                    // Mark for removal if too old
+                    if (flashProgress >= 1) {
+                        flashesToRemove.push(child);
+                    }
+                }
+            }
+            
+            // Remove expired flashes
+            for (const flash of flashesToRemove) {
+                this.effect.remove(flash);
+            }
+            
+            // Animate the central vortex
+            if (this.sevenSidedStrikeState.vortex) {
+                const vortex = this.sevenSidedStrikeState.vortex;
+                
+                // Rotate the vortex
+                vortex.rotation.z += vortex.userData.rotationSpeed * delta;
+                
+                // Pulse the vortex
+                const pulseScale = 0.8 + Math.sin(this.elapsedTime * vortex.userData.pulseSpeed) * 0.2;
+                vortex.scale.set(pulseScale, pulseScale, pulseScale);
+                
+                // Adjust opacity based on overall progress
+                const overallProgress = this.elapsedTime / this.duration;
+                
+                if (overallProgress < 0.2) {
+                    // Fade in
+                    vortex.material.opacity = Math.min(0.7, overallProgress * 3.5);
+                } else if (overallProgress > 0.8) {
+                    // Fade out
+                    vortex.material.opacity = Math.max(0, 0.7 - ((overallProgress - 0.8) * 3.5));
+                }
+            }
+        } else {
+            // Default multi-effect behavior
+            // Rotate strikes around center
+            const rotationSpeed = 2;
+            this.effect.rotation.y += rotationSpeed * delta;
+            
+            // Scale strikes based on elapsed time
+            const scalePattern = Math.sin(this.elapsedTime * 10) * 0.2 + 0.8;
+            
+            for (let i = 0; i < this.effect.children.length; i++) {
+                const strike = this.effect.children[i];
+                strike.scale.set(scalePattern, scalePattern, scalePattern);
+            }
         }
     }
     
     updateBuffEffect(delta) {
-        // Pulse the cylinder
-        const cylinder = this.effect.children[0];
-        const pulseSpeed = 1;
-        const pulseScale = 0.1;
-        
-        cylinder.scale.set(
-            1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale,
-            1,
-            1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale
-        );
-        
-        // Move particles up and respawn at bottom
-        for (let i = 1; i < this.effect.children.length; i++) {
-            const particle = this.effect.children[i];
-            particle.position.y += delta * 1.5;
+        // Special handling for Inner Sanctuary
+        if (this.name === 'Inner Sanctuary' && this.sanctuaryState) {
+            // Update sanctuary state
+            this.sanctuaryState.age += delta;
             
-            // Reset particle if it goes too high
-            if (particle.position.y > 2) {
-                const angle = Math.random() * Math.PI * 2;
-                const radius = Math.random() * this.radius;
+            // Get the sanctuary group (first child of effect group)
+            const sanctuaryGroup = this.effect.children[0];
+            
+            // Find the dome, edge ring, and base
+            const dome = sanctuaryGroup.children.find(child => 
+                child.geometry && child.geometry.type === 'SphereGeometry'
+            );
+            
+            const edge = sanctuaryGroup.children.find(child => 
+                child.geometry && child.geometry.type === 'TorusGeometry'
+            );
+            
+            const base = sanctuaryGroup.children.find(child => 
+                child.geometry && child.geometry.type === 'CylinderGeometry' && 
+                child.position.y < 0.1
+            );
+            
+            // Animate the dome
+            if (dome) {
+                // Pulse the dome
+                const domeScale = 1 + Math.sin(this.sanctuaryState.age * 0.5) * 0.05;
+                dome.scale.set(domeScale, domeScale, domeScale);
                 
-                particle.position.set(
-                    Math.cos(angle) * radius,
-                    0,
-                    Math.sin(angle) * radius
+                // Adjust dome opacity based on damage/attacks
+                // This would be connected to game logic in a real implementation
+                const baseDomeOpacity = 0.2;
+                const pulseOpacity = Math.sin(this.sanctuaryState.age * 3) * 0.05;
+                
+                // Simulate dome reacting to attacks with random flashes
+                if (Math.random() < 0.01) {
+                    // Random flash
+                    dome.material.opacity = 0.4;
+                } else {
+                    // Normal state
+                    dome.material.opacity = baseDomeOpacity + Math.max(0, pulseOpacity);
+                }
+            }
+            
+            // Animate the edge ring
+            if (edge) {
+                // Rotate the edge ring
+                edge.rotation.z += delta * 0.5;
+                
+                // Pulse the edge
+                const edgeScale = 1 + Math.sin(this.sanctuaryState.age * 2) * 0.1;
+                edge.scale.set(edgeScale, edgeScale, 1);
+                
+                // Adjust emissive intensity
+                if (edge.material) {
+                    edge.material.emissiveIntensity = 1 + Math.sin(this.sanctuaryState.age * 3) * 0.5;
+                }
+            }
+            
+            // Animate the base
+            if (base) {
+                // Subtle pulse for the base
+                const baseScale = 1 + Math.sin(this.sanctuaryState.age * 0.7) * 0.03;
+                base.scale.set(baseScale, 1, baseScale);
+            }
+            
+            // Animate runes
+            for (let i = 0; i < sanctuaryGroup.children.length; i++) {
+                const child = sanctuaryGroup.children[i];
+                
+                // Check if this is a rune group (contains a shape geometry)
+                if (child.children && child.children.length > 0 && 
+                    child.children[0].geometry && 
+                    child.children[0].geometry.type === 'ShapeGeometry') {
+                    
+                    const rune = child.children[0];
+                    
+                    // Hover animation
+                    if (rune.userData && rune.userData.initialY !== undefined) {
+                        const hoverOffset = Math.sin(this.sanctuaryState.age * rune.userData.hoverSpeed) * 0.05;
+                        child.position.y = rune.userData.initialY + hoverOffset;
+                    }
+                    
+                    // Rotation animation
+                    if (rune.userData && rune.userData.rotationSpeed) {
+                        rune.rotation.z += rune.userData.rotationSpeed * delta;
+                    }
+                    
+                    // Pulse animation
+                    if (rune.userData && rune.userData.pulseSpeed) {
+                        const pulseScale = 0.9 + Math.sin(this.sanctuaryState.age * rune.userData.pulseSpeed) * 0.1;
+                        rune.scale.set(pulseScale, pulseScale, pulseScale);
+                    }
+                    
+                    // Adjust emissive intensity
+                    if (rune.material) {
+                        rune.material.emissiveIntensity = 1 + Math.sin(this.sanctuaryState.age * 5) * 0.5;
+                    }
+                }
+            }
+            
+            // Animate energy pillars
+            const pillars = sanctuaryGroup.children.filter(child => 
+                child.geometry && 
+                child.geometry.type === 'CylinderGeometry' && 
+                child.position.y > 0.5
+            );
+            
+            for (const pillar of pillars) {
+                if (pillar.userData) {
+                    // Pulse height
+                    const heightScale = 1 + Math.sin(this.sanctuaryState.age * pillar.userData.pulseSpeed) * 0.2;
+                    pillar.scale.y = heightScale;
+                    
+                    // Adjust position to keep bottom at same level
+                    pillar.position.y = 1 + ((heightScale - 1) * pillar.geometry.parameters.height / 2);
+                    
+                    // Pulse opacity
+                    if (pillar.material) {
+                        pillar.material.opacity = 0.3 + Math.abs(Math.sin(this.sanctuaryState.age * 2)) * 0.3;
+                    }
+                }
+            }
+            
+            // Animate mandala
+            if (this.sanctuaryState.mandala) {
+                const mandala = this.sanctuaryState.mandala;
+                
+                // Rotate concentric circles
+                for (let i = 0; i < mandala.children.length; i++) {
+                    const child = mandala.children[i];
+                    
+                    if (child.geometry && child.geometry.type === 'RingGeometry') {
+                        if (child.userData && child.userData.rotationSpeed) {
+                            // Rotate at different speeds and directions
+                            child.rotation.z += child.userData.rotationSpeed * delta * child.userData.direction;
+                        }
+                    }
+                }
+                
+                // Pulse the central core
+                const core = mandala.children.find(child => 
+                    child.geometry && child.geometry.type === 'SphereGeometry'
                 );
+                
+                if (core) {
+                    const coreScale = 0.8 + Math.sin(this.sanctuaryState.age * 5) * 0.2;
+                    core.scale.set(coreScale, coreScale, coreScale);
+                    
+                    if (core.material) {
+                        core.material.emissiveIntensity = 1.5 + Math.sin(this.sanctuaryState.age * 7) * 0.5;
+                    }
+                }
+                
+                // Animate lotus petals
+                const petals = mandala.children.filter(child => 
+                    child.geometry && 
+                    child.geometry.type === 'ShapeGeometry'
+                );
+                
+                for (const petal of petals) {
+                    if (petal.userData && petal.userData.pulseSpeed) {
+                        const petalScale = 0.9 + Math.sin(this.sanctuaryState.age * petal.userData.pulseSpeed) * 0.1;
+                        petal.scale.set(petalScale, petalScale, petalScale);
+                    }
+                }
+                
+                // Rotate entire mandala slowly
+                mandala.rotation.z += delta * 0.1;
+            }
+            
+            // Animate particles
+            for (const particle of this.sanctuaryState.particles) {
+                if (particle.userData) {
+                    // Update orbit position
+                    particle.userData.orbitAngle += particle.userData.orbitSpeed * delta;
+                    
+                    // Calculate new position
+                    const newX = Math.cos(particle.userData.orbitAngle) * particle.userData.orbitRadius;
+                    const newZ = Math.sin(particle.userData.orbitAngle) * particle.userData.orbitRadius;
+                    
+                    // Update vertical position with sine wave
+                    const newY = particle.userData.initialHeight + 
+                                Math.sin(this.sanctuaryState.age * particle.userData.verticalSpeed) * 
+                                particle.userData.amplitude;
+                    
+                    // Update particle position
+                    particle.position.set(newX, newY, newZ);
+                    
+                    // Pulse particle size
+                    const particleScale = 0.8 + Math.sin(this.sanctuaryState.age * 3 + 
+                                                        particle.userData.orbitAngle) * 0.2;
+                    particle.scale.set(particleScale, particleScale, particleScale);
+                }
+            }
+            
+            // Handle fade-in and fade-out
+            const overallProgress = this.elapsedTime / this.duration;
+            
+            if (overallProgress < 0.1) {
+                // Fade in
+                sanctuaryGroup.traverse(child => {
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => {
+                                const targetOpacity = mat.opacity / 0.1;
+                                mat.opacity = Math.min(targetOpacity, overallProgress * 10 * targetOpacity);
+                            });
+                        } else {
+                            const targetOpacity = child.material.opacity;
+                            child.material.opacity = Math.min(targetOpacity, overallProgress * 10 * targetOpacity);
+                        }
+                    }
+                });
+            } else if (overallProgress > 0.9) {
+                // Fade out
+                const fadeOutProgress = (overallProgress - 0.9) / 0.1;
+                
+                sanctuaryGroup.traverse(child => {
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => {
+                                mat.opacity = Math.max(0, mat.opacity * (1 - fadeOutProgress));
+                            });
+                        } else {
+                            child.material.opacity = Math.max(0, child.material.opacity * (1 - fadeOutProgress));
+                        }
+                    }
+                });
+            }
+        } else {
+            // Default buff effect behavior
+            // Pulse the cylinder
+            const cylinder = this.effect.children[0];
+            const pulseSpeed = 1;
+            const pulseScale = 0.1;
+            
+            cylinder.scale.set(
+                1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale,
+                1,
+                1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale
+            );
+            
+            // Move particles up and respawn at bottom
+            for (let i = 1; i < this.effect.children.length; i++) {
+                const particle = this.effect.children[i];
+                particle.position.y += delta * 1.5;
+                
+                // Reset particle if it goes too high
+                if (particle.position.y > 2) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.random() * this.radius;
+                    
+                    particle.position.set(
+                        Math.cos(angle) * radius,
+                        0,
+                        Math.sin(angle) * radius
+                    );
+                }
             }
         }
     }
@@ -1212,6 +2194,1311 @@ export class Skill {
             1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale,
             1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale
         );
+    }
+    
+    createSummonEffect() {
+        // Create a group for the effect
+        const effectGroup = new THREE.Group();
+        
+        // Special handling for Mystic Ally
+        if (this.name === 'Mystic Ally') {
+            // Create a more complex and visually impressive effect for Mystic Ally
+            
+            // Create summoning circle
+            const summoningGroup = new THREE.Group();
+            
+            // Create base summoning circle
+            const circleGeometry = new THREE.CircleGeometry(this.radius, 32);
+            const circleMaterial = new THREE.MeshStandardMaterial({
+                color: this.color,
+                transparent: true,
+                opacity: 0.5,
+                side: THREE.DoubleSide,
+                emissive: this.color,
+                emissiveIntensity: 0.5
+            });
+            
+            const circle = new THREE.Mesh(circleGeometry, circleMaterial);
+            circle.rotation.x = -Math.PI / 2;
+            circle.position.y = 0.01;
+            summoningGroup.add(circle);
+            
+            // Create magical runes and symbols on the circle
+            const runeCount = 5;
+            for (let i = 0; i < runeCount; i++) {
+                const angle = (i / runeCount) * Math.PI * 2;
+                const radius = this.radius * 0.7;
+                
+                // Create rune shape
+                const runeShape = new THREE.Shape();
+                
+                // Create different rune shapes
+                switch (i % 5) {
+                    case 0: // Triangle
+                        runeShape.moveTo(0, 0.15);
+                        runeShape.lineTo(-0.15, -0.15);
+                        runeShape.lineTo(0.15, -0.15);
+                        runeShape.lineTo(0, 0.15);
+                        break;
+                    case 1: // Square
+                        runeShape.moveTo(-0.1, -0.1);
+                        runeShape.lineTo(0.1, -0.1);
+                        runeShape.lineTo(0.1, 0.1);
+                        runeShape.lineTo(-0.1, 0.1);
+                        runeShape.lineTo(-0.1, -0.1);
+                        break;
+                    case 2: // Pentagon
+                        for (let j = 0; j < 5; j++) {
+                            const a = (j / 5) * Math.PI * 2;
+                            const x = Math.cos(a) * 0.12;
+                            const y = Math.sin(a) * 0.12;
+                            if (j === 0) runeShape.moveTo(x, y);
+                            else runeShape.lineTo(x, y);
+                        }
+                        break;
+                    case 3: // Star
+                        for (let j = 0; j < 10; j++) {
+                            const a = (j / 10) * Math.PI * 2;
+                            const r = j % 2 === 0 ? 0.15 : 0.07;
+                            const x = Math.cos(a) * r;
+                            const y = Math.sin(a) * r;
+                            if (j === 0) runeShape.moveTo(x, y);
+                            else runeShape.lineTo(x, y);
+                        }
+                        break;
+                    case 4: // Circle with inner circle
+                        runeShape.absarc(0, 0, 0.12, 0, Math.PI * 2, false);
+                        const hole = new THREE.Path();
+                        hole.absarc(0, 0, 0.06, 0, Math.PI * 2, true);
+                        runeShape.holes.push(hole);
+                        break;
+                }
+                
+                const runeGeometry = new THREE.ShapeGeometry(runeShape);
+                const runeMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    emissive: this.color,
+                    emissiveIntensity: 1.5,
+                    transparent: true,
+                    opacity: 0.9,
+                    side: THREE.DoubleSide
+                });
+                
+                const rune = new THREE.Mesh(runeGeometry, runeMaterial);
+                rune.position.set(
+                    Math.cos(angle) * radius,
+                    0.02,
+                    Math.sin(angle) * radius
+                );
+                rune.rotation.x = -Math.PI / 2;
+                
+                // Store animation data
+                rune.userData = {
+                    rotationSpeed: 1 + (i * 0.5),
+                    pulseSpeed: 2 + (i * 0.3),
+                    initialPosition: rune.position.clone()
+                };
+                
+                summoningGroup.add(rune);
+            }
+            
+            // Create magical energy rings
+            const ringCount = 3;
+            for (let i = 0; i < ringCount; i++) {
+                const ringRadius = this.radius * (0.5 + (i * 0.2));
+                const ringGeometry = new THREE.RingGeometry(
+                    ringRadius - 0.05,
+                    ringRadius,
+                    32
+                );
+                const ringMaterial = new THREE.MeshStandardMaterial({
+                    color: this.color,
+                    emissive: this.color,
+                    emissiveIntensity: 1,
+                    transparent: true,
+                    opacity: 0.7 - (i * 0.1),
+                    side: THREE.DoubleSide
+                });
+                
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.x = -Math.PI / 2;
+                ring.position.y = 0.03 + (i * 0.02);
+                
+                // Store animation data
+                ring.userData = {
+                    rotationSpeed: 0.5 + (i * 0.3),
+                    direction: i % 2 === 0 ? 1 : -1 // Alternate directions
+                };
+                
+                summoningGroup.add(ring);
+            }
+            
+            // Create energy particles
+            const particleCount = 40;
+            const particles = [];
+            
+            for (let i = 0; i < particleCount; i++) {
+                // Random position within the summoning circle
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * this.radius;
+                const height = Math.random() * 2;
+                
+                // Create particle
+                const particleSize = 0.03 + (Math.random() * 0.05);
+                const particleGeometry = new THREE.SphereGeometry(particleSize, 8, 8);
+                const particleMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    emissive: this.color,
+                    emissiveIntensity: 1,
+                    transparent: true,
+                    opacity: 0.6 + (Math.random() * 0.4)
+                });
+                
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                particle.position.set(
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                );
+                
+                // Store particle animation data
+                particle.userData = {
+                    speed: 0.5 + (Math.random() * 1.5),
+                    rotationSpeed: 0.1 + (Math.random() * 0.5),
+                    initialHeight: height,
+                    maxHeight: 2 + (Math.random() * 1)
+                };
+                
+                summoningGroup.add(particle);
+                particles.push(particle);
+            }
+            
+            // Create the spirit ally
+            const allyGroup = new THREE.Group();
+            allyGroup.position.y = 1; // Start above the summoning circle
+            
+            // Create the ally's body (ethereal, semi-transparent)
+            const bodyGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+            const bodyMaterial = new THREE.MeshStandardMaterial({
+                color: this.color,
+                emissive: this.color,
+                emissiveIntensity: 0.5,
+                transparent: true,
+                opacity: 0.7,
+                metalness: 0.2,
+                roughness: 0.8
+            });
+            
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            allyGroup.add(body);
+            
+            // Create swirling energy around the ally
+            const energyCount = 3;
+            for (let i = 0; i < energyCount; i++) {
+                const curve = new THREE.EllipseCurve(
+                    0, 0,                         // Center
+                    0.6, 0.6,                     // X and Y radius
+                    0, Math.PI * 2,               // Start and end angle
+                    false,                        // Clockwise
+                    i * (Math.PI / energyCount)   // Rotation
+                );
+                
+                const points = curve.getPoints(50);
+                const energyGeometry = new THREE.BufferGeometry().setFromPoints(points);
+                
+                // Add height to make it 3D
+                const positions = energyGeometry.attributes.position.array;
+                for (let j = 0; j < positions.length; j += 3) {
+                    positions[j + 2] = Math.sin(j / 3 * 0.2) * 0.2;
+                }
+                
+                const energyMaterial = new THREE.LineBasicMaterial({
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const energy = new THREE.Line(energyGeometry, energyMaterial);
+                energy.rotation.x = Math.PI / 2;
+                
+                // Store animation data
+                energy.userData = {
+                    rotationSpeed: 0.5 + (i * 0.2),
+                    rotationAxis: new THREE.Vector3(
+                        Math.random() - 0.5,
+                        Math.random() - 0.5,
+                        Math.random() - 0.5
+                    ).normalize()
+                };
+                
+                allyGroup.add(energy);
+            }
+            
+            // Create ally features (eyes, etc.)
+            const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+            const eyeMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                emissive: 0xffffff,
+                emissiveIntensity: 1,
+                transparent: true,
+                opacity: 0.9
+            });
+            
+            // Left eye
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.15, 0.1, 0.3);
+            allyGroup.add(leftEye);
+            
+            // Right eye
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.15, 0.1, 0.3);
+            allyGroup.add(rightEye);
+            
+            // Create energy wisps trailing the ally
+            const wispCount = 5;
+            for (let i = 0; i < wispCount; i++) {
+                const wispGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+                const wispMaterial = new THREE.MeshStandardMaterial({
+                    color: this.color,
+                    emissive: this.color,
+                    emissiveIntensity: 1,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                
+                const wisp = new THREE.Mesh(wispGeometry, wispMaterial);
+                
+                // Position wisps in a trail behind the ally
+                const angle = (i / wispCount) * Math.PI;
+                wisp.position.set(
+                    Math.cos(angle) * 0.2,
+                    -0.2,
+                    -0.3 - (i * 0.1)
+                );
+                
+                // Store animation data
+                wisp.userData = {
+                    pulseSpeed: 3 + (i * 0.5),
+                    orbitSpeed: 1 + (i * 0.3),
+                    orbitRadius: 0.1 + (i * 0.05),
+                    initialPosition: wisp.position.clone()
+                };
+                
+                allyGroup.add(wisp);
+            }
+            
+            // Add ally to the summoning group
+            summoningGroup.add(allyGroup);
+            
+            // Add summoning group to effect group
+            effectGroup.add(summoningGroup);
+            
+            // Store animation state
+            this.mysticAllyState = {
+                age: 0,
+                phase: 'summoning', // 'summoning', 'active', 'dissipating'
+                particles: particles,
+                ally: allyGroup,
+                summoningCircle: summoningGroup,
+                initialAllyHeight: allyGroup.position.y
+            };
+        } else {
+            // Default summon effect implementation
+            // Create a simple effect (sphere)
+            const effectGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+            const effectMaterial = new THREE.MeshBasicMaterial({
+                color: this.color,
+                transparent: true,
+                opacity: 0.7
+            });
+            
+            const effect = new THREE.Mesh(effectGeometry, effectMaterial);
+            effectGroup.add(effect);
+        }
+        
+        // Position effect
+        effectGroup.position.copy(this.position);
+        
+        // Store effect
+        this.effect = effectGroup;
+        this.isActive = true;
+        
+        return effectGroup;
+    }
+    
+    createMarkEffect() {
+        // Create a group for the effect
+        const effectGroup = new THREE.Group();
+        
+        // Special handling for Exploding Palm
+        if (this.name === 'Exploding Palm') {
+            // Create a more complex and visually impressive effect for Exploding Palm
+            
+            // Create the main mark effect
+            const markGroup = new THREE.Group();
+            
+            // Create the base mark (blood-like symbol on the ground)
+            const markGeometry = new THREE.CircleGeometry(this.radius * 0.3, 32);
+            const markMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff0000, // Blood red
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide,
+                emissive: 0xff0000,
+                emissiveIntensity: 0.5
+            });
+            
+            const mark = new THREE.Mesh(markGeometry, markMaterial);
+            mark.rotation.x = -Math.PI / 2;
+            mark.position.y = 0.01;
+            markGroup.add(mark);
+            
+            // Create blood splatter effect around the mark
+            const splatterCount = 8;
+            for (let i = 0; i < splatterCount; i++) {
+                const angle = (i / splatterCount) * Math.PI * 2;
+                const distance = this.radius * (0.4 + Math.random() * 0.3);
+                
+                // Create splatter shape
+                const splatterShape = new THREE.Shape();
+                
+                // Random splatter shape
+                const points = 5 + Math.floor(Math.random() * 3);
+                const innerRadius = 0.05 + Math.random() * 0.05;
+                const outerRadius = innerRadius + 0.05 + Math.random() * 0.1;
+                
+                for (let j = 0; j < points * 2; j++) {
+                    const a = (j / (points * 2)) * Math.PI * 2;
+                    const r = j % 2 === 0 ? outerRadius : innerRadius;
+                    const x = Math.cos(a) * r;
+                    const y = Math.sin(a) * r;
+                    
+                    if (j === 0) splatterShape.moveTo(x, y);
+                    else splatterShape.lineTo(x, y);
+                }
+                
+                const splatterGeometry = new THREE.ShapeGeometry(splatterShape);
+                const splatterMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xff0000, // Blood red
+                    transparent: true,
+                    opacity: 0.6 + Math.random() * 0.3,
+                    side: THREE.DoubleSide
+                });
+                
+                const splatter = new THREE.Mesh(splatterGeometry, splatterMaterial);
+                splatter.position.set(
+                    Math.cos(angle) * distance,
+                    0.02,
+                    Math.sin(angle) * distance
+                );
+                splatter.rotation.x = -Math.PI / 2;
+                splatter.rotation.z = Math.random() * Math.PI * 2;
+                
+                // Store animation data
+                splatter.userData = {
+                    pulseSpeed: 1 + Math.random() * 2,
+                    fadeSpeed: 0.5 + Math.random() * 0.5
+                };
+                
+                markGroup.add(splatter);
+            }
+            
+            // Create the palm symbol (stylized hand print)
+            const palmShape = new THREE.Shape();
+            
+            // Create a hand shape
+            // Palm center
+            palmShape.moveTo(0, 0);
+            palmShape.absarc(0, 0, 0.15, 0, Math.PI * 2, false);
+            
+            // Fingers (5 elongated shapes)
+            const fingerCount = 5;
+            for (let i = 0; i < fingerCount; i++) {
+                const angle = ((i / fingerCount) * Math.PI * 1.2) - Math.PI * 0.1;
+                const length = 0.2 + (i === 2 ? 0.1 : 0); // Middle finger longer
+                
+                const fingerShape = new THREE.Shape();
+                fingerShape.moveTo(0, 0);
+                fingerShape.absellipse(
+                    Math.cos(angle) * 0.15,
+                    Math.sin(angle) * 0.15,
+                    0.05,
+                    length,
+                    0,
+                    Math.PI * 2,
+                    false,
+                    angle
+                );
+                
+                palmShape.holes.push(fingerShape);
+            }
+            
+            const palmGeometry = new THREE.ShapeGeometry(palmShape);
+            const palmMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff3333,
+                emissive: 0xff0000,
+                emissiveIntensity: 1,
+                transparent: true,
+                opacity: 0.9,
+                side: THREE.DoubleSide
+            });
+            
+            const palm = new THREE.Mesh(palmGeometry, palmMaterial);
+            palm.rotation.x = -Math.PI / 2;
+            palm.position.y = 0.03;
+            
+            // Store animation data
+            palm.userData = {
+                pulseSpeed: 3,
+                rotationSpeed: 0.2
+            };
+            
+            markGroup.add(palm);
+            
+            // Create pulsing energy ring around the mark
+            const ringGeometry = new THREE.RingGeometry(this.radius * 0.35, this.radius * 0.4, 32);
+            const ringMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff0000,
+                emissive: 0xff0000,
+                emissiveIntensity: 1,
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide
+            });
+            
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.y = 0.04;
+            
+            // Store animation data
+            ring.userData = {
+                pulseSpeed: 2,
+                rotationSpeed: 0.5
+            };
+            
+            markGroup.add(ring);
+            
+            // Create floating blood particles
+            const particleCount = 20;
+            const particles = [];
+            
+            for (let i = 0; i < particleCount; i++) {
+                // Random position around the mark
+                const angle = Math.random() * Math.PI * 2;
+                const radius = this.radius * (0.1 + Math.random() * 0.3);
+                const height = 0.05 + Math.random() * 0.3;
+                
+                // Create particle
+                const particleSize = 0.02 + Math.random() * 0.03;
+                const particleGeometry = new THREE.SphereGeometry(particleSize, 8, 8);
+                const particleMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xff0000,
+                    emissive: 0xff0000,
+                    emissiveIntensity: 0.5,
+                    transparent: true,
+                    opacity: 0.7 + Math.random() * 0.3
+                });
+                
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                particle.position.set(
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                );
+                
+                // Store particle animation data
+                particle.userData = {
+                    orbitSpeed: 0.2 + Math.random() * 0.5,
+                    orbitRadius: radius,
+                    orbitAngle: angle,
+                    verticalSpeed: 0.1 + Math.random() * 0.3,
+                    initialHeight: height,
+                    maxHeight: height + 0.1 + Math.random() * 0.2,
+                    minHeight: Math.max(0.05, height - 0.1)
+                };
+                
+                markGroup.add(particle);
+                particles.push(particle);
+            }
+            
+            // Create explosion effect (initially hidden)
+            const explosionGroup = new THREE.Group();
+            explosionGroup.visible = false;
+            
+            // Create explosion core
+            const coreGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+            const coreMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff5500,
+                emissive: 0xff5500,
+                emissiveIntensity: 2,
+                transparent: true,
+                opacity: 0.9
+            });
+            
+            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            explosionGroup.add(core);
+            
+            // Create explosion waves
+            const waveCount = 3;
+            for (let i = 0; i < waveCount; i++) {
+                const waveGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+                const waveMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xff3300,
+                    emissive: 0xff3300,
+                    emissiveIntensity: 1,
+                    transparent: true,
+                    opacity: 0.7 - (i * 0.1),
+                    wireframe: true
+                });
+                
+                const wave = new THREE.Mesh(waveGeometry, waveMaterial);
+                
+                // Store animation data
+                wave.userData = {
+                    expansionSpeed: 3 - (i * 0.5),
+                    initialScale: 1 + (i * 0.5)
+                };
+                
+                // Set initial scale
+                wave.scale.set(
+                    wave.userData.initialScale,
+                    wave.userData.initialScale,
+                    wave.userData.initialScale
+                );
+                
+                explosionGroup.add(wave);
+            }
+            
+            // Create explosion particles
+            const explosionParticleCount = 30;
+            for (let i = 0; i < explosionParticleCount; i++) {
+                // Random direction
+                const phi = Math.random() * Math.PI * 2;
+                const theta = Math.random() * Math.PI;
+                const radius = 0.3;
+                
+                const x = radius * Math.sin(theta) * Math.cos(phi);
+                const y = radius * Math.sin(theta) * Math.sin(phi);
+                const z = radius * Math.cos(theta);
+                
+                // Create particle
+                const particleGeometry = new THREE.SphereGeometry(0.03 + Math.random() * 0.05, 8, 8);
+                const particleMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xff0000,
+                    emissive: 0xff0000,
+                    emissiveIntensity: 1,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                particle.position.set(x, y, z);
+                
+                // Store particle data
+                particle.userData = {
+                    velocity: new THREE.Vector3(x, y, z).normalize().multiplyScalar(1 + Math.random() * 2),
+                    drag: 0.92 + Math.random() * 0.05
+                };
+                
+                explosionGroup.add(particle);
+            }
+            
+            markGroup.add(explosionGroup);
+            
+            // Add mark group to effect group
+            effectGroup.add(markGroup);
+            
+            // Store animation state
+            this.explodingPalmState = {
+                age: 0,
+                phase: 'marking', // 'marking', 'pulsing', 'exploding', 'fading'
+                particles: particles,
+                explosionGroup: explosionGroup,
+                markGroup: markGroup,
+                exploded: false,
+                explosionTime: this.duration * 0.8 // Explode at 80% of duration
+            };
+        } else {
+            // Default mark effect implementation
+            // Create a simple effect (circle)
+            const markGeometry = new THREE.CircleGeometry(this.radius * 0.5, 32);
+            const markMaterial = new THREE.MeshBasicMaterial({
+                color: this.color,
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide
+            });
+            
+            const mark = new THREE.Mesh(markGeometry, markMaterial);
+            mark.rotation.x = -Math.PI / 2;
+            mark.position.y = 0.01;
+            
+            effectGroup.add(mark);
+        }
+        
+        // Position effect
+        effectGroup.position.copy(this.position);
+        
+        // Store effect
+        this.effect = effectGroup;
+        this.isActive = true;
+        
+        return effectGroup;
+    }
+    
+    updateMarkEffect(delta) {
+        // Special handling for Exploding Palm
+        if (this.name === 'Exploding Palm' && this.explodingPalmState) {
+            // Update state
+            this.explodingPalmState.age += delta;
+            
+            // Get the mark group
+            const markGroup = this.explodingPalmState.markGroup;
+            
+            // Handle different phases
+            if (!this.explodingPalmState.exploded && this.elapsedTime >= this.explodingPalmState.explosionTime) {
+                // Transition to exploding phase
+                this.explodingPalmState.phase = 'exploding';
+                this.explodingPalmState.exploded = true;
+                this.explodingPalmState.explosionGroup.visible = true;
+                
+                // Hide the mark elements
+                for (let i = 0; i < markGroup.children.length; i++) {
+                    const child = markGroup.children[i];
+                    if (child !== this.explodingPalmState.explosionGroup) {
+                        child.visible = false;
+                    }
+                }
+            }
+            
+            // Handle marking/pulsing phase
+            if (this.explodingPalmState.phase === 'marking' || this.explodingPalmState.phase === 'pulsing') {
+                // After a short time, transition to pulsing
+                if (this.explodingPalmState.phase === 'marking' && this.elapsedTime > this.duration * 0.1) {
+                    this.explodingPalmState.phase = 'pulsing';
+                }
+                
+                // Find the palm symbol
+                const palm = markGroup.children.find(child => 
+                    child.geometry && child.geometry.type === 'ShapeGeometry' && 
+                    child.position.y > 0.02
+                );
+                
+                if (palm && palm.userData) {
+                    // Rotate the palm symbol slowly
+                    palm.rotation.z += palm.userData.rotationSpeed * delta;
+                    
+                    // Pulse the palm
+                    const palmPulse = 0.9 + Math.sin(this.explodingPalmState.age * palm.userData.pulseSpeed) * 0.1;
+                    palm.scale.set(palmPulse, palmPulse, palmPulse);
+                    
+                    // Increase emissive intensity as we get closer to explosion
+                    if (this.explodingPalmState.phase === 'pulsing') {
+                        const explosionProgress = this.elapsedTime / this.explodingPalmState.explosionTime;
+                        palm.material.emissiveIntensity = 1 + explosionProgress * 2;
+                        
+                        // Make pulse more intense as we approach explosion
+                        const pulseIntensity = 0.1 + (explosionProgress * 0.3);
+                        const fastPulse = 0.9 + Math.sin(this.explodingPalmState.age * 10) * pulseIntensity;
+                        palm.scale.set(palmPulse * fastPulse, palmPulse * fastPulse, palmPulse * fastPulse);
+                    }
+                }
+                
+                // Find the energy ring
+                const ring = markGroup.children.find(child => 
+                    child.geometry && child.geometry.type === 'RingGeometry'
+                );
+                
+                if (ring && ring.userData) {
+                    // Rotate the ring
+                    ring.rotation.z += ring.userData.rotationSpeed * delta;
+                    
+                    // Pulse the ring
+                    const ringPulse = 0.9 + Math.sin(this.explodingPalmState.age * ring.userData.pulseSpeed) * 0.1;
+                    ring.scale.set(ringPulse, ringPulse, ringPulse);
+                    
+                    // In pulsing phase, make the ring more active
+                    if (this.explodingPalmState.phase === 'pulsing') {
+                        const explosionProgress = this.elapsedTime / this.explodingPalmState.explosionTime;
+                        
+                        // Increase rotation speed
+                        ring.rotation.z += ring.userData.rotationSpeed * delta * explosionProgress * 3;
+                        
+                        // Increase emissive intensity
+                        ring.material.emissiveIntensity = 1 + explosionProgress * 3;
+                        
+                        // Add secondary fast pulse
+                        const pulseIntensity = 0.1 + (explosionProgress * 0.4);
+                        const fastPulse = 0.9 + Math.sin(this.explodingPalmState.age * 15) * pulseIntensity;
+                        ring.scale.set(ringPulse * fastPulse, ringPulse * fastPulse, ringPulse * fastPulse);
+                    }
+                }
+                
+                // Animate blood splatters
+                const splatters = markGroup.children.filter(child => 
+                    child.geometry && 
+                    child.geometry.type === 'ShapeGeometry' && 
+                    child.position.y < 0.03
+                );
+                
+                for (const splatter of splatters) {
+                    if (splatter.userData) {
+                        // Subtle pulse
+                        const splatterPulse = 0.95 + Math.sin(this.explodingPalmState.age * splatter.userData.pulseSpeed) * 0.05;
+                        splatter.scale.set(splatterPulse, splatterPulse, splatterPulse);
+                        
+                        // In pulsing phase, make splatters more active
+                        if (this.explodingPalmState.phase === 'pulsing') {
+                            const explosionProgress = this.elapsedTime / this.explodingPalmState.explosionTime;
+                            
+                            // Increase color intensity
+                            if (splatter.material) {
+                                const color = new THREE.Color(0xff0000);
+                                color.lerp(new THREE.Color(0xff8800), explosionProgress);
+                                splatter.material.color = color;
+                                splatter.material.emissive = color;
+                                splatter.material.emissiveIntensity = explosionProgress * 2;
+                            }
+                        }
+                    }
+                }
+                
+                // Animate floating particles
+                for (const particle of this.explodingPalmState.particles) {
+                    if (particle.userData) {
+                        // Update orbit position
+                        particle.userData.orbitAngle += particle.userData.orbitSpeed * delta;
+                        
+                        // Calculate new position
+                        const newX = Math.cos(particle.userData.orbitAngle) * particle.userData.orbitRadius;
+                        const newZ = Math.sin(particle.userData.orbitAngle) * particle.userData.orbitRadius;
+                        
+                        // Update vertical position
+                        particle.userData.verticalDirection = particle.userData.verticalDirection || 1;
+                        particle.position.y += particle.userData.verticalSpeed * delta * particle.userData.verticalDirection;
+                        
+                        // Reverse direction if reaching min/max height
+                        if (particle.position.y > particle.userData.maxHeight) {
+                            particle.userData.verticalDirection = -1;
+                        } else if (particle.position.y < particle.userData.minHeight) {
+                            particle.userData.verticalDirection = 1;
+                        }
+                        
+                        // Update particle position
+                        particle.position.x = newX;
+                        particle.position.z = newZ;
+                        
+                        // In pulsing phase, make particles more active
+                        if (this.explodingPalmState.phase === 'pulsing') {
+                            const explosionProgress = this.elapsedTime / this.explodingPalmState.explosionTime;
+                            
+                            // Increase orbit speed
+                            particle.userData.orbitSpeed = 0.2 + Math.random() * 0.5 + explosionProgress;
+                            
+                            // Increase vertical speed
+                            particle.userData.verticalSpeed = 0.1 + Math.random() * 0.3 + explosionProgress;
+                            
+                            // Change color to more orange/yellow as explosion approaches
+                            if (particle.material) {
+                                const color = new THREE.Color(0xff0000);
+                                color.lerp(new THREE.Color(0xff8800), explosionProgress);
+                                particle.material.color = color;
+                                particle.material.emissive = color;
+                                particle.material.emissiveIntensity = 0.5 + explosionProgress;
+                            }
+                        }
+                    }
+                }
+            }
+            // Handle exploding phase
+            else if (this.explodingPalmState.phase === 'exploding') {
+                // Get explosion group
+                const explosionGroup = this.explodingPalmState.explosionGroup;
+                
+                // Calculate explosion progress (0 to 1)
+                const explosionDuration = this.duration * 0.2; // Last 20% of total duration
+                const explosionProgress = (this.elapsedTime - this.explodingPalmState.explosionTime) / explosionDuration;
+                
+                // Find the core
+                const core = explosionGroup.children.find(child => 
+                    child.geometry && 
+                    child.geometry.type === 'SphereGeometry' && 
+                    !child.material.wireframe
+                );
+                
+                if (core) {
+                    // Pulse the core
+                    const corePulse = 1 + Math.sin(explosionProgress * Math.PI * 10) * 0.3;
+                    core.scale.set(corePulse, corePulse, corePulse);
+                    
+                    // Adjust core size based on explosion progress
+                    const coreSize = 1 + explosionProgress * 2;
+                    core.scale.multiplyScalar(coreSize);
+                    
+                    // Fade out core at the end
+                    if (explosionProgress > 0.7) {
+                        core.material.opacity = Math.max(0, 0.9 - ((explosionProgress - 0.7) / 0.3) * 0.9);
+                    }
+                }
+                
+                // Find explosion waves
+                const waves = explosionGroup.children.filter(child => 
+                    child.geometry && 
+                    child.geometry.type === 'SphereGeometry' && 
+                    child.material.wireframe
+                );
+                
+                for (const wave of waves) {
+                    if (wave.userData) {
+                        // Expand the wave
+                        const waveSize = wave.userData.initialScale + 
+                                        (explosionProgress * wave.userData.expansionSpeed * this.radius * 2);
+                        wave.scale.set(waveSize, waveSize, waveSize);
+                        
+                        // Fade out wave as it expands
+                        wave.material.opacity = Math.max(0, wave.material.opacity - (delta * 0.5));
+                    }
+                }
+                
+                // Animate explosion particles
+                const particles = explosionGroup.children.filter(child => 
+                    child.geometry && 
+                    child.geometry.type === 'SphereGeometry' && 
+                    child !== core && 
+                    !child.material.wireframe
+                );
+                
+                for (const particle of particles) {
+                    if (particle.userData) {
+                        // Move particle outward
+                        particle.position.add(
+                            particle.userData.velocity.clone().multiplyScalar(delta)
+                        );
+                        
+                        // Apply drag to slow particles
+                        particle.userData.velocity.multiplyScalar(particle.userData.drag);
+                        
+                        // Shrink particles over time
+                        particle.scale.multiplyScalar(0.98);
+                        
+                        // Fade out particles
+                        if (particle.material) {
+                            particle.material.opacity = Math.max(0, particle.material.opacity - (delta * 0.2));
+                        }
+                    }
+                }
+                
+                // Transition to fading phase at the end of explosion
+                if (explosionProgress >= 1) {
+                    this.explodingPalmState.phase = 'fading';
+                }
+            }
+            // Handle fading phase
+            else if (this.explodingPalmState.phase === 'fading') {
+                // Fade out all remaining elements
+                markGroup.traverse(child => {
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => {
+                                mat.opacity = Math.max(0, mat.opacity - (delta * 0.5));
+                            });
+                        } else {
+                            child.material.opacity = Math.max(0, child.material.opacity - (delta * 0.5));
+                        }
+                    }
+                });
+            }
+        } else {
+            // Default mark effect behavior
+            // Pulse the mark
+            const pulseSpeed = 1;
+            const pulseScale = 0.1;
+            
+            this.effect.children[0].scale.set(
+                1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale,
+                1,
+                1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale
+            );
+        }
+    }
+    
+    updateSummonEffect(delta) {
+        // Special handling for Mystic Ally
+        if (this.name === 'Mystic Ally' && this.mysticAllyState) {
+            // Update state
+            this.mysticAllyState.age += delta;
+            
+            // Get the summoning group and ally
+            const summoningGroup = this.mysticAllyState.summoningCircle;
+            const ally = this.mysticAllyState.ally;
+            
+            // Handle different phases of the summon
+            const summonDuration = this.duration * 0.2; // First 20% is summoning
+            const activeDuration = this.duration * 0.6; // Middle 60% is active
+            // Last 20% is dissipating
+            
+            // Determine current phase
+            if (this.elapsedTime < summonDuration) {
+                this.mysticAllyState.phase = 'summoning';
+            } else if (this.elapsedTime < summonDuration + activeDuration) {
+                this.mysticAllyState.phase = 'active';
+            } else {
+                this.mysticAllyState.phase = 'dissipating';
+            }
+            
+            // Handle summoning phase
+            if (this.mysticAllyState.phase === 'summoning') {
+                // Calculate progress through summoning phase (0 to 1)
+                const summonProgress = this.elapsedTime / summonDuration;
+                
+                // Animate the summoning circle
+                // Rotate magical rings
+                for (let i = 0; i < summoningGroup.children.length; i++) {
+                    const child = summoningGroup.children[i];
+                    
+                    // Animate rings
+                    if (child.geometry && child.geometry.type === 'RingGeometry') {
+                        if (child.userData && child.userData.rotationSpeed) {
+                            // Rotate at different speeds and directions
+                            child.rotation.z += child.userData.rotationSpeed * delta * child.userData.direction;
+                        }
+                        
+                        // Pulse opacity during summoning
+                        if (child.material) {
+                            child.material.opacity = 0.3 + (Math.sin(this.mysticAllyState.age * 5) * 0.2) + (summonProgress * 0.3);
+                        }
+                    }
+                    
+                    // Animate runes
+                    if (child.geometry && child.geometry.type === 'ShapeGeometry') {
+                        if (child.userData && child.userData.rotationSpeed) {
+                            // Rotate runes
+                            child.rotation.z += child.userData.rotationSpeed * delta;
+                            
+                            // Move runes inward during summoning
+                            if (child.userData.initialPosition) {
+                                const direction = new THREE.Vector3().subVectors(
+                                    new THREE.Vector3(0, child.position.y, 0),
+                                    child.userData.initialPosition
+                                ).normalize();
+                                
+                                const moveAmount = (1 - summonProgress) * delta * 0.5;
+                                child.position.add(direction.multiplyScalar(moveAmount));
+                            }
+                            
+                            // Pulse runes
+                            if (child.userData.pulseSpeed) {
+                                const pulseScale = 0.8 + Math.sin(this.mysticAllyState.age * child.userData.pulseSpeed) * 0.2;
+                                child.scale.set(pulseScale, pulseScale, pulseScale);
+                            }
+                            
+                            // Increase emissive intensity
+                            if (child.material) {
+                                child.material.emissiveIntensity = 1 + Math.sin(this.mysticAllyState.age * 10) * 0.5 + summonProgress;
+                            }
+                        }
+                    }
+                }
+                
+                // Animate ally appearing
+                if (ally) {
+                    // Move ally down from above
+                    const targetHeight = 0.5;
+                    const currentHeight = this.mysticAllyState.initialAllyHeight * (1 - summonProgress) + targetHeight * summonProgress;
+                    ally.position.y = currentHeight;
+                    
+                    // Rotate ally during summoning
+                    ally.rotation.y += delta * 3;
+                    
+                    // Pulse ally size
+                    const pulseScale = 0.5 + (summonProgress * 0.5) + Math.sin(this.mysticAllyState.age * 5) * 0.1;
+                    ally.scale.set(pulseScale, pulseScale, pulseScale);
+                    
+                    // Increase opacity as ally forms
+                    ally.traverse(child => {
+                        if (child.material) {
+                            if (Array.isArray(child.material)) {
+                                child.material.forEach(mat => {
+                                    mat.opacity = Math.min(mat.opacity, summonProgress);
+                                });
+                            } else {
+                                child.material.opacity = Math.min(child.material.opacity, summonProgress);
+                            }
+                        }
+                    });
+                }
+                
+                // Animate particles converging to form the ally
+                for (const particle of this.mysticAllyState.particles) {
+                    if (particle.userData) {
+                        // Move particles toward the center and upward
+                        const direction = new THREE.Vector3(
+                            -particle.position.x * 0.1,
+                            (ally.position.y - particle.position.y) * 0.1,
+                            -particle.position.z * 0.1
+                        );
+                        
+                        particle.position.add(direction.multiplyScalar(particle.userData.speed * delta));
+                        
+                        // Rotate particles
+                        particle.rotation.x += particle.userData.rotationSpeed * delta;
+                        particle.rotation.y += particle.userData.rotationSpeed * delta;
+                        particle.rotation.z += particle.userData.rotationSpeed * delta;
+                        
+                        // Fade particles as they approach the ally
+                        const distanceToAlly = particle.position.distanceTo(new THREE.Vector3(0, ally.position.y, 0));
+                        if (distanceToAlly < 0.5) {
+                            if (particle.material) {
+                                particle.material.opacity = Math.max(0, particle.material.opacity - (delta * 2));
+                            }
+                        }
+                    }
+                }
+            }
+            // Handle active phase
+            else if (this.mysticAllyState.phase === 'active') {
+                // Calculate progress through active phase (0 to 1)
+                const activeProgress = (this.elapsedTime - summonDuration) / activeDuration;
+                
+                // Animate the summoning circle (more subtle during active phase)
+                // Rotate magical rings
+                for (let i = 0; i < summoningGroup.children.length; i++) {
+                    const child = summoningGroup.children[i];
+                    
+                    // Animate rings
+                    if (child.geometry && child.geometry.type === 'RingGeometry') {
+                        if (child.userData && child.userData.rotationSpeed) {
+                            // Rotate at different speeds and directions
+                            child.rotation.z += child.userData.rotationSpeed * delta * child.userData.direction * 0.5;
+                        }
+                    }
+                    
+                    // Animate runes
+                    if (child.geometry && child.geometry.type === 'ShapeGeometry') {
+                        if (child.userData && child.userData.rotationSpeed) {
+                            // Rotate runes slowly
+                            child.rotation.z += child.userData.rotationSpeed * delta * 0.3;
+                            
+                            // Subtle pulse
+                            if (child.userData.pulseSpeed) {
+                                const pulseScale = 0.9 + Math.sin(this.mysticAllyState.age * child.userData.pulseSpeed * 0.5) * 0.1;
+                                child.scale.set(pulseScale, pulseScale, pulseScale);
+                            }
+                        }
+                    }
+                }
+                
+                // Animate ally in active state
+                if (ally) {
+                    // Hover animation
+                    const hoverHeight = 0.5 + Math.sin(this.mysticAllyState.age * 0.7) * 0.1;
+                    ally.position.y = hoverHeight;
+                    
+                    // Gentle rotation
+                    ally.rotation.y += delta * 0.5;
+                    
+                    // Subtle breathing animation
+                    const breathScale = 1 + Math.sin(this.mysticAllyState.age * 1.5) * 0.05;
+                    ally.scale.set(breathScale, breathScale, breathScale);
+                    
+                    // Animate ally components
+                    ally.traverse(child => {
+                        // Animate energy wisps
+                        if (child.userData && child.userData.orbitSpeed) {
+                            // Update orbit position
+                            child.userData.orbitAngle = (child.userData.orbitAngle || 0) + child.userData.orbitSpeed * delta;
+                            
+                            // Calculate new position
+                            const orbitX = child.userData.initialPosition.x + 
+                                          Math.cos(child.userData.orbitAngle) * child.userData.orbitRadius;
+                            const orbitZ = child.userData.initialPosition.z + 
+                                          Math.sin(child.userData.orbitAngle) * child.userData.orbitRadius;
+                            
+                            // Update position
+                            child.position.x = orbitX;
+                            child.position.z = orbitZ;
+                            
+                            // Pulse size
+                            if (child.userData.pulseSpeed) {
+                                const pulseScale = 0.8 + Math.sin(this.mysticAllyState.age * child.userData.pulseSpeed) * 0.2;
+                                child.scale.set(pulseScale, pulseScale, pulseScale);
+                            }
+                        }
+                        
+                        // Animate energy swirls
+                        if (child.userData && child.userData.rotationAxis) {
+                            // Rotate around custom axis
+                            const rotationMatrix = new THREE.Matrix4();
+                            rotationMatrix.makeRotationAxis(
+                                child.userData.rotationAxis,
+                                child.userData.rotationSpeed * delta
+                            );
+                            child.applyMatrix4(rotationMatrix);
+                        }
+                    });
+                    
+                    // Occasionally emit energy particles
+                    if (Math.random() < 0.05) {
+                        const particleGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+                        const particleMaterial = new THREE.MeshStandardMaterial({
+                            color: this.color,
+                            emissive: this.color,
+                            emissiveIntensity: 1,
+                            transparent: true,
+                            opacity: 0.8
+                        });
+                        
+                        const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                        
+                        // Random position around ally
+                        const angle = Math.random() * Math.PI * 2;
+                        particle.position.set(
+                            Math.cos(angle) * 0.4,
+                            ally.position.y,
+                            Math.sin(angle) * 0.4
+                        );
+                        
+                        // Store particle data
+                        particle.userData = {
+                            age: 0,
+                            maxAge: 1 + Math.random(),
+                            velocity: new THREE.Vector3(
+                                (Math.random() - 0.5) * 0.5,
+                                Math.random() * 0.5,
+                                (Math.random() - 0.5) * 0.5
+                            )
+                        };
+                        
+                        summoningGroup.add(particle);
+                    }
+                    
+                    // Update emitted particles
+                    const particlesToRemove = [];
+                    for (let i = 0; i < summoningGroup.children.length; i++) {
+                        const child = summoningGroup.children[i];
+                        
+                        if (child.userData && child.userData.age !== undefined) {
+                            // Update particle age
+                            child.userData.age += delta;
+                            
+                            // Move particle
+                            child.position.add(child.userData.velocity.clone().multiplyScalar(delta));
+                            
+                            // Fade out particle
+                            if (child.material) {
+                                child.material.opacity = Math.max(0, 0.8 - (child.userData.age / child.userData.maxAge) * 0.8);
+                            }
+                            
+                            // Shrink particle
+                            const shrinkFactor = 1 - (child.userData.age / child.userData.maxAge);
+                            child.scale.set(shrinkFactor, shrinkFactor, shrinkFactor);
+                            
+                            // Mark for removal if too old
+                            if (child.userData.age >= child.userData.maxAge) {
+                                particlesToRemove.push(child);
+                            }
+                        }
+                    }
+                    
+                    // Remove expired particles
+                    for (const particle of particlesToRemove) {
+                        summoningGroup.remove(particle);
+                    }
+                }
+            }
+            // Handle dissipating phase
+            else {
+                // Calculate progress through dissipating phase (0 to 1)
+                const dissipateProgress = (this.elapsedTime - (summonDuration + activeDuration)) / (this.duration - summonDuration - activeDuration);
+                
+                // Animate the summoning circle fading
+                summoningGroup.traverse(child => {
+                    if (child !== ally && child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => {
+                                mat.opacity = Math.max(0, mat.opacity * (1 - dissipateProgress * 0.1));
+                            });
+                        } else {
+                            child.material.opacity = Math.max(0, child.material.opacity * (1 - dissipateProgress * 0.1));
+                        }
+                    }
+                });
+                
+                // Animate ally dissipating
+                if (ally) {
+                    // Rise upward
+                    ally.position.y = 0.5 + dissipateProgress * 2;
+                    
+                    // Spin faster
+                    ally.rotation.y += delta * (2 + dissipateProgress * 5);
+                    
+                    // Fade out
+                    ally.traverse(child => {
+                        if (child.material) {
+                            if (Array.isArray(child.material)) {
+                                child.material.forEach(mat => {
+                                    mat.opacity = Math.max(0, mat.opacity * (1 - dissipateProgress * 0.2));
+                                });
+                            } else {
+                                child.material.opacity = Math.max(0, child.material.opacity * (1 - dissipateProgress * 0.2));
+                            }
+                        }
+                    });
+                    
+                    // Break apart at the end
+                    if (dissipateProgress > 0.7) {
+                        // Create particle explosion effect
+                        if (Math.random() < 0.2) {
+                            const particleGeometry = new THREE.SphereGeometry(0.05 + Math.random() * 0.1, 8, 8);
+                            const particleMaterial = new THREE.MeshStandardMaterial({
+                                color: this.color,
+                                emissive: this.color,
+                                emissiveIntensity: 1,
+                                transparent: true,
+                                opacity: 0.8
+                            });
+                            
+                            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                            
+                            // Random position around ally
+                            const angle1 = Math.random() * Math.PI * 2;
+                            const angle2 = Math.random() * Math.PI * 2;
+                            const radius = Math.random() * 0.3;
+                            
+                            particle.position.set(
+                                Math.cos(angle1) * Math.sin(angle2) * radius + ally.position.x,
+                                Math.cos(angle2) * radius + ally.position.y,
+                                Math.sin(angle1) * Math.sin(angle2) * radius + ally.position.z
+                            );
+                            
+                            // Store particle data
+                            particle.userData = {
+                                age: 0,
+                                maxAge: 0.5 + Math.random() * 0.5,
+                                velocity: new THREE.Vector3(
+                                    (Math.random() - 0.5) * 2,
+                                    (Math.random() - 0.5) * 2,
+                                    (Math.random() - 0.5) * 2
+                                )
+                            };
+                            
+                            summoningGroup.add(particle);
+                        }
+                    }
+                }
+            }
+        } else {
+            // Default summon effect behavior
+            // Pulse the effect
+            const pulseSpeed = 3;
+            const pulseScale = 0.2;
+            
+            this.effect.children[0].scale.set(
+                1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale,
+                1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale,
+                1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale
+            );
+        }
     }
     
     updateCooldown(delta) {
