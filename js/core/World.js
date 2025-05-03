@@ -5,8 +5,8 @@ export class World {
     constructor(scene, loadingManager) {
         this.scene = scene;
         this.loadingManager = loadingManager;
-        this.terrainSize = 1000; // 10x larger terrain
-        this.terrainResolution = 256; // Increased resolution for larger terrain
+        this.terrainSize = 100; // Smaller initial terrain (1/10 of previous size)
+        this.terrainResolution = 128; // Adjusted resolution for smaller terrain
         this.terrainHeight = 10;
         this.objects = [];
         this.zones = [];
@@ -14,19 +14,23 @@ export class World {
         
         // For infinite terrain
         this.currentChunk = { x: 0, z: 0 };
-        this.chunkSize = 200; // Size of each terrain chunk
+        this.chunkSize = 20; // Smaller chunks for more frequent updates (1/10 of previous size)
         this.visibleChunks = {}; // Store currently visible chunks
-        this.objectDensity = 0.0005; // Increased density for more objects per unit area
+        this.objectDensity = 0.005; // Increased density for smaller chunks
         
         // For persistent environment objects
         this.environmentObjects = {}; // Store environment objects by chunk key
         this.environmentObjectTypes = ['tree', 'rock', 'bush', 'flower']; // Types of environment objects
         this.environmentObjectDensity = {
-            'tree': 0.0003,
-            'rock': 0.0002,
-            'bush': 0.0004,
-            'flower': 0.0005
+            'tree': 0.003,
+            'rock': 0.002,
+            'bush': 0.004,
+            'flower': 0.005
         };
+        
+        // Screen-based enemy spawning
+        this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
+        this.screenSpawnDistance = 20; // Distance to move before spawning new enemies
         
         // Reference to the game instance (will be set by Game.js)
         this.game = null;
@@ -82,11 +86,7 @@ export class World {
     }
     
     async createTerrain() {
-        // Create heightmap using SimplexNoise
-        const simplex = new SimplexNoise();
-        const heightMap = this.generateHeightMap(simplex);
-        
-        // Create terrain geometry
+        // Create a completely flat terrain for consistency with endless terrain
         const geometry = new THREE.PlaneGeometry(
             this.terrainSize, 
             this.terrainSize, 
@@ -94,26 +94,13 @@ export class World {
             this.terrainResolution - 1
         );
         
-        // Apply heightmap to geometry
-        const vertices = geometry.attributes.position.array;
-        for (let i = 0; i < vertices.length; i += 3) {
-            const x = Math.floor((i / 3) % this.terrainResolution);
-            const y = Math.floor((i / 3) / this.terrainResolution);
-            vertices[i + 2] = heightMap[y * this.terrainResolution + x];
-        }
-        
+        // No need to apply heightmap since we want a flat terrain
         geometry.computeVertexNormals();
         
         // Create terrain material
-        const textureLoader = new THREE.TextureLoader(this.loadingManager);
-        
-        // Create basic textures using procedural patterns
         const grassTexture = this.createProceduralTexture(0x2d572c, 0x1e3b1e, 512);
-        const rockTexture = this.createProceduralTexture(0x555555, 0x333333, 512);
-        const snowTexture = this.createProceduralTexture(0xffffff, 0xeeeeee, 512);
-        const sandTexture = this.createProceduralTexture(0xd2b48c, 0xc2a47c, 512);
         
-        // Create terrain material with splatmap
+        // Create terrain material with grass texture
         const material = new THREE.MeshStandardMaterial({
             map: grassTexture,
             roughness: 0.8,
@@ -127,8 +114,8 @@ export class World {
         terrain.receiveShadow = true;
         terrain.castShadow = true;
         
-        // Color the terrain based on height
-        this.colorTerrain(terrain, heightMap);
+        // Apply uniform grass coloring with slight variations
+        this.colorTerrainUniform(terrain);
         
         // Make sure terrain is positioned at the center
         terrain.position.set(0, 0, 0);
@@ -137,11 +124,35 @@ export class World {
         this.scene.add(terrain);
         this.terrain = terrain;
         
-        // Log to confirm terrain was added
-        console.log("Terrain created and added to scene:", terrain);
+        console.log("Flat terrain created and added to scene");
         
         // Add water plane
         this.createWater();
+        
+        // Initialize the first chunks around the player
+        this.updateWorldForPlayer(new THREE.Vector3(0, 0, 0));
+    }
+    
+    colorTerrainUniform(terrain) {
+        const colors = [];
+        const positions = terrain.geometry.attributes.position.array;
+        
+        for (let i = 0; i < positions.length; i += 3) {
+            // Use grass color with slight variations
+            const baseColor = new THREE.Color(0x2d572c); // Base grass color
+            
+            // Add some variation to make the grass look more natural
+            const variation = Math.random() * 0.1 - 0.05;
+            const color = new THREE.Color(
+                Math.max(0, Math.min(1, baseColor.r + variation)),
+                Math.max(0, Math.min(1, baseColor.g + variation)),
+                Math.max(0, Math.min(1, baseColor.b + variation))
+            );
+            
+            colors.push(color.r, color.g, color.b);
+        }
+        
+        terrain.geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     }
     
     generateHeightMap(simplex) {
@@ -179,7 +190,8 @@ export class World {
     }
     
     createWater() {
-        const waterGeometry = new THREE.PlaneGeometry(this.terrainSize * 1.5, this.terrainSize * 1.5);
+        // Create a much larger water plane that extends beyond the visible terrain
+        const waterGeometry = new THREE.PlaneGeometry(2000, 2000); // Very large water plane
         const waterMaterial = new THREE.MeshStandardMaterial({
             color: 0x0055ff,
             transparent: true,
@@ -190,7 +202,7 @@ export class World {
         
         const water = new THREE.Mesh(waterGeometry, waterMaterial);
         water.rotation.x = -Math.PI / 2;
-        water.position.y = 0.15; // Lowered water level to match flat terrain
+        water.position.y = -0.1; // Slightly below terrain to avoid z-fighting
         
         this.scene.add(water);
         this.water = water;
@@ -446,73 +458,55 @@ export class World {
     }
     
     createZones() {
-        // Define zones with different characteristics
-        this.zones = [
-            // Original zones near the starting area
-            {
-                name: 'Forest',
-                center: new THREE.Vector3(20, 0, 20),
-                radius: 15,
-                color: 0x2d572c
-            },
-            {
-                name: 'Desert',
-                center: new THREE.Vector3(-20, 0, -20),
-                radius: 15,
-                color: 0xd2b48c
-            },
-            {
-                name: 'Mountains',
-                center: new THREE.Vector3(-20, 0, 20),
-                radius: 15,
-                color: 0x555555
-            },
-            {
-                name: 'Swamp',
-                center: new THREE.Vector3(20, 0, -20),
-                radius: 15,
-                color: 0x4a7023
-            },
-            {
-                name: 'Dark Sanctum',
-                center: new THREE.Vector3(0, 0, -40),
-                radius: 12,
-                color: 0x330033
-            }
+        // Define zone types
+        const zoneTypes = [
+            { name: 'Forest', color: 0x2d572c, radius: 15 },
+            { name: 'Desert', color: 0xd2b48c, radius: 15 },
+            { name: 'Mountains', color: 0x555555, radius: 15 },
+            { name: 'Swamp', color: 0x4a7023, radius: 15 },
+            { name: 'Ruins', color: 0x999999, radius: 10 },
+            { name: 'Dark Sanctum', color: 0x330033, radius: 12 }
         ];
         
-        // Add more zones throughout the world
-        // Create a pattern of zones that repeats across the world
-        const zoneTypes = [
-            { name: 'Forest', color: 0x2d572c, radius: 40 },
-            { name: 'Desert', color: 0xd2b48c, radius: 40 },
-            { name: 'Mountains', color: 0x555555, radius: 40 },
-            { name: 'Swamp', color: 0x4a7023, radius: 40 },
-            { name: 'Ruins', color: 0x999999, radius: 30 }
-        ];
+        // Initialize empty zones array
+        this.zones = [];
         
         // Create zones in a grid pattern across the world
-        const spacing = 200; // Space between zone centers
-        const range = 3; // How many zones in each direction
+        const spacing = 30; // Space between zone centers (smaller for smaller world)
+        const range = 10; // More zones for better coverage
         
         for (let x = -range; x <= range; x++) {
             for (let z = -range; z <= range; z++) {
-                // Skip the center area where we already have zones
-                if (Math.abs(x) <= 1 && Math.abs(z) <= 1) continue;
-                
-                // Choose a zone type based on position
-                const zoneIndex = Math.abs((x * 3 + z) % zoneTypes.length);
+                // Choose a zone type based on position (deterministic but varied)
+                const zoneIndex = Math.abs((x * 3 + z * 5) % zoneTypes.length);
                 const zoneType = zoneTypes[zoneIndex];
+                
+                // Add some randomness to zone positions to make them less grid-like
+                const offsetX = (Math.random() - 0.5) * spacing * 0.5;
+                const offsetZ = (Math.random() - 0.5) * spacing * 0.5;
                 
                 // Create the zone
                 this.zones.push({
                     name: zoneType.name,
-                    center: new THREE.Vector3(x * spacing, 0, z * spacing),
-                    radius: zoneType.radius,
+                    center: new THREE.Vector3(
+                        x * spacing + offsetX, 
+                        0, 
+                        z * spacing + offsetZ
+                    ),
+                    radius: zoneType.radius * (0.8 + Math.random() * 0.4), // Vary radius slightly
                     color: zoneType.color
                 });
             }
         }
+        
+        // Add special zones
+        // Dark Sanctum at the center
+        this.zones.push({
+            name: 'Dark Sanctum',
+            center: new THREE.Vector3(0, 0, 0),
+            radius: 10,
+            color: 0x330033
+        });
         
         // Visualize zones (for development)
         this.zones.forEach(zone => {
@@ -926,10 +920,17 @@ export class World {
             
             // Generate objects in the new chunks around the player
             this.updateVisibleChunks(chunkX, chunkZ);
+        }
+        
+        // Check if player has moved far enough for screen-based enemy spawning
+        const distanceMoved = playerPosition.distanceTo(this.lastPlayerPosition);
+        if (distanceMoved >= this.screenSpawnDistance) {
+            // Update last position
+            this.lastPlayerPosition.copy(playerPosition);
             
-            // Notify game that player has moved to a new chunk (for enemy spawning)
+            // Notify game that player has moved a screen distance (for enemy spawning)
             if (this.game && this.game.enemyManager) {
-                this.game.enemyManager.onPlayerChunkChanged(chunkX, chunkZ);
+                this.game.enemyManager.onPlayerMovedScreenDistance(playerPosition);
             }
         }
     }
