@@ -155,8 +155,11 @@ export class Player {
         // Add model to scene
         this.scene.add(this.modelGroup);
         
-        // Set initial position
-        this.setPosition(0, 0, 0);
+        // Set initial position - make sure player is visible above terrain
+        this.setPosition(0, 2, 0);
+        
+        // Log to confirm player model was added
+        console.log("Player model created and added to scene:", this.modelGroup);
     }
     
     initializeSkills() {
@@ -283,6 +286,9 @@ export class Player {
         // Update camera position and target
         this.camera.position.copy(cameraPosition);
         this.camera.lookAt(cameraTarget);
+        
+        // Log camera position for debugging
+        console.log("Camera position updated:", this.camera.position, "Looking at:", cameraTarget);
     }
     
     updateSkills(delta) {

@@ -4,19 +4,27 @@ import { Game } from './core/Game.js';
 
 // Initialize the game when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM loaded, initializing game...");
+    
     // Create loading screen elements
     createLoadingScreen();
     
     // Initialize the game
     const game = new Game();
+    console.log("Game instance created:", game);
     
     // Start the game
     game.init().then(() => {
+        console.log("Game initialized successfully");
+        
         // Hide loading screen when game is initialized
         document.getElementById('loading-screen').style.display = 'none';
         
         // Show game menu
         showGameMenu(game);
+        console.log("Game menu displayed");
+    }).catch(error => {
+        console.error("Error initializing game:", error);
     });
 });
 
@@ -165,55 +173,12 @@ function showOptionsMenu(game, mainMenu) {
     audioTitle.style.fontSize = '24px';
     audioTitle.style.marginTop = '20px';
     
-    // Music volume slider
-    const musicVolumeContainer = document.createElement('div');
-    musicVolumeContainer.style.margin = '10px 0';
-    
-    const musicVolumeLabel = document.createElement('label');
-    musicVolumeLabel.textContent = 'Music Volume: ';
-    musicVolumeLabel.style.color = '#fff';
-    
-    const musicVolumeSlider = document.createElement('input');
-    musicVolumeSlider.type = 'range';
-    musicVolumeSlider.min = '0';
-    musicVolumeSlider.max = '100';
-    musicVolumeSlider.value = game.audioManager.musicVolume * 100;
-    musicVolumeSlider.addEventListener('input', () => {
-        game.audioManager.setMusicVolume(musicVolumeSlider.value / 100);
-    });
-    
-    musicVolumeContainer.appendChild(musicVolumeLabel);
-    musicVolumeContainer.appendChild(musicVolumeSlider);
-    
-    // SFX volume slider
-    const sfxVolumeContainer = document.createElement('div');
-    sfxVolumeContainer.style.margin = '10px 0';
-    
-    const sfxVolumeLabel = document.createElement('label');
-    sfxVolumeLabel.textContent = 'SFX Volume: ';
-    sfxVolumeLabel.style.color = '#fff';
-    
-    const sfxVolumeSlider = document.createElement('input');
-    sfxVolumeSlider.type = 'range';
-    sfxVolumeSlider.min = '0';
-    sfxVolumeSlider.max = '100';
-    sfxVolumeSlider.value = game.audioManager.sfxVolume * 100;
-    sfxVolumeSlider.addEventListener('input', () => {
-        game.audioManager.setSFXVolume(sfxVolumeSlider.value / 100);
-    });
-    
-    sfxVolumeContainer.appendChild(sfxVolumeLabel);
-    sfxVolumeContainer.appendChild(sfxVolumeSlider);
-    
-    // Mute button
-    const muteButton = document.createElement('button');
-    muteButton.className = 'menu-button';
-    muteButton.style.marginTop = '10px';
-    muteButton.textContent = game.audioManager.isMuted ? 'Unmute' : 'Mute';
-    muteButton.addEventListener('click', () => {
-        const isMuted = game.audioManager.toggleMute();
-        muteButton.textContent = isMuted ? 'Unmute' : 'Mute';
-    });
+    // Audio disabled message
+    const audioDisabledMessage = document.createElement('div');
+    audioDisabledMessage.textContent = 'Audio is currently disabled. Audio files need to be added to the assets/audio directory.';
+    audioDisabledMessage.style.color = '#ff9999';
+    audioDisabledMessage.style.margin = '10px 0';
+    audioDisabledMessage.style.fontSize = '14px';
     
     // Back button
     const backButton = document.createElement('button');
@@ -226,10 +191,10 @@ function showOptionsMenu(game, mainMenu) {
     });
     
     optionsMenu.appendChild(title);
+    optionsMenu.appendChild(gameTitle);
+    optionsMenu.appendChild(difficultyContainer);
     optionsMenu.appendChild(audioTitle);
-    optionsMenu.appendChild(musicVolumeContainer);
-    optionsMenu.appendChild(sfxVolumeContainer);
-    optionsMenu.appendChild(muteButton);
+    optionsMenu.appendChild(audioDisabledMessage);
     optionsMenu.appendChild(backButton);
     
     document.body.appendChild(optionsMenu);

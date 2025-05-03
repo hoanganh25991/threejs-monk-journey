@@ -14,12 +14,12 @@ export class World {
     }
     
     async init() {
-        // Add ambient light
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+        // Add stronger ambient light
+        const ambientLight = new THREE.AmbientLight(0x404040, 1.0); // Increased intensity
         this.scene.add(ambientLight);
         
         // Add directional light (sun)
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5); // Increased intensity
         directionalLight.position.set(50, 100, 50);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
@@ -31,6 +31,17 @@ export class World {
         directionalLight.shadow.camera.top = 100;
         directionalLight.shadow.camera.bottom = -100;
         this.scene.add(directionalLight);
+        
+        // Add a hemisphere light for better ambient lighting
+        const hemisphereLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
+        this.scene.add(hemisphereLight);
+        
+        // Add a point light near the player's starting position
+        const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+        pointLight.position.set(0, 10, 0);
+        this.scene.add(pointLight);
+        
+        console.log("Lights added to scene");
         
         // Create terrain
         await this.createTerrain();
@@ -96,8 +107,15 @@ export class World {
         // Color the terrain based on height
         this.colorTerrain(terrain, heightMap);
         
+        // Make sure terrain is positioned at the center
+        terrain.position.set(0, 0, 0);
+        
+        // Add terrain to scene
         this.scene.add(terrain);
         this.terrain = terrain;
+        
+        // Log to confirm terrain was added
+        console.log("Terrain created and added to scene:", terrain);
         
         // Add water plane
         this.createWater();

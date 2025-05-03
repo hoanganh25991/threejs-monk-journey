@@ -1,5 +1,3 @@
-# Diablo Immortal Development Progress Log
-
 ## Implementation Summary - May 2024
 
 ### Core Game Structure
@@ -89,12 +87,3 @@
    - Created visual effects for skills
    - Added combat impact effects
    - Implemented environmental particles for different zones
-
-## Next Steps
-1. Enhance graphics with more detailed models and textures
-2. Add sound effects and background music
-3. Implement more enemy types and attack patterns
-4. Create additional skills and progression paths
-5. Add more quests and storyline elements
-6. Implement multiplayer functionality
-7. Add save/load game feature

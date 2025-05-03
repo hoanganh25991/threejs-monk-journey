@@ -34,8 +34,8 @@ export class Game {
         
         // Initialize scene
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x111122);
-        this.scene.fog = new THREE.FogExp2(0x111122, 0.005);
+        this.scene.background = new THREE.Color(0x87CEEB); // Light blue sky color
+        this.scene.fog = new THREE.FogExp2(0x87CEEB, 0.002); // Reduced fog density
         
         // Initialize camera
         this.camera = new THREE.PerspectiveCamera(
@@ -90,6 +90,16 @@ export class Game {
         this.difficultyManager = new DifficultyManager(this);
         this.difficultyManager.applyDifficultySettings();
         
+        // Add axes helper for debugging
+        const axesHelper = new THREE.AxesHelper(10);
+        this.scene.add(axesHelper);
+        console.log("Added axes helper to scene");
+        
+        // Add a grid helper for better spatial reference
+        const gridHelper = new THREE.GridHelper(100, 100);
+        this.scene.add(gridHelper);
+        console.log("Added grid helper to scene");
+        
         // Handle window resize
         window.addEventListener('resize', () => this.onWindowResize());
         
@@ -97,12 +107,30 @@ export class Game {
     }
     
     start() {
+        console.log("Game starting...");
+        
+        // Make sure the canvas is visible
+        this.canvas.style.display = 'block';
+        
+        // Reset camera position if needed
+        this.camera.position.set(0, 10, 20);
+        this.camera.lookAt(0, 0, 0);
+        
+        // Disable orbit controls when game starts
+        this.controls.enabled = false;
+        
+        // Reset player position
+        this.player.setPosition(0, 2, 0);
+        
+        // Start the game loop
         this.isRunning = true;
         this.clock.start();
         this.animate();
         
         // Start background music
         this.audioManager.playMusic();
+        
+        console.log("Game started successfully");
     }
     
     pause() {
@@ -123,8 +151,10 @@ export class Game {
         
         const delta = this.clock.getDelta();
         
-        // Update controls
-        this.controls.update();
+        // Update controls (only if enabled)
+        if (this.controls.enabled) {
+            this.controls.update();
+        }
         
         // Update player
         this.player.update(delta);
@@ -140,6 +170,14 @@ export class Game {
         
         // Render scene
         this.renderer.render(this.scene, this.camera);
+        
+        // Log rendering for debugging (only once)
+        if (!this.hasLoggedRendering) {
+            console.log("Rendering scene:", this.scene);
+            console.log("Camera:", this.camera);
+            console.log("Renderer:", this.renderer);
+            this.hasLoggedRendering = true;
+        }
     }
     
     onWindowResize() {

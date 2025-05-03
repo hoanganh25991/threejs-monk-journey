@@ -20,6 +20,8 @@ body {
     display: block;
     width: 100%;
     height: 100%;
+    background-color: #87CEEB; /* Match scene background color */
+    z-index: 1; /* Ensure canvas is above background */
 }
 
 /* UI Elements */
