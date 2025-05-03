@@ -19,7 +19,7 @@ export class Player {
             strength: 10,
             dexterity: 10,
             intelligence: 10,
-            movementSpeed: 5,
+            movementSpeed: 10,
             attackPower: 10
         };
         
@@ -317,7 +317,7 @@ export class Player {
     
     updateCamera() {
         // Position camera in a more top-down view with greater height and distance
-        const cameraOffset = new THREE.Vector3(0, 15, 30);
+        const cameraOffset = new THREE.Vector3(0, 15, 20);
         
         // Validate player position before using it
         if (isNaN(this.position.x) || isNaN(this.position.y) || isNaN(this.position.z)) {
