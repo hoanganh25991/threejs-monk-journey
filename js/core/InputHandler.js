@@ -136,8 +136,16 @@ export class InputHandler {
         // Cast ray from camera through mouse position
         this.raycaster.setFromCamera(this.mouse.position, this.game.camera);
         
-        // First check for intersections with terrain
-        const terrainIntersects = this.raycaster.intersectObject(this.game.world.terrain);
+        // Create an array of all terrain meshes to check
+        const terrainMeshes = [this.game.world.terrain];
+        
+        // Add all terrain chunks to the array
+        for (const chunkKey in this.game.world.terrainChunks) {
+            terrainMeshes.push(this.game.world.terrainChunks[chunkKey]);
+        }
+        
+        // Check for intersections with all terrain meshes
+        const terrainIntersects = this.raycaster.intersectObjects(terrainMeshes);
         
         if (terrainIntersects.length > 0) {
             // Update mouse target position from terrain intersection

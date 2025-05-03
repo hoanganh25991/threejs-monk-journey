@@ -18,6 +18,12 @@ export class World {
         this.visibleChunks = {}; // Store currently visible chunks
         this.objectDensity = 0.005; // Increased density for smaller chunks
         
+        // For terrain chunks
+        this.terrainChunks = {}; // Store terrain chunks by chunk key
+        this.terrainChunkSize = 50; // Size of each terrain chunk
+        this.visibleTerrainChunks = {}; // Store currently visible terrain chunks
+        this.terrainChunkViewDistance = 3; // How many terrain chunks to show in each direction
+        
         // For persistent environment objects
         this.environmentObjects = {}; // Store environment objects by chunk key
         this.environmentObjectTypes = ['tree', 'rock', 'bush', 'flower']; // Types of environment objects
@@ -133,6 +139,100 @@ export class World {
         this.updateWorldForPlayer(new THREE.Vector3(0, 0, 0));
     }
     
+    // Create a terrain chunk at the specified coordinates
+    createTerrainChunk(chunkX, chunkZ) {
+        const chunkKey = `${chunkX},${chunkZ}`;
+        
+        // Skip if this chunk already exists
+        if (this.terrainChunks[chunkKey]) {
+            return;
+        }
+        
+        // Calculate world coordinates for this chunk
+        const worldX = chunkX * this.terrainChunkSize;
+        const worldZ = chunkZ * this.terrainChunkSize;
+        
+        // Create terrain geometry
+        const geometry = new THREE.PlaneGeometry(
+            this.terrainChunkSize,
+            this.terrainChunkSize,
+            16, // Lower resolution for better performance
+            16
+        );
+        
+        // Create terrain material
+        const grassTexture = this.createProceduralTexture(0x2d572c, 0x1e3b1e, 512);
+        
+        // Create terrain material with grass texture
+        const material = new THREE.MeshStandardMaterial({
+            map: grassTexture,
+            roughness: 0.8,
+            metalness: 0.2,
+            vertexColors: true
+        });
+        
+        // Create terrain mesh
+        const terrain = new THREE.Mesh(geometry, material);
+        terrain.rotation.x = -Math.PI / 2;
+        terrain.receiveShadow = true;
+        
+        // Apply uniform grass coloring with slight variations
+        this.colorTerrainUniform(terrain);
+        
+        // Position the terrain chunk
+        terrain.position.set(
+            worldX + this.terrainChunkSize / 2,
+            0,
+            worldZ + this.terrainChunkSize / 2
+        );
+        
+        // Add terrain to scene
+        this.scene.add(terrain);
+        
+        // Store the terrain chunk
+        this.terrainChunks[chunkKey] = terrain;
+    }
+    
+    // Update visible terrain chunks based on player position
+    updateTerrainChunks(centerX, centerZ) {
+        // Track which terrain chunks should be visible
+        const newVisibleTerrainChunks = {};
+        
+        // Generate terrain chunks in view distance
+        for (let x = centerX - this.terrainChunkViewDistance; x <= centerX + this.terrainChunkViewDistance; x++) {
+            for (let z = centerZ - this.terrainChunkViewDistance; z <= centerZ + this.terrainChunkViewDistance; z++) {
+                const chunkKey = `${x},${z}`;
+                newVisibleTerrainChunks[chunkKey] = true;
+                
+                // If this terrain chunk doesn't exist yet, create it
+                if (!this.terrainChunks[chunkKey]) {
+                    this.createTerrainChunk(x, z);
+                }
+            }
+        }
+        
+        // Remove terrain chunks that are no longer visible
+        for (const chunkKey in this.visibleTerrainChunks) {
+            if (!newVisibleTerrainChunks[chunkKey]) {
+                this.removeTerrainChunk(chunkKey);
+            }
+        }
+        
+        // Update the visible terrain chunks
+        this.visibleTerrainChunks = newVisibleTerrainChunks;
+    }
+    
+    // Remove a terrain chunk
+    removeTerrainChunk(chunkKey) {
+        const terrain = this.terrainChunks[chunkKey];
+        if (terrain) {
+            this.scene.remove(terrain);
+            terrain.geometry.dispose();
+            terrain.material.dispose();
+            delete this.terrainChunks[chunkKey];
+        }
+    }
+    
     colorTerrainUniform(terrain) {
         const colors = [];
         const positions = terrain.geometry.attributes.position.array;
@@ -187,6 +287,41 @@ export class World {
         }
         
         terrain.geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    }
+    
+    // Create a procedural texture for terrain
+    createProceduralTexture(baseColor, darkColor, size = 256) {
+        // Create a canvas for the texture
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const context = canvas.getContext('2d');
+        
+        // Fill with base color
+        context.fillStyle = '#' + new THREE.Color(baseColor).getHexString();
+        context.fillRect(0, 0, size, size);
+        
+        // Add noise pattern
+        const darkColorStyle = '#' + new THREE.Color(darkColor).getHexString();
+        
+        // Create a noise pattern with small dots
+        for (let y = 0; y < size; y += 2) {
+            for (let x = 0; x < size; x += 2) {
+                if (Math.random() < 0.2) {
+                    context.fillStyle = darkColorStyle;
+                    const dotSize = 1 + Math.random();
+                    context.fillRect(x, y, dotSize, dotSize);
+                }
+            }
+        }
+        
+        // Create texture from canvas
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(10, 10); // Repeat the texture to avoid visible tiling
+        
+        return texture;
     }
     
     createWater() {
@@ -914,6 +1049,10 @@ export class World {
         const chunkX = Math.floor(playerPosition.x / this.chunkSize);
         const chunkZ = Math.floor(playerPosition.z / this.chunkSize);
         
+        // Get the terrain chunk coordinates for the player's position
+        const terrainChunkX = Math.floor(playerPosition.x / this.terrainChunkSize);
+        const terrainChunkZ = Math.floor(playerPosition.z / this.terrainChunkSize);
+        
         // If player has moved to a new chunk
         if (chunkX !== this.currentChunk.x || chunkZ !== this.currentChunk.z) {
             this.currentChunk = { x: chunkX, z: chunkZ };
@@ -921,6 +1060,9 @@ export class World {
             // Generate objects in the new chunks around the player
             this.updateVisibleChunks(chunkX, chunkZ);
         }
+        
+        // Update terrain chunks around the player
+        this.updateTerrainChunks(terrainChunkX, terrainChunkZ);
         
         // Check if player has moved far enough for screen-based enemy spawning
         const distanceMoved = playerPosition.distanceTo(this.lastPlayerPosition);
