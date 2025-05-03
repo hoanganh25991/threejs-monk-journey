@@ -1198,59 +1198,79 @@ export class Skill {
     }
     
     createWaveEffect() {
+        // Configuration for bell size and appearance
+        const config = {
+            bellSizeMultiplier: 2.0,  // Adjust this value to change the overall bell size
+            bellHeight: 8,            // Height above the ground
+            bellColor: 0xFFD700,      // Gold color for the bell
+            bellOpacity: 0.9,         // Bell transparency
+            bellMetalness: 0.8,       // Bell metallic appearance
+            bellRoughness: 0.2,       // Bell surface roughness
+            strikerColor: 0xAA7722    // Color of the striker inside the bell
+        };
+        
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
         // Create the bell - using a combination of shapes to form a bell
         const bellGroup = new THREE.Group();
         
+        // Apply size multiplier to all dimensions
+        const bellTopRadius = 1.2 * config.bellSizeMultiplier;
+        const bellBottomRadius = 2 * config.bellSizeMultiplier;
+        const bellHeight = 2.5 * config.bellSizeMultiplier;
+        const bellRimRadius = 2 * config.bellSizeMultiplier;
+        const bellRimThickness = 0.2 * config.bellSizeMultiplier;
+        const strikerRadius = 0.3 * config.bellSizeMultiplier;
+        
         // Bell top (dome)
-        const bellTopGeometry = new THREE.SphereGeometry(1.2, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        const bellTopGeometry = new THREE.SphereGeometry(bellTopRadius, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
         const bellMaterial = new THREE.MeshStandardMaterial({
-            color: 0xFFD700, // Gold color for the bell
-            metalness: 0.8,
-            roughness: 0.2,
+            color: config.bellColor,
+            metalness: config.bellMetalness,
+            roughness: config.bellRoughness,
             transparent: true,
-            opacity: 0.9
+            opacity: config.bellOpacity
         });
         
         const bellTop = new THREE.Mesh(bellTopGeometry, bellMaterial);
-        bellTop.position.y = 2.5;
+        bellTop.position.y = bellHeight;
         bellGroup.add(bellTop);
         
         // Bell body (inverted cone)
-        const bellBodyGeometry = new THREE.CylinderGeometry(1.2, 2, 2.5, 16, 1, true);
+        const bellBodyGeometry = new THREE.CylinderGeometry(bellTopRadius, bellBottomRadius, bellHeight, 16, 1, true);
         const bellBody = new THREE.Mesh(bellBodyGeometry, bellMaterial);
-        bellBody.position.y = 1.25;
+        bellBody.position.y = bellHeight/2;
         bellGroup.add(bellBody);
         
         // Bell rim (torus)
-        const bellRimGeometry = new THREE.TorusGeometry(2, 0.2, 16, 32);
+        const bellRimGeometry = new THREE.TorusGeometry(bellRimRadius, bellRimThickness, 16, 32);
         const bellRim = new THREE.Mesh(bellRimGeometry, bellMaterial);
         bellRim.position.y = 0;
         bellRim.rotation.x = Math.PI / 2;
         bellGroup.add(bellRim);
         
         // Bell striker (small sphere inside)
-        const strikerGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+        const strikerGeometry = new THREE.SphereGeometry(strikerRadius, 8, 8);
         const strikerMaterial = new THREE.MeshStandardMaterial({
-            color: 0xAA7722,
+            color: config.strikerColor,
             metalness: 0.5,
             roughness: 0.5
         });
         
         const striker = new THREE.Mesh(strikerGeometry, strikerMaterial);
-        striker.position.y = 0.8;
+        striker.position.y = bellHeight * 0.32; // Position striker proportionally to bell size
         bellGroup.add(striker);
         
         // Position the bell above the player
-        bellGroup.position.y = 8;
+        bellGroup.position.y = config.bellHeight;
         
         // Add bell to effect group
         effectGroup.add(bellGroup);
         
         // Create impact area (circle on the ground)
-        const impactGeometry = new THREE.CircleGeometry(this.radius, 32);
+        const impactRadius = this.radius * config.bellSizeMultiplier; // Scale impact area with bell size
+        const impactGeometry = new THREE.CircleGeometry(impactRadius, 32);
         const impactMaterial = new THREE.MeshBasicMaterial({
             color: this.color,
             transparent: true,
@@ -1271,8 +1291,9 @@ export class Skill {
             const angle = (i / rayCount) * Math.PI * 2;
             
             // Validate radius to prevent NaN values
-            const safeRadius = isNaN(this.radius) || this.radius <= 0 ? 1.0 : this.radius;
-            const rayGeometry = new THREE.BoxGeometry(0.2, 0.2, safeRadius);
+            const safeRadius = isNaN(impactRadius) || impactRadius <= 0 ? 1.0 : impactRadius;
+            const rayThickness = 0.2 * config.bellSizeMultiplier; // Scale ray thickness with bell size
+            const rayGeometry = new THREE.BoxGeometry(rayThickness, rayThickness, safeRadius);
             const rayMaterial = new THREE.MeshBasicMaterial({
                 color: this.color,
                 transparent: true,
@@ -1281,9 +1302,9 @@ export class Skill {
             
             const ray = new THREE.Mesh(rayGeometry, rayMaterial);
             ray.position.set(
-                Math.cos(angle) * (this.radius / 2),
+                Math.cos(angle) * (impactRadius / 2),
                 0.2,
-                Math.sin(angle) * (this.radius / 2)
+                Math.sin(angle) * (impactRadius / 2)
             );
             
             ray.rotation.y = angle;
@@ -1292,12 +1313,13 @@ export class Skill {
         }
         
         // Create particles for visual effect
-        const particleCount = 30;
+        const particleCount = Math.floor(30 * config.bellSizeMultiplier); // Scale particle count with bell size
         for (let i = 0; i < particleCount; i++) {
             const angle = (i / particleCount) * Math.PI * 2;
-            const radius = Math.random() * this.radius;
+            const radius = Math.random() * impactRadius;
             
-            const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+            const particleSize = 0.1 * config.bellSizeMultiplier; // Scale particle size with bell size
+            const particleGeometry = new THREE.SphereGeometry(particleSize, 8, 8);
             const particleMaterial = new THREE.MeshBasicMaterial({
                 color: this.color,
                 transparent: true,
@@ -1321,11 +1343,12 @@ export class Skill {
         this.effect = effectGroup;
         this.isActive = true;
         
-        // Store animation state
+        // Store animation state with configuration
         this.bellState = {
             phase: 'descending', // 'descending', 'impact', 'ascending'
-            initialHeight: 8,
-            impactTime: 0
+            initialHeight: config.bellHeight,
+            impactTime: 0,
+            config: config // Store config for use in update method
         };
         
         return effectGroup;
@@ -2159,16 +2182,23 @@ export class Skill {
         // Get impact area (second child of effect group)
         const impactArea = this.effect.children[1];
         
+        // Get config from bell state
+        const config = this.bellState.config || {
+            bellSizeMultiplier: 2.0,
+            bellHeight: 8
+        };
+        
         // Animation phases for the bell
         switch (this.bellState.phase) {
             case 'descending':
                 // Bell descends from the sky
-                const descentSpeed = 15; // Speed of descent
+                const descentSpeed = 15 * Math.sqrt(config.bellSizeMultiplier); // Scale speed with bell size
                 bellGroup.position.y -= descentSpeed * delta;
                 
                 // When bell reaches near ground level, switch to impact phase
-                if (bellGroup.position.y <= 0.5) {
-                    bellGroup.position.y = 0.5; // Ensure bell doesn't go below ground
+                const groundClearance = 0.5 * config.bellSizeMultiplier;
+                if (bellGroup.position.y <= groundClearance) {
+                    bellGroup.position.y = groundClearance; // Ensure bell doesn't go below ground
                     this.bellState.phase = 'impact';
                     this.bellState.impactTime = 0;
                     
@@ -2182,24 +2212,24 @@ export class Skill {
                 // Bell impact phase - create shockwave and visual effects
                 this.bellState.impactTime += delta;
                 
-                // Expand impact area
-                const expansionSpeed = 5;
-                const maxScale = 1.5;
+                // Expand impact area - scale with bell size
+                const expansionSpeed = 5 * Math.sqrt(config.bellSizeMultiplier);
+                const maxScale = 1.5 * config.bellSizeMultiplier;
                 const currentScale = Math.min(this.bellState.impactTime * expansionSpeed, maxScale);
                 impactArea.scale.set(currentScale, currentScale, currentScale);
                 
                 // Fade impact area as it expands
                 impactArea.material.opacity = 0.7 * (1 - (currentScale / maxScale));
                 
-                // Make bell vibrate during impact
-                const vibrationIntensity = 0.2 * (1 - (this.bellState.impactTime / 0.5));
+                // Make bell vibrate during impact - scale vibration with bell size
+                const vibrationIntensity = 0.2 * config.bellSizeMultiplier * (1 - (this.bellState.impactTime / 0.5));
                 bellGroup.rotation.z = Math.sin(this.bellState.impactTime * 40) * vibrationIntensity;
                 
                 // Animate light rays
                 for (let i = 2; i < 2 + 8; i++) { // Rays are children 2-9
                     if (this.effect.children[i]) {
                         const ray = this.effect.children[i];
-                        ray.scale.z = 1 + Math.sin(this.bellState.impactTime * 10) * 0.5;
+                        ray.scale.z = 1 + Math.sin(this.bellState.impactTime * 10) * 0.5 * config.bellSizeMultiplier;
                         ray.material.opacity = 0.5 * (1 - (this.bellState.impactTime / 0.5));
                     }
                 }
@@ -2211,8 +2241,8 @@ export class Skill {
                 break;
                 
             case 'ascending':
-                // Bell ascends back to the sky
-                const ascentSpeed = 10;
+                // Bell ascends back to the sky - scale speed with bell size
+                const ascentSpeed = 10 * Math.sqrt(config.bellSizeMultiplier);
                 bellGroup.position.y += ascentSpeed * delta;
                 
                 // Gradually fade out the bell as it ascends
@@ -2239,16 +2269,16 @@ export class Skill {
                 for (let i = 2 + 8; i < this.effect.children.length; i++) {
                     const particle = this.effect.children[i];
                     
-                    // Move particles outward and upward
+                    // Move particles outward and upward - scale movement with bell size
                     const directionToCenter = new THREE.Vector3(
                         particle.position.x,
                         0,
                         particle.position.z
                     ).normalize();
                     
-                    particle.position.x += directionToCenter.x * delta * 2;
-                    particle.position.z += directionToCenter.z * delta * 2;
-                    particle.position.y += delta * 3;
+                    particle.position.x += directionToCenter.x * delta * 2 * config.bellSizeMultiplier;
+                    particle.position.z += directionToCenter.z * delta * 2 * config.bellSizeMultiplier;
+                    particle.position.y += delta * 3 * config.bellSizeMultiplier;
                     
                     // Fade out particles
                     particle.material.opacity = Math.max(0, particle.material.opacity - delta);
@@ -3905,25 +3935,108 @@ export class Skill {
     }
     
     remove() {
-        // Clean up effect
-        if (this.effect && this.effect.parent) {
-            this.effect.parent.remove(this.effect);
+        // Clean up effect and all its children recursively
+        if (this.effect) {
+            // Function to recursively dispose of geometries and materials
+            const disposeObject = (obj) => {
+                if (!obj) return;
+                
+                // Dispose of children first
+                if (obj.children && obj.children.length > 0) {
+                    // Create a copy of the children array to avoid modification during iteration
+                    const children = [...obj.children];
+                    for (const child of children) {
+                        disposeObject(child);
+                    }
+                }
+                
+                // Dispose of geometry
+                if (obj.geometry) {
+                    obj.geometry.dispose();
+                }
+                
+                // Dispose of material(s)
+                if (obj.material) {
+                    if (Array.isArray(obj.material)) {
+                        for (const material of obj.material) {
+                            if (material.map) material.map.dispose();
+                            material.dispose();
+                        }
+                    } else {
+                        if (obj.material.map) obj.material.map.dispose();
+                        obj.material.dispose();
+                    }
+                }
+                
+                // Remove from parent
+                if (obj.parent) {
+                    obj.parent.remove(obj);
+                }
+            };
+            
+            // Dispose of the entire effect tree
+            disposeObject(this.effect);
         }
         
         // Clean up impact rings for Exploding Palm
-        if (this.name === 'Exploding Palm' && this.explodingPalmState && this.explodingPalmState.impactRings) {
-            // Remove all impact rings from the scene
-            for (const ring of this.explodingPalmState.impactRings) {
-                if (ring && ring.parent) {
-                    ring.parent.remove(ring);
+        if (this.name === 'Exploding Palm' && this.explodingPalmState) {
+            // Clean up impact rings
+            if (this.explodingPalmState.impactRings) {
+                for (const ring of this.explodingPalmState.impactRings) {
+                    if (ring && ring.parent) {
+                        if (ring.geometry) ring.geometry.dispose();
+                        if (ring.material) ring.material.dispose();
+                        ring.parent.remove(ring);
+                    }
                 }
+                this.explodingPalmState.impactRings = [];
             }
-            this.explodingPalmState.impactRings = [];
+            
+            // Clean up dust particles
+            if (this.explodingPalmState.dustParticles) {
+                for (const dust of this.explodingPalmState.dustParticles) {
+                    if (dust && dust.parent) {
+                        if (dust.geometry) dust.geometry.dispose();
+                        if (dust.material) dust.material.dispose();
+                        dust.parent.remove(dust);
+                    }
+                }
+                this.explodingPalmState.dustParticles = [];
+            }
         }
         
+        // Clean up Wave of Light bell state
+        if (this.name === 'Wave of Light' && this.bellState) {
+            this.bellState = null;
+        }
+        
+        // Clean up Cyclone Strike state
+        if (this.name === 'Cyclone Strike' && this.cycloneState) {
+            this.cycloneState = null;
+        }
+        
+        // Clean up Seven-Sided Strike state
+        if (this.name === 'Seven-Sided Strike' && this.sevenSidedStrikeState) {
+            this.sevenSidedStrikeState = null;
+        }
+        
+        // Clean up Wave Strike state
+        if (this.name === 'Wave Strike' && this.waveState) {
+            this.waveState = null;
+        }
+        
+        // Clean up Mystic Ally state
+        if (this.name === 'Mystic Ally' && this.mysticAllyState) {
+            this.mysticAllyState = null;
+        }
+        
+        // Reset all state
         this.effect = null;
         this.isActive = false;
         this.elapsedTime = 0;
+        
+        // Force garbage collection hint (not guaranteed but can help)
+        if (window.gc) window.gc();
     }
     
     getPosition() {

@@ -34,40 +34,134 @@ body {
     pointer-events: none;
 }
 
-#health-bar-container {
+#player-stats-container {
     position: absolute;
-    bottom: 20px;
+    top: 20px;
     left: 20px;
-    width: 200px;
-    height: 20px;
-    background-color: rgba(0, 0, 0, 0.5);
+    width: 220px;
+    background-color: rgba(0, 0, 0, 0.7);
     border: 2px solid #333;
     border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#player-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+#player-portrait {
+    width: 50px;
+    height: 50px;
+    background-color: #444;
+    border-radius: 50%;
+    margin-right: 10px;
+    overflow: hidden;
+    border: 2px solid #666;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+}
+
+#player-info {
+    flex: 1;
+}
+
+#player-name {
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+#level-indicator {
+    position: relative;
+    top: 0;
+    left: 0;
+    color: #ffcc66;
+    font-size: 14px;
+    margin-bottom: 5px;
+    text-shadow: 1px 1px 2px black;
+}
+
+#health-bar-container {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    border-radius: 3px;
+    margin-bottom: 5px;
+    overflow: hidden;
 }
 
 #health-bar {
     height: 100%;
     width: 100%;
     background-color: #f00;
-    border-radius: 3px;
+    border-radius: 2px;
+}
+
+#health-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    text-shadow: 1px 1px 2px black;
+    white-space: nowrap;
+}
+
+#health-icon {
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 14px;
 }
 
 #mana-bar-container {
-    position: absolute;
-    bottom: 45px;
-    left: 20px;
-    width: 200px;
+    position: relative;
+    width: 100%;
     height: 20px;
     background-color: rgba(0, 0, 0, 0.5);
-    border: 2px solid #333;
-    border-radius: 5px;
+    border: 1px solid #333;
+    border-radius: 3px;
+    overflow: hidden;
 }
 
 #mana-bar {
     height: 100%;
     width: 100%;
     background-color: #00f;
-    border-radius: 3px;
+    border-radius: 2px;
+}
+
+#mana-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    text-shadow: 1px 1px 2px black;
+    white-space: nowrap;
+}
+
+#mana-icon {
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 14px;
 }
 
 #skills-container {

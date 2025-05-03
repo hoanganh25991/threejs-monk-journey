@@ -164,7 +164,7 @@ export class Player {
     }
     
     initializeSkills() {
-        // Initialize monk skills with reduced cooldown (0.5 seconds for all skills)
+        // Initialize monk skills with reduced cooldown and increased durations
         this.skills = [
             new Skill({
                 name: 'Wave Strike',
@@ -175,7 +175,7 @@ export class Player {
                 cooldown: 0.1, // Reduced cooldown
                 range: 10,
                 radius: 2,
-                duration: 1,
+                duration: 2.5, // Increased duration from 1 to 2.5
                 color: 0x00ffff
             }),
             new Skill({
@@ -187,7 +187,7 @@ export class Player {
                 cooldown: 0.1, // Reduced cooldown
                 range: 5,
                 radius: 4,
-                duration: 0.5,
+                duration: 1.5, // Increased duration from 0.5 to 1.5
                 color: 0xffcc00
             }),
             new Skill({
@@ -199,7 +199,7 @@ export class Player {
                 cooldown: 0.1, // Reduced cooldown
                 range: 6,
                 radius: 10,
-                duration: 2,
+                duration: 3.5, // Increased duration from 2 to 3.5
                 color: 0xff0000,
                 hits: 7
             }),
@@ -212,7 +212,7 @@ export class Player {
                 cooldown: 0.1, // Reduced cooldown
                 range: 0,
                 radius: 5,
-                duration: 5,
+                duration: 7, // Increased duration from 5 to 7
                 color: 0xffffff
             }),
             new Skill({
@@ -224,19 +224,19 @@ export class Player {
                 cooldown: 0.1, // Reduced cooldown
                 range: 2,
                 radius: 1,
-                duration: 10,
+                duration: 15, // Increased duration from 10 to 15
                 color: 0x00ffff
             }),
             new Skill({
                 name: 'Wave of Light',
                 description: 'Summon a massive bell that crashes down on enemies',
                 type: 'wave',
-                damage: 50, // Increased damage
+                damage: 50,
                 manaCost: 40,
                 cooldown: 0.1, // Reduced cooldown
-                range: 10, // Increased range
-                radius: 8, // Increased radius
-                duration: 2, // Increased duration
+                range: 10,
+                radius: 8,
+                duration: 3.5, // Increased duration from 2 to 3.5
                 color: 0xffdd22 // Golden color for the bell's light
             }),
             new Skill({
@@ -246,9 +246,9 @@ export class Player {
                 damage: 15,
                 manaCost: 25,
                 cooldown: 0.1, // Reduced cooldown
-                range: 10, // INCREASED range from 2 to 10 for better visibility
-                radius: 5, // INCREASED radius from 3 to 5 for bigger explosion
-                duration: 10, // DOUBLED duration from 5 to 10 seconds
+                range: 10,
+                radius: 5,
+                duration: 15, // Increased duration from 10 to 15 seconds
                 color: 0xff3333
             })
         ];
@@ -452,14 +452,35 @@ export class Player {
             if (skill.isExpired()) {
                 skill.remove();
                 this.activeSkills.splice(i, 1);
+                continue;
             }
             
             // Force cleanup for skills that are being spammed
             // This prevents UI and particles from persisting when holding keys
-            if (skill.isActive && skill.elapsedTime > skill.duration * 1.5) {
-                console.log(`Force cleaning up skill ${skill.name} that exceeded 150% of its duration`);
+            // Reduced from 1.5 to 1.1 to clean up faster when spamming
+            if (skill.isActive && skill.elapsedTime > skill.duration * 1.1) {
+                console.log(`Force cleaning up skill ${skill.name} that exceeded 110% of its duration`);
                 skill.remove();
                 this.activeSkills.splice(i, 1);
+                continue;
+            }
+            
+            // Immediately clean up skills of the same type when a new one is cast
+            // This is especially important when holding keys to spam skills
+            for (let j = this.activeSkills.length - 1; j >= 0; j--) {
+                if (i !== j && 
+                    this.activeSkills[j].name === skill.name && 
+                    this.activeSkills[j].elapsedTime > this.activeSkills[j].duration * 0.5) {
+                    // If we have two skills of the same type and the older one is at least halfway through its duration
+                    console.log(`Cleaning up older instance of ${this.activeSkills[j].name} due to key spamming`);
+                    this.activeSkills[j].remove();
+                    this.activeSkills.splice(j, 1);
+                    
+                    // Adjust index if we removed an element before the current one
+                    if (j < i) {
+                        i--;
+                    }
+                }
             }
         }
         
@@ -471,9 +492,9 @@ export class Player {
             skillTypeCount[skill.type] = (skillTypeCount[skill.type] || 0) + 1;
             
             // If there are too many skills of the same type, remove the oldest ones
-            const maxSkillsPerType = 3; // Maximum number of skills of the same type allowed
+            const maxSkillsPerType = 2; // Reduced from 3 to 2 to limit visual clutter
             if (skillTypeCount[skill.type] > maxSkillsPerType) {
-                // Find the oldest skill of this type (smallest elapsedTime means it was created earlier)
+                // Find the oldest skill of this type (largest elapsedTime means it was created earlier)
                 let oldestSkillIndex = i;
                 let oldestElapsedTime = skill.elapsedTime;
                 

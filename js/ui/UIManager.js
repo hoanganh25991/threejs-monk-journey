@@ -43,33 +43,90 @@ export class UIManager {
     }
     
     createPlayerUI() {
+        // Create player stats container
+        this.playerStatsContainer = document.createElement('div');
+        this.playerStatsContainer.id = 'player-stats-container';
+        
+        // Create player header (portrait and info)
+        const playerHeader = document.createElement('div');
+        playerHeader.id = 'player-header';
+        
+        // Create player portrait
+        const playerPortrait = document.createElement('div');
+        playerPortrait.id = 'player-portrait';
+        playerPortrait.textContent = '🧘'; // Monk emoji
+        playerHeader.appendChild(playerPortrait);
+        
+        // Create player info container
+        const playerInfo = document.createElement('div');
+        playerInfo.id = 'player-info';
+        
+        // Create player name
+        const playerName = document.createElement('div');
+        playerName.id = 'player-name';
+        playerName.textContent = 'Monk';
+        playerInfo.appendChild(playerName);
+        
         // Create level indicator
         this.levelIndicator = document.createElement('div');
         this.levelIndicator.id = 'level-indicator';
         this.levelIndicator.textContent = `Level: ${this.game.player.getLevel()}`;
-        this.uiContainer.appendChild(this.levelIndicator);
+        playerInfo.appendChild(this.levelIndicator);
+        
+        // Add player info to header
+        playerHeader.appendChild(playerInfo);
+        
+        // Add header to stats container
+        this.playerStatsContainer.appendChild(playerHeader);
         
         // Create health bar container
         this.healthBarContainer = document.createElement('div');
         this.healthBarContainer.id = 'health-bar-container';
         
+        // Create health icon
+        const healthIcon = document.createElement('div');
+        healthIcon.id = 'health-icon';
+        healthIcon.textContent = '❤️';
+        this.healthBarContainer.appendChild(healthIcon);
+        
         // Create health bar
         this.healthBar = document.createElement('div');
         this.healthBar.id = 'health-bar';
-        
         this.healthBarContainer.appendChild(this.healthBar);
-        this.uiContainer.appendChild(this.healthBarContainer);
+        
+        // Create health text
+        this.healthText = document.createElement('div');
+        this.healthText.id = 'health-text';
+        this.healthBarContainer.appendChild(this.healthText);
+        
+        // Add health bar to stats container
+        this.playerStatsContainer.appendChild(this.healthBarContainer);
         
         // Create mana bar container
         this.manaBarContainer = document.createElement('div');
         this.manaBarContainer.id = 'mana-bar-container';
         
+        // Create mana icon
+        const manaIcon = document.createElement('div');
+        manaIcon.id = 'mana-icon';
+        manaIcon.textContent = '🔷';
+        this.manaBarContainer.appendChild(manaIcon);
+        
         // Create mana bar
         this.manaBar = document.createElement('div');
         this.manaBar.id = 'mana-bar';
-        
         this.manaBarContainer.appendChild(this.manaBar);
-        this.uiContainer.appendChild(this.manaBarContainer);
+        
+        // Create mana text
+        this.manaText = document.createElement('div');
+        this.manaText.id = 'mana-text';
+        this.manaBarContainer.appendChild(this.manaText);
+        
+        // Add mana bar to stats container
+        this.playerStatsContainer.appendChild(this.manaBarContainer);
+        
+        // Add stats container to UI
+        this.uiContainer.appendChild(this.playerStatsContainer);
     }
     
     createEnemyUI() {
@@ -381,13 +438,39 @@ export class UIManager {
         // Update level indicator
         this.levelIndicator.textContent = `Level: ${this.game.player.getLevel()}`;
         
+        // Get health values
+        const currentHealth = Math.round(this.game.player.getHealth());
+        const maxHealth = this.game.player.getMaxHealth();
+        const healthPercent = (currentHealth / maxHealth) * 100;
+        
         // Update health bar
-        const healthPercent = (this.game.player.getHealth() / this.game.player.getMaxHealth()) * 100;
         this.healthBar.style.width = `${healthPercent}%`;
         
+        // Update health text
+        this.healthText.textContent = `${currentHealth}/${maxHealth}`;
+        
+        // Get mana values
+        const currentMana = Math.round(this.game.player.getMana());
+        const maxMana = this.game.player.getMaxMana();
+        const manaPercent = (currentMana / maxMana) * 100;
+        
         // Update mana bar
-        const manaPercent = (this.game.player.getMana() / this.game.player.getMaxMana()) * 100;
         this.manaBar.style.width = `${manaPercent}%`;
+        
+        // Update mana text
+        this.manaText.textContent = `${currentMana}/${maxMana}`;
+        
+        // Change health bar color based on health percentage
+        if (healthPercent < 25) {
+            this.healthBar.style.backgroundColor = '#ff3333'; // Bright red when low
+            this.healthBar.style.boxShadow = '0 0 8px #ff3333';
+        } else if (healthPercent < 50) {
+            this.healthBar.style.backgroundColor = '#ff6633'; // Orange-red when medium
+            this.healthBar.style.boxShadow = '0 0 5px #ff6633';
+        } else {
+            this.healthBar.style.backgroundColor = '#ff0000'; // Normal red when high
+            this.healthBar.style.boxShadow = 'none';
+        }
     }
     
     updateEnemyUI() {
@@ -473,6 +556,8 @@ export class UIManager {
     
     updateNotifications() {
         // Update existing notifications
+        let needsReorganization = false;
+        
         for (let i = this.notifications.length - 1; i >= 0; i--) {
             const notification = this.notifications[i];
             
@@ -483,15 +568,45 @@ export class UIManager {
             if (notification.lifetime <= 0) {
                 notification.element.remove();
                 this.notifications.splice(i, 1);
+                needsReorganization = true;
             } else {
                 // Update opacity for fade out
                 if (notification.lifetime < 1) {
                     notification.element.style.opacity = notification.lifetime;
                 }
                 
-                // Update position for slide up
+                // Faster slide up for smoother animation
                 const currentTop = parseInt(notification.element.style.top);
-                notification.element.style.top = `${currentTop - 0.5}px`;
+                notification.element.style.top = `${currentTop - 0.8}px`;
+            }
+        }
+        
+        // If we removed notifications, reorganize the remaining ones
+        if (needsReorganization && this.notifications.length > 0) {
+            // Get screen height to calculate maximum notification area
+            const screenHeight = window.innerHeight;
+            const maxNotificationAreaHeight = screenHeight / 5;
+            
+            // Calculate total height of all notifications
+            let totalHeight = 0;
+            for (let i = 0; i < this.notifications.length; i++) {
+                const notif = this.notifications[i];
+                const height = notif.element.offsetHeight + 10; // Height + margin
+                totalHeight += height;
+            }
+            
+            // If we exceed the max height, compress the notifications
+            if (totalHeight > maxNotificationAreaHeight) {
+                this.compressNotifications(maxNotificationAreaHeight);
+            } else {
+                // Just reposition notifications with proper spacing
+                let currentTop = 80; // Start from the top position
+                
+                for (let i = 0; i < this.notifications.length; i++) {
+                    const notification = this.notifications[i];
+                    notification.element.style.top = `${currentTop}px`;
+                    currentTop += notification.element.offsetHeight + 10; // Height + margin
+                }
             }
         }
     }
@@ -522,6 +637,10 @@ export class UIManager {
     }
     
     showNotification(message) {
+        // Get screen height to calculate maximum notification area (1/5 of screen height)
+        const screenHeight = window.innerHeight;
+        const maxNotificationAreaHeight = screenHeight / 5;
+        
         // Create notification element
         const notification = document.createElement('div');
         notification.style.position = 'absolute';
@@ -530,31 +649,106 @@ export class UIManager {
         notification.style.transform = 'translateX(-50%)';
         notification.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
         notification.style.color = 'white';
-        notification.style.padding = '10px 20px';
+        notification.style.padding = '8px 16px'; // Slightly smaller padding
         notification.style.borderRadius = '5px';
         notification.style.zIndex = '100';
-        notification.style.transition = 'opacity 0.5s';
+        notification.style.transition = 'opacity 0.5s, top 0.3s';
+        notification.style.fontSize = '14px'; // Smaller font size
+        notification.style.maxWidth = '80%'; // Limit width
+        notification.style.textAlign = 'center'; // Center text
         notification.textContent = message;
         
         // Add notification to UI container
         this.uiContainer.appendChild(notification);
         
-        // Add to notifications array
+        // If we have too many notifications, remove the oldest ones
+        const maxNotifications = 5; // Maximum number of notifications to show at once
+        if (this.notifications.length >= maxNotifications) {
+            // Remove oldest notification
+            const oldestNotification = this.notifications.shift();
+            oldestNotification.element.remove();
+        }
+        
+        // Add to notifications array with shorter lifetime for faster cleanup
         this.notifications.push({
             element: notification,
-            lifetime: 3 // 3 seconds
+            lifetime: 2.5, // Reduced from 3 to 2.5 seconds
+            message: message // Store message for deduplication
         });
+        
+        // Check for duplicate messages and reduce their lifetime
+        this.deduplicateNotifications();
         
         // Adjust position for multiple notifications
         if (this.notifications.length > 1) {
-            const previousNotification = this.notifications[this.notifications.length - 2];
-            const previousHeight = previousNotification.element.offsetHeight;
-            const previousTop = parseInt(previousNotification.element.style.top);
-            notification.style.top = `${previousTop + previousHeight + 10}px`;
+            // Calculate total height of all notifications
+            let totalHeight = 0;
+            let availableHeight = maxNotificationAreaHeight;
+            
+            // Calculate how much space we need
+            for (let i = 0; i < this.notifications.length - 1; i++) {
+                const notif = this.notifications[i];
+                const height = notif.element.offsetHeight + 10; // Height + margin
+                totalHeight += height;
+            }
+            
+            // If we exceed the max height, compress the notifications
+            if (totalHeight > availableHeight) {
+                // Compress notifications to fit in the available space
+                this.compressNotifications(availableHeight);
+            } else {
+                // Just position the new notification below the last one
+                const previousNotification = this.notifications[this.notifications.length - 2];
+                const previousHeight = previousNotification.element.offsetHeight;
+                const previousTop = parseInt(previousNotification.element.style.top);
+                notification.style.top = `${previousTop + previousHeight + 10}px`;
+            }
+        }
+    }
+    
+    // Helper method to compress notifications to fit in available space
+    compressNotifications(availableHeight) {
+        // Calculate how much space each notification can take
+        const notificationCount = this.notifications.length;
+        const spacePerNotification = availableHeight / notificationCount;
+        
+        // Position each notification with compressed spacing
+        let currentTop = 80; // Start from the top position
+        
+        for (let i = 0; i < this.notifications.length; i++) {
+            const notification = this.notifications[i];
+            notification.element.style.top = `${currentTop}px`;
+            
+            // Move to next position (use smaller spacing when compressed)
+            currentTop += spacePerNotification;
+        }
+    }
+    
+    // Helper method to deduplicate notifications
+    deduplicateNotifications() {
+        // Create a map to count occurrences of each message
+        const messageCounts = {};
+        
+        // Count occurrences
+        for (const notification of this.notifications) {
+            const message = notification.message;
+            messageCounts[message] = (messageCounts[message] || 0) + 1;
+        }
+        
+        // Reduce lifetime of duplicate messages
+        for (const notification of this.notifications) {
+            const message = notification.message;
+            if (messageCounts[message] > 1) {
+                // Reduce lifetime of duplicates to clean them up faster
+                notification.lifetime = Math.min(notification.lifetime, 1.5);
+            }
         }
     }
     
     showDamageNumber(amount, position, isPlayerDamage = false) {
+        // Only show damage particles for player-caused damage
+        if (!isPlayerDamage) return;
+        
         // Convert 3D position to screen position
         const vector = position.clone();
         vector.project(this.game.camera);
@@ -562,27 +756,118 @@ export class UIManager {
         const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
         const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
         
-        // Create damage number element
-        const damageNumber = document.createElement('div');
-        damageNumber.style.position = 'absolute';
-        damageNumber.style.top = `${y}px`;
-        damageNumber.style.left = `${x}px`;
-        damageNumber.style.transform = 'translate(-50%, -50%)';
-        damageNumber.style.color = isPlayerDamage ? 'red' : 'white';
-        damageNumber.style.textShadow = '1px 1px 2px black';
-        damageNumber.style.fontSize = '20px';
-        damageNumber.style.fontWeight = 'bold';
-        damageNumber.style.zIndex = '100';
-        damageNumber.textContent = Math.round(amount);
+        // Create blood particle container
+        const particleContainer = document.createElement('div');
+        particleContainer.style.position = 'absolute';
+        particleContainer.style.top = `${y}px`;
+        particleContainer.style.left = `${x}px`;
+        particleContainer.style.width = '0';
+        particleContainer.style.height = '0';
+        particleContainer.style.zIndex = '100';
         
-        // Add damage number to UI container
-        this.uiContainer.appendChild(damageNumber);
+        // Determine particle count and color based on damage amount
+        const minParticles = 3;
+        const maxParticles = 15;
+        const particleCount = Math.min(maxParticles, minParticles + Math.floor(amount / 10));
         
-        // Add to damage numbers array
+        // Determine color based on damage amount
+        // Higher damage = brighter/more intense red
+        let baseColor;
+        if (amount < 10) {
+            baseColor = [120, 0, 0]; // Dark red for low damage
+        } else if (amount < 30) {
+            baseColor = [180, 0, 0]; // Medium red
+        } else if (amount < 50) {
+            baseColor = [220, 0, 0]; // Bright red
+        } else {
+            baseColor = [255, 30, 30]; // Intense red with slight glow for high damage
+        }
+        
+        // Create blood particles
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            
+            // Randomize particle size based on damage
+            const minSize = 3;
+            const maxSize = 8 + (amount / 20); // Larger particles for higher damage
+            const size = minSize + Math.random() * (maxSize - minSize);
+            
+            // Randomize particle color slightly
+            const colorVariation = 30; // Amount of random variation
+            const r = Math.max(0, Math.min(255, baseColor[0] + (Math.random() * colorVariation - colorVariation/2)));
+            const g = Math.max(0, Math.min(255, baseColor[1] + (Math.random() * colorVariation - colorVariation/2)));
+            const b = Math.max(0, Math.min(255, baseColor[2] + (Math.random() * colorVariation - colorVariation/2)));
+            
+            // Set particle styles
+            particle.style.position = 'absolute';
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.borderRadius = '50%';
+            particle.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+            particle.style.boxShadow = `0 0 ${size/2}px rgba(${r}, ${g}, ${b}, 0.7)`;
+            
+            // Randomize particle position
+            const spread = 30 + (amount / 5); // Higher damage = wider spread
+            const posX = (Math.random() * spread * 2) - spread;
+            const posY = (Math.random() * spread * 2) - spread;
+            particle.style.transform = `translate(${posX}px, ${posY}px)`;
+            
+            // Add animation for particle
+            const duration = 0.5 + (Math.random() * 1);
+            particle.style.transition = `all ${duration}s ease-out`;
+            
+            // Add particle to container
+            particleContainer.appendChild(particle);
+            
+            // Animate particle after a small delay
+            setTimeout(() => {
+                // Move particle outward
+                const distance = 20 + (Math.random() * 40);
+                const angle = Math.random() * Math.PI * 2;
+                const endX = posX + Math.cos(angle) * distance;
+                const endY = posY + Math.sin(angle) * distance;
+                
+                // Apply gravity effect
+                const gravity = 20 + (Math.random() * 30);
+                
+                // Update particle position and fade out
+                particle.style.transform = `translate(${endX}px, ${endY + gravity}px)`;
+                particle.style.opacity = '0';
+            }, 10);
+        }
+        
+        // Add particle container to UI
+        this.uiContainer.appendChild(particleContainer);
+        
+        // Add to damage numbers array for cleanup
         this.damageNumbers.push({
-            element: damageNumber,
-            lifetime: 1 // 1 second
+            element: particleContainer,
+            lifetime: 2.0 // Slightly longer lifetime for particles
         });
+        
+        // For very high damage, add a brief screen flash effect
+        if (amount > 40) {
+            const flash = document.createElement('div');
+            flash.style.position = 'absolute';
+            flash.style.top = '0';
+            flash.style.left = '0';
+            flash.style.width = '100%';
+            flash.style.height = '100%';
+            flash.style.backgroundColor = 'rgba(255, 0, 0, 0.15)';
+            flash.style.pointerEvents = 'none';
+            flash.style.zIndex = '90';
+            flash.style.transition = 'opacity 0.5s';
+            
+            this.uiContainer.appendChild(flash);
+            
+            // Fade out and remove after a short time
+            setTimeout(() => {
+                flash.style.opacity = '0';
+                setTimeout(() => {
+                    flash.remove();
+                }, 500);
+            }, 100);
+        }
     }
     
     showDialog(title, text) {
