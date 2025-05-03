@@ -175,10 +175,32 @@ export class SaveManager {
     }
     
     getWorldData() {
+        const world = this.game.world;
+        
+        // Serialize environment objects for each chunk
+        const serializedEnvironmentObjects = {};
+        for (const chunkKey in world.environmentObjects) {
+            serializedEnvironmentObjects[chunkKey] = world.environmentObjects[chunkKey].map(item => ({
+                type: item.type,
+                position: {
+                    x: item.position.x,
+                    y: item.position.y,
+                    z: item.position.z
+                }
+            }));
+        }
+        
+        // Serialize terrain chunks
+        const serializedTerrainChunks = {};
+        for (const chunkKey in world.terrainChunks) {
+            // We only need to store which chunks exist, not their full geometry
+            serializedTerrainChunks[chunkKey] = true;
+        }
+        
         // Save discovered zones, interactive objects state, etc.
         return {
-            discoveredZones: this.game.world.zones.filter(zone => zone.discovered).map(zone => zone.name),
-            interactiveObjects: this.game.world.interactiveObjects.map(obj => ({
+            discoveredZones: world.zones.filter(zone => zone.discovered).map(zone => zone.name),
+            interactiveObjects: world.interactiveObjects.map(obj => ({
                 type: obj.type,
                 position: {
                     x: obj.position.x,
@@ -187,7 +209,17 @@ export class SaveManager {
                 },
                 isOpen: obj.isOpen || false,
                 isCompleted: obj.isCompleted || false
-            }))
+            })),
+            // Save current player chunk for reference
+            currentChunk: world.currentChunk,
+            // Save environment objects by chunk
+            environmentObjects: serializedEnvironmentObjects,
+            // Save terrain chunks
+            terrainChunks: serializedTerrainChunks,
+            // Save visible chunks
+            visibleChunks: Object.keys(world.visibleChunks),
+            // Save visible terrain chunks
+            visibleTerrainChunks: Object.keys(world.visibleTerrainChunks)
         };
     }
     
@@ -280,10 +312,12 @@ export class SaveManager {
     loadWorldData(worldData) {
         if (!worldData) return;
         
+        const world = this.game.world;
+        
         // Mark discovered zones
         if (worldData.discoveredZones && Array.isArray(worldData.discoveredZones)) {
             worldData.discoveredZones.forEach(zoneName => {
-                const zone = this.game.world.zones.find(z => z.name === zoneName);
+                const zone = world.zones.find(z => z.name === zoneName);
                 if (zone) {
                     zone.discovered = true;
                 }
@@ -293,7 +327,7 @@ export class SaveManager {
         // Restore interactive objects state
         if (worldData.interactiveObjects && Array.isArray(worldData.interactiveObjects)) {
             worldData.interactiveObjects.forEach(savedObj => {
-                const obj = this.game.world.interactiveObjects.find(o => 
+                const obj = world.interactiveObjects.find(o => 
                     o.type === savedObj.type && 
                     Math.abs(o.position.x - savedObj.position.x) < 1 &&
                     Math.abs(o.position.z - savedObj.position.z) < 1
@@ -304,6 +338,47 @@ export class SaveManager {
                     obj.isCompleted = savedObj.isCompleted;
                 }
             });
+        }
+        
+        // Restore current chunk
+        if (worldData.currentChunk) {
+            world.currentChunk = worldData.currentChunk;
+        }
+        
+        // Clear existing terrain and environment objects
+        world.clearWorldObjects();
+        
+        // Restore environment objects
+        if (worldData.environmentObjects) {
+            // Store the serialized environment objects for later restoration
+            world.savedEnvironmentObjects = worldData.environmentObjects;
+        }
+        
+        // Restore terrain chunks
+        if (worldData.terrainChunks) {
+            // Store the serialized terrain chunks for later restoration
+            world.savedTerrainChunks = worldData.terrainChunks;
+        }
+        
+        // Restore visible chunks
+        if (worldData.visibleChunks && Array.isArray(worldData.visibleChunks)) {
+            world.visibleChunks = {};
+            worldData.visibleChunks.forEach(chunkKey => {
+                world.visibleChunks[chunkKey] = [];
+            });
+        }
+        
+        // Restore visible terrain chunks
+        if (worldData.visibleTerrainChunks && Array.isArray(worldData.visibleTerrainChunks)) {
+            world.visibleTerrainChunks = {};
+            worldData.visibleTerrainChunks.forEach(chunkKey => {
+                world.visibleTerrainChunks[chunkKey] = true;
+            });
+        }
+        
+        // Update the world based on player position to regenerate necessary chunks
+        if (this.game.player) {
+            world.updateWorldForPlayer(this.game.player.position);
         }
     }
     

@@ -38,6 +38,10 @@ export class World {
         this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
         this.screenSpawnDistance = 20; // Distance to move before spawning new enemies
         
+        // For save/load functionality
+        this.savedEnvironmentObjects = null; // Saved environment objects from load
+        this.savedTerrainChunks = null; // Saved terrain chunks from load
+        
         // Reference to the game instance (will be set by Game.js)
         this.game = null;
     }
@@ -148,6 +152,15 @@ export class World {
             return;
         }
         
+        // Check if this chunk was saved previously
+        const shouldCreateChunk = !this.savedTerrainChunks || 
+                                 this.savedTerrainChunks[chunkKey] || 
+                                 Object.keys(this.savedTerrainChunks).length === 0;
+        
+        if (!shouldCreateChunk) {
+            return; // Skip creating this chunk as it wasn't in the saved state
+        }
+        
         // Calculate world coordinates for this chunk
         const worldX = chunkX * this.terrainChunkSize;
         const worldZ = chunkZ * this.terrainChunkSize;
@@ -191,6 +204,31 @@ export class World {
         
         // Store the terrain chunk
         this.terrainChunks[chunkKey] = terrain;
+    }
+    
+    // Clear all world objects for a clean reload
+    clearWorldObjects() {
+        // Clear terrain chunks
+        for (const chunkKey in this.terrainChunks) {
+            this.removeTerrainChunk(chunkKey);
+        }
+        
+        // Clear environment objects
+        for (const chunkKey in this.environmentObjects) {
+            this.environmentObjects[chunkKey].forEach(item => {
+                if (item.object && item.object.parent) {
+                    this.scene.remove(item.object);
+                }
+            });
+        }
+        
+        // Reset object collections
+        this.terrainChunks = {};
+        this.visibleTerrainChunks = {};
+        this.environmentObjects = {};
+        this.visibleChunks = {};
+        
+        console.log("World objects cleared for reload");
     }
     
     // Update visible terrain chunks based on player position
@@ -1075,6 +1113,13 @@ export class World {
                 this.game.enemyManager.onPlayerMovedScreenDistance(playerPosition);
             }
         }
+        
+        // If we've loaded saved data, we can clear it now that it's been processed
+        if (this.savedEnvironmentObjects || this.savedTerrainChunks) {
+            console.log("Saved world data processed, clearing temporary storage");
+            this.savedEnvironmentObjects = null;
+            this.savedTerrainChunks = null;
+        }
     }
     
     updateVisibleChunks(centerX, centerZ) {
@@ -1182,24 +1227,18 @@ export class World {
         const chunkKey = `${chunkX},${chunkZ}`;
         const environmentObjects = [];
         
-        // Calculate world coordinates for this chunk
-        const worldX = chunkX * this.chunkSize;
-        const worldZ = chunkZ * this.chunkSize;
-        
-        // Generate environment objects for each type
-        for (const objectType of this.environmentObjectTypes) {
-            // Determine number of objects to generate based on density
-            const density = this.environmentObjectDensity[objectType];
-            const numObjects = Math.floor(this.chunkSize * this.chunkSize * density);
+        // Check if we have saved environment objects for this chunk
+        if (this.savedEnvironmentObjects && this.savedEnvironmentObjects[chunkKey]) {
+            // Restore saved environment objects
+            const savedObjects = this.savedEnvironmentObjects[chunkKey];
             
-            for (let i = 0; i < numObjects; i++) {
-                // Random position within the chunk
-                const x = worldX + random() * this.chunkSize;
-                const z = worldZ + random() * this.chunkSize;
-                
-                // Create the object based on type
+            for (const savedObj of savedObjects) {
+                // Create the object based on saved type and position
                 let object;
-                switch (objectType) {
+                const x = savedObj.position.x;
+                const z = savedObj.position.z;
+                
+                switch (savedObj.type) {
                     case 'tree':
                         object = this.createTree(x, z);
                         break;
@@ -1217,10 +1256,54 @@ export class World {
                 if (object) {
                     // Store object with its type and position for persistence
                     environmentObjects.push({
-                        type: objectType,
+                        type: savedObj.type,
                         object: object,
                         position: new THREE.Vector3(x, this.getTerrainHeight(x, z), z)
                     });
+                }
+            }
+        } else {
+            // Generate new environment objects
+            // Calculate world coordinates for this chunk
+            const worldX = chunkX * this.chunkSize;
+            const worldZ = chunkZ * this.chunkSize;
+            
+            // Generate environment objects for each type
+            for (const objectType of this.environmentObjectTypes) {
+                // Determine number of objects to generate based on density
+                const density = this.environmentObjectDensity[objectType];
+                const numObjects = Math.floor(this.chunkSize * this.chunkSize * density);
+                
+                for (let i = 0; i < numObjects; i++) {
+                    // Random position within the chunk
+                    const x = worldX + random() * this.chunkSize;
+                    const z = worldZ + random() * this.chunkSize;
+                    
+                    // Create the object based on type
+                    let object;
+                    switch (objectType) {
+                        case 'tree':
+                            object = this.createTree(x, z);
+                            break;
+                        case 'rock':
+                            object = this.createRock(x, z);
+                            break;
+                        case 'bush':
+                            object = this.createBush(x, z);
+                            break;
+                        case 'flower':
+                            object = this.createFlower(x, z);
+                            break;
+                    }
+                    
+                    if (object) {
+                        // Store object with its type and position for persistence
+                        environmentObjects.push({
+                            type: objectType,
+                            object: object,
+                            position: new THREE.Vector3(x, this.getTerrainHeight(x, z), z)
+                        });
+                    }
                 }
             }
         }
