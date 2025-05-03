@@ -157,6 +157,9 @@ export class Game {
             this.controls.update();
         }
         
+        // Update input handler for continuous skill casting
+        this.inputHandler.update(delta);
+        
         // Update player
         this.player.update(delta);
         

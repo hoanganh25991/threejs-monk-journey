@@ -11,6 +11,28 @@ export class InputHandler {
         };
         this.raycaster = new THREE.Raycaster();
         
+        // Track skill keys being held down
+        this.skillKeysHeld = {
+            Digit1: false,
+            Digit2: false,
+            Digit3: false,
+            Digit4: false,
+            Digit5: false,
+            Digit6: false,
+            Digit7: false
+        };
+        
+        // Cooldown tracking for continuous casting
+        this.skillCastCooldowns = {
+            Digit1: 0,
+            Digit2: 0,
+            Digit3: 0,
+            Digit4: 0,
+            Digit5: 0,
+            Digit6: 0,
+            Digit7: 0
+        };
+        
         // Initialize input event listeners
         this.initKeyboardEvents();
         this.initMouseEvents();
@@ -38,7 +60,10 @@ export class InputHandler {
                 case 'Digit5':
                 case 'Digit6':
                 case 'Digit7':
-                    // Use skill
+                    // Mark skill key as held down
+                    this.skillKeysHeld[event.code] = true;
+                    
+                    // Initial skill cast when key is first pressed
                     const skillIndex = parseInt(event.code.charAt(5)) - 1;
                     this.game.player.useSkill(skillIndex);
                     break;
@@ -52,6 +77,12 @@ export class InputHandler {
         // Key up event
         window.addEventListener('keyup', (event) => {
             this.keys[event.code] = false;
+            
+            // Handle skill key release
+            if (this.skillKeysHeld[event.code] !== undefined) {
+                this.skillKeysHeld[event.code] = false;
+                this.skillCastCooldowns[event.code] = 0;
+            }
         });
     }
     
@@ -200,5 +231,26 @@ export class InputHandler {
     
     isMouseDown() {
         return this.mouse.isDown;
+    }
+    
+    update(delta) {
+        // Handle continuous skill casting for held keys
+        const castInterval = 0.1; // Cast every 0.1 seconds when key is held
+        
+        for (const keyCode in this.skillKeysHeld) {
+            if (this.skillKeysHeld[keyCode]) {
+                // Reduce cooldown
+                this.skillCastCooldowns[keyCode] -= delta;
+                
+                // If cooldown is up, cast the skill again
+                if (this.skillCastCooldowns[keyCode] <= 0) {
+                    const skillIndex = parseInt(keyCode.charAt(5)) - 1;
+                    this.game.player.useSkill(skillIndex);
+                    
+                    // Reset cooldown
+                    this.skillCastCooldowns[keyCode] = castInterval;
+                }
+            }
+        }
     }
 }
