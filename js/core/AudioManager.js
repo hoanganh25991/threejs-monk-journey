@@ -17,6 +17,9 @@ export class AudioManager {
         this.sounds = {};
         this.music = {};
         
+        // Audio file availability tracking
+        this.audioFilesAvailable = false;
+        
         console.log('Audio system initialized');
     }
     
@@ -26,14 +29,38 @@ export class AudioManager {
             this.listener = new THREE.AudioListener();
             this.game.camera.add(this.listener);
             
-            // Create sound collections
-            this.createSoundEffects();
-            this.createMusic();
+            // Check if audio files exist
+            this.checkAudioFilesExist().then(available => {
+                this.audioFilesAvailable = available;
+                
+                if (available) {
+                    console.log('Audio files found, initializing audio system');
+                    // Create sound collections
+                    this.createSoundEffects();
+                    this.createMusic();
+                } else {
+                    console.warn('Audio files not found, using simulated audio');
+                    // Create simulated sound collections
+                    this.createSimulatedSoundEffects();
+                    this.createSimulatedMusic();
+                }
+            });
             
             return true;
         } catch (error) {
             console.error('Error initializing audio system:', error);
             this.audioEnabled = false;
+            return false;
+        }
+    }
+    
+    async checkAudioFilesExist() {
+        try {
+            // Check if main theme exists as a simple test
+            const response = await fetch('assets/audio/main_theme.mp3', { method: 'HEAD' });
+            return response.ok;
+        } catch (error) {
+            console.warn('Error checking audio files:', error);
             return false;
         }
     }
@@ -74,6 +101,42 @@ export class AudioManager {
         this.music.bossTheme = this.createSound('bossTheme', 'boss_theme.mp3', this.musicVolume, true);
     }
     
+    createSimulatedSoundEffects() {
+        // Player sounds
+        this.sounds.playerAttack = this.createSimulatedSound('playerAttack', 220, 0.7, 0.3);
+        this.sounds.playerHit = this.createSimulatedSound('playerHit', 330, 0.8, 0.2);
+        this.sounds.playerDeath = this.createSimulatedSound('playerDeath', 110, 1.0, 0.5);
+        this.sounds.levelUp = this.createSimulatedSound('levelUp', 440, 1.0, 0.4);
+        
+        // Skill sounds
+        this.sounds.skillWaveStrike = this.createSimulatedSound('skillWaveStrike', 280, 0.8, 0.3);
+        this.sounds.skillCycloneStrike = this.createSimulatedSound('skillCycloneStrike', 320, 0.8, 0.4);
+        this.sounds.skillSevenSidedStrike = this.createSimulatedSound('skillSevenSidedStrike', 380, 0.8, 0.5);
+        this.sounds.skillInnerSanctuary = this.createSimulatedSound('skillInnerSanctuary', 180, 0.6, 0.6);
+        
+        // Enemy sounds
+        this.sounds.enemyAttack = this.createSimulatedSound('enemyAttack', 200, 0.6, 0.2);
+        this.sounds.enemyHit = this.createSimulatedSound('enemyHit', 250, 0.7, 0.1);
+        this.sounds.enemyDeath = this.createSimulatedSound('enemyDeath', 150, 0.8, 0.4);
+        this.sounds.bossDeath = this.createSimulatedSound('bossDeath', 100, 1.0, 0.7);
+        
+        // UI sounds
+        this.sounds.buttonClick = this.createSimulatedSound('buttonClick', 500, 0.5, 0.1);
+        this.sounds.inventoryOpen = this.createSimulatedSound('inventoryOpen', 350, 0.5, 0.2);
+        this.sounds.itemPickup = this.createSimulatedSound('itemPickup', 400, 0.6, 0.2);
+        
+        // Environment sounds
+        this.sounds.chestOpen = this.createSimulatedSound('chestOpen', 300, 0.7, 0.3);
+        this.sounds.doorOpen = this.createSimulatedSound('doorOpen', 200, 0.7, 0.4);
+    }
+    
+    createSimulatedMusic() {
+        // Background music
+        this.music.mainTheme = this.createSimulatedSound('mainTheme', 220, this.musicVolume, 1.0, true);
+        this.music.battleTheme = this.createSimulatedSound('battleTheme', 280, this.musicVolume, 1.0, true);
+        this.music.bossTheme = this.createSimulatedSound('bossTheme', 180, this.musicVolume, 1.0, true);
+    }
+    
     createSound(name, filename, volume = 1.0, loop = false) {
         try {
             // Create audio object
@@ -87,14 +150,21 @@ export class AudioManager {
             // Load audio file
             const audioLoader = new THREE.AudioLoader();
             
-            // Use a placeholder function for loading since we don't have actual files
-            // In a real implementation, this would load the file
-            // audioLoader.load(`assets/audio/${filename}`, buffer => {
-            //     sound.setBuffer(buffer);
-            // });
-            
-            // For now, we'll simulate the sound with a buffer
-            this.simulateAudioBuffer(sound);
+            // Load the actual file
+            audioLoader.load(`assets/audio/${filename}`, buffer => {
+                sound.setBuffer(buffer);
+                console.log(`Loaded audio: ${name}`);
+            }, 
+            // Progress callback
+            (xhr) => {
+                console.log(`${name} loading: ${(xhr.loaded / xhr.total * 100)}% loaded`);
+            },
+            // Error callback
+            (error) => {
+                console.error(`Error loading audio ${name}:`, error);
+                // Fall back to simulated sound
+                this.simulateAudioBuffer(sound);
+            });
             
             return sound;
         } catch (error) {
@@ -103,17 +173,39 @@ export class AudioManager {
         }
     }
     
-    simulateAudioBuffer(sound) {
+    createSimulatedSound(name, frequency = 220, volume = 1.0, duration = 0.5, loop = false) {
+        try {
+            // Create audio object
+            const sound = new THREE.Audio(this.listener);
+            
+            // Set properties
+            sound.name = name;
+            sound.setVolume(volume);
+            sound.setLoop(loop);
+            
+            // Create a simulated buffer
+            this.simulateAudioBuffer(sound, frequency, duration);
+            
+            return sound;
+        } catch (error) {
+            console.error(`Error creating simulated sound ${name}:`, error);
+            return null;
+        }
+    }
+    
+    simulateAudioBuffer(sound, frequency = 220, duration = 0.5) {
         // Create a simple oscillator-based sound as a placeholder
-        // This is just for demonstration and won't actually play
         const context = this.listener.context;
         const sampleRate = context.sampleRate;
-        const buffer = context.createBuffer(1, sampleRate * 1, sampleRate);
+        const buffer = context.createBuffer(1, sampleRate * duration, sampleRate);
         
         // Fill the buffer with a simple sine wave
         const data = buffer.getChannelData(0);
         for (let i = 0; i < buffer.length; i++) {
-            data[i] = Math.sin(i * 0.01) * 0.5;
+            // Create a decaying sine wave
+            const t = i / sampleRate;
+            const decay = 1 - t / duration;
+            data[i] = Math.sin(2 * Math.PI * frequency * t) * 0.5 * decay;
         }
         
         sound.setBuffer(buffer);
@@ -123,17 +215,26 @@ export class AudioManager {
         if (!this.audioEnabled || this.isMuted) return;
         
         const sound = this.sounds[name];
-        if (sound && !sound.isPlaying) {
+        if (sound) {
             try {
+                // If the sound is already playing, stop it first
+                if (sound.isPlaying) {
+                    sound.stop();
+                }
+                
+                // Play the sound
                 sound.play();
+                return true;
             } catch (error) {
                 console.warn(`Could not play sound ${name}:`, error);
+                return false;
             }
         }
+        return false;
     }
     
     playMusic(name = 'mainTheme') {
-        if (!this.audioEnabled || this.isMuted) return;
+        if (!this.audioEnabled || this.isMuted) return false;
         
         // Stop current music if playing
         this.stopMusic();
@@ -144,29 +245,53 @@ export class AudioManager {
             try {
                 music.play();
                 this.currentMusic = name;
+                return true;
             } catch (error) {
                 console.warn(`Could not play music ${name}:`, error);
+                return false;
             }
         }
+        return false;
     }
     
     stopMusic() {
         if (this.currentMusic && this.music[this.currentMusic]) {
-            this.music[this.currentMusic].stop();
+            try {
+                this.music[this.currentMusic].stop();
+                return true;
+            } catch (error) {
+                console.warn(`Could not stop music ${this.currentMusic}:`, error);
+                return false;
+            }
         }
         this.currentMusic = null;
+        return true;
     }
     
     pauseMusic() {
         if (this.currentMusic && this.music[this.currentMusic]) {
-            this.music[this.currentMusic].pause();
+            try {
+                this.music[this.currentMusic].pause();
+                return true;
+            } catch (error) {
+                console.warn(`Could not pause music ${this.currentMusic}:`, error);
+                return false;
+            }
         }
+        return false;
     }
     
     resumeMusic() {
         if (this.currentMusic && this.music[this.currentMusic]) {
-            this.music[this.currentMusic].play();
+            try {
+                this.music[this.currentMusic].play();
+                return true;
+            } catch (error) {
+                console.warn(`Could not resume music ${this.currentMusic}:`, error);
+                return false;
+            }
         }
+        return false;
     }
     
     toggleMute() {
@@ -179,7 +304,11 @@ export class AudioManager {
             // Stop all sound effects
             Object.values(this.sounds).forEach(sound => {
                 if (sound && sound.isPlaying) {
-                    sound.stop();
+                    try {
+                        sound.stop();
+                    } catch (error) {
+                        console.warn(`Could not stop sound:`, error);
+                    }
                 }
             });
         } else {
@@ -201,6 +330,8 @@ export class AudioManager {
                 music.setVolume(this.musicVolume);
             }
         });
+        
+        return this.musicVolume;
     }
     
     setSFXVolume(volume) {
@@ -212,5 +343,68 @@ export class AudioManager {
                 sound.setVolume(this.sfxVolume);
             }
         });
+        
+        return this.sfxVolume;
+    }
+    
+    getMusicVolume() {
+        return this.musicVolume;
+    }
+    
+    getSFXVolume() {
+        return this.sfxVolume;
+    }
+    
+    isMusicPlaying() {
+        return this.currentMusic !== null && this.music[this.currentMusic]?.isPlaying;
+    }
+    
+    getCurrentMusic() {
+        return this.currentMusic;
+    }
+    
+    isAudioEnabled() {
+        return this.audioEnabled;
+    }
+    
+    areAudioFilesAvailable() {
+        return this.audioFilesAvailable;
+    }
+    
+    // Save audio settings to localStorage
+    saveSettings() {
+        try {
+            const settings = {
+                isMuted: this.isMuted,
+                musicVolume: this.musicVolume,
+                sfxVolume: this.sfxVolume
+            };
+            
+            localStorage.setItem('audioSettings', JSON.stringify(settings));
+            return true;
+        } catch (error) {
+            console.error('Error saving audio settings:', error);
+            return false;
+        }
+    }
+    
+    // Load audio settings from localStorage
+    loadSettings() {
+        try {
+            const settingsJson = localStorage.getItem('audioSettings');
+            if (settingsJson) {
+                const settings = JSON.parse(settingsJson);
+                
+                // Apply settings
+                this.isMuted = settings.isMuted || false;
+                this.setMusicVolume(settings.musicVolume || 0.5);
+                this.setSFXVolume(settings.sfxVolume || 0.8);
+                
+                return true;
+            }
+        } catch (error) {
+            console.error('Error loading audio settings:', error);
+        }
+        return false;
     }
 }

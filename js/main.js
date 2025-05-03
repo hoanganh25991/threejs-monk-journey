@@ -173,12 +173,153 @@ function showOptionsMenu(game, mainMenu) {
     audioTitle.style.fontSize = '24px';
     audioTitle.style.marginTop = '20px';
     
-    // Audio disabled message
-    const audioDisabledMessage = document.createElement('div');
-    audioDisabledMessage.textContent = 'Audio is currently disabled. Audio files need to be added to the assets/audio directory.';
-    audioDisabledMessage.style.color = '#ff9999';
-    audioDisabledMessage.style.margin = '10px 0';
-    audioDisabledMessage.style.fontSize = '14px';
+    // Check if audio is enabled
+    const audioEnabled = game.audioManager.isAudioEnabled();
+    
+    if (audioEnabled) {
+        // Create audio controls container
+        const audioControlsContainer = document.createElement('div');
+        audioControlsContainer.style.margin = '10px 0';
+        
+        // Mute toggle
+        const muteContainer = document.createElement('div');
+        muteContainer.style.margin = '10px 0';
+        
+        const muteLabel = document.createElement('label');
+        muteLabel.textContent = 'Mute Audio: ';
+        muteLabel.style.color = '#fff';
+        
+        const muteCheckbox = document.createElement('input');
+        muteCheckbox.type = 'checkbox';
+        muteCheckbox.checked = game.audioManager.isMuted;
+        muteCheckbox.style.marginLeft = '10px';
+        
+        muteCheckbox.addEventListener('change', () => {
+            game.audioManager.toggleMute();
+            game.audioManager.saveSettings();
+        });
+        
+        muteContainer.appendChild(muteLabel);
+        muteContainer.appendChild(muteCheckbox);
+        
+        // Music volume slider
+        const musicVolumeContainer = document.createElement('div');
+        musicVolumeContainer.style.margin = '10px 0';
+        
+        const musicVolumeLabel = document.createElement('label');
+        musicVolumeLabel.textContent = 'Music Volume: ';
+        musicVolumeLabel.style.color = '#fff';
+        
+        const musicVolumeSlider = document.createElement('input');
+        musicVolumeSlider.type = 'range';
+        musicVolumeSlider.min = '0';
+        musicVolumeSlider.max = '100';
+        musicVolumeSlider.value = game.audioManager.getMusicVolume() * 100;
+        musicVolumeSlider.style.marginLeft = '10px';
+        musicVolumeSlider.style.width = '150px';
+        
+        const musicVolumeValue = document.createElement('span');
+        musicVolumeValue.textContent = `${Math.round(game.audioManager.getMusicVolume() * 100)}%`;
+        musicVolumeValue.style.color = '#fff';
+        musicVolumeValue.style.marginLeft = '10px';
+        
+        musicVolumeSlider.addEventListener('input', () => {
+            const volume = parseInt(musicVolumeSlider.value) / 100;
+            game.audioManager.setMusicVolume(volume);
+            musicVolumeValue.textContent = `${Math.round(volume * 100)}%`;
+        });
+        
+        musicVolumeSlider.addEventListener('change', () => {
+            game.audioManager.saveSettings();
+        });
+        
+        musicVolumeContainer.appendChild(musicVolumeLabel);
+        musicVolumeContainer.appendChild(musicVolumeSlider);
+        musicVolumeContainer.appendChild(musicVolumeValue);
+        
+        // SFX volume slider
+        const sfxVolumeContainer = document.createElement('div');
+        sfxVolumeContainer.style.margin = '10px 0';
+        
+        const sfxVolumeLabel = document.createElement('label');
+        sfxVolumeLabel.textContent = 'SFX Volume: ';
+        sfxVolumeLabel.style.color = '#fff';
+        
+        const sfxVolumeSlider = document.createElement('input');
+        sfxVolumeSlider.type = 'range';
+        sfxVolumeSlider.min = '0';
+        sfxVolumeSlider.max = '100';
+        sfxVolumeSlider.value = game.audioManager.getSFXVolume() * 100;
+        sfxVolumeSlider.style.marginLeft = '10px';
+        sfxVolumeSlider.style.width = '150px';
+        
+        const sfxVolumeValue = document.createElement('span');
+        sfxVolumeValue.textContent = `${Math.round(game.audioManager.getSFXVolume() * 100)}%`;
+        sfxVolumeValue.style.color = '#fff';
+        sfxVolumeValue.style.marginLeft = '10px';
+        
+        sfxVolumeSlider.addEventListener('input', () => {
+            const volume = parseInt(sfxVolumeSlider.value) / 100;
+            game.audioManager.setSFXVolume(volume);
+            sfxVolumeValue.textContent = `${Math.round(volume * 100)}%`;
+        });
+        
+        sfxVolumeSlider.addEventListener('change', () => {
+            game.audioManager.saveSettings();
+            // Play a test sound
+            game.audioManager.playSound('buttonClick');
+        });
+        
+        sfxVolumeContainer.appendChild(sfxVolumeLabel);
+        sfxVolumeContainer.appendChild(sfxVolumeSlider);
+        sfxVolumeContainer.appendChild(sfxVolumeValue);
+        
+        // Test sound button
+        const testSoundContainer = document.createElement('div');
+        testSoundContainer.style.margin = '10px 0';
+        
+        const testSoundButton = document.createElement('button');
+        testSoundButton.textContent = 'Test Sound';
+        testSoundButton.className = 'menu-button';
+        testSoundButton.style.padding = '5px 10px';
+        testSoundButton.style.fontSize = '14px';
+        
+        testSoundButton.addEventListener('click', () => {
+            game.audioManager.playSound('buttonClick');
+        });
+        
+        testSoundContainer.appendChild(testSoundButton);
+        
+        // Add all audio controls to container
+        audioControlsContainer.appendChild(muteContainer);
+        audioControlsContainer.appendChild(musicVolumeContainer);
+        audioControlsContainer.appendChild(sfxVolumeContainer);
+        audioControlsContainer.appendChild(testSoundContainer);
+        
+        // Add audio controls to menu
+        optionsMenu.appendChild(audioTitle);
+        optionsMenu.appendChild(audioControlsContainer);
+        
+        // Add note about simulated audio if files aren't available
+        if (!game.audioManager.areAudioFilesAvailable()) {
+            const simulatedAudioNote = document.createElement('div');
+            simulatedAudioNote.textContent = 'Using simulated audio. For better audio experience, add audio files to the assets/audio directory.';
+            simulatedAudioNote.style.color = '#ffcc99';
+            simulatedAudioNote.style.margin = '10px 0';
+            simulatedAudioNote.style.fontSize = '14px';
+            optionsMenu.appendChild(simulatedAudioNote);
+        }
+    } else {
+        // Audio disabled message
+        const audioDisabledMessage = document.createElement('div');
+        audioDisabledMessage.textContent = 'Audio is currently disabled. Audio files need to be added to the assets/audio directory.';
+        audioDisabledMessage.style.color = '#ff9999';
+        audioDisabledMessage.style.margin = '10px 0';
+        audioDisabledMessage.style.fontSize = '14px';
+        
+        optionsMenu.appendChild(audioTitle);
+        optionsMenu.appendChild(audioDisabledMessage);
+    }
     
     // Back button
     const backButton = document.createElement('button');
@@ -193,8 +334,6 @@ function showOptionsMenu(game, mainMenu) {
     optionsMenu.appendChild(title);
     optionsMenu.appendChild(gameTitle);
     optionsMenu.appendChild(difficultyContainer);
-    optionsMenu.appendChild(audioTitle);
-    optionsMenu.appendChild(audioDisabledMessage);
     optionsMenu.appendChild(backButton);
     
     document.body.appendChild(optionsMenu);
