@@ -215,13 +215,8 @@ export class CollisionManager {
             playerPosition.z
         );
         
-        // Check if player is in water
-        if (terrainHeight < this.world.water.position.y) {
-            // Player is in water, apply water effects
-            this.player.setInWater(true);
-        } else {
-            this.player.setInWater(false);
-        }
+        // Water has been removed, so player is never in water
+        this.player.setInWater(false);
     }
     
     checkSkillEnemyCollisions() {

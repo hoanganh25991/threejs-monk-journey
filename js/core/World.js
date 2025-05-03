@@ -5,8 +5,8 @@ export class World {
     constructor(scene, loadingManager) {
         this.scene = scene;
         this.loadingManager = loadingManager;
-        this.terrainSize = 100; // Smaller initial terrain (1/10 of previous size)
-        this.terrainResolution = 128; // Adjusted resolution for smaller terrain
+        this.terrainSize = 50; // Match the size of terrain chunks for consistency
+        this.terrainResolution = 16; // Match the resolution of terrain chunks for consistency
         this.terrainHeight = 10;
         this.objects = [];
         this.zones = [];
@@ -136,9 +136,6 @@ export class World {
         
         console.log("Flat terrain created and added to scene");
         
-        // Add water plane
-        this.createWater();
-        
         // Initialize the first chunks around the player
         this.updateWorldForPlayer(new THREE.Vector3(0, 0, 0));
     }
@@ -220,6 +217,14 @@ export class World {
                     this.scene.remove(item.object);
                 }
             });
+        }
+        
+        // Remove initial terrain if it exists
+        if (this.terrain && this.terrain.parent) {
+            this.scene.remove(this.terrain);
+            this.terrain.geometry.dispose();
+            this.terrain.material.dispose();
+            this.terrain = null;
         }
         
         // Reset object collections
@@ -362,24 +367,7 @@ export class World {
         return texture;
     }
     
-    createWater() {
-        // Create an extremely large water plane that extends far beyond the explorable area
-        const waterGeometry = new THREE.PlaneGeometry(10000, 10000); // Massive water plane
-        const waterMaterial = new THREE.MeshStandardMaterial({
-            color: 0x0055ff,
-            transparent: true,
-            opacity: 0.6,
-            roughness: 0.1,
-            metalness: 0.8
-        });
-        
-        const water = new THREE.Mesh(waterGeometry, waterMaterial);
-        water.rotation.x = -Math.PI / 2;
-        water.position.y = -0.1; // Slightly below terrain to avoid z-fighting
-        
-        this.scene.add(water);
-        this.water = water;
-    }
+    // Water has been removed as it's been replaced with grass terrain
     
     createStructures() {
         // Create initial structures near the player's starting position
