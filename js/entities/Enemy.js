@@ -37,6 +37,9 @@ export class Enemy {
         
         // Enemy model
         this.modelGroup = null;
+        
+        // Reference to game world for terrain height
+        this.world = null;
     }
     
     init() {
@@ -637,6 +640,9 @@ export class Enemy {
         // Skip update if dead
         if (this.state.isDead) return;
         
+        // Ensure enemy is always at the correct terrain height
+        this.updateTerrainHeight();
+        
         // Update attack cooldown
         if (this.state.attackCooldown > 0) {
             this.state.attackCooldown -= delta;
@@ -728,6 +734,12 @@ export class Enemy {
                 this.position.y,
                 this.position.z + direction.z * step
             );
+            
+            // Get terrain height at new position if world is available
+            if (this.world) {
+                const terrainHeight = this.world.getTerrainHeight(newPosition.x, newPosition.z);
+                newPosition.y = terrainHeight + this.heightOffset;
+            }
             
             // Update position
             this.setPosition(newPosition.x, newPosition.y, newPosition.z);
@@ -1205,6 +1217,25 @@ export class Enemy {
         // Update model position
         if (this.modelGroup) {
             this.modelGroup.position.copy(this.position);
+        }
+    }
+    
+    updateTerrainHeight() {
+        // Ensure enemy is always at the correct terrain height
+        if (this.world) {
+            const terrainHeight = this.world.getTerrainHeight(this.position.x, this.position.z);
+            
+            // Only update if the terrain height is higher than current position
+            // or if the enemy is significantly above the terrain
+            if (this.position.y < terrainHeight + this.heightOffset || 
+                this.position.y > terrainHeight + this.heightOffset + 0.5) {
+                this.position.y = terrainHeight + this.heightOffset;
+                
+                // Update model position
+                if (this.modelGroup) {
+                    this.modelGroup.position.y = this.position.y;
+                }
+            }
         }
     }
     

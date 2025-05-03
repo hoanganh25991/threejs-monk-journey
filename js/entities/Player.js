@@ -207,7 +207,7 @@ export class Player {
                 name: 'Inner Sanctuary',
                 description: 'Create a protective zone that reduces damage',
                 type: 'buff',
-                damage: 0,
+                damage: 10,
                 manaCost: 20,
                 cooldown: 0.1, // Reduced cooldown
                 range: 0,
@@ -258,6 +258,9 @@ export class Player {
         // Update movement
         this.updateMovement(delta);
         
+        // Ensure player is always at the correct terrain height
+        this.updateTerrainHeight();
+        
         // Update camera
         this.updateCamera();
         
@@ -269,6 +272,25 @@ export class Player {
         
         // Regenerate resources
         this.regenerateResources(delta);
+    }
+    
+    updateTerrainHeight() {
+        // Ensure player is always at the correct terrain height
+        if (this.game && this.game.world) {
+            const terrainHeight = this.game.world.getTerrainHeight(this.position.x, this.position.z);
+            
+            // Only update if the terrain height is higher than current position
+            // or if the player is significantly above the terrain
+            if (this.position.y < terrainHeight + this.heightOffset || 
+                this.position.y > terrainHeight + this.heightOffset + 0.5) {
+                this.position.y = terrainHeight + this.heightOffset;
+                
+                // Update model position
+                if (this.modelGroup) {
+                    this.modelGroup.position.y = this.position.y;
+                }
+            }
+        }
     }
     
     updateMovement(delta) {

@@ -303,6 +303,18 @@ export class EnemyManager {
         
         // Create enemy
         const enemy = new Enemy(this.scene, this.player, scaledEnemyType);
+        
+        // Set world reference for terrain height
+        if (this.game && this.game.world) {
+            enemy.world = this.game.world;
+            
+            // Adjust initial position to be on terrain
+            if (spawnPosition) {
+                const terrainHeight = this.game.world.getTerrainHeight(spawnPosition.x, spawnPosition.z);
+                spawnPosition.y = terrainHeight + enemy.heightOffset;
+            }
+        }
+        
         enemy.init();
         enemy.setPosition(spawnPosition.x, spawnPosition.y, spawnPosition.z);
         
@@ -530,6 +542,18 @@ export class EnemyManager {
         
         // Create boss
         const boss = new Enemy(this.scene, this.player, scaledBossType);
+        
+        // Set world reference for terrain height
+        if (this.game && this.game.world) {
+            boss.world = this.game.world;
+            
+            // Adjust initial position to be on terrain
+            if (spawnPosition) {
+                const terrainHeight = this.game.world.getTerrainHeight(spawnPosition.x, spawnPosition.z);
+                spawnPosition.y = terrainHeight + boss.heightOffset;
+            }
+        }
+        
         boss.init();
         boss.setPosition(spawnPosition.x, spawnPosition.y, spawnPosition.z);
         
