@@ -172,7 +172,7 @@ export class Player {
                 type: 'ranged',
                 damage: 20,
                 manaCost: 15,
-                cooldown: 0.5, // Reduced cooldown
+                cooldown: 0.1, // Reduced cooldown
                 range: 10,
                 radius: 2,
                 duration: 1,
@@ -184,7 +184,7 @@ export class Player {
                 type: 'aoe',
                 damage: 15,
                 manaCost: 25,
-                cooldown: 0.5, // Reduced cooldown
+                cooldown: 0.1, // Reduced cooldown
                 range: 5,
                 radius: 4,
                 duration: 0.5,
@@ -196,7 +196,7 @@ export class Player {
                 type: 'multi',
                 damage: 10,
                 manaCost: 30,
-                cooldown: 0.5, // Reduced cooldown
+                cooldown: 0.1, // Reduced cooldown
                 range: 6,
                 radius: 1,
                 duration: 2,
@@ -209,7 +209,7 @@ export class Player {
                 type: 'buff',
                 damage: 0,
                 manaCost: 20,
-                cooldown: 0.5, // Reduced cooldown
+                cooldown: 0.1, // Reduced cooldown
                 range: 0,
                 radius: 3,
                 duration: 5,
@@ -221,7 +221,7 @@ export class Player {
                 type: 'summon',
                 damage: 8,
                 manaCost: 35,
-                cooldown: 0.5, // Reduced cooldown
+                cooldown: 0.1, // Reduced cooldown
                 range: 2,
                 radius: 1,
                 duration: 10,
@@ -233,7 +233,7 @@ export class Player {
                 type: 'wave',
                 damage: 30,
                 manaCost: 40,
-                cooldown: 0.5, // Reduced cooldown
+                cooldown: 0.1, // Reduced cooldown
                 range: 8,
                 radius: 2,
                 duration: 1,
@@ -245,7 +245,7 @@ export class Player {
                 type: 'mark',
                 damage: 15,
                 manaCost: 25,
-                cooldown: 0.5, // Reduced cooldown
+                cooldown: 0.1, // Reduced cooldown
                 range: 2,
                 radius: 3,
                 duration: 5,
