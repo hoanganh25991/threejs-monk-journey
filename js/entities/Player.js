@@ -13,8 +13,8 @@ export class Player {
             experience: 0,
             experienceToNextLevel: 100,
             health: 100,
-            maxHealth: 100,
-            mana: 100,
+            maxHealth: 100_000,
+            mana: 100_000,
             maxMana: 100,
             strength: 10,
             dexterity: 10,
@@ -291,6 +291,12 @@ export class Player {
                     this.position.z + direction.z * step
                 );
                 
+                // Get terrain height at new position
+                if (this.game && this.game.world) {
+                    const terrainHeight = this.game.world.getTerrainHeight(newPosition.x, newPosition.z);
+                    newPosition.y = terrainHeight + this.heightOffset;
+                }
+                
                 // Update position
                 this.setPosition(newPosition.x, newPosition.y, newPosition.z);
                 
@@ -301,6 +307,11 @@ export class Player {
                 // Reached target
                 this.state.isMoving = false;
             }
+        }
+        
+        // Update the world based on player position
+        if (this.game && this.game.world) {
+            this.game.world.updateWorldForPlayer(this.position);
         }
     }
     

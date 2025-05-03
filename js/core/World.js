@@ -5,12 +5,18 @@ export class World {
     constructor(scene, loadingManager) {
         this.scene = scene;
         this.loadingManager = loadingManager;
-        this.terrainSize = 100;
-        this.terrainResolution = 128;
+        this.terrainSize = 1000; // 10x larger terrain
+        this.terrainResolution = 256; // Increased resolution for larger terrain
         this.terrainHeight = 10;
         this.objects = [];
         this.zones = [];
         this.interactiveObjects = [];
+        
+        // For infinite terrain
+        this.currentChunk = { x: 0, z: 0 };
+        this.chunkSize = 200; // Size of each terrain chunk
+        this.visibleChunks = {}; // Store currently visible chunks
+        this.objectDensity = 0.0001; // Controls how many objects per unit area
     }
     
     async init() {
@@ -219,22 +225,14 @@ export class World {
     }
     
     createStructures() {
-        // Create ruins
+        // Create initial structures near the player's starting position
         this.createRuins(0, 0);
-        this.createRuins(30, 20);
-        this.createRuins(-25, -15);
         
-        // Create bridges
-        this.createBridge(15, 5, 10, 3);
-        this.createBridge(-10, -8, 8, 2);
-        
-        // Create small buildings
-        this.createBuilding(5, 15, 5, 5, 4);
-        this.createBuilding(-20, 10, 4, 6, 5);
-        this.createBuilding(25, -20, 6, 4, 3);
-        
-        // Create Dark Sanctum
+        // Create Dark Sanctum as a landmark
         this.createDarkSanctum(0, -40);
+        
+        // Initialize the first chunks around the player
+        this.updateWorldForPlayer(new THREE.Vector3(0, 0, 0));
     }
     
     createRuins(x, z) {
@@ -865,11 +863,15 @@ export class World {
             return 0; // Return a safe default height
         }
         
-        // Convert world coordinates to terrain coordinates
-        const terrainX = (x / this.terrainSize + 0.5) * this.terrainResolution;
-        const terrainZ = (z / this.terrainSize + 0.5) * this.terrainResolution;
+        // Wrap coordinates to create infinite terrain effect
+        const wrappedX = ((x % this.terrainSize) + this.terrainSize) % this.terrainSize;
+        const wrappedZ = ((z % this.terrainSize) + this.terrainSize) % this.terrainSize;
         
-        // Ensure coordinates are within bounds
+        // Convert world coordinates to terrain coordinates
+        const terrainX = (wrappedX / this.terrainSize) * this.terrainResolution;
+        const terrainZ = (wrappedZ / this.terrainSize) * this.terrainResolution;
+        
+        // Ensure coordinates are within bounds (should always be true with wrapping)
         if (terrainX < 0 || terrainX >= this.terrainResolution || 
             terrainZ < 0 || terrainZ >= this.terrainResolution) {
             console.warn("Terrain coordinates out of bounds:", terrainX, terrainZ);
@@ -963,5 +965,219 @@ export class World {
         texture.repeat.set(4, 4);
         
         return texture;
+    }
+    
+    // New methods for infinite terrain with random objects
+    
+    updateWorldForPlayer(playerPosition) {
+        // Get the chunk coordinates for the player's position
+        const chunkX = Math.floor(playerPosition.x / this.chunkSize);
+        const chunkZ = Math.floor(playerPosition.z / this.chunkSize);
+        
+        // If player has moved to a new chunk
+        if (chunkX !== this.currentChunk.x || chunkZ !== this.currentChunk.z) {
+            this.currentChunk = { x: chunkX, z: chunkZ };
+            
+            // Generate objects in the new chunks around the player
+            this.updateVisibleChunks(chunkX, chunkZ);
+        }
+    }
+    
+    updateVisibleChunks(centerX, centerZ) {
+        // Track which chunks should be visible
+        const newVisibleChunks = {};
+        const renderDistance = 2; // How many chunks in each direction to render
+        
+        // Generate or update chunks in render distance
+        for (let x = centerX - renderDistance; x <= centerX + renderDistance; x++) {
+            for (let z = centerZ - renderDistance; z <= centerZ + renderDistance; z++) {
+                const chunkKey = `${x},${z}`;
+                newVisibleChunks[chunkKey] = true;
+                
+                // If this chunk doesn't exist yet, create it
+                if (!this.visibleChunks[chunkKey]) {
+                    this.generateChunkObjects(x, z);
+                }
+            }
+        }
+        
+        // Remove objects from chunks that are no longer visible
+        for (const chunkKey in this.visibleChunks) {
+            if (!newVisibleChunks[chunkKey]) {
+                this.removeChunkObjects(chunkKey);
+            }
+        }
+        
+        // Update the visible chunks
+        this.visibleChunks = newVisibleChunks;
+    }
+    
+    generateChunkObjects(chunkX, chunkZ) {
+        const chunkKey = `${chunkX},${chunkZ}`;
+        const chunkObjects = [];
+        
+        // Calculate world coordinates for this chunk
+        const worldX = chunkX * this.chunkSize;
+        const worldZ = chunkZ * this.chunkSize;
+        
+        // Seed the random number generator based on chunk coordinates for consistency
+        const seed = (chunkX * 16777259 + chunkZ * 16807) % 2147483647;
+        const random = this.seededRandom(seed);
+        
+        // Determine number of objects to generate based on chunk size and density
+        const numObjects = Math.floor(this.chunkSize * this.chunkSize * this.objectDensity);
+        
+        // Generate random objects
+        for (let i = 0; i < numObjects; i++) {
+            // Random position within the chunk
+            const x = worldX + random() * this.chunkSize;
+            const z = worldZ + random() * this.chunkSize;
+            
+            // Determine object type based on random value
+            const objectType = random();
+            
+            // Create different types of objects based on random value
+            if (objectType < 0.3) {
+                // Create a ruin
+                this.createRuins(x, z);
+            } else if (objectType < 0.5) {
+                // Create a building
+                const width = 3 + random() * 5;
+                const depth = 3 + random() * 5;
+                const height = 2 + random() * 5;
+                this.createBuilding(x, z, width, depth, height);
+            } else if (objectType < 0.6) {
+                // Create a bridge
+                const length = 5 + random() * 10;
+                const width = 2 + random() * 3;
+                this.createBridge(x, z, length, width);
+            } else if (objectType < 0.7) {
+                // Create a chest
+                this.createChest(x, z);
+            } else if (objectType < 0.8) {
+                // Create a quest marker
+                const questNames = ["Demon Hunt", "Lost Treasure", "Ancient Ritual", "Forgotten Tomb"];
+                const questName = questNames[Math.floor(random() * questNames.length)];
+                this.createQuestMarker(x, z, questName);
+            } else {
+                // Create a tree or rock
+                if (random() < 0.5) {
+                    this.createTree(x, z);
+                } else {
+                    this.createRock(x, z);
+                }
+            }
+        }
+        
+        // Store the objects for this chunk
+        this.visibleChunks[chunkKey] = chunkObjects;
+    }
+    
+    removeChunkObjects(chunkKey) {
+        // Remove all objects in this chunk from the scene
+        const objects = this.visibleChunks[chunkKey];
+        if (objects) {
+            objects.forEach(object => {
+                this.scene.remove(object);
+                
+                // Also remove from interactive objects if applicable
+                const interactiveIndex = this.interactiveObjects.findIndex(obj => obj.mesh === object);
+                if (interactiveIndex >= 0) {
+                    this.interactiveObjects.splice(interactiveIndex, 1);
+                }
+            });
+        }
+        
+        // Remove the chunk from the visible chunks
+        delete this.visibleChunks[chunkKey];
+    }
+    
+    // Seeded random number generator for consistent chunk generation
+    seededRandom(seed) {
+        return function() {
+            seed = (seed * 9301 + 49297) % 233280;
+            return seed / 233280;
+        };
+    }
+    
+    // Helper method to create a tree
+    createTree(x, z) {
+        const treeGroup = new THREE.Group();
+        
+        // Create trunk
+        const trunkMaterial = new THREE.MeshStandardMaterial({
+            color: 0x8B4513,
+            roughness: 0.9,
+            metalness: 0.1
+        });
+        
+        const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.5, 2, 8);
+        const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+        trunk.position.y = 1;
+        trunk.castShadow = true;
+        trunk.receiveShadow = true;
+        
+        treeGroup.add(trunk);
+        
+        // Create foliage
+        const foliageMaterial = new THREE.MeshStandardMaterial({
+            color: 0x2d572c,
+            roughness: 0.8,
+            metalness: 0.2
+        });
+        
+        const foliageGeometry = new THREE.ConeGeometry(1.5, 3, 8);
+        const foliage = new THREE.Mesh(foliageGeometry, foliageMaterial);
+        foliage.position.y = 3;
+        foliage.castShadow = true;
+        foliage.receiveShadow = true;
+        
+        treeGroup.add(foliage);
+        
+        // Position tree on terrain
+        treeGroup.position.set(x, this.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(treeGroup);
+        this.objects.push(treeGroup);
+        
+        return treeGroup;
+    }
+    
+    // Helper method to create a rock
+    createRock(x, z) {
+        const rockGroup = new THREE.Group();
+        
+        // Create rock
+        const rockMaterial = new THREE.MeshStandardMaterial({
+            color: 0x888888,
+            roughness: 0.9,
+            metalness: 0.2
+        });
+        
+        const rockGeometry = new THREE.DodecahedronGeometry(0.5 + Math.random() * 1.5, 0);
+        const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+        rock.position.y = 0.5;
+        rock.rotation.x = Math.random() * Math.PI;
+        rock.rotation.y = Math.random() * Math.PI;
+        rock.rotation.z = Math.random() * Math.PI;
+        rock.scale.set(
+            0.8 + Math.random() * 0.4,
+            0.8 + Math.random() * 0.4,
+            0.8 + Math.random() * 0.4
+        );
+        rock.castShadow = true;
+        rock.receiveShadow = true;
+        
+        rockGroup.add(rock);
+        
+        // Position rock on terrain
+        rockGroup.position.set(x, this.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(rockGroup);
+        this.objects.push(rockGroup);
+        
+        return rockGroup;
     }
 }

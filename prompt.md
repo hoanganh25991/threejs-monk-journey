@@ -1,2 +1,2 @@
 - Review the `functional-requirement/readme.md` for key features and functionalities.
-- [] Complete the game based on the gathered information.
+- [] Complete all features.
