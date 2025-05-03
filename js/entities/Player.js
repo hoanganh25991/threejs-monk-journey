@@ -246,9 +246,9 @@ export class Player {
                 damage: 15,
                 manaCost: 25,
                 cooldown: 0.1, // Reduced cooldown
-                range: 2,
-                radius: 3,
-                duration: 5,
+                range: 10, // INCREASED range from 2 to 10 for better visibility
+                radius: 5, // INCREASED radius from 3 to 5 for bigger explosion
+                duration: 10, // DOUBLED duration from 5 to 10 seconds
                 color: 0xff3333
             })
         ];

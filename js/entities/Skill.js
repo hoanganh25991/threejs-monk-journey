@@ -2613,12 +2613,12 @@ export class Skill {
             // Create a 3D palm model with fingers
             const handGroup = new THREE.Group();
             
-            // Create palm base (hand)
-            const palmBaseGeometry = new THREE.BoxGeometry(0.8, 0.2, 1);
+            // Create palm base (hand) - INCREASED SIZE for visibility
+            const palmBaseGeometry = new THREE.BoxGeometry(1.2, 0.3, 1.5);
             const palmBaseMaterial = new THREE.MeshStandardMaterial({
                 color: 0xff3333,
                 emissive: 0xff3333,
-                emissiveIntensity: 1,
+                emissiveIntensity: 2, // Increased intensity
                 transparent: true,
                 opacity: 0.9,
             });
@@ -2630,22 +2630,22 @@ export class Skill {
             // Create fingers (5 elongated shapes)
             const fingerCount = 5;
             const fingerPositions = [
-                { x: -0.3, z: 0.4 },  // Thumb
-                { x: -0.15, z: 0.5 },  // Index
-                { x: 0, z: 0.55 },     // Middle
-                { x: 0.15, z: 0.5 },   // Ring
-                { x: 0.3, z: 0.4 }     // Pinky
+                { x: -0.45, z: 0.6 },  // Thumb - adjusted positions
+                { x: -0.225, z: 0.75 },  // Index
+                { x: 0, z: 0.825 },     // Middle
+                { x: 0.225, z: 0.75 },   // Ring
+                { x: 0.45, z: 0.6 }     // Pinky
             ];
             
-            const fingerLengths = [0.3, 0.4, 0.5, 0.4, 0.3]; // Different lengths for each finger
+            const fingerLengths = [0.45, 0.6, 0.75, 0.6, 0.45]; // Longer fingers for visibility
             
             for (let i = 0; i < fingerCount; i++) {
-                // Create finger
-                const fingerGeometry = new THREE.BoxGeometry(0.12, 0.15, fingerLengths[i]);
+                // Create finger - INCREASED SIZE for visibility
+                const fingerGeometry = new THREE.BoxGeometry(0.18, 0.225, fingerLengths[i]);
                 const fingerMaterial = new THREE.MeshStandardMaterial({
                     color: 0xff3333,
                     emissive: 0xff3333,
-                    emissiveIntensity: 1,
+                    emissiveIntensity: 2, // Increased intensity
                     transparent: true,
                     opacity: 0.9,
                 });
@@ -2655,16 +2655,16 @@ export class Skill {
                 // Position finger
                 finger.position.set(
                     fingerPositions[i].x,
-                    0.05,
+                    0.075,
                     fingerPositions[i].z + (fingerLengths[i] / 2)
                 );
                 
-                // Add finger joints (knuckles)
-                const knuckleGeometry = new THREE.SphereGeometry(0.07, 8, 8);
+                // Add finger joints (knuckles) - INCREASED SIZE for visibility
+                const knuckleGeometry = new THREE.SphereGeometry(0.105, 8, 8);
                 const knuckleMaterial = new THREE.MeshStandardMaterial({
                     color: 0xff4444,
                     emissive: 0xff4444,
-                    emissiveIntensity: 1,
+                    emissiveIntensity: 2, // Increased intensity
                     transparent: true,
                     opacity: 0.9,
                 });
@@ -2672,19 +2672,19 @@ export class Skill {
                 const knuckle = new THREE.Mesh(knuckleGeometry, knuckleMaterial);
                 knuckle.position.set(
                     fingerPositions[i].x,
-                    0.05,
+                    0.075,
                     fingerPositions[i].z
                 );
                 
                 handGroup.add(finger);
                 handGroup.add(knuckle);
                 
-                // Add fingernails
-                const nailGeometry = new THREE.BoxGeometry(0.1, 0.05, 0.1);
+                // Add fingernails - INCREASED SIZE for visibility
+                const nailGeometry = new THREE.BoxGeometry(0.15, 0.075, 0.15);
                 const nailMaterial = new THREE.MeshStandardMaterial({
                     color: 0xffdddd,
                     emissive: 0xffaaaa,
-                    emissiveIntensity: 0.5,
+                    emissiveIntensity: 1.5, // Increased intensity
                     transparent: true,
                     opacity: 0.9,
                 });
@@ -2692,52 +2692,52 @@ export class Skill {
                 const nail = new THREE.Mesh(nailGeometry, nailMaterial);
                 nail.position.set(
                     fingerPositions[i].x,
-                    0.1,
+                    0.15,
                     fingerPositions[i].z + fingerLengths[i]
                 );
                 
                 handGroup.add(nail);
             }
             
-            // Add energy aura around the hand
-            const auraGeometry = new THREE.SphereGeometry(1, 16, 16);
+            // Add energy aura around the hand - INCREASED SIZE for visibility
+            const auraGeometry = new THREE.SphereGeometry(1.5, 16, 16);
             const auraMaterial = new THREE.MeshStandardMaterial({
                 color: 0xff5500,
                 emissive: 0xff5500,
-                emissiveIntensity: 1,
+                emissiveIntensity: 2, // Increased intensity
                 transparent: true,
-                opacity: 0.3,
+                opacity: 0.5, // Increased opacity
                 side: THREE.DoubleSide,
                 wireframe: true
             });
             
             const aura = new THREE.Mesh(auraGeometry, auraMaterial);
-            aura.scale.set(1, 0.5, 1.2);
+            aura.scale.set(1.5, 0.75, 1.8); // Increased scale
             handGroup.add(aura);
             
-            // Add energy particles around the hand
-            const particleCount = 30;
+            // Add energy particles around the hand - INCREASED SIZE and COUNT
+            const particleCount = 45; // More particles
             const particles = [];
             
             for (let i = 0; i < particleCount; i++) {
                 // Random position around the hand
                 const phi = Math.random() * Math.PI * 2;
                 const theta = Math.random() * Math.PI;
-                const radius = 0.8 + Math.random() * 0.4;
+                const radius = 1.2 + Math.random() * 0.6; // Larger radius
                 
                 const x = radius * Math.sin(theta) * Math.cos(phi);
                 const y = radius * Math.sin(theta) * Math.sin(phi) * 0.5; // Flatten in Y
                 const z = radius * Math.cos(theta);
                 
-                // Create particle
-                const particleSize = 0.03 + Math.random() * 0.05;
+                // Create particle - INCREASED SIZE
+                const particleSize = 0.05 + Math.random() * 0.08; // Larger particles
                 const particleGeometry = new THREE.SphereGeometry(particleSize, 8, 8);
                 const particleMaterial = new THREE.MeshStandardMaterial({
                     color: 0xff3300,
                     emissive: 0xff3300,
-                    emissiveIntensity: 1,
+                    emissiveIntensity: 2, // Increased intensity
                     transparent: true,
-                    opacity: 0.7 + Math.random() * 0.3
+                    opacity: 0.8 + Math.random() * 0.2 // Higher opacity
                 });
                 
                 const particle = new THREE.Mesh(particleGeometry, particleMaterial);
@@ -2745,7 +2745,7 @@ export class Skill {
                 
                 // Store particle animation data
                 particle.userData = {
-                    orbitSpeed: 0.5 + Math.random() * 1.5,
+                    orbitSpeed: 1.0 + Math.random() * 2.0, // Faster orbit
                     orbitRadius: new THREE.Vector3(x, y, z).length(),
                     orbitAxis: new THREE.Vector3(
                         Math.random() - 0.5,
@@ -2760,30 +2760,32 @@ export class Skill {
                 particles.push(particle);
             }
             
-            // Add trailing energy effect
-            const trailCount = 5;
+            // Add trailing energy effect - INCREASED SIZE
+            const trailCount = 7; // More trails
             const trails = [];
             
             for (let i = 0; i < trailCount; i++) {
-                const trailGeometry = new THREE.PlaneGeometry(0.8, 0.8);
+                const trailGeometry = new THREE.PlaneGeometry(1.2, 1.2); // Larger trails
                 const trailMaterial = new THREE.MeshBasicMaterial({
                     color: 0xff3300,
                     transparent: true,
-                    opacity: 0.5 - (i * 0.1),
+                    opacity: 0.7 - (i * 0.1), // Higher base opacity
                     side: THREE.DoubleSide
                 });
                 
                 const trail = new THREE.Mesh(trailGeometry, trailMaterial);
-                trail.position.z = -0.5 - (i * 0.3);
+                trail.position.z = -0.7 - (i * 0.4); // More spacing
                 trail.rotation.x = Math.PI / 2;
                 
                 handGroup.add(trail);
                 trails.push(trail);
             }
             
-            // Rotate hand to face forward
+            // Rotate hand to face forward with fingers pointing upward (180 degree rotation)
             handGroup.rotation.x = Math.PI / 2;
-            handGroup.position.y = 1; // Position at player's height
+            handGroup.rotation.z = Math.PI; // 180 degree rotation to flip the palm
+            // Position higher for better visibility
+            handGroup.position.y = 1.5; // Higher position
             
             palmGroup.add(handGroup);
             
@@ -2791,26 +2793,26 @@ export class Skill {
             const explosionGroup = new THREE.Group();
             explosionGroup.visible = false;
             
-            // Create giant palm for explosion
+            // Create giant palm for explosion - IMPROVED SHAPE
             const giantPalmShape = new THREE.Shape();
             
             // Create a larger hand shape for the explosion
-            // Palm center
+            // Palm center - INCREASED SIZE
             giantPalmShape.moveTo(0, 0);
-            giantPalmShape.absarc(0, 0, 0.4, 0, Math.PI * 2, false);
+            giantPalmShape.absarc(0, 0, 0.6, 0, Math.PI * 2, false); // Larger palm center
             
-            // Fingers (5 elongated shapes)
+            // Fingers (5 elongated shapes) - IMPROVED SHAPE
             const giantFingerCount = 5;
             for (let i = 0; i < giantFingerCount; i++) {
                 const angle = ((i / giantFingerCount) * Math.PI * 1.2) - Math.PI * 0.1;
-                const length = 0.6 + (i === 2 ? 0.2 : 0); // Middle finger longer
+                const length = 0.9 + (i === 2 ? 0.3 : 0); // Longer fingers, middle finger even longer
                 
                 const fingerShape = new THREE.Shape();
                 fingerShape.moveTo(0, 0);
                 fingerShape.absellipse(
-                    Math.cos(angle) * 0.4,
-                    Math.sin(angle) * 0.4,
-                    0.15,
+                    Math.cos(angle) * 0.6, // Adjusted to match larger palm
+                    Math.sin(angle) * 0.6,
+                    0.22, // Wider fingers
                     length,
                     0,
                     Math.PI * 2,
@@ -2825,7 +2827,7 @@ export class Skill {
             const giantPalmMaterial = new THREE.MeshStandardMaterial({
                 color: 0xff3300,
                 emissive: 0xff3300,
-                emissiveIntensity: 2,
+                emissiveIntensity: 3, // Increased intensity
                 transparent: true,
                 opacity: 0.9,
                 side: THREE.DoubleSide
@@ -2834,13 +2836,13 @@ export class Skill {
             const giantPalm = new THREE.Mesh(giantPalmGeometry, giantPalmMaterial);
             giantPalm.rotation.x = -Math.PI / 2;
             giantPalm.position.y = 0.5; // Position above ground
-            giantPalm.scale.set(3, 3, 3); // Make it giant
+            giantPalm.scale.set(4, 4, 4); // Make it even larger
             
             // Store animation data
             giantPalm.userData = {
-                initialScale: 0.1,
-                targetScale: 3,
-                rotationSpeed: 1
+                initialScale: 0.2, // Start slightly larger
+                targetScale: 4, // Grow to larger size
+                rotationSpeed: 1.5 // Rotate faster
             };
             
             // Start with small scale
@@ -2945,9 +2947,9 @@ export class Skill {
                 explosionGroup: explosionGroup,
                 palmGroup: palmGroup,
                 exploded: false,
-                explosionTime: this.duration * 0.8, // Explode at 80% of duration
-                flyingSpeed: 15, // Speed of the flying palm
-                maxDistance: this.range, // Maximum distance the palm can travel
+                explosionTime: this.duration * 0.9, // Explode at 90% of duration (later)
+                flyingSpeed: 6, // REDUCED speed of the flying palm (was 15)
+                maxDistance: this.range * 1.5, // INCREASED maximum distance by 50%
                 distanceTraveled: 0, // Current distance traveled
                 hitTarget: false, // Whether the palm has hit a target
                 targetPosition: null // Position where the palm hit a target
@@ -2970,8 +2972,16 @@ export class Skill {
             effectGroup.add(mark);
         }
         
-        // Position effect
+        // Position effect - IMPORTANT: Set the correct orientation
         effectGroup.position.copy(this.position);
+        
+        // Set the correct rotation to face the direction the player is looking
+        effectGroup.rotation.y = Math.atan2(this.direction.x, this.direction.z);
+        
+        // Debug message to confirm the skill is being created
+        console.log(`Created Exploding Palm effect at position:`, this.position, 
+                    `with direction:`, this.direction, 
+                    `and rotation:`, effectGroup.rotation);
         
         // Store effect
         this.effect = effectGroup;
@@ -2998,9 +3008,20 @@ export class Skill {
                 this.explodingPalmState.hitTarget ||
                 // Explode if reached explosion time
                 this.elapsedTime >= this.explodingPalmState.explosionTime;
+            
+            // Log progress for debugging
+            if (Math.floor(this.elapsedTime) % 2 === 0 && Math.floor(this.elapsedTime) !== this.lastLoggedTime) {
+                this.lastLoggedTime = Math.floor(this.elapsedTime);
+                console.log(`Exploding Palm progress: ${Math.round((this.elapsedTime / this.duration) * 100)}% complete`);
+                console.log(`Distance traveled: ${Math.round(this.explodingPalmState.distanceTraveled)} / ${Math.round(this.explodingPalmState.maxDistance)}`);
+            }
                 
             // Transition to exploding phase if needed
             if (this.explodingPalmState.phase === 'flying' && shouldExplode) {
+                console.log(`Exploding Palm is exploding! Reason: ${
+                    this.explodingPalmState.distanceTraveled >= this.explodingPalmState.maxDistance ? 'Max distance reached' :
+                    this.explodingPalmState.hitTarget ? 'Hit target' : 'Duration reached'
+                }`);
                 this.explodingPalmState.phase = 'exploding';
                 this.explodingPalmState.exploded = true;
                 this.explodingPalmState.explosionGroup.visible = true;
@@ -3031,19 +3052,88 @@ export class Skill {
                     palmGroup.position.z + this.direction.z * moveDistance
                 );
                 
-                // Animate hand rotation
+                // Animate hand to show heaviness (no rotation, just steady movement with effects)
                 if (handGroup) {
-                    // Rotate the hand for a spinning effect
-                    handGroup.rotation.z += delta * 5; // Spin around forward axis
+                    // Keep the hand steady (no rotation) for a more powerful, heavy appearance
+                    // handGroup.rotation.z is now fixed at Math.PI (set during creation)
                     
-                    // Add slight wobble
-                    const wobbleAmount = 0.1;
-                    const wobbleSpeed = 10;
-                    handGroup.rotation.y = Math.sin(this.explodingPalmState.age * wobbleSpeed) * wobbleAmount;
+                    // Add very slight downward tilt to show weight
+                    const tiltAmount = 0.05;
+                    handGroup.rotation.x = (Math.PI / 2) + tiltAmount;
                     
-                    // Pulse the hand slightly
-                    const pulseFactor = 1 + Math.sin(this.explodingPalmState.age * 8) * 0.05;
+                    // Add very subtle slow pulse to show power
+                    const pulseFactor = 1 + Math.sin(this.explodingPalmState.age * 2) * 0.03;
                     handGroup.scale.set(pulseFactor, pulseFactor, pulseFactor);
+                    
+                    // Create ground effect to show heaviness - dust/debris kicked up by the palm's power
+                    if (Math.random() < 0.2) { // 20% chance each frame to create effect
+                        // Create dust particle
+                        const dustGeometry = new THREE.SphereGeometry(0.1 + Math.random() * 0.2, 8, 8);
+                        const dustMaterial = new THREE.MeshBasicMaterial({
+                            color: 0x885533,
+                            transparent: true,
+                            opacity: 0.3 + Math.random() * 0.3
+                        });
+                        
+                        const dust = new THREE.Mesh(dustGeometry, dustMaterial);
+                        
+                        // Position dust below and slightly behind the palm
+                        const offsetX = (Math.random() - 0.5) * 2;
+                        const offsetZ = -1 - Math.random() * 2;
+                        dust.position.set(
+                            offsetX,
+                            -1.2, // Below the palm
+                            offsetZ
+                        );
+                        
+                        // Store velocity for animation
+                        dust.userData = {
+                            velocity: new THREE.Vector3(
+                                offsetX * 0.5,
+                                0.5 + Math.random() * 1.0, // Upward
+                                offsetZ * 0.2
+                            ),
+                            age: 0,
+                            maxAge: 0.5 + Math.random() * 0.5
+                        };
+                        
+                        // Add to hand group
+                        handGroup.add(dust);
+                        
+                        // Add to a list for cleanup
+                        if (!this.explodingPalmState.dustParticles) {
+                            this.explodingPalmState.dustParticles = [];
+                        }
+                        this.explodingPalmState.dustParticles.push(dust);
+                    }
+                    
+                    // Animate existing dust particles
+                    if (this.explodingPalmState.dustParticles) {
+                        for (let i = this.explodingPalmState.dustParticles.length - 1; i >= 0; i--) {
+                            const dust = this.explodingPalmState.dustParticles[i];
+                            if (dust && dust.userData) {
+                                // Update age
+                                dust.userData.age += delta;
+                                
+                                // Move dust
+                                dust.position.add(dust.userData.velocity.clone().multiplyScalar(delta));
+                                
+                                // Apply gravity
+                                dust.userData.velocity.y -= 2 * delta;
+                                
+                                // Fade out
+                                if (dust.material) {
+                                    dust.material.opacity = Math.max(0, 0.6 * (1 - (dust.userData.age / dust.userData.maxAge)));
+                                }
+                                
+                                // Remove if too old
+                                if (dust.userData.age >= dust.userData.maxAge) {
+                                    handGroup.remove(dust);
+                                    this.explodingPalmState.dustParticles.splice(i, 1);
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 // Animate particles
@@ -3080,6 +3170,91 @@ export class Skill {
                     // Scale trails for a motion blur effect
                     const trailScale = 0.8 + (i * 0.1);
                     trail.scale.set(trailScale, trailScale, 1);
+                }
+                
+                // Create ground impact effect to show heaviness
+                if (!this.explodingPalmState.lastImpactTime || 
+                    this.explodingPalmState.age - this.explodingPalmState.lastImpactTime > 0.5) { // Every 0.5 seconds
+                    
+                    this.explodingPalmState.lastImpactTime = this.explodingPalmState.age;
+                    
+                    // Create impact ring on the ground
+                    const ringGeometry = new THREE.RingGeometry(0.2, 0.8, 16);
+                    const ringMaterial = new THREE.MeshBasicMaterial({
+                        color: 0xff3300,
+                        transparent: true,
+                        opacity: 0.7,
+                        side: THREE.DoubleSide
+                    });
+                    
+                    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                    ring.rotation.x = Math.PI / 2; // Lay flat on ground
+                    ring.position.set(
+                        palmGroup.position.x,
+                        0.05, // Just above ground
+                        palmGroup.position.z
+                    );
+                    
+                    // Store animation data
+                    ring.userData = {
+                        age: 0,
+                        maxAge: 1.0,
+                        initialScale: 0.5,
+                        targetScale: 3.0
+                    };
+                    
+                    // Start small
+                    ring.scale.set(
+                        ring.userData.initialScale,
+                        ring.userData.initialScale,
+                        ring.userData.initialScale
+                    );
+                    
+                    // Add to scene (not to palm group so it stays on ground)
+                    if (this.game && this.game.scene) {
+                        this.game.scene.add(ring);
+                    } else if (this.effect.parent) {
+                        this.effect.parent.add(ring);
+                    }
+                    
+                    // Add to a list for cleanup
+                    if (!this.explodingPalmState.impactRings) {
+                        this.explodingPalmState.impactRings = [];
+                    }
+                    this.explodingPalmState.impactRings.push(ring);
+                }
+                
+                // Animate existing impact rings
+                if (this.explodingPalmState.impactRings) {
+                    for (let i = this.explodingPalmState.impactRings.length - 1; i >= 0; i--) {
+                        const ring = this.explodingPalmState.impactRings[i];
+                        if (ring && ring.userData) {
+                            // Update age
+                            ring.userData.age += delta;
+                            
+                            // Expand ring
+                            const progress = ring.userData.age / ring.userData.maxAge;
+                            const scale = ring.userData.initialScale + 
+                                         (ring.userData.targetScale - ring.userData.initialScale) * progress;
+                            
+                            ring.scale.set(scale, scale, scale);
+                            
+                            // Fade out
+                            if (ring.material) {
+                                ring.material.opacity = Math.max(0, 0.7 * (1 - progress));
+                            }
+                            
+                            // Remove if too old
+                            if (ring.userData.age >= ring.userData.maxAge) {
+                                if (this.game && this.game.scene) {
+                                    this.game.scene.remove(ring);
+                                } else if (ring.parent) {
+                                    ring.parent.remove(ring);
+                                }
+                                this.explodingPalmState.impactRings.splice(i, 1);
+                            }
+                        }
+                    }
                 }
                 
                 // Check for collision with enemies
@@ -3733,6 +3908,17 @@ export class Skill {
         // Clean up effect
         if (this.effect && this.effect.parent) {
             this.effect.parent.remove(this.effect);
+        }
+        
+        // Clean up impact rings for Exploding Palm
+        if (this.name === 'Exploding Palm' && this.explodingPalmState && this.explodingPalmState.impactRings) {
+            // Remove all impact rings from the scene
+            for (const ring of this.explodingPalmState.impactRings) {
+                if (ring && ring.parent) {
+                    ring.parent.remove(ring);
+                }
+            }
+            this.explodingPalmState.impactRings = [];
         }
         
         this.effect = null;

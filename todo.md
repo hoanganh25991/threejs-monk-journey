@@ -1,6 +1,12 @@
-- [] Fix issue: when hold keys to spam skills, the skills after duration (effect time), the skill's model, particle still show up. Please help to clean up them in this case. Increase default duration of effect of all skills.
+- [] Fix issue: when hold keys to spam skills, the skills after duration (effect time), the skill's model, particle, effect still show up. Please help to clean up them completely in this case. Increase default duration of effect of all skills.
 - [] Fix issue: alert message at middle of the screen should on take and stack up 1/5 of the screen, to allow view other, sometime i spawn skills, and too much message show up, it's consume whole height of the screen. Apply quickly remove old messages, if too much new messages coming.
 - [] Enhance: instead of showing damage of enemy by number, show it as particle effect of blooding, base on the damage value, variant the colour. Just show the damage of the skill player casted, not all enemies, and show them in stacked way, max one per 0.3 second.
 - [] Enhance: move the health bar and mana bar to top left corner, in same container with the level, show the icon, hero-portrait of the monk. Show absolute remain/max health, remain/max mana
 - [] Enhance: remove the first terrain, replace with the ground with grey colour, something special to mark that, this is initial place, like our village, add some structures to it. Then only spawn enemies on other dynamic generated terrain.
 - [] Enhance: help me generate audio effect for each skill when casted, when in duration effect if has something special need to added. audio-generator.html is what help me generate audio before.
+- [] Enhance: draw hero model similar to man monk, provide much complex look for man monk, muscle, head, chest, hand, leg. Add action when moving, add action for legs and hands.
+- [] Enhance: draw complex model for skeleton monster, close to skeleton, not solid box
+- [] Enhance: createWaveEffect, add config at top of this method, allow me to control the size of the bell, if i want to bell 2 times bigger then current, i just x2 that bell size number
+- [] Enhance: review World.js file and optimise it, remove unused method, remove duplicate methods, define common methods to be shared if they are closed.
+- [] Enhance: review Player.js file and optimise it, remove unused method, remove duplicate methods, define common methods to be shared if they are closed.
+- [] Enhance: add GPU acceleration, manage memory leak, manage object better to achieve fast render 60 FPS. Add FPS on top-right of the screen, add memory usage in MB also
