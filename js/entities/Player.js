@@ -241,7 +241,7 @@ export class Player {
             }),
             new Skill({
                 name: 'Exploding Palm',
-                description: 'Mark enemies to explode on death, dealing damage to nearby enemies',
+                description: 'Giant Palm: Summon a massive ethereal palm that marks enemies, causing them to violently explode on death and unleash devastating damage to all nearby foes',
                 type: 'mark',
                 damage: 15,
                 manaCost: 25,

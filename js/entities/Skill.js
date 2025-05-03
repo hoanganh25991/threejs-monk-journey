@@ -2725,6 +2725,67 @@ export class Skill {
             const explosionGroup = new THREE.Group();
             explosionGroup.visible = false;
             
+            // Create giant palm for explosion
+            const giantPalmShape = new THREE.Shape();
+            
+            // Create a larger hand shape for the explosion
+            // Palm center
+            giantPalmShape.moveTo(0, 0);
+            giantPalmShape.absarc(0, 0, 0.4, 0, Math.PI * 2, false);
+            
+            // Fingers (5 elongated shapes)
+            const giantFingerCount = 5;
+            for (let i = 0; i < giantFingerCount; i++) {
+                const angle = ((i / giantFingerCount) * Math.PI * 1.2) - Math.PI * 0.1;
+                const length = 0.6 + (i === 2 ? 0.2 : 0); // Middle finger longer
+                
+                const fingerShape = new THREE.Shape();
+                fingerShape.moveTo(0, 0);
+                fingerShape.absellipse(
+                    Math.cos(angle) * 0.4,
+                    Math.sin(angle) * 0.4,
+                    0.15,
+                    length,
+                    0,
+                    Math.PI * 2,
+                    false,
+                    angle
+                );
+                
+                giantPalmShape.holes.push(fingerShape);
+            }
+            
+            const giantPalmGeometry = new THREE.ShapeGeometry(giantPalmShape);
+            const giantPalmMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff3300,
+                emissive: 0xff3300,
+                emissiveIntensity: 2,
+                transparent: true,
+                opacity: 0.9,
+                side: THREE.DoubleSide
+            });
+            
+            const giantPalm = new THREE.Mesh(giantPalmGeometry, giantPalmMaterial);
+            giantPalm.rotation.x = -Math.PI / 2;
+            giantPalm.position.y = 0.5; // Position above ground
+            giantPalm.scale.set(3, 3, 3); // Make it giant
+            
+            // Store animation data
+            giantPalm.userData = {
+                initialScale: 0.1,
+                targetScale: 3,
+                rotationSpeed: 1
+            };
+            
+            // Start with small scale
+            giantPalm.scale.set(
+                giantPalm.userData.initialScale,
+                giantPalm.userData.initialScale,
+                giantPalm.userData.initialScale
+            );
+            
+            explosionGroup.add(giantPalm);
+            
             // Create explosion core
             const coreGeometry = new THREE.SphereGeometry(0.3, 16, 16);
             const coreMaterial = new THREE.MeshStandardMaterial({
@@ -3018,6 +3079,73 @@ export class Skill {
                 // Calculate explosion progress (0 to 1)
                 const explosionDuration = this.duration * 0.2; // Last 20% of total duration
                 const explosionProgress = (this.elapsedTime - this.explodingPalmState.explosionTime) / explosionDuration;
+                
+                // Find the giant palm
+                const giantPalm = explosionGroup.children.find(child => 
+                    child.geometry && 
+                    child.geometry.type === 'ShapeGeometry'
+                );
+                
+                if (giantPalm && giantPalm.userData) {
+                    // Animate the giant palm
+                    
+                    // Scale up the palm dramatically during explosion
+                    const initialScale = giantPalm.userData.initialScale;
+                    const targetScale = giantPalm.userData.targetScale;
+                    
+                    // Easing function for dramatic effect
+                    let scaleProgress;
+                    if (explosionProgress < 0.3) {
+                        // Fast initial growth
+                        scaleProgress = explosionProgress / 0.3;
+                    } else if (explosionProgress < 0.7) {
+                        // Hold at full size
+                        scaleProgress = 1;
+                    } else {
+                        // Fade out
+                        scaleProgress = 1 - ((explosionProgress - 0.7) / 0.3);
+                    }
+                    
+                    // Apply scale with easing
+                    const currentScale = initialScale + (targetScale - initialScale) * scaleProgress;
+                    
+                    // Add pulsing effect
+                    const pulseFactor = 1 + Math.sin(explosionProgress * Math.PI * 5) * 0.1;
+                    const finalScale = currentScale * pulseFactor;
+                    
+                    giantPalm.scale.set(finalScale, finalScale, finalScale);
+                    
+                    // Rotate the palm
+                    giantPalm.rotation.z += delta * giantPalm.userData.rotationSpeed;
+                    
+                    // Adjust position - rise up and then fall
+                    let heightOffset;
+                    if (explosionProgress < 0.5) {
+                        // Rise up
+                        heightOffset = explosionProgress * 2;
+                    } else {
+                        // Fall down
+                        heightOffset = 1 - ((explosionProgress - 0.5) * 2);
+                    }
+                    
+                    giantPalm.position.y = 0.5 + heightOffset * 2;
+                    
+                    // Adjust opacity
+                    if (explosionProgress < 0.2) {
+                        // Fade in
+                        giantPalm.material.opacity = explosionProgress / 0.2 * 0.9;
+                    } else if (explosionProgress > 0.7) {
+                        // Fade out
+                        giantPalm.material.opacity = Math.max(0, 0.9 - ((explosionProgress - 0.7) / 0.3) * 0.9);
+                    } else {
+                        // Full opacity during main explosion
+                        giantPalm.material.opacity = 0.9;
+                    }
+                    
+                    // Increase emissive intensity at peak
+                    const emissiveIntensity = 2 + Math.sin(explosionProgress * Math.PI) * 3;
+                    giantPalm.material.emissiveIntensity = Math.max(0, emissiveIntensity);
+                }
                 
                 // Find the core
                 const core = explosionGroup.children.find(child => 

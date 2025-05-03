@@ -42,8 +42,9 @@ This document summarizes the implementation of visually impressive skill effects
 - Implemented floating blood particles with orbit animations
 - Created pulsing energy ring with rotation
 - Added build-up effects as explosion approaches
-- Implemented dramatic explosion with expanding waves
-- Added particle burst during explosion
+- Implemented dramatic explosion with a giant palm rising from the ground
+- Added expanding waves and particle burst during explosion
+- Created dynamic animation for the giant palm (scaling, rising, rotating, and fading)
 
 ## Technical Approach
 - Used THREE.js geometry and materials for all visual elements
