@@ -316,8 +316,8 @@ export class Player {
     }
     
     updateCamera() {
-        // Position camera behind player
-        const cameraOffset = new THREE.Vector3(0, 5, 10);
+        // Position camera in a more top-down view with greater height and distance
+        const cameraOffset = new THREE.Vector3(0, 15, 30);
         
         // Validate player position before using it
         if (isNaN(this.position.x) || isNaN(this.position.y) || isNaN(this.position.z)) {
@@ -328,7 +328,7 @@ export class Player {
         
         const cameraTarget = new THREE.Vector3(
             this.position.x,
-            this.position.y + 1,
+            this.position.y, // Look directly at player's position for top-down view
             this.position.z
         );
         
