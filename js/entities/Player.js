@@ -19,7 +19,7 @@ export class Player {
             strength: 10,
             dexterity: 10,
             intelligence: 10,
-            movementSpeed: 10,
+            movementSpeed: 15,
             attackPower: 10
         };
         
@@ -198,7 +198,7 @@ export class Player {
                 manaCost: 30,
                 cooldown: 0.1, // Reduced cooldown
                 range: 6,
-                radius: 1,
+                radius: 10,
                 duration: 2,
                 color: 0xff0000,
                 hits: 7
@@ -211,7 +211,7 @@ export class Player {
                 manaCost: 20,
                 cooldown: 0.1, // Reduced cooldown
                 range: 0,
-                radius: 5,
+                radius: 50,
                 duration: 5,
                 color: 0xffffff
             }),
