@@ -445,6 +445,49 @@ export class Player {
                 skill.remove();
                 this.activeSkills.splice(i, 1);
             }
+            
+            // Force cleanup for skills that are being spammed
+            // This prevents UI and particles from persisting when holding keys
+            if (skill.isActive && skill.elapsedTime > skill.duration * 1.5) {
+                console.log(`Force cleaning up skill ${skill.name} that exceeded 150% of its duration`);
+                skill.remove();
+                this.activeSkills.splice(i, 1);
+            }
+        }
+        
+        // Limit the number of active skills of the same type
+        // This prevents visual clutter when spamming the same skill
+        const skillTypeCount = {};
+        for (let i = this.activeSkills.length - 1; i >= 0; i--) {
+            const skill = this.activeSkills[i];
+            skillTypeCount[skill.type] = (skillTypeCount[skill.type] || 0) + 1;
+            
+            // If there are too many skills of the same type, remove the oldest ones
+            const maxSkillsPerType = 3; // Maximum number of skills of the same type allowed
+            if (skillTypeCount[skill.type] > maxSkillsPerType) {
+                // Find the oldest skill of this type (smallest elapsedTime means it was created earlier)
+                let oldestSkillIndex = i;
+                let oldestElapsedTime = skill.elapsedTime;
+                
+                for (let j = 0; j < this.activeSkills.length; j++) {
+                    if (j !== i && this.activeSkills[j].type === skill.type && this.activeSkills[j].elapsedTime > oldestElapsedTime) {
+                        oldestSkillIndex = j;
+                        oldestElapsedTime = this.activeSkills[j].elapsedTime;
+                    }
+                }
+                
+                // Remove the oldest skill
+                if (oldestSkillIndex !== i) {
+                    this.activeSkills[oldestSkillIndex].remove();
+                    this.activeSkills.splice(oldestSkillIndex, 1);
+                    skillTypeCount[skill.type]--;
+                    
+                    // Adjust index if we removed an element before the current one
+                    if (oldestSkillIndex < i) {
+                        i--;
+                    }
+                }
+            }
         }
         
         // Update skill cooldowns

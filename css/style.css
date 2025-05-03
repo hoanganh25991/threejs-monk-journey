@@ -75,16 +75,16 @@ body {
     bottom: 20px;
     right: 20px;
     display: flex;
-    gap: 10px;
+    gap: 15px;
     pointer-events: auto;
 }
 
 .skill-button {
-    width: 50px;
-    height: 50px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border: 2px solid #333;
-    border-radius: 5px;
+    width: 65px;
+    height: 65px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #6b4c2a;
+    border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -92,10 +92,27 @@ body {
     font-weight: bold;
     cursor: pointer;
     position: relative;
+    box-shadow: 0 0 10px rgba(255, 150, 0, 0.3);
+    overflow: hidden;
+}
+
+.skill-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,150,0,0.2) 0%, rgba(0,0,0,0) 70%);
+    z-index: 1;
 }
 
 .skill-button:hover {
-    background-color: rgba(50, 50, 50, 0.7);
+    box-shadow: 0 0 15px rgba(255, 150, 0, 0.5);
+}
+
+.skill-button:active {
+    transform: scale(0.95);
 }
 
 .skill-cooldown {
@@ -105,7 +122,84 @@ body {
     width: 100%;
     height: 0%;
     background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    z-index: 2;
+}
+
+.skill-icon {
+    width: 80%;
+    height: 80%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 3;
+    position: relative;
+}
+
+.skill-key {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 1px solid #6b4c2a;
     border-radius: 3px;
+    padding: 2px 4px;
+    font-size: 10px;
+    z-index: 4;
+}
+
+.skill-name {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ffcc66;
+    font-size: 12px;
+    text-shadow: 1px 1px 2px black;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.skill-button:hover .skill-name {
+    opacity: 1;
+}
+
+@keyframes skill-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 10px rgba(255, 150, 0, 0.3); }
+    50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(255, 150, 0, 0.7); }
+    100% { transform: scale(1); box-shadow: 0 0 10px rgba(255, 150, 0, 0.3); }
+}
+
+.skill-activated {
+    animation: skill-pulse 0.3s ease-in-out;
+}
+
+@keyframes ready-pulse {
+    0% { box-shadow: 0 0 10px rgba(255, 150, 0, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(255, 150, 0, 0.5); }
+    100% { box-shadow: 0 0 10px rgba(255, 150, 0, 0.3); }
+}
+
+.ready-pulse {
+    animation: ready-pulse 2s infinite ease-in-out;
+}
+
+.showing-cooldown::after {
+    content: attr(data-cooldown);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px black;
+}
+
+.not-enough-mana {
+    filter: grayscale(70%);
+    border-color: #555 !important;
 }
 
 #level-indicator {

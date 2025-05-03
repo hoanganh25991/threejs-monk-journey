@@ -98,23 +98,75 @@ export class UIManager {
         // Create skill buttons
         const skills = this.game.player.getSkills();
         
+        // Define skill icons and colors based on skill type
+        const skillIcons = {
+            'Wave Strike': '🌊', // Wave emoji
+            'Cyclone Strike': '🌀', // Cyclone emoji
+            'Seven-Sided Strike': '🔄', // Cycle emoji
+            'Inner Sanctuary': '🛡️', // Shield emoji
+            'Mystic Ally': '👤', // Person emoji
+            'Wave of Light': '🔔', // Bell emoji
+            'Exploding Palm': '💥', // Explosion emoji
+        };
+        
+        const skillColors = {
+            'ranged': '#00ffff',
+            'aoe': '#ffcc00',
+            'multi': '#ff0000',
+            'buff': '#ffffff',
+            'summon': '#00ffff',
+            'wave': '#ffdd22',
+            'mark': '#ff3333'
+        };
+        
         skills.forEach((skill, index) => {
             // Create skill button
             const skillButton = document.createElement('div');
             skillButton.className = 'skill-button';
-            skillButton.textContent = index + 1;
-            skillButton.title = `${skill.name}: ${skill.description}`;
+            skillButton.setAttribute('data-skill-type', skill.type);
+            
+            // Create skill name tooltip
+            const skillName = document.createElement('div');
+            skillName.className = 'skill-name';
+            skillName.textContent = skill.name;
+            skillButton.appendChild(skillName);
+            
+            // Create skill icon
+            const skillIcon = document.createElement('div');
+            skillIcon.className = 'skill-icon';
+            skillIcon.textContent = skillIcons[skill.name] || '✨'; // Default to sparkle if no icon
+            skillIcon.style.color = skillColors[skill.type] || '#ffffff';
+            skillIcon.style.fontSize = '30px';
+            skillIcon.style.textShadow = `0 0 10px ${skillColors[skill.type] || '#ffffff'}`;
+            skillButton.appendChild(skillIcon);
+            
+            // Create key indicator
+            const skillKey = document.createElement('div');
+            skillKey.className = 'skill-key';
+            skillKey.textContent = index + 1;
+            skillButton.appendChild(skillKey);
             
             // Create cooldown overlay
             const cooldownOverlay = document.createElement('div');
             cooldownOverlay.className = 'skill-cooldown';
-            
             skillButton.appendChild(cooldownOverlay);
+            
+            // Set button border color based on skill type
+            skillButton.style.borderColor = skillColors[skill.type] || '#6b4c2a';
             
             // Add click event
             skillButton.addEventListener('click', () => {
                 this.game.player.useSkill(index);
+                
+                // Add click animation
+                skillButton.classList.add('skill-activated');
+                setTimeout(() => {
+                    skillButton.classList.remove('skill-activated');
+                }, 300);
             });
+            
+            // Add tooltip with description on hover
+            skillButton.title = `${skill.name}: ${skill.description}`;
             
             this.skillsContainer.appendChild(skillButton);
         });
@@ -365,9 +417,57 @@ export class UIManager {
         const skillButtons = this.skillsContainer.querySelectorAll('.skill-button');
         
         skills.forEach((skill, index) => {
-            const cooldownOverlay = skillButtons[index].querySelector('.skill-cooldown');
+            const skillButton = skillButtons[index];
+            const cooldownOverlay = skillButton.querySelector('.skill-cooldown');
             const cooldownPercent = skill.getCooldownPercent() * 100;
+            
+            // Update cooldown overlay
             cooldownOverlay.style.height = `${cooldownPercent}%`;
+            
+            // Add visual feedback based on cooldown state
+            if (cooldownPercent > 0) {
+                // Skill is on cooldown
+                skillButton.style.opacity = '0.7';
+                
+                // Show cooldown time if significant
+                if (cooldownPercent > 5) {
+                    const skillIcon = skillButton.querySelector('.skill-icon');
+                    if (skillIcon) {
+                        // If cooldown is active, show the remaining time
+                        const remainingTime = (skill.cooldown * (cooldownPercent / 100)).toFixed(1);
+                        if (remainingTime > 0.1) {
+                            skillIcon.setAttribute('data-cooldown', remainingTime);
+                            skillIcon.classList.add('showing-cooldown');
+                        } else {
+                            skillIcon.removeAttribute('data-cooldown');
+                            skillIcon.classList.remove('showing-cooldown');
+                        }
+                    }
+                }
+            } else {
+                // Skill is ready
+                skillButton.style.opacity = '1';
+                
+                const skillIcon = skillButton.querySelector('.skill-icon');
+                if (skillIcon) {
+                    skillIcon.removeAttribute('data-cooldown');
+                    skillIcon.classList.remove('showing-cooldown');
+                }
+                
+                // Add subtle pulsing effect to ready skills
+                if (!skillButton.classList.contains('ready-pulse')) {
+                    skillButton.classList.add('ready-pulse');
+                }
+            }
+            
+            // Check if player has enough mana for this skill
+            const hasEnoughMana = this.game.player.getMana() >= skill.manaCost;
+            
+            if (!hasEnoughMana) {
+                skillButton.classList.add('not-enough-mana');
+            } else {
+                skillButton.classList.remove('not-enough-mana');
+            }
         });
     }
     
