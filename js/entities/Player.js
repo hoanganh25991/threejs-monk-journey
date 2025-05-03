@@ -270,6 +270,14 @@ export class Player {
     updateCamera() {
         // Position camera behind player
         const cameraOffset = new THREE.Vector3(0, 5, 10);
+        
+        // Validate player position before using it
+        if (isNaN(this.position.x) || isNaN(this.position.y) || isNaN(this.position.z)) {
+            console.warn("Invalid player position detected:", this.position);
+            // Reset player position to a safe value
+            this.position.set(0, 2, 0);
+        }
+        
         const cameraTarget = new THREE.Vector3(
             this.position.x,
             this.position.y + 1,
@@ -283,12 +291,21 @@ export class Player {
             this.position.z + cameraOffset.z
         );
         
-        // Update camera position and target
-        this.camera.position.copy(cameraPosition);
-        this.camera.lookAt(cameraTarget);
-        
-        // Log camera position for debugging
-        console.log("Camera position updated:", this.camera.position, "Looking at:", cameraTarget);
+        // Validate camera position before applying
+        if (!isNaN(cameraPosition.x) && !isNaN(cameraPosition.y) && !isNaN(cameraPosition.z)) {
+            // Update camera position
+            this.camera.position.copy(cameraPosition);
+            
+            // Validate camera target before looking at it
+            if (!isNaN(cameraTarget.x) && !isNaN(cameraTarget.y) && !isNaN(cameraTarget.z)) {
+                this.camera.lookAt(cameraTarget);
+            }
+            
+            // Log camera position for debugging (only if valid)
+            console.log("Camera position updated:", this.camera.position, "Looking at:", cameraTarget);
+        } else {
+            console.warn("Invalid camera position calculated:", cameraPosition);
+        }
     }
     
     updateSkills(delta) {
@@ -751,6 +768,13 @@ export class Player {
     }
     
     setPosition(x, y, z) {
+        // Validate input coordinates
+        if (isNaN(x) || isNaN(y) || isNaN(z)) {
+            console.warn("Attempted to set invalid player position:", x, y, z);
+            // Use last valid position or default to origin
+            return;
+        }
+        
         // Update position
         this.position.set(x, y, z);
         

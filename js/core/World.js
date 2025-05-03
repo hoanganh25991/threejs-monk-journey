@@ -678,9 +678,22 @@ export class World {
         // Default height if terrain not yet created
         if (!this.terrain) return 0;
         
+        // Check for invalid input values (NaN or undefined)
+        if (isNaN(x) || isNaN(z) || x === undefined || z === undefined) {
+            console.warn("Invalid coordinates passed to getTerrainHeight:", x, z);
+            return 0; // Return a safe default height
+        }
+        
         // Convert world coordinates to terrain coordinates
         const terrainX = (x / this.terrainSize + 0.5) * this.terrainResolution;
         const terrainZ = (z / this.terrainSize + 0.5) * this.terrainResolution;
+        
+        // Ensure coordinates are within bounds
+        if (terrainX < 0 || terrainX >= this.terrainResolution || 
+            terrainZ < 0 || terrainZ >= this.terrainResolution) {
+            console.warn("Terrain coordinates out of bounds:", terrainX, terrainZ);
+            return 0; // Return a safe default height
+        }
         
         // Get terrain indices
         const x1 = Math.floor(terrainX);
@@ -707,12 +720,19 @@ export class World {
         const h21 = vertices[i21 + 2];
         const h22 = vertices[i22 + 2];
         
+        // Check for invalid height values
+        if (isNaN(h11) || isNaN(h12) || isNaN(h21) || isNaN(h22)) {
+            console.warn("Invalid height values in terrain:", h11, h12, h21, h22);
+            return 0; // Return a safe default height
+        }
+        
         // Bilinear interpolation
         const h1 = h11 * (1 - fx) + h12 * fx;
         const h2 = h21 * (1 - fx) + h22 * fx;
         const height = h1 * (1 - fz) + h2 * fz;
         
-        return height;
+        // Final safety check
+        return isNaN(height) ? 0 : height;
     }
     
     getZoneAt(position) {

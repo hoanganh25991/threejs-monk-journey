@@ -111,8 +111,25 @@ export class CollisionManager {
     checkPlayerTerrainCollisions() {
         const playerPosition = this.player.getPosition();
         
+        // Validate player position
+        if (isNaN(playerPosition.x) || isNaN(playerPosition.y) || isNaN(playerPosition.z)) {
+            console.warn("Invalid player position in terrain collision check:", playerPosition);
+            // Reset player to a safe position
+            this.player.setPosition(0, 2, 0);
+            return;
+        }
+        
         // Get terrain height at player position
         const terrainHeight = this.world.getTerrainHeight(playerPosition.x, playerPosition.z);
+        
+        // Validate terrain height
+        if (isNaN(terrainHeight)) {
+            console.warn("Invalid terrain height calculated:", terrainHeight);
+            // Use a safe default height
+            const safeHeight = 2;
+            this.player.setPosition(playerPosition.x, safeHeight, playerPosition.z);
+            return;
+        }
         
         // Adjust player height to terrain height
         this.player.setPosition(

@@ -1,1 +1,4 @@
-- [] Base on functional-requirement/readme.md and progress-log.md, help me complete the game. After completed update, write summary to progress-log.md.
+- Review the `functional-requirement/readme.md` for key features and functionalities.
+- Analyze the progress logs in the "progress" directory to assess current development status.
+- Identify missing components or incomplete features.
+- Complete the game based on the gathered information.
