@@ -16,7 +16,17 @@ export class World {
         this.currentChunk = { x: 0, z: 0 };
         this.chunkSize = 200; // Size of each terrain chunk
         this.visibleChunks = {}; // Store currently visible chunks
-        this.objectDensity = 0.0001; // Controls how many objects per unit area
+        this.objectDensity = 0.0005; // Increased density for more objects per unit area
+        
+        // For persistent environment objects
+        this.environmentObjects = {}; // Store environment objects by chunk key
+        this.environmentObjectTypes = ['tree', 'rock', 'bush', 'flower']; // Types of environment objects
+        this.environmentObjectDensity = {
+            'tree': 0.0003,
+            'rock': 0.0002,
+            'bush': 0.0004,
+            'flower': 0.0005
+        };
         
         // Reference to the game instance (will be set by Game.js)
         this.game = null;
@@ -974,11 +984,20 @@ export class World {
         const seed = (chunkX * 16777259 + chunkZ * 16807) % 2147483647;
         const random = this.seededRandom(seed);
         
-        // Determine number of objects to generate based on chunk size and density
-        const numObjects = Math.floor(this.chunkSize * this.chunkSize * this.objectDensity);
+        // Check if we've already generated environment objects for this chunk
+        if (!this.environmentObjects[chunkKey]) {
+            // Generate environment objects (trees, rocks, etc.)
+            this.generateEnvironmentObjects(chunkX, chunkZ, random);
+        } else {
+            // Restore previously generated environment objects
+            this.restoreEnvironmentObjects(chunkKey);
+        }
         
-        // Generate random objects
-        for (let i = 0; i < numObjects; i++) {
+        // Determine number of structures to generate based on chunk size and density
+        const numStructures = Math.floor(this.chunkSize * this.chunkSize * this.objectDensity * 0.2); // Reduced density for structures
+        
+        // Generate random structures
+        for (let i = 0; i < numStructures; i++) {
             // Random position within the chunk
             const x = worldX + random() * this.chunkSize;
             const z = worldZ + random() * this.chunkSize;
@@ -986,7 +1005,7 @@ export class World {
             // Determine object type based on random value
             const objectType = random();
             
-            // Create different types of objects based on random value
+            // Create different types of structures based on random value
             if (objectType < 0.3) {
                 // Create a ruin
                 this.createRuins(x, z);
@@ -1009,18 +1028,76 @@ export class World {
                 const questNames = ["Demon Hunt", "Lost Treasure", "Ancient Ritual", "Forgotten Tomb"];
                 const questName = questNames[Math.floor(random() * questNames.length)];
                 this.createQuestMarker(x, z, questName);
-            } else {
-                // Create a tree or rock
-                if (random() < 0.5) {
-                    this.createTree(x, z);
-                } else {
-                    this.createRock(x, z);
-                }
             }
         }
         
         // Store the objects for this chunk
         this.visibleChunks[chunkKey] = chunkObjects;
+    }
+    
+    generateEnvironmentObjects(chunkX, chunkZ, random) {
+        const chunkKey = `${chunkX},${chunkZ}`;
+        const environmentObjects = [];
+        
+        // Calculate world coordinates for this chunk
+        const worldX = chunkX * this.chunkSize;
+        const worldZ = chunkZ * this.chunkSize;
+        
+        // Generate environment objects for each type
+        for (const objectType of this.environmentObjectTypes) {
+            // Determine number of objects to generate based on density
+            const density = this.environmentObjectDensity[objectType];
+            const numObjects = Math.floor(this.chunkSize * this.chunkSize * density);
+            
+            for (let i = 0; i < numObjects; i++) {
+                // Random position within the chunk
+                const x = worldX + random() * this.chunkSize;
+                const z = worldZ + random() * this.chunkSize;
+                
+                // Create the object based on type
+                let object;
+                switch (objectType) {
+                    case 'tree':
+                        object = this.createTree(x, z);
+                        break;
+                    case 'rock':
+                        object = this.createRock(x, z);
+                        break;
+                    case 'bush':
+                        object = this.createBush(x, z);
+                        break;
+                    case 'flower':
+                        object = this.createFlower(x, z);
+                        break;
+                }
+                
+                if (object) {
+                    // Store object with its type and position for persistence
+                    environmentObjects.push({
+                        type: objectType,
+                        object: object,
+                        position: new THREE.Vector3(x, this.getTerrainHeight(x, z), z)
+                    });
+                }
+            }
+        }
+        
+        // Store environment objects for this chunk
+        this.environmentObjects[chunkKey] = environmentObjects;
+    }
+    
+    restoreEnvironmentObjects(chunkKey) {
+        // Get the stored environment objects for this chunk
+        const environmentObjects = this.environmentObjects[chunkKey];
+        
+        if (environmentObjects) {
+            // Add each object back to the scene
+            environmentObjects.forEach(item => {
+                if (item.object && !item.object.parent) {
+                    this.scene.add(item.object);
+                }
+            });
+        }
     }
     
     removeChunkObjects(chunkKey) {
@@ -1038,8 +1115,177 @@ export class World {
             });
         }
         
+        // Remove environment objects from scene but keep their data
+        if (this.environmentObjects[chunkKey]) {
+            this.environmentObjects[chunkKey].forEach(item => {
+                if (item.object && item.object.parent) {
+                    this.scene.remove(item.object);
+                }
+            });
+        }
+        
         // Remove the chunk from the visible chunks
         delete this.visibleChunks[chunkKey];
+    }
+    
+    // Helper method to create a bush
+    createBush(x, z) {
+        const bushGroup = new THREE.Group();
+        
+        // Create bush foliage
+        const bushMaterial = new THREE.MeshStandardMaterial({
+            color: 0x2d6a4f, // Dark green
+            roughness: 0.8,
+            metalness: 0.2
+        });
+        
+        // Create several spheres for the bush
+        const numSpheres = 3 + Math.floor(Math.random() * 3);
+        const baseSize = 0.5 + Math.random() * 0.5;
+        
+        for (let i = 0; i < numSpheres; i++) {
+            const size = baseSize * (0.7 + Math.random() * 0.6);
+            const bushGeometry = new THREE.SphereGeometry(size, 8, 6);
+            const bushPart = new THREE.Mesh(bushGeometry, bushMaterial);
+            
+            // Position spheres to form a bush shape
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * 0.3;
+            bushPart.position.set(
+                Math.cos(angle) * radius,
+                size * 0.8,
+                Math.sin(angle) * radius
+            );
+            
+            // Add some random scaling
+            bushPart.scale.set(
+                1.0 + Math.random() * 0.2,
+                0.8 + Math.random() * 0.4,
+                1.0 + Math.random() * 0.2
+            );
+            
+            bushPart.castShadow = true;
+            bushPart.receiveShadow = true;
+            
+            bushGroup.add(bushPart);
+        }
+        
+        // Position bush at specified coordinates
+        bushGroup.position.set(x, this.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(bushGroup);
+        
+        return bushGroup;
+    }
+    
+    // Helper method to create flowers
+    createFlower(x, z) {
+        const flowerGroup = new THREE.Group();
+        
+        // Random flower color
+        const flowerColors = [
+            0xff5555, // Red
+            0xffff55, // Yellow
+            0x5555ff, // Blue
+            0xff55ff, // Purple
+            0xffffff  // White
+        ];
+        const flowerColor = flowerColors[Math.floor(Math.random() * flowerColors.length)];
+        
+        // Create stem
+        const stemMaterial = new THREE.MeshStandardMaterial({
+            color: 0x2d6a4f, // Dark green
+            roughness: 0.8,
+            metalness: 0.2
+        });
+        
+        const stemGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8);
+        const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+        stem.position.y = 0.25;
+        stem.castShadow = true;
+        stem.receiveShadow = true;
+        
+        flowerGroup.add(stem);
+        
+        // Create flower head
+        const flowerMaterial = new THREE.MeshStandardMaterial({
+            color: flowerColor,
+            roughness: 0.8,
+            metalness: 0.2
+        });
+        
+        // Randomly choose between different flower shapes
+        const flowerType = Math.random();
+        
+        if (flowerType < 0.33) {
+            // Daisy-like flower (cone + disc)
+            const petalGeometry = new THREE.ConeGeometry(0.2, 0.1, 8);
+            const flowerHead = new THREE.Mesh(petalGeometry, flowerMaterial);
+            flowerHead.rotation.x = Math.PI / 2;
+            flowerHead.position.y = 0.55;
+            
+            const centerMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffff00, // Yellow center
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            
+            const centerGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+            const center = new THREE.Mesh(centerGeometry, centerMaterial);
+            center.position.y = 0.6;
+            
+            flowerGroup.add(flowerHead);
+            flowerGroup.add(center);
+        } else if (flowerType < 0.66) {
+            // Tulip-like flower (sphere)
+            const flowerGeometry = new THREE.SphereGeometry(0.15, 8, 8);
+            const flowerHead = new THREE.Mesh(flowerGeometry, flowerMaterial);
+            flowerHead.scale.set(1, 1.5, 1);
+            flowerHead.position.y = 0.6;
+            
+            flowerGroup.add(flowerHead);
+        } else {
+            // Multiple small petals
+            const numPetals = 5 + Math.floor(Math.random() * 3);
+            
+            for (let i = 0; i < numPetals; i++) {
+                const petalGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+                const petal = new THREE.Mesh(petalGeometry, flowerMaterial);
+                
+                const angle = (i / numPetals) * Math.PI * 2;
+                const radius = 0.12;
+                
+                petal.position.set(
+                    Math.cos(angle) * radius,
+                    0.55,
+                    Math.sin(angle) * radius
+                );
+                
+                flowerGroup.add(petal);
+            }
+            
+            // Add center
+            const centerMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffff00, // Yellow center
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            
+            const centerGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+            const center = new THREE.Mesh(centerGeometry, centerMaterial);
+            center.position.y = 0.55;
+            
+            flowerGroup.add(center);
+        }
+        
+        // Position flower at specified coordinates
+        flowerGroup.position.set(x, this.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(flowerGroup);
+        
+        return flowerGroup;
     }
     
     // Seeded random number generator for consistent chunk generation
