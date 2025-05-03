@@ -1,3 +1,2 @@
 - Review the `functional-requirement/readme.md` for key features and functionalities.
-- Identify missing components or incomplete features.
 - [] Complete the game based on the gathered information.
