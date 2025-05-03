@@ -104,7 +104,7 @@ export class CollisionManager {
         this.player.setPosition(
             playerPosition.x + direction.x * pushDistance,
             playerPosition.y,
-            playerPosition.z + direction.y * pushDistance
+            playerPosition.z + direction.z * pushDistance
         );
     }
     
