@@ -34,6 +34,17 @@ export class World {
             'flower': 0.005
         };
         
+        // For structures
+        this.structureTypes = ['house', 'tower', 'ruins', 'darkSanctum']; // Types of structures
+        this.structureDensity = {
+            'house': 0.001,    // Doubled density
+            'tower': 0.0008,   // Increased density
+            'ruins': 0.0008,   // Doubled density
+            'darkSanctum': 0.0002 // Doubled but still rare
+        };
+        this.structuresPlaced = {}; // Track placed structures by chunk key
+        this.specialStructures = {}; // Track special structures like Dark Sanctum
+        
         // Screen-based enemy spawning
         this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
         this.screenSpawnDistance = 20; // Distance to move before spawning new enemies
@@ -44,6 +55,9 @@ export class World {
         
         // Reference to the game instance (will be set by Game.js)
         this.game = null;
+        
+        // Flag to prevent terrain vibration on first load
+        this.initialTerrainCreated = false;
     }
     
     setGame(game) {
@@ -127,7 +141,8 @@ export class World {
         // Apply uniform grass coloring with slight variations
         this.colorTerrainUniform(terrain);
         
-        // Make sure terrain is positioned at the center
+        // Make sure terrain is positioned at the center and exactly at y=0
+        // This is critical to prevent vibration
         terrain.position.set(0, 0, 0);
         
         // Add terrain to scene
@@ -135,6 +150,9 @@ export class World {
         this.terrain = terrain;
         
         console.log("Flat terrain created and added to scene");
+        
+        // Set flag to indicate initial terrain is created
+        this.initialTerrainCreated = true;
         
         // Initialize the first chunks around the player
         this.updateWorldForPlayer(new THREE.Vector3(0, 0, 0));
@@ -189,7 +207,7 @@ export class World {
         // Apply uniform grass coloring with slight variations
         this.colorTerrainUniform(terrain);
         
-        // Position the terrain chunk
+        // Position the terrain chunk - ensure y=0 exactly to prevent vibration
         terrain.position.set(
             worldX + this.terrainChunkSize / 2,
             0,
@@ -201,6 +219,9 @@ export class World {
         
         // Store the terrain chunk
         this.terrainChunks[chunkKey] = terrain;
+        
+        // Generate structures for this chunk if it's a new chunk
+        this.generateStructuresForChunk(chunkX, chunkZ);
     }
     
     // Clear all world objects for a clean reload
@@ -250,6 +271,12 @@ export class World {
                 // If this terrain chunk doesn't exist yet, create it
                 if (!this.terrainChunks[chunkKey]) {
                     this.createTerrainChunk(x, z);
+                }
+                
+                // Always ensure structures are generated for this chunk
+                // This ensures structures appear even when moving far away
+                if (!this.structuresPlaced[chunkKey]) {
+                    this.generateStructuresForChunk(x, z);
                 }
             }
         }
@@ -376,8 +403,92 @@ export class World {
         // Create Dark Sanctum as a landmark
         this.createDarkSanctum(0, -40);
         
+        // Mark these initial structures as placed
+        this.specialStructures['initial_ruins'] = { x: 0, z: 0, type: 'ruins' };
+        this.specialStructures['initial_darkSanctum'] = { x: 0, z: -40, type: 'darkSanctum' };
+        
         // Initialize the first chunks around the player
         this.updateWorldForPlayer(new THREE.Vector3(0, 0, 0));
+    }
+    
+    // Generate structures for a specific chunk
+    generateStructuresForChunk(chunkX, chunkZ) {
+        const chunkKey = `${chunkX},${chunkZ}`;
+        
+        // Skip if structures already generated for this chunk
+        if (this.structuresPlaced[chunkKey]) {
+            return;
+        }
+        
+        // Mark this chunk as processed
+        this.structuresPlaced[chunkKey] = [];
+        
+        // Calculate world coordinates for this chunk
+        const worldX = chunkX * this.terrainChunkSize;
+        const worldZ = chunkZ * this.terrainChunkSize;
+        
+        // Use seeded random for consistent generation
+        const random = this.seededRandom(chunkKey);
+        
+        // Determine if this chunk should have a Dark Sanctum (very rare)
+        if (random() < this.structureDensity.darkSanctum) {
+            const x = worldX + random() * this.terrainChunkSize;
+            const z = worldZ + random() * this.terrainChunkSize;
+            
+            // Check if we're too close to an existing Dark Sanctum
+            let tooClose = false;
+            for (const key in this.specialStructures) {
+                if (this.specialStructures[key].type === 'darkSanctum') {
+                    const dx = this.specialStructures[key].x - x;
+                    const dz = this.specialStructures[key].z - z;
+                    const distance = Math.sqrt(dx * dx + dz * dz);
+                    if (distance < 200) { // Minimum distance between Dark Sanctums
+                        tooClose = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (!tooClose) {
+                this.createDarkSanctum(x, z);
+                this.specialStructures[`darkSanctum_${chunkKey}_${this.structuresPlaced[chunkKey].length}`] = { 
+                    x, z, type: 'darkSanctum' 
+                };
+                this.structuresPlaced[chunkKey].push({ x, z, type: 'darkSanctum' });
+            }
+        }
+        
+        // Generate houses
+        for (let i = 0; i < Math.floor(this.terrainChunkSize * this.terrainChunkSize * this.structureDensity.house); i++) {
+            const x = worldX + random() * this.terrainChunkSize;
+            const z = worldZ + random() * this.terrainChunkSize;
+            
+            // Randomize house dimensions
+            const width = 3 + random() * 5;
+            const depth = 3 + random() * 5;
+            const height = 2 + random() * 5;
+            
+            this.createBuilding(x, z, width, depth, height);
+            this.structuresPlaced[chunkKey].push({ x, z, type: 'house' });
+        }
+        
+        // Generate towers
+        for (let i = 0; i < Math.floor(this.terrainChunkSize * this.terrainChunkSize * this.structureDensity.tower); i++) {
+            const x = worldX + random() * this.terrainChunkSize;
+            const z = worldZ + random() * this.terrainChunkSize;
+            
+            this.createTower(x, z);
+            this.structuresPlaced[chunkKey].push({ x, z, type: 'tower' });
+        }
+        
+        // Generate ruins
+        for (let i = 0; i < Math.floor(this.terrainChunkSize * this.terrainChunkSize * this.structureDensity.ruins); i++) {
+            const x = worldX + random() * this.terrainChunkSize;
+            const z = worldZ + random() * this.terrainChunkSize;
+            
+            this.createRuins(x, z);
+            this.structuresPlaced[chunkKey].push({ x, z, type: 'ruins' });
+        }
     }
     
     createRuins(x, z) {
@@ -769,11 +880,128 @@ export class World {
         });
     }
     
+    createTower(x, z) {
+        const towerGroup = new THREE.Group();
+        
+        // Randomize tower properties
+        const random = Math.random;
+        const height = 10 + random() * 15; // Tower height between 10-25 units
+        const radius = 2 + random() * 3; // Tower radius between 2-5 units
+        const segments = Math.floor(6 + random() * 6); // Tower segments between 6-12
+        
+        // Randomize tower color (stone variations)
+        const colorVariation = random() * 0.2 - 0.1;
+        const baseColor = new THREE.Color(0.5 + colorVariation, 0.5 + colorVariation, 0.5 + colorVariation);
+        
+        // Create tower base (cylinder)
+        const towerGeometry = new THREE.CylinderGeometry(radius, radius * 1.2, height, segments);
+        const towerMaterial = new THREE.MeshStandardMaterial({
+            color: baseColor,
+            roughness: 0.8,
+            metalness: 0.2
+        });
+        const tower = new THREE.Mesh(towerGeometry, towerMaterial);
+        tower.position.y = height / 2;
+        tower.castShadow = true;
+        tower.receiveShadow = true;
+        
+        towerGroup.add(tower);
+        
+        // Create tower roof (cone)
+        const roofHeight = height * 0.3;
+        const roofGeometry = new THREE.ConeGeometry(radius * 1.2, roofHeight, segments);
+        const roofMaterial = new THREE.MeshStandardMaterial({
+            color: new THREE.Color(0.3, 0.1, 0.1), // Reddish roof
+            roughness: 0.7,
+            metalness: 0.3
+        });
+        const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+        roof.position.y = height + roofHeight / 2;
+        roof.castShadow = true;
+        
+        towerGroup.add(roof);
+        
+        // Add windows
+        const windowCount = Math.floor(3 + random() * 3); // 3-6 windows
+        const windowHeight = height / (windowCount + 1);
+        
+        for (let i = 1; i <= windowCount; i++) {
+            const windowGeometry = new THREE.BoxGeometry(1, 1, 0.5);
+            const windowMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffffaa,
+                emissive: 0xffffaa,
+                emissiveIntensity: 0.5,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            // Create windows around the tower
+            for (let j = 0; j < segments; j += 2) {
+                const angle = (j / segments) * Math.PI * 2;
+                const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
+                
+                windowMesh.position.set(
+                    Math.sin(angle) * (radius - 0.1),
+                    i * windowHeight,
+                    Math.cos(angle) * (radius - 0.1)
+                );
+                windowMesh.rotation.y = angle + Math.PI / 2;
+                
+                towerGroup.add(windowMesh);
+            }
+        }
+        
+        // Add a flag at the top (optional, based on random chance)
+        if (random() > 0.5) {
+            const flagpoleGeometry = new THREE.CylinderGeometry(0.1, 0.1, 3, 8);
+            const flagpoleMaterial = new THREE.MeshStandardMaterial({
+                color: 0x333333,
+                roughness: 0.5,
+                metalness: 0.5
+            });
+            const flagpole = new THREE.Mesh(flagpoleGeometry, flagpoleMaterial);
+            flagpole.position.y = height + roofHeight + 1.5;
+            
+            towerGroup.add(flagpole);
+            
+            // Create flag
+            const flagGeometry = new THREE.PlaneGeometry(2, 1);
+            const flagColor = new THREE.Color(
+                random(), 
+                random(), 
+                random()
+            );
+            const flagMaterial = new THREE.MeshStandardMaterial({
+                color: flagColor,
+                side: THREE.DoubleSide
+            });
+            const flag = new THREE.Mesh(flagGeometry, flagMaterial);
+            flag.position.set(1, height + roofHeight + 2, 0);
+            flag.rotation.y = Math.PI / 2;
+            
+            towerGroup.add(flag);
+        }
+        
+        // Position tower on terrain
+        towerGroup.position.set(x, this.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(towerGroup);
+        this.objects.push(towerGroup);
+        
+        return towerGroup;
+    }
+    
     createDarkSanctum(x, z) {
         const sanctumGroup = new THREE.Group();
         
+        // Randomize sanctum properties for variation
+        const random = Math.random;
+        const baseSize = 18 + random() * 4; // Base size between 18-22 units
+        const pillarHeight = 8 + random() * 2; // Pillar height between 8-10 units
+        
         // Create main structure (dark temple)
-        const baseGeometry = new THREE.BoxGeometry(20, 1, 20);
+        const baseGeometry = new THREE.BoxGeometry(baseSize, 1, baseSize);
         const baseMaterial = new THREE.MeshStandardMaterial({
             color: 0x222222,
             roughness: 0.9,
@@ -782,11 +1010,12 @@ export class World {
         const base = new THREE.Mesh(baseGeometry, baseMaterial);
         base.position.y = 0.5;
         base.receiveShadow = true;
+        base.castShadow = true;
         
         sanctumGroup.add(base);
         
         // Create pillars
-        const pillarGeometry = new THREE.CylinderGeometry(1, 1, 8, 8);
+        const pillarGeometry = new THREE.CylinderGeometry(1, 1, pillarHeight, 8);
         const pillarMaterial = new THREE.MeshStandardMaterial({
             color: 0x330033,
             roughness: 0.7,
@@ -796,12 +1025,12 @@ export class World {
         // Create 8 pillars in a circle
         for (let i = 0; i < 8; i++) {
             const angle = (i / 8) * Math.PI * 2;
-            const radius = 8;
+            const radius = baseSize / 2.5;
             
             const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
             pillar.position.set(
                 Math.cos(angle) * radius,
-                4,
+                pillarHeight / 2,
                 Math.sin(angle) * radius
             );
             pillar.castShadow = true;
@@ -861,7 +1090,7 @@ export class World {
         }
         
         // Create dark aura around the sanctum
-        const auraGeometry = new THREE.RingGeometry(10, 12, 32);
+        const auraGeometry = new THREE.RingGeometry(baseSize / 2, baseSize / 2 + 2, 32);
         const auraMaterial = new THREE.MeshBasicMaterial({
             color: 0x330033,
             transparent: true,
@@ -874,14 +1103,41 @@ export class World {
         
         sanctumGroup.add(aura);
         
+        // Add some random decorative elements
+        if (random() > 0.5) {
+            // Add skulls around the altar
+            for (let i = 0; i < 5; i++) {
+                const skullGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+                const skullMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xdddddd,
+                    roughness: 0.9
+                });
+                const skull = new THREE.Mesh(skullGeometry, skullMaterial);
+                
+                const angle = (i / 5) * Math.PI * 2;
+                const radius = 3;
+                
+                skull.position.set(
+                    Math.sin(angle) * radius,
+                    1.5,
+                    Math.cos(angle) * radius
+                );
+                
+                sanctumGroup.add(skull);
+            }
+        }
+        
         // Position the sanctum
         sanctumGroup.position.set(x, this.getTerrainHeight(x, z), z);
         
         // Add to scene
         this.scene.add(sanctumGroup);
+        this.objects.push(sanctumGroup);
         
         // Add a boss spawn point
         this.createBossSpawnPoint(x, z, 'necromancer_lord');
+        
+        return sanctumGroup;
     }
     
     createBossSpawnPoint(x, z, bossType) {
@@ -1015,7 +1271,8 @@ export class World {
     }
     
     getTerrainHeight(x, z) {
-        // Always return 0 for completely flat terrain
+        // Always return exactly 0 for completely flat terrain
+        // This is critical to prevent vibration
         return 0;
     }
     
@@ -1113,7 +1370,7 @@ export class World {
     updateVisibleChunks(centerX, centerZ) {
         // Track which chunks should be visible
         const newVisibleChunks = {};
-        const renderDistance = 2; // How many chunks in each direction to render
+        const renderDistance = 3; // Increased render distance to see more structures
         const newChunks = []; // Track newly created chunks for enemy spawning
         
         // Generate or update chunks in render distance
@@ -1125,6 +1382,17 @@ export class World {
                 // If this chunk doesn't exist yet, create it
                 if (!this.visibleChunks[chunkKey]) {
                     this.generateChunkObjects(x, z);
+                    
+                    // Also generate structures for this chunk
+                    // Convert from small chunks to terrain chunks
+                    const terrainChunkX = Math.floor((x * this.chunkSize) / this.terrainChunkSize);
+                    const terrainChunkZ = Math.floor((z * this.chunkSize) / this.terrainChunkSize);
+                    
+                    // Generate structures if they don't exist yet
+                    if (!this.structuresPlaced[`${terrainChunkX},${terrainChunkZ}`]) {
+                        this.generateStructuresForChunk(terrainChunkX, terrainChunkZ);
+                    }
+                    
                     newChunks.push({ x, z, key: chunkKey });
                 }
             }

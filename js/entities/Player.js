@@ -282,9 +282,15 @@ export class Player {
             // Always maintain a fixed height above terrain to prevent vibration
             const targetHeight = terrainHeight + this.heightOffset;
             
-            // Use a smooth transition to prevent vibration
-            const smoothFactor = 0.1; // Lower value = smoother transition
-            this.position.y += (targetHeight - this.position.y) * smoothFactor;
+            // Check if the world's initial terrain has been created
+            if (this.game.world.initialTerrainCreated) {
+                // Use a very small smooth factor to prevent vibration
+                const smoothFactor = 0.05; // Lower value = smoother transition
+                this.position.y += (targetHeight - this.position.y) * smoothFactor;
+            } else {
+                // If initial terrain isn't created yet, just set the height directly
+                this.position.y = targetHeight;
+            }
             
             // Update model position
             if (this.modelGroup) {
