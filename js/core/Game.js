@@ -92,15 +92,8 @@ export class Game {
         this.difficultyManager = new DifficultyManager(this);
         this.difficultyManager.applyDifficultySettings();
         
-        // Add axes helper for debugging
-        const axesHelper = new THREE.AxesHelper(10);
-        this.scene.add(axesHelper);
-        console.log("Added axes helper to scene");
-        
-        // Add a grid helper for better spatial reference
-        const gridHelper = new THREE.GridHelper(100, 100);
-        this.scene.add(gridHelper);
-        console.log("Added grid helper to scene");
+        // Debug helpers are removed for production
+        // console.log("Debug helpers removed for production");
         
         // Handle window resize
         window.addEventListener('resize', () => this.onWindowResize());
