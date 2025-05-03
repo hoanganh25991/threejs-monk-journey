@@ -194,13 +194,24 @@ export class UIManager {
             this.togglePauseMenu();
         });
         
+        // Create save button
+        const saveButton = document.createElement('button');
+        saveButton.className = 'menu-button';
+        saveButton.textContent = 'Save Game';
+        saveButton.addEventListener('click', () => {
+            if (this.game.saveManager.saveGame()) {
+                this.showNotification('Game saved successfully');
+            } else {
+                this.showNotification('Failed to save game');
+            }
+        });
+        
         // Create options button
         const optionsButton = document.createElement('button');
         optionsButton.className = 'menu-button';
         optionsButton.textContent = 'Options';
         optionsButton.addEventListener('click', () => {
-            // Options functionality can be added later
-            alert('Options menu is not implemented yet.');
+            this.showOptionsMenu();
         });
         
         // Create quit button
@@ -214,9 +225,98 @@ export class UIManager {
         
         this.pauseMenu.appendChild(title);
         this.pauseMenu.appendChild(resumeButton);
+        this.pauseMenu.appendChild(saveButton);
         this.pauseMenu.appendChild(optionsButton);
         this.pauseMenu.appendChild(quitButton);
         document.body.appendChild(this.pauseMenu);
+    }
+    
+    showOptionsMenu() {
+        // Hide pause menu
+        this.pauseMenu.style.display = 'none';
+        
+        // Create options menu
+        const optionsMenu = document.createElement('div');
+        optionsMenu.id = 'game-menu';
+        
+        const title = document.createElement('h1');
+        title.textContent = 'Options';
+        
+        // Audio settings
+        const audioTitle = document.createElement('h2');
+        audioTitle.textContent = 'Audio Settings';
+        audioTitle.style.color = '#aaa';
+        audioTitle.style.fontSize = '24px';
+        audioTitle.style.marginTop = '20px';
+        
+        // Music volume slider
+        const musicVolumeContainer = document.createElement('div');
+        musicVolumeContainer.style.margin = '10px 0';
+        
+        const musicVolumeLabel = document.createElement('label');
+        musicVolumeLabel.textContent = 'Music Volume: ';
+        musicVolumeLabel.style.color = '#fff';
+        
+        const musicVolumeSlider = document.createElement('input');
+        musicVolumeSlider.type = 'range';
+        musicVolumeSlider.min = '0';
+        musicVolumeSlider.max = '100';
+        musicVolumeSlider.value = this.game.audioManager.musicVolume * 100;
+        musicVolumeSlider.addEventListener('input', () => {
+            this.game.audioManager.setMusicVolume(musicVolumeSlider.value / 100);
+        });
+        
+        musicVolumeContainer.appendChild(musicVolumeLabel);
+        musicVolumeContainer.appendChild(musicVolumeSlider);
+        
+        // SFX volume slider
+        const sfxVolumeContainer = document.createElement('div');
+        sfxVolumeContainer.style.margin = '10px 0';
+        
+        const sfxVolumeLabel = document.createElement('label');
+        sfxVolumeLabel.textContent = 'SFX Volume: ';
+        sfxVolumeLabel.style.color = '#fff';
+        
+        const sfxVolumeSlider = document.createElement('input');
+        sfxVolumeSlider.type = 'range';
+        sfxVolumeSlider.min = '0';
+        sfxVolumeSlider.max = '100';
+        sfxVolumeSlider.value = this.game.audioManager.sfxVolume * 100;
+        sfxVolumeSlider.addEventListener('input', () => {
+            this.game.audioManager.setSFXVolume(sfxVolumeSlider.value / 100);
+        });
+        
+        sfxVolumeContainer.appendChild(sfxVolumeLabel);
+        sfxVolumeContainer.appendChild(sfxVolumeSlider);
+        
+        // Mute button
+        const muteButton = document.createElement('button');
+        muteButton.className = 'menu-button';
+        muteButton.style.marginTop = '10px';
+        muteButton.textContent = this.game.audioManager.isMuted ? 'Unmute' : 'Mute';
+        muteButton.addEventListener('click', () => {
+            const isMuted = this.game.audioManager.toggleMute();
+            muteButton.textContent = isMuted ? 'Unmute' : 'Mute';
+        });
+        
+        // Back button
+        const backButton = document.createElement('button');
+        backButton.className = 'menu-button';
+        backButton.textContent = 'Back';
+        backButton.style.marginTop = '30px';
+        backButton.addEventListener('click', () => {
+            optionsMenu.remove();
+            this.pauseMenu.style.display = 'flex';
+        });
+        
+        optionsMenu.appendChild(title);
+        optionsMenu.appendChild(audioTitle);
+        optionsMenu.appendChild(musicVolumeContainer);
+        optionsMenu.appendChild(sfxVolumeContainer);
+        optionsMenu.appendChild(muteButton);
+        optionsMenu.appendChild(backButton);
+        
+        document.body.appendChild(optionsMenu);
     }
     
     createDeathScreen() {

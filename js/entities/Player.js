@@ -385,6 +385,11 @@ export class Player {
         // Create attack effect
         this.createAttackEffect(direction);
         
+        // Play attack sound
+        if (this.game && this.game.audioManager) {
+            this.game.audioManager.playSound('playerAttack');
+        }
+        
         // Reset attack state after delay
         setTimeout(() => {
             this.state.isAttacking = false;
@@ -515,6 +520,28 @@ export class Player {
         // Add skill effect to scene
         this.scene.add(skillEffect);
         
+        // Play skill sound
+        if (this.game && this.game.audioManager) {
+            // Play specific skill sound based on skill name
+            switch (skill.name) {
+                case 'Wave Strike':
+                    this.game.audioManager.playSound('skillWaveStrike');
+                    break;
+                case 'Cyclone Strike':
+                    this.game.audioManager.playSound('skillCycloneStrike');
+                    break;
+                case 'Seven-Sided Strike':
+                    this.game.audioManager.playSound('skillSevenSidedStrike');
+                    break;
+                case 'Inner Sanctuary':
+                    this.game.audioManager.playSound('skillInnerSanctuary');
+                    break;
+                default:
+                    // Generic skill sound
+                    this.game.audioManager.playSound('playerAttack');
+            }
+        }
+        
         // Add to active skills
         this.activeSkills.push(skill);
         
@@ -538,6 +565,11 @@ export class Player {
         // Apply damage
         this.stats.health -= reducedDamage;
         
+        // Play hit sound
+        if (this.game && this.game.audioManager) {
+            this.game.audioManager.playSound('playerHit');
+        }
+        
         // Check if player is dead
         if (this.stats.health <= 0) {
             this.stats.health = 0;
@@ -559,6 +591,11 @@ export class Player {
         
         // Play death animation
         this.modelGroup.rotation.x = Math.PI / 2;
+        
+        // Play death sound
+        if (this.game && this.game.audioManager) {
+            this.game.audioManager.playSound('playerDeath');
+        }
         
         // Show death screen
         this.game.uiManager.showDeathScreen();
@@ -613,6 +650,11 @@ export class Player {
         // Restore health and mana
         this.stats.health = this.stats.maxHealth;
         this.stats.mana = this.stats.maxMana;
+        
+        // Play level up sound
+        if (this.game && this.game.audioManager) {
+            this.game.audioManager.playSound('levelUp');
+        }
         
         // Show level up notification
         this.game.uiManager.showLevelUp(this.stats.level);

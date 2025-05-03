@@ -9,6 +9,7 @@ import { CollisionManager } from './CollisionManager.js';
 import { QuestManager } from './QuestManager.js';
 import { AudioManager } from './AudioManager.js';
 import { SaveManager } from './SaveManager.js';
+import { DifficultyManager } from './DifficultyManager.js';
 
 export class Game {
     constructor() {
@@ -83,6 +84,11 @@ export class Game {
         
         // Initialize save manager
         this.saveManager = new SaveManager(this);
+        this.saveManager.init();
+        
+        // Initialize difficulty manager
+        this.difficultyManager = new DifficultyManager(this);
+        this.difficultyManager.applyDifficultySettings();
         
         // Handle window resize
         window.addEventListener('resize', () => this.onWindowResize());

@@ -164,6 +164,11 @@ export class QuestManager {
         // Award rewards
         this.awardQuestRewards(quest);
         
+        // Play quest complete sound
+        if (this.game && this.game.audioManager) {
+            this.game.audioManager.playSound('questComplete');
+        }
+        
         // Update UI
         this.game.uiManager.updateQuestLog(this.activeQuests);
         this.game.uiManager.showDialog(
