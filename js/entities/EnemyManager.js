@@ -7,11 +7,17 @@ export class EnemyManager {
         this.player = player;
         this.loadingManager = loadingManager;
         this.enemies = [];
-        this.maxEnemies = 15;
+        this.maxEnemies = 30; // Increased max enemies for world exploration
         this.spawnRadius = 30;
         this.spawnTimer = 0;
         this.spawnInterval = 5; // Spawn enemy every 5 seconds
         this.game = null; // Will be set by Game.js
+        
+        // For chunk-based enemy spawning
+        this.enemyChunks = {}; // Track enemies per chunk
+        this.enemiesPerChunk = 5; // Number of enemies to spawn per chunk
+        this.chunkSpawnRadius = 80; // Radius within chunk to spawn enemies
+        this.enemyGroupSize = { min: 2, max: 5 }; // Enemies spawn in groups
         
         // Zone-based enemy spawning
         this.zoneEnemies = {
@@ -620,5 +626,166 @@ export class EnemyManager {
         // Spawn the Frost Titan at the specified position
         const position = new THREE.Vector3(x, 0, z);
         return this.spawnBoss('frost_titan', position);
+    }
+    
+    // New methods for chunk-based enemy spawning
+    
+    onPlayerChunkChanged(chunkX, chunkZ) {
+        // Clean up enemies that are too far from the player
+        this.cleanupDistantEnemies(chunkX, chunkZ);
+        
+        // Make sure we have enough enemies in the world
+        this.ensureEnemyPopulation();
+    }
+    
+    cleanupDistantEnemies(playerChunkX, playerChunkZ) {
+        const maxChunkDistance = 4; // How many chunks away to keep enemies
+        
+        // Remove enemies that are too far away
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const enemy = this.enemies[i];
+            const position = enemy.getPosition();
+            
+            // Skip if this is a boss
+            if (enemy.isBoss) continue;
+            
+            // Calculate chunk coordinates for this enemy
+            const enemyChunkX = Math.floor(position.x / this.game.world.chunkSize);
+            const enemyChunkZ = Math.floor(position.z / this.game.world.chunkSize);
+            
+            // Calculate chunk distance
+            const chunkDistance = Math.max(
+                Math.abs(enemyChunkX - playerChunkX),
+                Math.abs(enemyChunkZ - playerChunkZ)
+            );
+            
+            // If enemy is too far away, remove it
+            if (chunkDistance > maxChunkDistance) {
+                enemy.remove();
+                this.enemies.splice(i, 1);
+                
+                // Update enemy chunk tracking
+                const chunkKey = `${enemyChunkX},${enemyChunkZ}`;
+                if (this.enemyChunks[chunkKey]) {
+                    this.enemyChunks[chunkKey]--;
+                    if (this.enemyChunks[chunkKey] <= 0) {
+                        delete this.enemyChunks[chunkKey];
+                    }
+                }
+            }
+        }
+    }
+    
+    ensureEnemyPopulation() {
+        // If we're below the max enemies, spawn more in nearby chunks
+        if (this.enemies.length < this.maxEnemies) {
+            // Get player's current chunk
+            const playerPos = this.player.getPosition();
+            const playerChunkX = Math.floor(playerPos.x / this.game.world.chunkSize);
+            const playerChunkZ = Math.floor(playerPos.z / this.game.world.chunkSize);
+            
+            // Check nearby chunks for enemy population
+            const checkRadius = 2; // How many chunks around player to check
+            
+            for (let x = playerChunkX - checkRadius; x <= playerChunkX + checkRadius; x++) {
+                for (let z = playerChunkZ - checkRadius; z <= playerChunkZ + checkRadius; z++) {
+                    // Skip if we've reached max enemies
+                    if (this.enemies.length >= this.maxEnemies) break;
+                    
+                    // Check if this chunk needs more enemies
+                    const chunkKey = `${x},${z}`;
+                    const chunkEnemyCount = this.enemyChunks[chunkKey] || 0;
+                    
+                    if (chunkEnemyCount < this.enemiesPerChunk) {
+                        // Spawn a group of enemies in this chunk
+                        this.spawnEnemyGroup(x, z);
+                    }
+                }
+            }
+        }
+    }
+    
+    spawnEnemiesInChunk(chunkX, chunkZ) {
+        const chunkKey = `${chunkX},${chunkZ}`;
+        
+        // Skip if we already have enough enemies in this chunk
+        if (this.enemyChunks[chunkKey] && this.enemyChunks[chunkKey] >= this.enemiesPerChunk) {
+            return;
+        }
+        
+        // Skip if we're at max enemies globally
+        if (this.enemies.length >= this.maxEnemies) {
+            return;
+        }
+        
+        // Spawn 1-3 groups of enemies in this chunk
+        const numGroups = 1 + Math.floor(Math.random() * 2);
+        
+        for (let i = 0; i < numGroups; i++) {
+            this.spawnEnemyGroup(chunkX, chunkZ);
+            
+            // Stop if we've reached max enemies
+            if (this.enemies.length >= this.maxEnemies) {
+                break;
+            }
+        }
+    }
+    
+    spawnEnemyGroup(chunkX, chunkZ) {
+        // Calculate world coordinates for chunk center
+        const chunkCenterX = chunkX * this.game.world.chunkSize + this.game.world.chunkSize / 2;
+        const chunkCenterZ = chunkZ * this.game.world.chunkSize + this.game.world.chunkSize / 2;
+        
+        // Determine group size
+        const groupSize = this.enemyGroupSize.min + 
+            Math.floor(Math.random() * (this.enemyGroupSize.max - this.enemyGroupSize.min + 1));
+        
+        // Determine group position within chunk (random point within spawn radius)
+        const groupAngle = Math.random() * Math.PI * 2;
+        const groupDistance = Math.random() * this.chunkSpawnRadius;
+        const groupX = chunkCenterX + Math.cos(groupAngle) * groupDistance;
+        const groupZ = chunkCenterZ + Math.sin(groupAngle) * groupDistance;
+        
+        // Get terrain height at group position
+        const terrainHeight = this.game.world.getTerrainHeight(groupX, groupZ);
+        
+        // Get current zone for appropriate enemy types
+        let currentZone = 'forest'; // Default zone
+        const zone = this.game.world.getZoneAt(new THREE.Vector3(groupX, terrainHeight, groupZ));
+        if (zone) {
+            currentZone = zone.name.toLowerCase();
+        }
+        
+        // Get enemy types for this zone
+        const zoneEnemyTypes = this.zoneEnemies[currentZone] || Object.keys(this.zoneEnemies)[0];
+        
+        // Select a random enemy type from the zone for this group
+        const groupEnemyType = zoneEnemyTypes[Math.floor(Math.random() * zoneEnemyTypes.length)];
+        
+        // Spawn the group of enemies
+        for (let i = 0; i < groupSize; i++) {
+            // Skip if we've reached max enemies
+            if (this.enemies.length >= this.maxEnemies) {
+                break;
+            }
+            
+            // Calculate position within group (random spread)
+            const spreadRadius = 5 + Math.random() * 5;
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.random() * spreadRadius;
+            const x = groupX + Math.cos(angle) * distance;
+            const z = groupZ + Math.sin(angle) * distance;
+            
+            // Get terrain height at position
+            const y = this.game.world.getTerrainHeight(x, z);
+            
+            // Spawn enemy
+            const position = new THREE.Vector3(x, y, z);
+            this.spawnEnemy(groupEnemyType, position);
+            
+            // Update enemy count for this chunk
+            const chunkKey = `${chunkX},${chunkZ}`;
+            this.enemyChunks[chunkKey] = (this.enemyChunks[chunkKey] || 0) + 1;
+        }
     }
 }

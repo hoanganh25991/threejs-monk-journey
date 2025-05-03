@@ -17,6 +17,13 @@ export class World {
         this.chunkSize = 200; // Size of each terrain chunk
         this.visibleChunks = {}; // Store currently visible chunks
         this.objectDensity = 0.0001; // Controls how many objects per unit area
+        
+        // Reference to the game instance (will be set by Game.js)
+        this.game = null;
+    }
+    
+    setGame(game) {
+        this.game = game;
     }
     
     async init() {
@@ -431,6 +438,7 @@ export class World {
     createZones() {
         // Define zones with different characteristics
         this.zones = [
+            // Original zones near the starting area
             {
                 name: 'Forest',
                 center: new THREE.Vector3(20, 0, 20),
@@ -462,6 +470,39 @@ export class World {
                 color: 0x330033
             }
         ];
+        
+        // Add more zones throughout the world
+        // Create a pattern of zones that repeats across the world
+        const zoneTypes = [
+            { name: 'Forest', color: 0x2d572c, radius: 40 },
+            { name: 'Desert', color: 0xd2b48c, radius: 40 },
+            { name: 'Mountains', color: 0x555555, radius: 40 },
+            { name: 'Swamp', color: 0x4a7023, radius: 40 },
+            { name: 'Ruins', color: 0x999999, radius: 30 }
+        ];
+        
+        // Create zones in a grid pattern across the world
+        const spacing = 200; // Space between zone centers
+        const range = 3; // How many zones in each direction
+        
+        for (let x = -range; x <= range; x++) {
+            for (let z = -range; z <= range; z++) {
+                // Skip the center area where we already have zones
+                if (Math.abs(x) <= 1 && Math.abs(z) <= 1) continue;
+                
+                // Choose a zone type based on position
+                const zoneIndex = Math.abs((x * 3 + z) % zoneTypes.length);
+                const zoneType = zoneTypes[zoneIndex];
+                
+                // Create the zone
+                this.zones.push({
+                    name: zoneType.name,
+                    center: new THREE.Vector3(x * spacing, 0, z * spacing),
+                    radius: zoneType.radius,
+                    color: zoneType.color
+                });
+            }
+        }
         
         // Visualize zones (for development)
         this.zones.forEach(zone => {
@@ -875,6 +916,11 @@ export class World {
             
             // Generate objects in the new chunks around the player
             this.updateVisibleChunks(chunkX, chunkZ);
+            
+            // Notify game that player has moved to a new chunk (for enemy spawning)
+            if (this.game && this.game.enemyManager) {
+                this.game.enemyManager.onPlayerChunkChanged(chunkX, chunkZ);
+            }
         }
     }
     
@@ -882,6 +928,7 @@ export class World {
         // Track which chunks should be visible
         const newVisibleChunks = {};
         const renderDistance = 2; // How many chunks in each direction to render
+        const newChunks = []; // Track newly created chunks for enemy spawning
         
         // Generate or update chunks in render distance
         for (let x = centerX - renderDistance; x <= centerX + renderDistance; x++) {
@@ -892,6 +939,7 @@ export class World {
                 // If this chunk doesn't exist yet, create it
                 if (!this.visibleChunks[chunkKey]) {
                     this.generateChunkObjects(x, z);
+                    newChunks.push({ x, z, key: chunkKey });
                 }
             }
         }
@@ -905,6 +953,13 @@ export class World {
         
         // Update the visible chunks
         this.visibleChunks = newVisibleChunks;
+        
+        // Spawn enemies in new chunks if game and enemy manager are available
+        if (this.game && this.game.enemyManager && newChunks.length > 0) {
+            newChunks.forEach(chunk => {
+                this.game.enemyManager.spawnEnemiesInChunk(chunk.x, chunk.z);
+            });
+        }
     }
     
     generateChunkObjects(chunkX, chunkZ) {

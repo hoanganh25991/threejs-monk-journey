@@ -54,6 +54,7 @@ export class Game {
         
         // Initialize world
         this.world = new World(this.scene, this.loadingManager);
+        this.world.setGame(this);
         await this.world.init();
         
         // Initialize player
@@ -162,6 +163,9 @@ export class Game {
         
         // Update player
         this.player.update(delta);
+        
+        // Update world based on player position
+        this.world.updateWorldForPlayer(this.player.getPosition());
         
         // Update enemies
         this.enemyManager.update(delta);
