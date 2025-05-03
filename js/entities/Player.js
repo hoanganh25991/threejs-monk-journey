@@ -229,15 +229,15 @@ export class Player {
             }),
             new Skill({
                 name: 'Wave of Light',
-                description: 'Slam the ground creating a wave of holy light',
+                description: 'Summon a massive bell that crashes down on enemies',
                 type: 'wave',
-                damage: 30,
+                damage: 50, // Increased damage
                 manaCost: 40,
                 cooldown: 0.1, // Reduced cooldown
-                range: 8,
-                radius: 2,
-                duration: 1,
-                color: 0xffffaa
+                range: 10, // Increased range
+                radius: 4, // Increased radius
+                duration: 2, // Increased duration
+                color: 0xffdd22 // Golden color for the bell's light
             }),
             new Skill({
                 name: 'Exploding Palm',
