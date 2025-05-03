@@ -7,6 +7,8 @@ import { UIManager } from '../ui/UIManager.js';
 import { EnemyManager } from '../entities/EnemyManager.js';
 import { CollisionManager } from './CollisionManager.js';
 import { QuestManager } from './QuestManager.js';
+import { AudioManager } from './AudioManager.js';
+import { SaveManager } from './SaveManager.js';
 
 export class Game {
     constructor() {
@@ -75,6 +77,13 @@ export class Game {
         // Initialize quest manager
         this.questManager = new QuestManager(this);
         
+        // Initialize audio manager
+        this.audioManager = new AudioManager(this);
+        this.audioManager.init();
+        
+        // Initialize save manager
+        this.saveManager = new SaveManager(this);
+        
         // Handle window resize
         window.addEventListener('resize', () => this.onWindowResize());
         
@@ -85,6 +94,9 @@ export class Game {
         this.isRunning = true;
         this.clock.start();
         this.animate();
+        
+        // Start background music
+        this.audioManager.playMusic();
     }
     
     pause() {

@@ -1,0 +1,1 @@
+- [] Base on functional-requirement/readme.md and progress-log.md, help me complete the game. After completed update, write summary to progress-log.md.
