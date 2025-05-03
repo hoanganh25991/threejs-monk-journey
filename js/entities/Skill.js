@@ -266,43 +266,224 @@ export class Skill {
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
-        // Create a ring
-        const ringGeometry = new THREE.RingGeometry(this.radius - 0.2, this.radius, 32);
-        const ringMaterial = new THREE.MeshBasicMaterial({
-            color: this.color,
-            transparent: true,
-            opacity: 0.5,
-            side: THREE.DoubleSide
-        });
-        
-        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-        ring.rotation.x = -Math.PI / 2;
-        ring.position.y = 0.1;
-        
-        // Add ring to group
-        effectGroup.add(ring);
-        
-        // Create particles
-        const particleCount = 20;
-        for (let i = 0; i < particleCount; i++) {
-            const angle = (i / particleCount) * Math.PI * 2;
-            const radius = this.radius * 0.8;
+        // Special handling for Cyclone Strike
+        if (this.name === 'Cyclone Strike') {
+            // Create a tornado/cyclone effect
+            const cycloneGroup = new THREE.Group();
             
-            const particleGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-            const particleMaterial = new THREE.MeshBasicMaterial({
+            // Create the base of the cyclone
+            const baseRadius = this.radius;
+            const baseHeight = 0.2;
+            const baseGeometry = new THREE.CylinderGeometry(baseRadius, baseRadius * 1.2, baseHeight, 32);
+            const baseMaterial = new THREE.MeshStandardMaterial({
                 color: this.color,
                 transparent: true,
-                opacity: 0.7
+                opacity: 0.7,
+                metalness: 0.2,
+                roughness: 0.8,
+                side: THREE.DoubleSide
             });
             
-            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-            particle.position.set(
-                Math.cos(angle) * radius,
-                0.5,
-                Math.sin(angle) * radius
-            );
+            const base = new THREE.Mesh(baseGeometry, baseMaterial);
+            base.position.y = baseHeight / 2;
+            cycloneGroup.add(base);
             
-            effectGroup.add(particle);
+            // Create the main cyclone body with multiple layers
+            const layerCount = 8;
+            const maxHeight = 4;
+            const spiralFactor = 0.2; // Controls how much the cyclone spirals
+            
+            for (let i = 0; i < layerCount; i++) {
+                const layerHeight = 0.4;
+                const heightPosition = baseHeight + (i * layerHeight);
+                const layerRadius = baseRadius * (1 - (i / layerCount) * 0.7); // Gradually decrease radius
+                
+                const layerGeometry = new THREE.TorusGeometry(layerRadius, 0.2, 16, 32);
+                const layerMaterial = new THREE.MeshStandardMaterial({
+                    color: this.color,
+                    transparent: true,
+                    opacity: 0.6 - (i * 0.05), // Gradually decrease opacity
+                    metalness: 0.3,
+                    roughness: 0.7,
+                    side: THREE.DoubleSide
+                });
+                
+                const layer = new THREE.Mesh(layerGeometry, layerMaterial);
+                layer.position.y = heightPosition;
+                layer.rotation.x = Math.PI / 2; // Lay flat
+                layer.rotation.z = i * spiralFactor; // Create spiral effect
+                
+                // Store initial position and rotation for animation
+                layer.userData = {
+                    initialHeight: heightPosition,
+                    rotationSpeed: 2 + (i * 0.5), // Layers rotate at different speeds
+                    verticalSpeed: 0.5 + (Math.random() * 0.5)
+                };
+                
+                cycloneGroup.add(layer);
+            }
+            
+            // Add wind/dust particles swirling around the cyclone
+            const particleCount = 50;
+            const particles = [];
+            
+            for (let i = 0; i < particleCount; i++) {
+                // Random position around the cyclone
+                const angle = Math.random() * Math.PI * 2;
+                const distance = (Math.random() * baseRadius * 1.2) + (baseRadius * 0.2);
+                const height = Math.random() * maxHeight;
+                
+                // Create particle
+                const particleSize = 0.05 + (Math.random() * 0.15);
+                let particleGeometry;
+                
+                // Mix of different particle shapes
+                const shapeType = Math.floor(Math.random() * 3);
+                switch (shapeType) {
+                    case 0:
+                        particleGeometry = new THREE.SphereGeometry(particleSize, 8, 8);
+                        break;
+                    case 1:
+                        particleGeometry = new THREE.BoxGeometry(particleSize, particleSize, particleSize);
+                        break;
+                    case 2:
+                        particleGeometry = new THREE.TetrahedronGeometry(particleSize);
+                        break;
+                }
+                
+                // Vary particle colors slightly
+                const colorVariation = Math.random() * 0.2 - 0.1; // -0.1 to 0.1
+                const particleColor = new THREE.Color(this.color);
+                particleColor.r = Math.min(1, Math.max(0, particleColor.r + colorVariation));
+                particleColor.g = Math.min(1, Math.max(0, particleColor.g + colorVariation));
+                particleColor.b = Math.min(1, Math.max(0, particleColor.b + colorVariation));
+                
+                const particleMaterial = new THREE.MeshStandardMaterial({
+                    color: particleColor,
+                    transparent: true,
+                    opacity: 0.4 + (Math.random() * 0.4),
+                    metalness: 0.1,
+                    roughness: 0.9
+                });
+                
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                particle.position.set(
+                    Math.cos(angle) * distance,
+                    height,
+                    Math.sin(angle) * distance
+                );
+                
+                // Store particle animation data
+                particle.userData = {
+                    angle: angle,
+                    distance: distance,
+                    height: height,
+                    rotationSpeed: 1 + (Math.random() * 2),
+                    verticalSpeed: 0.2 + (Math.random() * 0.8),
+                    scaleSpeed: 0.95 + (Math.random() * 0.05)
+                };
+                
+                cycloneGroup.add(particle);
+                particles.push(particle);
+            }
+            
+            // Add energy core at the center of the cyclone
+            const coreGeometry = new THREE.SphereGeometry(baseRadius * 0.3, 16, 16);
+            const coreMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                emissive: this.color,
+                emissiveIntensity: 1.5,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            core.position.y = maxHeight / 2;
+            cycloneGroup.add(core);
+            
+            // Add energy beams emanating from the core
+            const beamCount = 5;
+            for (let i = 0; i < beamCount; i++) {
+                const angle = (i / beamCount) * Math.PI * 2;
+                const beamLength = baseRadius * 0.8;
+                
+                const beamGeometry = new THREE.CylinderGeometry(0.05, 0.05, beamLength, 8);
+                const beamMaterial = new THREE.MeshStandardMaterial({
+                    color: this.color,
+                    emissive: this.color,
+                    emissiveIntensity: 1,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                
+                const beam = new THREE.Mesh(beamGeometry, beamMaterial);
+                beam.position.set(
+                    Math.cos(angle) * (baseRadius * 0.5),
+                    maxHeight / 2,
+                    Math.sin(angle) * (baseRadius * 0.5)
+                );
+                beam.rotation.z = Math.PI / 2;
+                beam.rotation.y = angle;
+                
+                // Store beam animation data
+                beam.userData = {
+                    angle: angle,
+                    rotationSpeed: 3 + (Math.random() * 2),
+                    pulseSpeed: 5 + (Math.random() * 3)
+                };
+                
+                cycloneGroup.add(beam);
+            }
+            
+            // Add the cyclone group to the effect group
+            effectGroup.add(cycloneGroup);
+            
+            // Store animation state
+            this.cycloneState = {
+                age: 0,
+                rotationSpeed: 2,
+                particles: particles
+            };
+        } else {
+            // Default AOE effect
+            // Create a ring
+            const ringGeometry = new THREE.RingGeometry(this.radius - 0.2, this.radius, 32);
+            const ringMaterial = new THREE.MeshBasicMaterial({
+                color: this.color,
+                transparent: true,
+                opacity: 0.5,
+                side: THREE.DoubleSide
+            });
+            
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.y = 0.1;
+            
+            // Add ring to group
+            effectGroup.add(ring);
+            
+            // Create particles
+            const particleCount = 20;
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (i / particleCount) * Math.PI * 2;
+                const radius = this.radius * 0.8;
+                
+                const particleGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+                const particleMaterial = new THREE.MeshBasicMaterial({
+                    color: this.color,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+                particle.position.set(
+                    Math.cos(angle) * radius,
+                    0.5,
+                    Math.sin(angle) * radius
+                );
+                
+                effectGroup.add(particle);
+            }
         }
         
         // Position effect
@@ -588,42 +769,286 @@ export class Skill {
     }
     
     updateRangedEffect(delta) {
-        // Move projectile forward
-        const speed = 10;
-        this.effect.position.x += this.direction.x * speed * delta;
-        this.effect.position.z += this.direction.z * speed * delta;
-        
-        // Update position for collision detection
-        this.position.copy(this.effect.position);
-        
-        // Scale down trail particles
-        for (let i = 1; i < this.effect.children.length; i++) {
-            const particle = this.effect.children[i];
-            particle.scale.multiplyScalar(0.95);
+        // Special handling for Wave Strike
+        if (this.name === 'Wave Strike' && this.waveState) {
+            // Move wave forward
+            const speed = 8;
+            this.effect.position.x += this.direction.x * speed * delta;
+            this.effect.position.z += this.direction.z * speed * delta;
+            
+            // Update position for collision detection
+            this.position.copy(this.effect.position);
+            
+            // Update wave state
+            this.waveState.age += delta;
+            
+            // Get the wave group (first child of effect group)
+            const waveGroup = this.effect.children[0];
+            
+            // Animate based on phase
+            if (this.waveState.age < 0.3) {
+                // Growing phase - scale up
+                const growScale = this.waveState.age / 0.3;
+                waveGroup.scale.set(growScale, growScale, growScale);
+            } else if (this.waveState.age > this.duration * 0.7) {
+                // Dissipating phase - fade out
+                const fadeRatio = 1 - ((this.waveState.age - (this.duration * 0.7)) / (this.duration * 0.3));
+                
+                // Fade out all materials
+                waveGroup.traverse(child => {
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => {
+                                mat.opacity = Math.max(0, mat.opacity * fadeRatio);
+                            });
+                        } else {
+                            child.material.opacity = Math.max(0, child.material.opacity * fadeRatio);
+                        }
+                    }
+                });
+            }
+            
+            // Animate water droplets
+            for (const droplet of this.waveState.droplets) {
+                // Move droplets outward and slightly upward
+                droplet.position.add(
+                    droplet.userData.direction.clone().multiplyScalar(delta * droplet.userData.speed)
+                );
+                
+                // Scale down droplets over time
+                droplet.scale.multiplyScalar(0.98);
+            }
+            
+            // Animate energy tendrils
+            for (let i = 0; i < waveGroup.children.length; i++) {
+                const child = waveGroup.children[i];
+                if (child.userData && child.userData.rotationSpeed) {
+                    // Rotate tendrils
+                    child.rotation.z += child.userData.rotationSpeed * delta;
+                    
+                    // Pulse tendrils
+                    const pulseScale = 0.9 + (Math.sin(this.waveState.age * 5) * 0.1);
+                    child.scale.set(pulseScale, 1, pulseScale);
+                }
+            }
+            
+            // Animate core (pulsing)
+            const core = waveGroup.children.find(child => 
+                child.geometry && child.geometry.type === 'SphereGeometry' && 
+                child.position.x === 0 && child.position.z === 0
+            );
+            
+            if (core) {
+                const pulseScale = 0.8 + (Math.sin(this.waveState.age * 8) * 0.2);
+                core.scale.set(pulseScale, pulseScale, pulseScale);
+                
+                if (core.material) {
+                    core.material.emissiveIntensity = 1 + (Math.sin(this.waveState.age * 10) * 0.5);
+                }
+            }
+            
+            // Animate wake (stretching behind)
+            const wake = waveGroup.children.find(child => 
+                child.geometry && child.geometry.type === 'PlaneGeometry'
+            );
+            
+            if (wake) {
+                // Stretch wake as wave moves
+                wake.scale.y = 1 + (this.waveState.age * 0.5);
+                wake.position.z = -(wake.scale.y / 2);
+                
+                // Fade wake over time
+                if (wake.material) {
+                    wake.material.opacity = Math.max(0, 0.3 - (this.waveState.age * 0.05));
+                }
+            }
+        } else {
+            // Default ranged effect behavior
+            // Move projectile forward
+            const speed = 10;
+            this.effect.position.x += this.direction.x * speed * delta;
+            this.effect.position.z += this.direction.z * speed * delta;
+            
+            // Update position for collision detection
+            this.position.copy(this.effect.position);
+            
+            // Scale down trail particles
+            for (let i = 1; i < this.effect.children.length; i++) {
+                const particle = this.effect.children[i];
+                particle.scale.multiplyScalar(0.95);
+            }
         }
     }
     
     updateAoeEffect(delta) {
-        // Pulse the ring
-        const ring = this.effect.children[0];
-        const pulseSpeed = 2;
-        const pulseScale = 0.2;
-        
-        ring.scale.set(
-            1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale,
-            1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale,
-            1
-        );
-        
-        // Rotate particles
-        for (let i = 1; i < this.effect.children.length; i++) {
-            const particle = this.effect.children[i];
-            const angle = (i / (this.effect.children.length - 1)) * Math.PI * 2;
-            const radius = this.radius * 0.8;
+        // Special handling for Cyclone Strike
+        if (this.name === 'Cyclone Strike' && this.cycloneState) {
+            // Update cyclone state
+            this.cycloneState.age += delta;
             
-            particle.position.x = Math.cos(angle + this.elapsedTime * 2) * radius;
-            particle.position.z = Math.sin(angle + this.elapsedTime * 2) * radius;
-            particle.rotation.y += delta * 5;
+            // Get the cyclone group (first child of effect group)
+            const cycloneGroup = this.effect.children[0];
+            
+            // Rotate the entire cyclone
+            cycloneGroup.rotation.y += this.cycloneState.rotationSpeed * delta;
+            
+            // Find the base, layers, core, and beams
+            const base = cycloneGroup.children[0]; // First child is the base
+            
+            // Animate the cyclone layers (torus rings)
+            for (let i = 1; i <= 8; i++) { // Layers are children 1-8
+                if (cycloneGroup.children[i] && cycloneGroup.children[i].userData && 
+                    cycloneGroup.children[i].userData.initialHeight !== undefined) {
+                    
+                    const layer = cycloneGroup.children[i];
+                    
+                    // Rotate each layer at its own speed
+                    layer.rotation.z += layer.userData.rotationSpeed * delta;
+                    
+                    // Oscillate layers vertically
+                    const verticalOffset = Math.sin(this.cycloneState.age * layer.userData.verticalSpeed) * 0.2;
+                    layer.position.y = layer.userData.initialHeight + verticalOffset;
+                    
+                    // Pulse the layers
+                    const pulseScale = 0.9 + (Math.sin(this.cycloneState.age * 3 + i) * 0.1);
+                    layer.scale.set(pulseScale, pulseScale, 1);
+                }
+            }
+            
+            // Animate particles
+            for (const particle of this.cycloneState.particles) {
+                // Update particle angle (rotate around center)
+                particle.userData.angle += particle.userData.rotationSpeed * delta;
+                
+                // Move particle in a spiral pattern
+                particle.position.set(
+                    Math.cos(particle.userData.angle) * particle.userData.distance,
+                    particle.userData.height + (this.cycloneState.age * particle.userData.verticalSpeed) % 4,
+                    Math.sin(particle.userData.angle) * particle.userData.distance
+                );
+                
+                // Rotate particle
+                particle.rotation.x += delta * 3;
+                particle.rotation.y += delta * 3;
+                particle.rotation.z += delta * 3;
+                
+                // Scale particle (gradually shrink)
+                particle.scale.multiplyScalar(particle.userData.scaleSpeed);
+                
+                // Reset particles that get too small or move too high
+                if (particle.scale.x < 0.2 || particle.position.y > 4) {
+                    // Reset size
+                    particle.scale.set(1, 1, 1);
+                    
+                    // Reset position - start from bottom
+                    const newAngle = Math.random() * Math.PI * 2;
+                    const newDistance = (Math.random() * this.radius * 1.2) + (this.radius * 0.2);
+                    
+                    particle.position.set(
+                        Math.cos(newAngle) * newDistance,
+                        Math.random() * 0.5, // Start near the bottom
+                        Math.sin(newAngle) * newDistance
+                    );
+                    
+                    // Update userData
+                    particle.userData.angle = newAngle;
+                    particle.userData.distance = newDistance;
+                    particle.userData.height = particle.position.y;
+                }
+            }
+            
+            // Find and animate the core
+            const core = cycloneGroup.children.find(child => 
+                child.geometry && child.geometry.type === 'SphereGeometry' && 
+                child.position.y > 1
+            );
+            
+            if (core) {
+                // Pulse the core
+                const pulseScale = 0.8 + (Math.sin(this.cycloneState.age * 5) * 0.2);
+                core.scale.set(pulseScale, pulseScale, pulseScale);
+                
+                // Adjust emissive intensity
+                if (core.material) {
+                    core.material.emissiveIntensity = 1 + (Math.sin(this.cycloneState.age * 8) * 0.5);
+                }
+            }
+            
+            // Animate energy beams
+            for (let i = 0; i < cycloneGroup.children.length; i++) {
+                const child = cycloneGroup.children[i];
+                if (child.userData && child.userData.rotationSpeed && child.userData.angle !== undefined) {
+                    // Rotate beam around core
+                    child.userData.angle += child.userData.rotationSpeed * delta;
+                    
+                    // Update beam position
+                    const baseRadius = this.radius;
+                    child.position.set(
+                        Math.cos(child.userData.angle) * (baseRadius * 0.5),
+                        child.position.y,
+                        Math.sin(child.userData.angle) * (baseRadius * 0.5)
+                    );
+                    
+                    // Update beam rotation to always point outward
+                    child.rotation.y = child.userData.angle;
+                    
+                    // Pulse beam length
+                    const pulseScale = 0.8 + (Math.sin(this.cycloneState.age * child.userData.pulseSpeed) * 0.2);
+                    child.scale.y = pulseScale;
+                }
+            }
+            
+            // Handle fade-out near the end of duration
+            if (this.elapsedTime > this.duration * 0.7) {
+                const fadeRatio = 1 - ((this.elapsedTime - (this.duration * 0.7)) / (this.duration * 0.3));
+                
+                // Fade out all materials
+                cycloneGroup.traverse(child => {
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => {
+                                mat.opacity = Math.max(0, mat.opacity * fadeRatio);
+                            });
+                        } else {
+                            child.material.opacity = Math.max(0, child.material.opacity * fadeRatio);
+                        }
+                    }
+                });
+                
+                // Slow down rotation as it fades
+                this.cycloneState.rotationSpeed *= 0.98;
+            }
+            
+            // Pull effect - move nearby objects toward the cyclone
+            // This is just visual - actual gameplay logic would be handled elsewhere
+            const pullRadius = this.radius * 2;
+            const pullStrength = 5 * delta;
+            
+            // The pull effect could be implemented in the game's physics system
+            // Here we're just animating the cyclone itself
+        } else {
+            // Default AOE effect behavior
+            // Pulse the ring
+            const ring = this.effect.children[0];
+            const pulseSpeed = 2;
+            const pulseScale = 0.2;
+            
+            ring.scale.set(
+                1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale,
+                1 + Math.sin(this.elapsedTime * pulseSpeed) * pulseScale,
+                1
+            );
+            
+            // Rotate particles
+            for (let i = 1; i < this.effect.children.length; i++) {
+                const particle = this.effect.children[i];
+                const angle = (i / (this.effect.children.length - 1)) * Math.PI * 2;
+                const radius = this.radius * 0.8;
+                
+                particle.position.x = Math.cos(angle + this.elapsedTime * 2) * radius;
+                particle.position.z = Math.sin(angle + this.elapsedTime * 2) * radius;
+                particle.rotation.y += delta * 5;
+            }
         }
     }
     

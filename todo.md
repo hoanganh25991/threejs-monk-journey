@@ -1,3 +1,5 @@
 - [] Fix issue: when hold keys to spam skills, the skills after duration (effect time), the skills ui, particle still show up. Please help to clean up them in this case.
 - [] Fix issue: alert message at middle of the screen should on take and stack up 1/5 of the screen, to allow view other, sometime i spawn skills, and too much message show up, it's consume whole height of the screen.
-- [] Instead of showing damage of enemy by number, show it as particle effect of blooding, base on the damage value, variant the color. Just show the damage of the skill player casted, not all enemies, and show them in stacked way, one per 0.3 second.
+- [] Enhance: instead of showing damage of enemy by number, show it as particle effect of blooding, base on the damage value, variant the color. Just show the damage of the skill player casted, not all enemies, and show them in stacked way, one per 0.3 second.
+- [] Enhance: move the health bar and mana bar to top left corner, in same container with the level, show the icon, hero-portrait of the monk. Show absolute remain/max health, remain/max mana
+- [] 
