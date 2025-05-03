@@ -279,16 +279,16 @@ export class Player {
         if (this.game && this.game.world) {
             const terrainHeight = this.game.world.getTerrainHeight(this.position.x, this.position.z);
             
-            // Only update if the terrain height is higher than current position
-            // or if the player is significantly above the terrain
-            if (this.position.y < terrainHeight + this.heightOffset || 
-                this.position.y > terrainHeight + this.heightOffset + 0.5) {
-                this.position.y = terrainHeight + this.heightOffset;
-                
-                // Update model position
-                if (this.modelGroup) {
-                    this.modelGroup.position.y = this.position.y;
-                }
+            // Always maintain a fixed height above terrain to prevent vibration
+            const targetHeight = terrainHeight + this.heightOffset;
+            
+            // Use a smooth transition to prevent vibration
+            const smoothFactor = 0.1; // Lower value = smoother transition
+            this.position.y += (targetHeight - this.position.y) * smoothFactor;
+            
+            // Update model position
+            if (this.modelGroup) {
+                this.modelGroup.position.y = this.position.y;
             }
         }
     }
@@ -306,25 +306,28 @@ export class Player {
                 // Calculate movement step
                 const step = this.stats.movementSpeed * delta;
                 
-                // Calculate new position
+                // Calculate new position (only update X and Z, let updateTerrainHeight handle Y)
                 const newPosition = new THREE.Vector3(
                     this.position.x + direction.x * step,
                     this.position.y,
                     this.position.z + direction.z * step
                 );
                 
-                // Get terrain height at new position
-                if (this.game && this.game.world) {
-                    const terrainHeight = this.game.world.getTerrainHeight(newPosition.x, newPosition.z);
-                    newPosition.y = terrainHeight + this.heightOffset;
-                }
+                // Update position (only X and Z)
+                this.position.x = newPosition.x;
+                this.position.z = newPosition.z;
                 
-                // Update position
-                this.setPosition(newPosition.x, newPosition.y, newPosition.z);
+                // Update model position
+                if (this.modelGroup) {
+                    this.modelGroup.position.x = this.position.x;
+                    this.modelGroup.position.z = this.position.z;
+                }
                 
                 // Update rotation to face movement direction
                 this.rotation.y = Math.atan2(direction.x, direction.z);
-                this.modelGroup.rotation.y = this.rotation.y;
+                if (this.modelGroup) {
+                    this.modelGroup.rotation.y = this.rotation.y;
+                }
             } else {
                 // Reached target
                 this.state.isMoving = false;
@@ -840,8 +843,10 @@ export class Player {
         // Update position
         this.position.set(x, y, z);
         
-        // Update model position
-        this.modelGroup.position.copy(this.position);
+        // Update model position (if it exists)
+        if (this.modelGroup) {
+            this.modelGroup.position.copy(this.position);
+        }
     }
     
     setInWater(inWater) {

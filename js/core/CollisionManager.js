@@ -208,12 +208,8 @@ export class CollisionManager {
             return;
         }
         
-        // Adjust player height to terrain height
-        this.player.setPosition(
-            playerPosition.x,
-            terrainHeight + this.player.getHeightOffset(),
-            playerPosition.z
-        );
+        // Let the player's updateTerrainHeight method handle the height adjustment
+        // This avoids duplicate height adjustments that can cause vibration
         
         // Water has been removed, so player is never in water
         this.player.setInWater(false);
