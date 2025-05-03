@@ -25,10 +25,38 @@ export class Skill {
         this.direction = new THREE.Vector3();
     }
     
+    // Utility method to validate vector values
+    validateVector(vector) {
+        if (!vector) return false;
+        
+        // Check if any component is NaN or infinite
+        if (isNaN(vector.x) || isNaN(vector.y) || isNaN(vector.z) ||
+            !isFinite(vector.x) || !isFinite(vector.y) || !isFinite(vector.z)) {
+            console.warn("Invalid vector detected:", vector);
+            return false;
+        }
+        
+        return true;
+    }
+    
     createEffect(playerPosition, playerRotation) {
+        // Validate input positions
+        if (!this.validateVector(playerPosition)) {
+            console.error("Invalid player position provided to skill:", this.name);
+            // Use a default safe position
+            playerPosition = new THREE.Vector3(0, 0, 0);
+        }
+        
         // Set skill position
         this.position.copy(playerPosition);
         this.position.y += 1; // Adjust height
+        
+        // Validate rotation
+        if (!playerRotation || isNaN(playerRotation.y)) {
+            console.error("Invalid player rotation provided to skill:", this.name);
+            // Use a default rotation
+            playerRotation = { y: 0 };
+        }
         
         // Set skill direction based on player rotation
         this.direction.set(
@@ -37,24 +65,42 @@ export class Skill {
             Math.cos(playerRotation.y)
         );
         
+        // Validate direction vector
+        if (!this.validateVector(this.direction)) {
+            console.error("Invalid direction calculated for skill:", this.name);
+            // Use a default direction
+            this.direction.set(0, 0, 1);
+        }
+        
         // Create effect based on skill type
-        switch (this.type) {
-            case 'ranged':
-                return this.createRangedEffect();
-            case 'aoe':
-                return this.createAoeEffect();
-            case 'multi':
-                return this.createMultiEffect();
-            case 'buff':
-                return this.createBuffEffect();
-            case 'wave':
-                return this.createWaveEffect();
-            case 'summon':
-                return this.createSummonEffect();
-            case 'mark':
-                return this.createMarkEffect();
-            default:
-                return this.createDefaultEffect();
+        try {
+            switch (this.type) {
+                case 'ranged':
+                    return this.createRangedEffect();
+                case 'aoe':
+                    return this.createAoeEffect();
+                case 'multi':
+                    return this.createMultiEffect();
+                case 'buff':
+                    return this.createBuffEffect();
+                case 'wave':
+                    return this.createWaveEffect();
+                case 'summon':
+                    return this.createSummonEffect();
+                case 'mark':
+                    return this.createMarkEffect();
+                default:
+                    return this.createDefaultEffect();
+            }
+        } catch (error) {
+            console.error(`Error creating effect for skill ${this.name}:`, error);
+            // Return a simple default effect as fallback
+            const fallbackGroup = new THREE.Group();
+            const fallbackGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+            const fallbackMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const fallbackMesh = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
+            fallbackGroup.add(fallbackMesh);
+            return fallbackGroup;
         }
     }
     
@@ -348,6 +394,11 @@ export class Skill {
                         particleGeometry = new THREE.SphereGeometry(particleSize, 8, 8);
                         break;
                     case 1:
+                        // Validate particleSize to prevent NaN values
+                        if (isNaN(particleSize) || particleSize <= 0) {
+                            particleSize = 0.1; // Default safe value
+                            console.warn("Invalid particleSize detected, using default value");
+                        }
                         particleGeometry = new THREE.BoxGeometry(particleSize, particleSize, particleSize);
                         break;
                     case 2:
@@ -472,6 +523,7 @@ export class Skill {
                 const angle = (i / particleCount) * Math.PI * 2;
                 const radius = this.radius * 0.8;
                 
+                // Use fixed size for particle geometry to avoid potential NaN issues
                 const particleGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
                 const particleMaterial = new THREE.MeshBasicMaterial({
                     color: this.color,
@@ -757,6 +809,7 @@ export class Skill {
                 const angle = (i / this.hits) * Math.PI * 2;
                 const radius = this.range * 0.5;
                 
+                // Use fixed size for strike geometry to avoid potential NaN issues
                 const strikeGeometry = new THREE.BoxGeometry(0.3, 1, 0.3);
                 const strikeMaterial = new THREE.MeshBasicMaterial({
                     color: this.color,
@@ -1217,7 +1270,9 @@ export class Skill {
         for (let i = 0; i < rayCount; i++) {
             const angle = (i / rayCount) * Math.PI * 2;
             
-            const rayGeometry = new THREE.BoxGeometry(0.2, 0.2, this.radius);
+            // Validate radius to prevent NaN values
+            const safeRadius = isNaN(this.radius) || this.radius <= 0 ? 1.0 : this.radius;
+            const rayGeometry = new THREE.BoxGeometry(0.2, 0.2, safeRadius);
             const rayMaterial = new THREE.MeshBasicMaterial({
                 color: this.color,
                 transparent: true,
@@ -1300,35 +1355,53 @@ export class Skill {
     update(delta) {
         if (!this.isActive || !this.effect) return;
         
+        // Validate delta to prevent NaN issues
+        if (isNaN(delta) || delta <= 0) {
+            console.warn(`Invalid delta value (${delta}) for skill ${this.name}, using default`);
+            delta = 0.016; // Default to ~60fps
+        }
+        
         // Update elapsed time
         this.elapsedTime += delta;
         
-        // Update effect based on skill type
-        switch (this.type) {
-            case 'ranged':
-                this.updateRangedEffect(delta);
-                break;
-            case 'aoe':
-                this.updateAoeEffect(delta);
-                break;
-            case 'multi':
-                this.updateMultiEffect(delta);
-                break;
-            case 'buff':
-                this.updateBuffEffect(delta);
-                break;
-            case 'wave':
-                this.updateWaveEffect(delta);
-                break;
-            case 'summon':
-                this.updateSummonEffect(delta);
-                break;
-            case 'mark':
-                this.updateMarkEffect(delta);
-                break;
-            default:
-                this.updateDefaultEffect(delta);
-                break;
+        try {
+            // Update effect based on skill type
+            switch (this.type) {
+                case 'ranged':
+                    this.updateRangedEffect(delta);
+                    break;
+                case 'aoe':
+                    this.updateAoeEffect(delta);
+                    break;
+                case 'multi':
+                    this.updateMultiEffect(delta);
+                    break;
+                case 'buff':
+                    this.updateBuffEffect(delta);
+                    break;
+                case 'wave':
+                    this.updateWaveEffect(delta);
+                    break;
+                case 'summon':
+                    this.updateSummonEffect(delta);
+                    break;
+                case 'mark':
+                    this.updateMarkEffect(delta);
+                    break;
+                default:
+                    this.updateDefaultEffect(delta);
+                    break;
+            }
+            
+            // Validate position after update to catch any issues
+            if (!this.validateVector(this.position)) {
+                console.warn(`Invalid position detected after updating skill ${this.name}, resetting`);
+                this.position.set(0, 0, 0);
+            }
+        } catch (error) {
+            console.error(`Error updating skill ${this.name}:`, error);
+            // Mark skill as expired to remove it on next frame
+            this.elapsedTime = this.duration * 2;
         }
     }
     

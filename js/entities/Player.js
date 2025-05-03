@@ -211,7 +211,7 @@ export class Player {
                 manaCost: 20,
                 cooldown: 0.1, // Reduced cooldown
                 range: 0,
-                radius: 3,
+                radius: 5,
                 duration: 5,
                 color: 0xffffff
             }),
@@ -235,7 +235,7 @@ export class Player {
                 manaCost: 40,
                 cooldown: 0.1, // Reduced cooldown
                 range: 10, // Increased range
-                radius: 4, // Increased radius
+                radius: 8, // Increased radius
                 duration: 2, // Increased duration
                 color: 0xffdd22 // Golden color for the bell's light
             }),
@@ -437,8 +437,16 @@ export class Player {
         for (let i = this.activeSkills.length - 1; i >= 0; i--) {
             const skill = this.activeSkills[i];
             
-            // Update skill
-            skill.update(delta);
+            try {
+                // Update skill
+                skill.update(delta);
+            } catch (error) {
+                console.error(`Error updating skill ${skill.name}:`, error);
+                // Remove problematic skill
+                skill.remove();
+                this.activeSkills.splice(i, 1);
+                continue;
+            }
             
             // Remove expired skills
             if (skill.isExpired()) {
