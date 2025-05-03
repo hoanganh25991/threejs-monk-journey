@@ -190,8 +190,8 @@ export class World {
     }
     
     createWater() {
-        // Create a much larger water plane that extends beyond the visible terrain
-        const waterGeometry = new THREE.PlaneGeometry(2000, 2000); // Very large water plane
+        // Create an extremely large water plane that extends far beyond the explorable area
+        const waterGeometry = new THREE.PlaneGeometry(10000, 10000); // Massive water plane
         const waterMaterial = new THREE.MeshStandardMaterial({
             color: 0x0055ff,
             transparent: true,

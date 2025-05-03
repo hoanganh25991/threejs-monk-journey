@@ -136,12 +136,23 @@ export class InputHandler {
         // Cast ray from camera through mouse position
         this.raycaster.setFromCamera(this.mouse.position, this.game.camera);
         
-        // Check for intersections with terrain
-        const intersects = this.raycaster.intersectObject(this.game.world.terrain);
+        // First check for intersections with terrain
+        const terrainIntersects = this.raycaster.intersectObject(this.game.world.terrain);
         
-        if (intersects.length > 0) {
-            // Update mouse target position
-            this.mouse.target.copy(intersects[0].point);
+        if (terrainIntersects.length > 0) {
+            // Update mouse target position from terrain intersection
+            this.mouse.target.copy(terrainIntersects[0].point);
+        } else {
+            // If no terrain intersection, use a plane at y=0 to allow movement beyond terrain
+            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // Horizontal plane at y=0
+            const rayCaster = new THREE.Raycaster();
+            rayCaster.setFromCamera(this.mouse.position, this.game.camera);
+            
+            const intersection = new THREE.Vector3();
+            if (rayCaster.ray.intersectPlane(plane, intersection)) {
+                // Update mouse target position from plane intersection
+                this.mouse.target.copy(intersection);
+            }
         }
     }
     
