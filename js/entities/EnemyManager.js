@@ -152,6 +152,22 @@ export class EnemyManager {
                 behavior: 'boss',
                 zone: 'mountains',
                 abilities: ['fire_nova', 'teleport']
+            },
+            {
+                type: 'frost_titan',
+                name: 'Frost Titan',
+                health: 600,
+                damage: 40,
+                speed: 2.0,
+                attackRange: 3,
+                attackSpeed: 1.0,
+                experienceValue: 350,
+                color: 0x88ccff,
+                scale: 3,
+                isBoss: true,
+                behavior: 'boss',
+                zone: 'mountains',
+                abilities: ['ice_storm', 'frost_nova', 'ice_barrier']
             }
         ];
         
@@ -450,6 +466,10 @@ export class EnemyManager {
                 bossType = 'swamp_horror';
                 spawnPosition = new THREE.Vector3(-15, 0, -15); // In swamp
                 break;
+            case 'main_quest_5': // Frost Titan quest
+                bossType = 'frost_titan';
+                spawnPosition = new THREE.Vector3(20, 0, 20); // In snowy mountains
+                break;
             case 'main_quest_6': // Final boss quest
                 bossType = 'demon_lord';
                 spawnPosition = new THREE.Vector3(25, 0, -25); // In mountains
@@ -473,5 +493,11 @@ export class EnemyManager {
         });
         
         this.enemies = [];
+    }
+    
+    spawnFrostTitan(x = 0, z = 0) {
+        // Spawn the Frost Titan at the specified position
+        const position = new THREE.Vector3(x, 0, z);
+        return this.spawnBoss('frost_titan', position);
     }
 }
