@@ -1,0 +1,197 @@
+import * as THREE from 'three';
+
+export class InputHandler {
+    constructor(game) {
+        this.game = game;
+        this.keys = {};
+        this.mouse = {
+            position: new THREE.Vector2(),
+            isDown: false,
+            target: new THREE.Vector3()
+        };
+        this.raycaster = new THREE.Raycaster();
+        
+        // Initialize input event listeners
+        this.initKeyboardEvents();
+        this.initMouseEvents();
+    }
+    
+    initKeyboardEvents() {
+        // Key down event
+        window.addEventListener('keydown', (event) => {
+            this.keys[event.code] = true;
+            
+            // Handle special key presses
+            switch (event.code) {
+                case 'KeyI':
+                    // Toggle inventory
+                    this.game.uiManager.toggleInventory();
+                    break;
+                case 'Escape':
+                    // Toggle pause menu
+                    this.game.uiManager.togglePauseMenu();
+                    break;
+                case 'Digit1':
+                case 'Digit2':
+                case 'Digit3':
+                case 'Digit4':
+                    // Use skill
+                    const skillIndex = parseInt(event.code.charAt(5)) - 1;
+                    this.game.player.useSkill(skillIndex);
+                    break;
+            }
+        });
+        
+        // Key up event
+        window.addEventListener('keyup', (event) => {
+            this.keys[event.code] = false;
+        });
+    }
+    
+    initMouseEvents() {
+        // Mouse move event
+        window.addEventListener('mousemove', (event) => {
+            // Calculate normalized device coordinates
+            this.mouse.position.x = (event.clientX / window.innerWidth) * 2 - 1;
+            this.mouse.position.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            // Update mouse target position on terrain
+            this.updateMouseTarget();
+        });
+        
+        // Mouse down event
+        window.addEventListener('mousedown', (event) => {
+            this.mouse.isDown = true;
+            
+            // Handle mouse button clicks
+            switch (event.button) {
+                case 0: // Left click
+                    // Move player to target location
+                    if (this.mouse.target) {
+                        this.game.player.moveTo(this.mouse.target);
+                    }
+                    
+                    // Check for interactive objects
+                    this.checkInteraction();
+                    break;
+                case 2: // Right click
+                    // Use primary attack
+                    if (this.mouse.target) {
+                        this.game.player.attack(this.mouse.target);
+                    }
+                    break;
+            }
+        });
+        
+        // Mouse up event
+        window.addEventListener('mouseup', (event) => {
+            this.mouse.isDown = false;
+        });
+        
+        // Prevent context menu on right click
+        window.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+        });
+    }
+    
+    updateMouseTarget() {
+        // Cast ray from camera through mouse position
+        this.raycaster.setFromCamera(this.mouse.position, this.game.camera);
+        
+        // Check for intersections with terrain
+        const intersects = this.raycaster.intersectObject(this.game.world.terrain);
+        
+        if (intersects.length > 0) {
+            // Update mouse target position
+            this.mouse.target.copy(intersects[0].point);
+        }
+    }
+    
+    checkInteraction() {
+        // Cast ray from camera through mouse position
+        this.raycaster.setFromCamera(this.mouse.position, this.game.camera);
+        
+        // Get all interactive objects
+        const interactiveObjects = this.game.world.interactiveObjects.map(obj => obj.mesh);
+        
+        // Check for intersections with interactive objects
+        const intersects = this.raycaster.intersectObjects(interactiveObjects, true);
+        
+        if (intersects.length > 0) {
+            // Find the interactive object that was clicked
+            const clickedMesh = intersects[0].object;
+            let parentMesh = clickedMesh;
+            
+            // Find the top-level parent mesh
+            while (parentMesh.parent && parentMesh.parent !== this.game.scene) {
+                parentMesh = parentMesh.parent;
+            }
+            
+            // Find the interactive object data
+            const interactiveObject = this.game.world.interactiveObjects.find(obj => obj.mesh === parentMesh);
+            
+            if (interactiveObject) {
+                // Trigger interaction
+                const result = interactiveObject.onInteract();
+                
+                // Handle interaction result
+                if (result) {
+                    switch (result.type) {
+                        case 'item':
+                            // Add item to inventory
+                            this.game.player.addToInventory(result.item);
+                            this.game.uiManager.showNotification(`Found ${result.item.name} x${result.item.amount}`);
+                            break;
+                        case 'quest':
+                            // Show quest dialog
+                            this.game.questManager.startQuest(result.quest);
+                            this.game.uiManager.showDialog(
+                                `New Quest: ${result.quest.name}`,
+                                result.quest.description
+                            );
+                            break;
+                    }
+                }
+            }
+        }
+    }
+    
+    isKeyPressed(keyCode) {
+        return this.keys[keyCode] === true;
+    }
+    
+    getMovementDirection() {
+        const direction = new THREE.Vector3(0, 0, 0);
+        
+        if (this.isKeyPressed('KeyW') || this.isKeyPressed('ArrowUp')) {
+            direction.z -= 1;
+        }
+        
+        if (this.isKeyPressed('KeyS') || this.isKeyPressed('ArrowDown')) {
+            direction.z += 1;
+        }
+        
+        if (this.isKeyPressed('KeyA') || this.isKeyPressed('ArrowLeft')) {
+            direction.x -= 1;
+        }
+        
+        if (this.isKeyPressed('KeyD') || this.isKeyPressed('ArrowRight')) {
+            direction.x += 1;
+        }
+        
+        // Normalize direction vector
+        if (direction.length() > 0) {
+            direction.normalize();
+        }
+        
+        return direction;
+    }
+    
+    getMouseTarget() {
+        return this.mouse.target;
+    }
+    
+    isMouseDown() {
+        return this.mouse.isDown;
+    }
+}
