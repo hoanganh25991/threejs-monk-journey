@@ -29,7 +29,8 @@ export class Player {
             isAttacking: false,
             isUsingSkill: false,
             isDead: false,
-            inWater: false
+            inWater: false,
+            isInteracting: false
         };
         
         // Player position and orientation
@@ -213,6 +214,42 @@ export class Player {
                 radius: 3,
                 duration: 5,
                 color: 0xffffff
+            }),
+            new Skill({
+                name: 'Mystic Ally',
+                description: 'Summon a spirit ally to fight alongside you',
+                type: 'summon',
+                damage: 8,
+                manaCost: 35,
+                cooldown: 15,
+                range: 2,
+                radius: 1,
+                duration: 10,
+                color: 0x00ffff
+            }),
+            new Skill({
+                name: 'Wave of Light',
+                description: 'Slam the ground creating a wave of holy light',
+                type: 'wave',
+                damage: 30,
+                manaCost: 40,
+                cooldown: 12,
+                range: 8,
+                radius: 2,
+                duration: 1,
+                color: 0xffffaa
+            }),
+            new Skill({
+                name: 'Exploding Palm',
+                description: 'Mark enemies to explode on death, dealing damage to nearby enemies',
+                type: 'mark',
+                damage: 15,
+                manaCost: 25,
+                cooldown: 8,
+                range: 2,
+                radius: 3,
+                duration: 5,
+                color: 0xff3333
             })
         ];
     }
@@ -861,5 +898,21 @@ export class Player {
     
     setGame(game) {
         this.game = game;
+    }
+    
+    isInteracting() {
+        return this.state.isInteracting;
+    }
+    
+    setInteracting(isInteracting) {
+        this.state.isInteracting = isInteracting;
+    }
+    
+    interact() {
+        this.state.isInteracting = true;
+    }
+    
+    setInWater(inWater) {
+        this.state.inWater = inWater;
     }
 }

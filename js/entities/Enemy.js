@@ -64,6 +64,16 @@ export class Enemy {
             case 'frost_titan':
                 this.createFrostTitanModel();
                 break;
+            case 'necromancer':
+            case 'necromancer_lord':
+                this.createNecromancerModel();
+                break;
+            case 'shadow_beast':
+                this.createShadowBeastModel();
+                break;
+            case 'infernal_golem':
+                this.createInfernalGolemModel();
+                break;
             default:
                 this.createDefaultModel();
                 break;
@@ -1228,6 +1238,350 @@ export class Enemy {
     
     getName() {
         return this.name;
+    }
+    
+    createNecromancerModel() {
+        // Create body (robed figure)
+        const bodyGeometry = new THREE.CylinderGeometry(0.4, 0.6, 1.8, 8);
+        const bodyMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x330033,
+            roughness: 0.9,
+            metalness: 0.1
+        });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.position.y = 0.9;
+        body.castShadow = true;
+        
+        this.modelGroup.add(body);
+        
+        // Create head (skull-like)
+        const headGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+        const headMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0xdddddd,
+            roughness: 0.8,
+            metalness: 0.2
+        });
+        const head = new THREE.Mesh(headGeometry, headMaterial);
+        head.position.y = 1.9;
+        head.castShadow = true;
+        
+        this.modelGroup.add(head);
+        
+        // Create hood
+        const hoodGeometry = new THREE.ConeGeometry(0.4, 0.5, 8);
+        const hoodMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x330033,
+            roughness: 0.9,
+            metalness: 0.1
+        });
+        const hood = new THREE.Mesh(hoodGeometry, hoodMaterial);
+        hood.position.y = 2.1;
+        hood.rotation.x = Math.PI;
+        hood.castShadow = true;
+        
+        this.modelGroup.add(hood);
+        
+        // Create staff
+        const staffGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 8);
+        const staffMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x553311,
+            roughness: 0.8,
+            metalness: 0.2
+        });
+        const staff = new THREE.Mesh(staffGeometry, staffMaterial);
+        staff.position.set(0.6, 1.0, 0);
+        staff.rotation.z = Math.PI / 12;
+        staff.castShadow = true;
+        
+        this.modelGroup.add(staff);
+        
+        // Create staff orb
+        const orbGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+        const orbMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x9900cc,
+            roughness: 0.2,
+            metalness: 0.8,
+            emissive: 0x330066,
+            emissiveIntensity: 0.5
+        });
+        const orb = new THREE.Mesh(orbGeometry, orbMaterial);
+        orb.position.set(0.6, 2.0, 0);
+        orb.castShadow = true;
+        
+        this.modelGroup.add(orb);
+        
+        // Add necromancer lord specific elements
+        if (this.type === 'necromancer_lord') {
+            // Create floating skulls
+            const skullGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+            const skullMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xdddddd,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            
+            // Create 3 floating skulls
+            for (let i = 0; i < 3; i++) {
+                const angle = (i / 3) * Math.PI * 2;
+                const skull = new THREE.Mesh(skullGeometry, skullMaterial);
+                skull.position.set(
+                    Math.cos(angle) * 0.8,
+                    1.5,
+                    Math.sin(angle) * 0.8
+                );
+                skull.castShadow = true;
+                
+                this.modelGroup.add(skull);
+            }
+            
+            // Create larger staff orb
+            orb.scale.set(1.5, 1.5, 1.5);
+            orb.material.emissiveIntensity = 0.8;
+            
+            // Create aura
+            const auraGeometry = new THREE.RingGeometry(1, 1.1, 32);
+            const auraMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x9900cc,
+                transparent: true,
+                opacity: 0.5,
+                side: THREE.DoubleSide
+            });
+            const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+            aura.rotation.x = -Math.PI / 2;
+            aura.position.y = 0.1;
+            
+            this.modelGroup.add(aura);
+        }
+    }
+    
+    createShadowBeastModel() {
+        // Create body (dark, amorphous shape)
+        const bodyGeometry = new THREE.SphereGeometry(0.8, 16, 16);
+        const bodyMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x000000,
+            roughness: 1.0,
+            metalness: 0.0,
+            transparent: true,
+            opacity: 0.8
+        });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.position.y = 0.8;
+        body.scale.set(1, 0.8, 1.2);
+        body.castShadow = true;
+        
+        this.modelGroup.add(body);
+        
+        // Create head (part of the amorphous shape)
+        const headGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+        const headMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x000000,
+            roughness: 1.0,
+            metalness: 0.0,
+            transparent: true,
+            opacity: 0.8
+        });
+        const head = new THREE.Mesh(headGeometry, headMaterial);
+        head.position.y = 1.5;
+        head.castShadow = true;
+        
+        this.modelGroup.add(head);
+        
+        // Create glowing eyes
+        const eyeGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+        const eyeMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0xff0000,
+            emissive: 0xff0000,
+            emissiveIntensity: 1.0
+        });
+        
+        // Left eye
+        const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        leftEye.position.set(-0.2, 1.6, 0.3);
+        
+        this.modelGroup.add(leftEye);
+        
+        // Right eye
+        const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        rightEye.position.set(0.2, 1.6, 0.3);
+        
+        this.modelGroup.add(rightEye);
+        
+        // Create tendrils/arms
+        const tendrilGeometry = new THREE.CylinderGeometry(0.1, 0.05, 1.2, 8);
+        const tendrilMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x000000,
+            roughness: 1.0,
+            metalness: 0.0,
+            transparent: true,
+            opacity: 0.7
+        });
+        
+        // Create 4 tendrils
+        for (let i = 0; i < 4; i++) {
+            const angle = (i / 4) * Math.PI * 2;
+            const tendril = new THREE.Mesh(tendrilGeometry, tendrilMaterial);
+            tendril.position.set(
+                Math.cos(angle) * 0.5,
+                0.8,
+                Math.sin(angle) * 0.5
+            );
+            tendril.rotation.x = Math.PI / 2;
+            tendril.rotation.z = angle;
+            tendril.castShadow = true;
+            
+            this.modelGroup.add(tendril);
+        }
+        
+        // Create shadow aura
+        const auraGeometry = new THREE.RingGeometry(1, 1.5, 32);
+        const auraMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0x000000,
+            transparent: true,
+            opacity: 0.3,
+            side: THREE.DoubleSide
+        });
+        const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+        aura.rotation.x = -Math.PI / 2;
+        aura.position.y = 0.1;
+        
+        this.modelGroup.add(aura);
+    }
+    
+    createInfernalGolemModel() {
+        // Create body (large, rocky structure)
+        const bodyGeometry = new THREE.BoxGeometry(1.5, 1.5, 1);
+        const bodyMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x333333,
+            roughness: 1.0,
+            metalness: 0.2
+        });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.position.y = 0.75;
+        body.castShadow = true;
+        
+        this.modelGroup.add(body);
+        
+        // Create head (smaller box)
+        const headGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+        const headMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x333333,
+            roughness: 1.0,
+            metalness: 0.2
+        });
+        const head = new THREE.Mesh(headGeometry, headMaterial);
+        head.position.y = 1.8;
+        head.castShadow = true;
+        
+        this.modelGroup.add(head);
+        
+        // Create glowing cracks
+        const crackGeometry = new THREE.BoxGeometry(0.1, 1.4, 0.1);
+        const crackMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0xff3300,
+            emissive: 0xff3300,
+            emissiveIntensity: 1.0
+        });
+        
+        // Vertical crack
+        const verticalCrack = new THREE.Mesh(crackGeometry, crackMaterial);
+        verticalCrack.position.set(0, 0.75, 0.51);
+        
+        this.modelGroup.add(verticalCrack);
+        
+        // Horizontal crack
+        const horizontalCrack = new THREE.Mesh(crackGeometry, crackMaterial);
+        horizontalCrack.position.set(0, 0.75, 0.51);
+        horizontalCrack.rotation.z = Math.PI / 2;
+        
+        this.modelGroup.add(horizontalCrack);
+        
+        // Create arms (large, rocky cylinders)
+        const armGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1.2, 8);
+        const armMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x333333,
+            roughness: 1.0,
+            metalness: 0.2
+        });
+        
+        // Left arm
+        const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+        leftArm.position.set(-1.0, 0.9, 0);
+        leftArm.rotation.z = Math.PI / 2;
+        leftArm.castShadow = true;
+        
+        this.modelGroup.add(leftArm);
+        
+        // Right arm
+        const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+        rightArm.position.set(1.0, 0.9, 0);
+        rightArm.rotation.z = -Math.PI / 2;
+        rightArm.castShadow = true;
+        
+        this.modelGroup.add(rightArm);
+        
+        // Create fists (large spheres)
+        const fistGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+        const fistMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x333333,
+            roughness: 1.0,
+            metalness: 0.2
+        });
+        
+        // Left fist
+        const leftFist = new THREE.Mesh(fistGeometry, fistMaterial);
+        leftFist.position.set(-1.8, 0.9, 0);
+        leftFist.castShadow = true;
+        
+        this.modelGroup.add(leftFist);
+        
+        // Right fist
+        const rightFist = new THREE.Mesh(fistGeometry, fistMaterial);
+        rightFist.position.set(1.8, 0.9, 0);
+        rightFist.castShadow = true;
+        
+        this.modelGroup.add(rightFist);
+        
+        // Create legs (thick cylinders)
+        const legGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.8, 8);
+        const legMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x333333,
+            roughness: 1.0,
+            metalness: 0.2
+        });
+        
+        // Left leg
+        const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+        leftLeg.position.set(-0.5, 0, 0);
+        leftLeg.castShadow = true;
+        
+        this.modelGroup.add(leftLeg);
+        
+        // Right leg
+        const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+        rightLeg.position.set(0.5, 0, 0);
+        rightLeg.castShadow = true;
+        
+        this.modelGroup.add(rightLeg);
+        
+        // Add glowing eyes
+        const eyeGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+        const eyeMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0xff3300,
+            emissive: 0xff3300,
+            emissiveIntensity: 1.0
+        });
+        
+        // Left eye
+        const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        leftEye.position.set(-0.2, 1.8, 0.4);
+        
+        this.modelGroup.add(leftEye);
+        
+        // Right eye
+        const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        rightEye.position.set(0.2, 1.8, 0.4);
+        
+        this.modelGroup.add(rightEye);
     }
     
     getType() {

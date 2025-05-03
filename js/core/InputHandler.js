@@ -35,9 +35,16 @@ export class InputHandler {
                 case 'Digit2':
                 case 'Digit3':
                 case 'Digit4':
+                case 'Digit5':
+                case 'Digit6':
+                case 'Digit7':
                     // Use skill
                     const skillIndex = parseInt(event.code.charAt(5)) - 1;
                     this.game.player.useSkill(skillIndex);
+                    break;
+                case 'KeyE':
+                    // Interact with objects
+                    this.game.player.interact();
                     break;
             }
         });

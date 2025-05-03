@@ -88,6 +88,83 @@ export class CollisionManager {
                 this.handlePlayerObjectCollision(object, center);
             }
         });
+        
+        // Check collision with interactive objects
+        this.checkPlayerInteractiveObjectsCollisions();
+    }
+    
+    checkPlayerInteractiveObjectsCollisions() {
+        const playerPosition = this.player.getPosition();
+        
+        // Get nearby interactive objects
+        const interactiveObjects = this.world.getInteractiveObjectsNear(
+            playerPosition, 
+            5 // Interaction radius
+        );
+        
+        // Check if player is pressing the interaction key
+        if (this.player.isInteracting() && interactiveObjects.length > 0) {
+            // Find the closest interactive object
+            let closestObject = interactiveObjects[0];
+            let closestDistance = playerPosition.distanceTo(closestObject.position);
+            
+            for (let i = 1; i < interactiveObjects.length; i++) {
+                const distance = playerPosition.distanceTo(interactiveObjects[i].position);
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestObject = interactiveObjects[i];
+                }
+            }
+            
+            // Handle interaction
+            this.handleInteraction(closestObject);
+        }
+    }
+    
+    handleInteraction(interactiveObject) {
+        // Call the object's interaction handler
+        const result = interactiveObject.onInteract();
+        
+        // Handle different interaction types
+        switch (result.type) {
+            case 'quest':
+                // Handle quest interaction
+                if (this.player.game && this.player.game.questManager) {
+                    this.player.game.questManager.startQuest(result.quest);
+                }
+                break;
+                
+            case 'treasure':
+                // Handle treasure interaction
+                if (this.player.game && this.player.game.uiManager) {
+                    this.player.game.uiManager.showNotification(`Found ${result.item.name}!`);
+                    this.player.addToInventory(result.item);
+                }
+                break;
+                
+            case 'boss_spawn':
+                // Handle boss spawn interaction
+                if (this.player.game && this.player.game.enemyManager) {
+                    // Show notification
+                    if (this.player.game.uiManager) {
+                        this.player.game.uiManager.showNotification(result.message, 5);
+                    }
+                    
+                    // Spawn the boss
+                    this.player.game.enemyManager.spawnBoss(
+                        result.bossType,
+                        interactiveObject.position
+                    );
+                }
+                break;
+                
+            default:
+                console.warn(`Unknown interaction type: ${result.type}`);
+                break;
+        }
+        
+        // Reset interaction state
+        this.player.setInteracting(false);
     }
     
     handlePlayerObjectCollision(object, objectCenter) {

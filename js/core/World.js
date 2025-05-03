@@ -232,6 +232,9 @@ export class World {
         this.createBuilding(5, 15, 5, 5, 4);
         this.createBuilding(-20, 10, 4, 6, 5);
         this.createBuilding(25, -20, 6, 4, 3);
+        
+        // Create Dark Sanctum
+        this.createDarkSanctum(0, -40);
     }
     
     createRuins(x, z) {
@@ -498,6 +501,12 @@ export class World {
                 center: new THREE.Vector3(20, 0, -20),
                 radius: 15,
                 color: 0x4a7023
+            },
+            {
+                name: 'Dark Sanctum',
+                center: new THREE.Vector3(0, 0, -40),
+                radius: 12,
+                color: 0x330033
             }
         ];
         
@@ -597,6 +606,178 @@ export class World {
                     };
                 }
                 return null;
+            }
+        });
+    }
+    
+    createDarkSanctum(x, z) {
+        const sanctumGroup = new THREE.Group();
+        
+        // Create main structure (dark temple)
+        const baseGeometry = new THREE.BoxGeometry(20, 1, 20);
+        const baseMaterial = new THREE.MeshStandardMaterial({
+            color: 0x222222,
+            roughness: 0.9,
+            metalness: 0.2
+        });
+        const base = new THREE.Mesh(baseGeometry, baseMaterial);
+        base.position.y = 0.5;
+        base.receiveShadow = true;
+        
+        sanctumGroup.add(base);
+        
+        // Create pillars
+        const pillarGeometry = new THREE.CylinderGeometry(1, 1, 8, 8);
+        const pillarMaterial = new THREE.MeshStandardMaterial({
+            color: 0x330033,
+            roughness: 0.7,
+            metalness: 0.3
+        });
+        
+        // Create 8 pillars in a circle
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const radius = 8;
+            
+            const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+            pillar.position.set(
+                Math.cos(angle) * radius,
+                4,
+                Math.sin(angle) * radius
+            );
+            pillar.castShadow = true;
+            
+            sanctumGroup.add(pillar);
+        }
+        
+        // Create central altar
+        const altarGeometry = new THREE.BoxGeometry(4, 2, 4);
+        const altarMaterial = new THREE.MeshStandardMaterial({
+            color: 0x330033,
+            roughness: 0.6,
+            metalness: 0.4
+        });
+        const altar = new THREE.Mesh(altarGeometry, altarMaterial);
+        altar.position.y = 1.5;
+        altar.castShadow = true;
+        
+        sanctumGroup.add(altar);
+        
+        // Create magical orb on altar
+        const orbGeometry = new THREE.SphereGeometry(1, 16, 16);
+        const orbMaterial = new THREE.MeshStandardMaterial({
+            color: 0x9900cc,
+            roughness: 0.2,
+            metalness: 0.8,
+            emissive: 0x330066,
+            emissiveIntensity: 0.8
+        });
+        const orb = new THREE.Mesh(orbGeometry, orbMaterial);
+        orb.position.y = 3.5;
+        
+        sanctumGroup.add(orb);
+        
+        // Create floating runes around the orb
+        const runeGeometry = new THREE.TorusGeometry(0.5, 0.1, 8, 16);
+        const runeMaterial = new THREE.MeshBasicMaterial({
+            color: 0x9900cc,
+            transparent: true,
+            opacity: 0.7
+        });
+        
+        // Create 5 floating runes
+        for (let i = 0; i < 5; i++) {
+            const angle = (i / 5) * Math.PI * 2;
+            const radius = 2;
+            
+            const rune = new THREE.Mesh(runeGeometry, runeMaterial);
+            rune.position.set(
+                Math.cos(angle) * radius,
+                3.5,
+                Math.sin(angle) * radius
+            );
+            rune.rotation.x = Math.PI / 2;
+            
+            sanctumGroup.add(rune);
+        }
+        
+        // Create dark aura around the sanctum
+        const auraGeometry = new THREE.RingGeometry(10, 12, 32);
+        const auraMaterial = new THREE.MeshBasicMaterial({
+            color: 0x330033,
+            transparent: true,
+            opacity: 0.3,
+            side: THREE.DoubleSide
+        });
+        const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+        aura.rotation.x = -Math.PI / 2;
+        aura.position.y = 0.1;
+        
+        sanctumGroup.add(aura);
+        
+        // Position the sanctum
+        sanctumGroup.position.set(x, this.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(sanctumGroup);
+        
+        // Add a boss spawn point
+        this.createBossSpawnPoint(x, z, 'necromancer_lord');
+    }
+    
+    createBossSpawnPoint(x, z, bossType) {
+        // Create a special marker for boss spawn
+        const markerGroup = new THREE.Group();
+        
+        // Create base
+        const baseGeometry = new THREE.CircleGeometry(3, 32);
+        const baseMaterial = new THREE.MeshBasicMaterial({
+            color: 0x9900cc,
+            transparent: true,
+            opacity: 0.5,
+            side: THREE.DoubleSide
+        });
+        const base = new THREE.Mesh(baseGeometry, baseMaterial);
+        base.rotation.x = -Math.PI / 2;
+        base.position.y = 0.1;
+        
+        markerGroup.add(base);
+        
+        // Create runes on the ground
+        const runeGeometry = new THREE.TorusGeometry(2.5, 0.2, 8, 32);
+        const runeMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff0000,
+            transparent: true,
+            opacity: 0.7,
+            side: THREE.DoubleSide
+        });
+        const rune = new THREE.Mesh(runeGeometry, runeMaterial);
+        rune.rotation.x = -Math.PI / 2;
+        rune.position.y = 0.15;
+        
+        markerGroup.add(rune);
+        
+        // Position marker
+        markerGroup.position.set(x, this.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(markerGroup);
+        
+        // Add to interactive objects
+        this.interactiveObjects.push({
+            type: 'boss_spawn',
+            name: `${bossType} Spawn`,
+            mesh: markerGroup,
+            position: new THREE.Vector3(x, this.getTerrainHeight(x, z), z),
+            interactionRadius: 5,
+            bossType: bossType,
+            onInteract: () => {
+                // Return boss spawn information
+                return {
+                    type: 'boss_spawn',
+                    bossType: bossType,
+                    message: `You have awakened the ${bossType.replace('_', ' ')}!`
+                };
             }
         });
     }

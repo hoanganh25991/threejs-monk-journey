@@ -15,10 +15,11 @@ export class EnemyManager {
         
         // Zone-based enemy spawning
         this.zoneEnemies = {
-            'forest': ['skeleton', 'zombie'],
-            'ruins': ['skeleton', 'skeleton_archer'],
-            'swamp': ['zombie', 'zombie_brute'],
-            'mountains': ['demon', 'demon_scout']
+            'forest': ['skeleton', 'zombie', 'shadow_beast'],
+            'ruins': ['skeleton', 'skeleton_archer', 'necromancer'],
+            'swamp': ['zombie', 'zombie_brute', 'shadow_beast'],
+            'mountains': ['demon', 'demon_scout', 'infernal_golem'],
+            'dark_sanctum': ['necromancer', 'shadow_beast', 'infernal_golem']
         };
         
         // Enemy types
@@ -100,6 +101,45 @@ export class EnemyManager {
                 color: 0xcc5555,
                 behavior: 'flanker',
                 zone: 'mountains'
+            },
+            {
+                type: 'necromancer',
+                name: 'Necromancer',
+                health: 80,
+                damage: 18,
+                speed: 2.5,
+                attackRange: 6,
+                attackSpeed: 1.8,
+                experienceValue: 45,
+                color: 0x330033,
+                behavior: 'caster',
+                zone: 'ruins'
+            },
+            {
+                type: 'shadow_beast',
+                name: 'Shadow Beast',
+                health: 90,
+                damage: 22,
+                speed: 3.5,
+                attackRange: 1.5,
+                attackSpeed: 2.2,
+                experienceValue: 55,
+                color: 0x000000,
+                behavior: 'ambusher',
+                zone: 'forest'
+            },
+            {
+                type: 'infernal_golem',
+                name: 'Infernal Golem',
+                health: 150,
+                damage: 30,
+                speed: 1.8,
+                attackRange: 2.0,
+                attackSpeed: 1.0,
+                experienceValue: 70,
+                color: 0x333333,
+                behavior: 'tank',
+                zone: 'mountains'
             }
         ];
         
@@ -168,6 +208,22 @@ export class EnemyManager {
                 behavior: 'boss',
                 zone: 'mountains',
                 abilities: ['ice_storm', 'frost_nova', 'ice_barrier']
+            },
+            {
+                type: 'necromancer_lord',
+                name: 'Necromancer Lord',
+                health: 550,
+                damage: 35,
+                speed: 2.2,
+                attackRange: 8,
+                attackSpeed: 1.5,
+                experienceValue: 320,
+                color: 0x330033,
+                scale: 2.2,
+                isBoss: true,
+                behavior: 'boss',
+                zone: 'dark_sanctum',
+                abilities: ['summon_undead', 'death_nova', 'life_drain']
             }
         ];
         
@@ -388,6 +444,47 @@ export class EnemyManager {
             const distance = position.distanceTo(enemy.getPosition());
             return distance <= radius;
         });
+    }
+    
+    spawnBoss(bossType, position) {
+        // Find the boss type
+        const bossConfig = this.bossTypes.find(type => type.type === bossType);
+        
+        if (!bossConfig) {
+            console.warn(`Boss type ${bossType} not found`);
+            return null;
+        }
+        
+        // Apply difficulty scaling
+        const scaledBossConfig = this.applyDifficultyScaling(bossConfig);
+        
+        // Create boss
+        const boss = new Enemy(this.scene, this.player, scaledBossConfig);
+        boss.init();
+        
+        // Position boss
+        if (position) {
+            boss.setPosition(position.x, position.y + 1, position.z); // Raise slightly above ground
+        } else {
+            // Use player position as reference
+            const playerPos = this.player.getPosition();
+            boss.setPosition(playerPos.x, playerPos.y + 1, playerPos.z + 5); // 5 units in front of player
+        }
+        
+        // Add to enemies array
+        this.enemies.push(boss);
+        
+        // Play boss spawn effect
+        if (this.game && this.game.audioManager) {
+            this.game.audioManager.playSound('bossSpawn');
+        }
+        
+        // Show notification
+        if (this.game && this.game.uiManager) {
+            this.game.uiManager.showNotification(`${bossConfig.name} has appeared!`, 5);
+        }
+        
+        return boss;
     }
     
     getClosestEnemy(position, maxDistance = Infinity) {
