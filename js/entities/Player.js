@@ -211,7 +211,7 @@ export class Player {
                 manaCost: 20,
                 cooldown: 0.1, // Reduced cooldown
                 range: 0,
-                radius: 50,
+                radius: 5,
                 duration: 5,
                 color: 0xffffff
             }),
