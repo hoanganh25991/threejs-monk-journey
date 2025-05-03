@@ -2,13 +2,21 @@ export class SaveManager {
     constructor(game) {
         this.game = game;
         this.saveKey = 'diablo_immortal_save';
-        this.autoSaveInterval = 60000; // Auto-save every minute
+        this.chunkSaveKeyPrefix = 'diablo_immortal_chunk_';
+        this.autoSaveInterval = 300000; // Auto-save every 5 minutes (reduced frequency)
         this.autoSaveTimer = null;
+        this.lastSaveLevel = 0; // Track player level at last save
+        this.saveThresholdLevels = [5, 10, 15, 20, 30, 40, 50]; // Save at these level milestones
+        this.lastSaveTime = 0; // Track time of last save
+        this.minTimeBetweenSaves = 600000; // Minimum 10 minutes between saves
     }
     
     init() {
         // Start auto-save timer
         this.startAutoSave();
+        
+        // Load any existing save data
+        this.loadChunkIndex();
         
         return true;
     }
@@ -33,16 +41,30 @@ export class SaveManager {
         }
     }
     
-    saveGame() {
+    saveGame(forceSave = false) {
         try {
-            // Create save data object
+            const currentTime = Date.now();
+            const playerLevel = this.game.player.stats.level;
+            
+            // Check if we should save based on level milestones or forced save
+            const shouldSaveByLevel = this.saveThresholdLevels.includes(playerLevel) && playerLevel > this.lastSaveLevel;
+            const timeSinceLastSave = currentTime - this.lastSaveTime;
+            const enoughTimePassed = timeSinceLastSave > this.minTimeBetweenSaves;
+            
+            if (!forceSave && !shouldSaveByLevel && !enoughTimePassed) {
+                console.log('Skipping save - not at level milestone or not enough time passed');
+                return true; // Skip saving but return success
+            }
+            
+            // Create save data object (without full world data)
             const saveData = {
                 player: this.getPlayerData(),
                 quests: this.getQuestData(),
-                world: this.getWorldData(),
                 settings: this.getGameSettings(),
-                timestamp: Date.now(),
-                version: '1.1.0'
+                timestamp: currentTime,
+                version: '1.1.0',
+                // Only save world metadata, not full chunk data
+                worldMeta: this.getWorldMetadata()
             };
             
             // Convert to JSON string
@@ -50,6 +72,14 @@ export class SaveManager {
             
             // Save to local storage
             localStorage.setItem(this.saveKey, saveString);
+            
+            // Save chunks separately if at level milestone or forced
+            if (shouldSaveByLevel || forceSave) {
+                this.saveWorldChunks();
+                this.lastSaveLevel = playerLevel;
+            }
+            
+            this.lastSaveTime = currentTime;
             
             console.log('Game saved successfully');
             
@@ -99,8 +129,12 @@ export class SaveManager {
             // Load quest data
             this.loadQuestData(saveData.quests);
             
-            // Load world data
-            if (saveData.world) {
+            // Load world data - check for new or old format
+            if (saveData.worldMeta) {
+                // New format - load world metadata
+                this.loadWorldData(saveData.worldMeta);
+            } else if (saveData.world) {
+                // Old format - load full world data
                 this.loadWorldData(saveData.world);
             }
             
@@ -108,6 +142,14 @@ export class SaveManager {
             if (saveData.settings) {
                 this.loadGameSettings(saveData.settings);
             }
+            
+            // Update last save level to prevent immediate re-saving
+            if (saveData.player && saveData.player.level) {
+                this.lastSaveLevel = saveData.player.level;
+            }
+            
+            // Update last save time
+            this.lastSaveTime = Date.now();
             
             console.log('Game loaded successfully');
             
@@ -174,28 +216,9 @@ export class SaveManager {
         };
     }
     
-    getWorldData() {
+    // Get only world metadata (not full chunk data)
+    getWorldMetadata() {
         const world = this.game.world;
-        
-        // Serialize environment objects for each chunk
-        const serializedEnvironmentObjects = {};
-        for (const chunkKey in world.environmentObjects) {
-            serializedEnvironmentObjects[chunkKey] = world.environmentObjects[chunkKey].map(item => ({
-                type: item.type,
-                position: {
-                    x: item.position.x,
-                    y: item.position.y,
-                    z: item.position.z
-                }
-            }));
-        }
-        
-        // Serialize terrain chunks
-        const serializedTerrainChunks = {};
-        for (const chunkKey in world.terrainChunks) {
-            // We only need to store which chunks exist, not their full geometry
-            serializedTerrainChunks[chunkKey] = true;
-        }
         
         // Save discovered zones, interactive objects state, etc.
         return {
@@ -212,15 +235,95 @@ export class SaveManager {
             })),
             // Save current player chunk for reference
             currentChunk: world.currentChunk,
-            // Save environment objects by chunk
-            environmentObjects: serializedEnvironmentObjects,
-            // Save terrain chunks
-            terrainChunks: serializedTerrainChunks,
+            // Save list of chunk keys that exist (for index)
+            chunkKeys: Object.keys(world.terrainChunks),
             // Save visible chunks
             visibleChunks: Object.keys(world.visibleChunks),
             // Save visible terrain chunks
             visibleTerrainChunks: Object.keys(world.visibleTerrainChunks)
         };
+    }
+    
+    // Save world chunks individually to local storage
+    saveWorldChunks() {
+        const world = this.game.world;
+        const chunkIndex = {};
+        
+        console.log('Saving world chunks to local storage...');
+        
+        // Save each chunk individually
+        for (const chunkKey in world.terrainChunks) {
+            // Get environment objects for this chunk
+            const environmentObjects = world.environmentObjects[chunkKey] || [];
+            
+            // Create serialized environment objects
+            const serializedEnvironmentObjects = environmentObjects.map(item => ({
+                type: item.type,
+                position: {
+                    x: item.position.x,
+                    y: item.position.y,
+                    z: item.position.z
+                }
+            }));
+            
+            // Create chunk data object (minimal data needed to recreate the chunk)
+            const chunkData = {
+                key: chunkKey,
+                environmentObjects: serializedEnvironmentObjects,
+                // Store any structures in this chunk
+                structures: world.structuresPlaced[chunkKey] || []
+            };
+            
+            // Save chunk data to local storage with unique key
+            const chunkStorageKey = `${this.chunkSaveKeyPrefix}${chunkKey}`;
+            localStorage.setItem(chunkStorageKey, JSON.stringify(chunkData));
+            
+            // Add to chunk index
+            chunkIndex[chunkKey] = {
+                timestamp: Date.now(),
+                storageKey: chunkStorageKey
+            };
+        }
+        
+        // Save chunk index
+        localStorage.setItem(`${this.chunkSaveKeyPrefix}index`, JSON.stringify(chunkIndex));
+        
+        console.log(`Saved ${Object.keys(chunkIndex).length} chunks to local storage`);
+        return chunkIndex;
+    }
+    
+    // Load chunk index from local storage
+    loadChunkIndex() {
+        try {
+            const indexString = localStorage.getItem(`${this.chunkSaveKeyPrefix}index`);
+            if (!indexString) {
+                console.log('No chunk index found in local storage');
+                return null;
+            }
+            
+            return JSON.parse(indexString);
+        } catch (error) {
+            console.error('Error loading chunk index:', error);
+            return null;
+        }
+    }
+    
+    // Load a specific chunk from local storage
+    loadChunk(chunkKey) {
+        try {
+            const chunkStorageKey = `${this.chunkSaveKeyPrefix}${chunkKey}`;
+            const chunkString = localStorage.getItem(chunkStorageKey);
+            
+            if (!chunkString) {
+                console.log(`Chunk ${chunkKey} not found in local storage`);
+                return null;
+            }
+            
+            return JSON.parse(chunkString);
+        } catch (error) {
+            console.error(`Error loading chunk ${chunkKey}:`, error);
+            return null;
+        }
     }
     
     getGameSettings() {
@@ -348,15 +451,65 @@ export class SaveManager {
         // Clear existing terrain and environment objects
         world.clearWorldObjects();
         
-        // Restore environment objects
-        if (worldData.environmentObjects) {
-            // Store the serialized environment objects for later restoration
-            world.savedEnvironmentObjects = worldData.environmentObjects;
-        }
+        // Load chunk data from individual storage
+        const chunkIndex = this.loadChunkIndex();
         
-        // Restore terrain chunks
-        if (worldData.terrainChunks) {
-            // Store the serialized terrain chunks for later restoration
+        if (chunkIndex) {
+            console.log(`Found ${Object.keys(chunkIndex).length} saved chunks in index`);
+            
+            // Create a temporary storage for environment objects
+            const savedEnvironmentObjects = {};
+            
+            // Create a temporary storage for terrain chunks
+            const savedTerrainChunks = {};
+            
+            // Only load chunks near the player's current position
+            const playerChunkX = Math.floor(this.game.player.position.x / world.terrainChunkSize);
+            const playerChunkZ = Math.floor(this.game.player.position.z / world.terrainChunkSize);
+            const loadDistance = 2; // Only load chunks within 2 chunks of player
+            
+            // Count how many chunks we're loading
+            let loadedChunkCount = 0;
+            
+            // Process each chunk in the index
+            for (const chunkKey in chunkIndex) {
+                // Parse the chunk coordinates
+                const [chunkX, chunkZ] = chunkKey.split(',').map(Number);
+                
+                // Check if this chunk is within load distance
+                const distanceX = Math.abs(chunkX - playerChunkX);
+                const distanceZ = Math.abs(chunkZ - playerChunkZ);
+                
+                if (distanceX <= loadDistance && distanceZ <= loadDistance) {
+                    // Load this chunk from storage
+                    const chunkData = this.loadChunk(chunkKey);
+                    
+                    if (chunkData) {
+                        // Store environment objects for this chunk
+                        if (chunkData.environmentObjects && chunkData.environmentObjects.length > 0) {
+                            savedEnvironmentObjects[chunkKey] = chunkData.environmentObjects;
+                        }
+                        
+                        // Mark this chunk as existing
+                        savedTerrainChunks[chunkKey] = true;
+                        
+                        loadedChunkCount++;
+                    }
+                } else {
+                    // Just mark this chunk as existing without loading its data
+                    savedTerrainChunks[chunkKey] = true;
+                }
+            }
+            
+            console.log(`Loaded ${loadedChunkCount} chunks near player position`);
+            
+            // Store the loaded data for world to use
+            world.savedEnvironmentObjects = savedEnvironmentObjects;
+            world.savedTerrainChunks = savedTerrainChunks;
+        } else if (worldData.environmentObjects && worldData.terrainChunks) {
+            // Fall back to old format if no chunk index found
+            console.log('No chunk index found, falling back to legacy format');
+            world.savedEnvironmentObjects = worldData.environmentObjects;
             world.savedTerrainChunks = worldData.terrainChunks;
         }
         
@@ -408,9 +561,24 @@ export class SaveManager {
     
     deleteSave() {
         try {
-            // Remove save data from local storage
+            // Remove main save data from local storage
             localStorage.removeItem(this.saveKey);
-            console.log('Save data deleted successfully');
+            
+            // Get chunk index
+            const chunkIndex = this.loadChunkIndex();
+            
+            // Remove all chunk data
+            if (chunkIndex) {
+                for (const chunkKey in chunkIndex) {
+                    const chunkStorageKey = `${this.chunkSaveKeyPrefix}${chunkKey}`;
+                    localStorage.removeItem(chunkStorageKey);
+                }
+            }
+            
+            // Remove chunk index
+            localStorage.removeItem(`${this.chunkSaveKeyPrefix}index`);
+            
+            console.log('All save data deleted successfully');
             return true;
         } catch (error) {
             console.error('Error deleting save data:', error);

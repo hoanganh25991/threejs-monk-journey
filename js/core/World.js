@@ -184,6 +184,24 @@ export class World {
             return; // Skip creating this chunk as it wasn't in the saved state
         }
         
+        // Try to load this chunk from local storage first
+        if (this.game && this.game.saveManager) {
+            const loadedChunk = this.game.saveManager.loadChunk(chunkKey);
+            if (loadedChunk) {
+                // Create the terrain chunk from saved data
+                this.createTerrainChunkFromSavedData(chunkX, chunkZ, loadedChunk);
+                return;
+            }
+        }
+        
+        // If not loaded from storage, create a new chunk
+        this.createNewTerrainChunk(chunkX, chunkZ);
+    }
+    
+    // Create a new terrain chunk from scratch
+    createNewTerrainChunk(chunkX, chunkZ) {
+        const chunkKey = `${chunkX},${chunkZ}`;
+        
         // Calculate world coordinates for this chunk
         const worldX = chunkX * this.terrainChunkSize;
         const worldZ = chunkZ * this.terrainChunkSize;
@@ -232,6 +250,68 @@ export class World {
         this.generateStructuresForChunk(chunkX, chunkZ);
     }
     
+    // Create a terrain chunk from saved data
+    createTerrainChunkFromSavedData(chunkX, chunkZ, chunkData) {
+        const chunkKey = `${chunkX},${chunkZ}`;
+        
+        // Create the basic terrain chunk
+        this.createNewTerrainChunk(chunkX, chunkZ);
+        
+        // If we have environment objects, restore them
+        if (chunkData.environmentObjects && chunkData.environmentObjects.length > 0) {
+            // Clear any existing environment objects for this chunk
+            if (this.environmentObjects[chunkKey]) {
+                this.environmentObjects[chunkKey].forEach(item => {
+                    if (item.object && item.object.parent) {
+                        this.scene.remove(item.object);
+                    }
+                });
+            }
+            
+            // Create new array for environment objects
+            this.environmentObjects[chunkKey] = [];
+            
+            // Restore each environment object
+            chunkData.environmentObjects.forEach(savedObj => {
+                const x = savedObj.position.x;
+                const z = savedObj.position.z;
+                let object;
+                
+                // Create the appropriate object based on type
+                switch (savedObj.type) {
+                    case 'tree':
+                        object = this.createTree(x, z);
+                        break;
+                    case 'rock':
+                        object = this.createRock(x, z);
+                        break;
+                    case 'bush':
+                        object = this.createBush(x, z);
+                        break;
+                    case 'flower':
+                        object = this.createFlower(x, z);
+                        break;
+                }
+                
+                if (object) {
+                    // Add to environment objects
+                    this.environmentObjects[chunkKey].push({
+                        type: savedObj.type,
+                        object: object,
+                        position: new THREE.Vector3(x, this.getTerrainHeight(x, z), z)
+                    });
+                }
+            });
+        }
+        
+        // If we have structures, restore them
+        if (chunkData.structures && chunkData.structures.length > 0) {
+            this.structuresPlaced[chunkKey] = chunkData.structures;
+        }
+        
+        console.log(`Terrain chunk ${chunkKey} created from saved data`);
+    }
+    
     // Create a terrain chunk for the buffer (not immediately visible)
     createBufferedTerrainChunk(chunkX, chunkZ) {
         const chunkKey = `${chunkX},${chunkZ}`;
@@ -250,7 +330,97 @@ export class World {
             return; // Skip creating this chunk as it wasn't in the saved state
         }
         
-        // Calculate world coordinates for this chunk
+        // For buffered chunks, we'll just create a placeholder and defer actual creation
+        // This significantly reduces memory usage and improves performance
+        
+        // Create a minimal placeholder object
+        const placeholder = {
+            isPlaceholder: true,
+            chunkX: chunkX,
+            chunkZ: chunkZ
+        };
+        
+        // Store in buffer but don't create actual geometry yet
+        this.terrainBuffer[chunkKey] = placeholder;
+        
+        // Pre-generate structures for this chunk (just the data, not the actual objects)
+        if (!this.structuresPlaced[chunkKey]) {
+            this.generateStructuresForChunk(chunkX, chunkZ, true); // true = data only
+        }
+        
+        // Log buffered chunk creation
+        console.log(`Buffered terrain chunk placeholder created: ${chunkKey}`);
+    }
+    
+    // Convert a buffered placeholder to a real chunk when needed
+    convertPlaceholderToRealChunk(chunkKey) {
+        const placeholder = this.terrainBuffer[chunkKey];
+        
+        // Skip if not a placeholder
+        if (!placeholder || !placeholder.isPlaceholder) {
+            return;
+        }
+        
+        // Extract coordinates
+        const { chunkX, chunkZ } = placeholder;
+        
+        // Try to load from storage first
+        if (this.game && this.game.saveManager) {
+            const loadedChunk = this.game.saveManager.loadChunk(chunkKey);
+            if (loadedChunk) {
+                // Create terrain but don't add to scene yet (it's still in buffer)
+                const worldX = chunkX * this.terrainChunkSize;
+                const worldZ = chunkZ * this.terrainChunkSize;
+                
+                // Create terrain geometry
+                const geometry = new THREE.PlaneGeometry(
+                    this.terrainChunkSize,
+                    this.terrainChunkSize,
+                    16, // Lower resolution for better performance
+                    16
+                );
+                
+                // Create terrain material
+                const grassTexture = this.createProceduralTexture(0x2d572c, 0x1e3b1e, 512);
+                
+                // Create terrain material with grass texture
+                const material = new THREE.MeshStandardMaterial({
+                    map: grassTexture,
+                    roughness: 0.8,
+                    metalness: 0.2,
+                    vertexColors: true
+                });
+                
+                // Create terrain mesh
+                const terrain = new THREE.Mesh(geometry, material);
+                terrain.rotation.x = -Math.PI / 2;
+                terrain.receiveShadow = true;
+                
+                // Apply uniform grass coloring with slight variations
+                this.colorTerrainUniform(terrain);
+                
+                // Position the terrain chunk - ensure y=0 exactly to prevent vibration
+                terrain.position.set(
+                    worldX + this.terrainChunkSize / 2,
+                    0,
+                    worldZ + this.terrainChunkSize / 2
+                );
+                
+                // Replace placeholder with real terrain
+                this.terrainBuffer[chunkKey] = terrain;
+                
+                // Store environment objects data for later use
+                if (loadedChunk.environmentObjects && loadedChunk.environmentObjects.length > 0) {
+                    // We'll create a temporary storage for this data
+                    terrain.savedEnvironmentObjects = loadedChunk.environmentObjects;
+                }
+                
+                console.log(`Placeholder converted to real buffered chunk: ${chunkKey}`);
+                return;
+            }
+        }
+        
+        // If no saved data, create a new chunk
         const worldX = chunkX * this.terrainChunkSize;
         const worldZ = chunkZ * this.terrainChunkSize;
         
@@ -288,16 +458,10 @@ export class World {
             worldZ + this.terrainChunkSize / 2
         );
         
-        // Store in buffer but don't add to scene yet
+        // Replace placeholder with real terrain
         this.terrainBuffer[chunkKey] = terrain;
         
-        // Pre-generate structures for this chunk
-        if (!this.structuresPlaced[chunkKey]) {
-            this.generateStructuresForChunk(chunkX, chunkZ);
-        }
-        
-        // Log buffered chunk creation
-        console.log(`Buffered terrain chunk created: ${chunkKey}`);
+        console.log(`Placeholder converted to new buffered chunk: ${chunkKey}`);
     }
     
     // Clear all world objects for a clean reload
@@ -384,8 +548,59 @@ export class World {
                 // If this terrain chunk doesn't exist yet, create it immediately
                 // First check if it's in the buffer
                 if (this.terrainBuffer[chunkKey]) {
+                    // Check if it's a placeholder and convert if needed
+                    if (this.terrainBuffer[chunkKey].isPlaceholder) {
+                        this.convertPlaceholderToRealChunk(chunkKey);
+                    }
+                    
                     // Move from buffer to active chunks
                     this.terrainChunks[chunkKey] = this.terrainBuffer[chunkKey];
+                    
+                    // If the chunk has saved environment objects, create them now
+                    if (this.terrainChunks[chunkKey].savedEnvironmentObjects) {
+                        const savedObjects = this.terrainChunks[chunkKey].savedEnvironmentObjects;
+                        delete this.terrainChunks[chunkKey].savedEnvironmentObjects;
+                        
+                        // Create environment objects
+                        if (!this.environmentObjects[chunkKey]) {
+                            this.environmentObjects[chunkKey] = [];
+                        }
+                        
+                        // Create each saved object
+                        savedObjects.forEach(savedObj => {
+                            const objX = savedObj.position.x;
+                            const objZ = savedObj.position.z;
+                            let object;
+                            
+                            switch (savedObj.type) {
+                                case 'tree':
+                                    object = this.createTree(objX, objZ);
+                                    break;
+                                case 'rock':
+                                    object = this.createRock(objX, objZ);
+                                    break;
+                                case 'bush':
+                                    object = this.createBush(objX, objZ);
+                                    break;
+                                case 'flower':
+                                    object = this.createFlower(objX, objZ);
+                                    break;
+                            }
+                            
+                            if (object) {
+                                this.environmentObjects[chunkKey].push({
+                                    type: savedObj.type,
+                                    object: object,
+                                    position: new THREE.Vector3(objX, this.getTerrainHeight(objX, objZ), objZ)
+                                });
+                            }
+                        });
+                    }
+                    
+                    // Add to scene
+                    this.scene.add(this.terrainChunks[chunkKey]);
+                    
+                    // Remove from buffer
                     delete this.terrainBuffer[chunkKey];
                     console.log(`Chunk ${chunkKey} moved from buffer to active`);
                 } 
@@ -620,7 +835,7 @@ export class World {
     }
     
     // Generate structures for a specific chunk
-    generateStructuresForChunk(chunkX, chunkZ) {
+    generateStructuresForChunk(chunkX, chunkZ, dataOnly = false) {
         const chunkKey = `${chunkX},${chunkZ}`;
         
         // Skip if structures already generated for this chunk
@@ -658,11 +873,16 @@ export class World {
             }
             
             if (!tooClose) {
-                this.createDarkSanctum(x, z);
-                this.specialStructures[`darkSanctum_${chunkKey}_${this.structuresPlaced[chunkKey].length}`] = { 
-                    x, z, type: 'darkSanctum' 
-                };
+                // Store the structure data
                 this.structuresPlaced[chunkKey].push({ x, z, type: 'darkSanctum' });
+                
+                // Only create the actual 3D object if not in data-only mode
+                if (!dataOnly) {
+                    this.createDarkSanctum(x, z);
+                    this.specialStructures[`darkSanctum_${chunkKey}_${this.structuresPlaced[chunkKey].length - 1}`] = { 
+                        x, z, type: 'darkSanctum' 
+                    };
+                }
             }
         }
         
@@ -676,8 +896,16 @@ export class World {
             const depth = 3 + random() * 5;
             const height = 2 + random() * 5;
             
-            this.createBuilding(x, z, width, depth, height);
-            this.structuresPlaced[chunkKey].push({ x, z, type: 'house' });
+            // Store the structure data
+            this.structuresPlaced[chunkKey].push({ 
+                x, z, type: 'house', 
+                dimensions: { width, depth, height } 
+            });
+            
+            // Only create the actual 3D object if not in data-only mode
+            if (!dataOnly) {
+                this.createBuilding(x, z, width, depth, height);
+            }
         }
         
         // Generate towers
@@ -685,8 +913,13 @@ export class World {
             const x = worldX + random() * this.terrainChunkSize;
             const z = worldZ + random() * this.terrainChunkSize;
             
-            this.createTower(x, z);
+            // Store the structure data
             this.structuresPlaced[chunkKey].push({ x, z, type: 'tower' });
+            
+            // Only create the actual 3D object if not in data-only mode
+            if (!dataOnly) {
+                this.createTower(x, z);
+            }
         }
         
         // Generate ruins
@@ -694,8 +927,13 @@ export class World {
             const x = worldX + random() * this.terrainChunkSize;
             const z = worldZ + random() * this.terrainChunkSize;
             
-            this.createRuins(x, z);
+            // Store the structure data
             this.structuresPlaced[chunkKey].push({ x, z, type: 'ruins' });
+            
+            // Only create the actual 3D object if not in data-only mode
+            if (!dataOnly) {
+                this.createRuins(x, z);
+            }
         }
     }
     
