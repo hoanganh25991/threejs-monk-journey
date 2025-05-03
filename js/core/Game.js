@@ -70,6 +70,7 @@ export class Game {
         
         // Initialize enemy manager
         this.enemyManager = new EnemyManager(this.scene, this.player, this.loadingManager);
+        this.enemyManager.setGame(this);
         await this.enemyManager.init();
         
         // Initialize collision manager

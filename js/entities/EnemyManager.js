@@ -7,10 +7,19 @@ export class EnemyManager {
         this.player = player;
         this.loadingManager = loadingManager;
         this.enemies = [];
-        this.maxEnemies = 10;
+        this.maxEnemies = 15;
         this.spawnRadius = 30;
         this.spawnTimer = 0;
         this.spawnInterval = 5; // Spawn enemy every 5 seconds
+        this.game = null; // Will be set by Game.js
+        
+        // Zone-based enemy spawning
+        this.zoneEnemies = {
+            'forest': ['skeleton', 'zombie'],
+            'ruins': ['skeleton', 'skeleton_archer'],
+            'swamp': ['zombie', 'zombie_brute'],
+            'mountains': ['demon', 'demon_scout']
+        };
         
         // Enemy types
         this.enemyTypes = [
@@ -23,7 +32,22 @@ export class EnemyManager {
                 attackRange: 1.5,
                 attackSpeed: 1.5,
                 experienceValue: 20,
-                color: 0xcccccc
+                color: 0xcccccc,
+                behavior: 'aggressive',
+                zone: 'ruins'
+            },
+            {
+                type: 'skeleton_archer',
+                name: 'Skeleton Archer',
+                health: 40,
+                damage: 15,
+                speed: 2.5,
+                attackRange: 8,
+                attackSpeed: 2,
+                experienceValue: 25,
+                color: 0xddccbb,
+                behavior: 'ranged',
+                zone: 'ruins'
             },
             {
                 type: 'zombie',
@@ -34,7 +58,22 @@ export class EnemyManager {
                 attackRange: 1.2,
                 attackSpeed: 1,
                 experienceValue: 30,
-                color: 0x88aa88
+                color: 0x88aa88,
+                behavior: 'slow',
+                zone: 'swamp'
+            },
+            {
+                type: 'zombie_brute',
+                name: 'Zombie Brute',
+                health: 120,
+                damage: 25,
+                speed: 1.5,
+                attackRange: 1.8,
+                attackSpeed: 0.8,
+                experienceValue: 45,
+                color: 0x668866,
+                behavior: 'tank',
+                zone: 'swamp'
             },
             {
                 type: 'demon',
@@ -45,9 +84,83 @@ export class EnemyManager {
                 attackRange: 1.8,
                 attackSpeed: 2,
                 experienceValue: 50,
-                color: 0xaa3333
+                color: 0xaa3333,
+                behavior: 'aggressive',
+                zone: 'mountains'
+            },
+            {
+                type: 'demon_scout',
+                name: 'Demon Scout',
+                health: 70,
+                damage: 15,
+                speed: 5,
+                attackRange: 1.5,
+                attackSpeed: 2.5,
+                experienceValue: 40,
+                color: 0xcc5555,
+                behavior: 'flanker',
+                zone: 'mountains'
             }
         ];
+        
+        // Boss types
+        this.bossTypes = [
+            {
+                type: 'skeleton_king',
+                name: 'Skeleton King',
+                health: 300,
+                damage: 25,
+                speed: 2.5,
+                attackRange: 2,
+                attackSpeed: 1.2,
+                experienceValue: 200,
+                color: 0xcccccc,
+                scale: 2,
+                isBoss: true,
+                behavior: 'boss',
+                zone: 'ruins',
+                abilities: ['summon_minions', 'ground_slam']
+            },
+            {
+                type: 'swamp_horror',
+                name: 'Swamp Horror',
+                health: 400,
+                damage: 30,
+                speed: 1.8,
+                attackRange: 2.2,
+                attackSpeed: 1,
+                experienceValue: 250,
+                color: 0x446644,
+                scale: 2.2,
+                isBoss: true,
+                behavior: 'boss',
+                zone: 'swamp',
+                abilities: ['poison_cloud', 'tentacle_grab']
+            },
+            {
+                type: 'demon_lord',
+                name: 'Demon Lord',
+                health: 500,
+                damage: 35,
+                speed: 3,
+                attackRange: 2.5,
+                attackSpeed: 1.5,
+                experienceValue: 300,
+                color: 0xaa3333,
+                scale: 2.5,
+                isBoss: true,
+                behavior: 'boss',
+                zone: 'mountains',
+                abilities: ['fire_nova', 'teleport']
+            }
+        ];
+        
+        // Difficulty scaling
+        this.difficultyMultiplier = 1.0;
+    }
+    
+    setGame(game) {
+        this.game = game;
     }
     
     async init() {
@@ -78,26 +191,163 @@ export class EnemyManager {
             
             // Remove dead enemies
             if (enemy.isDead()) {
+                // Check for quest updates
+                if (this.game && this.game.questManager) {
+                    this.game.questManager.updateEnemyKill(enemy);
+                }
+                
+                // Check for item drops
+                this.handleEnemyDrop(enemy);
+                
+                // Remove enemy
                 enemy.remove();
                 this.enemies.splice(i, 1);
             }
         }
     }
     
-    spawnEnemy() {
-        // Get random enemy type
-        const enemyType = this.enemyTypes[Math.floor(Math.random() * this.enemyTypes.length)];
+    spawnEnemy(specificType = null, position = null) {
+        let enemyType;
         
-        // Get random position
-        const position = this.getRandomSpawnPosition();
+        if (specificType) {
+            // Use specified enemy type
+            enemyType = this.enemyTypes.find(type => type.type === specificType) || 
+                        this.bossTypes.find(type => type.type === specificType);
+            
+            if (!enemyType) {
+                console.warn(`Enemy type ${specificType} not found, using random type`);
+                enemyType = this.getRandomEnemyType();
+            }
+        } else {
+            // Get random enemy type based on current zone
+            enemyType = this.getRandomEnemyType();
+        }
+        
+        // Apply difficulty scaling
+        const scaledEnemyType = this.applyDifficultyScaling(enemyType);
+        
+        // Get position
+        const spawnPosition = position || this.getRandomSpawnPosition();
         
         // Create enemy
-        const enemy = new Enemy(this.scene, this.player, enemyType);
+        const enemy = new Enemy(this.scene, this.player, scaledEnemyType);
         enemy.init();
-        enemy.setPosition(position.x, position.y, position.z);
+        enemy.setPosition(spawnPosition.x, spawnPosition.y, spawnPosition.z);
         
         // Add to enemies array
         this.enemies.push(enemy);
+        
+        return enemy;
+    }
+    
+    getRandomEnemyType() {
+        // Get current zone if available
+        let currentZone = 'forest'; // Default zone
+        
+        if (this.game && this.game.world) {
+            const playerPosition = this.player.getPosition();
+            const zone = this.game.world.getZoneAt(playerPosition);
+            
+            if (zone) {
+                currentZone = zone.name.toLowerCase();
+            }
+        }
+        
+        // Get enemy types for this zone
+        const zoneEnemyTypes = this.zoneEnemies[currentZone] || Object.keys(this.zoneEnemies)[0];
+        
+        // Select a random enemy type from the zone
+        const randomTypeId = zoneEnemyTypes[Math.floor(Math.random() * zoneEnemyTypes.length)];
+        
+        // Find the enemy type object
+        return this.enemyTypes.find(type => type.type === randomTypeId) || this.enemyTypes[0];
+    }
+    
+    applyDifficultyScaling(enemyType) {
+        // Create a copy of the enemy type to modify
+        const scaledType = { ...enemyType };
+        
+        // Apply difficulty multiplier to stats
+        scaledType.health = Math.round(scaledType.health * this.difficultyMultiplier);
+        scaledType.damage = Math.round(scaledType.damage * this.difficultyMultiplier);
+        scaledType.experienceValue = Math.round(scaledType.experienceValue * this.difficultyMultiplier);
+        
+        return scaledType;
+    }
+    
+    handleEnemyDrop(enemy) {
+        // Check if enemy should drop an item
+        const dropChance = enemy.isBoss ? 1.0 : 0.2; // 100% for bosses, 20% for regular enemies
+        
+        if (Math.random() < dropChance) {
+            // Determine item type
+            let item;
+            
+            if (enemy.isBoss) {
+                // Boss drops are better
+                item = this.generateBossDrop(enemy);
+            } else {
+                // Regular enemy drops
+                item = this.generateRegularDrop(enemy);
+            }
+            
+            // Add item to player inventory
+            if (this.game && this.game.player && item) {
+                this.game.player.addToInventory(item);
+                
+                // Show notification
+                if (this.game.uiManager) {
+                    this.game.uiManager.showNotification(`Found ${item.name}`);
+                }
+            }
+        }
+    }
+    
+    generateRegularDrop(enemy) {
+        // Simple drop table
+        const dropTable = [
+            { name: 'Health Potion', amount: 1, weight: 40 },
+            { name: 'Mana Potion', amount: 1, weight: 30 },
+            { name: 'Gold Coin', amount: Math.floor(5 + Math.random() * 20), weight: 20 },
+            { name: 'Common Weapon', type: 'weapon', damage: 5 + Math.floor(Math.random() * 5), damageReduction: 0, amount: 1, weight: 5 },
+            { name: 'Common Armor', type: 'armor', damage: 0, damageReduction: 0.05 + Math.random() * 0.05, amount: 1, weight: 5 }
+        ];
+        
+        return this.selectWeightedItem(dropTable);
+    }
+    
+    generateBossDrop(enemy) {
+        // Boss drop table
+        const dropTable = [
+            { name: 'Greater Health Potion', amount: 2, weight: 20 },
+            { name: 'Greater Mana Potion', amount: 2, weight: 15 },
+            { name: 'Gold Pile', amount: Math.floor(50 + Math.random() * 100), weight: 20 },
+            { name: 'Rare Weapon', type: 'weapon', damage: 15 + Math.floor(Math.random() * 10), damageReduction: 0, amount: 1, weight: 15 },
+            { name: 'Rare Armor', type: 'armor', damage: 0, damageReduction: 0.1 + Math.random() * 0.1, amount: 1, weight: 15 },
+            { name: 'Rare Helmet', type: 'helmet', damage: 2 + Math.floor(Math.random() * 3), damageReduction: 0.05 + Math.random() * 0.05, amount: 1, weight: 10 },
+            { name: 'Rare Boots', type: 'boots', damage: 0, damageReduction: 0.05 + Math.random() * 0.05, amount: 1, weight: 5 }
+        ];
+        
+        return this.selectWeightedItem(dropTable);
+    }
+    
+    selectWeightedItem(items) {
+        // Calculate total weight
+        const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+        
+        // Get random value
+        let random = Math.random() * totalWeight;
+        
+        // Find selected item
+        for (const item of items) {
+            random -= item.weight;
+            if (random <= 0) {
+                return { ...item };
+            }
+        }
+        
+        // Fallback
+        return { ...items[0] };
     }
     
     getRandomSpawnPosition() {
@@ -139,65 +389,80 @@ export class EnemyManager {
         return closestEnemy;
     }
     
-    spawnBoss(type, position) {
+    spawnBoss(type, position = null) {
         // Get boss type
         let bossType;
         
-        switch (type) {
-            case 'skeleton':
-                bossType = {
-                    type: 'skeleton_king',
-                    name: 'Skeleton King',
-                    health: 300,
-                    damage: 25,
-                    speed: 2.5,
-                    attackRange: 2,
-                    attackSpeed: 1.2,
-                    experienceValue: 200,
-                    color: 0xcccccc,
-                    scale: 2,
-                    isBoss: true
-                };
-                break;
-            case 'demon':
-                bossType = {
-                    type: 'demon_lord',
-                    name: 'Demon Lord',
-                    health: 500,
-                    damage: 35,
-                    speed: 3,
-                    attackRange: 2.5,
-                    attackSpeed: 1.5,
-                    experienceValue: 300,
-                    color: 0xaa3333,
-                    scale: 2.5,
-                    isBoss: true
-                };
-                break;
-            default:
-                bossType = {
-                    type: 'ancient_evil',
-                    name: 'Ancient Evil',
-                    health: 400,
-                    damage: 30,
-                    speed: 2,
-                    attackRange: 3,
-                    attackSpeed: 1,
-                    experienceValue: 250,
-                    color: 0x553377,
-                    scale: 2.2,
-                    isBoss: true
-                };
+        // Find the boss in the boss types array
+        if (type === 'random') {
+            // Get a random boss
+            const randomIndex = Math.floor(Math.random() * this.bossTypes.length);
+            bossType = this.bossTypes[randomIndex];
+        } else {
+            // Find specific boss type
+            bossType = this.bossTypes.find(boss => boss.type === type || boss.zone === type);
+            
+            // If not found, use first boss
+            if (!bossType) {
+                console.warn(`Boss type ${type} not found, using default boss`);
+                bossType = this.bossTypes[0];
+            }
         }
         
+        // Apply difficulty scaling
+        const scaledBossType = this.applyDifficultyScaling(bossType);
+        
+        // Get position if not provided
+        const spawnPosition = position || this.getRandomSpawnPosition();
+        
         // Create boss
-        const boss = new Enemy(this.scene, this.player, bossType);
+        const boss = new Enemy(this.scene, this.player, scaledBossType);
         boss.init();
-        boss.setPosition(position.x, position.y, position.z);
+        boss.setPosition(spawnPosition.x, spawnPosition.y, spawnPosition.z);
         
         // Add to enemies array
         this.enemies.push(boss);
         
+        // Announce boss spawn
+        if (this.game && this.game.uiManager) {
+            this.game.uiManager.showNotification(`${bossType.name} has appeared!`, 5000);
+            
+            // Play boss music if available
+            if (this.game.audioManager) {
+                this.game.audioManager.playMusic('bossTheme');
+            }
+        }
+        
+        return boss;
+    }
+    
+    spawnBossForQuest(questId) {
+        // Determine which boss to spawn based on quest
+        let bossType;
+        let spawnPosition;
+        
+        switch (questId) {
+            case 'main_quest_3': // Skeleton King quest
+                bossType = 'skeleton_king';
+                spawnPosition = new THREE.Vector3(10, 0, 10); // Near ruins
+                break;
+            case 'main_quest_4': // Swamp quest
+                bossType = 'swamp_horror';
+                spawnPosition = new THREE.Vector3(-15, 0, -15); // In swamp
+                break;
+            case 'main_quest_6': // Final boss quest
+                bossType = 'demon_lord';
+                spawnPosition = new THREE.Vector3(25, 0, -25); // In mountains
+                break;
+            default:
+                bossType = 'random';
+                spawnPosition = null;
+        }
+        
+        // Spawn the boss
+        const boss = this.spawnBoss(bossType, spawnPosition);
+        
+        // Return the boss
         return boss;
     }
     
