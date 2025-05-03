@@ -39,6 +39,7 @@ export class UIManager {
         // Create UI container
         this.uiContainer = document.createElement('div');
         this.uiContainer.id = 'ui-container';
+        this.uiContainer.style.zIndex = 1000;
         document.body.appendChild(this.uiContainer);
     }
     
