@@ -19,7 +19,7 @@ export class Player {
             strength: 10,
             dexterity: 10,
             intelligence: 10,
-            movementSpeed: 8,
+            movementSpeed: 10,
             attackPower: 10
         };
         
