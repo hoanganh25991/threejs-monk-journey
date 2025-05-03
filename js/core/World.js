@@ -130,40 +130,11 @@ export class World {
     generateHeightMap(simplex) {
         const heightMap = new Array(this.terrainResolution * this.terrainResolution);
         
+        // Fill the entire heightmap with zeros for a completely flat terrain
         for (let y = 0; y < this.terrainResolution; y++) {
             for (let x = 0; x < this.terrainResolution; x++) {
-                // Normalize coordinates to range [0, 1]
-                const nx = x / (this.terrainResolution - 1);
-                const ny = y / (this.terrainResolution - 1);
-                
-                // Scale to terrain size and center
-                const px = (nx - 0.5) * this.terrainSize;
-                const py = (ny - 0.5) * this.terrainSize;
-                
-                // Generate height using multiple octaves of noise
-                let height = 0;
-                let frequency = 0.01;
-                let amplitude = 1;
-                const octaves = 6;
-                
-                for (let o = 0; o < octaves; o++) {
-                    const noiseValue = simplex.noise(px * frequency, py * frequency) * 0.5 + 0.5;
-                    height += noiseValue * amplitude;
-                    
-                    amplitude *= 0.5;
-                    frequency *= 2;
-                }
-                
-                // Scale height to terrain height
-                height *= this.terrainHeight;
-                
-                // Create some flat areas for gameplay
-                if (height < this.terrainHeight * 0.3) {
-                    height = this.terrainHeight * 0.3;
-                }
-                
-                // Store height in heightmap
-                heightMap[y * this.terrainResolution + x] = height;
+                // Set all heights to 0 for completely flat terrain
+                heightMap[y * this.terrainResolution + x] = 0;
             }
         }
         
@@ -175,26 +146,10 @@ export class World {
         const positions = terrain.geometry.attributes.position.array;
         
         for (let i = 0; i < positions.length; i += 3) {
-            const height = positions[i + 2];
+            // Always use grass color for flat terrain
+            let color = new THREE.Color(0x2d572c); // Grass color
             
-            // Color based on height
-            let color = new THREE.Color();
-            
-            if (height < 2) {
-                // Sand
-                color.setHex(0xd2b48c);
-            } else if (height < 5) {
-                // Grass
-                color.setHex(0x2d572c);
-            } else if (height < 8) {
-                // Rock
-                color.setHex(0x555555);
-            } else {
-                // Snow
-                color.setHex(0xffffff);
-            }
-            
-            // Add some variation
+            // Add some variation to make the grass look more natural
             const variation = Math.random() * 0.1 - 0.05;
             color.r = Math.max(0, Math.min(1, color.r + variation));
             color.g = Math.max(0, Math.min(1, color.g + variation));
@@ -218,7 +173,7 @@ export class World {
         
         const water = new THREE.Mesh(waterGeometry, waterMaterial);
         water.rotation.x = -Math.PI / 2;
-        water.position.y = 1.5; // Water level
+        water.position.y = 0.15; // Lowered water level to match flat terrain
         
         this.scene.add(water);
         this.water = water;
@@ -854,68 +809,8 @@ export class World {
     }
     
     getTerrainHeight(x, z) {
-        // Default height if terrain not yet created
-        if (!this.terrain) return 0;
-        
-        // Check for invalid input values (NaN or undefined)
-        if (isNaN(x) || isNaN(z) || x === undefined || z === undefined) {
-            console.warn("Invalid coordinates passed to getTerrainHeight:", x, z);
-            return 0; // Return a safe default height
-        }
-        
-        // Wrap coordinates to create infinite terrain effect
-        const wrappedX = ((x % this.terrainSize) + this.terrainSize) % this.terrainSize;
-        const wrappedZ = ((z % this.terrainSize) + this.terrainSize) % this.terrainSize;
-        
-        // Convert world coordinates to terrain coordinates
-        const terrainX = (wrappedX / this.terrainSize) * this.terrainResolution;
-        const terrainZ = (wrappedZ / this.terrainSize) * this.terrainResolution;
-        
-        // Ensure coordinates are within bounds (should always be true with wrapping)
-        if (terrainX < 0 || terrainX >= this.terrainResolution || 
-            terrainZ < 0 || terrainZ >= this.terrainResolution) {
-            console.warn("Terrain coordinates out of bounds:", terrainX, terrainZ);
-            return 0; // Return a safe default height
-        }
-        
-        // Get terrain indices
-        const x1 = Math.floor(terrainX);
-        const z1 = Math.floor(terrainZ);
-        const x2 = Math.min(x1 + 1, this.terrainResolution - 1);
-        const z2 = Math.min(z1 + 1, this.terrainResolution - 1);
-        
-        // Get fractional part
-        const fx = terrainX - x1;
-        const fz = terrainZ - z1;
-        
-        // Get vertex positions
-        const vertices = this.terrain.geometry.attributes.position.array;
-        
-        // Calculate indices in the position array
-        const i11 = ((z1 * this.terrainResolution) + x1) * 3;
-        const i12 = ((z1 * this.terrainResolution) + x2) * 3;
-        const i21 = ((z2 * this.terrainResolution) + x1) * 3;
-        const i22 = ((z2 * this.terrainResolution) + x2) * 3;
-        
-        // Get heights
-        const h11 = vertices[i11 + 2];
-        const h12 = vertices[i12 + 2];
-        const h21 = vertices[i21 + 2];
-        const h22 = vertices[i22 + 2];
-        
-        // Check for invalid height values
-        if (isNaN(h11) || isNaN(h12) || isNaN(h21) || isNaN(h22)) {
-            console.warn("Invalid height values in terrain:", h11, h12, h21, h22);
-            return 0; // Return a safe default height
-        }
-        
-        // Bilinear interpolation
-        const h1 = h11 * (1 - fx) + h12 * fx;
-        const h2 = h21 * (1 - fx) + h22 * fx;
-        const height = h1 * (1 - fz) + h2 * fz;
-        
-        // Final safety check
-        return isNaN(height) ? 0 : height;
+        // Always return 0 for completely flat terrain
+        return 0;
     }
     
     getZoneAt(position) {
