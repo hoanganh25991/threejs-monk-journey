@@ -17,7 +17,7 @@ This update implements a virtual joystick for movement control and removes the c
 - Maintained keyboard controls (WASD/Arrow keys) for desktop users
 
 ### 3. Integrated with Existing Systems
-- Added joystick state tracking in the UIManager
+- Added joystick state tracking in the HUDManager
 - Ensured joystick input overrides keyboard input when active
 - Preserved interaction with objects and attack functionality
 

@@ -22,8 +22,15 @@
 - [x] Fix issue: change currentQuality to lower like medium, minimal, but the FPS not increase???, the "high" option is good enough, but the game really blur. I want "medium" is good to play already, help me update the division of threshold better.
 - [x] Enhance: auto pause music in background, specially on phone, when i don't play the game
 - [x] Fix weird issue: on desktop, all skills on horizon 1 row: cast skill match exactly with the skill, but on phone with 2 rows of skills, cast skill by pressing 1, is skill 2 cast
-- [] Enhance: Level Up message is impressive, but when multiple level up, should remove the old one quickly, even the current one also only max in 2 seconds, after 2 seconds duration, completely disappear
+- [x] Enhance: add GPU acceleration which help to make game much faster, auto reduce complex of threejs, shadow,... to allow have good FPS on medium device, add FPS on top-right of the screen, control the effect, things by target FPS: 60
+
+- [x] Update the service worker cache list by working through the js, assets, css, and images directories. -> generate scripts
+
+- [x] Enhance: Level Up message is impressive, but when multiple level up, should remove the old one quickly, even the current one also only max in 2 seconds, after 2 seconds duration, completely disappear
+
 - [] Enhance: optimize performance when multiple enemies attack hero, add ParticleManager.js to reduce/batching the bleeding particle each enemy hit to hero
+
+- [] Fix issue: ParticleManager.js has dispose method, is it should be called by PerformanceManager.js, i dont see where this method called
 
 - [ ] Enhance: review Player.js file and optimise it:
     - remove unused method
@@ -40,7 +47,7 @@
     - separate into multiple files for easier to maintain, define interface when needed
 
 
-- [ ] Enhance: review UIManager.js file and optimise it:
+- [ ] Enhance: review HUDManager.js file and optimise it:
     - Remove unused methods.
     - Remove duplicate methods.
     - Define common methods for shared use.
@@ -71,22 +78,64 @@
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
 
-    
+- [ ] Enhance: review main.js file and optimise it:
+    - remove unused method
+    - remove duplicate methods
+    - define common methods to be shared
+    - separate into multiple files for easier to maintain, define interface when needed
+    - remove the origin file, integrate with new code base
 
+- [ ] Enhance: review Game.js file and optimise it:
+    - remove unused method
+    - remove duplicate methods
+    - define common methods to be shared
+    - separate into multiple files for easier to maintain, define interface when needed
+    - remove the origin file, integrate with new code base
 
-- [x] Update the service worker cache list by working through the js, assets, css, and images directories. -> generate scripts
+- [ ] Enhance: review PerformanceManager.js file and optimise it:
+    - remove unused method
+    - remove duplicate methods
+    - define common methods to be shared
+    - separate into multiple files for easier to maintain, define interface when needed
+    - remove the origin file, integrate with new code base
+
+- [] Enhance: PerformanceManager.js should not render UI directly with DOM manipulation, it should expose the DTO only, let HUDManager handle actual render.
+
 
 - [ ] Enhance: add config to creaeTeleportEffect, allow to easily say increase size of effect 2 times, than the skill effect 2 times bigger
-- [ ] Enhance: when punch automatically, it will be 1,2, 1,2,3, 1,2, 1,2,3,... but at 5 times of this loop, it create heavy punch, which like a ball of thunder energy at top of his punch and effect damage to all enemies close to that
+
+- [ ] Enhance: when punch automatically, it will be 1,2, 1,2,3, 1,2, 1,2,3,... but at 5 times of this loop, it create thunder punch, which like a ball of thunder energy at top of his punch and effect damage to all enemies close to that, radius default 20, knock back enemies affected
+
 - [ ] Enhance: remove the first terrain, replace with the ground with grey colour, something special to mark that, this is initial place, like our village, add some structures to it. Then only spawn enemies on other dynamic generated terrain.
-- [ ] Enhance: help me generate audio effect for each skill when casted, when in duration effect if has something special need to added. generate-audio.js is what help me generate audio before.
+
+- [ ] Enhance: add sound to skill has multiple effects if has something special, generate-audio.js is what help me generate audio before.
+
 - [ ] Enhance: draw hero model similar to man monk, provide much complex look for man monk, muscle, head, chest, hand, leg. Add action when moving, add action for legs and hands.
+
 - [ ] Enhance: draw complex model for skeleton monster, close to skeleton, not solid box
+
 - [ ] Enhance: createWaveEffect, add config at top of this method, allow me to control the size of the bell, if i want to bell 2 times bigger then current, i just x2 that bell size number
-- [x] Enhance: add GPU acceleration which help to make game much faster, auto reduce complex of threejs, shadow,... to allow have good FPS on medium device, add FPS on top-right of the screen, control the effect, things by target FPS: 60
+
+- [ ] Enhance: new Skill({
+                name: 'Mystic Ally',
+                description: 'Summon a spirit ally to fight alongside you',
+                type: 'summon',
+    have you see this skill in diablo immortal, where it create 2 allies as clone of hero, they in blue, help me add that
+    then, they can fight (punch action) and random cast skill as hero, they just cast skill with long interval, each time cast is random
+
+- [ ] Enhance: new Skill({
+                name: 'Seven-Sided Strike',
+                description: 'Rapidly attack multiple enemies',
+    you have create multiple cloned hero at random position around the hero to fight, that's good
+    however, strike animation and duration short make skill animation unclear
+    help me make:
+    1. duration longer, 3 seconds at least
+    2. allow the cloned hero in flying kick shape (show flying leg)
+    3. flying in different direction around the hero
+    4. when we have enemies near by the hero, allow some random cloned hero kick to that direction
+    5. radius to check for near by enemies default is 50
 
 
-- [] Enhance: PerformanceManager.js should not render UI directly with DOM manipulation, it should expose the DTO only, let UIManager handle actual render.
 
 
 

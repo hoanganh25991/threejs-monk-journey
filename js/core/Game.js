@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { WorldManager } from '../world/WorldManager.js';
 import { Player } from '../entities/Player.js';
 import { InputHandler } from './InputHandler.js';
-import { UIManager } from '../ui/UIManager.js';
+import { HUDManager } from './HUDManager.js';
 import { EnemyManager } from '../entities/EnemyManager.js';
 import { CollisionManager } from './CollisionManager.js';
 import { QuestManager } from './QuestManager.js';
@@ -107,7 +107,7 @@ export class Game {
         this.inputHandler = new InputHandler(this);
         
         // Initialize UI manager
-        this.uiManager = new UIManager(this);
+        this.uiManager = new HUDManager(this);
         await this.uiManager.init();
         
         // Initialize enemy manager

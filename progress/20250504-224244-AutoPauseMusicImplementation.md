@@ -24,7 +24,7 @@ Implemented a feature to automatically pause background music when the game is n
   - `onBlur()`
   - `onFocus()`
 
-### 3. main.js (Options Menu)
+### 3. main.js (Settings Menu)
 - Added "Auto-pause music when inactive" toggle in the audio settings section
 - Connected the toggle to the AudioManager's auto-pause functionality
 

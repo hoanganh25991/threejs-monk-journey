@@ -1,4 +1,4 @@
-# Fix Main Menu Options Conflict
+# Fix Main Menu Settings Conflict
 
 ## Issue
 There was a conflict between the main menu options screen and the in-game options menu. Both were creating elements with the same ID (`game-menu`), which was causing conflicts in the DOM and preventing the keyboard controls from being displayed properly in the in-game options menu.
@@ -6,7 +6,7 @@ There was a conflict between the main menu options screen and the in-game option
 ## Root Cause Analysis
 1. The game has two different options menus:
    - The main menu options (in main.js) which is shown before the game starts
-   - The in-game options menu (in UIManager.js) which is shown when you pause the game
+   - The in-game options menu (in HUDManager.js) which is shown when you pause the game
 
 2. Both menus were creating elements with the same ID (`game-menu`), causing conflicts in the DOM.
 

@@ -59,7 +59,7 @@ This document outlines the requirements and specifications for the development o
 
 ### 5. Customization and Accessibility
 
-#### 5.1. Customization Options
+#### 5.1. Customization Settings
 - **Theme Selection**: Allow players to choose from different UI themes or color schemes.
 - **Font Size**: Provide options to adjust font size for readability.
 

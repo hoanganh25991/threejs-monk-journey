@@ -254,7 +254,7 @@ export class CollisionManager {
         enemy.takeDamage(damage);
         
         // Show damage number
-        this.player.game.uiManager.showDamageNumber(damage, enemy.getPosition());
+        this.player.game.uiManager.createBleedingEffect(damage, enemy.getPosition());
         
         // Check if enemy is defeated
         if (enemy.getHealth() <= 0) {

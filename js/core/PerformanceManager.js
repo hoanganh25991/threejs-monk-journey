@@ -718,7 +718,7 @@ export class PerformanceManager {
                     
                     this.showQualityChangeNotification(
                         `Graphics quality lowered to ${twoLevelsDown} to improve performance. ` +
-                        `You can adjust settings in Options menu.`
+                        `You can adjust settings in Settings menu.`
                     );
                 } else {
                     this.applyQualitySettings(newQuality);
@@ -726,7 +726,7 @@ export class PerformanceManager {
                     
                     this.showQualityChangeNotification(
                         `Graphics quality lowered to ${newQuality} to maintain performance. ` +
-                        `You can adjust settings in Options menu.`
+                        `You can adjust settings in Settings menu.`
                     );
                 }
             } else {
@@ -736,7 +736,7 @@ export class PerformanceManager {
                 
                 this.showQualityChangeNotification(
                     `Graphics quality lowered to ${newQuality} to maintain performance. ` +
-                    `You can adjust settings in Options menu.`
+                    `You can adjust settings in Settings menu.`
                 );
             }
             
@@ -831,6 +831,14 @@ export class PerformanceManager {
         if (renderer.antialias !== settings.antialiasing) {
             console.log("Antialiasing change requires renderer recreation - skipping");
             // In a real implementation, we would recreate the renderer here
+        }
+        
+        // Update particle manager settings if available
+        if (this.game.particleManager) {
+            // Set low performance mode for low and minimal quality levels
+            const lowPerformanceMode = (qualityLevel === 'low' || qualityLevel === 'minimal');
+            this.game.particleManager.setPerformanceMode(lowPerformanceMode);
+            console.log(`Particle manager performance mode set to: ${lowPerformanceMode ? 'LOW' : 'HIGH'}`);
         }
         
         // Update the quality indicator in the UI

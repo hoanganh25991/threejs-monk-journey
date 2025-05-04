@@ -33,7 +33,7 @@
 ### Code Changes
 - Simplified the key handling in InputHandler.js to use a consistent mapping for all devices
 - Updated the Player.js `useBasicAttack()` method to properly find the skill with `basicAttack: true`
-- Modified the UIManager.js click event handlers to use different methods based on skill type
+- Modified the HUDManager.js click event handlers to use different methods based on skill type
 - Fixed the InputHandler.js update method to properly convert key digits to skill indices for continuous casting
 - Streamlined the getVisualPositionInGrid method to only be used for debugging
 - Enhanced logging to show both the key pressed and the actual skill index used

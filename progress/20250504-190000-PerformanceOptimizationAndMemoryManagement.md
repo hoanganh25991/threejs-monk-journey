@@ -24,7 +24,7 @@ This update focuses on enhancing the game's performance by improving memory mana
   - Special handling for medium quality to prevent unnecessary quality reduction
 
 ### UI Enhancements
-- Added Graphics Settings section to Options menu
+- Added Graphics Settings section to Settings menu
 - Implemented quality preset selection with descriptive labels
 - Added toggle for adaptive quality
 - Added toggle for performance statistics display

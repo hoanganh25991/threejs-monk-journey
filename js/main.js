@@ -250,12 +250,13 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
     optionsMenu.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
     
     const title = document.createElement('h1');
-    title.textContent = 'Options';
+    title.textContent = 'Settings';
+    optionsMenu.appendChild(title);
     
     // Performance settings
     const performanceTitle = document.createElement('h2');
     performanceTitle.textContent = 'Performance Settings';
-    performanceTitle.style.color = '#aaa';
+    performanceTitle.style.color = '#fff';
     performanceTitle.style.fontSize = '24px';
     performanceTitle.style.marginTop = '20px';
     
@@ -335,7 +336,7 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
     const fpsSlider = document.createElement('input');
     fpsSlider.type = 'range';
     fpsSlider.min = '30';
-    fpsSlider.max = '60';
+    fpsSlider.max = '120';
     fpsSlider.step = '5';
     fpsSlider.value = game.performanceManager ? game.performanceManager.targetFPS : 60;
     fpsSlider.style.marginLeft = '10px';
@@ -369,9 +370,10 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
     // Game settings
     const gameTitle = document.createElement('h2');
     gameTitle.textContent = 'Game Settings';
-    gameTitle.style.color = '#aaa';
+    gameTitle.style.color = '#fff';
     gameTitle.style.fontSize = '24px';
     gameTitle.style.marginTop = '20px';
+    optionsMenu.appendChild(gameTitle);
     
     // Difficulty selector
     const difficultyContainer = document.createElement('div');
@@ -404,11 +406,12 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
     
     difficultyContainer.appendChild(difficultyLabel);
     difficultyContainer.appendChild(difficultySelect);
+    optionsMenu.appendChild(difficultyContainer);
     
     // Audio settings
     const audioTitle = document.createElement('h2');
     audioTitle.textContent = 'Audio Settings';
-    audioTitle.style.color = '#aaa';
+    audioTitle.style.color = '#fff';
     audioTitle.style.fontSize = '24px';
     audioTitle.style.marginTop = '20px';
     
@@ -599,9 +602,6 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
         }
     });
     
-    optionsMenu.appendChild(title);
-    optionsMenu.appendChild(gameTitle);
-    optionsMenu.appendChild(difficultyContainer);
     optionsMenu.appendChild(backButton);
     
     document.body.appendChild(optionsMenu);

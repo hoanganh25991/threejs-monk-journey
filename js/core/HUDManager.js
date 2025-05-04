@@ -1,6 +1,6 @@
-import { INPUT_CONFIG } from '../core/InputHandler.js';
+import { INPUT_CONFIG } from './InputHandler.js';
 
-export class UIManager {
+export class HUDManager {
     constructor(game) {
         this.game = game;
         this.notifications = [];
@@ -1428,7 +1428,7 @@ export class UIManager {
         }
     }
     
-    showDamageNumber(amount, position, isPlayerDamage = false) {
+    createBleedingEffect(amount, position, isPlayerDamage = false) {
         // Only show damage particles for player-caused damage
         if (!isPlayerDamage) return;
         

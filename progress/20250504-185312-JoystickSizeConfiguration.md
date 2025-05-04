@@ -10,7 +10,7 @@ Added configuration options to adjust the virtual joystick size, with a default 
    - Set default `sizeMultiplier` to 0.8 (80% of original size)
    - Stored original base and handle sizes as reference values
 
-2. Modified `createVirtualJoystick()` in `UIManager.js`:
+2. Modified `createVirtualJoystick()` in `HUDManager.js`:
    - Now uses the configuration values from `INPUT_CONFIG`
    - Applies size multiplier to both the joystick base and handle
    - Sets inline styles for dynamic sizing

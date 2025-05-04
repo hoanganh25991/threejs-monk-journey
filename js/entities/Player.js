@@ -419,7 +419,7 @@ export class Player {
         
         // Show damage number
         if (this.game && this.game.uiManager) {
-            this.game.uiManager.showDamageNumber(damage, enemyPosition);
+            this.game.uiManager.createBleedingEffect(damage, enemyPosition);
         }
         
         // Apply knockback on heavy punch (combo step 3)
@@ -1018,7 +1018,7 @@ export class Player {
                 enemy.takeDamage(damage);
                 
                 // Show damage number
-                this.game.uiManager.showDamageNumber(damage, enemyPosition);
+                this.game.uiManager.createBleedingEffect(damage, enemyPosition);
                 
                 // Check if enemy is defeated
                 if (enemy.getHealth() <= 0) {
@@ -1271,7 +1271,7 @@ export class Player {
         }
         
         // Show damage taken
-        this.game.uiManager.showDamageNumber(reducedDamage, this.position, true);
+        this.game.uiManager.createBleedingEffect(reducedDamage, this.position, true);
         
         return reducedDamage;
     }
