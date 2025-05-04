@@ -109,6 +109,17 @@ export class Game {
         // Handle window resize
         window.addEventListener('resize', () => this.onWindowResize());
         
+        // Handle visibility change events (for auto-pausing music)
+        document.addEventListener('visibilitychange', () => this.onVisibilityChange());
+        
+        // Handle mobile-specific events
+        window.addEventListener('pagehide', () => this.onPageHide());
+        window.addEventListener('pageshow', () => this.onPageShow());
+        
+        // Handle blur/focus events (additional fallback for some browsers)
+        window.addEventListener('blur', () => this.onBlur());
+        window.addEventListener('focus', () => this.onFocus());
+        
         return true;
     }
     
@@ -254,6 +265,58 @@ export class Game {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    
+    onVisibilityChange() {
+        // Handle visibility change for audio
+        if (this.audioManager) {
+            this.audioManager.handleVisibilityChange();
+        }
+        
+        // Optionally pause/resume game loop
+        if (document.hidden || document.visibilityState === 'hidden') {
+            this.pause();
+        } else {
+            this.resume();
+        }
+    }
+    
+    onPageHide() {
+        // Additional handler for mobile browsers
+        if (this.audioManager && this.audioManager.isAutoPauseEnabled()) {
+            const wasPlaying = this.audioManager.isMusicPlaying();
+            if (wasPlaying) {
+                this.audioManager.pauseMusic();
+                console.log('Music paused due to page hide event');
+            }
+        }
+        
+        // Pause game loop
+        this.pause();
+    }
+    
+    onPageShow() {
+        // Resume game loop
+        this.resume();
+        
+        // Let visibility change handler handle audio resumption
+        this.onVisibilityChange();
+    }
+    
+    onBlur() {
+        // Additional fallback for some browsers
+        if (this.audioManager && this.audioManager.isAutoPauseEnabled()) {
+            const wasPlaying = this.audioManager.isMusicPlaying();
+            if (wasPlaying) {
+                this.audioManager.pauseMusic();
+                console.log('Music paused due to window blur event');
+            }
+        }
+    }
+    
+    onFocus() {
+        // Let visibility change handler handle audio resumption
+        this.onVisibilityChange();
     }
     
     setupLoadingManager() {

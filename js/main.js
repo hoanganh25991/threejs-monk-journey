@@ -85,6 +85,16 @@ function showGameMenu(game) {
         game.start();
     });
     
+    const optionsButton = document.createElement('button');
+    optionsButton.className = 'menu-button';
+    optionsButton.textContent = 'Options';
+    optionsButton.addEventListener('click', () => {
+        showOptionsMenu(game, gameMenu);
+    });
+    
+    gameMenu.appendChild(title);
+    gameMenu.appendChild(startButton);
+
     // Add load game button if save data exists
     if (game.saveManager.hasSaveData()) {
         const loadButton = document.createElement('button');
@@ -100,16 +110,7 @@ function showGameMenu(game) {
         });
         gameMenu.appendChild(loadButton);
     }
-    
-    const optionsButton = document.createElement('button');
-    optionsButton.className = 'menu-button';
-    optionsButton.textContent = 'Options';
-    optionsButton.addEventListener('click', () => {
-        showOptionsMenu(game, gameMenu);
-    });
-    
-    gameMenu.appendChild(title);
-    gameMenu.appendChild(startButton);
+
     gameMenu.appendChild(optionsButton);
     
     document.body.appendChild(gameMenu);
@@ -317,6 +318,26 @@ function showOptionsMenu(game, mainMenu) {
         muteContainer.appendChild(muteLabel);
         muteContainer.appendChild(muteCheckbox);
         
+        // Auto-pause toggle
+        const autoPauseContainer = document.createElement('div');
+        autoPauseContainer.style.margin = '10px 0';
+        
+        const autoPauseLabel = document.createElement('label');
+        autoPauseLabel.textContent = 'Auto-pause music when inactive: ';
+        autoPauseLabel.style.color = '#fff';
+        
+        const autoPauseCheckbox = document.createElement('input');
+        autoPauseCheckbox.type = 'checkbox';
+        autoPauseCheckbox.checked = game.audioManager.isAutoPauseEnabled();
+        autoPauseCheckbox.style.marginLeft = '10px';
+        
+        autoPauseCheckbox.addEventListener('change', () => {
+            game.audioManager.toggleAutoPause();
+        });
+        
+        autoPauseContainer.appendChild(autoPauseLabel);
+        autoPauseContainer.appendChild(autoPauseCheckbox);
+        
         // Music volume slider
         const musicVolumeContainer = document.createElement('div');
         musicVolumeContainer.style.margin = '10px 0';
@@ -407,6 +428,7 @@ function showOptionsMenu(game, mainMenu) {
         
         // Add all audio controls to container
         audioControlsContainer.appendChild(muteContainer);
+        audioControlsContainer.appendChild(autoPauseContainer);
         audioControlsContainer.appendChild(musicVolumeContainer);
         audioControlsContainer.appendChild(sfxVolumeContainer);
         audioControlsContainer.appendChild(testSoundContainer);
