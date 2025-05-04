@@ -261,7 +261,7 @@ export class Player {
                 damage: 50,
                 manaCost: 40,
                 cooldown: 0.5, // Reduced cooldown
-                range: 10,
+                range: 25,
                 radius: 5,
                 duration: 5.0, // Further increased duration from 3.5 to 5.0
                 color: 0xffdd22 // Golden color for the bell's light
