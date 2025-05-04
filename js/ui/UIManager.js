@@ -9,6 +9,8 @@ export class UIManager {
         this.isPauseMenuOpen = false;
         this.isDialogOpen = false;
         this.isDeathScreenOpen = false;
+        this.levelUpElement = null;
+        this.levelUpAnimation = null;
     }
     
     init() {
@@ -1686,6 +1688,9 @@ export class UIManager {
     }
     
     showDeathScreen() {
+        // Clear any level up notifications
+        this.clearLevelUpNotification();
+        
         // Show death screen
         this.deathScreen.style.display = 'flex';
         this.isDeathScreenOpen = true;
@@ -1704,8 +1709,12 @@ export class UIManager {
     }
     
     showLevelUp(level) {
+        // If there's an existing level up notification, remove it immediately
+        this.clearLevelUpNotification();
+        
         // Create level up element
-        const levelUp = document.createElement('div');
+        this.levelUpElement = document.createElement('div');
+        const levelUp = this.levelUpElement;
         levelUp.style.position = 'absolute';
         levelUp.style.top = '50%';
         levelUp.style.left = '50%';
@@ -1722,19 +1731,32 @@ export class UIManager {
         
         // Animate level up
         let scale = 1;
-        const animation = setInterval(() => {
+        this.levelUpAnimation = setInterval(() => {
             scale += 0.05;
             levelUp.style.transform = `translate(-50%, -50%) scale(${scale})`;
             levelUp.style.opacity = 2 - scale;
             
             if (scale >= 2) {
-                clearInterval(animation);
-                levelUp.remove();
+                this.clearLevelUpNotification();
             }
         }, 50);
         
         // Show notification
         this.showNotification(`Level Up! You are now level ${level}`);
+    }
+    
+    clearLevelUpNotification() {
+        // Clear any existing level up animation
+        if (this.levelUpAnimation) {
+            clearInterval(this.levelUpAnimation);
+            this.levelUpAnimation = null;
+        }
+        
+        // Remove any existing level up element
+        if (this.levelUpElement) {
+            this.levelUpElement.remove();
+            this.levelUpElement = null;
+        }
     }
     
     updateQuestLog(activeQuests) {
