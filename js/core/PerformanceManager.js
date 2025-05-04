@@ -22,7 +22,7 @@ export class PerformanceManager {
         this.fpsDisplayMultiplier = 1.5; // Display FPS at 1.5x the actual value
         
         // Standard width for all indicators
-        this.standardIndicatorWidth = '120px';
+        this.standardIndicatorWidth = '100px';
         
         this.memoryUsage = {
             current: 0,
@@ -138,7 +138,7 @@ export class PerformanceManager {
         element.style.width = this.standardIndicatorWidth;
         element.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
         element.style.color = '#0ff';
-        element.style.fontSize = '12px';
+        element.style.fontSize = '11px';
         element.style.fontFamily = 'monospace';
         element.style.borderRadius = '3px 0 0 3px';
         element.style.zIndex = '1001';
@@ -159,9 +159,10 @@ export class PerformanceManager {
         const canvases = element.querySelectorAll('canvas');
         if (canvases.length > 0) {
             canvases.forEach(canvas => {
-                canvas.style.width = '100%';
-                canvas.style.height = '48px';
-                // canvas.style.display = 'block'; // Keep hide other charts, wait to click to review
+                // canvas.style.width = '100%';
+                // canvas.style.height = '48px';
+                // canvas.style.display = 'block'; // Keep hide other charts, wait to click to
+                canvas.style.margin = 'auto';
             });
         }
     }
