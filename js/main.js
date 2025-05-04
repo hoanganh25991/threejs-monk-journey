@@ -23,10 +23,79 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show game menu - game will remain paused until user clicks a button
         showGameMenu(game);
         console.log("Game menu displayed");
+        
+        // Create settings button that will be visible during gameplay
+        createSettingsButton(game);
     }).catch(error => {
         console.error("Error initializing game:", error);
     });
 });
+
+// Create settings button at top-right of the screen
+function createSettingsButton(game) {
+    const settingsButton = document.createElement('button');
+    settingsButton.id = 'settings-button';
+    settingsButton.className = 'settings-button';
+    settingsButton.innerHTML = '⚙️'; // Gear icon
+    settingsButton.title = 'Settings';
+    
+    // Style the button
+    settingsButton.style.position = 'absolute';
+    settingsButton.style.top = '20px';
+    settingsButton.style.right = '20px';
+    settingsButton.style.zIndex = '2000'; // Higher z-index than FPS counter (1001)
+    settingsButton.style.width = '50px';
+    settingsButton.style.height = '50px';
+    settingsButton.style.borderRadius = '50%';
+    settingsButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    settingsButton.style.border = '2px solid #6b4c2a';
+    settingsButton.style.color = 'white';
+    settingsButton.style.fontSize = '24px';
+    settingsButton.style.cursor = 'pointer';
+    settingsButton.style.display = 'none'; // Initially hidden until game starts
+    
+    // Add click event to show settings menu
+    settingsButton.addEventListener('click', () => {
+        // Pause the game - we don't need to check isRunning since we're keeping animation loop active
+        game.pause();
+        
+        // Show settings menu
+        showOptionsMenu(game, null, true);
+        
+        console.log("Settings button clicked - game paused and settings menu opened");
+    });
+    
+    document.body.appendChild(settingsButton);
+    
+    // Add event listener to show/hide settings button based on game state
+    game.addEventListener('gameStateChanged', (state) => {
+        console.log('Game state changed:', state);
+        if (state === 'running') {
+            // Show settings button when game is running
+            settingsButton.style.display = 'block';
+        } else if (state === 'paused') {
+            // When paused, only hide if it's not because of the options menu
+            if (!document.getElementById('main-options-menu')) {
+                settingsButton.style.display = 'none';
+            } else {
+                // Keep button visible when options menu is open
+                settingsButton.style.display = 'block';
+            }
+        } else if (state === 'menu') {
+            settingsButton.style.display = 'none';
+        }
+    });
+    
+    // Also show the button when the game starts (in case the event isn't fired)
+    const originalStart = game.start;
+    game.start = function() {
+        originalStart.apply(this, arguments);
+        // Show settings button when game starts
+        setTimeout(() => {
+            settingsButton.style.display = 'block';
+        }, 500);
+    };
+}
 
 // Create loading screen
 function createLoadingScreen() {
@@ -77,49 +146,75 @@ function showGameMenu(game) {
     const title = document.createElement('h1');
     title.textContent = 'Monk Journey';
     
+    // Create a container for buttons to control their width
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'menu-button-container';
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.flexDirection = 'column';
+    buttonContainer.style.alignItems = 'center';
+    buttonContainer.style.width = '100%';
+    buttonContainer.style.maxWidth = '300px'; // Set a max width for the container
+    
     const startButton = document.createElement('button');
     startButton.className = 'menu-button';
     startButton.textContent = 'New Game';
+    startButton.style.width = '100%'; // Make button take full width of container
     startButton.addEventListener('click', () => {
         gameMenu.style.display = 'none';
         game.start();
+        // Make sure settings button is visible
+        const settingsButton = document.getElementById('settings-button');
+        if (settingsButton) {
+            settingsButton.style.display = 'block';
+        }
     });
     
     const optionsButton = document.createElement('button');
     optionsButton.className = 'menu-button';
-    optionsButton.textContent = 'Options';
+    optionsButton.textContent = 'Settings';
+    optionsButton.style.width = '100%'; // Make button take full width of container
     optionsButton.addEventListener('click', () => {
         showOptionsMenu(game, gameMenu);
     });
     
-    gameMenu.appendChild(title);
-    gameMenu.appendChild(startButton);
+    buttonContainer.appendChild(startButton);
 
     // Add load game button if save data exists
     if (game.saveManager.hasSaveData()) {
         const loadButton = document.createElement('button');
         loadButton.className = 'menu-button';
         loadButton.textContent = 'Load Game';
+        loadButton.style.width = '100%'; // Make button take full width of container
         loadButton.addEventListener('click', () => {
             if (game.saveManager.loadGame()) {
                 gameMenu.style.display = 'none';
                 game.start();
+                // Make sure settings button is visible
+                const settingsButton = document.getElementById('settings-button');
+                if (settingsButton) {
+                    settingsButton.style.display = 'block';
+                }
             } else {
                 alert('Failed to load game data.');
             }
         });
-        gameMenu.appendChild(loadButton);
+        buttonContainer.appendChild(loadButton);
     }
 
-    gameMenu.appendChild(optionsButton);
+    buttonContainer.appendChild(optionsButton);
+    
+    gameMenu.appendChild(title);
+    gameMenu.appendChild(buttonContainer);
     
     document.body.appendChild(gameMenu);
 }
 
 // Show options menu
-function showOptionsMenu(game, mainMenu) {
-    // Hide main menu
-    mainMenu.style.display = 'none';
+function showOptionsMenu(game, mainMenu, fromInGame = false) {
+    // Hide main menu if coming from main menu
+    if (mainMenu) {
+        mainMenu.style.display = 'none';
+    }
     
     // Create options menu
     const optionsMenu = document.createElement('div');
@@ -463,9 +558,17 @@ function showOptionsMenu(game, mainMenu) {
     backButton.className = 'menu-button';
     backButton.textContent = 'Back';
     backButton.style.marginTop = '30px';
+    backButton.style.width = '200px'; // Set a fixed width for the back button
     backButton.addEventListener('click', () => {
         optionsMenu.remove();
-        mainMenu.style.display = 'flex';
+        
+        if (fromInGame) {
+            // Resume the game if we came from in-game
+            game.resume();
+        } else if (mainMenu) {
+            // Return to main menu
+            mainMenu.style.display = 'flex';
+        }
     });
     
     optionsMenu.appendChild(title);

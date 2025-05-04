@@ -1,8 +1,8 @@
 export class SaveManager {
     constructor(game) {
         this.game = game;
-        this.saveKey = 'diablo_immortal_save';
-        this.chunkSaveKeyPrefix = 'diablo_immortal_chunk_';
+        this.saveKey = 'monk_journey_save';
+        this.chunkSaveKeyPrefix = 'monk_journey_chunk_';
         this.autoSaveInterval = 60_000; // Auto-save every minute (reduced frequency)
         this.autoSaveTimer = null;
         this.lastSaveLevel = 0; // Track player level at last save
