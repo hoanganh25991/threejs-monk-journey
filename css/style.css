@@ -2,6 +2,10 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    user-select: none; /* Prevent text selection on all elements */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE/Edge */
 }
 
 body {
@@ -79,6 +83,10 @@ body {
     width: 100%;
     height: 100%;
     pointer-events: none;
+    user-select: none; /* Prevent text selection on UI elements */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE/Edge */
 }
 
 #player-stats-container {
@@ -240,6 +248,10 @@ body {
     position: relative;
     box-shadow: 0 0 10px rgba(255, 150, 0, 0.3);
     overflow: hidden;
+    user-select: none; /* Prevent text selection on skill buttons */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE/Edge */
 }
 
 /* Mobile optimization for skills */
@@ -450,6 +462,10 @@ body {
     cursor: pointer;
     border-radius: 5px;
     transition: background-color 0.3s;
+    user-select: none; /* Prevent text selection on menu buttons */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE/Edge */
 }
 
 .menu-button:hover {
@@ -631,6 +647,10 @@ body {
     border: 3px solid rgba(255, 255, 255, 0.5);
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
     z-index: 1001; /* Ensure it's above other UI elements */
+    user-select: none; /* Prevent text selection on joystick */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE/Edge */
 }
 
 #virtual-joystick-base {
