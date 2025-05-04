@@ -66,6 +66,9 @@ export class PerformanceManager {
         this.stats.dom.style.left = 'auto';
         document.body.appendChild(this.stats.dom);
         
+        // Add GPU indicator next to Stats.js
+        this.createGPUIndicator();
+        
         // Apply initial quality settings
         this.applyQualitySettings(this.currentQuality);
         
@@ -75,6 +78,116 @@ export class PerformanceManager {
         console.log("Performance Manager initialized with quality:", this.currentQuality);
         
         return this;
+    }
+    
+    createGPUIndicator() {
+        // Create GPU indicator container
+        this.gpuIndicator = document.createElement('div');
+        this.gpuIndicator.id = 'gpu-indicator';
+        this.gpuIndicator.textContent = 'GPU';
+        
+        // Create GPU info panel (hidden by default)
+        this.gpuInfoPanel = document.createElement('div');
+        this.gpuInfoPanel.id = 'gpu-info-panel';
+        
+        // Get GPU information
+        const gpuInfo = this.getGPUInfo();
+        this.gpuInfoPanel.innerHTML = gpuInfo;
+        
+        // Add hover event to show/hide GPU info panel
+        this.gpuIndicator.addEventListener('mouseenter', () => {
+            this.gpuInfoPanel.style.display = 'block';
+        });
+        
+        this.gpuIndicator.addEventListener('mouseleave', () => {
+            this.gpuInfoPanel.style.display = 'none';
+        });
+        
+        // Add to document
+        document.body.appendChild(this.gpuIndicator);
+        document.body.appendChild(this.gpuInfoPanel);
+    }
+    
+    getGPUInfo() {
+        // Get WebGL context from the renderer
+        const gl = this.game.renderer.getContext();
+        
+        // Get GPU information
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        
+        let gpuVendor = 'Unknown';
+        let gpuRenderer = 'Unknown';
+        
+        if (debugInfo) {
+            gpuVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+            gpuRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        }
+        
+        // Get WebGL version
+        const glVersion = gl.getParameter(gl.VERSION);
+        const glslVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
+        
+        // Get max texture size
+        const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+        
+        // Get max viewport dimensions
+        const maxViewportDims = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
+        
+        // Get max render buffer size
+        const maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
+        
+        // Get acceleration status
+        const accelerated = this.isGPUAccelerated();
+        
+        // Format the information
+        return `
+            <div style="color: #4CAF50; font-weight: bold; margin-bottom: 5px;">GPU INFORMATION</div>
+            <div><span style="color: #aaa;">Vendor:</span> ${gpuVendor}</div>
+            <div><span style="color: #aaa;">Renderer:</span> ${gpuRenderer}</div>
+            <div><span style="color: #aaa;">WebGL Version:</span> ${glVersion}</div>
+            <div><span style="color: #aaa;">GLSL Version:</span> ${glslVersion}</div>
+            <div><span style="color: #aaa;">Max Texture Size:</span> ${maxTextureSize}px</div>
+            <div><span style="color: #aaa;">Max Viewport:</span> ${maxViewportDims[0]}x${maxViewportDims[1]}</div>
+            <div><span style="color: #aaa;">Max Render Buffer:</span> ${maxRenderBufferSize}</div>
+            <div><span style="color: #aaa;">Hardware Acceleration:</span> ${accelerated ? '<span style="color: #4CAF50;">Enabled</span>' : '<span style="color: #F44336;">Disabled</span>'}</div>
+            <div><span style="color: #aaa;">Power Preference:</span> <span style="color: #4CAF50;">High Performance</span></div>
+            <div style="margin-top: 5px; font-size: 10px; color: #aaa;">GPU acceleration is ${accelerated ? 'active' : 'not active'} for this session.</div>
+        `;
+    }
+    
+    isGPUAccelerated() {
+        // Check if GPU acceleration is enabled
+        // This is a best-effort detection as there's no foolproof way to detect GPU acceleration
+        
+        // Method 1: Check for hardware acceleration via canvas
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        
+        if (!gl) {
+            return false; // WebGL not supported
+        }
+        
+        // Method 2: Check for specific GPU features
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) {
+            const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+            // If renderer string contains terms like "SwiftShader", "ANGLE", or "llvmpipe", 
+            // it might be software rendering
+            const softwareRenderers = ['swiftshader', 'llvmpipe', 'software', 'mesa'];
+            const isSoftware = softwareRenderers.some(term => 
+                renderer.toLowerCase().includes(term)
+            );
+            
+            return !isSoftware;
+        }
+        
+        // Method 3: Check if the renderer has high-performance setting
+        if (this.game && this.game.renderer) {
+            return this.game.renderer.getContext().getContextAttributes().powerPreference === 'high-performance';
+        }
+        
+        // Default to true if we can't determine
+        return true;
     }
     
     update(delta) {
