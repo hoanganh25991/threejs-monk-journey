@@ -106,6 +106,9 @@ export class PerformanceManager {
         // Add GPU indicator next to Stats.js
         this.createGPUIndicator();
         
+        // Create quality level indicator
+        this.createQualityIndicator();
+        
         // Apply initial quality settings
         this.applyQualitySettings(this.currentQuality);
         
@@ -118,6 +121,86 @@ export class PerformanceManager {
         console.log("Performance Manager initialized with quality:", this.currentQuality);
         
         return this;
+    }
+    
+    createQualityIndicator() {
+        // Create quality indicator container
+        this.qualityIndicator = document.createElement('div');
+        this.qualityIndicator.id = 'quality-indicator';
+        this.qualityIndicator.style.position = 'absolute';
+        this.qualityIndicator.style.top = '80px'; // Position below memory display
+        this.qualityIndicator.style.right = '0px';
+        this.qualityIndicator.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        this.qualityIndicator.style.color = '#0ff';
+        this.qualityIndicator.style.padding = '5px 10px';
+        this.qualityIndicator.style.fontSize = '12px';
+        this.qualityIndicator.style.fontFamily = 'monospace';
+        this.qualityIndicator.style.borderRadius = '3px 0 0 3px';
+        this.qualityIndicator.style.zIndex = '1001';
+        this.qualityIndicator.style.opacity = '0.2'; // Set low opacity
+        this.qualityIndicator.style.transition = 'opacity 0.2s';
+        
+        // Update the quality text
+        this.updateQualityIndicator();
+        
+        // Add hover effect to increase opacity
+        this.qualityIndicator.addEventListener('mouseenter', () => {
+            this.qualityIndicator.style.opacity = '1';
+        });
+        
+        this.qualityIndicator.addEventListener('mouseleave', () => {
+            this.qualityIndicator.style.opacity = '0.2';
+        });
+        
+        // Add click event to toggle adaptive quality
+        this.qualityIndicator.addEventListener('click', () => {
+            this.adaptiveQualityEnabled = !this.adaptiveQualityEnabled;
+            this.updateQualityIndicator();
+            
+            const message = this.adaptiveQualityEnabled 
+                ? "Adaptive quality enabled - performance will be automatically optimized" 
+                : "Adaptive quality disabled - quality settings are now fixed";
+                
+            this.showQualityChangeNotification(message);
+        });
+        
+        document.body.appendChild(this.qualityIndicator);
+    }
+    
+    updateQualityIndicator() {
+        if (!this.qualityIndicator) return;
+        
+        // Get color based on quality level
+        let qualityColor;
+        switch (this.currentQuality) {
+            case 'ultra':
+                qualityColor = '#ff00ff'; // Purple for ultra
+                break;
+            case 'high':
+                qualityColor = '#00ff00'; // Green for high
+                break;
+            case 'medium':
+                qualityColor = '#ffff00'; // Yellow for medium
+                break;
+            case 'low':
+                qualityColor = '#ff8800'; // Orange for low
+                break;
+            case 'minimal':
+                qualityColor = '#ff0000'; // Red for minimal
+                break;
+            default:
+                qualityColor = '#ffffff'; // White for unknown
+        }
+        
+        // Update the indicator text
+        this.qualityIndicator.innerHTML = `
+            <div style="color: ${qualityColor}; font-weight: bold;">
+                QUALITY: ${this.currentQuality.toUpperCase()}
+            </div>
+            <div style="font-size: 10px; color: #aaa; margin-top: 2px;">
+                Target FPS: ${this.targetFPS} | Adaptive: ${this.adaptiveQualityEnabled ? 'ON' : 'OFF'}
+            </div>
+        `;
     }
     
     createMemoryDisplay() {
@@ -313,7 +396,7 @@ export class PerformanceManager {
         // Check memory usage periodically
         const now = performance.now();
         if (now - this.memoryUsage.lastCheck > this.memoryUsage.checkInterval) {
-            this.updateMemoryUsage();
+            this.updateMemoryUsage(avgFPS);
             this.memoryUsage.lastCheck = now;
         }
         
@@ -332,7 +415,7 @@ export class PerformanceManager {
         }
     }
     
-    updateMemoryUsage() {
+    updateMemoryUsage(avgFPS) {
         // Get memory info if available
         if (window.performance && window.performance.memory) {
             const memInfo = window.performance.memory;
@@ -342,12 +425,14 @@ export class PerformanceManager {
             this.memoryUsage.current = usedHeapSize;
             this.memoryUsage.peak = Math.max(this.memoryUsage.peak, usedHeapSize);
             
+            // Calculate percentage used
+            const percentUsed = (usedHeapSize / totalHeapSize) * 100;
+            
             // Update memory display
             if (this.memoryDisplay) {
                 this.memoryDisplay.textContent = `MEM: ${usedHeapSize.toFixed(1)} MB / ${totalHeapSize.toFixed(1)} MB`;
                 
                 // Change color based on memory usage
-                const percentUsed = (usedHeapSize / totalHeapSize) * 100;
                 if (percentUsed > 80) {
                     this.memoryDisplay.style.color = '#ff5555'; // Red for high usage
                 } else if (percentUsed > 60) {
@@ -531,13 +616,27 @@ export class PerformanceManager {
             // Only increase one step at a time and wait longer between increases
             const now = performance.now();
             if (now - this.lastOptimizationTime > this.optimizationInterval * 3) {
+                // Apply the new quality settings
                 this.applyQualitySettings(newQuality);
                 console.log(`Increasing quality to ${newQuality}`);
                 
-                // Only show notification when increasing to high or ultra
+                // Show notification for significant quality increases
                 if (newQuality === 'high' || newQuality === 'ultra') {
-                    this.showQualityChangeNotification(`Graphics quality increased to ${newQuality}`);
+                    // More detailed message for ultra quality
+                    if (newQuality === 'ultra') {
+                        this.showQualityChangeNotification(
+                            `Graphics quality increased to Ultra. Enjoy maximum visual fidelity!`
+                        );
+                    } else {
+                        this.showQualityChangeNotification(
+                            `Graphics quality increased to ${newQuality}. Performance is excellent!`
+                        );
+                    }
                 }
+                
+                // Reset consecutive counters after quality change
+                this.consecutiveHighFPSCount = 0;
+                this.consecutiveLowFPSCount = 0;
             }
         }
     }
@@ -550,10 +649,10 @@ export class PerformanceManager {
             // Get the next lower quality level
             const newQuality = qualityLevels[currentIndex - 1];
             
-            // If FPS is very low or force is true, decrease immediately
-            if (force || currentFPS < this.targetFPS * 0.6) {
-                // For very poor performance, drop two levels if possible
-                if (currentIndex > 1 && currentFPS < this.targetFPS * 0.4) {
+            // If FPS is very low or force is true, decrease more aggressively
+            if (force || currentFPS < this.targetFPS * 0.5) { // More conservative threshold (0.5 instead of 0.6)
+                // For extremely poor performance, drop two levels if possible
+                if (currentIndex > 1 && currentFPS < this.targetFPS * 0.3) { // More conservative threshold (0.3 instead of 0.4)
                     const twoLevelsDown = qualityLevels[currentIndex - 2];
                     this.applyQualitySettings(twoLevelsDown);
                     console.log(`Severely decreasing quality to ${twoLevelsDown} (FPS: ${Math.round(currentFPS)})`);
@@ -581,6 +680,13 @@ export class PerformanceManager {
                     `You can adjust settings in Options menu.`
                 );
             }
+            
+            // Reset consecutive counters after quality change
+            this.consecutiveHighFPSCount = 0;
+            this.consecutiveLowFPSCount = 0;
+            
+            // Add a cooldown period after decreasing quality to allow the system to stabilize
+            this.lastOptimizationTime = performance.now() + (this.optimizationInterval * 5);
         }
     }
     
@@ -623,7 +729,13 @@ export class PerformanceManager {
         }
         
         const settings = this.qualityLevels[qualityLevel];
+        const previousQuality = this.currentQuality;
         this.currentQuality = qualityLevel;
+        
+        // Log quality change
+        if (previousQuality !== qualityLevel) {
+            console.log(`Quality changed from ${previousQuality} to ${qualityLevel}`);
+        }
         
         // Update renderer settings
         const renderer = this.game.renderer;
@@ -661,6 +773,9 @@ export class PerformanceManager {
             console.log("Antialiasing change requires renderer recreation - skipping");
             // In a real implementation, we would recreate the renderer here
         }
+        
+        // Update the quality indicator in the UI
+        this.updateQualityIndicator();
         
         // Force a renderer update
         renderer.clear();

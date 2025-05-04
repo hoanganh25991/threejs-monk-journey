@@ -38,13 +38,16 @@
 
 
 - [ ] Enhance: review UIManager.js file and optimise it:
-    - remove unused method
-    - remove duplicate methods
-    - define common methods to be shared
-    - define each container UI in easy reusable way, just need parent div and id, it mount itself to that to easy review
-    - define container div in index.html instead of dynamic create new one, comment to code block retrieve the DOM that element already exist in index.html, add validate check to ensure DOM defined in index.html if not alert and provide fix sollution.
-    - separate into multiple files for easier to maintain, define interface when needed
-
+    - Remove unused methods.
+    - Remove duplicate methods.
+    - Define common methods for shared use.
+    - Design each container UI to be easily reusable, requiring only a parent `div` and an `id` to mount itself, facilitating standalone rendering later.
+    - Define container `div` elements in `index.html` instead of creating them dynamically. Comment the code block to retrieve these existing DOM elements, and add validation to ensure they are defined in `index.html`, alerting and providing a fix if not.
+    - Organize code into multiple files for easier maintenance, defining interfaces where necessary.
+    - using template style, ex:
+    ```js
+    return `<div style="color: #4CAF50; font-weight: bold; margin-bottom: 5px;">GPU INFORMATION</div><div><span style="color: #aaa;">Vendor:</span> ${gpuVendor}</div>`
+    ```
 
 - [ ] Enhance: review Enemy.js file and optimise it:
     - remove unused method
@@ -78,6 +81,10 @@
 - [ ] Enhance: draw complex model for skeleton monster, close to skeleton, not solid box
 - [ ] Enhance: createWaveEffect, add config at top of this method, allow me to control the size of the bell, if i want to bell 2 times bigger then current, i just x2 that bell size number
 - [x] Enhance: add GPU acceleration which help to make game much faster, auto reduce complex of threejs, shadow,... to allow have good FPS on medium device, add FPS on top-right of the screen, control the effect, things by target FPS: 60
+
+
+- [] Enhance: PerformanceManager.js should not render UI directly with DOM manipulation, it should expose the DTO only, let UIManager handle actual render.
+
 
 
 - [ ] Process all progress log files in the "progress" directory and update details in "functional-requirement":
