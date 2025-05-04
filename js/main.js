@@ -122,7 +122,8 @@ function showOptionsMenu(game, mainMenu) {
     
     // Create options menu
     const optionsMenu = document.createElement('div');
-    optionsMenu.id = 'game-menu';
+    optionsMenu.id = 'main-options-menu';
+    optionsMenu.className = 'game-menu';
     
     const title = document.createElement('h1');
     title.textContent = 'Options';

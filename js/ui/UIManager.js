@@ -293,7 +293,8 @@ export class UIManager {
     createPauseMenu() {
         // Create pause menu
         this.pauseMenu = document.createElement('div');
-        this.pauseMenu.id = 'game-menu';
+        this.pauseMenu.id = 'pause-menu';
+        this.pauseMenu.className = 'game-menu';
         this.pauseMenu.style.display = 'none';
         
         // Create pause menu title
@@ -349,12 +350,36 @@ export class UIManager {
         // Hide pause menu
         this.pauseMenu.style.display = 'none';
         
+        // Remove any existing options menu
+        const existingOptionsMenu = document.getElementById('options-menu');
+        if (existingOptionsMenu) {
+            existingOptionsMenu.remove();
+        }
+        
         // Create options menu
         const optionsMenu = document.createElement('div');
-        optionsMenu.id = 'game-menu';
+        optionsMenu.id = 'options-menu';
+        optionsMenu.style.position = 'absolute';
+        optionsMenu.style.top = '0';
+        optionsMenu.style.left = '0';
+        optionsMenu.style.width = '100%';
+        optionsMenu.style.height = '100%';
+        optionsMenu.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+        optionsMenu.style.display = 'flex';
+        optionsMenu.style.flexDirection = 'column';
+        optionsMenu.style.justifyContent = 'flex-start';
+        optionsMenu.style.alignItems = 'center';
+        optionsMenu.style.zIndex = '1000';
+        optionsMenu.style.overflowY = 'auto';
+        optionsMenu.style.padding = '20px';
         
+        // Create title
         const title = document.createElement('h1');
         title.textContent = 'Options';
+        title.style.color = '#f5f5f5';
+        title.style.fontSize = '48px';
+        title.style.marginBottom = '40px';
+        title.style.textShadow = '0 0 10px #ff6600';
         
         // Keyboard Controls section
         const controlsTitle = document.createElement('h2');
@@ -362,15 +387,19 @@ export class UIManager {
         controlsTitle.style.color = '#aaa';
         controlsTitle.style.fontSize = '24px';
         controlsTitle.style.marginTop = '20px';
+        controlsTitle.style.alignSelf = 'center';
         
         // Create controls container
         const controlsContainer = document.createElement('div');
+        controlsContainer.id = 'controls-container';
         controlsContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
         controlsContainer.style.padding = '15px';
         controlsContainer.style.borderRadius = '5px';
         controlsContainer.style.marginTop = '10px';
-        controlsContainer.style.maxWidth = '500px';
+        controlsContainer.style.width = '80%';
+        controlsContainer.style.maxWidth = '600px';
         controlsContainer.style.margin = '10px auto';
+        controlsContainer.style.border = '1px solid #333';
         
         // Helper function to format key code for display
         const formatKeyCode = (keyCode) => {
@@ -394,8 +423,12 @@ export class UIManager {
             }
         };
         
+        console.log('INPUT_CONFIG:', INPUT_CONFIG);
+        
         // Loop through each category in INPUT_CONFIG
         Object.entries(INPUT_CONFIG).forEach(([category, config]) => {
+            console.log(`Processing category: ${category}, config:`, config);
+            
             // Create category title
             const categoryTitle = document.createElement('h3');
             categoryTitle.textContent = config.title;
@@ -404,17 +437,48 @@ export class UIManager {
             controlsContainer.appendChild(categoryTitle);
             
             // Create category content
-            const categoryContent = document.createElement('p');
+            const categoryContent = document.createElement('div');
             categoryContent.style.color = '#ffffff';
-            categoryContent.style.marginBottom = '10px';
+            categoryContent.style.marginBottom = '15px';
+            categoryContent.style.paddingLeft = '10px';
             
             // Build HTML content for each control in this category
-            const controlsHtml = config.controls.map(control => {
-                const keyDisplay = control.keys.map(key => formatKeyCode(key)).join(', ');
-                return `${keyDisplay} - ${control.description}`;
-            }).join('<br>');
+            if (config.controls && Array.isArray(config.controls)) {
+                const controlsList = document.createElement('ul');
+                controlsList.style.listStyleType = 'none';
+                controlsList.style.padding = '0';
+                controlsList.style.margin = '0';
+                
+                config.controls.forEach(control => {
+                    const controlItem = document.createElement('li');
+                    controlItem.style.marginBottom = '5px';
+                    
+                    const keySpan = document.createElement('span');
+                    keySpan.style.display = 'inline-block';
+                    keySpan.style.minWidth = '80px';
+                    keySpan.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+                    keySpan.style.padding = '2px 5px';
+                    keySpan.style.borderRadius = '3px';
+                    keySpan.style.marginRight = '10px';
+                    keySpan.style.border = '1px solid #555';
+                    keySpan.style.textAlign = 'center';
+                    
+                    const keyDisplay = control.keys.map(key => formatKeyCode(key)).join(', ');
+                    keySpan.textContent = keyDisplay;
+                    
+                    const descSpan = document.createElement('span');
+                    descSpan.textContent = control.description;
+                    
+                    controlItem.appendChild(keySpan);
+                    controlItem.appendChild(descSpan);
+                    controlsList.appendChild(controlItem);
+                });
+                
+                categoryContent.appendChild(controlsList);
+            } else {
+                categoryContent.textContent = 'No controls defined for this category';
+            }
             
-            categoryContent.innerHTML = controlsHtml;
             controlsContainer.appendChild(categoryContent);
         });
         
@@ -424,6 +488,7 @@ export class UIManager {
         audioTitle.style.color = '#aaa';
         audioTitle.style.fontSize = '24px';
         audioTitle.style.marginTop = '20px';
+        audioTitle.style.alignSelf = 'center';
         
         // Audio disabled message
         const audioDisabledMessage = document.createElement('div');
@@ -431,12 +496,31 @@ export class UIManager {
         audioDisabledMessage.style.color = '#ff9999';
         audioDisabledMessage.style.margin = '10px 0';
         audioDisabledMessage.style.fontSize = '14px';
+        audioDisabledMessage.style.textAlign = 'center';
+        audioDisabledMessage.style.width = '80%';
+        audioDisabledMessage.style.maxWidth = '600px';
         
         // Back button
         const backButton = document.createElement('button');
-        backButton.className = 'menu-button';
         backButton.textContent = 'Back';
-        backButton.style.marginTop = '30px';
+        backButton.style.backgroundColor = '#333';
+        backButton.style.color = 'white';
+        backButton.style.border = 'none';
+        backButton.style.padding = '15px 30px';
+        backButton.style.margin = '30px 0';
+        backButton.style.fontSize = '18px';
+        backButton.style.cursor = 'pointer';
+        backButton.style.borderRadius = '5px';
+        backButton.style.transition = 'background-color 0.3s';
+        
+        backButton.addEventListener('mouseover', () => {
+            backButton.style.backgroundColor = '#555';
+        });
+        
+        backButton.addEventListener('mouseout', () => {
+            backButton.style.backgroundColor = '#333';
+        });
+        
         backButton.addEventListener('click', () => {
             optionsMenu.remove();
             this.pauseMenu.style.display = 'flex';
@@ -450,13 +534,17 @@ export class UIManager {
         optionsMenu.appendChild(audioDisabledMessage);
         optionsMenu.appendChild(backButton);
         
+        // Add to document body
         document.body.appendChild(optionsMenu);
+        
+        console.log('Options menu created and added to DOM');
     }
     
     createDeathScreen() {
         // Create death screen
         this.deathScreen = document.createElement('div');
-        this.deathScreen.id = 'game-menu';
+        this.deathScreen.id = 'death-screen';
+        this.deathScreen.className = 'game-menu';
         this.deathScreen.style.display = 'none';
         
         // Create death screen title

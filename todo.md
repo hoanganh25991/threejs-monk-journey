@@ -45,6 +45,7 @@
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
+    - define container div in index.html instead of dynamic create new one, comment to code block retrieve the DOM that element already exist in index.html, add validate check to ensure DOM defined in index.html if not alert and provide fix sollution.
     - separate into multiple files for easier to maintain, define interface when needed
 
 
@@ -66,3 +67,5 @@
 
 
 - [ ] Update the service worker cache list by working through the js, assets, css, and images directories.
+
+- [ ] Help me force the game in landscape mode, instead of portrait, always landscape
