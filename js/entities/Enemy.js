@@ -24,7 +24,9 @@ export class Enemy {
             isMoving: false,
             isAttacking: false,
             isDead: false,
-            attackCooldown: 0
+            attackCooldown: 0,
+            isKnockedBack: false,
+            knockbackEndTime: 0
         };
         
         // Enemy position and orientation
@@ -640,6 +642,19 @@ export class Enemy {
         // Skip update if dead
         if (this.state.isDead) return;
         
+        // Check if enemy is currently knocked back
+        if (this.state.isKnockedBack) {
+            // If knockback duration has ended, reset state
+            if (Date.now() > this.state.knockbackEndTime) {
+                this.state.isKnockedBack = false;
+            } else {
+                // Skip normal movement while knocked back
+                this.updateTerrainHeight();
+                this.updateAnimations(delta);
+                return;
+            }
+        }
+        
         // Ensure enemy is always at the correct terrain height
         this.updateTerrainHeight();
         
@@ -1127,6 +1142,99 @@ export class Enemy {
         this.flashDamage();
         
         return damage;
+    }
+    
+    // Method to apply knockback from player attacks
+    applyKnockback(knockbackVector, duration) {
+        // Set knockback state
+        this.state.isKnockedBack = true;
+        this.state.knockbackEndTime = Date.now() + (duration * 1000);
+        
+        // Store original position
+        const startPosition = this.position.clone();
+        
+        // Calculate target position after knockback
+        const targetPosition = new THREE.Vector3(
+            this.position.x + knockbackVector.x,
+            this.position.y,
+            this.position.z + knockbackVector.z
+        );
+        
+        // Create animation for smooth knockback movement
+        const startTime = Date.now();
+        const knockbackDuration = duration * 1000;
+        
+        // Create stagger animation for the enemy model
+        if (this.modelGroup) {
+            // Tilt the enemy in the direction of the knockback
+            const tiltDirection = new THREE.Vector3().subVectors(startPosition, targetPosition).normalize();
+            const tiltAngle = Math.min(Math.PI / 6, knockbackVector.length() / 4); // Max 30 degrees tilt
+            
+            // Apply tilt animation
+            const originalRotation = this.modelGroup.rotation.clone();
+            this.modelGroup.rotation.x = tiltAngle * tiltDirection.z;
+            this.modelGroup.rotation.z = tiltAngle * tiltDirection.x;
+            
+            // Reset rotation after knockback
+            setTimeout(() => {
+                if (this.modelGroup) {
+                    // Smooth transition back to original rotation
+                    const resetDuration = 300; // ms
+                    const resetStartTime = Date.now();
+                    
+                    const resetRotation = () => {
+                        const elapsed = Date.now() - resetStartTime;
+                        const progress = Math.min(elapsed / resetDuration, 1);
+                        
+                        // Ease out cubic function
+                        const easeOut = 1 - Math.pow(1 - progress, 3);
+                        
+                        // Interpolate rotation
+                        this.modelGroup.rotation.x = originalRotation.x + (1 - easeOut) * (tiltAngle * tiltDirection.z);
+                        this.modelGroup.rotation.z = originalRotation.z + (1 - easeOut) * (tiltAngle * tiltDirection.x);
+                        
+                        if (progress < 1) {
+                            requestAnimationFrame(resetRotation);
+                        }
+                    };
+                    
+                    resetRotation();
+                }
+            }, knockbackDuration);
+        }
+        
+        // Animate the knockback movement
+        const animateKnockback = () => {
+            if (!this.state.isKnockedBack) return; // Stop if no longer knocked back
+            
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / knockbackDuration, 1);
+            
+            // Ease out cubic function for natural movement
+            const easeOut = 1 - Math.pow(1 - progress, 3);
+            
+            // Add a slight arc to the knockback (enemy goes up then down)
+            const verticalOffset = progress < 0.5 
+                ? 0.5 * Math.sin(progress * Math.PI) * knockbackVector.length() / 3
+                : 0;
+            
+            // Interpolate position
+            this.position.x = startPosition.x + (targetPosition.x - startPosition.x) * easeOut;
+            this.position.y = startPosition.y + verticalOffset;
+            this.position.z = startPosition.z + (targetPosition.z - startPosition.z) * easeOut;
+            
+            if (progress < 1) {
+                requestAnimationFrame(animateKnockback);
+            } else {
+                // Ensure final position is set
+                this.position.x = targetPosition.x;
+                this.position.z = targetPosition.z;
+                // Let terrain height system handle the y position
+            }
+        };
+        
+        // Start knockback animation
+        animateKnockback();
     }
     
     flashDamage() {

@@ -203,7 +203,7 @@ export class UIManager {
             // Create key indicator
             const skillKey = document.createElement('div');
             skillKey.className = 'skill-key';
-            skillKey.textContent = index == 0 ? "h" : index + 1;
+            skillKey.textContent = index == 0 ? "h" : index;
             skillButton.appendChild(skillKey);
             
             // Create cooldown overlay
