@@ -20,6 +20,7 @@
     - remove the origin file, integrate with new code base
 - [ ] Enhance: manage memory leak, manage object better to achieve fast render 60 FPS. , add memory usage in MB also
 - [ ] Fix issue: change currentQuality to lower like medium, minimal, but the FPS not increase???, the "high" option is good enough, but the game really blur. I want "medium" is good to play already, help me update the division of threshold better.
+- []
 
 - [ ] Enhance: review Player.js file and optimise it:
     - remove unused method
@@ -40,6 +41,7 @@
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
+    - define each container UI in easy reusable way, just need parent div and id, it mount itself to that to easy review
     - define container div in index.html instead of dynamic create new one, comment to code block retrieve the DOM that element already exist in index.html, add validate check to ensure DOM defined in index.html if not alert and provide fix sollution.
     - separate into multiple files for easier to maintain, define interface when needed
 

@@ -4,12 +4,26 @@ import Stats from 'three/addons/libs/stats.module.js';
 export class PerformanceManager {
     constructor(game) {
         this.game = game;
-        this.targetFPS = 60;
+        this.targetFPS = 30; // Changed from 60 to 30 as requested
         this.fpsHistory = [];
         this.historySize = 30; // Store last 30 frames for smoothing
         this.adaptiveQualityEnabled = true;
         this.lastOptimizationTime = 0;
         this.optimizationInterval = 1000; // Check every second
+        
+        // Quality adjustment tracking
+        this.qualityCheckCounter = 0;
+        this.requiredChecksForDecrease = 5; // Require 5 consecutive low FPS checks before decreasing quality
+        this.requiredChecksForIncrease = 10; // Require 10 consecutive high FPS checks before increasing quality
+        this.consecutiveLowFPSCount = 0;
+        this.consecutiveHighFPSCount = 0;
+        
+        this.memoryUsage = {
+            current: 0,
+            peak: 0,
+            lastCheck: 0,
+            checkInterval: 2000 // Check memory every 2 seconds
+        };
         this.qualityLevels = {
             ultra: {
                 shadows: true,
@@ -17,7 +31,10 @@ export class PerformanceManager {
                 particleCount: 1.0,
                 drawDistance: 1.0,
                 antialiasing: true,
-                pixelRatio: window.devicePixelRatio
+                pixelRatio: window.devicePixelRatio,
+                textureQuality: 1.0,
+                objectDetail: 1.0,
+                maxVisibleObjects: Infinity
             },
             high: {
                 shadows: true,
@@ -25,36 +42,52 @@ export class PerformanceManager {
                 particleCount: 0.8,
                 drawDistance: 0.8,
                 antialiasing: true,
-                pixelRatio: Math.min(window.devicePixelRatio, 1.5)
+                pixelRatio: Math.min(window.devicePixelRatio, 1.5),
+                textureQuality: 0.8,
+                objectDetail: 0.9,
+                maxVisibleObjects: 500
             },
             medium: {
                 shadows: true,
                 shadowMapSize: 512,
-                particleCount: 0.6,
-                drawDistance: 0.6,
-                antialiasing: true,
-                pixelRatio: Math.min(window.devicePixelRatio, 1.0)
+                particleCount: 0.5,
+                drawDistance: 0.5,
+                antialiasing: false,
+                pixelRatio: Math.min(window.devicePixelRatio, 1.0),
+                textureQuality: 0.6,
+                objectDetail: 0.7,
+                maxVisibleObjects: 300
             },
             low: {
                 shadows: false,
                 shadowMapSize: 256,
-                particleCount: 0.4,
+                particleCount: 0.3,
                 drawDistance: 0.4,
                 antialiasing: false,
-                pixelRatio: Math.min(window.devicePixelRatio, 0.75)
+                pixelRatio: Math.min(window.devicePixelRatio, 0.75),
+                textureQuality: 0.4,
+                objectDetail: 0.5,
+                maxVisibleObjects: 200
             },
             minimal: {
                 shadows: false,
                 shadowMapSize: 0,
-                particleCount: 0.2,
+                particleCount: 0.1,
                 drawDistance: 0.3,
                 antialiasing: false,
-                pixelRatio: 0.5
+                pixelRatio: 0.5,
+                textureQuality: 0.2,
+                objectDetail: 0.3,
+                maxVisibleObjects: 100
             }
         };
         
-        this.currentQuality = 'ultra'; // Start with high quality by default
+        this.currentQuality = 'high'; // Start with high quality by default
         this.stats = null;
+        this.memoryDisplay = null;
+        this.disposalQueue = []; // Queue for objects to be disposed
+        this.disposalInterval = 5000; // Process disposal queue every 5 seconds
+        this.lastDisposalTime = 0;
     }
     
     init() {
@@ -64,7 +97,11 @@ export class PerformanceManager {
         this.stats.dom.style.top = '0px';
         this.stats.dom.style.right = '0px';
         this.stats.dom.style.left = 'auto';
+        this.stats.dom.style.opacity = '0.2'; // Set low opacity
         document.body.appendChild(this.stats.dom);
+        
+        // Create memory usage display
+        this.createMemoryDisplay();
         
         // Add GPU indicator next to Stats.js
         this.createGPUIndicator();
@@ -75,9 +112,57 @@ export class PerformanceManager {
         // Enable WebGL optimizations
         this.enableOptimizations();
         
+        // Initialize garbage collection helper
+        this.initGarbageCollectionHelper();
+        
         console.log("Performance Manager initialized with quality:", this.currentQuality);
         
         return this;
+    }
+    
+    createMemoryDisplay() {
+        // Create memory display container
+        this.memoryDisplay = document.createElement('div');
+        this.memoryDisplay.id = 'memory-display';
+        this.memoryDisplay.style.position = 'absolute';
+        this.memoryDisplay.style.top = '50px'; // Position below stats.js
+        this.memoryDisplay.style.right = '0px';
+        this.memoryDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        this.memoryDisplay.style.color = '#0ff';
+        this.memoryDisplay.style.padding = '5px 10px';
+        this.memoryDisplay.style.fontSize = '12px';
+        this.memoryDisplay.style.fontFamily = 'monospace';
+        this.memoryDisplay.style.borderRadius = '3px 0 0 3px';
+        this.memoryDisplay.style.zIndex = '1001';
+        this.memoryDisplay.style.opacity = '0.2'; // Set low opacity
+        this.memoryDisplay.style.transition = 'opacity 0.2s';
+        this.memoryDisplay.textContent = 'MEM: 0 MB';
+        
+        // Add hover effect to increase opacity
+        this.memoryDisplay.addEventListener('mouseenter', () => {
+            this.memoryDisplay.style.opacity = '1';
+        });
+        
+        this.memoryDisplay.addEventListener('mouseleave', () => {
+            this.memoryDisplay.style.opacity = '0.2';
+        });
+        
+        document.body.appendChild(this.memoryDisplay);
+    }
+    
+    initGarbageCollectionHelper() {
+        // Set up periodic garbage collection suggestion
+        setInterval(() => {
+            // Suggest garbage collection to browser
+            if (window.gc) {
+                try {
+                    window.gc();
+                    console.log("Manual garbage collection triggered");
+                } catch (e) {
+                    console.log("Manual garbage collection not available");
+                }
+            }
+        }, 60000); // Every minute
     }
     
     createGPUIndicator() {
@@ -85,6 +170,13 @@ export class PerformanceManager {
         this.gpuIndicator = document.createElement('div');
         this.gpuIndicator.id = 'gpu-indicator';
         this.gpuIndicator.textContent = 'GPU';
+        this.gpuIndicator.style.opacity = '0.2'; // Set low opacity
+        
+        // Create GPU Enabled indicator below memory stats
+        this.gpuEnabledIndicator = document.createElement('div');
+        this.gpuEnabledIndicator.id = 'gpu-enabled-indicator';
+        this.gpuEnabledIndicator.textContent = 'GPU Enabled';
+        this.gpuEnabledIndicator.style.opacity = '0.2'; // Set low opacity
         
         // Create GPU info panel (hidden by default)
         this.gpuInfoPanel = document.createElement('div');
@@ -94,7 +186,16 @@ export class PerformanceManager {
         const gpuInfo = this.getGPUInfo();
         this.gpuInfoPanel.innerHTML = gpuInfo;
         
-        // Add hover event to show/hide GPU info panel
+        // Add click event to show/hide GPU info panel for the new indicator
+        this.gpuEnabledIndicator.addEventListener('click', () => {
+            if (this.gpuInfoPanel.style.display === 'block') {
+                this.gpuInfoPanel.style.display = 'none';
+            } else {
+                this.gpuInfoPanel.style.display = 'block';
+            }
+        });
+        
+        // Keep the hover events for the original GPU indicator
         this.gpuIndicator.addEventListener('mouseenter', () => {
             this.gpuInfoPanel.style.display = 'block';
         });
@@ -105,6 +206,7 @@ export class PerformanceManager {
         
         // Add to document
         document.body.appendChild(this.gpuIndicator);
+        document.body.appendChild(this.gpuEnabledIndicator);
         document.body.appendChild(this.gpuInfoPanel);
     }
     
@@ -208,9 +310,21 @@ export class PerformanceManager {
         // Calculate average FPS
         const avgFPS = this.fpsHistory.reduce((sum, value) => sum + value, 0) / this.fpsHistory.length;
         
+        // Check memory usage periodically
+        const now = performance.now();
+        if (now - this.memoryUsage.lastCheck > this.memoryUsage.checkInterval) {
+            this.updateMemoryUsage();
+            this.memoryUsage.lastCheck = now;
+        }
+        
+        // Process disposal queue
+        if (now - this.lastDisposalTime > this.disposalInterval) {
+            this.processDisposalQueue();
+            this.lastDisposalTime = now;
+        }
+        
         // Check if we need to adjust quality
         if (this.adaptiveQualityEnabled) {
-            const now = performance.now();
             if (now - this.lastOptimizationTime > this.optimizationInterval) {
                 this.adjustQuality(avgFPS);
                 this.lastOptimizationTime = now;
@@ -218,14 +332,191 @@ export class PerformanceManager {
         }
     }
     
-    adjustQuality(currentFPS) {
-        // Don't adjust if we're already at the target FPS
-        if (currentFPS >= this.targetFPS * 1.1 && this.currentQuality !== 'ultra') {
-            // We have headroom to increase quality
-            this.increaseQuality();
-        } else if (currentFPS < this.targetFPS * 0.8 && this.currentQuality !== 'minimal') {
-            // We need to decrease quality to maintain performance
-            this.decreaseQuality(currentFPS);
+    updateMemoryUsage() {
+        // Get memory info if available
+        if (window.performance && window.performance.memory) {
+            const memInfo = window.performance.memory;
+            const usedHeapSize = memInfo.usedJSHeapSize / (1024 * 1024); // Convert to MB
+            const totalHeapSize = memInfo.totalJSHeapSize / (1024 * 1024); // Convert to MB
+            
+            this.memoryUsage.current = usedHeapSize;
+            this.memoryUsage.peak = Math.max(this.memoryUsage.peak, usedHeapSize);
+            
+            // Update memory display
+            if (this.memoryDisplay) {
+                this.memoryDisplay.textContent = `MEM: ${usedHeapSize.toFixed(1)} MB / ${totalHeapSize.toFixed(1)} MB`;
+                
+                // Change color based on memory usage
+                const percentUsed = (usedHeapSize / totalHeapSize) * 100;
+                if (percentUsed > 80) {
+                    this.memoryDisplay.style.color = '#ff5555'; // Red for high usage
+                } else if (percentUsed > 60) {
+                    this.memoryDisplay.style.color = '#ffff55'; // Yellow for medium usage
+                } else {
+                    this.memoryDisplay.style.color = '#55ff55'; // Green for low usage
+                }
+            }
+            
+            // If memory usage is very high, force quality reduction
+            if (percentUsed > 90 && this.currentQuality !== 'minimal') {
+                console.log(`High memory usage detected (${percentUsed.toFixed(1)}%), reducing quality`);
+                this.decreaseQuality(avgFPS, true);
+            }
+        } else {
+            // If memory API is not available
+            if (this.memoryDisplay) {
+                this.memoryDisplay.textContent = 'MEM: Not available';
+            }
+        }
+    }
+    
+    processDisposalQueue() {
+        if (this.disposalQueue.length === 0) return;
+        
+        console.log(`Processing disposal queue: ${this.disposalQueue.length} items`);
+        
+        // Process a batch of items from the queue
+        const batchSize = Math.min(20, this.disposalQueue.length);
+        const batch = this.disposalQueue.splice(0, batchSize);
+        
+        batch.forEach(item => {
+            try {
+                if (item.geometry) {
+                    item.geometry.dispose();
+                }
+                
+                if (item.material) {
+                    // Handle array of materials
+                    if (Array.isArray(item.material)) {
+                        item.material.forEach(mat => {
+                            this.disposeMaterial(mat);
+                        });
+                    } else {
+                        this.disposeMaterial(item.material);
+                    }
+                }
+                
+                if (item.dispose && typeof item.dispose === 'function') {
+                    item.dispose();
+                }
+                
+                // Remove from parent if applicable
+                if (item.parent) {
+                    item.parent.remove(item);
+                }
+                
+                // Clear any references
+                if (item.clear && typeof item.clear === 'function') {
+                    item.clear();
+                }
+            } catch (error) {
+                console.error("Error disposing object:", error);
+            }
+        });
+        
+        // Force a garbage collection hint
+        if (window.gc) {
+            try {
+                window.gc();
+            } catch (e) {
+                // Ignore if not available
+            }
+        }
+    }
+    
+    disposeMaterial(material) {
+        if (!material) return;
+        
+        // Dispose textures
+        const textureProps = [
+            'map', 'normalMap', 'bumpMap', 'specularMap', 'emissiveMap',
+            'roughnessMap', 'metalnessMap', 'alphaMap', 'aoMap',
+            'envMap', 'lightMap', 'displacementMap'
+        ];
+        
+        textureProps.forEach(prop => {
+            if (material[prop]) {
+                material[prop].dispose();
+            }
+        });
+        
+        // Dispose material
+        material.dispose();
+    }
+    
+    queueForDisposal(object) {
+        if (!object) return;
+        
+        // Add to disposal queue
+        this.disposalQueue.push(object);
+        
+        // If queue is getting too large, process immediately
+        if (this.disposalQueue.length > 100) {
+            this.processDisposalQueue();
+        }
+    }
+    
+    adjustQuality(currentFPS, forceDecrease = false) {
+        // If force decrease is requested (e.g., due to memory pressure)
+        if (forceDecrease) {
+            this.decreaseQuality(currentFPS, true);
+            return;
+        }
+        
+        // Track consecutive FPS readings for more conservative quality adjustments
+        
+        // Check for high FPS (potential quality increase)
+        if (currentFPS >= this.targetFPS * 1.2) {
+            this.consecutiveHighFPSCount++;
+            this.consecutiveLowFPSCount = 0; // Reset low FPS counter
+            
+            // Only increase quality after multiple consecutive high FPS readings
+            if (this.consecutiveHighFPSCount >= this.requiredChecksForIncrease && this.currentQuality !== 'ultra') {
+                // We have substantial and consistent headroom to increase quality
+                this.increaseQuality();
+                this.consecutiveHighFPSCount = 0; // Reset after adjustment
+                console.log(`Quality increase triggered after ${this.requiredChecksForIncrease} consecutive high FPS readings`);
+            }
+        } 
+        // Check for low FPS (potential quality decrease)
+        else if (currentFPS < this.targetFPS * 0.9) {
+            this.consecutiveLowFPSCount++;
+            this.consecutiveHighFPSCount = 0; // Reset high FPS counter
+            
+            // Only decrease quality after multiple consecutive low FPS readings
+            if (this.consecutiveLowFPSCount >= this.requiredChecksForDecrease && this.currentQuality !== 'minimal') {
+                // We have consistent performance issues, decrease quality
+                this.decreaseQuality(currentFPS);
+                this.consecutiveLowFPSCount = 0; // Reset after adjustment
+                console.log(`Quality decrease triggered after ${this.requiredChecksForDecrease} consecutive low FPS readings`);
+            }
+        }
+        // Special case for very low FPS - decrease more quickly
+        else if (currentFPS < this.targetFPS * 0.6) {
+            this.consecutiveLowFPSCount += 2; // Count very low FPS more aggressively
+            this.consecutiveHighFPSCount = 0;
+            
+            // Require fewer checks for very poor performance
+            if (this.consecutiveLowFPSCount >= Math.ceil(this.requiredChecksForDecrease / 2) && this.currentQuality !== 'minimal') {
+                this.decreaseQuality(currentFPS, true); // Force immediate decrease
+                this.consecutiveLowFPSCount = 0;
+                console.log(`Emergency quality decrease triggered due to very low FPS: ${Math.round(currentFPS)}`);
+            }
+        }
+        // FPS is within acceptable range
+        else {
+            // Reset both counters if FPS is in the acceptable range
+            this.consecutiveHighFPSCount = 0;
+            this.consecutiveLowFPSCount = 0;
+        }
+        
+        // Log current status periodically
+        this.qualityCheckCounter++;
+        if (this.qualityCheckCounter % 10 === 0) {
+            console.log(`Quality check #${this.qualityCheckCounter}: FPS=${Math.round(currentFPS)}, ` +
+                        `Quality=${this.currentQuality}, ` +
+                        `High FPS streak=${this.consecutiveHighFPSCount}/${this.requiredChecksForIncrease}, ` +
+                        `Low FPS streak=${this.consecutiveLowFPSCount}/${this.requiredChecksForDecrease}`);
         }
     }
     
@@ -234,31 +525,62 @@ export class PerformanceManager {
         const currentIndex = qualityLevels.indexOf(this.currentQuality);
         
         if (currentIndex < qualityLevels.length - 1) {
+            // Get the next higher quality level
             const newQuality = qualityLevels[currentIndex + 1];
-            this.applyQualitySettings(newQuality);
-            console.log(`Increasing quality to ${newQuality}`);
             
-            // Only show notification when increasing to high or ultra
-            if (newQuality === 'high' || newQuality === 'ultra') {
-                this.showQualityChangeNotification(`Graphics quality increased to ${newQuality}`);
+            // Only increase one step at a time and wait longer between increases
+            const now = performance.now();
+            if (now - this.lastOptimizationTime > this.optimizationInterval * 3) {
+                this.applyQualitySettings(newQuality);
+                console.log(`Increasing quality to ${newQuality}`);
+                
+                // Only show notification when increasing to high or ultra
+                if (newQuality === 'high' || newQuality === 'ultra') {
+                    this.showQualityChangeNotification(`Graphics quality increased to ${newQuality}`);
+                }
             }
         }
     }
     
-    decreaseQuality(currentFPS) {
+    decreaseQuality(currentFPS, force = false) {
         const qualityLevels = Object.keys(this.qualityLevels);
         const currentIndex = qualityLevels.indexOf(this.currentQuality);
         
         if (currentIndex > 0) {
+            // Get the next lower quality level
             const newQuality = qualityLevels[currentIndex - 1];
-            this.applyQualitySettings(newQuality);
-            console.log(`Decreasing quality to ${newQuality} (FPS: ${Math.round(currentFPS)})`);
             
-            // Show notification when decreasing quality
-            this.showQualityChangeNotification(
-                `Graphics quality lowered to ${newQuality} to maintain performance. ` +
-                `You can adjust settings in Options menu.`
-            );
+            // If FPS is very low or force is true, decrease immediately
+            if (force || currentFPS < this.targetFPS * 0.6) {
+                // For very poor performance, drop two levels if possible
+                if (currentIndex > 1 && currentFPS < this.targetFPS * 0.4) {
+                    const twoLevelsDown = qualityLevels[currentIndex - 2];
+                    this.applyQualitySettings(twoLevelsDown);
+                    console.log(`Severely decreasing quality to ${twoLevelsDown} (FPS: ${Math.round(currentFPS)})`);
+                    
+                    this.showQualityChangeNotification(
+                        `Graphics quality lowered to ${twoLevelsDown} to improve performance. ` +
+                        `You can adjust settings in Options menu.`
+                    );
+                } else {
+                    this.applyQualitySettings(newQuality);
+                    console.log(`Decreasing quality to ${newQuality} (FPS: ${Math.round(currentFPS)})`);
+                    
+                    this.showQualityChangeNotification(
+                        `Graphics quality lowered to ${newQuality} to maintain performance. ` +
+                        `You can adjust settings in Options menu.`
+                    );
+                }
+            } else {
+                // Normal decrease
+                this.applyQualitySettings(newQuality);
+                console.log(`Decreasing quality to ${newQuality} (FPS: ${Math.round(currentFPS)})`);
+                
+                this.showQualityChangeNotification(
+                    `Graphics quality lowered to ${newQuality} to maintain performance. ` +
+                    `You can adjust settings in Options menu.`
+                );
+            }
         }
     }
     
@@ -326,6 +648,12 @@ export class PerformanceManager {
             this.game.scene.fog.density = 0.002 * (1 / settings.drawDistance);
         }
         
+        // Apply texture quality settings
+        this.updateTextureQuality(settings.textureQuality);
+        
+        // Apply object detail settings
+        this.updateObjectDetail(settings.objectDetail, settings.maxVisibleObjects);
+        
         // Update antialiasing
         // Note: Changing antialiasing requires recreating the renderer
         // This is expensive, so we only do it when necessary
@@ -334,7 +662,80 @@ export class PerformanceManager {
             // In a real implementation, we would recreate the renderer here
         }
         
+        // Force a renderer update
+        renderer.clear();
+        
         // Quality has been updated
+        console.log(`Quality settings applied: ${qualityLevel}`);
+    }
+    
+    updateTextureQuality(qualityMultiplier) {
+        // Apply texture quality settings to all textures in the scene
+        this.game.scene.traverse(object => {
+            if (object.isMesh && object.material) {
+                const materials = Array.isArray(object.material) ? object.material : [object.material];
+                
+                materials.forEach(material => {
+                    // Update texture properties if they exist
+                    if (material.map) {
+                        // Adjust anisotropy based on quality
+                        const maxAnisotropy = this.game.renderer.capabilities.getMaxAnisotropy();
+                        material.map.anisotropy = Math.max(1, Math.floor(maxAnisotropy * qualityMultiplier));
+                        
+                        // Adjust mipmaps
+                        if (qualityMultiplier < 0.5) {
+                            material.map.minFilter = THREE.NearestFilter;
+                            material.map.magFilter = THREE.NearestFilter;
+                        } else {
+                            material.map.minFilter = THREE.LinearMipmapLinearFilter;
+                            material.map.magFilter = THREE.LinearFilter;
+                        }
+                        
+                        // Force texture update
+                        material.map.needsUpdate = true;
+                    }
+                });
+            }
+        });
+    }
+    
+    updateObjectDetail(detailMultiplier, maxVisibleObjects) {
+        // Apply object detail settings
+        let visibleObjectCount = 0;
+        
+        this.game.scene.traverse(object => {
+            if (object.isMesh) {
+                // Count visible objects
+                visibleObjectCount++;
+                
+                // Hide objects beyond the max visible count
+                if (visibleObjectCount > maxVisibleObjects) {
+                    object.visible = false;
+                    return;
+                }
+                
+                // Show objects within the limit
+                object.visible = true;
+                
+                // Adjust level of detail if available
+                if (object.userData && object.userData.lod) {
+                    const lodLevel = detailMultiplier < 0.3 ? 2 : // Low detail
+                                    detailMultiplier < 0.7 ? 1 : // Medium detail
+                                    0; // High detail
+                    
+                    // Apply LOD level if the object supports it
+                    if (typeof object.userData.setLOD === 'function') {
+                        object.userData.setLOD(lodLevel);
+                    }
+                }
+                
+                // Simplify geometry for low detail levels
+                if (detailMultiplier < 0.5 && object.geometry && object.geometry.attributes) {
+                    // For very low detail, we could implement geometry simplification here
+                    // This would require storing original geometry or having LOD versions
+                }
+            }
+        });
     }
     
     updateShadowMapSizes(size) {

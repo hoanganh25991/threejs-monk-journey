@@ -609,8 +609,176 @@ export class UIManager {
         joystickSizeContainer.appendChild(joystickSizeValue);
         uiContainer.appendChild(joystickSizeContainer);
         
+        // Graphics Settings section
+        const graphicsTitle = document.createElement('h2');
+        graphicsTitle.textContent = 'Graphics Settings';
+        graphicsTitle.style.color = '#aaa';
+        graphicsTitle.style.fontSize = '24px';
+        graphicsTitle.style.marginTop = '20px';
+        graphicsTitle.style.alignSelf = 'center';
+        
+        // Create graphics settings container
+        const graphicsContainer = document.createElement('div');
+        graphicsContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        graphicsContainer.style.padding = '15px';
+        graphicsContainer.style.borderRadius = '5px';
+        graphicsContainer.style.marginTop = '10px';
+        graphicsContainer.style.width = '80%';
+        graphicsContainer.style.maxWidth = '600px';
+        graphicsContainer.style.margin = '10px auto';
+        graphicsContainer.style.border = '1px solid #333';
+        
+        // Quality Preset section
+        const qualityPresetTitle = document.createElement('h3');
+        qualityPresetTitle.textContent = 'Quality Preset';
+        qualityPresetTitle.style.color = '#ffcc00';
+        qualityPresetTitle.style.marginBottom = '10px';
+        graphicsContainer.appendChild(qualityPresetTitle);
+        
+        // Create quality preset selector
+        const qualityPresetContainer = document.createElement('div');
+        qualityPresetContainer.style.display = 'flex';
+        qualityPresetContainer.style.flexDirection = 'column';
+        qualityPresetContainer.style.marginBottom = '15px';
+        
+        // Get current quality from performance manager
+        const currentQuality = this.game.performanceManager.currentQuality;
+        const qualityLevels = Object.keys(this.game.performanceManager.qualityLevels);
+        
+        // Create radio buttons for each quality level
+        qualityLevels.forEach(quality => {
+            const qualityOption = document.createElement('div');
+            qualityOption.style.display = 'flex';
+            qualityOption.style.alignItems = 'center';
+            qualityOption.style.marginBottom = '8px';
+            
+            const radioInput = document.createElement('input');
+            radioInput.type = 'radio';
+            radioInput.id = `quality-${quality}`;
+            radioInput.name = 'quality-preset';
+            radioInput.value = quality;
+            radioInput.checked = quality === currentQuality;
+            radioInput.style.marginRight = '10px';
+            
+            const radioLabel = document.createElement('label');
+            radioLabel.htmlFor = `quality-${quality}`;
+            radioLabel.textContent = quality.charAt(0).toUpperCase() + quality.slice(1);
+            radioLabel.style.color = '#fff';
+            radioLabel.style.cursor = 'pointer';
+            
+            // Add description of each quality level
+            const qualityDesc = document.createElement('span');
+            qualityDesc.style.marginLeft = '10px';
+            qualityDesc.style.fontSize = '12px';
+            qualityDesc.style.color = '#aaa';
+            
+            switch(quality) {
+                case 'ultra':
+                    qualityDesc.textContent = '(Maximum visual quality, high GPU usage)';
+                    break;
+                case 'high':
+                    qualityDesc.textContent = '(Good balance of quality and performance)';
+                    break;
+                case 'medium':
+                    qualityDesc.textContent = '(Balanced for mid-range devices)';
+                    break;
+                case 'low':
+                    qualityDesc.textContent = '(Optimized for performance)';
+                    break;
+                case 'minimal':
+                    qualityDesc.textContent = '(Maximum performance, lowest quality)';
+                    break;
+            }
+            
+            // Add event listener to change quality
+            radioInput.addEventListener('change', () => {
+                if (radioInput.checked) {
+                    this.game.performanceManager.setQualityLevel(quality);
+                    console.log(`Quality changed to ${quality}`);
+                }
+            });
+            
+            qualityOption.appendChild(radioInput);
+            qualityOption.appendChild(radioLabel);
+            qualityOption.appendChild(qualityDesc);
+            qualityPresetContainer.appendChild(qualityOption);
+        });
+        
+        graphicsContainer.appendChild(qualityPresetContainer);
+        
+        // Adaptive Quality toggle
+        const adaptiveQualityContainer = document.createElement('div');
+        adaptiveQualityContainer.style.marginTop = '15px';
+        adaptiveQualityContainer.style.marginBottom = '15px';
+        
+        const adaptiveQualityCheckbox = document.createElement('input');
+        adaptiveQualityCheckbox.type = 'checkbox';
+        adaptiveQualityCheckbox.id = 'adaptive-quality';
+        adaptiveQualityCheckbox.checked = this.game.performanceManager.adaptiveQualityEnabled;
+        adaptiveQualityCheckbox.style.marginRight = '10px';
+        
+        const adaptiveQualityLabel = document.createElement('label');
+        adaptiveQualityLabel.htmlFor = 'adaptive-quality';
+        adaptiveQualityLabel.textContent = 'Adaptive Quality';
+        adaptiveQualityLabel.style.color = '#fff';
+        adaptiveQualityLabel.style.cursor = 'pointer';
+        
+        const adaptiveQualityDesc = document.createElement('div');
+        adaptiveQualityDesc.textContent = 'Automatically adjusts graphics quality to maintain target framerate';
+        adaptiveQualityDesc.style.fontSize = '12px';
+        adaptiveQualityDesc.style.color = '#aaa';
+        adaptiveQualityDesc.style.marginTop = '5px';
+        adaptiveQualityDesc.style.marginLeft = '25px';
+        
+        adaptiveQualityCheckbox.addEventListener('change', () => {
+            const enabled = this.game.performanceManager.toggleAdaptiveQuality();
+            console.log(`Adaptive quality ${enabled ? 'enabled' : 'disabled'}`);
+        });
+        
+        adaptiveQualityContainer.appendChild(adaptiveQualityCheckbox);
+        adaptiveQualityContainer.appendChild(adaptiveQualityLabel);
+        adaptiveQualityContainer.appendChild(adaptiveQualityDesc);
+        graphicsContainer.appendChild(adaptiveQualityContainer);
+        
+        // Performance Stats toggle
+        const perfStatsContainer = document.createElement('div');
+        perfStatsContainer.style.marginTop = '15px';
+        perfStatsContainer.style.marginBottom = '15px';
+        
+        const perfStatsCheckbox = document.createElement('input');
+        perfStatsCheckbox.type = 'checkbox';
+        perfStatsCheckbox.id = 'perf-stats';
+        perfStatsCheckbox.checked = this.game.performanceManager.stats.dom.style.display !== 'none';
+        perfStatsCheckbox.style.marginRight = '10px';
+        
+        const perfStatsLabel = document.createElement('label');
+        perfStatsLabel.htmlFor = 'perf-stats';
+        perfStatsLabel.textContent = 'Show Performance Stats';
+        perfStatsLabel.style.color = '#fff';
+        perfStatsLabel.style.cursor = 'pointer';
+        
+        perfStatsCheckbox.addEventListener('change', () => {
+            if (perfStatsCheckbox.checked) {
+                this.game.performanceManager.stats.dom.style.display = 'block';
+                this.game.performanceManager.memoryDisplay.style.display = 'block';
+                this.game.performanceManager.gpuIndicator.style.display = 'block';
+                this.game.performanceManager.gpuEnabledIndicator.style.display = 'flex';
+            } else {
+                this.game.performanceManager.stats.dom.style.display = 'none';
+                this.game.performanceManager.memoryDisplay.style.display = 'none';
+                this.game.performanceManager.gpuIndicator.style.display = 'none';
+                this.game.performanceManager.gpuEnabledIndicator.style.display = 'none';
+            }
+        });
+        
+        perfStatsContainer.appendChild(perfStatsCheckbox);
+        perfStatsContainer.appendChild(perfStatsLabel);
+        graphicsContainer.appendChild(perfStatsContainer);
+        
         // Add all elements to options menu
         optionsMenu.appendChild(title);
+        optionsMenu.appendChild(graphicsTitle);
+        optionsMenu.appendChild(graphicsContainer);
         optionsMenu.appendChild(controlsTitle);
         optionsMenu.appendChild(controlsContainer);
         optionsMenu.appendChild(uiTitle);
