@@ -149,8 +149,13 @@ export class InputHandler {
                     this.skillKeysHeld[event.code] = true;
                     
                     // Initial skill cast when key is first pressed
-                    const skillIndex = parseInt(event.code.charAt(5));
-                    console.log(`Using skill with index: ${skillIndex} from key: ${event.code}`);
+                    const keyDigit = parseInt(event.code.charAt(5));
+                    
+                    // On all devices, we subtract 1 to convert from 1-based to 0-based index
+                    // This ensures consistent behavior across all devices
+                    const skillIndex = keyDigit - 1;
+                    
+                    console.log(`Using skill with index: ${skillIndex} from key: ${event.code} (key digit: ${keyDigit})`);
                     this.game.player.useSkill(skillIndex);
                     break;
                     
@@ -175,9 +180,14 @@ export class InputHandler {
                         // Also mark the original key as held down for consistency
                         this.skillKeysHeld[mappedKey] = true;
                         
-                        // Get the skill index from the mapped key
-                        const altSkillIndex = parseInt(mappedKey.charAt(5));
-                        console.log(`${event.code} skill index: ${altSkillIndex}`);
+                        // Get the key digit from the mapped key
+                        const altKeyDigit = parseInt(mappedKey.charAt(5));
+                        
+                        // On all devices, we subtract 1 to convert from 1-based to 0-based index
+                        // This ensures consistent behavior across all devices
+                        const altSkillIndex = altKeyDigit - 1;
+                        
+                        console.log(`${event.code} skill index: ${altSkillIndex} (key digit: ${altKeyDigit})`);
                         
                         // Use the skill
                         this.game.player.useSkill(altSkillIndex);

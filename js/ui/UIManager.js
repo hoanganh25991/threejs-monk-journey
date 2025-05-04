@@ -153,6 +153,18 @@ export class UIManager {
         this.uiContainer.appendChild(this.enemyHealthContainer);
     }
     
+    // Helper method to get the visual position of a skill button in the grid (for debugging only)
+    getVisualPositionInGrid(skillButton) {
+        // Get all skill buttons
+        const allButtons = Array.from(this.skillsContainer.querySelectorAll('.skill-button'));
+        
+        // Find the index of this button in the DOM
+        const buttonIndex = allButtons.indexOf(skillButton);
+        
+        // Return the visual position for debugging
+        return buttonIndex;
+    }
+    
     createSkillsUI() {
         // Create skills container
         this.skillsContainer = document.createElement('div');
@@ -210,12 +222,7 @@ export class UIManager {
             skillKey.className = 'skill-key';
             
             // Adjust key display to match our grid layout (4,5,6,7 on top, 1,2,3,h below)
-            let keyDisplay;
-            keyDisplay = index + 1; 
-            if (skill.basicAttack) {
-                keyDisplay = "h"; // Primary skill (Basic Attack)
-            }
-            
+            const keyDisplay = skill.basicAttack ? "h" : `${index +  1}`;
             skillKey.textContent = keyDisplay;
             skillButton.appendChild(skillKey);
             
@@ -229,7 +236,17 @@ export class UIManager {
             
             // Add click event
             skillButton.addEventListener('click', () => {
-                this.game.player.useSkill(index);
+                // Store the actual index for this skill button
+                const actualIndex = index;
+                
+                // Get the visual position of this skill in the grid
+                const isMobile = window.innerWidth <= 768;
+                const visualPosition = this.getVisualPositionInGrid(skillButton);
+                
+                console.log(`Skill clicked: ${skill.name}, Index: ${actualIndex}, Visual Position: ${visualPosition}`);
+                
+                // Use the correct index based on the device type
+                this.game.player.useSkill(actualIndex);
                 
                 // Add click animation
                 skillButton.classList.add('skill-activated');
