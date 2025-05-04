@@ -1539,7 +1539,7 @@ export class Enemy {
         
         // Create glowing eyes
         const eyeGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-        const eyeMaterial = new THREE.MeshBasicMaterial({ 
+        const eyeMaterial = new THREE.MeshStandardMaterial({ 
             color: 0xff0000,
             emissive: 0xff0000,
             emissiveIntensity: 1.0
@@ -1627,7 +1627,7 @@ export class Enemy {
         
         // Create glowing cracks
         const crackGeometry = new THREE.BoxGeometry(0.1, 1.4, 0.1);
-        const crackMaterial = new THREE.MeshBasicMaterial({ 
+        const crackMaterial = new THREE.MeshStandardMaterial({ 
             color: 0xff3300,
             emissive: 0xff3300,
             emissiveIntensity: 1.0
@@ -1716,7 +1716,7 @@ export class Enemy {
         
         // Add glowing eyes
         const eyeGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-        const eyeMaterial = new THREE.MeshBasicMaterial({ 
+        const eyeMaterial = new THREE.MeshStandardMaterial({ 
             color: 0xff3300,
             emissive: 0xff3300,
             emissiveIntensity: 1.0
