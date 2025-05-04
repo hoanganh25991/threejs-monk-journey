@@ -13,6 +13,7 @@ export class InputHandler {
         
         // Track skill keys being held down
         this.skillKeysHeld = {
+            KeyH: false, // H key for Fist of Thunder
             Digit1: false,
             Digit2: false,
             Digit3: false,
@@ -24,6 +25,7 @@ export class InputHandler {
         
         // Cooldown tracking for continuous casting
         this.skillCastCooldowns = {
+            KeyH: 0, // H key for Fist of Thunder
             Digit1: 0,
             Digit2: 0,
             Digit3: 0,
@@ -53,6 +55,13 @@ export class InputHandler {
                     // Toggle pause menu
                     this.game.uiManager.togglePauseMenu();
                     break;
+                case 'KeyH':
+                    // Mark H key as held down for Fist of Thunder
+                    this.skillKeysHeld[event.code] = true;
+                    
+                    // Use Fist of Thunder (first skill)
+                    this.game.player.useSkill(0);
+                    break;
                 case 'Digit1':
                 case 'Digit2':
                 case 'Digit3':
@@ -64,7 +73,8 @@ export class InputHandler {
                     this.skillKeysHeld[event.code] = true;
                     
                     // Initial skill cast when key is first pressed
-                    const skillIndex = parseInt(event.code.charAt(5)) - 1;
+                    // Add 1 to the index because Fist of Thunder is at index 0
+                    const skillIndex = parseInt(event.code.charAt(5));
                     this.game.player.useSkill(skillIndex);
                     break;
                 case 'KeyE':

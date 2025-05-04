@@ -365,6 +365,27 @@ export class EnemyManager {
         return scaledType;
     }
     
+    findNearestEnemy(position, maxDistance = 15) {
+        // Find the nearest enemy within maxDistance
+        let nearestEnemy = null;
+        let nearestDistance = maxDistance;
+        
+        for (const enemy of this.enemies) {
+            // Skip dead enemies
+            if (enemy.isDead()) continue;
+            
+            const enemyPosition = enemy.getPosition();
+            const distance = position.distanceTo(enemyPosition);
+            
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestEnemy = enemy;
+            }
+        }
+        
+        return nearestEnemy;
+    }
+    
     handleEnemyDrop(enemy) {
         // Check if enemy should drop an item
         const dropChance = enemy.isBoss ? 1.0 : 0.2; // 100% for bosses, 20% for regular enemies

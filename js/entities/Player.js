@@ -167,6 +167,18 @@ export class Player {
         // Initialize monk skills with reduced cooldown and further increased durations
         this.skills = [
             new Skill({
+                name: 'Fist of Thunder',
+                description: 'Teleport to the nearest enemy and strike them with lightning',
+                type: 'teleport',
+                damage: 1,
+                manaCost: 10,
+                cooldown: 0, // Very short cooldown for basic attack
+                range: 15, // Teleport range
+                radius: 2, // Area of effect after teleport
+                duration: 1.0, // Short duration
+                color: 0x4169e1 // Royal blue color for lightning
+            }),
+            new Skill({
                 name: 'Wave Strike',
                 description: 'Send a wave of energy towards enemies',
                 type: 'ranged',
@@ -813,16 +825,84 @@ export class Player {
             }
         }
         
-        // Create skill effect
-        const skillEffect = skill.createEffect(this.position, this.rotation);
-        
-        // Add skill effect to scene
-        this.scene.add(skillEffect);
+        // Special handling for teleport skills
+        if (skill.type === 'teleport' && skill.name === 'Fist of Thunder') {
+            // Find the nearest enemy
+            if (this.game && this.game.enemyManager) {
+                const nearestEnemy = this.game.enemyManager.findNearestEnemy(this.position, skill.range);
+                
+                if (nearestEnemy) {
+                    // Get enemy position
+                    const enemyPosition = nearestEnemy.getPosition();
+                    
+                    // Calculate direction to enemy
+                    const direction = new THREE.Vector3().subVectors(enemyPosition, this.position).normalize();
+                    
+                    // Update player rotation to face enemy
+                    this.rotation.y = Math.atan2(direction.x, direction.z);
+                    this.modelGroup.rotation.y = this.rotation.y;
+                    
+                    // Calculate teleport position (slightly before the enemy)
+                    const teleportDistance = Math.min(this.position.distanceTo(enemyPosition) - 1.5, skill.range);
+                    const teleportPosition = new THREE.Vector3(
+                        this.position.x + direction.x * teleportDistance,
+                        enemyPosition.y, // Match enemy height
+                        this.position.z + direction.z * teleportDistance
+                    );
+                    
+                    // Teleport player
+                    this.position.copy(teleportPosition);
+                    this.modelGroup.position.copy(teleportPosition);
+                    
+                    // Create skill effect at the new position
+                    const skillEffect = skill.createEffect(this.position, this.rotation);
+                    
+                    // Add skill effect to scene
+                    this.scene.add(skillEffect);
+                    
+                    // Play teleport sound
+                    if (this.game && this.game.audioManager) {
+                        this.game.audioManager.playSound('playerAttack');
+                    }
+                    
+                    // Reset skill state
+                    skill.elapsedTime = 0;
+                    skill.isActive = true;
+                    
+                    // Add to active skills
+                    this.activeSkills.push(skill);
+                    
+                    return true;
+                } else {
+                    // No enemy found, show notification
+                    if (this.game && this.game.uiManager) {
+                        this.game.uiManager.showNotification('No enemy in range');
+                    }
+                    
+                    // Refund mana
+                    this.stats.mana += skill.manaCost;
+                    
+                    // Reset cooldown
+                    skill.currentCooldown = 0;
+                    
+                    return false;
+                }
+            }
+        } else {
+            // Create skill effect for non-teleport skills
+            const skillEffect = skill.createEffect(this.position, this.rotation);
+            
+            // Add skill effect to scene
+            this.scene.add(skillEffect);
+        }
         
         // Play skill sound
         if (this.game && this.game.audioManager) {
             // Play specific skill sound based on skill name
             switch (skill.name) {
+                case 'Fist of Thunder':
+                    this.game.audioManager.playSound('playerAttack');
+                    break;
                 case 'Wave Strike':
                     this.game.audioManager.playSound('skillWaveStrike');
                     break;

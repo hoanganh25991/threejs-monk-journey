@@ -89,6 +89,8 @@ export class Skill {
                     return this.createSummonEffect();
                 case 'mark':
                     return this.createMarkEffect();
+                case 'teleport':
+                    return this.createTeleportEffect();
                 default:
                     return this.createDefaultEffect();
             }
@@ -1417,6 +1419,9 @@ export class Skill {
                     break;
                 case 'mark':
                     this.updateMarkEffect(delta);
+                    break;
+                case 'teleport':
+                    this.updateTeleportEffect(delta);
                     break;
                 default:
                     this.updateDefaultEffect(delta);
@@ -4170,12 +4175,408 @@ export class Skill {
         console.log(`Skill ${this.name} cleanup completed`);
     }
     
+    createTeleportEffect() {
+        // Create a group for the effect
+        const effectGroup = new THREE.Group();
+        
+        // Special handling for Fist of Thunder
+        if (this.name === 'Fist of Thunder') {
+            // Create a lightning teleport effect
+            const teleportGroup = new THREE.Group();
+            
+            // Create lightning trail effect
+            const trailCount = 20;
+            const trailSegments = [];
+            
+            // Create lightning segments
+            for (let i = 0; i < trailCount; i++) {
+                const segmentGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.5);
+                const segmentMaterial = new THREE.MeshStandardMaterial({
+                    color: this.color,
+                    emissive: this.color,
+                    emissiveIntensity: 1.5,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const segment = new THREE.Mesh(segmentGeometry, segmentMaterial);
+                
+                // Random position around the player
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 0.5 + Math.random() * 1.5;
+                
+                segment.position.set(
+                    Math.cos(angle) * radius,
+                    Math.random() * 2 - 1,
+                    Math.sin(angle) * radius
+                );
+                
+                // Random rotation
+                segment.rotation.x = Math.random() * Math.PI;
+                segment.rotation.y = Math.random() * Math.PI;
+                segment.rotation.z = Math.random() * Math.PI;
+                
+                // Store initial values for animation
+                segment.userData = {
+                    initialPos: segment.position.clone(),
+                    initialRot: segment.rotation.clone(),
+                    speed: 0.5 + Math.random() * 1.5,
+                    direction: new THREE.Vector3(
+                        Math.random() * 2 - 1,
+                        Math.random() * 2 - 1,
+                        Math.random() * 2 - 1
+                    ).normalize()
+                };
+                
+                teleportGroup.add(segment);
+                trailSegments.push(segment);
+            }
+            
+            // Create a flash effect at the center
+            const flashGeometry = new THREE.SphereGeometry(0.8, 16, 16);
+            const flashMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                emissive: this.color,
+                emissiveIntensity: 2,
+                transparent: true,
+                opacity: 0.9
+            });
+            
+            const flash = new THREE.Mesh(flashGeometry, flashMaterial);
+            teleportGroup.add(flash);
+            
+            // Add lightning arcs
+            const arcCount = 8;
+            for (let i = 0; i < arcCount; i++) {
+                const angle = (i / arcCount) * Math.PI * 2;
+                
+                // Create a lightning arc
+                const arcGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 8);
+                const arcMaterial = new THREE.MeshStandardMaterial({
+                    color: this.color,
+                    emissive: this.color,
+                    emissiveIntensity: 1.5,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                
+                const arc = new THREE.Mesh(arcGeometry, arcMaterial);
+                arc.position.set(
+                    Math.cos(angle) * 1,
+                    0,
+                    Math.sin(angle) * 1
+                );
+                
+                // Rotate to point outward
+                arc.rotation.x = Math.PI / 2;
+                arc.rotation.z = angle;
+                
+                teleportGroup.add(arc);
+            }
+            
+            // Store teleport state for animation
+            this.teleportState = {
+                flash: flash,
+                trailSegments: trailSegments,
+                phase: 'appearing', // 'appearing', 'stable', 'disappearing'
+                age: 0
+            };
+            
+            // Add teleport group to effect group
+            effectGroup.add(teleportGroup);
+        } else {
+            // Default teleport effect (fallback)
+            const teleportGeometry = new THREE.SphereGeometry(1, 16, 16);
+            const teleportMaterial = new THREE.MeshBasicMaterial({
+                color: this.color,
+                transparent: true,
+                opacity: 0.7
+            });
+            
+            const teleport = new THREE.Mesh(teleportGeometry, teleportMaterial);
+            effectGroup.add(teleport);
+        }
+        
+        // Position effect
+        effectGroup.position.copy(this.position);
+        
+        // Store effect
+        this.effect = effectGroup;
+        this.isActive = true;
+        
+        return effectGroup;
+    }
+    
     getPosition() {
         return this.position;
     }
     
     getRadius() {
         return this.radius;
+    }
+    
+    createTeleportEffect() {
+        // Create a group for the effect
+        const effectGroup = new THREE.Group();
+        
+        // Special handling for Fist of Thunder
+        if (this.name === 'Fist of Thunder') {
+            // Create a lightning teleport effect
+            const teleportGroup = new THREE.Group();
+            
+            // Create lightning trail effect
+            const trailCount = 20;
+            const trailSegments = [];
+            
+            // Create lightning segments
+            for (let i = 0; i < trailCount; i++) {
+                const segmentGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.5);
+                const segmentMaterial = new THREE.MeshStandardMaterial({
+                    color: this.color,
+                    emissive: this.color,
+                    emissiveIntensity: 1.5,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const segment = new THREE.Mesh(segmentGeometry, segmentMaterial);
+                
+                // Random position around the player
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 0.5 + Math.random() * 1.5;
+                
+                segment.position.set(
+                    Math.cos(angle) * radius,
+                    Math.random() * 2 - 1,
+                    Math.sin(angle) * radius
+                );
+                
+                // Random rotation
+                segment.rotation.x = Math.random() * Math.PI;
+                segment.rotation.y = Math.random() * Math.PI;
+                segment.rotation.z = Math.random() * Math.PI;
+                
+                // Store initial values for animation
+                segment.userData = {
+                    initialPos: segment.position.clone(),
+                    initialRot: segment.rotation.clone(),
+                    speed: 0.5 + Math.random() * 1.5,
+                    direction: new THREE.Vector3(
+                        Math.random() * 2 - 1,
+                        Math.random() * 2 - 1,
+                        Math.random() * 2 - 1
+                    ).normalize()
+                };
+                
+                teleportGroup.add(segment);
+                trailSegments.push(segment);
+            }
+            
+            // Create a flash effect at the center
+            const flashGeometry = new THREE.SphereGeometry(0.8, 16, 16);
+            const flashMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                emissive: this.color,
+                emissiveIntensity: 2,
+                transparent: true,
+                opacity: 0.9
+            });
+            
+            const flash = new THREE.Mesh(flashGeometry, flashMaterial);
+            teleportGroup.add(flash);
+            
+            // Add lightning arcs
+            const arcCount = 8;
+            for (let i = 0; i < arcCount; i++) {
+                const angle = (i / arcCount) * Math.PI * 2;
+                
+                // Create a lightning arc
+                const arcGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 8);
+                const arcMaterial = new THREE.MeshStandardMaterial({
+                    color: this.color,
+                    emissive: this.color,
+                    emissiveIntensity: 1.5,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                
+                const arc = new THREE.Mesh(arcGeometry, arcMaterial);
+                arc.position.set(
+                    Math.cos(angle) * 1,
+                    0,
+                    Math.sin(angle) * 1
+                );
+                
+                // Rotate to point outward
+                arc.rotation.x = Math.PI / 2;
+                arc.rotation.z = angle;
+                
+                teleportGroup.add(arc);
+            }
+            
+            // Store teleport state for animation
+            this.teleportState = {
+                flash: flash,
+                trailSegments: trailSegments,
+                phase: 'appearing', // 'appearing', 'stable', 'disappearing'
+                age: 0
+            };
+            
+            // Add teleport group to effect group
+            effectGroup.add(teleportGroup);
+        } else {
+            // Default teleport effect (fallback)
+            const teleportGeometry = new THREE.SphereGeometry(1, 16, 16);
+            const teleportMaterial = new THREE.MeshBasicMaterial({
+                color: this.color,
+                transparent: true,
+                opacity: 0.7
+            });
+            
+            const teleport = new THREE.Mesh(teleportGeometry, teleportMaterial);
+            effectGroup.add(teleport);
+        }
+        
+        // Position effect
+        effectGroup.position.copy(this.position);
+        
+        // Store effect
+        this.effect = effectGroup;
+        this.isActive = true;
+        
+        return effectGroup;
+    }
+    
+    updateTeleportEffect(delta) {
+        // Special handling for Fist of Thunder
+        if (this.name === 'Fist of Thunder' && this.teleportState) {
+            // Get teleport group (first child of effect group)
+            const teleportGroup = this.effect.children[0];
+            
+            // Update teleport state
+            this.teleportState.age += delta;
+            
+            // Handle different phases of the teleport effect
+            if (this.teleportState.phase === 'appearing') {
+                // Scale up the effect during appearing phase
+                const scale = Math.min(1.0, this.teleportState.age * 5); // Reach full size in 0.2 seconds
+                teleportGroup.scale.set(scale, scale, scale);
+                
+                // Flash effect
+                if (this.teleportState.flash) {
+                    this.teleportState.flash.material.opacity = Math.min(1.0, 2.0 - this.teleportState.age * 10);
+                    this.teleportState.flash.scale.set(1 + this.teleportState.age * 5, 1 + this.teleportState.age * 5, 1 + this.teleportState.age * 5);
+                }
+                
+                // Transition to stable phase
+                if (this.teleportState.age >= 0.2) {
+                    this.teleportState.phase = 'stable';
+                    this.teleportState.age = 0;
+                }
+            } else if (this.teleportState.phase === 'stable') {
+                // Animate lightning segments during stable phase
+                if (this.teleportState.trailSegments) {
+                    for (const segment of this.teleportState.trailSegments) {
+                        if (segment.userData) {
+                            // Oscillate position
+                            const initialPos = segment.userData.initialPos;
+                            const speed = segment.userData.speed;
+                            const direction = segment.userData.direction;
+                            
+                            segment.position.set(
+                                initialPos.x + Math.sin(this.teleportState.age * speed * 5) * direction.x * 0.3,
+                                initialPos.y + Math.sin(this.teleportState.age * speed * 5) * direction.y * 0.3,
+                                initialPos.z + Math.sin(this.teleportState.age * speed * 5) * direction.z * 0.3
+                            );
+                            
+                            // Rotate
+                            segment.rotation.x += delta * speed;
+                            segment.rotation.y += delta * speed * 0.7;
+                            segment.rotation.z += delta * speed * 0.5;
+                        }
+                    }
+                }
+                
+                // Pulse the flash
+                if (this.teleportState.flash) {
+                    this.teleportState.flash.material.opacity = 0.5 + Math.sin(this.teleportState.age * 10) * 0.3;
+                    this.teleportState.flash.material.emissiveIntensity = 1.5 + Math.sin(this.teleportState.age * 8) * 0.5;
+                }
+                
+                // Transition to disappearing phase
+                if (this.teleportState.age >= this.duration - 0.3) {
+                    this.teleportState.phase = 'disappearing';
+                    this.teleportState.age = 0;
+                }
+            } else if (this.teleportState.phase === 'disappearing') {
+                // Scale down the effect during disappearing phase
+                const scale = Math.max(0, 1.0 - this.teleportState.age * 3.33); // Disappear in 0.3 seconds
+                teleportGroup.scale.set(scale, scale, scale);
+                
+                // Fade out
+                if (teleportGroup.children) {
+                    for (const child of teleportGroup.children) {
+                        if (child.material && child.material.opacity !== undefined) {
+                            child.material.opacity = Math.max(0, child.material.opacity - delta * 3);
+                        }
+                    }
+                }
+            }
+            
+            // Check for enemies hit by the teleport effect
+            if (this.game && this.game.enemyManager && this.teleportState.phase === 'stable') {
+                // Check every 0.2 seconds to avoid too frequent checks
+                if (Math.floor(this.teleportState.age * 5) > Math.floor((this.teleportState.age - delta) * 5)) {
+                    // Get all enemies within range
+                    const hitRadius = this.radius;
+                    
+                    for (const enemy of this.game.enemyManager.enemies) {
+                        if (enemy.isDead()) continue;
+                        
+                        const enemyPos = enemy.getPosition();
+                        const distance = this.position.distanceTo(enemyPos);
+                        
+                        if (distance <= hitRadius) {
+                            // Apply damage
+                            enemy.takeDamage(this.damage);
+                            
+                            // Show hit effect
+                            this.createTeleportHitEffect(enemyPos);
+                        }
+                    }
+                }
+            }
+        } else {
+            // Default teleport effect
+            this.updateDefaultEffect(delta);
+        }
+    }
+    
+    createTeleportHitEffect(position) {
+        // Create a lightning hit effect at the enemy position
+        const hitGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+        const hitMaterial = new THREE.MeshBasicMaterial({
+            color: this.color,
+            transparent: true,
+            opacity: 0.8
+        });
+        
+        const hitMesh = new THREE.Mesh(hitGeometry, hitMaterial);
+        hitMesh.position.copy(position);
+        
+        // Add to scene
+        if (this.game && this.game.scene) {
+            this.game.scene.add(hitMesh);
+            
+            // Remove after a short delay
+            setTimeout(() => {
+                if (hitMesh.parent) {
+                    hitMesh.parent.remove(hitMesh);
+                }
+                if (hitMesh.geometry) hitMesh.geometry.dispose();
+                if (hitMesh.material) hitMesh.material.dispose();
+            }, 300);
+        }
     }
     
     getDamage() {

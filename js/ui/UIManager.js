@@ -158,6 +158,7 @@ export class UIManager {
         
         // Define skill icons and colors based on skill type
         const skillIcons = {
+            'Fist of Thunder': '⚡', // Lightning emoji
             'Wave Strike': '🌊', // Wave emoji
             'Cyclone Strike': '🌀', // Cyclone emoji
             'Seven-Sided Strike': '🔄', // Cycle emoji
@@ -168,6 +169,7 @@ export class UIManager {
         };
         
         const skillColors = {
+            'teleport': '#4169e1', // Royal blue for teleport
             'ranged': '#00ffff',
             'aoe': '#ffcc00',
             'multi': '#ff0000',
@@ -201,7 +203,7 @@ export class UIManager {
             // Create key indicator
             const skillKey = document.createElement('div');
             skillKey.className = 'skill-key';
-            skillKey.textContent = index + 1;
+            skillKey.textContent = index == 0 ? "h" : index + 1;
             skillButton.appendChild(skillKey);
             
             // Create cooldown overlay
