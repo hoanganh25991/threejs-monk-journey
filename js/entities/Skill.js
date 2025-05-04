@@ -1423,7 +1423,15 @@ export class Skill {
     }
     
     update(delta) {
+        // Skip update if skill is not active or effect is missing
         if (!this.isActive || !this.effect) return;
+        
+        // Check if the effect is still valid (not disposed)
+        if (!this.effect.parent) {
+            console.warn(`Skill ${this.name} effect has no parent, marking as inactive`);
+            this.isActive = false;
+            return;
+        }
         
         // Validate delta to prevent NaN issues
         if (isNaN(delta) || delta <= 0) {
@@ -1442,6 +1450,46 @@ export class Skill {
         }
         
         try {
+            // Check if materials are valid before updating
+            let hasInvalidMaterials = false;
+            
+            // Function to check if materials are valid
+            const checkMaterials = (obj) => {
+                if (!obj) return;
+                
+                if (obj.material) {
+                    if (Array.isArray(obj.material)) {
+                        for (const material of obj.material) {
+                            if (!material || material.disposed) {
+                                hasInvalidMaterials = true;
+                                return;
+                            }
+                        }
+                    } else if (!obj.material || obj.material.disposed) {
+                        hasInvalidMaterials = true;
+                        return;
+                    }
+                }
+                
+                // Check children
+                if (obj.children) {
+                    for (const child of obj.children) {
+                        checkMaterials(child);
+                        if (hasInvalidMaterials) return;
+                    }
+                }
+            };
+            
+            // Check if any materials are invalid
+            checkMaterials(this.effect);
+            
+            // If we found invalid materials, remove the effect
+            if (hasInvalidMaterials) {
+                console.warn(`Skill ${this.name} has invalid materials, removing effect`);
+                this.remove();
+                return;
+            }
+            
             // Update effect based on skill type
             switch (this.type) {
                 case 'ranged':
@@ -1482,6 +1530,8 @@ export class Skill {
             console.error(`Error updating skill ${this.name}:`, error);
             // Mark skill as expired to remove it on next frame
             this.elapsedTime = this.duration * 2;
+            // Force removal to clean up any problematic objects
+            this.remove();
         }
     }
     
@@ -4077,26 +4127,40 @@ export class Skill {
                     if (obj.material) {
                         if (Array.isArray(obj.material)) {
                             for (const material of obj.material) {
-                                if (material.map) {
-                                    material.map.dispose();
-                                    material.map = null;
+                                if (material) {  // Check if material exists
+                                    // Safely dispose textures
+                                    if (material.map) {
+                                        material.map.dispose();
+                                        material.map = null;
+                                    }
+                                    // Dispose of any other textures
+                                    if (material.normalMap) {
+                                        material.normalMap.dispose();
+                                        material.normalMap = null;
+                                    }
+                                    if (material.specularMap) {
+                                        material.specularMap.dispose();
+                                        material.specularMap = null;
+                                    }
+                                    if (material.emissiveMap) {
+                                        material.emissiveMap.dispose();
+                                        material.emissiveMap = null;
+                                    }
+                                    
+                                    // Clear uniforms to prevent "Cannot read properties of undefined (reading 'value')" error
+                                    if (material.uniforms) {
+                                        for (const key in material.uniforms) {
+                                            if (material.uniforms[key]) {
+                                                material.uniforms[key].value = null;
+                                            }
+                                        }
+                                    }
+                                    
+                                    material.dispose();
                                 }
-                                // Dispose of any other textures
-                                if (material.normalMap) {
-                                    material.normalMap.dispose();
-                                    material.normalMap = null;
-                                }
-                                if (material.specularMap) {
-                                    material.specularMap.dispose();
-                                    material.specularMap = null;
-                                }
-                                if (material.emissiveMap) {
-                                    material.emissiveMap.dispose();
-                                    material.emissiveMap = null;
-                                }
-                                material.dispose();
                             }
-                        } else {
+                        } else if (obj.material) {  // Check if material exists
+                            // Safely dispose textures
                             if (obj.material.map) {
                                 obj.material.map.dispose();
                                 obj.material.map = null;
@@ -4114,6 +4178,16 @@ export class Skill {
                                 obj.material.emissiveMap.dispose();
                                 obj.material.emissiveMap = null;
                             }
+                            
+                            // Clear uniforms to prevent "Cannot read properties of undefined (reading 'value')" error
+                            if (obj.material.uniforms) {
+                                for (const key in obj.material.uniforms) {
+                                    if (obj.material.uniforms[key]) {
+                                        obj.material.uniforms[key].value = null;
+                                    }
+                                }
+                            }
+                            
                             obj.material.dispose();
                         }
                         obj.material = null;
@@ -4126,7 +4200,7 @@ export class Skill {
                     
                     // Clear any userData
                     if (obj.userData) {
-                        obj.userData = null;
+                        obj.userData = {};  // Set to empty object instead of null
                     }
                 } catch (error) {
                     console.error(`Error disposing object in skill ${this.name}:`, error);
@@ -4135,12 +4209,16 @@ export class Skill {
             
             // Dispose of the entire effect tree
             try {
-                disposeObject(this.effect);
+                // Make the object invisible first to prevent rendering issues during cleanup
+                this.effect.visible = false;
                 
-                // Ensure the effect is removed from the scene if it's still there
+                // Ensure the object is removed from the scene's rendering queue
                 if (this.effect.parent) {
                     this.effect.parent.remove(this.effect);
                 }
+                
+                // Now dispose of all resources
+                disposeObject(this.effect);
                 
                 // Clear the reference
                 this.effect = null;
