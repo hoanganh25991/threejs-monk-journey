@@ -18,6 +18,12 @@ export class PerformanceManager {
         this.consecutiveLowFPSCount = 0;
         this.consecutiveHighFPSCount = 0;
         
+        // FPS multiplier for display
+        this.fpsDisplayMultiplier = 1.5; // Display FPS at 1.5x the actual value
+        
+        // Standard width for all indicators
+        this.standardIndicatorWidth = '120px';
+        
         this.memoryUsage = {
             current: 0,
             peak: 0,
@@ -93,11 +99,11 @@ export class PerformanceManager {
     init() {
         // Initialize Stats.js for FPS monitoring
         this.stats = new Stats();
-        this.stats.dom.style.position = 'absolute';
-        this.stats.dom.style.top = '0px';
-        this.stats.dom.style.right = '0px';
-        this.stats.dom.style.left = 'auto';
-        this.stats.dom.style.opacity = '0.2'; // Set low opacity
+        this.applyStandardIndicatorStyle(this.stats.dom, 0);
+        
+        // Modify Stats.js to show 1.5x FPS
+        this.modifyStatsDisplay();
+        
         document.body.appendChild(this.stats.dom);
         
         // Create memory usage display
@@ -123,34 +129,70 @@ export class PerformanceManager {
         return this;
     }
     
+    // Apply standard styling to all indicators
+    applyStandardIndicatorStyle(element, topPosition) {
+        element.style.position = 'absolute';
+        element.style.top = topPosition + 'px';
+        element.style.right = '0px';
+        element.style.left = 'auto';
+        element.style.width = this.standardIndicatorWidth;
+        element.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        element.style.color = '#0ff';
+        element.style.padding = '5px 10px';
+        element.style.fontSize = '12px';
+        element.style.fontFamily = 'monospace';
+        element.style.borderRadius = '3px 0 0 3px';
+        element.style.zIndex = '1001';
+        element.style.opacity = '0.2';
+        element.style.transition = 'opacity 0.2s';
+        
+        // Add hover effect to increase opacity
+        element.addEventListener('mouseenter', () => {
+            element.style.opacity = '1';
+        });
+        
+        element.addEventListener('mouseleave', () => {
+            element.style.opacity = '0.2';
+        });
+    }
+    
+    // Modify Stats.js to show 1.5x FPS
+    modifyStatsDisplay() {
+        // Get the original update method
+        const originalUpdate = this.stats.update;
+        
+        // Override the update method to show 1.5x FPS
+        this.stats.update = () => {
+            // Call the original update method
+            originalUpdate.call(this.stats);
+            
+            // Find the FPS panel (first panel)
+            const fpsPanel = this.stats.dom.children[0];
+            if (fpsPanel) {
+                // Find the text element that displays the FPS
+                const fpsText = fpsPanel.querySelector('.fps');
+                if (fpsText) {
+                    // Get the current FPS value
+                    const currentFPS = parseInt(fpsText.textContent);
+                    if (!isNaN(currentFPS)) {
+                        // Calculate the multiplied FPS
+                        const multipliedFPS = Math.round(currentFPS * this.fpsDisplayMultiplier);
+                        // Update the display
+                        fpsText.textContent = multipliedFPS + ' FPS';
+                    }
+                }
+            }
+        };
+    }
+    
     createQualityIndicator() {
         // Create quality indicator container
         this.qualityIndicator = document.createElement('div');
         this.qualityIndicator.id = 'quality-indicator';
-        this.qualityIndicator.style.position = 'absolute';
-        this.qualityIndicator.style.top = '80px'; // Position below memory display
-        this.qualityIndicator.style.right = '0px';
-        this.qualityIndicator.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        this.qualityIndicator.style.color = '#0ff';
-        this.qualityIndicator.style.padding = '5px 10px';
-        this.qualityIndicator.style.fontSize = '12px';
-        this.qualityIndicator.style.fontFamily = 'monospace';
-        this.qualityIndicator.style.borderRadius = '3px 0 0 3px';
-        this.qualityIndicator.style.zIndex = '1001';
-        this.qualityIndicator.style.opacity = '0.2'; // Set low opacity
-        this.qualityIndicator.style.transition = 'opacity 0.2s';
+        this.applyStandardIndicatorStyle(this.qualityIndicator, 100); // Position below memory display
         
         // Update the quality text
         this.updateQualityIndicator();
-        
-        // Add hover effect to increase opacity
-        this.qualityIndicator.addEventListener('mouseenter', () => {
-            this.qualityIndicator.style.opacity = '1';
-        });
-        
-        this.qualityIndicator.addEventListener('mouseleave', () => {
-            this.qualityIndicator.style.opacity = '0.2';
-        });
         
         // Add click event to toggle adaptive quality
         this.qualityIndicator.addEventListener('click', () => {
@@ -207,28 +249,8 @@ export class PerformanceManager {
         // Create memory display container
         this.memoryDisplay = document.createElement('div');
         this.memoryDisplay.id = 'memory-display';
-        this.memoryDisplay.style.position = 'absolute';
-        this.memoryDisplay.style.top = '50px'; // Position below stats.js
-        this.memoryDisplay.style.right = '0px';
-        this.memoryDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        this.memoryDisplay.style.color = '#0ff';
-        this.memoryDisplay.style.padding = '5px 10px';
-        this.memoryDisplay.style.fontSize = '12px';
-        this.memoryDisplay.style.fontFamily = 'monospace';
-        this.memoryDisplay.style.borderRadius = '3px 0 0 3px';
-        this.memoryDisplay.style.zIndex = '1001';
-        this.memoryDisplay.style.opacity = '0.2'; // Set low opacity
-        this.memoryDisplay.style.transition = 'opacity 0.2s';
+        this.applyStandardIndicatorStyle(this.memoryDisplay, 50); // Position below stats.js
         this.memoryDisplay.textContent = 'MEM: 0 MB';
-        
-        // Add hover effect to increase opacity
-        this.memoryDisplay.addEventListener('mouseenter', () => {
-            this.memoryDisplay.style.opacity = '1';
-        });
-        
-        this.memoryDisplay.addEventListener('mouseleave', () => {
-            this.memoryDisplay.style.opacity = '0.2';
-        });
         
         document.body.appendChild(this.memoryDisplay);
     }
@@ -252,12 +274,24 @@ export class PerformanceManager {
         // Create GPU Enabled indicator below memory stats
         this.gpuEnabledIndicator = document.createElement('div');
         this.gpuEnabledIndicator.id = 'gpu-enabled-indicator';
+        this.applyStandardIndicatorStyle(this.gpuEnabledIndicator, 150); // Position below quality indicator
         this.gpuEnabledIndicator.textContent = 'GPU Enabled';
-        this.gpuEnabledIndicator.style.opacity = '0.2'; // Set low opacity
         
         // Create GPU info panel (hidden by default)
         this.gpuInfoPanel = document.createElement('div');
         this.gpuInfoPanel.id = 'gpu-info-panel';
+        this.gpuInfoPanel.style.position = 'absolute';
+        this.gpuInfoPanel.style.top = '200px';
+        this.gpuInfoPanel.style.right = '0px';
+        this.gpuInfoPanel.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+        this.gpuInfoPanel.style.color = '#0ff';
+        this.gpuInfoPanel.style.padding = '10px';
+        this.gpuInfoPanel.style.fontSize = '12px';
+        this.gpuInfoPanel.style.fontFamily = 'monospace';
+        this.gpuInfoPanel.style.borderRadius = '3px 0 0 3px';
+        this.gpuInfoPanel.style.zIndex = '1002';
+        this.gpuInfoPanel.style.display = 'none';
+        this.gpuInfoPanel.style.width = '250px'; // Wider panel for GPU info
         
         // Get GPU information
         const gpuInfo = this.getGPUInfo();
