@@ -559,11 +559,16 @@ export class UIManager {
         // Update existing notifications
         let needsReorganization = false;
         
+        // Calculate message rate to determine if we need to expire messages faster
+        const messageRate = this.getMessageRate();
+        const fastExpiry = messageRate > 3; // If messages are coming in quickly
+        
         for (let i = this.notifications.length - 1; i >= 0; i--) {
             const notification = this.notifications[i];
             
-            // Update notification lifetime
-            notification.lifetime -= 1 / 60;
+            // Update notification lifetime - expire faster if many messages are coming in
+            const expiryRate = fastExpiry ? 1.5 / 60 : 1 / 60;
+            notification.lifetime -= expiryRate;
             
             // Remove expired notifications
             if (notification.lifetime <= 0) {
@@ -571,19 +576,23 @@ export class UIManager {
                 this.notifications.splice(i, 1);
                 needsReorganization = true;
             } else {
-                // Update opacity for fade out
-                if (notification.lifetime < 1) {
-                    notification.element.style.opacity = notification.lifetime;
+                // Update opacity for fade out - start fading earlier
+                const fadeStartThreshold = fastExpiry ? 1.2 : 1;
+                if (notification.lifetime < fadeStartThreshold) {
+                    notification.element.style.opacity = notification.lifetime / fadeStartThreshold;
                 }
                 
-                // Faster slide up for smoother animation
+                // Faster slide up for smoother animation - speed based on message rate
+                const slideSpeed = fastExpiry ? 1.2 : 0.8;
                 const currentTop = parseInt(notification.element.style.top);
-                notification.element.style.top = `${currentTop - 0.8}px`;
+                notification.element.style.top = `${currentTop - slideSpeed}px`;
             }
         }
         
-        // If we removed notifications, reorganize the remaining ones
-        if (needsReorganization && this.notifications.length > 0) {
+        // If we removed notifications or have too many, reorganize the remaining ones
+        if ((needsReorganization && this.notifications.length > 0) || 
+            (this.notifications.length > 3 && fastExpiry)) {
+            
             // Get screen height to calculate maximum notification area
             const screenHeight = window.innerHeight;
             const maxNotificationAreaHeight = screenHeight / 5;
@@ -592,7 +601,7 @@ export class UIManager {
             let totalHeight = 0;
             for (let i = 0; i < this.notifications.length; i++) {
                 const notif = this.notifications[i];
-                const height = notif.element.offsetHeight + 10; // Height + margin
+                const height = notif.element.offsetHeight + 5; // Height + smaller margin
                 totalHeight += height;
             }
             
@@ -605,8 +614,14 @@ export class UIManager {
                 
                 for (let i = 0; i < this.notifications.length; i++) {
                     const notification = this.notifications[i];
+                    
+                    // Reset transform in case it was previously compressed
+                    if (notification.element.style.transform.includes('scale')) {
+                        notification.element.style.transform = 'translateX(-50%)';
+                    }
+                    
                     notification.element.style.top = `${currentTop}px`;
-                    currentTop += notification.element.offsetHeight + 10; // Height + margin
+                    currentTop += notification.element.offsetHeight + 5; // Height + smaller margin
                 }
             }
         }
@@ -650,31 +665,47 @@ export class UIManager {
         notification.style.transform = 'translateX(-50%)';
         notification.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
         notification.style.color = 'white';
-        notification.style.padding = '8px 16px'; // Slightly smaller padding
+        notification.style.padding = '6px 12px'; // Even smaller padding for compactness
         notification.style.borderRadius = '5px';
         notification.style.zIndex = '100';
-        notification.style.transition = 'opacity 0.5s, top 0.3s';
-        notification.style.fontSize = '14px'; // Smaller font size
+        notification.style.transition = 'opacity 0.3s, top 0.2s'; // Faster transitions
+        notification.style.fontSize = '13px'; // Smaller font size for compactness
         notification.style.maxWidth = '80%'; // Limit width
         notification.style.textAlign = 'center'; // Center text
+        notification.style.overflow = 'hidden'; // Prevent text overflow
+        notification.style.textOverflow = 'ellipsis'; // Add ellipsis for long text
+        notification.style.whiteSpace = 'nowrap'; // Keep text on one line
         notification.textContent = message;
         
         // Add notification to UI container
         this.uiContainer.appendChild(notification);
         
+        // Calculate how many notifications we can fit in the max area
+        // Estimate each notification height (including margin) as about 40px
+        const estimatedNotificationHeight = 40;
+        const maxNotifications = Math.floor(maxNotificationAreaHeight / estimatedNotificationHeight);
+        
         // If we have too many notifications, remove the oldest ones
-        const maxNotifications = 5; // Maximum number of notifications to show at once
-        if (this.notifications.length >= maxNotifications) {
+        // Remove more aggressively when many new messages are coming in
+        const messageRate = this.getMessageRate();
+        const notificationsToKeep = messageRate > 3 ? 
+            Math.max(2, maxNotifications - 2) : // High message rate - keep fewer
+            maxNotifications; // Normal rate - keep max allowed
+            
+        while (this.notifications.length >= notificationsToKeep) {
             // Remove oldest notification
             const oldestNotification = this.notifications.shift();
             oldestNotification.element.remove();
         }
         
-        // Add to notifications array with shorter lifetime for faster cleanup
+        // Add to notifications array with dynamic lifetime based on message rate
+        const lifetime = messageRate > 3 ? 1.5 : 2.5; // Shorter lifetime when messages come quickly
+        
         this.notifications.push({
             element: notification,
-            lifetime: 2.5, // Reduced from 3 to 2.5 seconds
-            message: message // Store message for deduplication
+            lifetime: lifetime,
+            message: message, // Store message for deduplication
+            timestamp: Date.now() // Store timestamp for message rate calculation
         });
         
         // Check for duplicate messages and reduce their lifetime
@@ -689,7 +720,7 @@ export class UIManager {
             // Calculate how much space we need
             for (let i = 0; i < this.notifications.length - 1; i++) {
                 const notif = this.notifications[i];
-                const height = notif.element.offsetHeight + 10; // Height + margin
+                const height = notif.element.offsetHeight + 5; // Height + smaller margin
                 totalHeight += height;
             }
             
@@ -702,9 +733,25 @@ export class UIManager {
                 const previousNotification = this.notifications[this.notifications.length - 2];
                 const previousHeight = previousNotification.element.offsetHeight;
                 const previousTop = parseInt(previousNotification.element.style.top);
-                notification.style.top = `${previousTop + previousHeight + 10}px`;
+                notification.style.top = `${previousTop + previousHeight + 5}px`; // Smaller margin
             }
         }
+    }
+    
+    // Helper method to calculate message rate (messages per second)
+    getMessageRate() {
+        if (this.notifications.length < 2) return 1; // Default rate
+        
+        // Calculate time window (in seconds) for the last few messages
+        const now = Date.now();
+        const oldestTimestamp = this.notifications[0].timestamp;
+        const timeWindow = (now - oldestTimestamp) / 1000;
+        
+        // Avoid division by zero
+        if (timeWindow < 0.1) return 10; // Very high rate
+        
+        // Calculate messages per second
+        return this.notifications.length / timeWindow;
     }
     
     // Helper method to compress notifications to fit in available space
@@ -718,10 +765,17 @@ export class UIManager {
         
         for (let i = 0; i < this.notifications.length; i++) {
             const notification = this.notifications[i];
+            
+            // Apply a slight scale reduction for better compactness
+            const scale = Math.max(0.85, 1 - (notificationCount * 0.02));
+            notification.element.style.transform = `translateX(-50%) scale(${scale})`;
+            
+            // Set position
             notification.element.style.top = `${currentTop}px`;
             
             // Move to next position (use smaller spacing when compressed)
-            currentTop += spacePerNotification;
+            // Use a minimum spacing to prevent overlap
+            currentTop += Math.max(25, spacePerNotification);
         }
     }
     
@@ -729,19 +783,45 @@ export class UIManager {
     deduplicateNotifications() {
         // Create a map to count occurrences of each message
         const messageCounts = {};
+        const messageIndices = {}; // Track indices of first occurrence
         
-        // Count occurrences
-        for (const notification of this.notifications) {
+        // Count occurrences and track first occurrence
+        for (let i = 0; i < this.notifications.length; i++) {
+            const notification = this.notifications[i];
             const message = notification.message;
+            
+            if (messageCounts[message] === undefined) {
+                messageIndices[message] = i; // First occurrence
+            }
+            
             messageCounts[message] = (messageCounts[message] || 0) + 1;
         }
         
-        // Reduce lifetime of duplicate messages
-        for (const notification of this.notifications) {
+        // Handle duplicate messages
+        for (let i = this.notifications.length - 1; i >= 0; i--) {
+            const notification = this.notifications[i];
             const message = notification.message;
+            
             if (messageCounts[message] > 1) {
-                // Reduce lifetime of duplicates to clean them up faster
-                notification.lifetime = Math.min(notification.lifetime, 1.5);
+                // If this is not the first occurrence of the message
+                if (messageIndices[message] !== i) {
+                    // For duplicates, either remove them or reduce their lifetime drastically
+                    if (messageCounts[message] > 2) {
+                        // If more than 2 duplicates, remove all but the first occurrence
+                        notification.element.remove();
+                        this.notifications.splice(i, 1);
+                    } else {
+                        // For just 2 duplicates, drastically reduce lifetime
+                        notification.lifetime = Math.min(notification.lifetime, 0.8);
+                    }
+                } else {
+                    // For the first occurrence, update the text to show count
+                    if (messageCounts[message] > 2) {
+                        notification.element.textContent = `${message} (${messageCounts[message]}x)`;
+                    }
+                    // Slightly reduce lifetime of first occurrence too
+                    notification.lifetime = Math.min(notification.lifetime, 2.0);
+                }
             }
         }
     }
