@@ -161,7 +161,7 @@ export class PerformanceManager {
             canvases.forEach(canvas => {
                 canvas.style.width = '100%';
                 canvas.style.height = '48px';
-                canvas.style.display = 'block';
+                // canvas.style.display = 'block'; // Keep hide other charts, wait to click to review
             });
         }
     }
@@ -221,7 +221,7 @@ export class PerformanceManager {
         // Create quality indicator container
         this.qualityIndicator = document.createElement('div');
         this.qualityIndicator.id = 'quality-indicator';
-        this.applyStandardIndicatorStyle(this.qualityIndicator, 144 + 5 + 14 + 5 + 14 + 5); // Position below memory display
+        this.applyStandardIndicatorStyle(this.qualityIndicator, 48 + 5 + 14 + 5 + 14 + 5); // Position below memory display
         
         // Update the quality text
         this.updateQualityIndicator();
@@ -281,7 +281,7 @@ export class PerformanceManager {
         // Create memory display container
         this.memoryDisplay = document.createElement('div');
         this.memoryDisplay.id = 'memory-display';
-        this.applyStandardIndicatorStyle(this.memoryDisplay, 144 + 5); // Position below stats.js
+        this.applyStandardIndicatorStyle(this.memoryDisplay, 48 + 5); // Position below stats.js
         this.memoryDisplay.textContent = 'MEM: 0 MB';
         
         document.body.appendChild(this.memoryDisplay);
@@ -306,7 +306,7 @@ export class PerformanceManager {
         // Create GPU Enabled indicator below memory stats
         this.gpuEnabledIndicator = document.createElement('div');
         this.gpuEnabledIndicator.id = 'gpu-enabled-indicator';
-        this.applyStandardIndicatorStyle(this.gpuEnabledIndicator, 144 + 5 + 14 + 5); // Position below quality indicator
+        this.applyStandardIndicatorStyle(this.gpuEnabledIndicator, 48 + 5 + 14 + 5); // Position below quality indicator
         this.gpuEnabledIndicator.textContent = 'GPU Enabled';
         
         // Create GPU info panel (hidden by default)
@@ -488,7 +488,7 @@ export class PerformanceManager {
             
             // Update memory display
             if (this.memoryDisplay) {
-                this.memoryDisplay.textContent = `MEM: ${usedHeapSize.toFixed(0)} MB`;
+                this.memoryDisplay.textContent = `MEM: ${usedHeapSize.toFixed(0)}MB`;
                 
                 // Change color based on memory usage
                 if (percentUsed > 80) {
