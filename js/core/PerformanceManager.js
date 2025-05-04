@@ -249,12 +249,6 @@ export class PerformanceManager {
     }
     
     createGPUIndicator() {
-        // Create GPU indicator container
-        this.gpuIndicator = document.createElement('div');
-        this.gpuIndicator.id = 'gpu-indicator';
-        this.gpuIndicator.textContent = 'GPU';
-        this.gpuIndicator.style.opacity = '0.2'; // Set low opacity
-        
         // Create GPU Enabled indicator below memory stats
         this.gpuEnabledIndicator = document.createElement('div');
         this.gpuEnabledIndicator.id = 'gpu-enabled-indicator';
@@ -277,18 +271,16 @@ export class PerformanceManager {
                 this.gpuInfoPanel.style.display = 'block';
             }
         });
-        
-        // Keep the hover events for the original GPU indicator
-        this.gpuIndicator.addEventListener('mouseenter', () => {
-            this.gpuInfoPanel.style.display = 'block';
-        });
-        
-        this.gpuIndicator.addEventListener('mouseleave', () => {
-            this.gpuInfoPanel.style.display = 'none';
+
+        this.gpuInfoPanel.addEventListener('click', () => {
+            if (this.gpuInfoPanel.style.display === 'block') {
+                this.gpuInfoPanel.style.display = 'none';
+            } else {
+                this.gpuInfoPanel.style.display = 'block';
+            }
         });
         
         // Add to document
-        document.body.appendChild(this.gpuIndicator);
         document.body.appendChild(this.gpuEnabledIndicator);
         document.body.appendChild(this.gpuInfoPanel);
     }

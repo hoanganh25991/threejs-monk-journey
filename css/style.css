@@ -682,7 +682,7 @@ a, button, input, select, textarea, div[role="button"], [tabindex], .skill-butto
 /* GPU Enabled Indicator */
 #gpu-enabled-indicator {
     position: absolute;
-    top: 80px; /* Position below memory stats */
+    top: 120px; /* Position below memory stats */
     right: 0px;
     background-color: rgba(0, 0, 0, 0.5);
     color: #4CAF50;
@@ -705,8 +705,8 @@ a, button, input, select, textarea, div[role="button"], [tabindex], .skill-butto
 
 #gpu-info-panel {
     position: absolute;
-    top: 35px;
-    right: 10px;
+    top: 0px;
+    right: 0px;
     width: 300px;
     background-color: rgba(0, 0, 0, 0.8);
     color: #fff;
