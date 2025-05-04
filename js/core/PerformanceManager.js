@@ -4,7 +4,7 @@ import Stats from 'three/addons/libs/stats.module.js';
 export class PerformanceManager {
     constructor(game) {
         this.game = game;
-        this.targetFPS = 30; // Changed from 60 to 30 as requested
+        this.targetFPS = 60;
         this.fpsHistory = [];
         this.historySize = 30; // Store last 30 frames for smoothing
         this.adaptiveQualityEnabled = true;

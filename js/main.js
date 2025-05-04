@@ -4,7 +4,7 @@ import { Game } from './core/Game.js';
 
 // Initialize the game when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(startGame, 10)
+    setTimeout(startGame, 300)
 });
 
 function startGame() {
@@ -139,6 +139,15 @@ function showGameMenu(game) {
     const gameMenu = document.createElement('div');
     gameMenu.id = 'game-menu';
     
+    // Add background image
+    gameMenu.style.backgroundImage = 'url("assets/images/background.jpg")';
+    gameMenu.style.backgroundSize = 'cover';
+    gameMenu.style.backgroundPosition = 'center';
+    gameMenu.style.backgroundRepeat = 'no-repeat';
+    
+    // Add semi-transparent overlay to ensure text is readable
+    gameMenu.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+    
     const title = document.createElement('h1');
     title.textContent = 'Monk Journey';
     
@@ -230,6 +239,15 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
     const optionsMenu = document.createElement('div');
     optionsMenu.id = 'main-options-menu';
     optionsMenu.className = 'game-menu';
+    
+    // Add background image
+    optionsMenu.style.backgroundImage = 'url("assets/images/background.jpg")';
+    optionsMenu.style.backgroundSize = 'cover';
+    optionsMenu.style.backgroundPosition = 'center';
+    optionsMenu.style.backgroundRepeat = 'no-repeat';
+    
+    // Add semi-transparent overlay to ensure text is readable
+    optionsMenu.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
     
     const title = document.createElement('h1');
     title.textContent = 'Options';
