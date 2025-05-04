@@ -1528,8 +1528,14 @@ export class Player {
     }
     
     useBasicAttack() {
-        // Get the Fist of Thunder skill
-        const skill = this.skills[0];
+        // Find the Fist of Thunder skill (should be the last skill in the array)
+        // This is the basic attack skill with the "h" key
+        const basicAttackSkill = this.skills.find(skill => skill.basicAttack === true);
+        
+        // If no basic attack skill is found, use the first skill as fallback
+        const skill = basicAttackSkill || this.skills[0];
+        
+        console.log('Using basic attack skill:', skill.name);
         
         // Check if skill is on cooldown
         if (skill.isOnCooldown()) {

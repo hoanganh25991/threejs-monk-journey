@@ -239,14 +239,18 @@ export class UIManager {
                 // Store the actual index for this skill button
                 const actualIndex = index;
                 
-                // Get the visual position of this skill in the grid
-                const isMobile = window.innerWidth <= 768;
-                const visualPosition = this.getVisualPositionInGrid(skillButton);
+                console.log(`Skill clicked: ${skill.name}, Index: ${actualIndex}`);
                 
-                console.log(`Skill clicked: ${skill.name}, Index: ${actualIndex}, Visual Position: ${visualPosition}`);
-                
-                // Use the correct index based on the device type
-                this.game.player.useSkill(actualIndex);
+                // Check if this is the basic attack skill
+                if (skill.basicAttack) {
+                    // Use the basic attack method for the 'h' skill
+                    console.log('Using basic attack (h key skill)');
+                    this.game.player.useBasicAttack();
+                } else {
+                    // Use the regular skill method for numbered skills
+                    console.log('Using regular skill');
+                    this.game.player.useSkill(actualIndex);
+                }
                 
                 // Add click animation
                 skillButton.classList.add('skill-activated');
