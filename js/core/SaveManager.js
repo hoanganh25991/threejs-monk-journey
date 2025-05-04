@@ -222,25 +222,39 @@ export class SaveManager {
         
         // Save discovered zones, interactive objects state, etc.
         return {
-            discoveredZones: world.zones.filter(zone => zone.discovered).map(zone => zone.name),
-            interactiveObjects: world.interactiveObjects.map(obj => ({
-                type: obj.type,
-                position: {
-                    x: obj.position.x,
-                    y: obj.position.y,
-                    z: obj.position.z
-                },
-                isOpen: obj.isOpen || false,
-                isCompleted: obj.isCompleted || false
-            })),
-            // Save current player chunk for reference
-            currentChunk: world.currentChunk,
-            // Save list of chunk keys that exist (for index)
-            chunkKeys: Object.keys(world.terrainChunks),
-            // Save visible chunks
-            visibleChunks: Object.keys(world.visibleChunks),
-            // Save visible terrain chunks
-            visibleTerrainChunks: Object.keys(world.visibleTerrainChunks)
+            // Check if zones exist and have the discovered property before filtering
+            discoveredZones: world.zoneManager && world.zoneManager.zones ? 
+                world.zoneManager.zones
+                    .filter(zone => zone.discovered === true)
+                    .map(zone => zone.name) : 
+                [],
+            // Check if interactiveObjects exists before mapping
+            interactiveObjects: world.interactiveManager && world.interactiveManager.objects ? 
+                world.interactiveManager.objects.map(obj => ({
+                    type: obj.type,
+                    position: {
+                        x: obj.position.x,
+                        y: obj.position.y,
+                        z: obj.position.z
+                    },
+                    isOpen: obj.isOpen || false,
+                    isCompleted: obj.isCompleted || false
+                })) : 
+                [],
+            // Save current player chunk for reference if it exists
+            currentChunk: world.terrainManager ? world.terrainManager.currentChunk : null,
+            // Save list of chunk keys that exist (for index) if terrainChunks exists
+            chunkKeys: world.terrainManager && world.terrainManager.terrainChunks ? 
+                Object.keys(world.terrainManager.terrainChunks) : 
+                [],
+            // Save visible chunks if they exist
+            visibleChunks: world.terrainManager && world.terrainManager.visibleChunks ? 
+                Object.keys(world.terrainManager.visibleChunks) : 
+                [],
+            // Save visible terrain chunks if they exist
+            visibleTerrainChunks: world.terrainManager && world.terrainManager.visibleTerrainChunks ? 
+                Object.keys(world.terrainManager.visibleTerrainChunks) : 
+                []
         };
     }
     
