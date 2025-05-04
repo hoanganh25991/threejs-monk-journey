@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logo Generator</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 0 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Logo Generator</h1>
+    <div>
+        <canvas id="canvas192" width="192" height="192"></canvas>
+        <canvas id="canvas512" width="512" height="512"></canvas>
+    </div>
+    <div class="buttons">
+        <button id="download192">Download 192x192</button>
+        <button id="download512">Download 512x512</button>
+    </div>
+
+    <script>
+        // Function to draw emoji on canvas
+        function drawEmoji(canvas, emoji, size) {
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw emoji
+            ctx.font = `${size}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(emoji, canvas.width / 2, canvas.height / 2);
+        }
+
+        // Draw emojis on canvases
+        const canvas192 = document.getElementById('canvas192');
+        const canvas512 = document.getElementById('canvas512');
+        
+        drawEmoji(canvas192, '🧘', 120);
+        drawEmoji(canvas512, '🧘', 320);
+
+        // Download functionality
+        document.getElementById('download192').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'logo-192.png';
+            link.href = canvas192.toDataURL('image/png');
+            link.click();
+        });
+
+        document.getElementById('download512').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'logo-512.png';
+            link.href = canvas512.toDataURL('image/png');
+            link.click();
+        });
+    </script>
+</body>
+</html>

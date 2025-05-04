@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monk Journey</title>
     <link rel="stylesheet" href="css/style.css">
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="A Diablo Immortal inspired game featuring a monk character">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="images/logo-192.png">
+    <link rel="apple-touch-icon" href="images/logo-192.png">
     <!-- Import Three.js from CDN -->
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
     <script type="importmap">
@@ -26,5 +32,20 @@
 
     <!-- Main script module -->
     <script type="module" src="js/main.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/diablo-immortal/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>
