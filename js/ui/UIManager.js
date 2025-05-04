@@ -356,7 +356,7 @@ export class UIManager {
         // Create options button
         const optionsButton = document.createElement('button');
         optionsButton.className = 'menu-button';
-        optionsButton.textContent = 'Options';
+        optionsButton.textContent = 'Settings';
         optionsButton.addEventListener('click', () => {
             this.showOptionsMenu();
         });
@@ -407,7 +407,7 @@ export class UIManager {
         
         // Create title
         const title = document.createElement('h1');
-        title.textContent = 'Options';
+        title.textContent = 'Settings';
         title.style.color = '#f5f5f5';
         title.style.fontSize = '48px';
         title.style.marginBottom = '40px';
@@ -811,7 +811,7 @@ export class UIManager {
         // Add to document body
         document.body.appendChild(optionsMenu);
         
-        console.log('Options menu created and added to DOM');
+        console.log('Settings menu created and added to DOM');
     }
     
     createVirtualJoystick() {

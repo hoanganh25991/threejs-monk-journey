@@ -1,7 +1,7 @@
 # Input Handler Configuration Implementation
 
 ## Task Summary
-Added a structured input configuration system to make keyboard controls more maintainable and easier to display in the Options menu.
+Added a structured input configuration system to make keyboard controls more maintainable and easier to display in the Settings menu.
 
 ## Changes Made
 
@@ -12,7 +12,7 @@ Added a structured input configuration system to make keyboard controls more mai
 
 2. Updated the `UIManager.js` to:
    - Import the `INPUT_CONFIG` from InputHandler
-   - Dynamically generate the controls display in the Options menu
+   - Dynamically generate the controls display in the Settings menu
    - Add a key formatter to display keys in a user-friendly format (e.g., "KeyW" → "W")
 
 3. Benefits of this implementation:

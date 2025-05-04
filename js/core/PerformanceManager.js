@@ -718,7 +718,7 @@ export class PerformanceManager {
                     
                     this.showQualityChangeNotification(
                         `Graphics quality lowered to ${twoLevelsDown} to improve performance. ` +
-                        `You can adjust settings in Options menu.`
+                        `You can adjust settings in Settings menu.`
                     );
                 } else {
                     this.applyQualitySettings(newQuality);
@@ -726,7 +726,7 @@ export class PerformanceManager {
                     
                     this.showQualityChangeNotification(
                         `Graphics quality lowered to ${newQuality} to maintain performance. ` +
-                        `You can adjust settings in Options menu.`
+                        `You can adjust settings in Settings menu.`
                     );
                 }
             } else {
@@ -736,7 +736,7 @@ export class PerformanceManager {
                 
                 this.showQualityChangeNotification(
                     `Graphics quality lowered to ${newQuality} to maintain performance. ` +
-                    `You can adjust settings in Options menu.`
+                    `You can adjust settings in Settings menu.`
                 );
             }
             

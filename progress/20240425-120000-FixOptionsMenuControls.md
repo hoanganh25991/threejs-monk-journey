@@ -1,4 +1,4 @@
-# Fix Options Menu Keyboard Controls Display
+# Fix Settings Menu Keyboard Controls Display
 
 ## Issue
 The keyboard controls section in the options menu was not being displayed properly. The code for displaying the controls was correctly implemented, but there was an issue with how the options menu was being created and styled.

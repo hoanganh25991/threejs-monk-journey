@@ -1,4 +1,4 @@
-# Fix Main Menu Options Conflict
+# Fix Main Menu Settings Conflict
 
 ## Issue
 There was a conflict between the main menu options screen and the in-game options menu. Both were creating elements with the same ID (`game-menu`), which was causing conflicts in the DOM and preventing the keyboard controls from being displayed properly in the in-game options menu.
