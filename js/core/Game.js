@@ -37,7 +37,7 @@ export class Game {
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Better shadow quality
-        this.renderer.outputEncoding = THREE.sRGBEncoding; // Correct color space
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace; // Correct color space
         
         // Initialize scene
         this.scene = new THREE.Scene();
