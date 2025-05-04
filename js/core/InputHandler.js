@@ -147,15 +147,28 @@ export class InputHandler {
         this.raycaster.setFromCamera(this.mouse.position, this.game.camera);
         
         // Create an array of all terrain meshes to check
-        const terrainMeshes = [this.game.world.terrain];
+        const terrainMeshes = [];
         
-        // Add all terrain chunks to the array
-        for (const chunkKey in this.game.world.terrainChunks) {
-            terrainMeshes.push(this.game.world.terrainChunks[chunkKey]);
+        // Add base terrain if it exists
+        if (this.game.world.terrainManager && this.game.world.terrainManager.terrain) {
+            terrainMeshes.push(this.game.world.terrainManager.terrain);
         }
         
-        // Check for intersections with all terrain meshes
-        const terrainIntersects = this.raycaster.intersectObjects(terrainMeshes);
+        // Add all terrain chunks to the array if they exist
+        if (this.game.world.terrainManager && this.game.world.terrainManager.terrainChunks) {
+            for (const chunkKey in this.game.world.terrainManager.terrainChunks) {
+                const chunk = this.game.world.terrainManager.terrainChunks[chunkKey];
+                if (chunk) {
+                    terrainMeshes.push(chunk);
+                }
+            }
+        }
+        
+        // Check for intersections with all terrain meshes only if we have meshes to check
+        let terrainIntersects = [];
+        if (terrainMeshes.length > 0) {
+            terrainIntersects = this.raycaster.intersectObjects(terrainMeshes);
+        }
         
         if (terrainIntersects.length > 0) {
             // Update mouse target position from terrain intersection
@@ -178,8 +191,22 @@ export class InputHandler {
         // Cast ray from camera through mouse position
         this.raycaster.setFromCamera(this.mouse.position, this.game.camera);
         
-        // Get all interactive objects
-        const interactiveObjects = this.game.world.interactiveObjects.map(obj => obj.mesh);
+        // Get all interactive objects if they exist
+        let interactiveObjects = [];
+        if (this.game.world.interactiveManager && this.game.world.interactiveManager.getInteractiveObjects) {
+            const objects = this.game.world.interactiveManager.getInteractiveObjects();
+            if (objects && objects.length > 0) {
+                interactiveObjects = objects.map(obj => obj.mesh).filter(mesh => mesh !== undefined);
+            }
+        } else if (this.game.world.interactiveObjects) {
+            // Fallback to old structure if it exists
+            interactiveObjects = this.game.world.interactiveObjects.map(obj => obj.mesh).filter(mesh => mesh !== undefined);
+        }
+        
+        // Check for intersections with interactive objects only if we have objects to check
+        if (interactiveObjects.length === 0) {
+            return;
+        }
         
         // Check for intersections with interactive objects
         const intersects = this.raycaster.intersectObjects(interactiveObjects, true);
@@ -195,7 +222,12 @@ export class InputHandler {
             }
             
             // Find the interactive object data
-            const interactiveObject = this.game.world.interactiveObjects.find(obj => obj.mesh === parentMesh);
+            let interactiveObject;
+            if (this.game.world.interactiveManager && this.game.world.interactiveManager.getInteractiveObjectByMesh) {
+                interactiveObject = this.game.world.interactiveManager.getInteractiveObjectByMesh(parentMesh);
+            } else if (this.game.world.interactiveObjects) {
+                interactiveObject = this.game.world.interactiveObjects.find(obj => obj.mesh === parentMesh);
+            }
             
             if (interactiveObject) {
                 // Trigger interaction

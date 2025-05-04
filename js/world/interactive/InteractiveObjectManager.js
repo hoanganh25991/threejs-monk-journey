@@ -187,6 +187,23 @@ export class InteractiveObjectManager {
     }
     
     /**
+     * Get all interactive objects
+     * @returns {Array} - Array of all interactive objects
+     */
+    getInteractiveObjects() {
+        return this.interactiveObjects;
+    }
+    
+    /**
+     * Get an interactive object by its mesh
+     * @param {THREE.Object3D} mesh - The mesh to find the interactive object for
+     * @returns {Object|null} - The interactive object or null if not found
+     */
+    getInteractiveObjectByMesh(mesh) {
+        return this.interactiveObjects.find(obj => obj.mesh === mesh);
+    }
+    
+    /**
      * Clear all interactive objects
      */
     clear() {
