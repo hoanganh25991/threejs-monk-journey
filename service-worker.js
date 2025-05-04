@@ -4,7 +4,7 @@
  */
 
 const CACHE_NAME = 'diablo-immortal-cache';
-const CACHE_VERSION = '3';
+const CACHE_VERSION = '4';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 const ASSETS_TO_CACHE = [
@@ -74,7 +74,8 @@ const ASSETS_TO_CACHE = [
   'assets/audio/player_hit.mp3',
   'assets/audio/seven_sided_strike.mp3',
   'assets/audio/wave_of_light.mp3',
-  'assets/audio/wave_strike.mp3'
+  'assets/audio/wave_strike.mp3',
+  'assets/images/background.jpg'
 ];
 
 // Install event - cache all static assets
