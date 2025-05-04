@@ -1,4 +1,6 @@
-const CACHE_NAME = 'monk-journey-v2';
+// Update this version number whenever you add new files
+const CACHE_VERSION = '3';
+const CACHE_NAME = `monk-journey-v${CACHE_VERSION}`;
 const ASSETS_TO_CACHE = [
   '',
   'index.html',
