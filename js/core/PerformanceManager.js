@@ -138,7 +138,6 @@ export class PerformanceManager {
         element.style.width = this.standardIndicatorWidth;
         element.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
         element.style.color = '#0ff';
-        element.style.padding = '5px 10px';
         element.style.fontSize = '12px';
         element.style.fontFamily = 'monospace';
         element.style.borderRadius = '3px 0 0 3px';
@@ -222,7 +221,7 @@ export class PerformanceManager {
         // Create quality indicator container
         this.qualityIndicator = document.createElement('div');
         this.qualityIndicator.id = 'quality-indicator';
-        this.applyStandardIndicatorStyle(this.qualityIndicator, 100); // Position below memory display
+        this.applyStandardIndicatorStyle(this.qualityIndicator, 144 + 5 + 14 + 5 + 14 + 5); // Position below memory display
         
         // Update the quality text
         this.updateQualityIndicator();
@@ -282,7 +281,7 @@ export class PerformanceManager {
         // Create memory display container
         this.memoryDisplay = document.createElement('div');
         this.memoryDisplay.id = 'memory-display';
-        this.applyStandardIndicatorStyle(this.memoryDisplay, 50); // Position below stats.js
+        this.applyStandardIndicatorStyle(this.memoryDisplay, 144 + 5); // Position below stats.js
         this.memoryDisplay.textContent = 'MEM: 0 MB';
         
         document.body.appendChild(this.memoryDisplay);
@@ -307,14 +306,14 @@ export class PerformanceManager {
         // Create GPU Enabled indicator below memory stats
         this.gpuEnabledIndicator = document.createElement('div');
         this.gpuEnabledIndicator.id = 'gpu-enabled-indicator';
-        this.applyStandardIndicatorStyle(this.gpuEnabledIndicator, 150); // Position below quality indicator
+        this.applyStandardIndicatorStyle(this.gpuEnabledIndicator, 144 + 5 + 14 + 5); // Position below quality indicator
         this.gpuEnabledIndicator.textContent = 'GPU Enabled';
         
         // Create GPU info panel (hidden by default)
         this.gpuInfoPanel = document.createElement('div');
         this.gpuInfoPanel.id = 'gpu-info-panel';
         this.gpuInfoPanel.style.position = 'absolute';
-        this.gpuInfoPanel.style.top = '200px';
+        this.gpuInfoPanel.style.top = '0px';
         this.gpuInfoPanel.style.right = '0px';
         this.gpuInfoPanel.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
         this.gpuInfoPanel.style.color = '#0ff';
@@ -489,7 +488,7 @@ export class PerformanceManager {
             
             // Update memory display
             if (this.memoryDisplay) {
-                this.memoryDisplay.textContent = `MEM: ${usedHeapSize.toFixed(1)} MB / ${totalHeapSize.toFixed(1)} MB`;
+                this.memoryDisplay.textContent = `MEM: ${usedHeapSize.toFixed(0)} MB`;
                 
                 // Change color based on memory usage
                 if (percentUsed > 80) {

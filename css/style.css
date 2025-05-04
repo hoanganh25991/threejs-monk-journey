@@ -679,30 +679,6 @@ a, button, input, select, textarea, div[role="button"], [tabindex], .skill-butto
     opacity: 1 !important;
 }
 
-/* GPU Enabled Indicator */
-#gpu-enabled-indicator {
-    position: absolute;
-    top: 120px; /* Position below memory stats */
-    right: 0px;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: #4CAF50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-family: monospace;
-    cursor: pointer;
-    z-index: 1001;
-    border-radius: 3px 0 0 3px;
-    padding: 5px 10px;
-    transition: background-color 0.2s, opacity 0.2s;
-}
-
-#gpu-enabled-indicator:hover {
-    background-color: rgba(0, 0, 0, 0.7);
-    opacity: 1 !important;
-}
-
 #gpu-info-panel {
     position: absolute;
     top: 0px;
