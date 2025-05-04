@@ -171,9 +171,9 @@ export class Player {
                 description: 'Teleport to the nearest enemy and strike them with lightning',
                 type: 'teleport',
                 damage: 1,
-                manaCost: 10,
+                manaCost: 0,
                 cooldown: 0, // Very short cooldown for basic attack
-                range: 15, // Teleport range
+                range: 25, // Teleport range
                 radius: 2, // Area of effect after teleport
                 duration: 1.0, // Short duration
                 color: 0x4169e1 // Royal blue color for lightning
@@ -1217,6 +1217,205 @@ export class Player {
     
     getActiveSkills() {
         return this.activeSkills;
+    }
+    
+    useBasicAttack() {
+        // Get the Fist of Thunder skill
+        const skill = this.skills[0];
+        
+        // Check if skill is on cooldown
+        if (skill.isOnCooldown()) {
+            return false;
+        }
+        
+        // Check if player has enough mana
+        if (this.stats.mana < skill.manaCost) {
+            return false;
+        }
+        
+        // Find the nearest enemy
+        if (this.game && this.game.enemyManager) {
+            // First check if there's an enemy in melee range (2 units)
+            const meleeEnemy = this.game.enemyManager.findNearestEnemy(this.position, 2);
+            
+            if (meleeEnemy) {
+                // Enemy is in melee range, perform a punch attack
+                
+                // Use mana
+                this.stats.mana -= skill.manaCost;
+                
+                // Start cooldown
+                skill.startCooldown();
+                
+                // Get enemy position
+                const enemyPosition = meleeEnemy.getPosition();
+                
+                // Calculate direction to enemy
+                const direction = new THREE.Vector3().subVectors(enemyPosition, this.position).normalize();
+                
+                // Update player rotation to face enemy
+                this.rotation.y = Math.atan2(direction.x, direction.z);
+                this.modelGroup.rotation.y = this.rotation.y;
+                
+                // Create punch animation
+                this.createPunchAnimation();
+                
+                // Apply damage to the enemy
+                meleeEnemy.takeDamage(skill.damage);
+                
+                // Play punch sound
+                if (this.game && this.game.audioManager) {
+                    this.game.audioManager.playSound('playerAttack');
+                }
+                
+                return true;
+            } else {
+                // No enemy in melee range, try to teleport to a distant enemy
+                const teleportEnemy = this.game.enemyManager.findNearestEnemy(this.position, skill.range);
+                
+                if (teleportEnemy) {
+                    // Use mana
+                    this.stats.mana -= skill.manaCost;
+                    
+                    // Start cooldown
+                    skill.startCooldown();
+                    
+                    // Pass game reference to skill
+                    skill.game = this.game;
+                    
+                    // Get enemy position
+                    const enemyPosition = teleportEnemy.getPosition();
+                    
+                    // Calculate direction to enemy
+                    const direction = new THREE.Vector3().subVectors(enemyPosition, this.position).normalize();
+                    
+                    // Update player rotation to face enemy
+                    this.rotation.y = Math.atan2(direction.x, direction.z);
+                    this.modelGroup.rotation.y = this.rotation.y;
+                    
+                    // Calculate teleport position (slightly before the enemy)
+                    const teleportDistance = Math.min(this.position.distanceTo(enemyPosition) - 1.5, skill.range);
+                    const teleportPosition = new THREE.Vector3(
+                        this.position.x + direction.x * teleportDistance,
+                        enemyPosition.y, // Match enemy height
+                        this.position.z + direction.z * teleportDistance
+                    );
+                    
+                    // Teleport player
+                    this.position.copy(teleportPosition);
+                    this.modelGroup.position.copy(teleportPosition);
+                    
+                    // Create skill effect at the new position
+                    const skillEffect = skill.createEffect(this.position, this.rotation);
+                    
+                    // Add skill effect to scene
+                    this.scene.add(skillEffect);
+                    
+                    // Play teleport sound
+                    if (this.game && this.game.audioManager) {
+                        this.game.audioManager.playSound('playerAttack');
+                    }
+                    
+                    // Reset skill state
+                    skill.elapsedTime = 0;
+                    skill.isActive = true;
+                    
+                    // Add to active skills
+                    this.activeSkills.push(skill);
+                    
+                    return true;
+                } else {
+                    // No enemy found, show notification
+                    if (this.game && this.game.uiManager) {
+                        this.game.uiManager.showNotification('No enemy in range');
+                    }
+                    
+                    return false;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    createPunchAnimation() {
+        // Create a punch animation for the player model
+        
+        // Get the right arm of the player model
+        const rightArm = this.modelGroup.children.find(child => 
+            child.position.x > 0 && Math.abs(child.position.y - 0.6) < 0.1);
+        
+        if (!rightArm) return;
+        
+        // Store original rotation
+        const originalRotation = rightArm.rotation.clone();
+        
+        // Create punch animation
+        const punchForward = () => {
+            // Punch forward animation
+            rightArm.rotation.z = -Math.PI / 4; // Rotate arm forward
+            
+            // Create punch effect
+            this.createPunchEffect();
+            
+            // Return to original position after a short delay
+            setTimeout(() => {
+                rightArm.rotation.copy(originalRotation);
+            }, 200);
+        };
+        
+        // Execute punch animation
+        punchForward();
+    }
+    
+    createPunchEffect() {
+        // Create a visual effect for the punch
+        
+        // Calculate position in front of the player
+        const direction = new THREE.Vector3(0, 0, -1).applyEuler(this.rotation);
+        const punchPosition = new THREE.Vector3(
+            this.position.x + direction.x * 1.2,
+            this.position.y + 0.6, // At arm height
+            this.position.z + direction.z * 1.2
+        );
+        
+        // Create punch effect geometry
+        const punchGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+        const punchMaterial = new THREE.MeshBasicMaterial({
+            color: 0x4169e1, // Same blue as Fist of Thunder
+            transparent: true,
+            opacity: 0.7
+        });
+        
+        const punchMesh = new THREE.Mesh(punchGeometry, punchMaterial);
+        punchMesh.position.copy(punchPosition);
+        
+        // Add to scene
+        this.scene.add(punchMesh);
+        
+        // Animate the punch effect
+        let scale = 1.0;
+        let opacity = 0.7;
+        
+        const animatePunch = () => {
+            scale += 0.1;
+            opacity -= 0.05;
+            
+            punchMesh.scale.set(scale, scale, scale);
+            punchMaterial.opacity = opacity;
+            
+            if (opacity > 0) {
+                requestAnimationFrame(animatePunch);
+            } else {
+                // Remove from scene when animation is complete
+                this.scene.remove(punchMesh);
+                punchGeometry.dispose();
+                punchMaterial.dispose();
+            }
+        };
+        
+        // Start animation
+        animatePunch();
     }
     
     setGame(game) {

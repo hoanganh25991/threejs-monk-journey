@@ -56,11 +56,11 @@ export class InputHandler {
                     this.game.uiManager.togglePauseMenu();
                     break;
                 case 'KeyH':
-                    // Mark H key as held down for Fist of Thunder
+                    // Mark H key as held down for basic attack
                     this.skillKeysHeld[event.code] = true;
                     
-                    // Use Fist of Thunder (first skill)
-                    this.game.player.useSkill(0);
+                    // Use basic attack (teleport or punch)
+                    this.game.player.useBasicAttack();
                     break;
                 case 'Digit1':
                 case 'Digit2':
@@ -273,8 +273,14 @@ export class InputHandler {
                 
                 // If cooldown is up, cast the skill again
                 if (this.skillCastCooldowns[keyCode] <= 0) {
-                    const skillIndex = parseInt(keyCode.charAt(5)) - 1;
-                    this.game.player.useSkill(skillIndex);
+                    if (keyCode === 'KeyH') {
+                        // Special handling for H key (Fist of Thunder)
+                        this.game.player.useBasicAttack();
+                    } else {
+                        // For number keys
+                        const skillIndex = parseInt(keyCode.charAt(5));
+                        this.game.player.useSkill(skillIndex);
+                    }
                     
                     // Reset cooldown
                     this.skillCastCooldowns[keyCode] = castInterval;
