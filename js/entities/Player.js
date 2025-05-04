@@ -200,7 +200,7 @@ export class Player {
                 damage: 20,
                 manaCost: 15,
                 cooldown: 0.5, // Reduced cooldown
-                range: 10,
+                range: 25,
                 radius: 2,
                 duration: 3.5, // Further increased duration from 2.5 to 3.5
                 color: 0x00ffff
@@ -1080,75 +1080,92 @@ export class Player {
             }
         }
         
+        // Find the nearest enemy for auto-targeting (for all skill types)
+        let targetEnemy = null;
+        let targetDirection = null;
+        
+        if (this.game && this.game.enemyManager) {
+            // Use skill range for targeting, or a default range if skill has no range
+            const targetRange = skill.range > 0 ? skill.range : 15;
+            targetEnemy = this.game.enemyManager.findNearestEnemy(this.position, targetRange);
+            
+            if (targetEnemy) {
+                // Get enemy position
+                const enemyPosition = targetEnemy.getPosition();
+                
+                // Calculate direction to enemy
+                targetDirection = new THREE.Vector3().subVectors(enemyPosition, this.position).normalize();
+                
+                // Update player rotation to face enemy
+                this.rotation.y = Math.atan2(targetDirection.x, targetDirection.z);
+                this.modelGroup.rotation.y = this.rotation.y;
+                
+                console.log(`Auto-targeting enemy for skill ${skill.name}, facing direction: ${this.rotation.y}`);
+            }
+        }
+        
         // Special handling for teleport skills
         if (skill.type === 'teleport' && skill.name === 'Fist of Thunder') {
-            // Find the nearest enemy
-            if (this.game && this.game.enemyManager) {
-                const nearestEnemy = this.game.enemyManager.findNearestEnemy(this.position, skill.range);
+            if (targetEnemy) {
+                const enemyPosition = targetEnemy.getPosition();
                 
-                if (nearestEnemy) {
-                    // Get enemy position
-                    const enemyPosition = nearestEnemy.getPosition();
-                    
-                    // Calculate direction to enemy
-                    const direction = new THREE.Vector3().subVectors(enemyPosition, this.position).normalize();
-                    
-                    // Update player rotation to face enemy
-                    this.rotation.y = Math.atan2(direction.x, direction.z);
-                    this.modelGroup.rotation.y = this.rotation.y;
-                    
-                    // Calculate teleport position (slightly before the enemy)
-                    const teleportDistance = Math.min(this.position.distanceTo(enemyPosition) - 1.5, skill.range);
-                    const teleportPosition = new THREE.Vector3(
-                        this.position.x + direction.x * teleportDistance,
-                        enemyPosition.y, // Match enemy height
-                        this.position.z + direction.z * teleportDistance
-                    );
-                    
-                    // Teleport player
-                    this.position.copy(teleportPosition);
-                    this.modelGroup.position.copy(teleportPosition);
-                    
-                    // Create skill effect at the new position
-                    const skillEffect = skill.createEffect(this.position, this.rotation);
-                    
-                    // Add skill effect to scene
-                    this.scene.add(skillEffect);
-                    
-                    // Play teleport sound
-                    if (this.game && this.game.audioManager) {
-                        this.game.audioManager.playSound('playerAttack');
-                    }
-                    
-                    // Reset skill state
-                    skill.elapsedTime = 0;
-                    skill.isActive = true;
-                    
-                    // Add to active skills
-                    this.activeSkills.push(skill);
-                    
-                    return true;
-                } else {
-                    // No enemy found, show notification
-                    if (this.game && this.game.uiManager) {
-                        this.game.uiManager.showNotification('No enemy in range');
-                    }
-                    
-                    // Refund mana
-                    this.stats.mana += skill.manaCost;
-                    
-                    // Reset cooldown
-                    skill.currentCooldown = 0;
-                    
-                    return false;
+                // Calculate teleport position (slightly before the enemy)
+                const teleportDistance = Math.min(this.position.distanceTo(enemyPosition) - 1.5, skill.range);
+                const teleportPosition = new THREE.Vector3(
+                    this.position.x + targetDirection.x * teleportDistance,
+                    enemyPosition.y, // Match enemy height
+                    this.position.z + targetDirection.z * teleportDistance
+                );
+                
+                // Teleport player
+                this.position.copy(teleportPosition);
+                this.modelGroup.position.copy(teleportPosition);
+                
+                // Create skill effect at the new position
+                const skillEffect = skill.createEffect(this.position, this.rotation);
+                
+                // Add skill effect to scene
+                this.scene.add(skillEffect);
+                
+                // Play teleport sound
+                if (this.game && this.game.audioManager) {
+                    this.game.audioManager.playSound('playerAttack');
                 }
+                
+                // Reset skill state
+                skill.elapsedTime = 0;
+                skill.isActive = true;
+                
+                // Add to active skills
+                this.activeSkills.push(skill);
+                
+                return true;
+            } else {
+                // No enemy found, show notification
+                if (this.game && this.game.uiManager) {
+                    this.game.uiManager.showNotification('No enemy in range');
+                }
+                
+                // Refund mana
+                this.stats.mana += skill.manaCost;
+                
+                // Reset cooldown
+                skill.currentCooldown = 0;
+                
+                return false;
             }
         } else {
-            // Create skill effect for non-teleport skills
+            // For non-teleport skills, create the effect in the direction of the enemy if found
+            // or in the current player direction if no enemy is found
             const skillEffect = skill.createEffect(this.position, this.rotation);
             
             // Add skill effect to scene
             this.scene.add(skillEffect);
+            
+            // Show notification if an enemy was auto-targeted
+            if (targetEnemy && this.game && this.game.uiManager) {
+                this.game.uiManager.showNotification(`Auto-targeting ${targetEnemy.type} with ${skill.name}`);
+            }
         }
         
         // Play skill sound

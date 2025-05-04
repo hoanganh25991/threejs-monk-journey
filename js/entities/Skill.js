@@ -1338,19 +1338,55 @@ export class Skill {
             effectGroup.add(particle);
         }
         
-        // Position effect
+        // Position effect at the player's position
         effectGroup.position.copy(this.position);
+        
+        // Check if we have a game reference and can find a target enemy
+        let targetPosition = null;
+        
+        if (this.game && this.game.enemyManager) {
+            // Try to find the nearest enemy within the skill's range
+            const nearestEnemy = this.game.enemyManager.findNearestEnemy(this.position, this.range);
+            
+            if (nearestEnemy) {
+                // Get enemy position
+                const enemyPosition = nearestEnemy.getPosition();
+                
+                // Calculate direction to enemy
+                const direction = new THREE.Vector3().subVectors(enemyPosition, this.position).normalize();
+                
+                // Calculate target position (at the enemy's location)
+                targetPosition = new THREE.Vector3(
+                    enemyPosition.x,
+                    this.position.y, // Keep the same Y height as the player
+                    enemyPosition.z
+                );
+                
+                // Move the effect group to the target position
+                effectGroup.position.copy(targetPosition);
+                
+                console.log(`Wave of Light targeting enemy at position: ${targetPosition.x}, ${targetPosition.z}`);
+                
+                // Show notification if UI manager is available
+                if (this.game.player && this.game.player.game && this.game.player.game.uiManager) {
+                    this.game.player.game.uiManager.showNotification(`Wave of Light targeting ${nearestEnemy.type}`);
+                }
+            } else {
+                console.log('No enemy in range for Wave of Light, dropping bell at current position');
+            }
+        }
         
         // Store effect
         this.effect = effectGroup;
         this.isActive = true;
         
-        // Store animation state with configuration
+        // Store animation state with configuration and target position
         this.bellState = {
             phase: 'descending', // 'descending', 'impact', 'ascending'
             initialHeight: config.bellHeight,
             impactTime: 0,
-            config: config // Store config for use in update method
+            config: config, // Store config for use in update method
+            targetPosition: targetPosition // Store the target position if an enemy was found
         };
         
         return effectGroup;

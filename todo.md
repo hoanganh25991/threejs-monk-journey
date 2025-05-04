@@ -6,7 +6,7 @@
 - [x] Enhance: add basic attack, we have "fist of thunder" (please refer to fist of thunder in diablo immortal), where hero move quickly like teleport toward an enemy and hit him, add action to this basic attack:
     - move to enemy
     - punch enemy
-- [] Enhance: add punch action as base attack of hero, when enemy closed to hero (melee range), auto punch, and has punch animation and has damage, basic damge based on level, items, attribute
+- [x] Enhance: add punch action as base attack of hero, when enemy closed to hero (melee range), auto punch, and has punch animation and has damage, basic damge based on level, items, attribute
 - [] Enhance: add config to createTeleportEffect, allow to easily say increase size of effect 2 times, than the skill effect 2 times bigger
 - [] Enhance: remove the first terrain, replace with the ground with grey colour, something special to mark that, this is initial place, like our village, add some structures to it. Then only spawn enemies on other dynamic generated terrain.
 - [] Enhance: help me generate audio effect for each skill when casted, when in duration effect if has something special need to added. audio-generator.html is what help me generate audio before.
