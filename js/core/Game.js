@@ -17,6 +17,7 @@ export class Game {
         this.canvas = document.getElementById('game-canvas');
         this.clock = new THREE.Clock();
         this.isRunning = false;
+        this.isPaused = true; // Add paused state flag
         this.loadingManager = new THREE.LoadingManager();
         this.debugMode = false; // Set to true to enable debug logging
         
@@ -201,6 +202,7 @@ export class Game {
         this.player.setPosition(0, 2, 0);
         
         // Start the game loop
+        this.isPaused = false; // Unpause the game
         this.isRunning = true;
         this.clock.start();
         this.animate();
@@ -212,6 +214,7 @@ export class Game {
     }
     
     pause() {
+        this.isPaused = true;
         this.isRunning = false;
     }
     
@@ -220,6 +223,13 @@ export class Game {
             this.isRunning = true;
             this.animate();
         }
+    }
+    
+    // New method to toggle pause state without stopping animation loop
+    togglePause() {
+        this.isPaused = !this.isPaused;
+        console.log(`Game ${this.isPaused ? 'paused' : 'resumed'}`);
+        return this.isPaused;
     }
     
     animate() {
@@ -235,6 +245,13 @@ export class Game {
         // Update controls (only if enabled)
         if (this.controls.enabled) {
             this.controls.update();
+        }
+        
+        // If game is paused, only render the scene but don't update game logic
+        if (this.isPaused) {
+            // Just render the scene
+            this.renderer.render(this.scene, this.camera);
+            return;
         }
         
         // Update input handler for continuous skill casting

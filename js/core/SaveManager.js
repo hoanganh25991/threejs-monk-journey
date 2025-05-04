@@ -15,7 +15,8 @@ export class SaveManager {
         // Start auto-save timer
         this.startAutoSave();
         
-        // Load any existing save data
+        // Just load the chunk index, but don't load the game data yet
+        // This will be done explicitly when the user clicks "Load Game"
         this.loadChunkIndex();
         
         return true;

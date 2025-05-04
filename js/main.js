@@ -13,14 +13,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const game = new Game();
     console.log("Game instance created:", game);
     
-    // Start the game
+    // Initialize the game but keep it paused
     game.init().then(() => {
         console.log("Game initialized successfully");
         
         // Hide loading screen when game is initialized
         document.getElementById('loading-screen').style.display = 'none';
         
-        // Show game menu
+        // Show game menu - game will remain paused until user clicks a button
         showGameMenu(game);
         console.log("Game menu displayed");
     }).catch(error => {
