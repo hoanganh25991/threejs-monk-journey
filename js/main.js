@@ -34,7 +34,7 @@ function createLoadingScreen() {
     loadingScreen.id = 'loading-screen';
     
     const loadingTitle = document.createElement('h2');
-    loadingTitle.textContent = 'Loading Diablo Immortal...';
+    loadingTitle.textContent = 'Loading Monk Journey...';
     
     const loadingBarContainer = document.createElement('div');
     loadingBarContainer.id = 'loading-bar-container';
@@ -75,7 +75,7 @@ function showGameMenu(game) {
     gameMenu.id = 'game-menu';
     
     const title = document.createElement('h1');
-    title.textContent = 'Diablo Immortal';
+    title.textContent = 'Monk Journey';
     
     const startButton = document.createElement('button');
     startButton.className = 'menu-button';

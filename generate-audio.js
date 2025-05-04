@@ -1,4 +1,4 @@
-// Audio Generator Script for Diablo Immortal
+// Audio Generator Script for Monk Journey
 // This script generates audio files for the game using the Web Audio API
 
 const fs = require('fs');
