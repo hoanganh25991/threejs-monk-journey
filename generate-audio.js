@@ -42,7 +42,7 @@ const sounds = {
     'door_open.mp3': { frequency: 200, duration: 0.4, type: 'sine', volume: 0.7, decay: true, slide: -20 },
     
     // Music
-    'main_theme.mp3': { frequency: 220, duration: 5.0, type: 'sine', volume: 0.5, decay: false, melody: true },
+    // 'main_theme.mp3': { frequency: 220, duration: 5.0, type: 'sine', volume: 0.5, decay: false, melody: true }, // Ignore this file due to existing file
     'battle_theme.mp3': { frequency: 280, duration: 5.0, type: 'square', volume: 0.5, decay: false, melody: true, tempo: 140 },
     'boss_theme.mp3': { frequency: 180, duration: 5.0, type: 'sawtooth', volume: 0.5, decay: false, melody: true, tempo: 160 }
 };
