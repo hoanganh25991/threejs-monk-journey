@@ -25,6 +25,10 @@ const sounds = {
     'cyclone_strike.mp3': { frequency: 320, duration: 0.4, type: 'sawtooth', volume: 0.8, decay: true, vibrato: 10 },
     'seven_sided_strike.mp3': { frequency: 380, duration: 0.5, type: 'square', volume: 0.8, decay: true, arpeggio: [1, 1.5, 2, 1.5, 1, 1.5, 2] },
     'inner_sanctuary.mp3': { frequency: 180, duration: 0.6, type: 'sine', volume: 0.6, decay: false, reverb: true },
+    'fist_of_thunder.mp3': { frequency: 440, duration: 0.3, type: 'sine', volume: 0.8, decay: true, slide: 80, vibrato: 15 },
+    'mystic_ally.mp3': { frequency: 260, duration: 0.5, type: 'sine', volume: 0.7, decay: false, arpeggio: [1, 1.3, 1.6, 1.3] },
+    'wave_of_light.mp3': { frequency: 220, duration: 0.6, type: 'triangle', volume: 0.9, decay: true, slide: -30, reverb: true },
+    'exploding_palm.mp3': { frequency: 300, duration: 0.4, type: 'sawtooth', volume: 0.8, decay: true, arpeggio: [1, 1.2], slide: 40 },
     
     // Enemy sounds
     'enemy_attack.mp3': { frequency: 200, duration: 0.2, type: 'sawtooth', volume: 0.6, decay: true },
@@ -102,19 +106,8 @@ function generateAudioFiles() {
                 
                 // Special handling for music files to make them longer
                 if (filename.includes('theme')) {
-                    const tempFile = outputPath + '.temp';
-                    fs.renameSync(outputPath, tempFile);
-                    
-                    // Repeat the file to make it longer
-                    exec(`sox "${tempFile}" "${tempFile}" "${tempFile}" "${outputPath}"`, (error, stdout, stderr) => {
-                        if (error) {
-                            console.error(`Error extending ${filename}:`, error);
-                            fs.renameSync(tempFile, outputPath); // Restore original
-                            return;
-                        }
-                        console.log(`Extended ${filename}`);
-                        fs.unlinkSync(tempFile); // Delete temp file
-                    });
+                    // For now, let's skip the extension since it's causing issues
+                    console.log(`Generated ${filename} (skipping extension due to format issues)`);
                 }
             });
         });

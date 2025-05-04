@@ -77,6 +77,10 @@ export class AudioManager {
         this.sounds.skillCycloneStrike = this.createSound('skillCycloneStrike', 'cyclone_strike.mp3', 0.8);
         this.sounds.skillSevenSidedStrike = this.createSound('skillSevenSidedStrike', 'seven_sided_strike.mp3', 0.8);
         this.sounds.skillInnerSanctuary = this.createSound('skillInnerSanctuary', 'inner_sanctuary.mp3', 0.6);
+        this.sounds.skillFistOfThunder = this.createSound('skillFistOfThunder', 'fist_of_thunder.mp3', 0.8);
+        this.sounds.skillMysticAlly = this.createSound('skillMysticAlly', 'mystic_ally.mp3', 0.7);
+        this.sounds.skillWaveOfLight = this.createSound('skillWaveOfLight', 'wave_of_light.mp3', 0.9);
+        this.sounds.skillExplodingPalm = this.createSound('skillExplodingPalm', 'exploding_palm.mp3', 0.8);
         
         // Enemy sounds
         this.sounds.enemyAttack = this.createSound('enemyAttack', 'enemy_attack.mp3', 0.6);
@@ -113,6 +117,10 @@ export class AudioManager {
         this.sounds.skillCycloneStrike = this.createSimulatedSound('skillCycloneStrike', 320, 0.8, 0.4);
         this.sounds.skillSevenSidedStrike = this.createSimulatedSound('skillSevenSidedStrike', 380, 0.8, 0.5);
         this.sounds.skillInnerSanctuary = this.createSimulatedSound('skillInnerSanctuary', 180, 0.6, 0.6);
+        this.sounds.skillFistOfThunder = this.createSimulatedSound('skillFistOfThunder', 440, 0.8, 0.3);
+        this.sounds.skillMysticAlly = this.createSimulatedSound('skillMysticAlly', 260, 0.7, 0.5);
+        this.sounds.skillWaveOfLight = this.createSimulatedSound('skillWaveOfLight', 220, 0.9, 0.6);
+        this.sounds.skillExplodingPalm = this.createSimulatedSound('skillExplodingPalm', 300, 0.8, 0.4);
         
         // Enemy sounds
         this.sounds.enemyAttack = this.createSimulatedSound('enemyAttack', 200, 0.6, 0.2);
