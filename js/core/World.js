@@ -513,7 +513,7 @@ export class World {
     }
     
     // Update visible terrain chunks based on player position
-    updateTerrainChunks(centerX, centerZ) {
+    updateTerrainChunks(centerX, centerZ, drawDistanceMultiplier = 1.0) {
         // Track which terrain chunks should be visible
         const newVisibleTerrainChunks = {};
         
@@ -539,9 +539,12 @@ export class World {
             this.lastPlayerChunk = { x: centerX, z: centerZ };
         }
         
+        // Adjust view distance based on performance
+        const viewDistance = Math.max(1, Math.floor(this.terrainChunkViewDistance * drawDistanceMultiplier));
+        
         // Generate terrain chunks in view distance (these need to be immediately visible)
-        for (let x = centerX - this.terrainChunkViewDistance; x <= centerX + this.terrainChunkViewDistance; x++) {
-            for (let z = centerZ - this.terrainChunkViewDistance; z <= centerZ + this.terrainChunkViewDistance; z++) {
+        for (let x = centerX - viewDistance; x <= centerX + viewDistance; x++) {
+            for (let z = centerZ - viewDistance; z <= centerZ + viewDistance; z++) {
                 const chunkKey = `${x},${z}`;
                 newVisibleTerrainChunks[chunkKey] = true;
                 
@@ -1773,7 +1776,7 @@ export class World {
     
     // New methods for infinite terrain with random objects
     
-    updateWorldForPlayer(playerPosition) {
+    updateWorldForPlayer(playerPosition, drawDistanceMultiplier = 1.0) {
         // Get the chunk coordinates for the player's position
         const chunkX = Math.floor(playerPosition.x / this.chunkSize);
         const chunkZ = Math.floor(playerPosition.z / this.chunkSize);
@@ -1799,7 +1802,8 @@ export class World {
             this.currentChunk = { x: chunkX, z: chunkZ };
             
             // Generate objects in the new chunks around the player
-            this.updateVisibleChunks(chunkX, chunkZ);
+            // Apply draw distance multiplier to render distance
+            this.updateVisibleChunks(chunkX, chunkZ, drawDistanceMultiplier);
             
             // Update player movement direction for predictive loading
             if (this.lastPlayerPosition) {
@@ -1811,8 +1815,8 @@ export class World {
             }
         }
         
-        // Update terrain chunks around the player
-        this.updateTerrainChunks(terrainChunkX, terrainChunkZ);
+        // Update terrain chunks around the player with draw distance multiplier
+        this.updateTerrainChunks(terrainChunkX, terrainChunkZ, drawDistanceMultiplier);
         
         // Check if player has moved far enough for screen-based enemy spawning
         const distanceMoved = playerPosition.distanceTo(this.lastPlayerPosition);
@@ -1833,16 +1837,24 @@ export class World {
             this.savedTerrainChunks = null;
         }
         
+        // Update fog density based on draw distance for atmospheric effect
+        if (this.game && this.game.scene.fog) {
+            // Adjust fog density inversely to draw distance
+            // Lower draw distance = higher fog density (objects fade out sooner)
+            this.game.scene.fog.density = 0.002 * (1 / drawDistanceMultiplier);
+        }
+        
         // Debug info about buffered chunks
         if (this.game && this.game.debugMode) {
             console.log(`Active chunks: ${Object.keys(this.terrainChunks).length}, Buffered chunks: ${Object.keys(this.terrainBuffer).length}, Queue: ${this.terrainGenerationQueue.length}`);
         }
     }
     
-    updateVisibleChunks(centerX, centerZ) {
+    updateVisibleChunks(centerX, centerZ, drawDistanceMultiplier = 1.0) {
         // Track which chunks should be visible
         const newVisibleChunks = {};
-        const renderDistance = 3; // Increased render distance to see more structures
+        // Base render distance adjusted by draw distance multiplier
+        const renderDistance = Math.max(1, Math.floor(3 * drawDistanceMultiplier));
         const newChunks = []; // Track newly created chunks for enemy spawning
         
         // Generate or update chunks in render distance

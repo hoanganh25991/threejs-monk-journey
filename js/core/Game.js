@@ -10,6 +10,7 @@ import { QuestManager } from './QuestManager.js';
 import { AudioManager } from './AudioManager.js';
 import { SaveManager } from './SaveManager.js';
 import { DifficultyManager } from './DifficultyManager.js';
+import { PerformanceManager } from './PerformanceManager.js';
 
 export class Game {
     constructor() {
@@ -24,14 +25,19 @@ export class Game {
     }
     
     async init() {
-        // Initialize renderer
+        // Initialize renderer with GPU acceleration options
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,
-            antialias: true
+            antialias: true,
+            powerPreference: 'high-performance',
+            precision: 'highp',
+            stencil: false // Disable stencil buffer if not needed
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Better shadow quality
+        this.renderer.outputEncoding = THREE.sRGBEncoding; // Correct color space
         
         // Initialize scene
         this.scene = new THREE.Scene();
@@ -52,6 +58,10 @@ export class Game {
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
         this.controls.maxPolarAngle = Math.PI / 2 - 0.1; // Prevent camera from going below ground
+        
+        // Initialize performance manager (before other systems)
+        this.performanceManager = new PerformanceManager(this);
+        this.performanceManager.init();
         
         // Initialize world
         this.world = new World(this.scene, this.loadingManager);
@@ -93,13 +103,74 @@ export class Game {
         this.difficultyManager = new DifficultyManager(this);
         this.difficultyManager.applyDifficultySettings();
         
-        // Debug helpers are removed for production
-        // console.log("Debug helpers removed for production");
+        // Apply performance optimizations to the scene
+        this.optimizeScene();
         
         // Handle window resize
         window.addEventListener('resize', () => this.onWindowResize());
         
         return true;
+    }
+    
+    optimizeScene() {
+        // Apply scene-wide optimizations
+        this.scene.traverse(object => {
+            if (object.isMesh) {
+                // Enable frustum culling
+                object.frustumCulled = true;
+                
+                // Optimize shadows
+                if (object.castShadow) {
+                    object.castShadow = true;
+                    // Only update shadow when object moves
+                    object.matrixAutoUpdate = true;
+                }
+                
+                // Optimize materials
+                if (object.material) {
+                    const materials = Array.isArray(object.material) ? object.material : [object.material];
+                    
+                    materials.forEach(material => {
+                        // Set precision based on device capability
+                        material.precision = 'mediump';
+                        
+                        // Only use fog if scene has fog
+                        material.fog = !!this.scene.fog;
+                        
+                        // Optimize textures if present
+                        if (material.map) {
+                            material.map.anisotropy = 1;
+                        }
+                    });
+                }
+            }
+            
+            // Optimize lights
+            if (object.isLight) {
+                if (object.shadow) {
+                    // Set initial shadow map size based on performance level
+                    object.shadow.mapSize.width = 1024;
+                    object.shadow.mapSize.height = 1024;
+                    
+                    // Optimize shadow camera frustum
+                    if (object.shadow.camera) {
+                        // Tighten shadow camera frustum to scene size
+                        const camera = object.shadow.camera;
+                        if (camera.isOrthographicCamera) {
+                            // Adjust based on scene size
+                            const size = 20;
+                            camera.left = -size;
+                            camera.right = size;
+                            camera.top = size;
+                            camera.bottom = -size;
+                            camera.updateProjectionMatrix();
+                        }
+                    }
+                }
+            }
+        });
+        
+        console.log("Scene optimizations applied");
     }
     
     start() {
@@ -147,6 +218,9 @@ export class Game {
         
         const delta = this.clock.getDelta();
         
+        // Update performance manager first
+        this.performanceManager.update(delta);
+        
         // Update controls (only if enabled)
         if (this.controls.enabled) {
             this.controls.update();
@@ -159,7 +233,9 @@ export class Game {
         this.player.update(delta);
         
         // Update world based on player position
-        this.world.updateWorldForPlayer(this.player.getPosition());
+        // Use performance-based draw distance
+        const drawDistance = this.performanceManager.getDrawDistanceMultiplier();
+        this.world.updateWorldForPlayer(this.player.getPosition(), drawDistance);
         
         // Update enemies
         this.enemyManager.update(delta);
@@ -170,16 +246,8 @@ export class Game {
         // Update UI
         this.uiManager.update();
         
-        // Render scene
+        // Render scene with potential optimizations
         this.renderer.render(this.scene, this.camera);
-        
-        // Log rendering for debugging (only once)
-        if (!this.hasLoggedRendering) {
-            console.log("Rendering scene:", this.scene);
-            console.log("Camera:", this.camera);
-            console.log("Renderer:", this.renderer);
-            this.hasLoggedRendering = true;
-        }
     }
     
     onWindowResize() {

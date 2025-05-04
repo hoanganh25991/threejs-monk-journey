@@ -127,6 +127,120 @@ function showOptionsMenu(game, mainMenu) {
     const title = document.createElement('h1');
     title.textContent = 'Options';
     
+    // Performance settings
+    const performanceTitle = document.createElement('h2');
+    performanceTitle.textContent = 'Performance Settings';
+    performanceTitle.style.color = '#aaa';
+    performanceTitle.style.fontSize = '24px';
+    performanceTitle.style.marginTop = '20px';
+    
+    // Create performance controls container
+    const performanceContainer = document.createElement('div');
+    performanceContainer.style.margin = '10px 0';
+    
+    // Quality preset selector
+    const qualityContainer = document.createElement('div');
+    qualityContainer.style.margin = '10px 0';
+    
+    const qualityLabel = document.createElement('label');
+    qualityLabel.textContent = 'Quality Preset: ';
+    qualityLabel.style.color = '#fff';
+    
+    const qualitySelect = document.createElement('select');
+    qualitySelect.style.padding = '5px';
+    qualitySelect.style.marginLeft = '10px';
+    
+    // Add quality options
+    const qualityLevels = ['minimal', 'low', 'medium', 'high', 'ultra'];
+    qualityLevels.forEach(level => {
+        const option = document.createElement('option');
+        option.value = level;
+        option.textContent = level.charAt(0).toUpperCase() + level.slice(1);
+        qualitySelect.appendChild(option);
+    });
+    
+    // Set current quality
+    if (game.performanceManager) {
+        qualitySelect.value = game.performanceManager.currentQuality;
+    }
+    
+    // Add change event
+    qualitySelect.addEventListener('change', () => {
+        if (game.performanceManager) {
+            game.performanceManager.setQualityLevel(qualitySelect.value);
+        }
+    });
+    
+    qualityContainer.appendChild(qualityLabel);
+    qualityContainer.appendChild(qualitySelect);
+    
+    // Adaptive quality toggle
+    const adaptiveContainer = document.createElement('div');
+    adaptiveContainer.style.margin = '10px 0';
+    
+    const adaptiveLabel = document.createElement('label');
+    adaptiveLabel.textContent = 'Adaptive Quality: ';
+    adaptiveLabel.style.color = '#fff';
+    
+    const adaptiveCheckbox = document.createElement('input');
+    adaptiveCheckbox.type = 'checkbox';
+    adaptiveCheckbox.checked = game.performanceManager ? game.performanceManager.adaptiveQualityEnabled : true;
+    adaptiveCheckbox.style.marginLeft = '10px';
+    
+    adaptiveCheckbox.addEventListener('change', () => {
+        if (game.performanceManager) {
+            game.performanceManager.toggleAdaptiveQuality();
+            
+            // Disable quality selector if adaptive is enabled
+            qualitySelect.disabled = adaptiveCheckbox.checked;
+        }
+    });
+    
+    adaptiveContainer.appendChild(adaptiveLabel);
+    adaptiveContainer.appendChild(adaptiveCheckbox);
+    
+    // Target FPS slider
+    const fpsContainer = document.createElement('div');
+    fpsContainer.style.margin = '10px 0';
+    
+    const fpsLabel = document.createElement('label');
+    fpsLabel.textContent = 'Target FPS: ';
+    fpsLabel.style.color = '#fff';
+    
+    const fpsSlider = document.createElement('input');
+    fpsSlider.type = 'range';
+    fpsSlider.min = '30';
+    fpsSlider.max = '60';
+    fpsSlider.step = '5';
+    fpsSlider.value = game.performanceManager ? game.performanceManager.targetFPS : 60;
+    fpsSlider.style.marginLeft = '10px';
+    fpsSlider.style.width = '150px';
+    
+    const fpsValue = document.createElement('span');
+    fpsValue.textContent = `${fpsSlider.value} FPS`;
+    fpsValue.style.color = '#fff';
+    fpsValue.style.marginLeft = '10px';
+    
+    fpsSlider.addEventListener('input', () => {
+        if (game.performanceManager) {
+            game.performanceManager.setTargetFPS(parseInt(fpsSlider.value));
+            fpsValue.textContent = `${fpsSlider.value} FPS`;
+        }
+    });
+    
+    fpsContainer.appendChild(fpsLabel);
+    fpsContainer.appendChild(fpsSlider);
+    fpsContainer.appendChild(fpsValue);
+    
+    // Add all performance controls to container
+    performanceContainer.appendChild(qualityContainer);
+    performanceContainer.appendChild(adaptiveContainer);
+    performanceContainer.appendChild(fpsContainer);
+    
+    // Add performance settings to menu
+    optionsMenu.appendChild(performanceTitle);
+    optionsMenu.appendChild(performanceContainer);
+    
     // Game settings
     const gameTitle = document.createElement('h2');
     gameTitle.textContent = 'Game Settings';
