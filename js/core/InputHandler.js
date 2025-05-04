@@ -441,15 +441,19 @@ export class InputHandler {
                             this.skillCastCooldowns[keyCode] = castInterval;
                         } else if (keyCode.startsWith('Digit')) {
                             // For number keys
-                            const skillIndex = parseInt(keyCode.charAt(5));
-                            console.log('Continuous casting: Digit key', keyCode, 'Skill index:', skillIndex);
+                            const keyDigit = parseInt(keyCode.charAt(5));
+                            // Subtract 1 to convert from 1-based to 0-based index
+                            const skillIndex = keyDigit - 1;
+                            console.log('Continuous casting: Digit key', keyCode, 'Key digit:', keyDigit, 'Skill index:', skillIndex);
                             this.game.player.useSkill(skillIndex);
                             this.skillCastCooldowns[keyCode] = castInterval;
                         } else if (this.keyMapping && this.keyMapping[keyCode]) {
                             // For alternative keys (j,k,l,;,u,i,o)
                             const mappedKey = this.keyMapping[keyCode];
-                            const skillIndex = parseInt(mappedKey.charAt(5));
-                            console.log('Continuous casting: Alternative key', keyCode, 'mapped to', mappedKey, 'Skill index:', skillIndex);
+                            const keyDigit = parseInt(mappedKey.charAt(5));
+                            // Subtract 1 to convert from 1-based to 0-based index
+                            const skillIndex = keyDigit - 1;
+                            console.log('Continuous casting: Alternative key', keyCode, 'mapped to', mappedKey, 'Key digit:', keyDigit, 'Skill index:', skillIndex);
                             this.game.player.useSkill(skillIndex);
                             
                             // Reset cooldown for both the alternative key and the original key

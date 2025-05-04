@@ -22,6 +22,7 @@
 - [x] Fix issue: change currentQuality to lower like medium, minimal, but the FPS not increase???, the "high" option is good enough, but the game really blur. I want "medium" is good to play already, help me update the division of threshold better.
 - [] Enhance: auto pause music in background, specially on phone, when i don't play the game
 - [] Fix weird issue: on desktop, all skills on horizon 1 row: cast skill match exactly with the skill, but on phone with 2 rows of skills, cast skill by pressing 1, is skill 2 cast
+- [] Enhance: Level Up message is impressive, but when multiple level up, should remove the old one quickly, even the current one also only max in 2 seconds, after 2 seconds duration, completely disappear
 
 - [ ] Enhance: review Player.js file and optimise it:
     - remove unused method
