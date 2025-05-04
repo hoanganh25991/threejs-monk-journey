@@ -9,6 +9,11 @@ export class CollisionManager {
     }
     
     update() {
+        // Skip collision detection if game is paused
+        if (this.player.game && this.player.game.isPaused) {
+            return; // Don't process collisions when game is paused
+        }
+        
         // Check player-enemy collisions
         this.checkPlayerEnemyCollisions();
         

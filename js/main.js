@@ -4,6 +4,10 @@ import { Game } from './core/Game.js';
 
 // Initialize the game when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(startGame, 10)
+});
+
+function startGame() {
     console.log("DOM loaded, initializing game...");
     
     // Create loading screen elements
@@ -14,22 +18,24 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("Game instance created:", game);
     
     // Initialize the game but keep it paused
+    // This loads all resources but doesn't start the game loop
     game.init().then(() => {
-        console.log("Game initialized successfully");
+        console.log("Game initialized successfully - game is in paused state");
         
         // Hide loading screen when game is initialized
         document.getElementById('loading-screen').style.display = 'none';
+        game.pause();
         
-        // Show game menu - game will remain paused until user clicks a button
+        // Show game menu - game will remain paused until user clicks "New Game" or "Load Game"
         showGameMenu(game);
-        console.log("Game menu displayed");
+        console.log("Game menu displayed - waiting for user input to start game");
         
         // Create settings button that will be visible during gameplay
         createSettingsButton(game);
     }).catch(error => {
         console.error("Error initializing game:", error);
     });
-});
+}
 
 // Create settings button at top-right of the screen
 function createSettingsButton(game) {
@@ -85,16 +91,6 @@ function createSettingsButton(game) {
             settingsButton.style.display = 'none';
         }
     });
-    
-    // Also show the button when the game starts (in case the event isn't fired)
-    const originalStart = game.start;
-    game.start = function() {
-        originalStart.apply(this, arguments);
-        // Show settings button when game starts
-        setTimeout(() => {
-            settingsButton.style.display = 'block';
-        }, 500);
-    };
 }
 
 // Create loading screen
@@ -160,13 +156,19 @@ function showGameMenu(game) {
     startButton.textContent = 'New Game';
     startButton.style.width = '100%'; // Make button take full width of container
     startButton.addEventListener('click', () => {
+        console.log("New Game button clicked - starting game...");
         gameMenu.style.display = 'none';
+        
+        // Start the game - this will set isPaused to false and start the game loop
         game.start();
+        
         // Make sure settings button is visible
         const settingsButton = document.getElementById('settings-button');
         if (settingsButton) {
             settingsButton.style.display = 'block';
         }
+        
+        console.log("Game started - enemies and player are now active");
     });
     
     const optionsButton = document.createElement('button');
@@ -186,15 +188,23 @@ function showGameMenu(game) {
         loadButton.textContent = 'Load Game';
         loadButton.style.width = '100%'; // Make button take full width of container
         loadButton.addEventListener('click', () => {
+            console.log("Load Game button clicked - attempting to load saved game...");
             if (game.saveManager.loadGame()) {
+                console.log("Game data loaded successfully");
                 gameMenu.style.display = 'none';
+                
+                // Start the game with loaded data - this will set isPaused to false and start the game loop
                 game.start();
+                
                 // Make sure settings button is visible
                 const settingsButton = document.getElementById('settings-button');
                 if (settingsButton) {
                     settingsButton.style.display = 'block';
                 }
+                
+                console.log("Game started with loaded data - enemies and player are now active");
             } else {
+                console.error("Failed to load game data");
                 alert('Failed to load game data.');
             }
         });

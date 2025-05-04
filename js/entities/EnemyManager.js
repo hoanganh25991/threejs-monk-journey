@@ -251,6 +251,11 @@ export class EnemyManager {
     }
     
     update(delta) {
+        // Check if game is paused - if so, don't update enemies
+        if (this.game && this.game.isPaused) {
+            return; // Skip all enemy updates when game is paused
+        }
+        
         // Update spawn timer
         this.spawnTimer += delta;
         

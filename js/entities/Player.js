@@ -283,6 +283,11 @@ export class Player {
     }
     
     update(delta) {
+        // Check if game is paused - if so, don't update player
+        if (this.game && this.game.isPaused) {
+            return; // Skip all player updates when game is paused
+        }
+        
         // Check for keyboard movement input
         if (this.game && this.game.inputHandler) {
             this.handleKeyboardMovement(delta);

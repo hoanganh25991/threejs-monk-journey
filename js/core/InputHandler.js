@@ -422,6 +422,11 @@ export class InputHandler {
     }
     
     update(delta) {
+        // Skip input processing if game is paused
+        if (this.game && this.game.isPaused) {
+            return; // Don't process inputs when game is paused
+        }
+        
         // Handle continuous skill casting for held keys
         const castInterval = 0.1; // Cast every 0.1 seconds when key is held
         

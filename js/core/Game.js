@@ -16,13 +16,42 @@ export class Game {
     constructor() {
         this.canvas = document.getElementById('game-canvas');
         this.clock = new THREE.Clock();
-        this.isRunning = false;
-        this.isPaused = true; // Add paused state flag
+        this.isPaused = true; // Game starts in paused state
         this.loadingManager = new THREE.LoadingManager();
         this.debugMode = false; // Set to true to enable debug logging
         
+        // Event listeners for game state changes
+        this.eventListeners = {};
+        
         // Set up loading manager events
         this.setupLoadingManager();
+    }
+    
+    // Add event listener
+    addEventListener(event, callback) {
+        if (!this.eventListeners[event]) {
+            this.eventListeners[event] = [];
+        }
+        this.eventListeners[event].push(callback);
+    }
+    
+    // Remove event listener
+    removeEventListener(event, callback) {
+        if (this.eventListeners[event]) {
+            this.eventListeners[event] = this.eventListeners[event].filter(cb => cb !== callback);
+        }
+    }
+    
+    // Dispatch event
+    dispatchEvent(event, data) {
+        if (this.eventListeners[event]) {
+            this.eventListeners[event].forEach(callback => callback(data));
+        }
+    }
+    
+    // Computed property - isRunning is the opposite of isPaused
+    get isRunning() {
+        return !this.isPaused;
     }
     
     async init() {
@@ -79,7 +108,7 @@ export class Game {
         
         // Initialize UI manager
         this.uiManager = new UIManager(this);
-        this.uiManager.init();
+        await this.uiManager.init();
         
         // Initialize enemy manager
         this.enemyManager = new EnemyManager(this.scene, this.player, this.loadingManager);
@@ -94,11 +123,11 @@ export class Game {
         
         // Initialize audio manager
         this.audioManager = new AudioManager(this);
-        this.audioManager.init();
+        await this.audioManager.init();
         
         // Initialize save manager
         this.saveManager = new SaveManager(this);
-        this.saveManager.init();
+        await this.saveManager.init();
         
         // Initialize difficulty manager
         this.difficultyManager = new DifficultyManager(this);
@@ -202,39 +231,50 @@ export class Game {
         this.player.setPosition(0, 2, 0);
         
         // Start the game loop
-        this.isPaused = false; // Unpause the game
-        this.isRunning = true;
+        this.isPaused = false; // Unpause the game (isRunning becomes true)
         this.clock.start();
         this.animate();
         
         // Start background music
         this.audioManager.playMusic();
         
+        // Dispatch event that game has started
+        this.dispatchEvent('gameStateChanged', 'running');
+        
         console.log("Game started successfully");
     }
     
     pause() {
         this.isPaused = true;
-        this.isRunning = false;
+        // isRunning is now automatically false via the getter
+        
+        // Dispatch event that game has paused
+        this.dispatchEvent('gameStateChanged', 'paused');
     }
     
     resume() {
-        if (!this.isRunning) {
-            this.isRunning = true;
+        if (this.isPaused) {
+            this.isPaused = false; // isRunning becomes true via the getter
             this.animate();
+            
+            // Dispatch event that game has resumed
+            this.dispatchEvent('gameStateChanged', 'running');
         }
     }
     
-    // New method to toggle pause state without stopping animation loop
+    // Method to toggle pause state without stopping animation loop
     togglePause() {
         this.isPaused = !this.isPaused;
+        
+        // Dispatch event based on new state
+        this.dispatchEvent('gameStateChanged', this.isPaused ? 'paused' : 'running');
+        
         console.log(`Game ${this.isPaused ? 'paused' : 'resumed'}`);
         return this.isPaused;
     }
     
     animate() {
-        if (!this.isRunning) return;
-        
+        // Always continue the animation loop regardless of pause state
         requestAnimationFrame(() => this.animate());
         
         const delta = this.clock.getDelta();
