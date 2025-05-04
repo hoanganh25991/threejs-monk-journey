@@ -1387,6 +1387,13 @@ export class Skill {
         // Update elapsed time
         this.elapsedTime += delta;
         
+        // Check if skill has expired and force cleanup
+        if (this.elapsedTime >= this.duration) {
+            console.log(`Skill ${this.name} has expired, cleaning up`);
+            this.remove();
+            return;
+        }
+        
         try {
             // Update effect based on skill type
             switch (this.type) {
@@ -3941,41 +3948,65 @@ export class Skill {
             const disposeObject = (obj) => {
                 if (!obj) return;
                 
-                // Dispose of children first
-                if (obj.children && obj.children.length > 0) {
-                    // Create a copy of the children array to avoid modification during iteration
-                    const children = [...obj.children];
-                    for (const child of children) {
-                        disposeObject(child);
-                    }
-                }
-                
-                // Dispose of geometry
-                if (obj.geometry) {
-                    obj.geometry.dispose();
-                }
-                
-                // Dispose of material(s)
-                if (obj.material) {
-                    if (Array.isArray(obj.material)) {
-                        for (const material of obj.material) {
-                            if (material.map) material.map.dispose();
-                            material.dispose();
+                try {
+                    // Dispose of children first
+                    if (obj.children && obj.children.length > 0) {
+                        // Create a copy of the children array to avoid modification during iteration
+                        const children = [...obj.children];
+                        for (const child of children) {
+                            disposeObject(child);
                         }
-                    } else {
-                        if (obj.material.map) obj.material.map.dispose();
-                        obj.material.dispose();
                     }
-                }
-                
-                // Remove from parent
-                if (obj.parent) {
-                    obj.parent.remove(obj);
+                    
+                    // Dispose of geometry
+                    if (obj.geometry) {
+                        obj.geometry.dispose();
+                        obj.geometry = null;
+                    }
+                    
+                    // Dispose of material(s)
+                    if (obj.material) {
+                        if (Array.isArray(obj.material)) {
+                            for (const material of obj.material) {
+                                if (material.map) {
+                                    material.map.dispose();
+                                    material.map = null;
+                                }
+                                material.dispose();
+                            }
+                        } else {
+                            if (obj.material.map) {
+                                obj.material.map.dispose();
+                                obj.material.map = null;
+                            }
+                            obj.material.dispose();
+                        }
+                        obj.material = null;
+                    }
+                    
+                    // Remove from parent
+                    if (obj.parent) {
+                        obj.parent.remove(obj);
+                    }
+                } catch (error) {
+                    console.error(`Error disposing object in skill ${this.name}:`, error);
                 }
             };
             
             // Dispose of the entire effect tree
-            disposeObject(this.effect);
+            try {
+                disposeObject(this.effect);
+                
+                // Ensure the effect is removed from the scene if it's still there
+                if (this.effect.parent) {
+                    this.effect.parent.remove(this.effect);
+                }
+                
+                // Clear the reference
+                this.effect = null;
+            } catch (error) {
+                console.error(`Error disposing effect in skill ${this.name}:`, error);
+            }
         }
         
         // Clean up impact rings for Exploding Palm

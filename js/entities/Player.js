@@ -164,7 +164,7 @@ export class Player {
     }
     
     initializeSkills() {
-        // Initialize monk skills with reduced cooldown and increased durations
+        // Initialize monk skills with reduced cooldown and further increased durations
         this.skills = [
             new Skill({
                 name: 'Wave Strike',
@@ -175,7 +175,7 @@ export class Player {
                 cooldown: 0.1, // Reduced cooldown
                 range: 10,
                 radius: 2,
-                duration: 2.5, // Increased duration from 1 to 2.5
+                duration: 3.5, // Further increased duration from 2.5 to 3.5
                 color: 0x00ffff
             }),
             new Skill({
@@ -187,7 +187,7 @@ export class Player {
                 cooldown: 0.1, // Reduced cooldown
                 range: 5,
                 radius: 4,
-                duration: 1.5, // Increased duration from 0.5 to 1.5
+                duration: 2.5, // Further increased duration from 1.5 to 2.5
                 color: 0xffcc00
             }),
             new Skill({
@@ -199,7 +199,7 @@ export class Player {
                 cooldown: 0.1, // Reduced cooldown
                 range: 6,
                 radius: 10,
-                duration: 3.5, // Increased duration from 2 to 3.5
+                duration: 5.0, // Further increased duration from 3.5 to 5.0
                 color: 0xff0000,
                 hits: 7
             }),
@@ -212,7 +212,7 @@ export class Player {
                 cooldown: 0.1, // Reduced cooldown
                 range: 0,
                 radius: 5,
-                duration: 7, // Increased duration from 5 to 7
+                duration: 10, // Further increased duration from 7 to 10
                 color: 0xffffff
             }),
             new Skill({
@@ -224,7 +224,7 @@ export class Player {
                 cooldown: 0.1, // Reduced cooldown
                 range: 2,
                 radius: 1,
-                duration: 15, // Increased duration from 10 to 15
+                duration: 20, // Further increased duration from 15 to 20
                 color: 0x00ffff
             }),
             new Skill({
@@ -236,7 +236,7 @@ export class Player {
                 cooldown: 0.1, // Reduced cooldown
                 range: 10,
                 radius: 8,
-                duration: 3.5, // Increased duration from 2 to 3.5
+                duration: 5.0, // Further increased duration from 3.5 to 5.0
                 color: 0xffdd22 // Golden color for the bell's light
             }),
             new Skill({
@@ -248,7 +248,7 @@ export class Player {
                 cooldown: 0.1, // Reduced cooldown
                 range: 10,
                 radius: 5,
-                duration: 15, // Increased duration from 10 to 15 seconds
+                duration: 20, // Further increased duration from 15 to 20 seconds
                 color: 0xff3333
             })
         ];
@@ -435,7 +435,11 @@ export class Player {
     updateSkills(delta) {
         // Update active skills
         for (let i = this.activeSkills.length - 1; i >= 0; i--) {
+            // Safety check for array bounds
+            if (i >= this.activeSkills.length) continue;
+            
             const skill = this.activeSkills[i];
+            if (!skill) continue;
             
             try {
                 // Update skill
@@ -450,6 +454,7 @@ export class Player {
             
             // Remove expired skills
             if (skill.isExpired()) {
+                console.log(`Removing expired skill ${skill.name}`);
                 skill.remove();
                 this.activeSkills.splice(i, 1);
                 continue;
@@ -457,9 +462,9 @@ export class Player {
             
             // Force cleanup for skills that are being spammed
             // This prevents UI and particles from persisting when holding keys
-            // Reduced from 1.5 to 1.1 to clean up faster when spamming
-            if (skill.isActive && skill.elapsedTime > skill.duration * 1.1) {
-                console.log(`Force cleaning up skill ${skill.name} that exceeded 110% of its duration`);
+            // Reduced from 1.1 to 0.95 to clean up even faster when spamming
+            if (skill.isActive && skill.elapsedTime > skill.duration * 0.95) {
+                console.log(`Force cleaning up skill ${skill.name} that exceeded 95% of its duration`);
                 skill.remove();
                 this.activeSkills.splice(i, 1);
                 continue;
@@ -468,12 +473,18 @@ export class Player {
             // Immediately clean up skills of the same type when a new one is cast
             // This is especially important when holding keys to spam skills
             for (let j = this.activeSkills.length - 1; j >= 0; j--) {
+                // Safety check for array bounds
+                if (j >= this.activeSkills.length) continue;
+                
+                const otherSkill = this.activeSkills[j];
+                if (!otherSkill) continue;
+                
                 if (i !== j && 
-                    this.activeSkills[j].name === skill.name && 
-                    this.activeSkills[j].elapsedTime > this.activeSkills[j].duration * 0.5) {
-                    // If we have two skills of the same type and the older one is at least halfway through its duration
-                    console.log(`Cleaning up older instance of ${this.activeSkills[j].name} due to key spamming`);
-                    this.activeSkills[j].remove();
+                    otherSkill.name === skill.name && 
+                    otherSkill.elapsedTime > otherSkill.duration * 0.3) { // Reduced from 0.5 to 0.3 for faster cleanup
+                    // If we have two skills of the same type and the older one is at least 30% through its duration
+                    console.log(`Cleaning up older instance of ${otherSkill.name} due to key spamming`);
+                    otherSkill.remove();
                     this.activeSkills.splice(j, 1);
                     
                     // Adjust index if we removed an element before the current one
@@ -487,26 +498,72 @@ export class Player {
         // Limit the number of active skills of the same type
         // This prevents visual clutter when spamming the same skill
         const skillTypeCount = {};
+        const skillNameCount = {};
+        
         for (let i = this.activeSkills.length - 1; i >= 0; i--) {
+            // Safety check for array bounds
+            if (i >= this.activeSkills.length) continue;
+            
             const skill = this.activeSkills[i];
+            if (!skill) continue;
+            
+            // Count by type
             skillTypeCount[skill.type] = (skillTypeCount[skill.type] || 0) + 1;
             
-            // If there are too many skills of the same type, remove the oldest ones
-            const maxSkillsPerType = 2; // Reduced from 3 to 2 to limit visual clutter
-            if (skillTypeCount[skill.type] > maxSkillsPerType) {
-                // Find the oldest skill of this type (largest elapsedTime means it was created earlier)
+            // Count by name (more specific than type)
+            skillNameCount[skill.name] = (skillNameCount[skill.name] || 0) + 1;
+            
+            // If there are too many skills of the same name, remove the oldest ones
+            const maxSkillsPerName = 1; // Only allow 1 instance of each named skill
+            if (skillNameCount[skill.name] > maxSkillsPerName) {
+                // Find the oldest skill of this name
                 let oldestSkillIndex = i;
                 let oldestElapsedTime = skill.elapsedTime;
                 
                 for (let j = 0; j < this.activeSkills.length; j++) {
-                    if (j !== i && this.activeSkills[j].type === skill.type && this.activeSkills[j].elapsedTime > oldestElapsedTime) {
+                    if (j !== i && 
+                        this.activeSkills[j] && 
+                        this.activeSkills[j].name === skill.name && 
+                        this.activeSkills[j].elapsedTime > oldestElapsedTime) {
                         oldestSkillIndex = j;
                         oldestElapsedTime = this.activeSkills[j].elapsedTime;
                     }
                 }
                 
                 // Remove the oldest skill
-                if (oldestSkillIndex !== i) {
+                if (oldestSkillIndex !== i && this.activeSkills[oldestSkillIndex]) {
+                    console.log(`Removing oldest instance of ${this.activeSkills[oldestSkillIndex].name} to limit to ${maxSkillsPerName} instance`);
+                    this.activeSkills[oldestSkillIndex].remove();
+                    this.activeSkills.splice(oldestSkillIndex, 1);
+                    skillNameCount[skill.name]--;
+                    
+                    // Adjust index if we removed an element before the current one
+                    if (oldestSkillIndex < i) {
+                        i--;
+                    }
+                }
+            }
+            
+            // If there are too many skills of the same type, remove the oldest ones
+            const maxSkillsPerType = 2; // Limit to 2 skills of the same type
+            if (skillTypeCount[skill.type] > maxSkillsPerType) {
+                // Find the oldest skill of this type (largest elapsedTime means it was created earlier)
+                let oldestSkillIndex = i;
+                let oldestElapsedTime = skill.elapsedTime;
+                
+                for (let j = 0; j < this.activeSkills.length; j++) {
+                    if (j !== i && 
+                        this.activeSkills[j] && 
+                        this.activeSkills[j].type === skill.type && 
+                        this.activeSkills[j].elapsedTime > oldestElapsedTime) {
+                        oldestSkillIndex = j;
+                        oldestElapsedTime = this.activeSkills[j].elapsedTime;
+                    }
+                }
+                
+                // Remove the oldest skill
+                if (oldestSkillIndex !== i && this.activeSkills[oldestSkillIndex]) {
+                    console.log(`Removing oldest skill of type ${skill.type} to limit to ${maxSkillsPerType} skills`);
                     this.activeSkills[oldestSkillIndex].remove();
                     this.activeSkills.splice(oldestSkillIndex, 1);
                     skillTypeCount[skill.type]--;
@@ -516,6 +573,17 @@ export class Player {
                         i--;
                     }
                 }
+            }
+        }
+        
+        // Perform a final cleanup pass to remove any null or undefined skills
+        for (let i = this.activeSkills.length - 1; i >= 0; i--) {
+            if (!this.activeSkills[i] || !this.activeSkills[i].isActive) {
+                console.log(`Removing invalid skill at index ${i}`);
+                if (this.activeSkills[i]) {
+                    this.activeSkills[i].remove();
+                }
+                this.activeSkills.splice(i, 1);
             }
         }
         
