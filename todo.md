@@ -15,53 +15,58 @@
 - [ ] Enhance: draw hero model similar to man monk, provide much complex look for man monk, muscle, head, chest, hand, leg. Add action when moving, add action for legs and hands.
 - [ ] Enhance: draw complex model for skeleton monster, close to skeleton, not solid box
 - [ ] Enhance: createWaveEffect, add config at top of this method, allow me to control the size of the bell, if i want to bell 2 times bigger then current, i just x2 that bell size number
-- [ ] Enhance: add GPU acceleration which help to make game much faster, auto reduce complex of threejs, shadow,... to allow have good FPS on medium device, add FPS on top-right of the screen, control the effect, things by target FPS: 60
+- [x] Enhance: add GPU acceleration which help to make game much faster, auto reduce complex of threejs, shadow,... to allow have good FPS on medium device, add FPS on top-right of the screen, control the effect, things by target FPS: 60
+- [] Help me remove touch / click on screen to move
+- [] Add virtual joy stick on bottom-left to allow me to move on touch screen, to replace for a,w,s,d
+- [] On mobile, reduce the opacity of skill, make them smaller and stack them into 2 rows, so that i can see the view and touch skill easily
 - [ ] Enhance: review World.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
-    - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
+    - remove the origin file, integrate with new code base
+
 - [ ] Enhance: review Player.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
-    - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
+    - remove the origin file, integrate with new code base
+
 
 - [ ] Enhance: review Skill.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
-    - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
+
 
 - [ ] Enhance: review UIManager.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
-    - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
+
 
 - [ ] Enhance: review UIManager.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
-    - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
+
 
 - [ ] Enhance: review Enemy.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
-    - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
+
 
 - [ ] Enhance: review EnemyManager.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
-    - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
+
     
 - [ ] Enhance: manage memory leak, manage object better to achieve fast render 60 FPS. , add memory usage in MB also

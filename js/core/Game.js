@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { World } from './World.js';
+import { WorldManager } from '../world/WorldManager.js';
 import { Player } from '../entities/Player.js';
 import { InputHandler } from './InputHandler.js';
 import { UIManager } from '../ui/UIManager.js';
@@ -64,7 +64,7 @@ export class Game {
         this.performanceManager.init();
         
         // Initialize world
-        this.world = new World(this.scene, this.loadingManager);
+        this.world = new WorldManager(this.scene, this.loadingManager);
         this.world.setGame(this);
         await this.world.init();
         

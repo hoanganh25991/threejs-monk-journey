@@ -66,28 +66,30 @@ export class CollisionManager {
         const playerPosition = this.player.getPosition();
         const playerRadius = this.player.getCollisionRadius();
         
-        // Check collision with each object
-        this.world.objects.forEach(object => {
-            // Get object bounding box
-            const boundingBox = new THREE.Box3().setFromObject(object);
-            
-            // Create a sphere that encompasses the bounding box
-            const center = new THREE.Vector3();
-            boundingBox.getCenter(center);
-            const size = new THREE.Vector3();
-            boundingBox.getSize(size);
-            const objectRadius = Math.max(size.x, size.z) / 2;
-            
-            // Calculate distance between player and object center
-            const distance = new THREE.Vector2(playerPosition.x, playerPosition.z)
-                .distanceTo(new THREE.Vector2(center.x, center.z));
-            
-            // Check if collision occurred
-            if (distance < playerRadius + objectRadius) {
-                // Handle collision
-                this.handlePlayerObjectCollision(object, center);
-            }
-        });
+        // Check collision with structures if available
+        if (this.world && this.world.structureManager && this.world.structureManager.structures) {
+            this.world.structureManager.structures.forEach(object => {
+                // Get object bounding box
+                const boundingBox = new THREE.Box3().setFromObject(object);
+                
+                // Create a sphere that encompasses the bounding box
+                const center = new THREE.Vector3();
+                boundingBox.getCenter(center);
+                const size = new THREE.Vector3();
+                boundingBox.getSize(size);
+                const objectRadius = Math.max(size.x, size.z) / 2;
+                
+                // Calculate distance between player and object center
+                const distance = new THREE.Vector2(playerPosition.x, playerPosition.z)
+                    .distanceTo(new THREE.Vector2(center.x, center.z));
+                
+                // Check if collision occurred
+                if (distance < playerRadius + objectRadius) {
+                    // Handle collision
+                    this.handlePlayerObjectCollision(object, center);
+                }
+            });
+        }
         
         // Check collision with interactive objects
         this.checkPlayerInteractiveObjectsCollisions();
