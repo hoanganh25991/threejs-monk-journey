@@ -2,12 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="ScreenOrientation" content="autoRotate:disabled">
     <title>Monk Journey</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#000000">
     <meta name="description" content="A Diablo Immortal inspired game featuring a monk character">
+    <meta name="orientation" content="landscape">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="images/logo-192.png">
     <link rel="apple-touch-icon" href="images/logo-192.png">
@@ -23,6 +25,14 @@
     </script>
 </head>
 <body>
+    <div id="orientation-message">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+            <path d="M12 18h.01" />
+        </svg>
+        <p>Please rotate your device to landscape mode for the best experience</p>
+    </div>
+    
     <div id="game-container">
         <!-- Game Canvas -->
         <canvas id="game-canvas"></canvas>
@@ -42,6 +52,28 @@
         <p id="update-status" style="margin: 10px 0 0 0; font-size: 0.9em;">Updating...</p>
     </div>
 
+    <!-- Orientation Lock Script -->
+    <script>
+        // Try to lock the screen to landscape mode
+        function lockScreenToLandscape() {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(function(error) {
+                    console.log('Screen orientation lock failed: ', error);
+                });
+            }
+        }
+        
+        // Handle orientation changes
+        window.addEventListener('orientationchange', function() {
+            lockScreenToLandscape();
+        });
+        
+        // Initial call to lock orientation
+        document.addEventListener('DOMContentLoaded', function() {
+            lockScreenToLandscape();
+        });
+    </script>
+    
     <!-- Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
