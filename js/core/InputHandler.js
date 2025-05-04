@@ -31,6 +31,14 @@ export const INPUT_CONFIG = {
             { keys: ['Digit6', 'KeyI'], description: 'Skill 6' },
             { keys: ['Digit7', 'KeyO'], description: 'Skill 7' }
         ]
+    },
+    ui: {
+        title: 'UI Settings',
+        joystick: {
+            sizeMultiplier: 1, // Default to 80% of original size
+            baseSize: 140, // Original base size in pixels
+            handleSize: 70  // Original handle size in pixels
+        }
     }
 };
 

@@ -700,8 +700,7 @@ a, button, input, select, textarea, div[role="button"], [tabindex], .skill-butto
     position: absolute;
     bottom: 20px;
     left: 20px;
-    width: 150px;
-    height: 150px;
+    /* width and height are now set dynamically via JavaScript */
     background-color: rgba(0, 0, 0, 0.5);
     border-radius: 50%;
     pointer-events: auto;
@@ -757,8 +756,7 @@ a, button, input, select, textarea, div[role="button"], [tabindex], .skill-butto
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 70px;
-    height: 70px;
+    /* width and height are now set dynamically via JavaScript */
     background-color: rgba(255, 255, 255, 0.7);
     border-radius: 50%;
     border: 3px solid rgba(255, 255, 255, 0.9);

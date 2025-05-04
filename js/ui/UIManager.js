@@ -537,10 +537,84 @@ export class UIManager {
             this.pauseMenu.style.display = 'flex';
         });
         
+        // UI Settings section
+        const uiTitle = document.createElement('h2');
+        uiTitle.textContent = 'UI Settings';
+        uiTitle.style.color = '#aaa';
+        uiTitle.style.fontSize = '24px';
+        uiTitle.style.marginTop = '20px';
+        uiTitle.style.alignSelf = 'center';
+        
+        // Create UI settings container
+        const uiContainer = document.createElement('div');
+        uiContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        uiContainer.style.padding = '15px';
+        uiContainer.style.borderRadius = '5px';
+        uiContainer.style.marginTop = '10px';
+        uiContainer.style.width = '80%';
+        uiContainer.style.maxWidth = '600px';
+        uiContainer.style.margin = '10px auto';
+        uiContainer.style.border = '1px solid #333';
+        
+        // Joystick Size section
+        const joystickSizeTitle = document.createElement('h3');
+        joystickSizeTitle.textContent = 'Joystick Size';
+        joystickSizeTitle.style.color = '#ffcc00';
+        joystickSizeTitle.style.marginBottom = '10px';
+        uiContainer.appendChild(joystickSizeTitle);
+        
+        // Create joystick size control
+        const joystickSizeContainer = document.createElement('div');
+        joystickSizeContainer.style.display = 'flex';
+        joystickSizeContainer.style.alignItems = 'center';
+        joystickSizeContainer.style.marginBottom = '15px';
+        
+        const joystickSizeLabel = document.createElement('label');
+        joystickSizeLabel.textContent = 'Size Multiplier: ';
+        joystickSizeLabel.style.marginRight = '10px';
+        joystickSizeLabel.style.minWidth = '120px';
+        
+        const joystickSizeValue = document.createElement('span');
+        joystickSizeValue.textContent = INPUT_CONFIG.ui.joystick.sizeMultiplier.toFixed(1) + 'x';
+        joystickSizeValue.style.marginLeft = '10px';
+        joystickSizeValue.style.minWidth = '40px';
+        
+        const joystickSizeSlider = document.createElement('input');
+        joystickSizeSlider.type = 'range';
+        joystickSizeSlider.min = '0.5';
+        joystickSizeSlider.max = '2.0';
+        joystickSizeSlider.step = '0.1';
+        joystickSizeSlider.value = INPUT_CONFIG.ui.joystick.sizeMultiplier;
+        joystickSizeSlider.style.flex = '1';
+        
+        joystickSizeSlider.addEventListener('input', () => {
+            const newSize = parseFloat(joystickSizeSlider.value);
+            joystickSizeValue.textContent = newSize.toFixed(1) + 'x';
+            
+            // Update the configuration
+            INPUT_CONFIG.ui.joystick.sizeMultiplier = newSize;
+            
+            // Update the joystick size in real-time
+            const scaledBaseSize = INPUT_CONFIG.ui.joystick.baseSize * newSize;
+            const scaledHandleSize = INPUT_CONFIG.ui.joystick.handleSize * newSize;
+            
+            this.joystickContainer.style.width = `${scaledBaseSize}px`;
+            this.joystickContainer.style.height = `${scaledBaseSize}px`;
+            this.joystickHandle.style.width = `${scaledHandleSize}px`;
+            this.joystickHandle.style.height = `${scaledHandleSize}px`;
+        });
+        
+        joystickSizeContainer.appendChild(joystickSizeLabel);
+        joystickSizeContainer.appendChild(joystickSizeSlider);
+        joystickSizeContainer.appendChild(joystickSizeValue);
+        uiContainer.appendChild(joystickSizeContainer);
+        
         // Add all elements to options menu
         optionsMenu.appendChild(title);
         optionsMenu.appendChild(controlsTitle);
         optionsMenu.appendChild(controlsContainer);
+        optionsMenu.appendChild(uiTitle);
+        optionsMenu.appendChild(uiContainer);
         optionsMenu.appendChild(audioTitle);
         optionsMenu.appendChild(audioDisabledMessage);
         optionsMenu.appendChild(backButton);
@@ -552,9 +626,20 @@ export class UIManager {
     }
     
     createVirtualJoystick() {
+        // Get joystick configuration from INPUT_CONFIG
+        const joystickConfig = INPUT_CONFIG.ui.joystick;
+        const sizeMultiplier = joystickConfig.sizeMultiplier;
+        const baseSize = joystickConfig.baseSize;
+        const handleSize = joystickConfig.handleSize;
+        
         // Create virtual joystick container
         this.joystickContainer = document.createElement('div');
         this.joystickContainer.id = 'virtual-joystick-container';
+        
+        // Apply size multiplier to joystick container
+        const scaledBaseSize = baseSize * sizeMultiplier;
+        this.joystickContainer.style.width = `${scaledBaseSize}px`;
+        this.joystickContainer.style.height = `${scaledBaseSize}px`;
         
         // Create joystick base
         this.joystickBase = document.createElement('div');
@@ -563,6 +648,11 @@ export class UIManager {
         // Create joystick handle
         this.joystickHandle = document.createElement('div');
         this.joystickHandle.id = 'virtual-joystick-handle';
+        
+        // Apply size multiplier to joystick handle
+        const scaledHandleSize = handleSize * sizeMultiplier;
+        this.joystickHandle.style.width = `${scaledHandleSize}px`;
+        this.joystickHandle.style.height = `${scaledHandleSize}px`;
         
         // Add elements to container
         this.joystickContainer.appendChild(this.joystickBase);
