@@ -70,3 +70,6 @@
 
     
 - [ ] Enhance: manage memory leak, manage object better to achieve fast render 60 FPS. , add memory usage in MB also
+
+
+- [ ] Update the service worker cache list by working through the js, assets, css, and images directories.

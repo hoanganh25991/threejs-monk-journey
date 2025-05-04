@@ -5,7 +5,7 @@ export class AudioManager {
         this.game = game;
         this.audioEnabled = true;
         this.isMuted = false;
-        this.musicVolume = 0.5;
+        this.musicVolume = 0.3; // Lowered from 0.5 to 0.3 to match main_theme.mp3 volume
         this.sfxVolume = 0.8;
         
         // Audio listeners and sources
