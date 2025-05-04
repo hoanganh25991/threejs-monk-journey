@@ -6,12 +6,34 @@
     -webkit-user-select: none; /* Safari */
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE/Edge */
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+    outline: none !important; /* Force remove outline */
+}
+
+/* Remove default focus styles for all interactive elements */
+button, a, div, input, [role="button"], [tabindex] {
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
 }
 
 body {
     overflow: hidden;
     font-family: Arial, sans-serif;
     background-color: #000;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Additional mobile-specific rules */
+html {
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Target all clickable elements */
+a, button, input, select, textarea, div[role="button"], [tabindex], .skill-button, .menu-button {
+    -webkit-tap-highlight-color: transparent !important;
+    outline: none !important;
+    -webkit-touch-callout: none;
 }
 
 /* Force landscape orientation */
@@ -252,6 +274,27 @@ body {
     -webkit-user-select: none; /* Safari */
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE/Edge */
+    outline: none !important; /* Remove default focus outline */
+    -webkit-tap-highlight-color: transparent !important; /* Remove tap highlight on mobile */
+    -webkit-touch-callout: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Custom focus style for skill buttons */
+.skill-button:focus {
+    outline: none !important; /* Remove default focus outline */
+    box-shadow: 0 0 0 3px rgba(255, 150, 0, 0.7), 0 0 10px rgba(255, 150, 0, 0.3);
+    border-color: #ff9600; /* Orange border when focused */
+}
+
+/* Additional styles to prevent highlight on mobile */
+.skill-button:active,
+.skill-button:focus,
+.skill-button:hover,
+.skill-button * {
+    -webkit-tap-highlight-color: transparent !important;
+    outline: none !important;
 }
 
 /* Mobile optimization for skills */
@@ -466,6 +509,26 @@ body {
     -webkit-user-select: none; /* Safari */
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE/Edge */
+    outline: none !important; /* Remove default focus outline */
+    -webkit-tap-highlight-color: transparent !important; /* Remove tap highlight on mobile */
+    -webkit-touch-callout: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Custom focus style for menu buttons */
+.menu-button:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(255, 150, 0, 0.7);
+}
+
+/* Additional styles to prevent highlight on mobile */
+.menu-button:active,
+.menu-button:focus,
+.menu-button:hover,
+.menu-button * {
+    -webkit-tap-highlight-color: transparent !important;
+    outline: none !important;
 }
 
 .menu-button:hover {
@@ -651,6 +714,30 @@ body {
     -webkit-user-select: none; /* Safari */
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE/Edge */
+    outline: none !important; /* Remove default focus outline */
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+#virtual-joystick-container:focus,
+#virtual-joystick-base:focus,
+#virtual-joystick-handle:focus,
+#virtual-joystick-container:active,
+#virtual-joystick-base:active,
+#virtual-joystick-handle:active {
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Prevent highlight on all joystick elements */
+#virtual-joystick-container *,
+#virtual-joystick-base *,
+#virtual-joystick-handle * {
+    -webkit-tap-highlight-color: transparent !important;
+    outline: none !important;
 }
 
 #virtual-joystick-base {

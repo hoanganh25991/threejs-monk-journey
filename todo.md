@@ -57,6 +57,12 @@
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
 
+- [ ] Enhance: review style.css file and optimise it:
+    - remove unused method
+    - remove duplicate methods
+    - define common methods to be shared
+    - separate into multiple files for easier to maintain, define interface when needed
+
     
 - [ ] Enhance: manage memory leak, manage object better to achieve fast render 60 FPS. , add memory usage in MB also
 
