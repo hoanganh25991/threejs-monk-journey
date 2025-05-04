@@ -1,3 +1,5 @@
+import { INPUT_CONFIG } from '../core/InputHandler.js';
+
 export class UIManager {
     constructor(game) {
         this.game = game;
@@ -370,46 +372,51 @@ export class UIManager {
         controlsContainer.style.maxWidth = '500px';
         controlsContainer.style.margin = '10px auto';
         
-        // Movement controls
-        const movementTitle = document.createElement('h3');
-        movementTitle.textContent = 'Movement';
-        movementTitle.style.color = '#ffcc00';
-        movementTitle.style.marginBottom = '5px';
+        // Helper function to format key code for display
+        const formatKeyCode = (keyCode) => {
+            // Remove the 'Key' prefix for letter keys
+            if (keyCode.startsWith('Key')) {
+                return keyCode.substring(3);
+            }
+            // Format digit keys
+            if (keyCode.startsWith('Digit')) {
+                return keyCode.substring(5);
+            }
+            // Handle special keys
+            switch (keyCode) {
+                case 'ArrowUp': return '↑';
+                case 'ArrowDown': return '↓';
+                case 'ArrowLeft': return '←';
+                case 'ArrowRight': return '→';
+                case 'Escape': return 'ESC';
+                case 'Semicolon': return ';';
+                default: return keyCode;
+            }
+        };
         
-        const movementText = document.createElement('p');
-        movementText.innerHTML = 'W, A, S, D or Arrow Keys - Move character';
-        movementText.style.color = '#ffffff';
-        movementText.style.marginBottom = '10px';
-        
-        // Basic actions
-        const actionsTitle = document.createElement('h3');
-        actionsTitle.textContent = 'Basic Actions';
-        actionsTitle.style.color = '#ffcc00';
-        actionsTitle.style.marginBottom = '5px';
-        
-        const actionsText = document.createElement('p');
-        actionsText.innerHTML = 'H - Basic Attack (Fist of Thunder)<br>E - Interact with objects<br>Y - Toggle Inventory<br>ESC - Pause Menu';
-        actionsText.style.color = '#ffffff';
-        actionsText.style.marginBottom = '10px';
-        
-        // Skills
-        const skillsTitle = document.createElement('h3');
-        skillsTitle.textContent = 'Skills';
-        skillsTitle.style.color = '#ffcc00';
-        skillsTitle.style.marginBottom = '5px';
-        
-        const skillsText = document.createElement('p');
-        skillsText.innerHTML = '<strong>Primary Keys:</strong><br>1, 2, 3, 4, 5, 6, 7 - Use skills<br><br><strong>Alternative Keys:</strong><br>J, K, L, ; - Same as 1, 2, 3, 4<br>U, I, O - Same as 5, 6, 7';
-        skillsText.style.color = '#ffffff';
-        skillsText.style.marginBottom = '10px';
-        
-        // Add keyboard controls to container
-        controlsContainer.appendChild(movementTitle);
-        controlsContainer.appendChild(movementText);
-        controlsContainer.appendChild(actionsTitle);
-        controlsContainer.appendChild(actionsText);
-        controlsContainer.appendChild(skillsTitle);
-        controlsContainer.appendChild(skillsText);
+        // Loop through each category in INPUT_CONFIG
+        Object.entries(INPUT_CONFIG).forEach(([category, config]) => {
+            // Create category title
+            const categoryTitle = document.createElement('h3');
+            categoryTitle.textContent = config.title;
+            categoryTitle.style.color = '#ffcc00';
+            categoryTitle.style.marginBottom = '5px';
+            controlsContainer.appendChild(categoryTitle);
+            
+            // Create category content
+            const categoryContent = document.createElement('p');
+            categoryContent.style.color = '#ffffff';
+            categoryContent.style.marginBottom = '10px';
+            
+            // Build HTML content for each control in this category
+            const controlsHtml = config.controls.map(control => {
+                const keyDisplay = control.keys.map(key => formatKeyCode(key)).join(', ');
+                return `${keyDisplay} - ${control.description}`;
+            }).join('<br>');
+            
+            categoryContent.innerHTML = controlsHtml;
+            controlsContainer.appendChild(categoryContent);
+        });
         
         // Audio settings
         const audioTitle = document.createElement('h2');

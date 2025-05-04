@@ -1,5 +1,39 @@
 import * as THREE from 'three';
 
+// Input configuration for UI display and documentation
+export const INPUT_CONFIG = {
+    movement: {
+        title: 'Movement',
+        controls: [
+            { keys: ['KeyW', 'ArrowUp'], description: 'Move Forward' },
+            { keys: ['KeyS', 'ArrowDown'], description: 'Move Backward' },
+            { keys: ['KeyA', 'ArrowLeft'], description: 'Move Left' },
+            { keys: ['KeyD', 'ArrowRight'], description: 'Move Right' }
+        ]
+    },
+    actions: {
+        title: 'Basic Actions',
+        controls: [
+            { keys: ['KeyH'], description: 'Basic Attack (Fist of Thunder)' },
+            { keys: ['KeyE'], description: 'Interact with objects' },
+            { keys: ['KeyY'], description: 'Toggle Inventory' },
+            { keys: ['Escape'], description: 'Pause Menu' }
+        ]
+    },
+    skills: {
+        title: 'Skills',
+        controls: [
+            { keys: ['Digit1', 'KeyJ'], description: 'Skill 1' },
+            { keys: ['Digit2', 'KeyK'], description: 'Skill 2' },
+            { keys: ['Digit3', 'KeyL'], description: 'Skill 3' },
+            { keys: ['Digit4', 'Semicolon'], description: 'Skill 4' },
+            { keys: ['Digit5', 'KeyU'], description: 'Skill 5' },
+            { keys: ['Digit6', 'KeyI'], description: 'Skill 6' },
+            { keys: ['Digit7', 'KeyO'], description: 'Skill 7' }
+        ]
+    }
+};
+
 export class InputHandler {
     constructor(game) {
         this.game = game;

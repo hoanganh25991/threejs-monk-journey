@@ -48,13 +48,6 @@
     - separate into multiple files for easier to maintain, define interface when needed
 
 
-- [ ] Enhance: review UIManager.js file and optimise it:
-    - remove unused method
-    - remove duplicate methods
-    - define common methods to be shared
-    - separate into multiple files for easier to maintain, define interface when needed
-
-
 - [ ] Enhance: review Enemy.js file and optimise it:
     - remove unused method
     - remove duplicate methods
