@@ -172,7 +172,7 @@ export class Player {
                 type: 'ranged',
                 damage: 20,
                 manaCost: 15,
-                cooldown: 0.1, // Reduced cooldown
+                cooldown: 1, // Reduced cooldown
                 range: 10,
                 radius: 2,
                 duration: 3.5, // Further increased duration from 2.5 to 3.5
@@ -184,7 +184,7 @@ export class Player {
                 type: 'aoe',
                 damage: 15,
                 manaCost: 25,
-                cooldown: 0.1, // Reduced cooldown
+                cooldown: 1, // Reduced cooldown
                 range: 5,
                 radius: 4,
                 duration: 2.5, // Further increased duration from 1.5 to 2.5
@@ -196,7 +196,7 @@ export class Player {
                 type: 'multi',
                 damage: 10,
                 manaCost: 30,
-                cooldown: 0.1, // Reduced cooldown
+                cooldown: 1, // Reduced cooldown
                 range: 6,
                 radius: 10,
                 duration: 5.0, // Further increased duration from 3.5 to 5.0
@@ -209,7 +209,7 @@ export class Player {
                 type: 'buff',
                 damage: 10,
                 manaCost: 20,
-                cooldown: 0.1, // Reduced cooldown
+                cooldown: 1, // Reduced cooldown
                 range: 0,
                 radius: 5,
                 duration: 10, // Further increased duration from 7 to 10
@@ -221,7 +221,7 @@ export class Player {
                 type: 'summon',
                 damage: 8,
                 manaCost: 35,
-                cooldown: 0.1, // Reduced cooldown
+                cooldown: 1, // Reduced cooldown
                 range: 2,
                 radius: 1,
                 duration: 20, // Further increased duration from 15 to 20
@@ -233,9 +233,9 @@ export class Player {
                 type: 'wave',
                 damage: 50,
                 manaCost: 40,
-                cooldown: 0.1, // Reduced cooldown
+                cooldown: 1, // Reduced cooldown
                 range: 10,
-                radius: 8,
+                radius: 5,
                 duration: 5.0, // Further increased duration from 3.5 to 5.0
                 color: 0xffdd22 // Golden color for the bell's light
             }),
@@ -245,7 +245,7 @@ export class Player {
                 type: 'mark',
                 damage: 15,
                 manaCost: 25,
-                cooldown: 0.1, // Reduced cooldown
+                cooldown: 1, // Reduced cooldown
                 range: 10,
                 radius: 5,
                 duration: 20, // Further increased duration from 15 to 20 seconds
@@ -462,9 +462,9 @@ export class Player {
             
             // Force cleanup for skills that are being spammed
             // This prevents UI and particles from persisting when holding keys
-            // Reduced from 1.1 to 0.95 to clean up even faster when spamming
-            if (skill.isActive && skill.elapsedTime > skill.duration * 0.95) {
-                console.log(`Force cleaning up skill ${skill.name} that exceeded 95% of its duration`);
+            // Reduced from 0.95 to 0.85 to clean up even faster when spamming
+            if (skill.isActive && skill.elapsedTime > skill.duration * 0.85) {
+                console.log(`Force cleaning up skill ${skill.name} that exceeded 85% of its duration`);
                 skill.remove();
                 this.activeSkills.splice(i, 1);
                 continue;
@@ -481,8 +481,8 @@ export class Player {
                 
                 if (i !== j && 
                     otherSkill.name === skill.name && 
-                    otherSkill.elapsedTime > otherSkill.duration * 0.3) { // Reduced from 0.5 to 0.3 for faster cleanup
-                    // If we have two skills of the same type and the older one is at least 30% through its duration
+                    otherSkill.elapsedTime > otherSkill.duration * 0.2) { // Reduced from 0.3 to 0.2 for faster cleanup
+                    // If we have two skills of the same type and the older one is at least 20% through its duration
                     console.log(`Cleaning up older instance of ${otherSkill.name} due to key spamming`);
                     otherSkill.remove();
                     this.activeSkills.splice(j, 1);
@@ -514,7 +514,8 @@ export class Player {
             skillNameCount[skill.name] = (skillNameCount[skill.name] || 0) + 1;
             
             // If there are too many skills of the same name, remove the oldest ones
-            const maxSkillsPerName = 1; // Only allow 1 instance of each named skill
+            // Strict limit: only allow 1 instance of each named skill
+            const maxSkillsPerName = 1;
             if (skillNameCount[skill.name] > maxSkillsPerName) {
                 // Find the oldest skill of this name
                 let oldestSkillIndex = i;
@@ -545,7 +546,8 @@ export class Player {
             }
             
             // If there are too many skills of the same type, remove the oldest ones
-            const maxSkillsPerType = 2; // Limit to 2 skills of the same type
+            // Reduced from 2 to 1 to be more aggressive with cleanup
+            const maxSkillsPerType = 1;
             if (skillTypeCount[skill.type] > maxSkillsPerType) {
                 // Find the oldest skill of this type (largest elapsedTime means it was created earlier)
                 let oldestSkillIndex = i;
@@ -801,6 +803,16 @@ export class Player {
         // Pass game reference to skill
         skill.game = this.game;
         
+        // IMPORTANT: Clean up any existing instances of this skill before creating a new one
+        // This is critical for preventing visual clutter when spamming skills
+        for (let i = this.activeSkills.length - 1; i >= 0; i--) {
+            if (this.activeSkills[i] && this.activeSkills[i].name === skill.name) {
+                console.log(`Pre-emptively removing existing instance of ${skill.name} before creating new one`);
+                this.activeSkills[i].remove();
+                this.activeSkills.splice(i, 1);
+            }
+        }
+        
         // Create skill effect
         const skillEffect = skill.createEffect(this.position, this.rotation);
         
@@ -831,6 +843,10 @@ export class Player {
                     this.game.audioManager.playSound('playerAttack');
             }
         }
+        
+        // Reset skill state to ensure clean start
+        skill.elapsedTime = 0;
+        skill.isActive = true;
         
         // Add to active skills
         this.activeSkills.push(skill);

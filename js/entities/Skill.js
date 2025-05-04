@@ -1200,7 +1200,7 @@ export class Skill {
     createWaveEffect() {
         // Configuration for bell size and appearance
         const config = {
-            bellSizeMultiplier: 2.0,  // Adjust this value to change the overall bell size
+            bellSizeMultiplier: this.radius / 5,  // Adjust this value to change the overall bell size
             bellHeight: 8,            // Height above the ground
             bellColor: 0xFFD700,      // Gold color for the bell
             bellOpacity: 0.9,         // Bell transparency
@@ -3942,6 +3942,9 @@ export class Skill {
     }
     
     remove() {
+        // Log removal for debugging
+        console.log(`Removing skill effect: ${this.name}`);
+        
         // Clean up effect and all its children recursively
         if (this.effect) {
             // Function to recursively dispose of geometries and materials
@@ -3972,12 +3975,38 @@ export class Skill {
                                     material.map.dispose();
                                     material.map = null;
                                 }
+                                // Dispose of any other textures
+                                if (material.normalMap) {
+                                    material.normalMap.dispose();
+                                    material.normalMap = null;
+                                }
+                                if (material.specularMap) {
+                                    material.specularMap.dispose();
+                                    material.specularMap = null;
+                                }
+                                if (material.emissiveMap) {
+                                    material.emissiveMap.dispose();
+                                    material.emissiveMap = null;
+                                }
                                 material.dispose();
                             }
                         } else {
                             if (obj.material.map) {
                                 obj.material.map.dispose();
                                 obj.material.map = null;
+                            }
+                            // Dispose of any other textures
+                            if (obj.material.normalMap) {
+                                obj.material.normalMap.dispose();
+                                obj.material.normalMap = null;
+                            }
+                            if (obj.material.specularMap) {
+                                obj.material.specularMap.dispose();
+                                obj.material.specularMap = null;
+                            }
+                            if (obj.material.emissiveMap) {
+                                obj.material.emissiveMap.dispose();
+                                obj.material.emissiveMap = null;
                             }
                             obj.material.dispose();
                         }
@@ -3987,6 +4016,11 @@ export class Skill {
                     // Remove from parent
                     if (obj.parent) {
                         obj.parent.remove(obj);
+                    }
+                    
+                    // Clear any userData
+                    if (obj.userData) {
+                        obj.userData = null;
                     }
                 } catch (error) {
                     console.error(`Error disposing object in skill ${this.name}:`, error);
@@ -4034,30 +4068,90 @@ export class Skill {
                 }
                 this.explodingPalmState.dustParticles = [];
             }
+            
+            // Null out the entire state
+            this.explodingPalmState = null;
         }
         
         // Clean up Wave of Light bell state
         if (this.name === 'Wave of Light' && this.bellState) {
+            // Clean up any specific bell elements if they exist
+            if (this.bellState.bellMesh && this.bellState.bellMesh.parent) {
+                if (this.bellState.bellMesh.geometry) this.bellState.bellMesh.geometry.dispose();
+                if (this.bellState.bellMesh.material) this.bellState.bellMesh.material.dispose();
+                this.bellState.bellMesh.parent.remove(this.bellState.bellMesh);
+            }
+            
+            // Clean up any light effects
+            if (this.bellState.light && this.bellState.light.parent) {
+                this.bellState.light.parent.remove(this.bellState.light);
+            }
+            
+            // Null out the entire state
             this.bellState = null;
         }
         
         // Clean up Cyclone Strike state
         if (this.name === 'Cyclone Strike' && this.cycloneState) {
+            // Clean up any specific cyclone elements if they exist
+            if (this.cycloneState.particles) {
+                for (const particle of this.cycloneState.particles) {
+                    if (particle && particle.parent) {
+                        if (particle.geometry) particle.geometry.dispose();
+                        if (particle.material) particle.material.dispose();
+                        particle.parent.remove(particle);
+                    }
+                }
+            }
+            
+            // Null out the entire state
             this.cycloneState = null;
         }
         
         // Clean up Seven-Sided Strike state
         if (this.name === 'Seven-Sided Strike' && this.sevenSidedStrikeState) {
+            // Clean up any specific strike elements if they exist
+            if (this.sevenSidedStrikeState.strikePoints) {
+                for (const point of this.sevenSidedStrikeState.strikePoints) {
+                    if (point.mesh && point.mesh.parent) {
+                        if (point.mesh.geometry) point.mesh.geometry.dispose();
+                        if (point.mesh.material) point.mesh.material.dispose();
+                        point.mesh.parent.remove(point.mesh);
+                    }
+                }
+            }
+            
+            // Null out the entire state
             this.sevenSidedStrikeState = null;
         }
         
         // Clean up Wave Strike state
         if (this.name === 'Wave Strike' && this.waveState) {
+            // Clean up any specific wave elements if they exist
+            if (this.waveState.droplets) {
+                for (const droplet of this.waveState.droplets) {
+                    if (droplet && droplet.parent) {
+                        if (droplet.geometry) droplet.geometry.dispose();
+                        if (droplet.material) droplet.material.dispose();
+                        droplet.parent.remove(droplet);
+                    }
+                }
+            }
+            
+            // Null out the entire state
             this.waveState = null;
         }
         
         // Clean up Mystic Ally state
         if (this.name === 'Mystic Ally' && this.mysticAllyState) {
+            // Clean up any specific ally elements if they exist
+            if (this.mysticAllyState.allyMesh && this.mysticAllyState.allyMesh.parent) {
+                if (this.mysticAllyState.allyMesh.geometry) this.mysticAllyState.allyMesh.geometry.dispose();
+                if (this.mysticAllyState.allyMesh.material) this.mysticAllyState.allyMesh.material.dispose();
+                this.mysticAllyState.allyMesh.parent.remove(this.mysticAllyState.allyMesh);
+            }
+            
+            // Null out the entire state
             this.mysticAllyState = null;
         }
         
@@ -4066,8 +4160,14 @@ export class Skill {
         this.isActive = false;
         this.elapsedTime = 0;
         
+        // Clear any references that might cause memory leaks
+        this.position.set(0, 0, 0);
+        this.direction.set(0, 0, 0);
+        
         // Force garbage collection hint (not guaranteed but can help)
         if (window.gc) window.gc();
+        
+        console.log(`Skill ${this.name} cleanup completed`);
     }
     
     getPosition() {
