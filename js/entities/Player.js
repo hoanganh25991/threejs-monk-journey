@@ -273,7 +273,7 @@ export class Player {
                 damage: 15,
                 manaCost: 25,
                 cooldown: 0.5, // Reduced cooldown
-                range: 10,
+                range: 100,
                 radius: 5,
                 duration: 20, // Further increased duration from 15 to 20 seconds
                 color: 0xff3333
@@ -1157,6 +1157,35 @@ export class Player {
         } else {
             // For non-teleport skills, create the effect in the direction of the enemy if found
             // or in the current player direction if no enemy is found
+            
+            // COMPLETELY REVISED DIRECTION HANDLING
+            
+            // First priority: If there's a target enemy, face that direction (already handled above)
+            if (targetEnemy) {
+                // Direction already set in the code above
+                console.log("Using enemy direction for skill cast");
+            } 
+            // Second priority: If player is moving, use movement direction
+            else if (this.game && this.game.inputHandler) {
+                const moveDir = this.game.inputHandler.getMovementDirection();
+                
+                if (moveDir.length() > 0) {
+                    // Player is actively moving - use that direction
+                    this.rotation.y = Math.atan2(moveDir.x, moveDir.z);
+                    console.log(`Using movement direction for skill: ${moveDir.x.toFixed(2)}, ${moveDir.z.toFixed(2)}`);
+                } else {
+                    // Player is not moving - use current facing direction
+                    console.log(`Using current facing direction: ${Math.sin(this.rotation.y).toFixed(2)}, ${Math.cos(this.rotation.y).toFixed(2)}`);
+                }
+            }
+            
+            // Always update model rotation to match player rotation
+            this.modelGroup.rotation.y = this.rotation.y;
+            
+            // Log the final direction that will be used
+            console.log(`Final rotation for skill cast: ${this.rotation.y.toFixed(2)} radians`);
+            
+            // Create the skill effect with the player's position and rotation
             const skillEffect = skill.createEffect(this.position, this.rotation);
             
             // Add skill effect to scene

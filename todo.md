@@ -2,63 +2,66 @@
 - [x] Fix issue: alert message at middle of the screen should on take and stack up 1/5 of the screen, to allow view other, sometime i spawn skills, and too much message show up, it's consume whole height of the screen. Apply quickly remove old messages, if too much new messages coming.
 - [x] Enhance: instead of showing damage of enemy by number, show it as particle effect of blooding, base on the damage value, variant the colour. Just show the damage of the skill player casted, not all enemies, and show them in stacked way, max one per 0.3 second.
 - [x] Enhance: move the health bar and mana bar to top left corner, in same container with the level, show the icon, hero-portrait of the monk. Show absolute remain/max health, remain/max mana
-- [] Enhance: let the skill cast forward to the near enemies automatically, when cast skill, change the player face to that direction automatically also
-- [x] Enhance: add basic attack, we have "fist of thunder" (please refer to fist of thunder in diablo immortal), where hero move quickly like teleport toward an enemy and hit him, add action to this basic attack:
-    - move to enemy
-    - punch enemy
+- [x] Enhance: let the skill cast forward to the near enemies automatically, when cast skill, change the player face to that direction automatically also
+- [x] Enhance: add basic attack, we have "fist of thunder" (please refer to fist of thunder in diablo immortal), where hero move quickly like teleport toward an enemy and hit him.
 - [x] Enhance: add punch action as base attack of hero, when enemy closed to hero (melee range), auto punch, and has punch animation and has damage, basic damge based on level, items, attribute
-- [] Enhance: add config to createTeleportEffect, allow to easily say increase size of effect 2 times, than the skill effect 2 times bigger
-- [] Enhance: remove the first terrain, replace with the ground with grey colour, something special to mark that, this is initial place, like our village, add some structures to it. Then only spawn enemies on other dynamic generated terrain.
-- [] Enhance: help me generate audio effect for each skill when casted, when in duration effect if has something special need to added. audio-generator.html is what help me generate audio before.
-- [] Enhance: draw hero model similar to man monk, provide much complex look for man monk, muscle, head, chest, hand, leg. Add action when moving, add action for legs and hands.
-- [] Enhance: draw complex model for skeleton monster, close to skeleton, not solid box
-- [] Enhance: createWaveEffect, add config at top of this method, allow me to control the size of the bell, if i want to bell 2 times bigger then current, i just x2 that bell size number
-- [] Enhance: review World.js file and optimise it:
+- [ ] Enhance: allow me to press:
+    - "j","k","l",";" equal to "1","2","3","4"
+    - "u","i","o" equal to "5","6","7"
+- [ ] Enhance: add config to creaeTeleportEffect, allow to easily say increase size of effect 2 times, than the skill effect 2 times bigger
+- [ ] Enhance: when punch automatically, it will be 1,2, 1,2,3, 1,2, 1,2,3,... but at 5 times of this loop, it create heavy punch, which like a ball of thunder enegey at top of his punch and effect damage to all enemies close to that
+- [ ] Enhance: remove the first terrain, replace with the ground with grey colour, something special to mark that, this is initial place, like our village, add some structures to it. Then only spawn enemies on other dynamic generated terrain.
+- [ ] Enhance: help me generate audio effect for each skill when casted, when in duration effect if has something special need to added. audio-generator.html is what help me generate audio before.
+- [ ] Enhance: draw hero model similar to man monk, provide much complex look for man monk, muscle, head, chest, hand, leg. Add action when moving, add action for legs and hands.
+- [ ] Enhance: draw complex model for skeleton monster, close to skeleton, not solid box
+- [ ] Enhance: createWaveEffect, add config at top of this method, allow me to control the size of the bell, if i want to bell 2 times bigger then current, i just x2 that bell size number
+- [ ] Enhance: add GPU acceleration which help to make game much faster, auto reduce complex of threejs, shadow,... to allow have good FPS on medium device, add FPS on top-right of the screen, control the effect, things by target FPS: 60
+- [ ] Enhance: review World.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
     - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
-- [] Enhance: review Player.js file and optimise it:
-    - remove unused method
-    - remove duplicate methods
-    - define common methods to be shared
-    - separate into multiple files for easier to maintain, define interface when needed
-    - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
-
-- [] Enhance: review Skill.js file and optimise it:
-    - remove unused method
-    - remove duplicate methods
-    - define common methods to be shared
-    - separate into multiple files for easier to maintain, define interface when needed
-    - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
-
-- [] Enhance: review UIManager.js file and optimise it:
+- [ ] Enhance: review Player.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
     - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
 
-- [] Enhance: review UIManager.js file and optimise it:
+- [ ] Enhance: review Skill.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
     - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
 
-- [] Enhance: review Enemy.js file and optimise it:
+- [ ] Enhance: review UIManager.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
     - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
 
-- [] Enhance: review EnemyManager.js file and optimise it:
+- [ ] Enhance: review UIManager.js file and optimise it:
+    - remove unused method
+    - remove duplicate methods
+    - define common methods to be shared
+    - separate into multiple files for easier to maintain, define interface when needed
+    - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
+
+- [ ] Enhance: review Enemy.js file and optimise it:
+    - remove unused method
+    - remove duplicate methods
+    - define common methods to be shared
+    - separate into multiple files for easier to maintain, define interface when needed
+    - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
+
+- [ ] Enhance: review EnemyManager.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
     - things related to threejs group should be solid return threejs group, so that we can review it by model-viewer.html (for static model and active model like skill also)
     
-- [] Enhance: add GPU acceleration, manage memory leak, manage object better to achieve fast render 60 FPS. Add FPS on top-right of the screen, add memory usage in MB also
+- [ ] Enhance: manage memory leak, manage object better to achieve fast render 60 FPS. , add memory usage in MB also

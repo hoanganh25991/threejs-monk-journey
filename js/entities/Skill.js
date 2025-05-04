@@ -59,11 +59,17 @@ export class Skill {
         }
         
         // Set skill direction based on player rotation
+        // IMPORTANT: For Exploding Palm, we need to ensure it always moves forward
+        // in the direction the player is facing
         this.direction.set(
             Math.sin(playerRotation.y),
             0,
             Math.cos(playerRotation.y)
         );
+        
+        // Log the direction for debugging
+        console.log(`Skill ${this.name} direction set to: ${this.direction.x.toFixed(2)}, ${this.direction.z.toFixed(2)}`);
+        console.log(`Based on player rotation: ${playerRotation.y.toFixed(2)} radians`);
         
         // Validate direction vector
         if (!this.validateVector(this.direction)) {
@@ -2859,9 +2865,11 @@ export class Skill {
                 trails.push(trail);
             }
             
-            // Rotate hand to face forward with fingers pointing upward (180 degree rotation)
-            handGroup.rotation.x = Math.PI / 2;
-            handGroup.rotation.z = Math.PI; // 180 degree rotation to flip the palm
+            // FIX: Rotate hand to face forward with fingers pointing upward (to the sky)
+            // Changed rotation to make palm face forward with fingers extended upward
+            handGroup.rotation.x = -Math.PI / 2; // Rotate to make fingers point up
+            handGroup.rotation.z = 0; // No rotation on Z axis
+            
             // Position higher for better visibility
             handGroup.position.y = 1.5; // Higher position
             
@@ -3054,7 +3062,24 @@ export class Skill {
         effectGroup.position.copy(this.position);
         
         // Set the correct rotation to face the direction the player is looking
-        effectGroup.rotation.y = Math.atan2(this.direction.x, this.direction.z);
+        const rotationAngle = Math.atan2(this.direction.x, this.direction.z);
+        effectGroup.rotation.y = rotationAngle;
+        
+        // For Exploding Palm, ensure the palm group is also properly rotated
+        if (this.name === 'Exploding Palm' && this.explodingPalmState && this.explodingPalmState.palmGroup) {
+            // Set the palm group's initial rotation to match the player's direction
+            this.explodingPalmState.palmGroup.rotation.y = rotationAngle;
+            
+            // Ensure the hand is oriented correctly within the palm group
+            if (this.explodingPalmState.handGroup) {
+                // Fine-tune hand orientation if needed
+                this.explodingPalmState.handGroup.rotation.y = 0; // Keep aligned with palm group
+            }
+            
+            // Debug log to confirm direction
+            console.log(`Exploding Palm initial direction: ${this.direction.x.toFixed(2)}, ${this.direction.z.toFixed(2)}`);
+            console.log(`Exploding Palm rotation angle: ${rotationAngle.toFixed(2)} radians`);
+        }
         
         // Debug message to confirm the skill is being created
         console.log(`Created Exploding Palm effect at position:`, this.position, 
@@ -3112,32 +3137,69 @@ export class Skill {
             
             // Handle flying phase
             if (this.explodingPalmState.phase === 'flying') {
+                // COMPLETELY REVISED AUTO-TARGETING SYSTEM
+                // Always use the initial direction for the first frame
+                let targetDirection;
+                
+                // On the first frame, use the initial direction (from player facing)
+                if (this.explodingPalmState.age < delta * 2) {
+                    // Use the initial direction set when the skill was created
+                    targetDirection = this.direction.clone();
+                    console.log("Using initial direction for Exploding Palm");
+                } else {
+                    // After first frame, check for enemies to target
+                    let targetEnemy = null;
+                    
+                    // Default to continuing in the current direction if no enemy found
+                    targetDirection = this.direction.clone();
+                    
+                    if (this.game && this.game.enemies) {
+                        // Find the nearest enemy within range
+                        let nearestDistance = Infinity;
+                        const palmPosition = new THREE.Vector3(
+                            palmGroup.position.x,
+                            palmGroup.position.y,
+                            palmGroup.position.z
+                        );
+                        
+                        for (const enemy of this.game.enemies) {
+                            if (enemy && enemy.position && !enemy.state.isDead) {
+                                const distance = palmPosition.distanceTo(enemy.position);
+                                
+                                // Check if this enemy is closer than the current nearest
+                                if (distance < nearestDistance && distance < this.range) {
+                                    nearestDistance = distance;
+                                    targetEnemy = enemy;
+                                }
+                            }
+                        }
+                        
+                        // If we found a target enemy, adjust direction towards it
+                        if (targetEnemy) {
+                            // Calculate direction to enemy - this is a direct line from palm to enemy
+                            const enemyPosition = targetEnemy.position.clone();
+                            targetDirection = new THREE.Vector3().subVectors(enemyPosition, palmPosition).normalize();
+                            
+                            // Update palm rotation to face the enemy
+                            const angle = Math.atan2(targetDirection.x, targetDirection.z);
+                            palmGroup.rotation.y = angle;
+                            
+                            console.log(`Auto-targeting enemy with Exploding Palm, distance: ${nearestDistance.toFixed(2)}`);
+                        }
+                    }
+                }
+                
                 // Move the palm forward
                 const moveDistance = this.explodingPalmState.flyingSpeed * delta;
                 this.explodingPalmState.distanceTraveled += moveDistance;
                 
-                // Calculate new position
-                const newPosition = new THREE.Vector3(
-                    this.position.x + this.direction.x * moveDistance,
-                    this.position.y,
-                    this.position.z + this.direction.z * moveDistance
-                );
+                // Update palm position using the target direction
+                palmGroup.position.add(targetDirection.clone().multiplyScalar(moveDistance));
                 
-                // Update palm position
-                palmGroup.position.set(
-                    palmGroup.position.x + this.direction.x * moveDistance,
-                    palmGroup.position.y,
-                    palmGroup.position.z + this.direction.z * moveDistance
-                );
-                
-                // Animate hand to show heaviness (no rotation, just steady movement with effects)
+                // Animate hand to show power
                 if (handGroup) {
-                    // Keep the hand steady (no rotation) for a more powerful, heavy appearance
-                    // handGroup.rotation.z is now fixed at Math.PI (set during creation)
-                    
-                    // Add very slight downward tilt to show weight
-                    const tiltAmount = 0.05;
-                    handGroup.rotation.x = (Math.PI / 2) + tiltAmount;
+                    // FIX: Keep the hand oriented correctly with fingers pointing forward
+                    // No need to adjust rotation.x as we fixed it in createMarkEffect
                     
                     // Add very subtle slow pulse to show power
                     const pulseFactor = 1 + Math.sin(this.explodingPalmState.age * 2) * 0.03;
