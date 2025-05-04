@@ -3,12 +3,12 @@ export class SaveManager {
         this.game = game;
         this.saveKey = 'diablo_immortal_save';
         this.chunkSaveKeyPrefix = 'diablo_immortal_chunk_';
-        this.autoSaveInterval = 300000; // Auto-save every 5 minutes (reduced frequency)
+        this.autoSaveInterval = 60_000; // Auto-save every minute (reduced frequency)
         this.autoSaveTimer = null;
         this.lastSaveLevel = 0; // Track player level at last save
         this.saveThresholdLevels = [5, 10, 15, 20, 30, 40, 50]; // Save at these level milestones
         this.lastSaveTime = 0; // Track time of last save
-        this.minTimeBetweenSaves = 600000; // Minimum 10 minutes between saves
+        this.minTimeBetweenSaves = 60_000; // Minimum minute between saves
     }
     
     init() {

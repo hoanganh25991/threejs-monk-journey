@@ -1043,21 +1043,27 @@ export class Player {
     }
     
     useSkill(skillIndex) {
+        console.log('Player.useSkill called with index:', skillIndex);
+        
         // Check if skill index is valid
         if (skillIndex < 0 || skillIndex >= this.skills.length) {
+            console.log('Invalid skill index:', skillIndex, 'Max index:', this.skills.length - 1);
             return false;
         }
         
         // Get skill
         const skill = this.skills[skillIndex];
+        console.log('Using skill:', skill.name);
         
         // Check if skill is on cooldown
         if (skill.isOnCooldown()) {
+            console.log('Skill is on cooldown:', skill.name);
             return false;
         }
         
         // Check if player has enough mana
         if (this.stats.mana < skill.manaCost) {
+            console.log('Not enough mana for skill:', skill.name);
             return false;
         }
         

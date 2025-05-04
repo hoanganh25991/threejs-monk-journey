@@ -5,13 +5,13 @@
 - [x] Enhance: let the skill cast forward to the near enemies automatically, when cast skill, change the player face to that direction automatically also
 - [x] Enhance: add basic attack, we have "fist of thunder" (please refer to fist of thunder in diablo immortal), where hero move quickly like teleport toward an enemy and hit him.
 - [x] Enhance: add punch action as base attack of hero, when enemy closed to hero (melee range), auto punch, and has punch animation and has damage, basic damge based on level, items, attribute
-- [ ] Enhance: allow me to press:
+- [x] Enhance: allow me to press:
     - "j","k","l",";" equal to "1","2","3","4"
     - "u","i","o" equal to "5","6","7"
 - [ ] Enhance: add config to creaeTeleportEffect, allow to easily say increase size of effect 2 times, than the skill effect 2 times bigger
 - [ ] Enhance: when punch automatically, it will be 1,2, 1,2,3, 1,2, 1,2,3,... but at 5 times of this loop, it create heavy punch, which like a ball of thunder enegey at top of his punch and effect damage to all enemies close to that
 - [ ] Enhance: remove the first terrain, replace with the ground with grey colour, something special to mark that, this is initial place, like our village, add some structures to it. Then only spawn enemies on other dynamic generated terrain.
-- [ ] Enhance: help me generate audio effect for each skill when casted, when in duration effect if has something special need to added. audio-generator.html is what help me generate audio before.
+- [ ] Enhance: help me generate audio effect for each skill when casted, when in duration effect if has something special need to added. generate-audio.js is what help me generate audio before.
 - [ ] Enhance: draw hero model similar to man monk, provide much complex look for man monk, muscle, head, chest, hand, leg. Add action when moving, add action for legs and hands.
 - [ ] Enhance: draw complex model for skeleton monster, close to skeleton, not solid box
 - [ ] Enhance: createWaveEffect, add config at top of this method, allow me to control the size of the bell, if i want to bell 2 times bigger then current, i just x2 that bell size number

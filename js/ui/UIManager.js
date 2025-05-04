@@ -354,6 +354,63 @@ export class UIManager {
         const title = document.createElement('h1');
         title.textContent = 'Options';
         
+        // Keyboard Controls section
+        const controlsTitle = document.createElement('h2');
+        controlsTitle.textContent = 'Keyboard Controls';
+        controlsTitle.style.color = '#aaa';
+        controlsTitle.style.fontSize = '24px';
+        controlsTitle.style.marginTop = '20px';
+        
+        // Create controls container
+        const controlsContainer = document.createElement('div');
+        controlsContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        controlsContainer.style.padding = '15px';
+        controlsContainer.style.borderRadius = '5px';
+        controlsContainer.style.marginTop = '10px';
+        controlsContainer.style.maxWidth = '500px';
+        controlsContainer.style.margin = '10px auto';
+        
+        // Movement controls
+        const movementTitle = document.createElement('h3');
+        movementTitle.textContent = 'Movement';
+        movementTitle.style.color = '#ffcc00';
+        movementTitle.style.marginBottom = '5px';
+        
+        const movementText = document.createElement('p');
+        movementText.innerHTML = 'W, A, S, D or Arrow Keys - Move character';
+        movementText.style.color = '#ffffff';
+        movementText.style.marginBottom = '10px';
+        
+        // Basic actions
+        const actionsTitle = document.createElement('h3');
+        actionsTitle.textContent = 'Basic Actions';
+        actionsTitle.style.color = '#ffcc00';
+        actionsTitle.style.marginBottom = '5px';
+        
+        const actionsText = document.createElement('p');
+        actionsText.innerHTML = 'H - Basic Attack (Fist of Thunder)<br>E - Interact with objects<br>Y - Toggle Inventory<br>ESC - Pause Menu';
+        actionsText.style.color = '#ffffff';
+        actionsText.style.marginBottom = '10px';
+        
+        // Skills
+        const skillsTitle = document.createElement('h3');
+        skillsTitle.textContent = 'Skills';
+        skillsTitle.style.color = '#ffcc00';
+        skillsTitle.style.marginBottom = '5px';
+        
+        const skillsText = document.createElement('p');
+        skillsText.innerHTML = '<strong>Primary Keys:</strong><br>1, 2, 3, 4, 5, 6, 7 - Use skills<br><br><strong>Alternative Keys:</strong><br>J, K, L, ; - Same as 1, 2, 3, 4<br>U, I, O - Same as 5, 6, 7';
+        skillsText.style.color = '#ffffff';
+        skillsText.style.marginBottom = '10px';
+        
+        // Add keyboard controls to container
+        controlsContainer.appendChild(movementTitle);
+        controlsContainer.appendChild(movementText);
+        controlsContainer.appendChild(actionsTitle);
+        controlsContainer.appendChild(actionsText);
+        controlsContainer.appendChild(skillsTitle);
+        controlsContainer.appendChild(skillsText);
+        
         // Audio settings
         const audioTitle = document.createElement('h2');
         audioTitle.textContent = 'Audio Settings';
@@ -378,7 +435,10 @@ export class UIManager {
             this.pauseMenu.style.display = 'flex';
         });
         
+        // Add all elements to options menu
         optionsMenu.appendChild(title);
+        optionsMenu.appendChild(controlsTitle);
+        optionsMenu.appendChild(controlsContainer);
         optionsMenu.appendChild(audioTitle);
         optionsMenu.appendChild(audioDisabledMessage);
         optionsMenu.appendChild(backButton);

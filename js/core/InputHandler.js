@@ -11,6 +11,17 @@ export class InputHandler {
         };
         this.raycaster = new THREE.Raycaster();
         
+        // Key mapping for alternative keys
+        this.keyMapping = {
+            KeyJ: 'Digit1',
+            KeyK: 'Digit2',
+            KeyL: 'Digit3',
+            Semicolon: 'Digit4',
+            KeyU: 'Digit5',
+            KeyI: 'Digit6',
+            KeyO: 'Digit7'
+        };
+        
         // Track skill keys being held down
         this.skillKeysHeld = {
             KeyH: false, // H key for Fist of Thunder
@@ -20,7 +31,15 @@ export class InputHandler {
             Digit4: false,
             Digit5: false,
             Digit6: false,
-            Digit7: false
+            Digit7: false,
+            // Alternative keys
+            KeyJ: false, // Alternative to Digit1
+            KeyK: false, // Alternative to Digit2
+            KeyL: false, // Alternative to Digit3
+            Semicolon: false, // Alternative to Digit4
+            KeyU: false, // Alternative to Digit5
+            KeyI: false, // Alternative to Digit6
+            KeyO: false  // Alternative to Digit7
         };
         
         // Cooldown tracking for continuous casting
@@ -32,7 +51,15 @@ export class InputHandler {
             Digit4: 0,
             Digit5: 0,
             Digit6: 0,
-            Digit7: 0
+            Digit7: 0,
+            // Alternative keys
+            KeyJ: 0, // Alternative to Digit1
+            KeyK: 0, // Alternative to Digit2
+            KeyL: 0, // Alternative to Digit3
+            Semicolon: 0, // Alternative to Digit4
+            KeyU: 0, // Alternative to Digit5
+            KeyI: 0, // Alternative to Digit6
+            KeyO: 0  // Alternative to Digit7
         };
         
         // Initialize input event listeners
@@ -45,16 +72,22 @@ export class InputHandler {
         window.addEventListener('keydown', (event) => {
             this.keys[event.code] = true;
             
+            // Debug: Log key press
+            console.log('Key pressed:', event.code);
+            
             // Handle special key presses
             switch (event.code) {
-                case 'KeyI':
-                    // Toggle inventory
+                case 'KeyY':
+                    // Toggle inventory with Y key
                     this.game.uiManager.toggleInventory();
+                    console.log('Toggling inventory with KeyY');
                     break;
+                    
                 case 'Escape':
                     // Toggle pause menu
                     this.game.uiManager.togglePauseMenu();
                     break;
+                    
                 case 'KeyH':
                     // Mark H key as held down for basic attack
                     this.skillKeysHeld[event.code] = true;
@@ -62,6 +95,7 @@ export class InputHandler {
                     // Use basic attack (teleport or punch)
                     this.game.player.useBasicAttack();
                     break;
+                    
                 case 'Digit1':
                 case 'Digit2':
                 case 'Digit3':
@@ -73,13 +107,39 @@ export class InputHandler {
                     this.skillKeysHeld[event.code] = true;
                     
                     // Initial skill cast when key is first pressed
-                    // Add 1 to the index because Fist of Thunder is at index 0
                     const skillIndex = parseInt(event.code.charAt(5));
+                    console.log(`Using skill with index: ${skillIndex} from key: ${event.code}`);
                     this.game.player.useSkill(skillIndex);
                     break;
+                    
                 case 'KeyE':
                     // Interact with objects
                     this.game.player.interact();
+                    break;
+                    
+                // Handle all alternative keys
+                default:
+                    // Check if this is an alternative key
+                    if (this.keyMapping[event.code]) {
+                        console.log(`Alternative key ${event.code} pressed`);
+                        
+                        // Mark alternative skill key as held down
+                        this.skillKeysHeld[event.code] = true;
+                        
+                        // Get the corresponding digit key
+                        const mappedKey = this.keyMapping[event.code];
+                        console.log(`${event.code} mapped to: ${mappedKey}`);
+                        
+                        // Also mark the original key as held down for consistency
+                        this.skillKeysHeld[mappedKey] = true;
+                        
+                        // Get the skill index from the mapped key
+                        const altSkillIndex = parseInt(mappedKey.charAt(5));
+                        console.log(`${event.code} skill index: ${altSkillIndex}`);
+                        
+                        // Use the skill
+                        this.game.player.useSkill(altSkillIndex);
+                    }
                     break;
             }
         });
@@ -92,6 +152,13 @@ export class InputHandler {
             if (this.skillKeysHeld[event.code] !== undefined) {
                 this.skillKeysHeld[event.code] = false;
                 this.skillCastCooldowns[event.code] = 0;
+                
+                // If this is an alternative key, also reset the original key
+                if (this.keyMapping[event.code]) {
+                    const mappedKey = this.keyMapping[event.code];
+                    this.skillKeysHeld[mappedKey] = false;
+                    this.skillCastCooldowns[mappedKey] = 0;
+                }
             }
         });
     }
@@ -298,6 +365,7 @@ export class InputHandler {
         // Handle continuous skill casting for held keys
         const castInterval = 0.1; // Cast every 0.1 seconds when key is held
         
+        // Process only the keys that are actually held down
         for (const keyCode in this.skillKeysHeld) {
             if (this.skillKeysHeld[keyCode]) {
                 // Reduce cooldown
@@ -305,17 +373,35 @@ export class InputHandler {
                 
                 // If cooldown is up, cast the skill again
                 if (this.skillCastCooldowns[keyCode] <= 0) {
-                    if (keyCode === 'KeyH') {
-                        // Special handling for H key (Fist of Thunder)
-                        this.game.player.useBasicAttack();
-                    } else {
-                        // For number keys
-                        const skillIndex = parseInt(keyCode.charAt(5));
-                        this.game.player.useSkill(skillIndex);
+                    try {
+                        if (keyCode === 'KeyH') {
+                            // Special handling for H key (Fist of Thunder)
+                            console.log('Continuous casting: Basic attack (KeyH)');
+                            this.game.player.useBasicAttack();
+                            this.skillCastCooldowns[keyCode] = castInterval;
+                        } else if (keyCode.startsWith('Digit')) {
+                            // For number keys
+                            const skillIndex = parseInt(keyCode.charAt(5));
+                            console.log('Continuous casting: Digit key', keyCode, 'Skill index:', skillIndex);
+                            this.game.player.useSkill(skillIndex);
+                            this.skillCastCooldowns[keyCode] = castInterval;
+                        } else if (this.keyMapping && this.keyMapping[keyCode]) {
+                            // For alternative keys (j,k,l,;,u,i,o)
+                            const mappedKey = this.keyMapping[keyCode];
+                            const skillIndex = parseInt(mappedKey.charAt(5));
+                            console.log('Continuous casting: Alternative key', keyCode, 'mapped to', mappedKey, 'Skill index:', skillIndex);
+                            this.game.player.useSkill(skillIndex);
+                            
+                            // Reset cooldown for both the alternative key and the original key
+                            this.skillCastCooldowns[keyCode] = castInterval;
+                            this.skillCastCooldowns[mappedKey] = castInterval;
+                        }
+                    } catch (error) {
+                        console.error(`Error in continuous casting for key ${keyCode}:`, error);
+                        // Reset the key state to prevent further errors
+                        this.skillKeysHeld[keyCode] = false;
+                        this.skillCastCooldowns[keyCode] = 0;
                     }
-                    
-                    // Reset cooldown
-                    this.skillCastCooldowns[keyCode] = castInterval;
                 }
             }
         }
