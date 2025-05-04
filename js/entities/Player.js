@@ -182,18 +182,6 @@ export class Player {
         // Initialize monk skills with reduced cooldown and further increased durations
         this.skills = [
             new Skill({
-                name: 'Fist of Thunder',
-                description: 'Teleport to the nearest enemy and strike them with lightning',
-                type: 'teleport',
-                damage: 1,
-                manaCost: 0,
-                cooldown: 0, // Very short cooldown for basic attack
-                range: 25, // Teleport range
-                radius: 2, // Area of effect after teleport
-                duration: 1.0, // Short duration
-                color: 0x4169e1 // Royal blue color for lightning
-            }),
-            new Skill({
                 name: 'Wave Strike',
                 description: 'Send a wave of energy towards enemies',
                 type: 'ranged',
@@ -277,7 +265,20 @@ export class Player {
                 radius: 5,
                 duration: 20, // Further increased duration from 15 to 20 seconds
                 color: 0xff3333
-            })
+            }),
+            new Skill({
+                name: 'Fist of Thunder',
+                description: 'Teleport to the nearest enemy and strike them with lightning',
+                type: 'teleport',
+                damage: 1,
+                manaCost: 0,
+                cooldown: 0, // Very short cooldown for basic attack
+                range: 25, // Teleport range
+                radius: 2, // Area of effect after teleport
+                duration: 1.0, // Short duration
+                color: 0x4169e1, // Royal blue color for lightning,
+                basicAttack: true,
+            }),
         ];
     }
     

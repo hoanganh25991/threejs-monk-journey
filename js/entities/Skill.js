@@ -23,6 +23,9 @@ export class Skill {
         this.effect = null;
         this.position = new THREE.Vector3();
         this.direction = new THREE.Vector3();
+
+        // Primary Skill (Basic Attack)
+        this.basicAttack = config.basicAttack || false;       
     }
     
     // Utility method to validate vector values

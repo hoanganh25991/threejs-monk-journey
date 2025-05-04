@@ -215,11 +215,6 @@ export class InputHandler {
             // Handle mouse button clicks
             switch (event.button) {
                 case 0: // Left click
-                    // Move player to target location
-                    if (this.mouse.target) {
-                        this.game.player.moveTo(this.mouse.target);
-                    }
-                    
                     // Check for interactive objects
                     this.checkInteraction();
                     break;
@@ -363,6 +358,7 @@ export class InputHandler {
     getMovementDirection() {
         const direction = new THREE.Vector3(0, 0, 0);
         
+        // Check for keyboard input
         if (this.isKeyPressed('KeyW') || this.isKeyPressed('ArrowUp')) {
             direction.z -= 1;
         }
@@ -377,6 +373,18 @@ export class InputHandler {
         
         if (this.isKeyPressed('KeyD') || this.isKeyPressed('ArrowRight')) {
             direction.x += 1;
+        }
+        
+        // Check for joystick input (if available)
+        if (this.game && this.game.uiManager && this.game.uiManager.getJoystickDirection) {
+            const joystickDir = this.game.uiManager.getJoystickDirection();
+            
+            // Only use joystick if it's active (has non-zero values)
+            if (joystickDir && (joystickDir.x !== 0 || joystickDir.y !== 0)) {
+                // Override keyboard input with joystick input
+                direction.x = joystickDir.x;
+                direction.z = joystickDir.y; // Y axis of joystick maps to Z axis in 3D space
+            }
         }
         
         // Normalize direction vector

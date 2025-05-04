@@ -35,6 +35,9 @@ export class UIManager {
         
         // Create death screen
         this.createDeathScreen();
+        
+        // Create virtual joystick for touch devices
+        this.createVirtualJoystick();
     }
     
     createUIContainer() {
@@ -205,7 +208,15 @@ export class UIManager {
             // Create key indicator
             const skillKey = document.createElement('div');
             skillKey.className = 'skill-key';
-            skillKey.textContent = index == 0 ? "h" : index;
+            
+            // Adjust key display to match our grid layout (4,5,6,7 on top, 1,2,3,h below)
+            let keyDisplay;
+            keyDisplay = index + 1; 
+            if (skill.basicAttack) {
+                keyDisplay = "h"; // Primary skill (Basic Attack)
+            }
+            
+            skillKey.textContent = keyDisplay;
             skillButton.appendChild(skillKey);
             
             // Create cooldown overlay
@@ -538,6 +549,161 @@ export class UIManager {
         document.body.appendChild(optionsMenu);
         
         console.log('Options menu created and added to DOM');
+    }
+    
+    createVirtualJoystick() {
+        // Create virtual joystick container
+        this.joystickContainer = document.createElement('div');
+        this.joystickContainer.id = 'virtual-joystick-container';
+        
+        // Create joystick base
+        this.joystickBase = document.createElement('div');
+        this.joystickBase.id = 'virtual-joystick-base';
+        
+        // Create joystick handle
+        this.joystickHandle = document.createElement('div');
+        this.joystickHandle.id = 'virtual-joystick-handle';
+        
+        // Add elements to container
+        this.joystickContainer.appendChild(this.joystickBase);
+        this.joystickContainer.appendChild(this.joystickHandle);
+        
+        // Add container to UI
+        this.uiContainer.appendChild(this.joystickContainer);
+        
+        // Initialize joystick state
+        this.joystickState = {
+            active: false,
+            centerX: 0,
+            centerY: 0,
+            currentX: 0,
+            currentY: 0,
+            direction: { x: 0, y: 0 }
+        };
+        
+        // Set up touch event listeners
+        this.setupJoystickEvents();
+    }
+    
+    setupJoystickEvents() {
+        // Touch start event
+        this.joystickContainer.addEventListener('touchstart', (event) => {
+            event.preventDefault();
+            this.handleJoystickStart(event.touches[0].clientX, event.touches[0].clientY);
+        });
+        
+        // Mouse down event (for testing on desktop)
+        this.joystickContainer.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+            this.handleJoystickStart(event.clientX, event.clientY);
+            
+            // Add global mouse move and up events
+            document.addEventListener('mousemove', this.handleMouseMove);
+            document.addEventListener('mouseup', this.handleMouseUp);
+        });
+        
+        // Touch move event
+        this.joystickContainer.addEventListener('touchmove', (event) => {
+            event.preventDefault();
+            if (this.joystickState.active) {
+                this.handleJoystickMove(event.touches[0].clientX, event.touches[0].clientY);
+            }
+        });
+        
+        // Touch end event
+        this.joystickContainer.addEventListener('touchend', (event) => {
+            event.preventDefault();
+            this.handleJoystickEnd();
+        });
+        
+        // Touch cancel event
+        this.joystickContainer.addEventListener('touchcancel', (event) => {
+            event.preventDefault();
+            this.handleJoystickEnd();
+        });
+        
+        // Mouse move handler (defined as property to allow removal)
+        this.handleMouseMove = (event) => {
+            event.preventDefault();
+            if (this.joystickState.active) {
+                this.handleJoystickMove(event.clientX, event.clientY);
+            }
+        };
+        
+        // Mouse up handler (defined as property to allow removal)
+        this.handleMouseUp = (event) => {
+            event.preventDefault();
+            this.handleJoystickEnd();
+            
+            // Remove global mouse move and up events
+            document.removeEventListener('mousemove', this.handleMouseMove);
+            document.removeEventListener('mouseup', this.handleMouseUp);
+        };
+    }
+    
+    handleJoystickStart(clientX, clientY) {
+        // Get joystick container position
+        const rect = this.joystickContainer.getBoundingClientRect();
+        
+        // Set joystick state
+        this.joystickState.active = true;
+        this.joystickState.centerX = rect.left + rect.width / 2;
+        this.joystickState.centerY = rect.top + rect.height / 2;
+        
+        // Update joystick position
+        this.handleJoystickMove(clientX, clientY);
+    }
+    
+    handleJoystickMove(clientX, clientY) {
+        if (!this.joystickState.active) return;
+        
+        // Calculate distance from center
+        const deltaX = clientX - this.joystickState.centerX;
+        const deltaY = clientY - this.joystickState.centerY;
+        
+        // Calculate distance
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        
+        // Get joystick container radius
+        const rect = this.joystickContainer.getBoundingClientRect();
+        const radius = rect.width / 2;
+        
+        // Limit distance to radius
+        const limitedDistance = Math.min(distance, radius);
+        
+        // Calculate normalized direction
+        const normalizedX = deltaX / distance;
+        const normalizedY = deltaY / distance;
+        
+        // Calculate new position
+        const newX = normalizedX * limitedDistance;
+        const newY = normalizedY * limitedDistance;
+        
+        // Update joystick handle position
+        this.joystickHandle.style.transform = `translate(calc(-50% + ${newX}px), calc(-50% + ${newY}px))`;
+        
+        // Update joystick state
+        this.joystickState.currentX = newX;
+        this.joystickState.currentY = newY;
+        
+        // Update direction (normalized)
+        this.joystickState.direction = {
+            x: newX / radius,
+            y: newY / radius
+        };
+    }
+    
+    handleJoystickEnd() {
+        // Reset joystick state
+        this.joystickState.active = false;
+        this.joystickState.direction = { x: 0, y: 0 };
+        
+        // Reset joystick handle position
+        this.joystickHandle.style.transform = 'translate(-50%, -50%)';
+    }
+    
+    getJoystickDirection() {
+        return this.joystickState.direction;
     }
     
     createDeathScreen() {
