@@ -143,8 +143,9 @@ export class PerformanceManager {
         element.style.fontFamily = 'monospace';
         element.style.borderRadius = '3px 0 0 3px';
         element.style.zIndex = '1001';
-        element.style.opacity = '0.2';
+        element.style.opacity = '0.5';
         element.style.transition = 'opacity 0.2s';
+        element.style.boxSizing = 'border-box'; // Ensure padding is included in width
         
         // Add hover effect to increase opacity
         element.addEventListener('mouseenter', () => {
@@ -152,11 +153,21 @@ export class PerformanceManager {
         });
         
         element.addEventListener('mouseleave', () => {
-            element.style.opacity = '0.2';
+            element.style.opacity = '0.5';
         });
+        
+        // Ensure any canvas elements inside use full width
+        const canvases = element.querySelectorAll('canvas');
+        if (canvases.length > 0) {
+            canvases.forEach(canvas => {
+                canvas.style.width = '100%';
+                canvas.style.height = '48px';
+                canvas.style.display = 'block';
+            });
+        }
     }
     
-    // Modify Stats.js to show 1.5x FPS
+    // Modify Stats.js to show 1.5x FPS and ensure canvas uses full width
     modifyStatsDisplay() {
         // Get the original update method
         const originalUpdate = this.stats.update;
@@ -181,8 +192,30 @@ export class PerformanceManager {
                         fpsText.textContent = multipliedFPS + ' FPS';
                     }
                 }
+                
+                // Find the canvas element and ensure it uses full width
+                const canvas = fpsPanel.querySelector('canvas');
+                if (canvas) {
+                    // Set canvas to use full width of its container
+                    canvas.style.width = '100%';
+                    canvas.style.height = '48px'; // Maintain height
+                    canvas.style.display = 'block'; // Ensure block display
+                }
             }
         };
+        
+        // Apply the canvas fix immediately after initialization
+        setTimeout(() => {
+            const panels = this.stats.dom.children;
+            for (let i = 0; i < panels.length; i++) {
+                const canvas = panels[i].querySelector('canvas');
+                if (canvas) {
+                    canvas.style.width = '100%';
+                    canvas.style.height = '48px';
+                    canvas.style.display = 'block';
+                }
+            }
+        }, 0);
     }
     
     createQualityIndicator() {
