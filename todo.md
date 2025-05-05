@@ -40,7 +40,7 @@
     - remove the origin file, integrate with new code base
 
 
-- [ ] Enhance: review Skill.js file and optimise it:
+- [x] Enhance: review Skill.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
@@ -58,7 +58,6 @@
     - Exploding Palm (Mark)
 
     help me rename effect match exactly with the skill name,ex: WaveStrikeEffect, instead of RangedEffect
-
 
 
 

@@ -76,6 +76,10 @@ export class SkillEffect {
             return;
         }
         
+        // IMPORTANT: Update the skill's position property to match the effect's position
+        // This is crucial for collision detection in CollisionManager
+        this.skill.position.copy(this.effect.position);
+        
         // Basic rotation animation
         if (this.effect.rotation) {
             this.effect.rotation.y += delta;

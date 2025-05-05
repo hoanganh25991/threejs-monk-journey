@@ -18,6 +18,8 @@
 
 [Player Character Document](./player-character.md)
 
+[Player Model Document](./player-model.md)
+
 #### 3. Enemies
 - **Description**:
   - Create enemy models using simple geometric shapes such as cubes, boxes, and cones.

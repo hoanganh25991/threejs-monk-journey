@@ -286,6 +286,10 @@ export class MultiSkillEffect extends SkillEffect {
             return;
         }
         
+        // IMPORTANT: Update the skill's position property to match the effect's position
+        // This is crucial for collision detection in CollisionManager
+        this.skill.position.copy(this.effect.position);
+        
         // Special handling for Seven-Sided Strike
         if (this.skill.name === 'Seven-Sided Strike' && this.sevenSidedStrikeState) {
             this._updateSevenSidedStrikeEffect(delta);

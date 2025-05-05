@@ -269,6 +269,10 @@ export class RangedSkillEffect extends SkillEffect {
         this.effect.position.x += this.direction.x * moveDistance;
         this.effect.position.z += this.direction.z * moveDistance;
         
+        // IMPORTANT: Update the skill's position property to match the effect's position
+        // This is crucial for collision detection in CollisionManager
+        this.skill.position.copy(this.effect.position);
+        
         // Update distance traveled
         this.distanceTraveled += moveDistance;
         

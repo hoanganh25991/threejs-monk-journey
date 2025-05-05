@@ -197,6 +197,10 @@ export class AoESkillEffect extends SkillEffect {
             return;
         }
         
+        // IMPORTANT: Update the skill's position property to match the effect's position
+        // This is crucial for collision detection in CollisionManager
+        this.skill.position.copy(this.effect.position);
+        
         // Special handling for Cyclone Strike
         this.updateCycloneStrikeEffect(delta);
     }
