@@ -194,7 +194,7 @@ export class SaveManager {
             gold: player.gold,
             level: player.stats.level,
             experience: player.stats.experience,
-            skills: player.skills.map(skill => ({
+            skills: player.skills.getSkills().map(skill => ({
                 name: skill.name,
                 cooldown: skill.cooldown,
                 currentCooldown: skill.currentCooldown

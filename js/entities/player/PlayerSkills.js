@@ -161,122 +161,27 @@ export class PlayerSkills extends IPlayerSkills {
                 continue;
             }
             
-            // Force cleanup for skills that are being spammed
-            // This prevents UI and particles from persisting when holding keys
-            // Reduced from 0.95 to 0.85 to clean up even faster when spamming
-            if (skill.isActive && skill.elapsedTime > skill.duration * 0.85) {
-                console.log(`Force cleaning up skill ${skill.name} that exceeded 85% of its duration`);
-                skill.remove();
-                this.activeSkills.splice(i, 1);
-                continue;
-            }
-            
-            // Immediately clean up skills of the same type when a new one is cast
-            // This is especially important when holding keys to spam skills
-            for (let j = this.activeSkills.length - 1; j >= 0; j--) {
-                // Safety check for array bounds
-                if (j >= this.activeSkills.length) continue;
-                
-                const otherSkill = this.activeSkills[j];
-                if (!otherSkill) continue;
-                
-                if (i !== j && 
-                    otherSkill.name === skill.name && 
-                    otherSkill.elapsedTime > otherSkill.duration * 0.2) { // Reduced from 0.3 to 0.2 for faster cleanup
-                    // If we have two skills of the same type and the older one is at least 20% through its duration
-                    console.log(`Cleaning up older instance of ${otherSkill.name} due to key spamming`);
-                    otherSkill.remove();
-                    this.activeSkills.splice(j, 1);
-                    
-                    // Adjust index if we removed an element before the current one
-                    if (j < i) {
-                        i--;
-                    }
-                }
-            }
+            // We no longer force cleanup for skills that are being spammed
+            // This allows multiple instances of the same skill to exist simultaneously
+            // Each skill will naturally expire at the end of its duration
         }
         
-        // Limit the number of active skills of the same type
-        // This prevents visual clutter when spamming the same skill
-        const skillTypeCount = {};
-        const skillNameCount = {};
+        // We no longer limit the number of active skills of the same type
+        // This allows multiple instances of the same skill to exist simultaneously
         
-        for (let i = this.activeSkills.length - 1; i >= 0; i--) {
-            // Safety check for array bounds
-            if (i >= this.activeSkills.length) continue;
-            
-            const skill = this.activeSkills[i];
-            if (!skill) continue;
-            
-            // Count by type
-            skillTypeCount[skill.type] = (skillTypeCount[skill.type] || 0) + 1;
-            
-            // Count by name (more specific than type)
-            skillNameCount[skill.name] = (skillNameCount[skill.name] || 0) + 1;
-            
-            // If there are too many skills of the same name, remove the oldest ones
-            // Strict limit: only allow 1 instance of each named skill
-            const maxSkillsPerName = 1;
-            if (skillNameCount[skill.name] > maxSkillsPerName) {
-                // Find the oldest skill of this name
-                let oldestSkillIndex = i;
-                let oldestElapsedTime = skill.elapsedTime;
-                
-                for (let j = 0; j < this.activeSkills.length; j++) {
-                    if (j !== i && 
-                        this.activeSkills[j] && 
-                        this.activeSkills[j].name === skill.name && 
-                        this.activeSkills[j].elapsedTime > oldestElapsedTime) {
-                        oldestSkillIndex = j;
-                        oldestElapsedTime = this.activeSkills[j].elapsedTime;
-                    }
-                }
-                
-                // Remove the oldest skill
-                if (oldestSkillIndex !== i && this.activeSkills[oldestSkillIndex]) {
-                    console.log(`Removing oldest instance of ${this.activeSkills[oldestSkillIndex].name} to limit to ${maxSkillsPerName} instance`);
-                    this.activeSkills[oldestSkillIndex].remove();
-                    this.activeSkills.splice(oldestSkillIndex, 1);
-                    skillNameCount[skill.name]--;
-                    
-                    // Adjust index if we removed an element before the current one
-                    if (oldestSkillIndex < i) {
-                        i--;
-                    }
-                }
+        // Optional: Log the number of active skills for debugging
+        const skillCounts = {};
+        this.activeSkills.forEach(skill => {
+            if (skill) {
+                skillCounts[skill.name] = (skillCounts[skill.name] || 0) + 1;
             }
-            
-            // If there are too many skills of the same type, remove the oldest ones
-            // Reduced from 2 to 1 to be more aggressive with cleanup
-            const maxSkillsPerType = 1;
-            if (skillTypeCount[skill.type] > maxSkillsPerType) {
-                // Find the oldest skill of this type (largest elapsedTime means it was created earlier)
-                let oldestSkillIndex = i;
-                let oldestElapsedTime = skill.elapsedTime;
-                
-                for (let j = 0; j < this.activeSkills.length; j++) {
-                    if (j !== i && 
-                        this.activeSkills[j] && 
-                        this.activeSkills[j].type === skill.type && 
-                        this.activeSkills[j].elapsedTime > oldestElapsedTime) {
-                        oldestSkillIndex = j;
-                        oldestElapsedTime = this.activeSkills[j].elapsedTime;
-                    }
-                }
-                
-                // Remove the oldest skill
-                if (oldestSkillIndex !== i && this.activeSkills[oldestSkillIndex]) {
-                    console.log(`Removing oldest skill of type ${skill.type} to limit to ${maxSkillsPerType} skills`);
-                    this.activeSkills[oldestSkillIndex].remove();
-                    this.activeSkills.splice(oldestSkillIndex, 1);
-                    skillTypeCount[skill.type]--;
-                    
-                    // Adjust index if we removed an element before the current one
-                    if (oldestSkillIndex < i) {
-                        i--;
-                    }
-                }
-            }
+        });
+        
+        // Log only if there are multiple instances of any skill
+        const multipleInstances = Object.entries(skillCounts).filter(([_, count]) => count > 1);
+        if (multipleInstances.length > 0) {
+            console.log("Multiple skill instances active:", 
+                multipleInstances.map(([name, count]) => `${name}: ${count}`).join(", "));
         }
         
         // Perform a final cleanup pass to remove any null or undefined skills
@@ -325,15 +230,13 @@ export class PlayerSkills extends IPlayerSkills {
         // Start cooldown on the template (shared cooldown)
         skillTemplate.startCooldown();
         
-        // IMPORTANT: Clean up any existing instances of this skill before creating a new one
-        // This is critical for preventing visual clutter when spamming skills
-        for (let i = this.activeSkills.length - 1; i >= 0; i--) {
-            if (this.activeSkills[i] && this.activeSkills[i].name === skillTemplate.name) {
-                console.log(`Pre-emptively removing existing instance of ${skillTemplate.name} before creating new one`);
-                this.activeSkills[i].remove();
-                this.activeSkills.splice(i, 1);
-            }
-        }
+        // We no longer clean up existing instances of this skill
+        // This allows multiple instances of the same skill to exist simultaneously
+        console.log(`Creating a new instance of ${skillTemplate.name} while keeping existing instances`);
+        
+        // Optional: Log how many instances of this skill are currently active
+        const activeInstancesCount = this.activeSkills.filter(s => s && s.name === skillTemplate.name).length;
+        console.log(`Currently active instances of ${skillTemplate.name}: ${activeInstancesCount}`);
         
         // Find the nearest enemy for auto-targeting (for all skill types)
         let targetEnemy = null;
