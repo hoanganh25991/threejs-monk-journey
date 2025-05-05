@@ -1,29 +1,6 @@
 # Player Model Creation in Three.js
 
-### Overview of the Monk Character
-
-- **Head**: 
-  - **Shape**: Rounded, typically bald or with a simple hairstyle.
-  - **Color**: Natural skin tone.
-
-- **Attire**:
-  - **Robe**: Loose-fitting, often in shades of orange, red, or brown.
-  - **Sash/Belt**: A contrasting color, usually tied around the waist.
-
-- **Accessories**:
-  - **Beads**: Often worn around the neck or wrist, typically wooden or stone.
-  - **Sandals**: Simple footwear, if any.
-
-- **Physique**:
-  - **Build**: Lean and muscular, reflecting discipline and physical training.
-  - **Posture**: Upright and composed, exuding calmness and focus.
-
-- **Expression**:
-  - **Face**: Serene and peaceful, often with a gentle smile.
-
-This character embodies simplicity, discipline, and tranquility, often associated with spiritual and meditative practices.
-
-To create a detailed 3D character model using Three.js, you can use a combination of basic shapes and more complex geometry to represent different parts of the character. Here's a detailed breakdown:
+To create a detailed `3D Monk Character` model using Three.js, use a combination of basic shapes and more complex geometry to represent different parts of the character. Here's a detailed breakdown:
 
 ### Head and Face
 - **Head**: 
@@ -97,5 +74,3 @@ To create a detailed 3D character model using Three.js, you can use a combinatio
 
 - **Tattoo**:
   - **Texture**: Apply a texture map to the arms for tattoos.
-
-This detailed breakdown should help you create a more complex and realistic character model using Three.js, with arbitrary sizes to make the dimensions easier to understand and implement.

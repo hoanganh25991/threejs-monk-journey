@@ -85,9 +85,9 @@ export const SKILLS = [
         damage: 15,
         manaCost: 25,
         cooldown: 0.5, // Reduced cooldown
-        range: 100,
+        range: 30,
         radius: 5,
-        duration: 20, // Further increased duration from 15 to 20 seconds
+        duration: 5, // Further increased duration from 15 to 20 seconds
         color: 0xff3333
     },
     {

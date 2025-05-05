@@ -163,21 +163,9 @@ export class PlayerSkills extends IPlayerSkills {
             }
         }
         
-        // Create a new instance of the skill
-        const newSkillInstance = new Skill({
-            name: skillTemplate.name,
-            description: skillTemplate.description,
-            type: skillTemplate.type,
-            damage: skillTemplate.damage,
-            manaCost: skillTemplate.manaCost,
-            cooldown: skillTemplate.cooldown,
-            range: skillTemplate.range,
-            radius: skillTemplate.radius,
-            duration: skillTemplate.duration,
-            color: skillTemplate.color,
-            hits: skillTemplate.hits,
-            basicAttack: skillTemplate.basicAttack
-        });
+        // Create a new instance of the skill using the template from SKILLS config
+        const skillConfig = SKILLS.find(config => config.name === skillTemplate.name);
+        const newSkillInstance = new Skill(skillConfig);
         
         // Create a new effect handler for the new skill instance
         newSkillInstance.effectHandler = SkillEffectFactory.createEffect(newSkillInstance);
@@ -351,21 +339,9 @@ export class PlayerSkills extends IPlayerSkills {
                     // Start cooldown
                     skillTemplate.startCooldown();
                     
-                    // Create a new instance of the skill
-                    const newSkillInstance = new Skill({
-                        name: skillTemplate.name,
-                        description: skillTemplate.description,
-                        type: skillTemplate.type,
-                        damage: skillTemplate.damage,
-                        manaCost: skillTemplate.manaCost,
-                        cooldown: skillTemplate.cooldown,
-                        range: skillTemplate.range,
-                        radius: skillTemplate.radius,
-                        duration: skillTemplate.duration,
-                        color: skillTemplate.color,
-                        hits: skillTemplate.hits,
-                        basicAttack: skillTemplate.basicAttack
-                    });
+                    // Create a new instance of the skill using the template from SKILLS config
+                    const skillConfig = SKILLS.find(config => config.name === skillTemplate.name);
+                    const newSkillInstance = new Skill(skillConfig);
                     
                     // Create a new effect handler for the new skill instance
                     newSkillInstance.effectHandler = SkillEffectFactory.createEffect(newSkillInstance);
