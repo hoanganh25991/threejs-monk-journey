@@ -4,7 +4,7 @@
  */
 
 const CACHE_NAME = 'diablo-immortal-cache';
-const CACHE_VERSION = '4';
+const CACHE_VERSION = '5';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 const ASSETS_TO_CACHE = [
@@ -16,6 +16,7 @@ const ASSETS_TO_CACHE = [
   'js/core/CollisionManager.js',
   'js/core/DifficultyManager.js',
   'js/core/Game.js',
+  'js/core/HUDManager.js',
   'js/core/InputHandler.js',
   'js/core/PerformanceManager.js',
   'js/core/QuestManager.js',
@@ -25,7 +26,6 @@ const ASSETS_TO_CACHE = [
   'js/entities/Player.js',
   'js/entities/Skill.js',
   'js/main.js',
-  'js/ui/UIManager.js',
   'js/world/WorldManager.js',
   'js/world/environment/Bush.js',
   'js/world/environment/EnvironmentManager.js',
