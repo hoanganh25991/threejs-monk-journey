@@ -4,7 +4,7 @@
  */
 
 import * as THREE from 'three';
-import { Skill } from '../Skill.js';
+import { Skill } from '../skills/Skill.js';
 import { IPlayerSkills } from './PlayerInterface.js';
 
 export class PlayerSkills extends IPlayerSkills {

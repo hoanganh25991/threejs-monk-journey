@@ -32,7 +32,7 @@
 
 - [x] ~~Fix issue: ParticleManager.js has dispose method, is it should be called by PerformanceManager.js, i dont see where this method called~~
 
-- [ ] Enhance: review Player.js file and optimise it:
+- [x] Enhance: review Player.js file and optimise it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
@@ -47,17 +47,7 @@
     - separate into multiple files for easier to maintain, define interface when needed
 
 
-- [ ] Enhance: review HUDManager.js file and optimise it:
-    - Remove unused methods.
-    - Remove duplicate methods.
-    - Define common methods for shared use.
-    - Design each container UI to be easily reusable, requiring only a parent `div` and an `id` to mount itself, facilitating standalone rendering later.
-    - Define container `div` elements in `index.html` instead of creating them dynamically. Comment the code block to retrieve these existing DOM elements, and add validation to ensure they are defined in `index.html`, alerting and providing a fix if not.
-    - Organize code into multiple files for easier maintenance, defining interfaces where necessary.
-    - using template style, ex:
-    ```js
-    return `<div style="color: #4CAF50; font-weight: bold; margin-bottom: 5px;">GPU INFORMATION</div><div><span style="color: #aaa;">Vendor:</span> ${gpuVendor}</div>`
-    ```
+
 
 - [ ] Enhance: review Enemy.js file and optimise it:
     - remove unused method
@@ -101,6 +91,19 @@
 
 - [] Enhance: PerformanceManager.js should not render UI directly with DOM manipulation, it should expose the DTO only, let HUDManager handle actual render.
 
+
+- [ ] Enhance: review HUDManager.js file and optimise it:
+    - Remove unused methods.
+    - Remove duplicate methods.
+    - Define common methods for shared use.
+    - Design each container UI to be easily reusable, requiring only a parent `div` and an `id` to mount itself, facilitating standalone rendering later.
+    - Define container `div` elements in `index.html` instead of creating them dynamically. Comment the code block to retrieve these existing DOM elements, and add validation to ensure they are defined in `index.html`, alerting and providing a fix if not.
+    - Organize code into multiple files for easier maintenance, defining interfaces where necessary.
+    - using template style, ex:
+    ```js
+    return `<div style="color: #4CAF50; font-weight: bold; margin-bottom: 5px;">GPU INFORMATION</div><div><span style="color: #aaa;">Vendor:</span> ${gpuVendor}</div>`
+    ```
+    - should move methods not related to HUD to proper file, ex: createBleedingEffect
 
 - [ ] Enhance: add config to creaeTeleportEffect, allow to easily say increase size of effect 2 times, than the skill effect 2 times bigger
 
