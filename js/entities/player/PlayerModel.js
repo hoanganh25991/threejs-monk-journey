@@ -19,7 +19,8 @@ export class PlayerModel extends IPlayerModel {
         this.currentAnimation = null;
         
         // Configuration options
-        this.modelScale = 0.05; // Scale factor for the model (1/100 of original size)
+        this.modelScale = 1.2; // Scale factor for the model (1/100 of original size)
+        this.modelPath = 'assets/models/chinese_warrior_monk.glb'; // Path to the 3D model
     }
     
     async createModel() {
@@ -27,14 +28,14 @@ export class PlayerModel extends IPlayerModel {
         this.modelGroup = new THREE.Group();
         
         try {
-            // Load the warrior_monk.glb model
+            // Load the 3D model specified in the configuration
             const loader = new GLTFLoader();
             
             // Return a promise that resolves when the model is loaded
             const gltf = await new Promise((resolve, reject) => {
                 loader.load(
                     // Resource URL
-                    '/assets/models/warrior_monk.glb',
+                    this.modelPath,
                     // Called when the resource is loaded
                     (gltf) => resolve(gltf),
                     // Called while loading is progressing
@@ -43,7 +44,7 @@ export class PlayerModel extends IPlayerModel {
                     },
                     // Called when loading has errors
                     (error) => {
-                        console.error('Error loading warrior_monk.glb model:', error);
+                        console.error(`Error loading model from ${this.modelPath}:`, error);
                         reject(error);
                     }
                 );
@@ -90,8 +91,8 @@ export class PlayerModel extends IPlayerModel {
                 this.modelScale
             ); // Scale according to configuration
             
-            // Rotate the model to fix upside-down orientation
-            this.gltfModel.rotation.x = Math.PI; // Rotate 180 degrees around X-axis to flip it
+            // No rotation needed for the current model
+            // this.gltfModel.rotation.x = Math.PI; // Commented out as it was causing upside-down orientation
             
             this.gltfModel.position.set(0, 0, 0); // Adjust position as needed
             
@@ -102,9 +103,9 @@ export class PlayerModel extends IPlayerModel {
             this.scene.add(this.modelGroup);
             
             // Log to confirm player model was added
-            console.log("Warrior Monk model loaded and added to scene:", this.modelGroup);
+            console.log(`Model from ${this.modelPath} loaded and added to scene:`, this.modelGroup);
         } catch (error) {
-            console.error("Failed to load warrior_monk.glb model:", error);
+            console.error(`Failed to load model from ${this.modelPath}:`, error);
             
             // Fallback to simple geometric model if loading fails
             this.createFallbackModel();
@@ -336,6 +337,16 @@ export class PlayerModel extends IPlayerModel {
         }
         
         console.log(`Model scale set to: ${scale}`);
+    }
+    
+    /**
+     * Set the path to the 3D model
+     * @param {string} path - Path to the 3D model file
+     */
+    setModelPath(path) {
+        this.modelPath = path;
+        console.log(`Model path set to: ${path}`);
+        // Note: This won't reload the model - call createModel() again if needed
     }
     
     // Left jab - quick straight punch with left hand
