@@ -4,7 +4,7 @@
  */
 
 const CACHE_NAME = 'diablo-immortal-cache';
-const CACHE_VERSION = '7';
+const CACHE_VERSION = '8';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 const ASSETS_TO_CACHE = [
@@ -12,6 +12,7 @@ const ASSETS_TO_CACHE = [
   'index.html',
   'manifest.json',
   'css/style.css',
+  'js/config.js',
   'js/core/AudioManager.js',
   'js/core/CollisionManager.js',
   'js/core/DifficultyManager.js',
@@ -32,15 +33,17 @@ const ASSETS_TO_CACHE = [
   'js/entities/player/PlayerSkills.js',
   'js/entities/player/PlayerState.js',
   'js/entities/player/PlayerStats.js',
-  'js/entities/player/index.js',
   'js/entities/skills/AoESkillEffect.js',
+  'js/entities/skills/BuffSkillEffect.js',
+  'js/entities/skills/MarkSkillEffect.js',
   'js/entities/skills/MultiSkillEffect.js',
   'js/entities/skills/RangedSkillEffect.js',
   'js/entities/skills/Skill.js',
   'js/entities/skills/SkillEffect.js',
   'js/entities/skills/SkillEffectFactory.js',
+  'js/entities/skills/SummonSkillEffect.js',
   'js/entities/skills/TeleportSkillEffect.js',
-  'js/entities/skills/index.js',
+  'js/entities/skills/WaveSkillEffect.js',
   'js/main.js',
   'js/world/WorldManager.js',
   'js/world/environment/Bush.js',
