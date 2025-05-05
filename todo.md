@@ -46,6 +46,19 @@
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
 
+- [] Currently we have effect as:
+    - Wave Strike (Ranged)
+    - Cyclone Strike (AoE)
+    - Wave of Light (Wave)
+    - Fist of Thunder (Teleport)
+    - Skills Needing Specific Implementations:
+    - Seven-Sided Strike (Multi)
+    - Inner Sanctuary (Buff)
+    - Mystic Ally (Summon)
+    - Exploding Palm (Mark)
+
+    help me rename effect match exactly with the skill name,ex: WaveStrikeEffect, instead of RangedEffect
+
 
 
 
