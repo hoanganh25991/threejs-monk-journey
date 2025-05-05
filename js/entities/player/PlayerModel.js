@@ -89,6 +89,10 @@ export class PlayerModel extends IPlayerModel {
                 this.modelScale, 
                 this.modelScale
             ); // Scale according to configuration
+            
+            // Rotate the model to fix upside-down orientation
+            this.gltfModel.rotation.x = Math.PI; // Rotate 180 degrees around X-axis to flip it
+            
             this.gltfModel.position.set(0, 0, 0); // Adjust position as needed
             
             // Add the loaded model to our group
