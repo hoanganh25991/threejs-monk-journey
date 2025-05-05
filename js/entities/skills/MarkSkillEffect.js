@@ -29,9 +29,9 @@ export class MarkSkillEffect extends SkillEffect {
     // Position effect at the hero's position
     effectGroup.position.copy(position);
 
-    // Set the correct rotation to face the direction the player is looking
+    // Set the correct rotation to face the opposite direction the player is looking
     if (direction) {
-      const rotationAngle = Math.atan2(direction.x, direction.z);
+      const rotationAngle = Math.atan2(direction.x, direction.z) + Math.PI; // Add PI (180 degrees)
       effectGroup.rotation.y = rotationAngle;
 
       // For Exploding Palm, ensure the palm group is also properly rotated
@@ -40,8 +40,8 @@ export class MarkSkillEffect extends SkillEffect {
         this.explodingPalmState &&
         this.explodingPalmState.palmGroup
       ) {
-        // Set the palm group's initial rotation to match the player's direction
-        this.explodingPalmState.palmGroup.rotation.y = rotationAngle;
+        // Set the palm group's initial rotation to face opposite to the player's direction
+        this.explodingPalmState.palmGroup.rotation.y = rotationAngle; // Already includes the 180-degree rotation
 
         // Ensure the hand is oriented correctly within the palm group
         if (this.explodingPalmState.handGroup) {
@@ -49,14 +49,14 @@ export class MarkSkillEffect extends SkillEffect {
           this.explodingPalmState.handGroup.rotation.y = 0; // Keep aligned with palm group
         }
         
-        // Position the palm 10 units ahead of the hero in the direction they're facing
+        // Position the palm behind the hero (opposite to the direction they're facing)
         if (direction) {
-          // Calculate the position 10 units ahead in the direction the hero is facing
-          const forwardPosition = direction.clone().normalize().multiplyScalar(1.2);
+          // Calculate the position behind the hero (negative multiplier for backward direction)
+          const backwardPosition = direction.clone().normalize().multiplyScalar(-1.2);
           // Move the palm group to this position
-          this.explodingPalmState.palmGroup.position.add(forwardPosition);
+          this.explodingPalmState.palmGroup.position.add(backwardPosition);
           
-          console.log(`Positioned palm 10 units ahead at: ${this.explodingPalmState.palmGroup.position.x.toFixed(2)}, ${this.explodingPalmState.palmGroup.position.y.toFixed(2)}, ${this.explodingPalmState.palmGroup.position.z.toFixed(2)}`);
+          console.log(`Positioned palm behind the hero at: ${this.explodingPalmState.palmGroup.position.x.toFixed(2)}, ${this.explodingPalmState.palmGroup.position.y.toFixed(2)}, ${this.explodingPalmState.palmGroup.position.z.toFixed(2)}`);
         }
       }
     }
@@ -594,11 +594,11 @@ export class MarkSkillEffect extends SkillEffect {
         // Always use the initial direction for the first frame
         let targetDirection;
 
-        // On the first frame, use the initial direction (from player facing)
+        // On the first frame, use the initial direction (opposite to player facing)
         if (this.explodingPalmState.age < delta * 2) {
-          // Use the initial direction set when the skill was created
+          // Use the initial direction set when the skill was created (already reversed in movement code)
           targetDirection = this.currentDirection.clone();
-          console.log("Using initial direction for Exploding Palm");
+          console.log("Using initial direction (reversed) for Exploding Palm");
         } else {
           // After first frame, check for enemies to target
           let targetEnemy = null;
@@ -635,8 +635,8 @@ export class MarkSkillEffect extends SkillEffect {
                 .subVectors(enemyPosition, palmPosition)
                 .normalize();
 
-              // Update palm rotation to face the enemy
-              const angle = Math.atan2(targetDirection.x, targetDirection.z);
+              // Update palm rotation to face away from the enemy (180 degrees opposite)
+              const angle = Math.atan2(targetDirection.x, targetDirection.z) + Math.PI; // Add PI (180 degrees)
               palmGroup.rotation.y = angle;
 
               console.log(
@@ -648,13 +648,13 @@ export class MarkSkillEffect extends SkillEffect {
           }
         }
 
-        // Move the palm forward
+        // Move the palm backward (opposite to the target direction)
         const moveDistance = this.explodingPalmState.flyingSpeed * delta;
         this.explodingPalmState.distanceTraveled += moveDistance;
 
-        // Update palm position using the target direction
+        // Update palm position using the reversed target direction
         palmGroup.position.add(
-          targetDirection.clone().multiplyScalar(moveDistance)
+          targetDirection.clone().multiplyScalar(-moveDistance)
         );
 
         // Animate hand to show power
