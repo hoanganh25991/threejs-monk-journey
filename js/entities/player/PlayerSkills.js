@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { Skill } from '../skills/Skill.js';
 import { IPlayerSkills } from './PlayerInterface.js';
+import { SkillEffectFactory } from '../skills/SkillEffectFactory.js';
 
 export class PlayerSkills extends IPlayerSkills {
     constructor(scene, playerStats, playerPosition, playerRotation) {
@@ -302,36 +303,33 @@ export class PlayerSkills extends IPlayerSkills {
             return false;
         }
         
-        // Get skill
-        const skill = this.skills[skillIndex];
-        console.log('Using skill:', skill.name);
+        // Get skill template
+        const skillTemplate = this.skills[skillIndex];
+        console.log('Using skill:', skillTemplate.name);
         
         // Check if skill is on cooldown
-        if (skill.isOnCooldown()) {
-            console.log('Skill is on cooldown:', skill.name);
+        if (skillTemplate.isOnCooldown()) {
+            console.log('Skill is on cooldown:', skillTemplate.name);
             return false;
         }
         
         // Check if player has enough mana
-        if (this.playerStats.getMana() < skill.manaCost) {
-            console.log('Not enough mana for skill:', skill.name);
+        if (this.playerStats.getMana() < skillTemplate.manaCost) {
+            console.log('Not enough mana for skill:', skillTemplate.name);
             return false;
         }
         
         // Use mana
-        this.playerStats.setMana(this.playerStats.getMana() - skill.manaCost);
+        this.playerStats.setMana(this.playerStats.getMana() - skillTemplate.manaCost);
         
-        // Start cooldown
-        skill.startCooldown();
-        
-        // Pass game reference to skill
-        skill.game = this.game;
+        // Start cooldown on the template (shared cooldown)
+        skillTemplate.startCooldown();
         
         // IMPORTANT: Clean up any existing instances of this skill before creating a new one
         // This is critical for preventing visual clutter when spamming skills
         for (let i = this.activeSkills.length - 1; i >= 0; i--) {
-            if (this.activeSkills[i] && this.activeSkills[i].name === skill.name) {
-                console.log(`Pre-emptively removing existing instance of ${skill.name} before creating new one`);
+            if (this.activeSkills[i] && this.activeSkills[i].name === skillTemplate.name) {
+                console.log(`Pre-emptively removing existing instance of ${skillTemplate.name} before creating new one`);
                 this.activeSkills[i].remove();
                 this.activeSkills.splice(i, 1);
             }
@@ -343,7 +341,7 @@ export class PlayerSkills extends IPlayerSkills {
         
         if (this.game && this.game.enemyManager) {
             // Use skill range for targeting, or a default range if skill has no range
-            const targetRange = skill.range > 0 ? skill.range : 15;
+            const targetRange = skillTemplate.range > 0 ? skillTemplate.range : 15;
             targetEnemy = this.game.enemyManager.findNearestEnemy(this.playerPosition, targetRange);
             
             if (targetEnemy) {
@@ -356,17 +354,39 @@ export class PlayerSkills extends IPlayerSkills {
                 // Update player rotation to face enemy
                 this.playerRotation.y = Math.atan2(targetDirection.x, targetDirection.z);
                 
-                console.log(`Auto-targeting enemy for skill ${skill.name}, facing direction: ${this.playerRotation.y}`);
+                console.log(`Auto-targeting enemy for skill ${skillTemplate.name}, facing direction: ${this.playerRotation.y}`);
             }
         }
         
+        // Create a new instance of the skill
+        const newSkillInstance = new Skill({
+            name: skillTemplate.name,
+            description: skillTemplate.description,
+            type: skillTemplate.type,
+            damage: skillTemplate.damage,
+            manaCost: skillTemplate.manaCost,
+            cooldown: skillTemplate.cooldown,
+            range: skillTemplate.range,
+            radius: skillTemplate.radius,
+            duration: skillTemplate.duration,
+            color: skillTemplate.color,
+            hits: skillTemplate.hits,
+            basicAttack: skillTemplate.basicAttack
+        });
+        
+        // Create a new effect handler for the new skill instance
+        newSkillInstance.effectHandler = SkillEffectFactory.createEffect(newSkillInstance);
+        
+        // Pass game reference to the new skill instance
+        newSkillInstance.game = this.game;
+        
         // Special handling for teleport skills
-        if (skill.type === 'teleport' && skill.name === 'Fist of Thunder') {
+        if (skillTemplate.type === 'teleport' && skillTemplate.name === 'Fist of Thunder') {
             if (targetEnemy) {
                 const enemyPosition = targetEnemy.getPosition();
                 
                 // Calculate teleport position (slightly before the enemy)
-                const teleportDistance = Math.min(this.playerPosition.distanceTo(enemyPosition) - 1.5, skill.range);
+                const teleportDistance = Math.min(this.playerPosition.distanceTo(enemyPosition) - 1.5, skillTemplate.range);
                 const teleportPosition = new THREE.Vector3(
                     this.playerPosition.x + targetDirection.x * teleportDistance,
                     enemyPosition.y, // Match enemy height
@@ -377,7 +397,7 @@ export class PlayerSkills extends IPlayerSkills {
                 this.playerPosition.copy(teleportPosition);
                 
                 // Create skill effect at the new position
-                const skillEffect = skill.createEffect(this.playerPosition, this.playerRotation);
+                const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
                 
                 // Add skill effect to scene
                 this.scene.add(skillEffect);
@@ -387,12 +407,8 @@ export class PlayerSkills extends IPlayerSkills {
                     this.game.audioManager.playSound('playerAttack');
                 }
                 
-                // Reset skill state
-                skill.elapsedTime = 0;
-                skill.isActive = true;
-                
                 // Add to active skills
-                this.activeSkills.push(skill);
+                this.activeSkills.push(newSkillInstance);
                 
                 return true;
             } else {
@@ -402,10 +418,10 @@ export class PlayerSkills extends IPlayerSkills {
                 }
                 
                 // Refund mana
-                this.playerStats.setMana(this.playerStats.getMana() + skill.manaCost);
+                this.playerStats.setMana(this.playerStats.getMana() + skillTemplate.manaCost);
                 
                 // Reset cooldown
-                skill.currentCooldown = 0;
+                skillTemplate.currentCooldown = 0;
                 
                 return false;
             }
@@ -438,21 +454,21 @@ export class PlayerSkills extends IPlayerSkills {
             console.log(`Final rotation for skill cast: ${this.playerRotation.y.toFixed(2)} radians`);
             
             // Create the skill effect with the player's position and rotation
-            const skillEffect = skill.createEffect(this.playerPosition, this.playerRotation);
+            const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
             
             // Add skill effect to scene
             this.scene.add(skillEffect);
             
             // Show notification if an enemy was auto-targeted
             if (targetEnemy && this.game && this.game.uiManager) {
-                this.game.uiManager.showNotification(`Auto-targeting ${targetEnemy.type} with ${skill.name}`);
+                this.game.uiManager.showNotification(`Auto-targeting ${targetEnemy.type} with ${skillTemplate.name}`);
             }
         }
         
         // Play skill sound
         if (this.game && this.game.audioManager) {
             // Play specific skill sound based on skill name
-            switch (skill.name) {
+            switch (skillTemplate.name) {
                 case 'Fist of Thunder':
                     this.game.audioManager.playSound('playerAttack');
                     break;
@@ -477,12 +493,8 @@ export class PlayerSkills extends IPlayerSkills {
             }
         }
         
-        // Reset skill state to ensure clean start
-        skill.elapsedTime = 0;
-        skill.isActive = true;
-        
         // Add to active skills
-        this.activeSkills.push(skill);
+        this.activeSkills.push(newSkillInstance);
         
         return true;
     }
@@ -493,17 +505,17 @@ export class PlayerSkills extends IPlayerSkills {
         const basicAttackSkill = this.skills.find(skill => skill.basicAttack === true);
         
         // If no basic attack skill is found, use the first skill as fallback
-        const skill = basicAttackSkill || this.skills[0];
+        const skillTemplate = basicAttackSkill || this.skills[0];
         
-        console.log('Using basic attack skill:', skill.name);
+        console.log('Using basic attack skill:', skillTemplate.name);
         
         // Check if skill is on cooldown
-        if (skill.isOnCooldown()) {
+        if (skillTemplate.isOnCooldown()) {
             return false;
         }
         
         // Check if player has enough mana
-        if (this.playerStats.getMana() < skill.manaCost) {
+        if (this.playerStats.getMana() < skillTemplate.manaCost) {
             return false;
         }
         
@@ -517,25 +529,44 @@ export class PlayerSkills extends IPlayerSkills {
                 // Enemy is in melee range, use combo punch system
                 
                 // Use mana
-                this.playerStats.setMana(this.playerStats.getMana() - skill.manaCost);
+                this.playerStats.setMana(this.playerStats.getMana() - skillTemplate.manaCost);
                 
                 // Start cooldown
-                skill.startCooldown();
+                skillTemplate.startCooldown();
                 
                 return true;
             } else {
                 // No enemy in melee range, try to teleport to a distant enemy
-                const teleportEnemy = this.game.enemyManager.findNearestEnemy(this.playerPosition, skill.range);
+                const teleportEnemy = this.game.enemyManager.findNearestEnemy(this.playerPosition, skillTemplate.range);
                 
                 if (teleportEnemy) {
                     // Use mana
-                    this.playerStats.setMana(this.playerStats.getMana() - skill.manaCost);
+                    this.playerStats.setMana(this.playerStats.getMana() - skillTemplate.manaCost);
                     
                     // Start cooldown
-                    skill.startCooldown();
+                    skillTemplate.startCooldown();
                     
-                    // Pass game reference to skill
-                    skill.game = this.game;
+                    // Create a new instance of the skill
+                    const newSkillInstance = new Skill({
+                        name: skillTemplate.name,
+                        description: skillTemplate.description,
+                        type: skillTemplate.type,
+                        damage: skillTemplate.damage,
+                        manaCost: skillTemplate.manaCost,
+                        cooldown: skillTemplate.cooldown,
+                        range: skillTemplate.range,
+                        radius: skillTemplate.radius,
+                        duration: skillTemplate.duration,
+                        color: skillTemplate.color,
+                        hits: skillTemplate.hits,
+                        basicAttack: skillTemplate.basicAttack
+                    });
+                    
+                    // Create a new effect handler for the new skill instance
+                    newSkillInstance.effectHandler = SkillEffectFactory.createEffect(newSkillInstance);
+                    
+                    // Pass game reference to the new skill instance
+                    newSkillInstance.game = this.game;
                     
                     // Get enemy position
                     const enemyPosition = teleportEnemy.getPosition();
@@ -547,7 +578,7 @@ export class PlayerSkills extends IPlayerSkills {
                     this.playerRotation.y = Math.atan2(direction.x, direction.z);
                     
                     // Calculate teleport position (slightly before the enemy)
-                    const teleportDistance = Math.min(this.playerPosition.distanceTo(enemyPosition) - 1.5, skill.range);
+                    const teleportDistance = Math.min(this.playerPosition.distanceTo(enemyPosition) - 1.5, skillTemplate.range);
                     const teleportPosition = new THREE.Vector3(
                         this.playerPosition.x + direction.x * teleportDistance,
                         enemyPosition.y, // Match enemy height
@@ -558,7 +589,7 @@ export class PlayerSkills extends IPlayerSkills {
                     this.playerPosition.copy(teleportPosition);
                     
                     // Create skill effect at the new position
-                    const skillEffect = skill.createEffect(this.playerPosition, this.playerRotation);
+                    const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
                     
                     // Add skill effect to scene
                     this.scene.add(skillEffect);
@@ -568,12 +599,8 @@ export class PlayerSkills extends IPlayerSkills {
                         this.game.audioManager.playSound('playerAttack');
                     }
                     
-                    // Reset skill state
-                    skill.elapsedTime = 0;
-                    skill.isActive = true;
-                    
                     // Add to active skills
-                    this.activeSkills.push(skill);
+                    this.activeSkills.push(newSkillInstance);
                     
                     return true;
                 } else {

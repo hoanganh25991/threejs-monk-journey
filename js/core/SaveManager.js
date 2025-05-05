@@ -189,7 +189,7 @@ export class SaveManager {
         return {
             stats: { ...player.stats },
             position: position,
-            inventory: [...player.inventory],
+            inventory: [...player.getInventory()], // Use getInventory() method to get the array
             equipment: { ...player.equipment },
             gold: player.gold,
             level: player.stats.level,
@@ -368,8 +368,13 @@ export class SaveManager {
             playerData.position.z
         );
         
-        // Load inventory
-        player.inventory = [...playerData.inventory];
+        // Load inventory - clear existing inventory and add each item
+        player.inventory.inventory = []; // Clear the inventory array
+        if (playerData.inventory && Array.isArray(playerData.inventory)) {
+            playerData.inventory.forEach(item => {
+                player.addToInventory(item);
+            });
+        }
         
         // Load equipment
         player.equipment = { ...playerData.equipment };
