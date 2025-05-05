@@ -590,63 +590,18 @@ export class MarkSkillEffect extends SkillEffect {
 
       // Handle flying phase
       if (this.explodingPalmState.phase === "flying") {
-        // COMPLETELY REVISED AUTO-TARGETING SYSTEM
-        // Always use the initial direction for the first frame
-        let targetDirection;
-
-        // On the first frame, use the initial direction (opposite to player facing)
+        // SIMPLIFIED DIRECTION SYSTEM - ONLY USE CHARACTER DIRECTION
+        // Always use the initial direction set by the character
+        let targetDirection = this.currentDirection.clone();
+        
+        // Log the direction being used
         if (this.explodingPalmState.age < delta * 2) {
-          // Use the initial direction set when the skill was created (already reversed in movement code)
-          targetDirection = this.currentDirection.clone();
-          console.log("Using initial direction (reversed) for Exploding Palm");
-        } else {
-          // After first frame, check for enemies to target
-          let targetEnemy = null;
-
-          // Default to continuing in the current direction if no enemy found
-          targetDirection = this.currentDirection.clone();
-
-          if (this.game && this.game.enemies) {
-            // Find the nearest enemy within range
-            let nearestDistance = Infinity;
-            const palmPosition = new THREE.Vector3(
-              palmGroup.position.x,
-              palmGroup.position.y,
-              palmGroup.position.z
-            );
-
-            for (const enemy of this.game.enemies) {
-              if (enemy && enemy.position && !enemy.state.isDead) {
-                const distance = palmPosition.distanceTo(enemy.position);
-
-                // Check if this enemy is closer than the current nearest
-                if (distance < nearestDistance && distance < this.range) {
-                  nearestDistance = distance;
-                  targetEnemy = enemy;
-                }
-              }
-            }
-
-            // If we found a target enemy, adjust direction towards it
-            if (targetEnemy) {
-              // Calculate direction to enemy - this is a direct line from palm to enemy
-              const enemyPosition = targetEnemy.position.clone();
-              targetDirection = new THREE.Vector3()
-                .subVectors(enemyPosition, palmPosition)
-                .normalize();
-
-              // Update palm rotation to face away from the enemy (180 degrees opposite)
-              const angle = Math.atan2(targetDirection.x, targetDirection.z) + Math.PI; // Add PI (180 degrees)
-              palmGroup.rotation.y = angle;
-
-              console.log(
-                `Auto-targeting enemy with Exploding Palm, distance: ${nearestDistance.toFixed(
-                  2
-                )}`
-              );
-            }
-          }
+          console.log("Using character direction for Exploding Palm");
         }
+        
+        // Keep the palm rotated in the initial direction
+        const rotationAngle = Math.atan2(targetDirection.x, targetDirection.z) + Math.PI; // Add PI (180 degrees)
+        palmGroup.rotation.y = rotationAngle;
 
         // Move the palm backward (opposite to the target direction)
         const moveDistance = this.explodingPalmState.flyingSpeed * delta;
@@ -899,14 +854,17 @@ export class MarkSkillEffect extends SkillEffect {
               // If palm is close enough to enemy, mark it for explosion
               if (distance < enemy.collisionRadius + 1) {
                 this.explodingPalmState.hitTarget = true;
-                this.explodingPalmState.targetPosition = enemy.position.clone();
-
+                
+                // Store the position where the collision happened
+                this.explodingPalmState.targetPosition = palmPosition.clone();
+                
                 // Apply mark to enemy
                 if (enemy.applyMark) {
                   enemy.applyMark("explodingPalm", this.damage);
                 }
-
-                break;
+                
+                // Note: We don't break here, allowing the palm to hit multiple enemies
+                // in the same frame if they're close enough
               }
             }
           }
@@ -1098,8 +1056,11 @@ export class MarkSkillEffect extends SkillEffect {
               palmGroup.position.y,
               palmGroup.position.z
             );
+            
+            console.log(`Exploding Palm explosion at position: ${explosionPosition.x.toFixed(2)}, ${explosionPosition.y.toFixed(2)}, ${explosionPosition.z.toFixed(2)}`);
 
             // Check each enemy for being in explosion radius
+            let enemiesHit = 0;
             for (const enemy of this.game.enemies) {
               if (enemy && enemy.position && !enemy.state.isDead) {
                 const distance = explosionPosition.distanceTo(enemy.position);
@@ -1113,10 +1074,13 @@ export class MarkSkillEffect extends SkillEffect {
                   // Apply damage to enemy
                   if (enemy.takeDamage) {
                     enemy.takeDamage(finalDamage);
+                    enemiesHit++;
                   }
                 }
               }
             }
+            
+            console.log(`Exploding Palm hit ${enemiesHit} enemies with explosion damage`);
           }
         }
 
