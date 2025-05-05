@@ -179,13 +179,16 @@ export class SaveManager {
     getPlayerData() {
         const player = this.game.player;
         
+        // Create a default position if player.position is undefined
+        const position = player.position ? {
+            x: player.position.x,
+            y: player.position.y,
+            z: player.position.z
+        } : { x: 0, y: 0, z: 0 };
+        
         return {
             stats: { ...player.stats },
-            position: {
-                x: player.position.x,
-                y: player.position.y,
-                z: player.position.z
-            },
+            position: position,
             inventory: [...player.inventory],
             equipment: { ...player.equipment },
             gold: player.gold,
