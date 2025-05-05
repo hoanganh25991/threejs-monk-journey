@@ -4,6 +4,7 @@
  */
 
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { IPlayerModel } from './PlayerInterface.js';
 
 export class PlayerModel extends IPlayerModel {
@@ -12,11 +13,105 @@ export class PlayerModel extends IPlayerModel {
         
         this.scene = scene;
         this.modelGroup = null;
+        this.gltfModel = null;
+        this.mixer = null;
+        this.animations = {};
+        this.currentAnimation = null;
+        
+        // Configuration options
+        this.modelScale = 0.05; // Scale factor for the model (1/100 of original size)
     }
     
     async createModel() {
         // Create a group for the player
         this.modelGroup = new THREE.Group();
+        
+        try {
+            // Load the warrior_monk.glb model
+            const loader = new GLTFLoader();
+            
+            // Return a promise that resolves when the model is loaded
+            const gltf = await new Promise((resolve, reject) => {
+                loader.load(
+                    // Resource URL
+                    '/assets/models/warrior_monk.glb',
+                    // Called when the resource is loaded
+                    (gltf) => resolve(gltf),
+                    // Called while loading is progressing
+                    (xhr) => {
+                        console.log(`Loading model: ${(xhr.loaded / xhr.total * 100)}% loaded`);
+                    },
+                    // Called when loading has errors
+                    (error) => {
+                        console.error('Error loading warrior_monk.glb model:', error);
+                        reject(error);
+                    }
+                );
+            });
+            
+            // Store the loaded model
+            this.gltfModel = gltf.scene;
+            
+            // Apply shadows to all meshes in the model
+            this.gltfModel.traverse((node) => {
+                if (node.isMesh) {
+                    node.castShadow = true;
+                    node.receiveShadow = true;
+                }
+            });
+            
+            // Set up animations if they exist
+            if (gltf.animations && gltf.animations.length > 0) {
+                this.mixer = new THREE.AnimationMixer(this.gltfModel);
+                
+                // Store all animations by name for easy access
+                gltf.animations.forEach((clip) => {
+                    this.animations[clip.name] = this.mixer.clipAction(clip);
+                });
+                
+                console.log('Available animations:', Object.keys(this.animations));
+                
+                // Play idle animation by default if it exists
+                if (this.animations['idle']) {
+                    this.animations['idle'].play();
+                    this.currentAnimation = 'idle';
+                } else if (Object.keys(this.animations).length > 0) {
+                    // Play the first animation if idle doesn't exist
+                    const firstAnim = Object.keys(this.animations)[0];
+                    this.animations[firstAnim].play();
+                    this.currentAnimation = firstAnim;
+                }
+            }
+            
+            // Scale and position the model appropriately
+            this.gltfModel.scale.set(
+                this.modelScale, 
+                this.modelScale, 
+                this.modelScale
+            ); // Scale according to configuration
+            this.gltfModel.position.set(0, 0, 0); // Adjust position as needed
+            
+            // Add the loaded model to our group
+            this.modelGroup.add(this.gltfModel);
+            
+            // Add model to scene
+            this.scene.add(this.modelGroup);
+            
+            // Log to confirm player model was added
+            console.log("Warrior Monk model loaded and added to scene:", this.modelGroup);
+        } catch (error) {
+            console.error("Failed to load warrior_monk.glb model:", error);
+            
+            // Fallback to simple geometric model if loading fails
+            this.createFallbackModel();
+        }
+        
+        return this.modelGroup;
+    }
+    
+    // Fallback model creation in case the GLB model fails to load
+    createFallbackModel() {
+        console.warn("Using fallback geometric model");
         
         // Create body (cube)
         const bodyGeometry = new THREE.BoxGeometry(0.8, 1.2, 0.4);
@@ -74,74 +169,142 @@ export class PlayerModel extends IPlayerModel {
         
         this.modelGroup.add(rightLeg);
         
-        // Create monk-specific elements
-        
-        // Monk robe
-        const robeGeometry = new THREE.CylinderGeometry(0.5, 0.7, 0.8, 8);
-        const robeMaterial = new THREE.MeshStandardMaterial({ color: 0xcc8844 });
-        const robe = new THREE.Mesh(robeGeometry, robeMaterial);
-        robe.position.y = 0.2;
-        robe.castShadow = true;
-        
-        this.modelGroup.add(robe);
-        
-        // Monk belt
-        const beltGeometry = new THREE.CylinderGeometry(0.45, 0.45, 0.1, 8);
-        const beltMaterial = new THREE.MeshStandardMaterial({ color: 0x553311 });
-        const belt = new THREE.Mesh(beltGeometry, beltMaterial);
-        belt.position.y = 0.5;
-        belt.castShadow = true;
-        
-        this.modelGroup.add(belt);
-        
         // Add model to scene
         this.scene.add(this.modelGroup);
-        
-        // Log to confirm player model was added
-        console.log("Player model created and added to scene:", this.modelGroup);
-        
-        return this.modelGroup;
     }
     
     updateAnimations(delta, playerState) {
-        // Simple animations for the player model
-        if (playerState.isMoving()) {
-            // Walking animation
-            const walkSpeed = 5;
-            const walkAmplitude = 0.1;
+        // If we have a loaded GLB model with animations
+        if (this.mixer && this.gltfModel) {
+            // Update the animation mixer with the delta time
+            this.mixer.update(delta);
             
-            // Animate legs
-            const leftLeg = this.modelGroup.children[4];
-            const rightLeg = this.modelGroup.children[5];
+            // Handle player state animations
+            if (playerState.isMoving()) {
+                // Play walk/run animation if available
+                this.playAnimation('walk', 'run', 0.3);
+            } else if (playerState.isAttacking()) {
+                // Play attack animation if available
+                this.playAnimation('attack', 'punch', 0.2);
+            } else {
+                // Play idle animation if available
+                this.playAnimation('idle', 'idle', 0.5);
+            }
+        } 
+        // Fallback to simple geometric model animations
+        else if (this.modelGroup && this.modelGroup.children.length >= 6) {
+            // Simple animations for the fallback geometric model
+            if (playerState.isMoving()) {
+                // Walking animation
+                const walkSpeed = 5;
+                const walkAmplitude = 0.1;
+                
+                // Animate legs
+                const leftLeg = this.modelGroup.children[4];
+                const rightLeg = this.modelGroup.children[5];
+                
+                if (leftLeg && rightLeg) {
+                    leftLeg.position.z = Math.sin(Date.now() * 0.01 * walkSpeed) * walkAmplitude;
+                    rightLeg.position.z = -Math.sin(Date.now() * 0.01 * walkSpeed) * walkAmplitude;
+                }
+                
+                // Animate arms
+                const leftArm = this.modelGroup.children[2];
+                const rightArm = this.modelGroup.children[3];
+                
+                if (leftArm && rightArm) {
+                    leftArm.rotation.x = Math.sin(Date.now() * 0.01 * walkSpeed) * 0.2;
+                    rightArm.rotation.x = -Math.sin(Date.now() * 0.01 * walkSpeed) * 0.2;
+                }
+            } else {
+                // Reset to idle position
+                const leftLeg = this.modelGroup.children[4];
+                const rightLeg = this.modelGroup.children[5];
+                const leftArm = this.modelGroup.children[2];
+                const rightArm = this.modelGroup.children[3];
+                
+                if (leftLeg && rightLeg && leftArm && rightArm) {
+                    leftLeg.position.z = 0;
+                    rightLeg.position.z = 0;
+                    leftArm.rotation.x = 0;
+                    rightArm.rotation.x = 0;
+                }
+            }
             
-            leftLeg.position.z = Math.sin(Date.now() * 0.01 * walkSpeed) * walkAmplitude;
-            rightLeg.position.z = -Math.sin(Date.now() * 0.01 * walkSpeed) * walkAmplitude;
-            
-            // Animate arms
-            const leftArm = this.modelGroup.children[2];
-            const rightArm = this.modelGroup.children[3];
-            
-            leftArm.rotation.x = Math.sin(Date.now() * 0.01 * walkSpeed) * 0.2;
-            rightArm.rotation.x = -Math.sin(Date.now() * 0.01 * walkSpeed) * 0.2;
-        } else {
-            // Reset to idle position
-            const leftLeg = this.modelGroup.children[4];
-            const rightLeg = this.modelGroup.children[5];
-            const leftArm = this.modelGroup.children[2];
-            const rightArm = this.modelGroup.children[3];
-            
-            leftLeg.position.z = 0;
-            rightLeg.position.z = 0;
-            leftArm.rotation.x = 0;
-            rightArm.rotation.x = 0;
+            // Attack animation
+            if (playerState.isAttacking()) {
+                // Simple attack animation
+                const rightArm = this.modelGroup.children[3];
+                if (rightArm) {
+                    rightArm.rotation.x = Math.sin(Date.now() * 0.02) * 0.5;
+                }
+            }
+        }
+    }
+    
+    // Helper method to play animations with crossfade
+    // Returns true if animation was found and played, false otherwise
+    playAnimation(primaryName, fallbackName, transitionDuration = 0.5) {
+        // If we don't have animations, exit early
+        if (!this.animations || Object.keys(this.animations).length === 0) return false;
+        
+        // If primaryName is null, skip it
+        let animationToPlay = null;
+        if (primaryName) {
+            animationToPlay = this.animations[primaryName];
         }
         
-        // Attack animation
-        if (playerState.isAttacking()) {
-            // Simple attack animation
-            const rightArm = this.modelGroup.children[3];
-            rightArm.rotation.x = Math.sin(Date.now() * 0.02) * 0.5;
+        // Try fallback if primary not found and fallback is provided
+        if (!animationToPlay && fallbackName) {
+            animationToPlay = this.animations[fallbackName];
         }
+        
+        // If neither exists, try to find a similar animation by partial name match
+        if (!animationToPlay) {
+            const allAnimNames = Object.keys(this.animations);
+            
+            // Try to find animation that contains the primary name
+            if (primaryName) {
+                const primaryMatch = allAnimNames.find(name => 
+                    name.toLowerCase().includes(primaryName.toLowerCase()));
+                    
+                if (primaryMatch) {
+                    animationToPlay = this.animations[primaryMatch];
+                }
+            }
+            
+            // Try to find animation that contains the fallback name if primary match not found
+            if (!animationToPlay && fallbackName) {
+                const fallbackMatch = allAnimNames.find(name => 
+                    name.toLowerCase().includes(fallbackName.toLowerCase()));
+                    
+                if (fallbackMatch) {
+                    animationToPlay = this.animations[fallbackMatch];
+                }
+            }
+            
+            // If no matching animation is found, return false
+            if (!animationToPlay) {
+                return false;
+            }
+        }
+        
+        // If this is already the current animation, don't restart it but return true
+        if (this.currentAnimation === animationToPlay._clip.name) return true;
+        
+        // Crossfade to the new animation
+        animationToPlay.reset().fadeIn(transitionDuration).play();
+        
+        // If there was a previous animation, fade it out
+        if (this.currentAnimation && this.animations[this.currentAnimation]) {
+            this.animations[this.currentAnimation].fadeOut(transitionDuration);
+        }
+        
+        // Update the current animation
+        this.currentAnimation = animationToPlay._clip.name;
+        
+        // Animation was successfully played
+        return true;
     }
     
     setPosition(position) {
@@ -156,9 +319,46 @@ export class PlayerModel extends IPlayerModel {
         }
     }
     
+    /**
+     * Set the scale of the model
+     * @param {number} scale - Scale factor to apply to the model
+     */
+    setModelScale(scale) {
+        this.modelScale = scale;
+        
+        // Apply the new scale if the model is loaded
+        if (this.gltfModel) {
+            this.gltfModel.scale.set(scale, scale, scale);
+        }
+        
+        console.log(`Model scale set to: ${scale}`);
+    }
+    
     // Left jab - quick straight punch with left hand
     createLeftPunchAnimation() {
-        // Get the left arm of the player model
+        // If we have a GLB model with animations
+        if (this.gltfModel && this.mixer) {
+            // Try to play a left punch animation from the model
+            const animationNames = ['leftPunch', 'leftJab', 'punchLeft', 'jabLeft', 'punch_left', 'jab_left'];
+            
+            // Try each animation name
+            for (const animName of animationNames) {
+                if (this.playAnimation(animName, null, 0.1)) {
+                    // Create punch effect - blue color for left hand
+                    this.createPunchEffect('left', 0x4169e1); // Royal blue
+                    return;
+                }
+            }
+            
+            // If no specific left punch animation found, try generic punch
+            if (this.playAnimation('punch', 'attack', 0.1)) {
+                // Create punch effect - blue color for left hand
+                this.createPunchEffect('left', 0x4169e1); // Royal blue
+                return;
+            }
+        }
+        
+        // Fallback to geometric model animation
         const leftArm = this.modelGroup.children.find(child => 
             child.position.x < 0 && Math.abs(child.position.y - 0.6) < 0.1);
         
@@ -193,7 +393,29 @@ export class PlayerModel extends IPlayerModel {
     
     // Right cross - powerful straight punch with right hand
     createRightPunchAnimation() {
-        // Get the right arm of the player model
+        // If we have a GLB model with animations
+        if (this.gltfModel && this.mixer) {
+            // Try to play a right punch animation from the model
+            const animationNames = ['rightPunch', 'rightCross', 'punchRight', 'crossRight', 'punch_right', 'cross_right'];
+            
+            // Try each animation name
+            for (const animName of animationNames) {
+                if (this.playAnimation(animName, null, 0.1)) {
+                    // Create punch effect - red color for right hand
+                    this.createPunchEffect('right', 0xff4500); // OrangeRed
+                    return;
+                }
+            }
+            
+            // If no specific right punch animation found, try generic punch
+            if (this.playAnimation('punch', 'attack', 0.1)) {
+                // Create punch effect - red color for right hand
+                this.createPunchEffect('right', 0xff4500); // OrangeRed
+                return;
+            }
+        }
+        
+        // Fallback to geometric model animation
         const rightArm = this.modelGroup.children.find(child => 
             child.position.x > 0 && Math.abs(child.position.y - 0.6) < 0.1);
         
@@ -228,7 +450,29 @@ export class PlayerModel extends IPlayerModel {
     
     // Left hook - circular punch with left hand
     createLeftHookAnimation() {
-        // Get the left arm and torso of the player model
+        // If we have a GLB model with animations
+        if (this.gltfModel && this.mixer) {
+            // Try to play a left hook animation from the model
+            const animationNames = ['leftHook', 'hookLeft', 'hook_left'];
+            
+            // Try each animation name
+            for (const animName of animationNames) {
+                if (this.playAnimation(animName, null, 0.1)) {
+                    // Create punch effect - purple color for hook
+                    this.createPunchEffect('left-hook', 0x9932cc); // DarkOrchid
+                    return;
+                }
+            }
+            
+            // If no specific left hook animation found, try generic hook or punch
+            if (this.playAnimation('hook', 'punch', 0.1)) {
+                // Create punch effect - purple color for hook
+                this.createPunchEffect('left-hook', 0x9932cc); // DarkOrchid
+                return;
+            }
+        }
+        
+        // Fallback to geometric model animation
         const leftArm = this.modelGroup.children.find(child => 
             child.position.x < 0 && Math.abs(child.position.y - 0.6) < 0.1);
         
@@ -281,7 +525,29 @@ export class PlayerModel extends IPlayerModel {
     
     // Heavy uppercut - powerful upward punch with right hand
     createHeavyPunchAnimation() {
-        // Get the right arm and torso of the player model
+        // If we have a GLB model with animations
+        if (this.gltfModel && this.mixer) {
+            // Try to play an uppercut animation from the model
+            const animationNames = ['uppercut', 'heavyPunch', 'heavy_punch', 'heavy_attack'];
+            
+            // Try each animation name
+            for (const animName of animationNames) {
+                if (this.playAnimation(animName, null, 0.1)) {
+                    // Create heavy punch effect
+                    this.createHeavyPunchEffect();
+                    return;
+                }
+            }
+            
+            // If no specific uppercut animation found, try generic strong attack
+            if (this.playAnimation('strong_attack', 'heavy_attack', 0.1)) {
+                // Create heavy punch effect
+                this.createHeavyPunchEffect();
+                return;
+            }
+        }
+        
+        // Fallback to geometric model animation
         const rightArm = this.modelGroup.children.find(child => 
             child.position.x > 0 && Math.abs(child.position.y - 0.6) < 0.1);
         
