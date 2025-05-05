@@ -74,6 +74,15 @@ export class Skill {
      * @returns {THREE.Group} - The created effect
      */
     createEffect(playerPosition, playerRotation) {
+        // Reset the effect handler first to ensure a clean state
+        if (this.effectHandler) {
+            this.effectHandler.reset();
+        }
+        
+        // Reset skill state
+        this.isActive = false;
+        this.elapsedTime = 0;
+        
         // Validate input positions
         if (!this.validateVector(playerPosition)) {
             console.error("Invalid player position provided to skill:", this.name);
@@ -110,6 +119,7 @@ export class Skill {
         try {
             const effect = this.effectHandler.create(this.position, this.direction);
             this.isActive = true;
+            console.log(`Created new effect for skill: ${this.name}`);
             return effect;
         } catch (error) {
             console.error(`Error creating effect for skill ${this.name}:`, error);
@@ -243,5 +253,30 @@ export class Skill {
      */
     getRadius() {
         return this.radius;
+    }
+    
+    /**
+     * Reset the skill to its initial state
+     * This allows the skill to be reused without creating a new instance
+     */
+    reset() {
+        // Reset skill state
+        this.isActive = false;
+        this.elapsedTime = 0;
+        
+        // Reset position and direction
+        this.position = new THREE.Vector3();
+        this.direction = new THREE.Vector3();
+        
+        // Reset the effect handler if it exists
+        if (this.effectHandler) {
+            this.effectHandler.reset();
+        }
+        
+        // Note: We don't reset the cooldown here, as that's managed separately
+        // If you want to reset the cooldown as well, uncomment the next line
+        // this.currentCooldown = 0;
+        
+        return this;
     }
 }

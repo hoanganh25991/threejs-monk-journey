@@ -14,6 +14,12 @@ export class WaveSkillEffect extends SkillEffect {
         this.direction = new THREE.Vector3();
         this.distanceTraveled = 0;
         this.bellCreated = false;
+        
+        // Get radius from skill or set default
+        this.radius = skill && skill.radius ? skill.radius : 2.0;
+        this.color = skill && skill.color ? skill.color : 0xffffff;
+        this.range = skill && skill.range ? skill.range : 10.0;
+        this.game = skill ? skill.game : null;
     }
 
     /**
@@ -32,13 +38,7 @@ export class WaveSkillEffect extends SkillEffect {
         this.distanceTraveled = 0;
         
         // Check if this is the Wave of Light skill (bell)
-        if (this.skill.name === 'Wave of Light') {
-            this._createBellEffect(effectGroup);
-            this.bellCreated = true;
-        } else {
-            // Create the standard wave effect for other wave-type skills
-            this._createWaveEffect(effectGroup);
-        }
+        this.createWaveEffect(effectGroup);
         
         // Position effect
         effectGroup.position.copy(position);
@@ -56,329 +56,199 @@ export class WaveSkillEffect extends SkillEffect {
      * @param {THREE.Group} effectGroup - Group to add the effect to
      * @private
      */
-    _createBellEffect(effectGroup) {
-        // Create bell group
+    createWaveEffect(effectGroup) {
+        // Ensure radius is valid
+        const safeRadius = isNaN(this.radius) || this.radius <= 0 ? 2.0 : this.radius;
+        
+        // Configuration for bell size and appearance
+        const config = {
+            bellSizeMultiplier: safeRadius / 5,  // Adjust this value to change the overall bell size
+            bellHeight: 8,            // Height above the ground
+            bellColor: 0xFFD700,      // Gold color for the bell
+            bellOpacity: 0.9,         // Bell transparency
+            bellMetalness: 0.8,       // Bell metallic appearance
+            bellRoughness: 0.2,       // Bell surface roughness
+            strikerColor: 0xAA7722    // Color of the striker inside the bell
+        };
+        
+        // Create the bell - using a combination of shapes to form a bell
         const bellGroup = new THREE.Group();
         
-        // Create the bell shape
-        const bellGeometry = new THREE.CylinderGeometry(
-            1.0,  // Top radius (narrower at top)
-            2.0,  // Bottom radius (wider at bottom)
-            2.5,  // Height
-            16,   // Radial segments
-            3,    // Height segments
-            false // Closed ends
-        );
+        // Apply size multiplier to all dimensions
+        const bellTopRadius = 1.2 * config.bellSizeMultiplier;
+        const bellBottomRadius = 2 * config.bellSizeMultiplier;
+        const bellHeight = 2.5 * config.bellSizeMultiplier;
+        const bellRimRadius = 2 * config.bellSizeMultiplier;
+        const bellRimThickness = 0.2 * config.bellSizeMultiplier;
+        const strikerRadius = 0.3 * config.bellSizeMultiplier;
         
+        // Bell top (dome)
+        const bellTopGeometry = new THREE.SphereGeometry(bellTopRadius, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
         const bellMaterial = new THREE.MeshStandardMaterial({
-            color: 0xD4AF37, // Gold color for bell
-            metalness: 0.8,
-            roughness: 0.2,
-            emissive: 0xD4AF37,
-            emissiveIntensity: 0.3
+            color: config.bellColor,
+            metalness: config.bellMetalness,
+            roughness: config.bellRoughness,
+            transparent: true,
+            opacity: config.bellOpacity
         });
         
-        const bell = new THREE.Mesh(bellGeometry, bellMaterial);
-        bell.position.y = 5; // Start high above
-        bellGroup.add(bell);
+        const bellTop = new THREE.Mesh(bellTopGeometry, bellMaterial);
+        bellTop.position.y = bellHeight;
+        bellGroup.add(bellTop);
         
-        // Create bell handle/top
-        const handleGeometry = new THREE.CylinderGeometry(
-            0.3, // Top radius
-            0.3, // Bottom radius
-            0.5, // Height
-            8    // Radial segments
-        );
+        // Bell body (inverted cone)
+        const bellBodyGeometry = new THREE.CylinderGeometry(bellTopRadius, bellBottomRadius, bellHeight, 16, 1, true);
+        const bellBody = new THREE.Mesh(bellBodyGeometry, bellMaterial);
+        bellBody.position.y = bellHeight/2;
+        bellGroup.add(bellBody);
         
-        const handle = new THREE.Mesh(handleGeometry, bellMaterial);
-        handle.position.y = 6.5; // Position on top of bell
-        bellGroup.add(handle);
+        // Bell rim (torus)
+        const bellRimGeometry = new THREE.TorusGeometry(bellRimRadius, bellRimThickness, 16, 32);
+        const bellRim = new THREE.Mesh(bellRimGeometry, bellMaterial);
+        bellRim.position.y = 0;
+        bellRim.rotation.x = Math.PI / 2;
+        bellGroup.add(bellRim);
         
-        // Create bell striker (inside the bell)
-        const strikerGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+        // Bell striker (small sphere inside)
+        const strikerGeometry = new THREE.SphereGeometry(strikerRadius, 8, 8);
         const strikerMaterial = new THREE.MeshStandardMaterial({
-            color: 0xA67C00, // Darker gold
-            metalness: 0.7,
-            roughness: 0.3
+            color: config.strikerColor,
+            metalness: 0.5,
+            roughness: 0.5
         });
         
         const striker = new THREE.Mesh(strikerGeometry, strikerMaterial);
-        striker.position.y = 4.2; // Position inside the bell
+        striker.position.y = bellHeight * 0.32; // Position striker proportionally to bell size
         bellGroup.add(striker);
         
-        // Create glowing aura around the bell
-        const auraGeometry = new THREE.SphereGeometry(2.5, 16, 16);
-        const auraMaterial = new THREE.MeshBasicMaterial({
-            color: this.skill.color,
+        // Position the bell above the player
+        bellGroup.position.y = config.bellHeight;
+        
+        // Add bell to effect group
+        effectGroup.add(bellGroup);
+        
+        // Create impact area (circle on the ground)
+        // Ensure we have valid values for radius calculation
+        const safeMultiplier = isNaN(config.bellSizeMultiplier) || config.bellSizeMultiplier <= 0 ? 0.4 : config.bellSizeMultiplier;
+        const impactRadius = safeRadius * safeMultiplier; // Scale impact area with bell size
+        const safeImpactRadius = isNaN(impactRadius) || impactRadius <= 0 ? 1.0 : impactRadius;
+        
+        const impactGeometry = new THREE.CircleGeometry(safeImpactRadius, 32);
+        const impactMaterial = new THREE.MeshBasicMaterial({
+            color: this.color || 0xffffff, // Ensure color is valid
             transparent: true,
             opacity: 0.3,
             side: THREE.DoubleSide
         });
         
-        const aura = new THREE.Mesh(auraGeometry, auraMaterial);
-        aura.position.y = 5; // Same height as bell
-        bellGroup.add(aura);
+        const impactArea = new THREE.Mesh(impactGeometry, impactMaterial);
+        impactArea.rotation.x = -Math.PI / 2;
+        impactArea.position.y = 0.05;
         
-        // Add particles around the bell
-        const particleCount = 30;
-        const particles = [];
+        // Add impact area to effect group
+        effectGroup.add(impactArea);
         
-        for (let i = 0; i < particleCount; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const radius = 2.0 + (Math.random() * 1.0);
-            const height = 4 + (Math.random() * 2.5);
-            
-            const particleGeometry = new THREE.SphereGeometry(0.1 + Math.random() * 0.1, 8, 8);
-            const particleMaterial = new THREE.MeshBasicMaterial({
-                color: this.skill.color,
-                transparent: true,
-                opacity: 0.6 + (Math.random() * 0.4)
-            });
-            
-            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-            particle.position.set(
-                Math.cos(angle) * radius,
-                height,
-                Math.sin(angle) * radius
-            );
-            
-            // Store animation data
-            particle.userData = {
-                initialPos: particle.position.clone(),
-                speed: 0.5 + (Math.random() * 1.5),
-                phase: Math.random() * Math.PI * 2
-            };
-            
-            bellGroup.add(particle);
-            particles.push(particle);
-        }
-        
-        // Add light rays emanating from the bell
+        // Create light rays emanating from impact point
         const rayCount = 8;
-        const rays = [];
-        
         for (let i = 0; i < rayCount; i++) {
             const angle = (i / rayCount) * Math.PI * 2;
             
-            const rayGeometry = new THREE.CylinderGeometry(
-                0.1,  // Top radius
-                0.3,  // Bottom radius
-                3.0,  // Height
-                8,    // Radial segments
-                1,    // Height segments
-                false // Closed ends
-            );
-            
+            // Use the already validated safe radius
+            const rayThickness = Math.max(0.1, 0.2 * safeMultiplier); // Ensure positive thickness
+            const rayGeometry = new THREE.BoxGeometry(rayThickness, rayThickness, safeImpactRadius);
             const rayMaterial = new THREE.MeshBasicMaterial({
-                color: this.skill.color,
+                color: this.color || 0xffffff, // Ensure color is valid
                 transparent: true,
                 opacity: 0.5
             });
             
             const ray = new THREE.Mesh(rayGeometry, rayMaterial);
-            
-            // Position and rotate the ray to point outward
             ray.position.set(
-                Math.cos(angle) * 1.5,
-                5, // Same height as bell
-                Math.sin(angle) * 1.5
+                Math.cos(angle) * (safeImpactRadius / 2),
+                0.2,
+                Math.sin(angle) * (safeImpactRadius / 2)
             );
             
-            ray.rotation.z = Math.PI / 2; // Lay flat
-            ray.rotation.y = -angle; // Point outward
+            ray.rotation.y = angle;
             
-            // Store animation data
-            ray.userData = {
-                angle: angle,
-                initialLength: 3.0
-            };
-            
-            bellGroup.add(ray);
-            rays.push(ray);
+            effectGroup.add(ray);
         }
         
-        // Add shockwave ring for when the bell hits the ground
-        const shockwaveGeometry = new THREE.RingGeometry(0.1, 0.2, 32);
-        const shockwaveMaterial = new THREE.MeshBasicMaterial({
-            color: this.skill.color,
-            transparent: true,
-            opacity: 0.0, // Start invisible
-            side: THREE.DoubleSide
-        });
+        // Create particles for visual effect
+        const safeParticleMultiplier = Math.max(0.1, safeMultiplier);
+        const particleCount = Math.max(5, Math.floor(30 * safeParticleMultiplier)); // Ensure at least 5 particles
         
-        const shockwave = new THREE.Mesh(shockwaveGeometry, shockwaveMaterial);
-        shockwave.rotation.x = -Math.PI / 2; // Lay flat on ground
-        shockwave.position.y = 0.1; // Slightly above ground
-        bellGroup.add(shockwave);
-        
-        // Store bell animation state
-        this.bellState = {
-            bell: bell,
-            handle: handle,
-            striker: striker,
-            aura: aura,
-            particles: particles,
-            rays: rays,
-            shockwave: shockwave,
-            phase: 'descending', // Initial phase: bell is descending
-            impactTime: 0.8, // Time when bell hits ground
-            ringingDuration: 1.5, // How long the bell rings after impact
-            shockwaveStart: 0.8, // When shockwave starts (same as impact)
-            shockwaveGrowDuration: 0.5 // How long shockwave expands
-        };
-        
-        // Add bell group to effect group
-        effectGroup.add(bellGroup);
-    }
-
-    /**
-     * Create the wave effect
-     * @param {THREE.Group} effectGroup - Group to add the effect to
-     * @private
-     */
-    _createWaveEffect(effectGroup) {
-        try {
-            // Create main wave group
-            const waveGroup = new THREE.Group();
+        for (let i = 0; i < particleCount; i++) {
+            const angle = (i / particleCount) * Math.PI * 2;
+            const radius = Math.random() * safeImpactRadius;
             
-            // Create the main wave shape
-            const waveGeometry = new THREE.CylinderGeometry(
-                this.waveWidth, // Top radius
-                this.waveWidth * 0.8, // Bottom radius
-                this.waveHeight, // Height
-                32, // Radial segments
-                1, // Height segments
-                true // Open-ended
-            );
-            
-            const waveMaterial = new THREE.MeshStandardMaterial({
-                color: this.skill.color,
-                transparent: true,
-                opacity: 0.6,
-                side: THREE.DoubleSide,
-                metalness: 0.2,
-                roughness: 0.3
-            });
-            
-            const wave = new THREE.Mesh(waveGeometry, waveMaterial);
-            wave.rotation.x = Math.PI / 2;
-            wave.scale.z = 0.3; // Make it thinner
-            waveGroup.add(wave);
-            
-            // Add energy ring at the front of the wave
-            const ringGeometry = new THREE.TorusGeometry(this.waveWidth * 0.9, 0.2, 16, 32);
-            const ringMaterial = new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                emissive: this.skill.color,
-                emissiveIntensity: 1.0,
-                transparent: true,
-                opacity: 0.8
-            });
-            
-            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-            ring.rotation.x = Math.PI / 2;
-            ring.position.z = this.waveHeight / 2;
-            waveGroup.add(ring);
-            
-            // Add particles around the wave
-            const particleCount = 30;
-            const particles = [];
-            
-            for (let i = 0; i < particleCount; i++) {
-                // Random position around the wave
-                const angle = Math.random() * Math.PI * 2;
-                const radius = this.waveWidth * (0.7 + Math.random() * 0.3);
-                const height = (Math.random() * this.waveHeight) - (this.waveHeight / 2);
-                
-                // Create particle
-                const particleSize = 0.05 + (Math.random() * 0.15);
-                const particleGeometry = new THREE.SphereGeometry(particleSize, 8, 8);
-                const particleMaterial = new THREE.MeshBasicMaterial({
-                    color: this.skill.color,
-                    transparent: true,
-                    opacity: 0.6 + (Math.random() * 0.4)
-                });
-                
-                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-                particle.position.set(
-                    Math.cos(angle) * radius,
-                    Math.sin(angle) * radius,
-                    height
-                );
-                
-                // Store initial position for animation
-                particle.userData = {
-                    initialPos: particle.position.clone(),
-                    speed: 0.5 + (Math.random() * 1.5),
-                    direction: new THREE.Vector3(
-                        (Math.random() * 2) - 1,
-                        (Math.random() * 2) - 1,
-                        (Math.random() * 2) - 1
-                    ).normalize()
-                };
-                
-                waveGroup.add(particle);
-                particles.push(particle);
-            }
-            
-            // Add central energy core
-            const coreGeometry = new THREE.SphereGeometry(0.5, 16, 16);
-            const coreMaterial = new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                emissive: this.skill.color,
-                emissiveIntensity: 2.0,
-                transparent: true,
-                opacity: 0.9
-            });
-            
-            const core = new THREE.Mesh(coreGeometry, coreMaterial);
-            waveGroup.add(core);
-            
-            // Add trailing wake behind the wave
-            const wakeGeometry = new THREE.PlaneGeometry(this.waveWidth * 2, this.waveHeight * 2);
-            const wakeMaterial = new THREE.MeshBasicMaterial({
-                color: this.skill.color,
-                transparent: true,
-                opacity: 0.3,
-                side: THREE.DoubleSide
-            });
-            
-            const wake = new THREE.Mesh(wakeGeometry, wakeMaterial);
-            wake.rotation.x = Math.PI / 2;
-            wake.position.z = -this.waveHeight;
-            waveGroup.add(wake);
-            
-            // Add the wave group to the effect group
-            effectGroup.add(waveGroup);
-            
-            // Store wave animation state
-            this.waveState = {
-                wave: wave,
-                ring: ring,
-                core: core,
-                wake: wake,
-                particles: particles,
-                age: 0
-            };
-        } catch (error) {
-            console.error(`Error in _createWaveEffect: ${error.message}`);
-            
-            // Create a simple fallback wave
-            const fallbackGeometry = new THREE.SphereGeometry(1, 16, 16);
-            const fallbackMaterial = new THREE.MeshBasicMaterial({ 
-                color: this.skill.color,
+            const particleSize = Math.max(0.05, 0.1 * safeParticleMultiplier); // Ensure minimum size
+            const particleGeometry = new THREE.SphereGeometry(particleSize, 8, 8);
+            const particleMaterial = new THREE.MeshBasicMaterial({
+                color: this.color || 0xffffff, // Ensure color is valid
                 transparent: true,
                 opacity: 0.7
             });
-            const fallbackMesh = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
-            effectGroup.add(fallbackMesh);
             
-            // Initialize waveState to prevent errors in update
-            this.waveState = {
-                age: 0,
-                particles: []
-            };
+            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+            particle.position.set(
+                Math.cos(angle) * radius,
+                Math.random() * 0.5,
+                Math.sin(angle) * radius
+            );
+            
+            effectGroup.add(particle);
         }
+        
+        // Check if we have a game reference and can find a target enemy
+        let targetPosition = null;
+        
+        if (this.game && this.game.enemyManager) {
+            // Try to find the nearest enemy within the skill's range
+            const nearestEnemy = this.game.enemyManager.findNearestEnemy(this.initialPosition, this.range);
+            
+            if (nearestEnemy) {
+                // Get enemy position
+                const enemyPosition = nearestEnemy.getPosition();
+                
+                // Calculate direction to enemy
+                const direction = new THREE.Vector3().subVectors(enemyPosition, this.initialPosition).normalize();
+                
+                // Calculate target position (at the enemy's location)
+                targetPosition = new THREE.Vector3(
+                    enemyPosition.x,
+                    this.initialPosition.y, // Keep the same Y height as the player
+                    enemyPosition.z
+                );
+                
+                // Move the effect group to the target position
+                effectGroup.position.copy(targetPosition);
+                
+                console.log(`Wave of Light targeting enemy at position: ${targetPosition.x}, ${targetPosition.z}`);
+                
+                // Show notification if UI manager is available
+                if (this.game.player && this.game.player.game && this.game.player.game.uiManager) {
+                    this.game.player.game.uiManager.showNotification(`Wave of Light targeting ${nearestEnemy.type}`);
+                }
+            } else {
+                console.log('No enemy in range for Wave of Light, dropping bell at current position');
+            }
+        }
+        
+        // Store effect
+        this.effect = effectGroup;
+        this.isActive = true;
+        
+        // Store animation state with configuration and target position
+        this.bellState = {
+            phase: 'descending', // 'descending', 'impact', 'ascending'
+            initialHeight: config.bellHeight,
+            impactTime: 0,
+            config: config, // Store config for use in update method
+            targetPosition: targetPosition // Store the target position if an enemy was found
+        };
+        
+        return effectGroup;
     }
 
     /**
@@ -398,29 +268,10 @@ export class WaveSkillEffect extends SkillEffect {
             }
             
             // Handle different updates based on effect type
-            if (this.bellCreated) {
-                this._updateBellAnimation(delta);
-            } else {
-                // Move wave forward
-                const moveDistance = this.waveSpeed * delta;
-                this.effect.position.x += this.direction.x * moveDistance;
-                this.effect.position.z += this.direction.z * moveDistance;
-                
-                // Update distance traveled
-                this.distanceTraveled += moveDistance;
-                
-                // Check if wave has reached maximum range
-                if (this.distanceTraveled >= this.skill.range) {
-                    this.isActive = false;
-                    return;
-                }
-                
-                // Update standard wave animation
-                this._updateWaveAnimation(delta);
-            }
+            this.updateWaveEffect(delta);
         } catch (error) {
             console.error(`Error updating effect: ${error.message}`);
-            
+
             // Mark as inactive to prevent further errors
             this.isActive = false;
         }
@@ -431,204 +282,141 @@ export class WaveSkillEffect extends SkillEffect {
      * @param {number} delta - Time since last update in seconds
      * @private
      */
-    _updateBellAnimation(delta) {
-        if (!this.bellState) return;
+    updateWaveEffect(delta) {
+        // Get bell group (first child of effect group)
+        const bellGroup = this.effect.children[0];
         
-        const state = this.bellState;
+        // Get impact area (second child of effect group)
+        const impactArea = this.effect.children[1];
         
-        // Handle different phases of the bell animation
-        if (state.phase === 'descending') {
-            // Bell is falling from the sky
-            const progress = Math.min(this.elapsedTime / state.impactTime, 1.0);
-            const easeInQuad = progress * progress; // Ease-in for acceleration
-            
-            // Move bell downward
-            state.bell.position.y = 5 * (1 - easeInQuad);
-            state.handle.position.y = 6.5 * (1 - easeInQuad) + state.bell.position.y;
-            state.striker.position.y = 4.2 * (1 - easeInQuad) + state.bell.position.y * 0.2;
-            state.aura.position.y = state.bell.position.y;
-            
-            // Rotate bell slightly as it falls
-            state.bell.rotation.x = progress * 0.2;
-            
-            // When bell hits the ground
-            if (progress >= 1.0) {
-                state.phase = 'ringing';
-                
-                // Make shockwave visible
-                state.shockwave.material.opacity = 0.8;
-            }
-        } else if (state.phase === 'ringing') {
-            // Bell is ringing after impact
-            const ringProgress = (this.elapsedTime - state.impactTime) / state.ringingDuration;
-            
-            if (ringProgress <= 1.0) {
-                // Bell vibration effect
-                const vibrationSpeed = 20;
-                const vibrationAmount = 0.05 * (1 - ringProgress); // Diminishing vibration
-                state.bell.rotation.x = Math.sin(this.elapsedTime * vibrationSpeed) * vibrationAmount;
-                
-                // Striker movement
-                const strikerSpeed = 15;
-                const strikerAmount = 0.2 * (1 - ringProgress); // Diminishing movement
-                state.striker.position.x = Math.sin(this.elapsedTime * strikerSpeed) * strikerAmount;
-                
-                // Pulse aura
-                const auraPulse = 1.0 + Math.sin(this.elapsedTime * 10) * 0.2;
-                state.aura.scale.set(auraPulse, auraPulse, auraPulse);
-                state.aura.material.opacity = 0.3 * (1 - ringProgress * 0.5);
-            } else {
-                // Ringing is complete, start fading
-                state.phase = 'fading';
-            }
-            
-            // Update shockwave during ringing phase
-            const shockwaveProgress = (this.elapsedTime - state.shockwaveStart) / state.shockwaveGrowDuration;
-            if (shockwaveProgress <= 1.0) {
-                // Expand shockwave
-                const size = 0.2 + shockwaveProgress * 10.0; // Grow from 0.2 to 10.2
-                state.shockwave.scale.set(size, size, 1);
-                
-                // Fade shockwave as it expands
-                state.shockwave.material.opacity = 0.8 * (1 - shockwaveProgress);
-            }
-        } else if (state.phase === 'fading') {
-            // Bell is fading away
-            const fadeProgress = (this.elapsedTime - (state.impactTime + state.ringingDuration)) / 0.5;
-            const opacity = 1.0 - Math.min(fadeProgress, 1.0);
-            
-            // Fade all bell components
-            if (state.bell.material) state.bell.material.opacity = opacity;
-            if (state.handle.material) state.handle.material.opacity = opacity;
-            if (state.striker.material) state.striker.material.opacity = opacity;
-            if (state.aura.material) state.aura.material.opacity = opacity * 0.3;
-            
-            // When fully faded, mark as inactive
-            if (fadeProgress >= 1.0) {
-                this.isActive = false;
-            }
-        }
+        // Get config from bell state
+        const config = this.bellState.config || {
+            bellSizeMultiplier: 2.0,
+            bellHeight: 8
+        };
         
-        // Always update particles
-        for (const particle of state.particles) {
-            if (particle && particle.userData) {
-                const initialPos = particle.userData.initialPos;
-                const speed = particle.userData.speed;
-                const phase = particle.userData.phase;
+        // Animation phases for the bell
+        switch (this.bellState.phase) {
+            case 'descending':
+                // Bell descends from the sky
+                const descentSpeed = 15 * Math.sqrt(config.bellSizeMultiplier); // Scale speed with bell size
+                bellGroup.position.y -= descentSpeed * delta;
                 
-                // Spiral movement upward during ringing phase
-                if (state.phase === 'ringing' || state.phase === 'fading') {
-                    particle.position.y += delta * speed;
+                // When bell reaches near ground level, switch to impact phase
+                const groundClearance = 0.5 * config.bellSizeMultiplier;
+                if (bellGroup.position.y <= groundClearance) {
+                    bellGroup.position.y = groundClearance; // Ensure bell doesn't go below ground
+                    this.bellState.phase = 'impact';
+                    this.bellState.impactTime = 0;
                     
-                    // Spiral outward
-                    const angle = this.elapsedTime * speed + phase;
-                    const radius = initialPos.distanceTo(new THREE.Vector3(0, initialPos.y, 0)) + 
-                                  (this.elapsedTime * 0.5);
-                    
-                    particle.position.x = Math.cos(angle) * radius;
-                    particle.position.z = Math.sin(angle) * radius;
-                    
-                    // Fade particles over time
-                    if (particle.material) {
-                        particle.material.opacity = Math.max(0, particle.material.opacity - (delta * 0.2));
+                    // Make impact area visible and expand it
+                    impactArea.material.opacity = 0.7;
+                    impactArea.scale.set(0.1, 0.1, 0.1); // Start small
+                }
+                break;
+                
+            case 'impact':
+                // Bell impact phase - create shockwave and visual effects
+                this.bellState.impactTime += delta;
+                
+                // Expand impact area - scale with bell size
+                const expansionSpeed = 5 * Math.sqrt(config.bellSizeMultiplier);
+                const maxScale = 1.5 * config.bellSizeMultiplier;
+                const currentScale = Math.min(this.bellState.impactTime * expansionSpeed, maxScale);
+                impactArea.scale.set(currentScale, currentScale, currentScale);
+                
+                // Fade impact area as it expands
+                impactArea.material.opacity = 0.7 * (1 - (currentScale / maxScale));
+                
+                // Make bell vibrate during impact - scale vibration with bell size
+                const vibrationIntensity = 0.2 * config.bellSizeMultiplier * (1 - (this.bellState.impactTime / 0.5));
+                bellGroup.rotation.z = Math.sin(this.bellState.impactTime * 40) * vibrationIntensity;
+                
+                // Animate light rays
+                for (let i = 2; i < 2 + 8; i++) { // Rays are children 2-9
+                    if (this.effect.children[i]) {
+                        const ray = this.effect.children[i];
+                        ray.scale.z = 1 + Math.sin(this.bellState.impactTime * 10) * 0.5 * config.bellSizeMultiplier;
+                        ray.material.opacity = 0.5 * (1 - (this.bellState.impactTime / 0.5));
                     }
                 }
-            }
-        }
-        
-        // Update light rays
-        for (const ray of state.rays) {
-            if (ray && ray.userData) {
-                const angle = ray.userData.angle;
                 
-                if (state.phase === 'descending') {
-                    // Rays follow bell down
-                    ray.position.y = state.bell.position.y;
-                } else if (state.phase === 'ringing') {
-                    // Rays extend outward during ringing
-                    const extensionFactor = 1.0 + (this.elapsedTime - state.impactTime) * 2;
-                    ray.scale.y = extensionFactor;
-                    
-                    // Pulse rays
-                    const pulse = 1.0 + Math.sin(this.elapsedTime * 10 + angle) * 0.2;
-                    ray.scale.x = pulse;
-                    ray.scale.z = pulse;
-                } else if (state.phase === 'fading') {
-                    // Fade rays
-                    if (ray.material) {
-                        ray.material.opacity = Math.max(0, ray.material.opacity - (delta * 0.5));
+                // After impact time, switch to ascending phase
+                if (this.bellState.impactTime >= 0.5) {
+                    this.bellState.phase = 'ascending';
+                }
+                break;
+                
+            case 'ascending':
+                // Bell ascends back to the sky - scale speed with bell size
+                const ascentSpeed = 10 * Math.sqrt(config.bellSizeMultiplier);
+                bellGroup.position.y += ascentSpeed * delta;
+                
+                // Gradually fade out the bell as it ascends
+                if (bellGroup.children.length > 0) {
+                    for (let i = 0; i < bellGroup.children.length; i++) {
+                        const part = bellGroup.children[i];
+                        if (part.material) {
+                            part.material.opacity = Math.max(0, part.material.opacity - delta);
+                        }
                     }
                 }
-            }
+                
+                // Fade out impact area and rays
+                impactArea.material.opacity = Math.max(0, impactArea.material.opacity - delta);
+                
+                for (let i = 2; i < 2 + 8; i++) { // Rays are children 2-9
+                    if (this.effect.children[i]) {
+                        const ray = this.effect.children[i];
+                        ray.material.opacity = Math.max(0, ray.material.opacity - delta);
+                    }
+                }
+                
+                // Animate particles (last children of effect group)
+                for (let i = 2 + 8; i < this.effect.children.length; i++) {
+                    const particle = this.effect.children[i];
+                    
+                    // Move particles outward and upward - scale movement with bell size
+                    const directionToCenter = new THREE.Vector3(
+                        particle.position.x,
+                        0,
+                        particle.position.z
+                    ).normalize();
+                    
+                    particle.position.x += directionToCenter.x * delta * 2 * config.bellSizeMultiplier;
+                    particle.position.z += directionToCenter.z * delta * 2 * config.bellSizeMultiplier;
+                    particle.position.y += delta * 3 * config.bellSizeMultiplier;
+                    
+                    // Fade out particles
+                    particle.material.opacity = Math.max(0, particle.material.opacity - delta);
+                }
+                break;
         }
     }
-
+    
     /**
-     * Update the wave animation
-     * @param {number} delta - Time since last update in seconds
-     * @private
+     * Reset the wave effect to its initial state
+     * Overrides the base class reset method to handle wave-specific state
      */
-    _updateWaveAnimation(delta) {
-        if (!this.waveState) return;
+    reset() {
+        // Call the parent class reset method first
+        super.reset();
         
-        this.waveState.age += delta;
+        // Reset wave-specific properties
+        this.distanceTraveled = 0;
+        this.bellCreated = false;
+        this.initialPosition = new THREE.Vector3();
+        this.direction = new THREE.Vector3();
         
-        // Animate particles
-        for (const particle of this.waveState.particles) {
-            if (particle && particle.userData && particle.userData.initialPos) {
-                const initialPos = particle.userData.initialPos;
-                const speed = particle.userData.speed;
-                const direction = particle.userData.direction;
-                
-                // Oscillate position
-                particle.position.set(
-                    initialPos.x + Math.sin(this.waveState.age * speed) * direction.x * 0.2,
-                    initialPos.y + Math.sin(this.waveState.age * speed) * direction.y * 0.2,
-                    initialPos.z + Math.sin(this.waveState.age * speed) * direction.z * 0.2
-                );
-            }
-        }
-        
-        // Animate the main wave
-        if (this.waveState.wave) {
-            // Pulse the wave
-            const pulseScale = 1.0 + Math.sin(this.waveState.age * 3) * 0.1;
-            this.waveState.wave.scale.x = pulseScale;
-            this.waveState.wave.scale.y = pulseScale;
-        }
-        
-        // Animate the energy ring
-        if (this.waveState.ring) {
-            // Rotate the ring
-            this.waveState.ring.rotation.z += delta * 2;
-            
-            // Pulse the ring
-            const ringPulse = 1.0 + Math.sin(this.waveState.age * 5) * 0.2;
-            this.waveState.ring.scale.set(ringPulse, ringPulse, 1);
-        }
-        
-        // Animate the central core
-        if (this.waveState.core) {
-            // Pulse the core
-            const corePulse = 1.0 + Math.sin(this.waveState.age * 8) * 0.3;
-            this.waveState.core.scale.set(corePulse, corePulse, corePulse);
-            
-            // Pulse opacity
-            if (this.waveState.core.material) {
-                this.waveState.core.material.opacity = 0.7 + Math.sin(this.waveState.age * 4) * 0.3;
-            }
-        }
-        
-        // Animate the wake
-        if (this.waveState.wake) {
-            // Stretch the wake as the wave moves
-            this.waveState.wake.scale.y = 1.0 + (this.distanceTraveled * 0.05);
-            this.waveState.wake.position.z = -this.waveHeight - (this.distanceTraveled * 0.1);
-            
-            // Fade the wake over time
-            if (this.waveState.wake.material) {
-                this.waveState.wake.material.opacity = Math.max(0.1, 0.3 - (this.elapsedTime * 0.05));
-            }
+        // Reset bell state if it exists
+        if (this.bellState) {
+            this.bellState = {
+                phase: 'descending',
+                initialHeight: this.bellState.config ? this.bellState.config.bellHeight : 8,
+                impactTime: 0,
+                config: this.bellState.config,
+                targetPosition: null
+            };
         }
     }
 }

@@ -111,4 +111,19 @@ export class SkillEffect {
         this.effect = null;
         this.isActive = false;
     }
+    
+    /**
+     * Reset the effect to its initial state
+     * This allows the effect to be reused without creating a new instance
+     */
+    reset() {
+        // Dispose of any existing effect
+        this.dispose();
+        
+        // Reset state variables
+        this.isActive = false;
+        this.elapsedTime = 0;
+        
+        // Additional reset logic can be added in derived classes
+    }
 }

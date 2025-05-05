@@ -21,11 +21,7 @@ export class AoESkillEffect extends SkillEffect {
         const effectGroup = new THREE.Group();
         
         // Special handling for Cyclone Strike
-        if (this.skill.name === 'Cyclone Strike') {
-            this._createCycloneStrikeEffect(effectGroup);
-        } else {
-            this._createDefaultAoEEffect(effectGroup);
-        }
+        this.createCycloneStrikeEffect(effectGroup);
         
         // Position effect
         effectGroup.position.copy(position);
@@ -38,70 +34,18 @@ export class AoESkillEffect extends SkillEffect {
     }
 
     /**
-     * Create the default AoE effect
-     * @param {THREE.Group} effectGroup - Group to add the effect to
-     * @private
-     */
-    _createDefaultAoEEffect(effectGroup) {
-        // Create a circular area effect
-        const areaGeometry = new THREE.CircleGeometry(this.skill.radius, 32);
-        const areaMaterial = new THREE.MeshBasicMaterial({
-            color: this.skill.color,
-            transparent: true,
-            opacity: 0.5,
-            side: THREE.DoubleSide
-        });
-        
-        const area = new THREE.Mesh(areaGeometry, areaMaterial);
-        area.rotation.x = -Math.PI / 2; // Lay flat on the ground
-        area.position.y = 0.1; // Slightly above ground to avoid z-fighting
-        
-        effectGroup.add(area);
-        
-        // Add particles rising from the area
-        const particleCount = 20;
-        for (let i = 0; i < particleCount; i++) {
-            const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-            const particleMaterial = new THREE.MeshBasicMaterial({
-                color: this.skill.color,
-                transparent: true,
-                opacity: 0.7
-            });
-            
-            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-            
-            // Random position within the circle
-            const angle = Math.random() * Math.PI * 2;
-            const radius = Math.random() * this.skill.radius;
-            particle.position.set(
-                Math.cos(angle) * radius,
-                Math.random() * 2, // Random height
-                Math.sin(angle) * radius
-            );
-            
-            // Store initial position for animation
-            particle.userData = {
-                initialY: particle.position.y,
-                speed: 0.5 + Math.random() * 1.5
-            };
-            
-            effectGroup.add(particle);
-        }
-    }
-
-    /**
      * Create the Cyclone Strike special effect
      * @param {THREE.Group} effectGroup - Group to add the effect to
      * @private
      */
-    _createCycloneStrikeEffect(effectGroup) {
+    createCycloneStrikeEffect(effectGroup) {
         // Create a tornado/cyclone effect
         const cycloneGroup = new THREE.Group();
         
-        // Create the base of the cyclone
-        const baseRadius = this.skill.radius;
+        // Create the base of the cyclone - now smaller
+        const baseRadius = this.skill.radius * 0.4; // Reduced base radius
         const baseHeight = 0.2;
-        const baseGeometry = new THREE.CylinderGeometry(baseRadius, baseRadius * 1.2, baseHeight, 32);
+        const baseGeometry = new THREE.CylinderGeometry(baseRadius, baseRadius * 0.8, baseHeight, 32);
         const baseMaterial = new THREE.MeshStandardMaterial({
             color: this.skill.color,
             transparent: true,
@@ -116,14 +60,15 @@ export class AoESkillEffect extends SkillEffect {
         cycloneGroup.add(base);
         
         // Create the main cyclone body with multiple layers
-        const layerCount = 8;
+        const layerCount = 10;
         const maxHeight = 4;
         const spiralFactor = 0.2; // Controls how much the cyclone spirals
         
         for (let i = 0; i < layerCount; i++) {
             const layerHeight = 0.4;
             const heightPosition = baseHeight + (i * layerHeight);
-            const layerRadius = baseRadius * (1 - (i / layerCount) * 0.7); // Gradually decrease radius
+            // Gradually increase radius as we go up (reversed from original)
+            const layerRadius = baseRadius * (1 + (i / layerCount) * 1.5);
             
             const layerGeometry = new THREE.TorusGeometry(layerRadius, 0.2, 16, 32);
             const layerMaterial = new THREE.MeshStandardMaterial({
@@ -151,14 +96,19 @@ export class AoESkillEffect extends SkillEffect {
         }
         
         // Add wind/dust particles swirling around the cyclone
-        const particleCount = 50;
+        const particleCount = 50 * 1.5;
         const particles = [];
         
         for (let i = 0; i < particleCount; i++) {
             // Random position around the cyclone
             const angle = Math.random() * Math.PI * 2;
-            const distance = (Math.random() * baseRadius * 1.2) + (baseRadius * 0.2);
             const height = Math.random() * maxHeight;
+            
+            // Calculate distance based on height - particles further out at higher heights
+            // This creates a cone shape matching our inverted cyclone
+            const heightRatio = height / maxHeight;
+            const maxDistanceAtHeight = baseRadius * (1 + heightRatio * 2.5) * 1.2;
+            const distance = (Math.random() * maxDistanceAtHeight * 0.8) + (maxDistanceAtHeight * 0.2);
             
             // Create particle
             const particleSize = 0.05 + (Math.random() * 0.15);
@@ -248,52 +198,7 @@ export class AoESkillEffect extends SkillEffect {
         }
         
         // Special handling for Cyclone Strike
-        if (this.skill.name === 'Cyclone Strike' && this.cycloneState) {
-            this._updateCycloneStrikeEffect(delta);
-        } else {
-            this._updateDefaultAoEEffect(delta);
-        }
-    }
-
-    /**
-     * Update the default AoE effect
-     * @param {number} delta - Time since last update in seconds
-     * @private
-     */
-    _updateDefaultAoEEffect(delta) {
-        // Pulse the area
-        const pulseScale = 1 + (Math.sin(this.elapsedTime * 3) * 0.1);
-        
-        // Apply to the first child (the circle)
-        if (this.effect.children[0]) {
-            this.effect.children[0].scale.set(pulseScale, pulseScale, pulseScale);
-        }
-        
-        // Animate particles
-        for (let i = 1; i < this.effect.children.length; i++) {
-            const particle = this.effect.children[i];
-            if (particle.userData && particle.userData.initialY !== undefined) {
-                // Move particle up
-                particle.position.y += particle.userData.speed * delta;
-                
-                // Reset if it goes too high
-                if (particle.position.y > 3) {
-                    particle.position.y = particle.userData.initialY;
-                    
-                    // Randomize horizontal position again
-                    const angle = Math.random() * Math.PI * 2;
-                    const radius = Math.random() * this.skill.radius;
-                    particle.position.x = Math.cos(angle) * radius;
-                    particle.position.z = Math.sin(angle) * radius;
-                }
-                
-                // Fade out as it rises
-                if (particle.material) {
-                    const heightRatio = (particle.position.y - particle.userData.initialY) / 3;
-                    particle.material.opacity = 0.7 * (1 - heightRatio);
-                }
-            }
-        }
+        this.updateCycloneStrikeEffect(delta);
     }
 
     /**
@@ -301,7 +206,7 @@ export class AoESkillEffect extends SkillEffect {
      * @param {number} delta - Time since last update in seconds
      * @private
      */
-    _updateCycloneStrikeEffect(delta) {
+    updateCycloneStrikeEffect(delta) {
         // Update cyclone state
         this.cycloneState.age += delta;
         
