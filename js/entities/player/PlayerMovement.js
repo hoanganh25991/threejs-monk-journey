@@ -1,0 +1,226 @@
+/**
+ * PlayerMovement.js
+ * Handles player movement, position, and camera updates
+ */
+
+import * as THREE from 'three';
+import { IPlayerMovement } from './PlayerInterface.js';
+
+export class PlayerMovement extends IPlayerMovement {
+    constructor(playerState, playerStats, modelGroup, camera) {
+        super();
+        
+        // Store references
+        this.playerState = playerState;
+        this.playerStats = playerStats;
+        this.modelGroup = modelGroup;
+        this.camera = camera;
+        
+        // Position and orientation
+        this.position = new THREE.Vector3(0, 0, 0);
+        this.targetPosition = new THREE.Vector3(0, 0, 0);
+        this.rotation = new THREE.Euler(0, 0, 0);
+        
+        // Collision properties
+        this.collisionRadius = 0.5;
+        this.heightOffset = 1.0;
+        
+        // Game reference
+        this.game = null;
+    }
+    
+    setGame(game) {
+        this.game = game;
+    }
+    
+    updateMovement(delta) {
+        if (this.playerState.isMoving()) {
+            // Calculate direction to target
+            const direction = new THREE.Vector3().subVectors(this.targetPosition, this.position).normalize();
+            
+            // Calculate distance to target
+            const distance = this.position.distanceTo(this.targetPosition);
+            
+            // Move towards target
+            if (distance > 0.1) {
+                // Calculate movement step
+                const step = this.playerStats.getMovementSpeed() * delta;
+                
+                // Calculate new position (only update X and Z, let updateTerrainHeight handle Y)
+                const newPosition = new THREE.Vector3(
+                    this.position.x + direction.x * step,
+                    this.position.y,
+                    this.position.z + direction.z * step
+                );
+                
+                // Update position (only X and Z)
+                this.position.x = newPosition.x;
+                this.position.z = newPosition.z;
+                
+                // Update model position
+                if (this.modelGroup) {
+                    this.modelGroup.position.x = this.position.x;
+                    this.modelGroup.position.z = this.position.z;
+                }
+                
+                // Update rotation to face movement direction
+                this.rotation.y = Math.atan2(direction.x, direction.z);
+                if (this.modelGroup) {
+                    this.modelGroup.rotation.y = this.rotation.y;
+                }
+            } else {
+                // Reached target
+                this.playerState.setMoving(false);
+            }
+        }
+        
+        // Update the world based on player position
+        if (this.game && this.game.world) {
+            this.game.world.updateWorldForPlayer(this.position);
+        }
+    }
+    
+    handleKeyboardMovement(delta) {
+        // Get movement direction from input handler
+        const direction = this.game.inputHandler.getMovementDirection();
+        
+        // If there's keyboard input, move the player
+        if (direction.length() > 0) {
+            // Calculate movement step
+            const step = this.playerStats.getMovementSpeed() * delta;
+            
+            // Calculate new position (only update X and Z)
+            const newPosition = new THREE.Vector3(
+                this.position.x + direction.x * step,
+                this.position.y,
+                this.position.z + direction.z * step
+            );
+            
+            // Update position
+            this.position.x = newPosition.x;
+            this.position.z = newPosition.z;
+            
+            // Update model position
+            if (this.modelGroup) {
+                this.modelGroup.position.x = this.position.x;
+                this.modelGroup.position.z = this.position.z;
+            }
+            
+            // Update rotation to face movement direction
+            this.rotation.y = Math.atan2(direction.x, direction.z);
+            if (this.modelGroup) {
+                this.modelGroup.rotation.y = this.rotation.y;
+            }
+            
+            // Set moving state
+            this.playerState.setMoving(true);
+            
+            // Update target position to current position to prevent mouse movement overriding
+            this.targetPosition.copy(this.position);
+        }
+    }
+    
+    updateTerrainHeight() {
+        // Ensure player is always at the correct terrain height
+        if (this.game && this.game.world) {
+            const terrainHeight = this.game.world.getTerrainHeight(this.position.x, this.position.z);
+            
+            // Always maintain a fixed height above terrain to prevent vibration
+            const targetHeight = terrainHeight + this.heightOffset;
+            
+            // Check if the world's initial terrain has been created
+            if (this.game.world.initialTerrainCreated) {
+                // Use a very small smooth factor to prevent vibration
+                const smoothFactor = 0.05; // Lower value = smoother transition
+                this.position.y += (targetHeight - this.position.y) * smoothFactor;
+            } else {
+                // If initial terrain isn't created yet, just set the height directly
+                this.position.y = targetHeight;
+            }
+            
+            // Update model position
+            if (this.modelGroup) {
+                this.modelGroup.position.y = this.position.y;
+            }
+        }
+    }
+    
+    updateCamera() {
+        // Position camera in a more top-down view with greater height and distance
+        const cameraOffset = new THREE.Vector3(0, 15, 20);
+        
+        // Validate player position before using it
+        if (isNaN(this.position.x) || isNaN(this.position.y) || isNaN(this.position.z)) {
+            console.warn("Invalid player position detected:", this.position);
+            // Reset player position to a safe value
+            this.position.set(0, 2, 0);
+        }
+        
+        const cameraTarget = new THREE.Vector3(
+            this.position.x,
+            this.position.y, // Look directly at player's position for top-down view
+            this.position.z
+        );
+        
+        // Calculate camera position
+        const cameraPosition = new THREE.Vector3(
+            this.position.x + cameraOffset.x,
+            this.position.y + cameraOffset.y,
+            this.position.z + cameraOffset.z
+        );
+        
+        // Validate camera position before applying
+        if (!isNaN(cameraPosition.x) && !isNaN(cameraPosition.y) && !isNaN(cameraPosition.z)) {
+            // Update camera position
+            this.camera.position.copy(cameraPosition);
+            
+            // Validate camera target before looking at it
+            if (!isNaN(cameraTarget.x) && !isNaN(cameraTarget.y) && !isNaN(cameraTarget.z)) {
+                this.camera.lookAt(cameraTarget);
+            }
+        } else {
+            console.warn("Invalid camera position calculated:", cameraPosition);
+        }
+    }
+    
+    moveTo(target) {
+        // Set target position
+        this.targetPosition.copy(target);
+        
+        // Start moving
+        this.playerState.setMoving(true);
+    }
+    
+    setPosition(x, y, z) {
+        // Validate input coordinates
+        if (isNaN(x) || isNaN(y) || isNaN(z)) {
+            console.warn("Attempted to set invalid player position:", x, y, z);
+            // Use last valid position or default to origin
+            return;
+        }
+        
+        // Update position
+        this.position.set(x, y, z);
+        
+        // Update model position (if it exists)
+        if (this.modelGroup) {
+            this.modelGroup.position.copy(this.position);
+        }
+    }
+    
+    getPosition() {
+        return this.position;
+    }
+    
+    getRotation() {
+        return this.rotation;
+    }
+    
+    getCollisionRadius() {
+        return this.collisionRadius;
+    }
+    
+    getHeightOffset() {
+        return this.heightOffset;
+    }
+}

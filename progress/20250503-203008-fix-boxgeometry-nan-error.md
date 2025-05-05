@@ -84,7 +84,7 @@ The following changes were made to fix the issue:
    ```
 
 ## Files Modified
-1. `/Users/anhle/work-station/diablo-immortal/js/entities/Player.js`
+1. `/Users/anhle/work-station/diablo-immortal/js/entities/palyer/Player.js`
 2. `/Users/anhle/work-station/diablo-immortal/js/entities/Skill.js`
 
 ## Result

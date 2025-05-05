@@ -23,7 +23,7 @@ const ASSETS_TO_CACHE = [
   'js/core/SaveManager.js',
   'js/entities/Enemy.js',
   'js/entities/EnemyManager.js',
-  'js/entities/Player.js',
+  'js/entities/palyer/Player.js',
   'js/entities/Skill.js',
   'js/main.js',
   'js/world/WorldManager.js',

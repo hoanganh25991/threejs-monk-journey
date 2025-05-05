@@ -103,6 +103,9 @@ export class Game {
         this.player.setGame(this);
         await this.player.init();
         
+        // Ensure game reference is set after initialization
+        this.player.setGame(this);
+        
         // Initialize input handler
         this.inputHandler = new InputHandler(this);
         

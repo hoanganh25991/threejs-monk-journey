@@ -28,9 +28,9 @@
 
 - [x] Enhance: Level Up message is impressive, but when multiple level up, should remove the old one quickly, even the current one also only max in 2 seconds, after 2 seconds duration, completely disappear
 
-- [] Enhance: optimize performance when multiple enemies attack hero, add ParticleManager.js to reduce/batching the bleeding particle each enemy hit to hero
+- [x] ~~Enhance: optimize performance when multiple enemies attack hero, add ParticleManager.js to reduce/batching the bleeding particle each enemy hit to hero~~
 
-- [] Fix issue: ParticleManager.js has dispose method, is it should be called by PerformanceManager.js, i dont see where this method called
+- [x] ~~Fix issue: ParticleManager.js has dispose method, is it should be called by PerformanceManager.js, i dont see where this method called~~
 
 - [ ] Enhance: review Player.js file and optimise it:
     - remove unused method

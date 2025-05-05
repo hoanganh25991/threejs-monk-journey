@@ -32,7 +32,7 @@ Implemented a comprehensive cleanup system for skill effects with the following 
 - Better visual clarity during combat
 
 ## Files Modified
-- `/js/entities/Player.js`
+- `/js/entities/palyer/Player.js`
 - `/js/entities/Skill.js`
 
 ## Testing

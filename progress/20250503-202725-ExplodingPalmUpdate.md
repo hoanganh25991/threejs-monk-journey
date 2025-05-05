@@ -4,7 +4,7 @@
 Updated the description of the Exploding Palm skill to reflect its "Giant Palm" variant, providing a more detailed and immersive description of the skill's effects.
 
 ## Changes Made
-- Modified the description of the Exploding Palm skill in `js/entities/Player.js`
+- Modified the description of the Exploding Palm skill in `js/entities/palyer/Player.js`
 - Changed from: "Mark enemies to explode on death, dealing damage to nearby enemies"
 - Changed to: "Giant Palm: Summon a massive ethereal palm that marks enemies, causing them to violently explode on death and unleash devastating damage to all nearby foes"
 

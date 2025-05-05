@@ -5,7 +5,7 @@ This update significantly enhances the blood particle system in the game by impl
 
 ## Files Modified
 1. `/js/core/ParticleManager.js` - Enhanced the blood particle system with multiple geometries and behaviors
-2. `/js/entities/Player.js` - Updated to pass damage information to the particle system
+2. `/js/entities/palyer/Player.js` - Updated to pass damage information to the particle system
 3. `/js/entities/Enemy.js` - Updated to pass damage information to the particle system
 
 ## Key Improvements

@@ -1633,10 +1633,10 @@ export class HUDManager {
         // Handle different item types
         if (item.name === 'Health Potion') {
             // Heal player
-            this.game.player.stats.health += 50;
-            if (this.game.player.stats.health > this.game.player.stats.maxHealth) {
-                this.game.player.stats.health = this.game.player.stats.maxHealth;
-            }
+            // Use proper methods instead of direct access
+            const newHealth = this.game.player.getHealth() + 50;
+            const maxHealth = this.game.player.getMaxHealth();
+            this.game.player.getStatsObject().setHealth(Math.min(newHealth, maxHealth));
             
             // Remove item from inventory
             this.game.player.removeFromInventory(item.name, 1);
@@ -1648,10 +1648,10 @@ export class HUDManager {
             this.updateInventoryItems();
         } else if (item.name === 'Mana Potion') {
             // Restore mana
-            this.game.player.stats.mana += 50;
-            if (this.game.player.stats.mana > this.game.player.stats.maxMana) {
-                this.game.player.stats.mana = this.game.player.stats.maxMana;
-            }
+            // Use proper methods instead of direct access
+            const newMana = this.game.player.getMana() + 50;
+            const maxMana = this.game.player.getMaxMana();
+            this.game.player.getStatsObject().setMana(Math.min(newMana, maxMana));
             
             // Remove item from inventory
             this.game.player.removeFromInventory(item.name, 1);
