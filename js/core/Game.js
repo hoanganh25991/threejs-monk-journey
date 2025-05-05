@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { WorldManager } from '../world/WorldManager.js';
-import { Player } from '../entities/Player.js';
+import { Player } from '../entities/player/Player.js';
 import { InputHandler } from './InputHandler.js';
 import { HUDManager } from './HUDManager.js';
 import { EnemyManager } from '../entities/EnemyManager.js';
