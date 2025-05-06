@@ -74,7 +74,7 @@ export class ModelPreview {
         // Create camera with wider field of view for better model visibility
         this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.1, 1000);
         // Position camera further back (z-axis) and slightly higher (y-axis) to see the whole model
-        this.camera.position.set(0, 2.0, 6.0); // Zoomed out by 1.5x from original z=4 position
+        this.camera.position.set(0, 2.0, 9.0); // Zoomed out by 2.25x from original z=4 position (1.5x more than before)
         
         // Create renderer
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -248,7 +248,7 @@ export class ModelPreview {
         if (maxDimension > 4) {
             // For larger models, move camera back proportionally
             const distanceFactor = maxDimension / 4;
-            this.camera.position.z = Math.min(15, 6.0 * distanceFactor);
+            this.camera.position.z = Math.min(20, 9.0 * distanceFactor); // Updated to match the new default camera distance
             this.camera.updateProjectionMatrix();
         }
     }
@@ -317,7 +317,7 @@ export class ModelPreview {
      * Reset camera to default position
      */
     resetCamera() {
-        this.camera.position.set(0, 2.0, 6.0);
+        this.camera.position.set(0, 2.0, 9.0);
         this.camera.lookAt(0, 0, 0);
         this.controls.reset();
     }
