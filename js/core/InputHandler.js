@@ -314,7 +314,10 @@ export class InputHandler {
             }
         } else if (this.game.world.interactiveObjects) {
             // Fallback to old structure if it exists
+            console.warn('Using legacy interactiveObjects structure');
             interactiveObjects = this.game.world.interactiveObjects.map(obj => obj.mesh).filter(mesh => mesh !== undefined);
+        } else {
+            console.warn('No interactive objects manager found');
         }
         
         // Check for intersections with interactive objects only if we have objects to check
@@ -340,7 +343,10 @@ export class InputHandler {
             if (this.game.world.interactiveManager && this.game.world.interactiveManager.getInteractiveObjectByMesh) {
                 interactiveObject = this.game.world.interactiveManager.getInteractiveObjectByMesh(parentMesh);
             } else if (this.game.world.interactiveObjects) {
+                console.warn('Using legacy interactiveObjects structure for finding object');
                 interactiveObject = this.game.world.interactiveObjects.find(obj => obj.mesh === parentMesh);
+            } else {
+                console.warn('No interactive objects manager found for finding object');
             }
             
             if (interactiveObject) {

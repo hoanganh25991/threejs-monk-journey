@@ -113,63 +113,120 @@ export class SaveManager {
                 return false;
             }
             
-            // Parse save data
-            const saveData = JSON.parse(saveString);
-            
-            // Check version compatibility
-            if (saveData.version !== '1.1.0') {
-                console.warn('Save data version mismatch, some data may not load correctly');
-            }
-            
-            // Clear existing game state
-            this.game.enemyManager.removeAllEnemies();
-            
-            // Load player data
-            this.loadPlayerData(saveData.player);
-            
-            // Load quest data
-            this.loadQuestData(saveData.quests);
-            
-            // Load world data - check for new or old format
-            if (saveData.worldMeta) {
-                // New format - load world metadata
-                this.loadWorldData(saveData.worldMeta);
-            } else if (saveData.world) {
-                // Old format - load full world data
-                this.loadWorldData(saveData.world);
-            }
-            
-            // Load game settings
-            if (saveData.settings) {
-                this.loadGameSettings(saveData.settings);
-            }
-            
-            // Update last save level to prevent immediate re-saving
-            if (saveData.player && saveData.player.level) {
-                this.lastSaveLevel = saveData.player.level;
-            }
-            
-            // Update last save time
-            this.lastSaveTime = Date.now();
-            
-            console.log('Game loaded successfully');
-            
-            // Show notification if game is running
-            if (this.game.isRunning && this.game.uiManager) {
-                this.game.uiManager.showNotification('Game loaded successfully');
+            try {
+                // Parse save data
+                const saveData = JSON.parse(saveString);
+                console.log('Save data parsed successfully:', Object.keys(saveData));
                 
-                // Update UI elements
-                this.game.uiManager.updatePlayerUI();
-                this.game.uiManager.updateQuestLog(this.game.questManager.activeQuests);
+                // Check version compatibility
+                if (saveData.version !== '1.1.0') {
+                    console.warn('Save data version mismatch, some data may not load correctly');
+                }
+                
+                try {
+                    // Clear existing game state
+                    if (this.game.enemyManager) {
+                        this.game.enemyManager.removeAllEnemies();
+                    } else {
+                        console.warn('Enemy manager not found, skipping enemy removal');
+                    }
+                    
+                    try {
+                        // Load player data
+                        if (saveData.player) {
+                            console.log('Loading player data...');
+                            this.loadPlayerData(saveData.player);
+                            console.log('Player data loaded successfully');
+                        } else {
+                            console.warn('No player data found in save');
+                        }
+                        
+                        try {
+                            // Load quest data
+                            if (saveData.quests) {
+                                console.log('Loading quest data...');
+                                this.loadQuestData(saveData.quests);
+                                console.log('Quest data loaded successfully');
+                            } else {
+                                console.warn('No quest data found in save');
+                            }
+                            
+                            try {
+                                // Load world data - check for new or old format
+                                console.log('Loading world data...');
+                                if (saveData.worldMeta) {
+                                    // New format - load world metadata
+                                    console.log('Using new world metadata format');
+                                    this.loadWorldData(saveData.worldMeta);
+                                } else if (saveData.world) {
+                                    // Old format - load full world data
+                                    console.log('Using old world data format');
+                                    this.loadWorldData(saveData.world);
+                                } else {
+                                    console.warn('No world data found in save');
+                                }
+                                console.log('World data loaded successfully');
+                                
+                                try {
+                                    // Load game settings
+                                    if (saveData.settings) {
+                                        console.log('Loading game settings...');
+                                        this.loadGameSettings(saveData.settings);
+                                        console.log('Game settings loaded successfully');
+                                    } else {
+                                        console.warn('No settings data found in save');
+                                    }
+                                    
+                                    // Update last save level to prevent immediate re-saving
+                                    if (saveData.player && saveData.player.level) {
+                                        this.lastSaveLevel = saveData.player.level;
+                                    }
+                                    
+                                    // Update last save time
+                                    this.lastSaveTime = Date.now();
+                                    
+                                    console.log('Game loaded successfully');
+                                    
+                                    // Show notification if game is running
+                                    if (this.game.isRunning && this.game.uiManager) {
+                                        this.game.uiManager.showNotification('Game loaded successfully');
+                                        
+                                        // Update UI elements
+                                        this.game.uiManager.updatePlayerUI();
+                                        this.game.uiManager.updateQuestLog(this.game.questManager.activeQuests);
+                                    }
+                                    
+                                    return true;
+                                } catch (settingsError) {
+                                    console.error('Error loading game settings:', settingsError);
+                                    throw settingsError;
+                                }
+                            } catch (worldError) {
+                                console.error('Error loading world data:', worldError);
+                                throw worldError;
+                            }
+                        } catch (questError) {
+                            console.error('Error loading quest data:', questError);
+                            throw questError;
+                        }
+                    } catch (playerError) {
+                        console.error('Error loading player data:', playerError);
+                        throw playerError;
+                    }
+                } catch (gameStateError) {
+                    console.error('Error clearing game state:', gameStateError);
+                    throw gameStateError;
+                }
+            } catch (parseError) {
+                console.error('Error parsing save data:', parseError);
+                throw parseError;
             }
-            
-            return true;
         } catch (error) {
             console.error('Error loading game:', error);
             
             // Show error notification if game is running
             if (this.game.isRunning && this.game.uiManager) {
-                this.game.uiManager.showNotification('Failed to load game', 3000, 'error');
+                this.game.uiManager.showNotification('Failed to load game: ' + error.message, 3000, 'error');
             }
             
             return false;
@@ -269,10 +326,17 @@ export class SaveManager {
         
         console.log('Saving world chunks to local storage...');
         
+        // Check if terrainManager exists and has terrainChunks
+        if (!world.terrainManager || !world.terrainManager.terrainChunks) {
+            console.warn('No terrain chunks found to save');
+            return chunkIndex;
+        }
+        
         // Save each chunk individually
-        for (const chunkKey in world.terrainChunks) {
-            // Get environment objects for this chunk
-            const environmentObjects = world.environmentObjects[chunkKey] || [];
+        for (const chunkKey in world.terrainManager.terrainChunks) {
+            // Get environment objects for this chunk - check if environmentManager exists
+            const environmentObjects = world.environmentManager && world.environmentManager.objects && 
+                                      world.environmentManager.objects[chunkKey] || [];
             
             // Create serialized environment objects
             const serializedEnvironmentObjects = environmentObjects.map(item => ({
@@ -288,8 +352,9 @@ export class SaveManager {
             const chunkData = {
                 key: chunkKey,
                 environmentObjects: serializedEnvironmentObjects,
-                // Store any structures in this chunk
-                structures: world.structuresPlaced[chunkKey] || []
+                // Store any structures in this chunk - check if structureManager exists
+                structures: world.structureManager && world.structureManager.structures && 
+                           world.structureManager.structures[chunkKey] || []
             };
             
             // Save chunk data to local storage with unique key
@@ -356,31 +421,133 @@ export class SaveManager {
     }
     
     loadPlayerData(playerData) {
-        const player = this.game.player;
-        
-        // Load stats
-        player.stats = { ...playerData.stats };
-        
-        // Load position
-        player.setPosition(
-            playerData.position.x,
-            playerData.position.y,
-            playerData.position.z
-        );
-        
-        // Load inventory - clear existing inventory and add each item
-        player.inventory.inventory = []; // Clear the inventory array
-        if (playerData.inventory && Array.isArray(playerData.inventory)) {
-            playerData.inventory.forEach(item => {
-                player.addToInventory(item);
-            });
+        if (!playerData) {
+            console.error('Player data is null or undefined');
+            return;
         }
         
-        // Load equipment
-        player.equipment = { ...playerData.equipment };
+        console.log('Loading player data:', Object.keys(playerData));
+        const player = this.game.player;
         
-        // Load gold
-        player.gold = playerData.gold;
+        if (!player) {
+            console.error('Player object is null or undefined');
+            return;
+        }
+        
+        try {
+            // Load stats
+            if (playerData.stats) {
+                console.log('Loading player stats');
+                // Instead of replacing the stats object, update its properties
+                // This preserves the methods of the PlayerStats class
+                Object.keys(playerData.stats).forEach(key => {
+                    player.stats[key] = playerData.stats[key];
+                });
+            } else {
+                console.warn('No player stats found in save data');
+            }
+            
+            try {
+                // Load position
+                if (playerData.position) {
+                    console.log('Loading player position');
+                    player.setPosition(
+                        playerData.position.x || 0,
+                        playerData.position.y || 0,
+                        playerData.position.z || 0
+                    );
+                } else {
+                    console.warn('No player position found in save data, using default');
+                    player.setPosition(0, 0, 0);
+                }
+                
+                try {
+                    // Load inventory - clear existing inventory and add each item
+                    if (player.inventory) {
+                        console.log('Loading player inventory');
+                        if (player.inventory.inventory) {
+                            player.inventory.inventory = []; // Clear the inventory array
+                        } else {
+                            console.warn('Player inventory.inventory is not an array, creating new one');
+                            player.inventory.inventory = [];
+                        }
+                        
+                        if (playerData.inventory && Array.isArray(playerData.inventory)) {
+                            console.log(`Loading ${playerData.inventory.length} inventory items`);
+                            playerData.inventory.forEach(item => {
+                                if (player.addToInventory) {
+                                    player.addToInventory(item);
+                                } else {
+                                    console.warn('Player addToInventory method not found');
+                                    player.inventory.inventory.push(item);
+                                }
+                            });
+                        } else {
+                            console.warn('No inventory data found or not an array');
+                        }
+                    } else {
+                        console.warn('Player inventory object not found');
+                    }
+                    
+                    try {
+                        // Load equipment
+                        if (playerData.equipment) {
+                            console.log('Loading player equipment');
+                            // Check if player.equipment exists
+                            if (!player.equipment) {
+                                player.equipment = {};
+                            }
+                            // Update equipment properties instead of replacing the object
+                            Object.keys(playerData.equipment).forEach(key => {
+                                player.equipment[key] = playerData.equipment[key];
+                            });
+                        } else {
+                            console.warn('No equipment data found in save');
+                        }
+                        
+                        // Load additional player data if available
+                        if (playerData.gold !== undefined) {
+                            console.log('Loading player gold');
+                            player.gold = playerData.gold;
+                        }
+                        
+                        if (playerData.level !== undefined) {
+                            console.log('Loading player level');
+                            player.stats.level = playerData.level;
+                        }
+                        
+                        if (playerData.experience !== undefined) {
+                            console.log('Loading player experience');
+                            player.stats.experience = playerData.experience;
+                        }
+                        
+                        // Load skills if available
+                        if (playerData.skills && Array.isArray(playerData.skills) && player.skills) {
+                            console.log('Loading player skills');
+                            try {
+                                player.skills.loadSkills(playerData.skills);
+                            } catch (skillError) {
+                                console.warn('Error loading skills:', skillError);
+                            }
+                        }
+                        
+                        console.log('Player data loaded successfully');
+                    } catch (equipmentError) {
+                        console.error('Error loading equipment:', equipmentError);
+                        throw equipmentError;
+                    }
+                } catch (inventoryError) {
+                    console.error('Error loading inventory:', inventoryError);
+                    throw inventoryError;
+                }
+            } catch (positionError) {
+                console.error('Error loading position:', positionError);
+                throw positionError;
+            }
+        } catch (statsError) {
+            console.error('Error loading stats:', statsError);
+            throw statsError;
+        }
         
         // Load skills cooldowns if available
         if (playerData.skills && Array.isArray(playerData.skills)) {
@@ -393,168 +560,350 @@ export class SaveManager {
     }
     
     loadQuestData(questData) {
+        if (!questData) {
+            console.error('Quest data is null or undefined');
+            return;
+        }
+        
+        console.log('Loading quest data:', Object.keys(questData));
+        
         const questManager = this.game.questManager;
+        if (!questManager) {
+            console.error('Quest manager is null or undefined');
+            return;
+        }
         
-        // Reset quest state
-        questManager.activeQuests = [];
-        questManager.completedQuests = [];
-        
-        // Load active quests with their progress
-        if (questData.activeQuests && Array.isArray(questData.activeQuests)) {
-            questManager.activeQuests = questData.activeQuests.map(quest => {
-                // Find the original quest template
-                const originalQuest = questManager.quests.find(q => q.id === quest.id);
-                if (originalQuest) {
-                    // Create a new quest object with progress from saved data
-                    return {
-                        ...originalQuest,
-                        objective: {
-                            ...originalQuest.objective,
-                            progress: quest.objective.progress,
-                            discovered: quest.objective.discovered || []
+        try {
+            // Reset quest state
+            questManager.activeQuests = [];
+            questManager.completedQuests = [];
+            
+            // Load active quests with their progress
+            if (questData.activeQuests && Array.isArray(questData.activeQuests)) {
+                console.log(`Loading ${questData.activeQuests.length} active quests`);
+                questManager.activeQuests = questData.activeQuests.map(quest => {
+                    try {
+                        // Find the original quest template
+                        const originalQuest = questManager.quests.find(q => q.id === quest.id);
+                        if (originalQuest) {
+                            // Create a new quest object with progress from saved data
+                            return {
+                                ...originalQuest,
+                                objective: {
+                                    ...originalQuest.objective,
+                                    progress: quest.objective && quest.objective.progress ? quest.objective.progress : 0,
+                                    discovered: quest.objective && quest.objective.discovered ? quest.objective.discovered : []
+                                }
+                            };
                         }
-                    };
+                        return quest;
+                    } catch (questError) {
+                        console.error('Error processing quest:', questError, quest);
+                        return quest;
+                    }
+                });
+            } else {
+                console.warn('No active quests found or not an array');
+            }
+            
+            try {
+                // Load completed quests
+                if (questData.completedQuests && Array.isArray(questData.completedQuests)) {
+                    console.log(`Loading ${questData.completedQuests.length} completed quests`);
+                    questManager.completedQuests = [...questData.completedQuests];
+                } else {
+                    console.warn('No completed quests found or not an array');
                 }
-                return quest;
-            });
+                
+                try {
+                    // Filter available quests to remove active and completed ones
+                    if (questManager.quests && Array.isArray(questManager.quests)) {
+                        console.log('Filtering available quests');
+                        questManager.quests = questManager.quests.filter(quest => {
+                            const isActive = questManager.activeQuests.some(q => q.id === quest.id);
+                            const isCompleted = questManager.completedQuests.some(q => q.id === quest.id);
+                            return !isActive && !isCompleted;
+                        });
+                    } else {
+                        console.warn('Quest manager quests is not an array');
+                    }
+                    
+                    // Update UI if game is running and UI manager exists
+                    if (this.game.isRunning && this.game.uiManager) {
+                        console.log('Updating quest UI');
+                        this.game.uiManager.updateQuestLog(questManager.activeQuests);
+                    }
+                    
+                    console.log('Quest data loaded successfully');
+                } catch (filterError) {
+                    console.error('Error filtering quests:', filterError);
+                    throw filterError;
+                }
+            } catch (completedError) {
+                console.error('Error loading completed quests:', completedError);
+                throw completedError;
+            }
+        } catch (questError) {
+            console.error('Error loading quest data:', questError);
+            throw questError;
         }
-        
-        // Load completed quests
-        if (questData.completedQuests && Array.isArray(questData.completedQuests)) {
-            questManager.completedQuests = [...questData.completedQuests];
-        }
-        
-        // Filter available quests to remove active and completed ones
-        questManager.quests = questManager.quests.filter(quest => {
-            const isActive = questManager.activeQuests.some(q => q.id === quest.id);
-            const isCompleted = questManager.completedQuests.some(q => q.id === quest.id);
-            return !isActive && !isCompleted;
-        });
-        
-        // Update UI
-        this.game.uiManager.updateQuestLog(questManager.activeQuests);
     }
     
     loadWorldData(worldData) {
-        if (!worldData) return;
+        if (!worldData) {
+            console.warn('World data is null or undefined');
+            return;
+        }
+        
+        console.log('Loading world data:', Object.keys(worldData));
         
         const world = this.game.world;
-        
-        // Mark discovered zones
-        if (worldData.discoveredZones && Array.isArray(worldData.discoveredZones)) {
-            worldData.discoveredZones.forEach(zoneName => {
-                const zone = world.zones.find(z => z.name === zoneName);
-                if (zone) {
-                    zone.discovered = true;
-                }
-            });
+        if (!world) {
+            console.error('World object is null or undefined');
+            return;
         }
         
-        // Restore interactive objects state
-        if (worldData.interactiveObjects && Array.isArray(worldData.interactiveObjects)) {
-            worldData.interactiveObjects.forEach(savedObj => {
-                const obj = world.interactiveObjects.find(o => 
-                    o.type === savedObj.type && 
-                    Math.abs(o.position.x - savedObj.position.x) < 1 &&
-                    Math.abs(o.position.z - savedObj.position.z) < 1
-                );
+        try {
+            // Mark discovered zones - check if zoneManager exists
+            if (worldData.discoveredZones && Array.isArray(worldData.discoveredZones)) {
+                console.log(`Loading ${worldData.discoveredZones.length} discovered zones`);
                 
-                if (obj) {
-                    obj.isOpen = savedObj.isOpen;
-                    obj.isCompleted = savedObj.isCompleted;
-                }
-            });
-        }
-        
-        // Restore current chunk
-        if (worldData.currentChunk) {
-            world.currentChunk = worldData.currentChunk;
-        }
-        
-        // Clear existing terrain and environment objects
-        world.clearWorldObjects();
-        
-        // Load chunk data from individual storage
-        const chunkIndex = this.loadChunkIndex();
-        
-        if (chunkIndex) {
-            console.log(`Found ${Object.keys(chunkIndex).length} saved chunks in index`);
-            
-            // Create a temporary storage for environment objects
-            const savedEnvironmentObjects = {};
-            
-            // Create a temporary storage for terrain chunks
-            const savedTerrainChunks = {};
-            
-            // Only load chunks near the player's current position
-            const playerChunkX = Math.floor(this.game.player.position.x / world.terrainChunkSize);
-            const playerChunkZ = Math.floor(this.game.player.position.z / world.terrainChunkSize);
-            const loadDistance = 2; // Only load chunks within 2 chunks of player
-            
-            // Count how many chunks we're loading
-            let loadedChunkCount = 0;
-            
-            // Process each chunk in the index
-            for (const chunkKey in chunkIndex) {
-                // Parse the chunk coordinates
-                const [chunkX, chunkZ] = chunkKey.split(',').map(Number);
-                
-                // Check if this chunk is within load distance
-                const distanceX = Math.abs(chunkX - playerChunkX);
-                const distanceZ = Math.abs(chunkZ - playerChunkZ);
-                
-                if (distanceX <= loadDistance && distanceZ <= loadDistance) {
-                    // Load this chunk from storage
-                    const chunkData = this.loadChunk(chunkKey);
-                    
-                    if (chunkData) {
-                        // Store environment objects for this chunk
-                        if (chunkData.environmentObjects && chunkData.environmentObjects.length > 0) {
-                            savedEnvironmentObjects[chunkKey] = chunkData.environmentObjects;
+                if (world.zoneManager && world.zoneManager.zones) {
+                    worldData.discoveredZones.forEach(zoneName => {
+                        try {
+                            const zone = world.zoneManager.zones.find(z => z.name === zoneName);
+                            if (zone) {
+                                zone.discovered = true;
+                                console.log(`Marked zone as discovered: ${zoneName}`);
+                            } else {
+                                console.warn(`Zone not found: ${zoneName}`);
+                            }
+                        } catch (zoneError) {
+                            console.warn(`Error processing zone ${zoneName}:`, zoneError);
                         }
-                        
-                        // Mark this chunk as existing
-                        savedTerrainChunks[chunkKey] = true;
-                        
-                        loadedChunkCount++;
-                    }
+                    });
                 } else {
-                    // Just mark this chunk as existing without loading its data
-                    savedTerrainChunks[chunkKey] = true;
+                    console.warn('Zone manager or zones array not found');
                 }
+            } else {
+                console.warn('No discovered zones found or not an array');
             }
             
-            console.log(`Loaded ${loadedChunkCount} chunks near player position`);
+            // Restore interactive objects state - check if interactiveManager exists
+            if (worldData.interactiveObjects && Array.isArray(worldData.interactiveObjects)) {
+                console.log(`Loading ${worldData.interactiveObjects.length} interactive objects`);
+                
+                if (world.interactiveManager && world.interactiveManager.objects) {
+                    worldData.interactiveObjects.forEach(savedObj => {
+                        try {
+                            const obj = world.interactiveManager.objects.find(o => 
+                                o.type === savedObj.type && 
+                                Math.abs(o.position.x - savedObj.position.x) < 1 &&
+                                Math.abs(o.position.z - savedObj.position.z) < 1
+                            );
+                            
+                            if (obj) {
+                                obj.isOpen = savedObj.isOpen || false;
+                                obj.isCompleted = savedObj.isCompleted || false;
+                                console.log(`Restored interactive object state: ${obj.type}`);
+                            } else {
+                                console.warn(`Interactive object not found: ${savedObj.type} at position ${savedObj.position.x}, ${savedObj.position.z}`);
+                            }
+                        } catch (objError) {
+                            console.warn(`Error processing interactive object:`, objError, savedObj);
+                        }
+                    });
+                } else {
+                    console.warn('Interactive manager or objects array not found');
+                }
+            } else {
+                console.warn('No interactive objects found or not an array');
+            }
             
-            // Store the loaded data for world to use
-            world.savedEnvironmentObjects = savedEnvironmentObjects;
-            world.savedTerrainChunks = savedTerrainChunks;
-        } else if (worldData.environmentObjects && worldData.terrainChunks) {
-            // Fall back to old format if no chunk index found
-            console.log('No chunk index found, falling back to legacy format');
-            world.savedEnvironmentObjects = worldData.environmentObjects;
-            world.savedTerrainChunks = worldData.terrainChunks;
+            // Restore current chunk
+            if (worldData.currentChunk) {
+                console.log(`Setting current chunk to: ${worldData.currentChunk}`);
+                if (world.terrainManager) {
+                    world.terrainManager.currentChunk = worldData.currentChunk;
+                } else {
+                    world.currentChunk = worldData.currentChunk;
+                }
+            } else {
+                console.warn('No current chunk found in save data');
+            }
+            
+            // Clear existing terrain and environment objects if method exists
+            if (world.clearWorldObjects) {
+                console.log('Clearing existing world objects');
+                world.clearWorldObjects();
+            } else {
+                console.warn('clearWorldObjects method not found on world object');
+            }
+            
+            // Load chunk data from individual storage
+            console.log('Loading chunk index');
+            const chunkIndex = this.loadChunkIndex();
+            
+            if (chunkIndex) {
+                console.log(`Found ${Object.keys(chunkIndex).length} saved chunks in index`);
+                
+                // Create a temporary storage for environment objects
+                const savedEnvironmentObjects = {};
+                
+                // Create a temporary storage for terrain chunks
+                const savedTerrainChunks = {};
+                
+                // Only load chunks near the player's current position
+                const terrainChunkSize = world.terrainManager ? 
+                    world.terrainManager.chunkSize : 
+                    (world.terrainChunkSize || 100); // Default to 100 if not found
+                
+                console.log(`Using terrain chunk size: ${terrainChunkSize}`);
+                
+                let playerPos = this.game.player.getPosition ? 
+                    this.game.player.getPosition() : 
+                    this.game.player.position;
+                
+                if (!playerPos) {
+                    console.warn('Player position not found, using default (0,0,0)');
+                    playerPos = { x: 0, y: 0, z: 0 };
+                }
+                
+                const playerChunkX = Math.floor(playerPos.x / terrainChunkSize);
+                const playerChunkZ = Math.floor(playerPos.z / terrainChunkSize);
+                const loadDistance = 2; // Only load chunks within 2 chunks of player
+                
+                console.log(`Player is at chunk (${playerChunkX}, ${playerChunkZ}), loading chunks within distance ${loadDistance}`);
+                
+                // Count how many chunks we're loading
+                let loadedChunkCount = 0;
+                
+                // Process each chunk in the index
+                for (const chunkKey in chunkIndex) {
+                    try {
+                        // Parse the chunk coordinates
+                        const [chunkX, chunkZ] = chunkKey.split(',').map(Number);
+                        
+                        // Check if this chunk is within load distance
+                        const distanceX = Math.abs(chunkX - playerChunkX);
+                        const distanceZ = Math.abs(chunkZ - playerChunkZ);
+                        
+                        if (distanceX <= loadDistance && distanceZ <= loadDistance) {
+                            console.log(`Loading chunk ${chunkKey} (within range of player)`);
+                            
+                            // Load this chunk from storage
+                            const chunkData = this.loadChunk(chunkKey);
+                            
+                            if (chunkData) {
+                                // Store environment objects for this chunk
+                                if (chunkData.environmentObjects && chunkData.environmentObjects.length > 0) {
+                                    savedEnvironmentObjects[chunkKey] = chunkData.environmentObjects;
+                                    console.log(`Loaded ${chunkData.environmentObjects.length} environment objects for chunk ${chunkKey}`);
+                                } else {
+                                    console.warn(`No environment objects found for chunk ${chunkKey}`);
+                                }
+                                
+                                // Mark this chunk as existing
+                                savedTerrainChunks[chunkKey] = true;
+                                loadedChunkCount++;
+                            } else {
+                                console.warn(`Failed to load chunk data for ${chunkKey}`);
+                            }
+                        } else {
+                            console.log(`Skipping chunk ${chunkKey} (out of range of player)`);
+                        }
+                    } catch (chunkError) {
+                        console.warn(`Error processing chunk ${chunkKey}:`, chunkError);
+                    }
+                }
+                
+                console.log(`Loaded ${loadedChunkCount} chunks near player position`);
+                
+                // Store the loaded data for world to use
+                if (world.environmentManager) {
+                    world.environmentManager.savedObjects = savedEnvironmentObjects;
+                } else {
+                    world.savedEnvironmentObjects = savedEnvironmentObjects;
+                }
+                if (world.terrainManager) {
+                    world.terrainManager.savedChunks = savedTerrainChunks;
+                } else {
+                    world.savedTerrainChunks = savedTerrainChunks;
+                }
+            } else if (worldData.environmentObjects && worldData.terrainChunks) {
+                // Fall back to old format if no chunk index found
+                console.log('No chunk index found, falling back to legacy format');
+                if (world.environmentManager) {
+                    world.environmentManager.savedObjects = worldData.environmentObjects;
+                } else {
+                    world.savedEnvironmentObjects = worldData.environmentObjects;
+                }
+                if (world.terrainManager) {
+                    world.terrainManager.savedChunks = worldData.terrainChunks;
+                } else {
+                    world.savedTerrainChunks = worldData.terrainChunks;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading world data:', error);
         }
         
-        // Restore visible chunks
-        if (worldData.visibleChunks && Array.isArray(worldData.visibleChunks)) {
-            world.visibleChunks = {};
-            worldData.visibleChunks.forEach(chunkKey => {
-                world.visibleChunks[chunkKey] = [];
-            });
-        }
-        
-        // Restore visible terrain chunks
-        if (worldData.visibleTerrainChunks && Array.isArray(worldData.visibleTerrainChunks)) {
-            world.visibleTerrainChunks = {};
-            worldData.visibleTerrainChunks.forEach(chunkKey => {
-                world.visibleTerrainChunks[chunkKey] = true;
-            });
-        }
-        
-        // Update the world based on player position to regenerate necessary chunks
-        if (this.game.player) {
-            world.updateWorldForPlayer(this.game.player.position);
+        try {
+            // Restore visible chunks
+            if (worldData.visibleChunks && Array.isArray(worldData.visibleChunks)) {
+                console.log(`Loading ${worldData.visibleChunks.length} visible chunks`);
+                if (world.terrainManager) {
+                    world.terrainManager.visibleChunks = {};
+                    worldData.visibleChunks.forEach(chunkKey => {
+                        world.terrainManager.visibleChunks[chunkKey] = [];
+                    });
+                } else {
+                    world.visibleChunks = {};
+                    worldData.visibleChunks.forEach(chunkKey => {
+                        world.visibleChunks[chunkKey] = [];
+                    });
+                }
+            } else {
+                console.warn('No visible chunks found or not an array');
+            }
+            
+            // Restore visible terrain chunks
+            if (worldData.visibleTerrainChunks && Array.isArray(worldData.visibleTerrainChunks)) {
+                console.log(`Loading ${worldData.visibleTerrainChunks.length} visible terrain chunks`);
+                if (world.terrainManager) {
+                    world.terrainManager.visibleTerrainChunks = {};
+                    worldData.visibleTerrainChunks.forEach(chunkKey => {
+                        world.terrainManager.visibleTerrainChunks[chunkKey] = true;
+                    });
+                } else {
+                    world.visibleTerrainChunks = {};
+                    worldData.visibleTerrainChunks.forEach(chunkKey => {
+                        world.visibleTerrainChunks[chunkKey] = true;
+                    });
+                }
+            } else {
+                console.warn('No visible terrain chunks found or not an array');
+            }
+            
+            console.log('World data loaded successfully');
+            
+            // Update the world based on player position to regenerate necessary chunks
+            if (this.game.player) {
+                const playerPos = this.game.player.getPosition ? 
+                    this.game.player.getPosition() : 
+                    this.game.player.position;
+                
+                if (playerPos && world.updateWorldForPlayer) {
+                    console.log('Updating world for player position');
+                    world.updateWorldForPlayer(playerPos);
+                } else {
+                    console.warn('Could not update world for player - missing position or method');
+                }
+            } else {
+                console.warn('Player object not found, skipping world update');
+            }
+        } catch (error) {
+            console.error('Error updating world after load:', error);
         }
     }
     

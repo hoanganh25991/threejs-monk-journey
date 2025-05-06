@@ -11,7 +11,7 @@ export const CHARACTER_MODELS = [
         defaultAdjustments: {
             position: { x: 0, y: 0, z: 0 },
             rotation: { x: 0, y: 0, z: 0 },
-            heightOffset: 2.0 // Default height offset for movement
+            heightOffset: 2.05 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
