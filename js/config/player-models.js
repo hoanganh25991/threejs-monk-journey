@@ -6,11 +6,8 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/monk.glb',
         description: 'Default monk character model',
         baseScale: 1.3, // Base scale to fit the model to game world
-        multiplier: 1.0, // Default multiplier (1x size)
-        preview: {
-            position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
-        }
+        multiplier: 1.0  // Default multiplier (1x size)
+        // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
         id: 'monk-v2',
@@ -18,11 +15,8 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/monk-v2.glb',
         description: 'Enhanced monk character model',
         baseScale: 1.3, // Base scale to fit the model to game world
-        multiplier: 1.0, // Default multiplier (1x size)
-        preview: {
-            position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
-        }
+        multiplier: 1.0  // Default multiplier (1x size)
+        // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
         id: 'knight',
@@ -30,11 +24,8 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/knight-of-valor.glb',
         description: 'Valorous knight character model',
         baseScale: 3.0, // Base scale to fit the model to game world
-        multiplier: 1.0, // Default multiplier (1x size)
-        preview: {
-            position: { x: 0, y: 2.0, z: 0 }, // Raised y-position to place knight on ground
-            rotation: { x: 0, y: 0, z: 0 }
-        }
+        multiplier: 1.0  // Default multiplier (1x size)
+        // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
         id: 'skeleton',
@@ -42,11 +33,8 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/skeleton-king.glb',
         description: 'Undead skeleton king character model',
         baseScale: 1.0, // Base scale to fit the model to game world
-        multiplier: 1.0, // Default multiplier (1x size)
-        preview: {
-            position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
-        }
+        multiplier: 1.0  // Default multiplier (1x size)
+        // Preview position and rotation are handled dynamically by the adjustment system
     }
 ];
 

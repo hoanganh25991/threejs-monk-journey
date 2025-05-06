@@ -120,20 +120,44 @@ export class PlayerModel extends IPlayerModel {
             this.gltfModel.position.set(0, 0, 0);
             this.gltfModel.rotation.set(0, 0, 0);
 
-            // Apply position and rotation from the model configuration if available
-            if (this.currentModel.preview && this.currentModel.preview.position) {
-                // Apply position from config
-                const pos = this.currentModel.preview.position;
-                this.gltfModel.position.set(pos.x, pos.y, pos.z);
-                console.log(`Applied position from config: X: ${pos.x}, Y: ${pos.y}, Z: ${pos.z}`);
-                
-                
+            // Try to load saved adjustments for this model
+            let adjustmentsLoaded = false;
+            if (this.game && this.game.uiManager && this.game.uiManager.loadModelAdjustments) {
+                // This will be called again in setModel, but we need it here for initial model creation
+                adjustmentsLoaded = this.game.uiManager.loadModelAdjustments(this.currentModelId);
             }
-            if (this.currentModel.preview && this.currentModel.preview.rotation) {
-                // Apply rotation from config
-                const rot = this.currentModel.preview.rotation;
-                this.gltfModel.rotation.set(rot.x, rot.y, rot.z);
-                console.log(`Applied rotation from config: X: ${rot.x}, Y: ${rot.y}, Z: ${rot.z}`);
+            
+            // If no saved adjustments, apply model-specific default positions
+            if (!adjustmentsLoaded) {
+                // Apply default position based on model type
+                let defaultPosition = { x: 0, y: 0, z: 0 };
+                let defaultRotation = { x: 0, y: 0, z: 0 };
+                
+                // Set model-specific default positions
+                switch(this.currentModelId) {
+                    case 'knight':
+                        defaultPosition.y = 2.0; // Knight needs to be raised
+                        break;
+                    case 'skeleton':
+                        defaultPosition.y = 0.5; // Skeleton needs slight adjustment
+                        break;
+                    // Add other model-specific defaults as needed
+                }
+                
+                // Apply the default position
+                this.gltfModel.position.set(defaultPosition.x, defaultPosition.y, defaultPosition.z);
+                console.log(`Applied default position: X: ${defaultPosition.x}, Y: ${defaultPosition.y}, Z: ${defaultPosition.z}`);
+                
+                // Apply the default rotation
+                this.gltfModel.rotation.set(defaultRotation.x, defaultRotation.y, defaultRotation.z);
+                console.log(`Applied default rotation: X: ${defaultRotation.x}, Y: ${defaultRotation.y}, Z: ${defaultRotation.z}`);
+                
+                // Store these defaults in the model's preview property for later reference
+                if (!this.currentModel.preview) {
+                    this.currentModel.preview = {};
+                }
+                this.currentModel.preview.position = defaultPosition;
+                this.currentModel.preview.rotation = defaultRotation;
             }
 
             // Add the loaded model to our group
@@ -298,6 +322,11 @@ export class PlayerModel extends IPlayerModel {
         this.baseScale = scale;
         this.updateEffectiveScale();
         console.log(`Model base scale set to: ${scale}`);
+        
+        // Update the model configuration to persist this change
+        if (this.currentModel) {
+            this.currentModel.baseScale = scale;
+        }
     }
     
     /**
@@ -308,6 +337,11 @@ export class PlayerModel extends IPlayerModel {
         this.sizeMultiplier = multiplier;
         this.updateEffectiveScale();
         console.log(`Model size multiplier set to: ${multiplier}x`);
+        
+        // Update the model configuration to persist this change
+        if (this.currentModel) {
+            this.currentModel.multiplier = multiplier;
+        }
     }
     
     /**
@@ -326,6 +360,64 @@ export class PlayerModel extends IPlayerModel {
         }
         
         console.log(`Model effective scale updated to: ${this.modelScale}`);
+    }
+    
+    /**
+     * Set the preview position of the model
+     * @param {Object} position - Position object with x, y, z properties
+     */
+    setPreviewPosition(position) {
+        if (!this.currentModel.preview) {
+            this.currentModel.preview = {};
+        }
+        
+        this.currentModel.preview.position = position;
+        
+        // Apply the new position if the model is loaded
+        if (this.gltfModel) {
+            this.gltfModel.position.set(position.x, position.y, position.z);
+            console.log(`Model preview position updated to: X: ${position.x}, Y: ${position.y}, Z: ${position.z}`);
+        }
+    }
+    
+    /**
+     * Set the preview rotation of the model
+     * @param {Object} rotation - Rotation object with x, y, z properties
+     */
+    setPreviewRotation(rotation) {
+        if (!this.currentModel.preview) {
+            this.currentModel.preview = {};
+        }
+        
+        this.currentModel.preview.rotation = rotation;
+        
+        // Apply the new rotation if the model is loaded
+        if (this.gltfModel) {
+            this.gltfModel.rotation.set(rotation.x, rotation.y, rotation.z);
+            console.log(`Model preview rotation updated to: X: ${rotation.x}, Y: ${rotation.y}, Z: ${rotation.z}`);
+        }
+    }
+    
+    /**
+     * Get the current preview position
+     * @returns {Object} Position object with x, y, z properties
+     */
+    getPreviewPosition() {
+        if (this.currentModel && this.currentModel.preview && this.currentModel.preview.position) {
+            return this.currentModel.preview.position;
+        }
+        return { x: 0, y: 0, z: 0 };
+    }
+    
+    /**
+     * Get the current preview rotation
+     * @returns {Object} Rotation object with x, y, z properties
+     */
+    getPreviewRotation() {
+        if (this.currentModel && this.currentModel.preview && this.currentModel.preview.rotation) {
+            return this.currentModel.preview.rotation;
+        }
+        return { x: 0, y: 0, z: 0 };
     }
     
     /**
@@ -373,7 +465,62 @@ export class PlayerModel extends IPlayerModel {
             }
         }
         
+        // Try to load saved adjustments for this model
+        let adjustmentsLoaded = false;
+        if (this.game && this.game.uiManager && this.game.uiManager.loadModelAdjustments) {
+            adjustmentsLoaded = this.game.uiManager.loadModelAdjustments(modelId);
+        }
+        
+        // If no saved adjustments were found, apply default model-specific adjustments
+        if (!adjustmentsLoaded) {
+            this.applyModelSpecificAdjustments(modelId);
+        }
+        
         return true;
+    }
+    
+    /**
+     * Apply model-specific adjustments based on model ID
+     * @param {string} modelId - ID of the model to adjust
+     */
+    applyModelSpecificAdjustments(modelId) {
+        // Default positions and rotations for different model types
+        let defaultPosition = { x: 0, y: 0, z: 0 };
+        let defaultRotation = { x: 0, y: 0, z: 0 };
+        
+        // Set model-specific default positions
+        switch(modelId) {
+            case 'knight':
+                // Knight-specific adjustments
+                defaultPosition = { x: 0, y: 2.0, z: 0 }; // Knight needs to be raised
+                break;
+                
+            case 'skeleton':
+                // Skeleton-specific adjustments
+                defaultPosition = { x: 0, y: 0.5, z: 0 }; // Skeleton needs slight adjustment
+                break;
+                
+            case 'monk':
+            case 'monk-v2':
+                // Monk-specific adjustments if needed
+                defaultPosition = { x: 0, y: 0, z: 0 };
+                break;
+                
+            // Add more cases for other models as needed
+            
+            default:
+                // Default adjustments for other models
+                defaultPosition = { x: 0, y: 0, z: 0 };
+                break;
+        }
+        
+        // Apply the default position and rotation
+        this.setPreviewPosition(defaultPosition);
+        this.setPreviewRotation(defaultRotation);
+        
+        console.log(`Applied ${modelId}-specific adjustments:`, 
+            `Position: X: ${defaultPosition.x}, Y: ${defaultPosition.y}, Z: ${defaultPosition.z}`,
+            `Rotation: X: ${defaultRotation.x}, Y: ${defaultRotation.y}, Z: ${defaultRotation.z}`);
     }
     
     /**
@@ -382,6 +529,14 @@ export class PlayerModel extends IPlayerModel {
      */
     getCurrentModelId() {
         return this.currentModelId;
+    }
+    
+    /**
+     * Get the current model configuration
+     * @returns {Object} The current model configuration
+     */
+    getCurrentModel() {
+        return this.currentModel;
     }
     
     /**

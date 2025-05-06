@@ -36,8 +36,397 @@ export class HUDManager {
         // Create death screen
         this.createDeathScreen();
         
+        // Create model adjustment panel
+        this.createModelAdjustmentPanel();
+        
         // Create virtual joystick for touch devices
         this.createVirtualJoystick();
+        
+        return true;
+    }
+    
+    /**
+     * Create a panel for adjusting model properties
+     */
+    createModelAdjustmentPanel() {
+        // Create the panel container
+        const panel = document.createElement('div');
+        panel.id = 'model-adjustment-panel';
+        panel.style.position = 'absolute';
+        panel.style.top = '10px';
+        panel.style.right = '10px';
+        panel.style.width = '300px';
+        panel.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        panel.style.color = 'white';
+        panel.style.padding = '10px';
+        panel.style.borderRadius = '5px';
+        panel.style.display = 'none'; // Hidden by default
+        panel.style.zIndex = '1000';
+        panel.style.fontFamily = 'Arial, sans-serif';
+        
+        // Create panel header
+        const header = document.createElement('div');
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'center';
+        header.style.marginBottom = '10px';
+        
+        const title = document.createElement('h3');
+        title.textContent = 'Model Adjustments';
+        title.style.margin = '0';
+        
+        const closeButton = document.createElement('button');
+        closeButton.textContent = 'X';
+        closeButton.style.background = 'none';
+        closeButton.style.border = 'none';
+        closeButton.style.color = 'white';
+        closeButton.style.fontSize = '16px';
+        closeButton.style.cursor = 'pointer';
+        closeButton.onclick = () => {
+            panel.style.display = 'none';
+        };
+        
+        header.appendChild(title);
+        header.appendChild(closeButton);
+        panel.appendChild(header);
+        
+        // Create base scale adjustment
+        this.createSliderControl(panel, 'Base Scale', 0.1, 10, 0.1, 1.0, (value) => {
+            if (this.game.player && this.game.player.model) {
+                this.game.player.model.setBaseScale(parseFloat(value));
+            }
+        });
+        
+        // Create size multiplier adjustment
+        this.createSliderControl(panel, 'Size Multiplier', 0.1, 5, 0.1, 1.0, (value) => {
+            if (this.game.player && this.game.player.model) {
+                this.game.player.model.setSizeMultiplier(parseFloat(value));
+            }
+        });
+        
+        // Create position adjustments
+        this.createPositionControls(panel);
+        
+        // Create rotation adjustments
+        this.createRotationControls(panel);
+        
+        // Create save button
+        const saveButton = document.createElement('button');
+        saveButton.textContent = 'Save Adjustments';
+        saveButton.style.width = '100%';
+        saveButton.style.padding = '8px';
+        saveButton.style.marginTop = '10px';
+        saveButton.style.backgroundColor = '#4CAF50';
+        saveButton.style.color = 'white';
+        saveButton.style.border = 'none';
+        saveButton.style.borderRadius = '4px';
+        saveButton.style.cursor = 'pointer';
+        saveButton.onclick = () => {
+            this.saveModelAdjustments();
+        };
+        panel.appendChild(saveButton);
+        
+        // Add toggle button to main UI
+        const toggleButton = document.createElement('button');
+        toggleButton.id = 'toggle-model-panel';
+        toggleButton.textContent = 'Adjust Model';
+        toggleButton.style.position = 'absolute';
+        toggleButton.style.top = '10px';
+        toggleButton.style.right = '10px';
+        toggleButton.style.padding = '5px 10px';
+        toggleButton.style.backgroundColor = '#2196F3';
+        toggleButton.style.color = 'white';
+        toggleButton.style.border = 'none';
+        toggleButton.style.borderRadius = '4px';
+        toggleButton.style.cursor = 'pointer';
+        toggleButton.style.zIndex = '999';
+        toggleButton.onclick = () => {
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                this.updateModelAdjustmentPanel();
+            } else {
+                panel.style.display = 'none';
+            }
+        };
+        
+        // Add elements to the DOM
+        this.uiContainer.appendChild(panel);
+        this.uiContainer.appendChild(toggleButton);
+        
+        // Store references
+        this.modelAdjustmentPanel = panel;
+        this.toggleModelPanelButton = toggleButton;
+    }
+    
+    /**
+     * Create a slider control for the adjustment panel
+     */
+    createSliderControl(parent, label, min, max, step, defaultValue, onChange) {
+        const container = document.createElement('div');
+        container.style.marginBottom = '10px';
+        
+        const labelElement = document.createElement('label');
+        labelElement.textContent = label;
+        labelElement.style.display = 'block';
+        labelElement.style.marginBottom = '5px';
+        
+        const sliderContainer = document.createElement('div');
+        sliderContainer.style.display = 'flex';
+        sliderContainer.style.alignItems = 'center';
+        
+        const slider = document.createElement('input');
+        slider.type = 'range';
+        slider.min = min;
+        slider.max = max;
+        slider.step = step;
+        slider.value = defaultValue;
+        slider.style.flex = '1';
+        slider.style.marginRight = '10px';
+        
+        const valueDisplay = document.createElement('span');
+        valueDisplay.textContent = defaultValue;
+        valueDisplay.style.minWidth = '40px';
+        valueDisplay.style.textAlign = 'right';
+        
+        slider.oninput = () => {
+            valueDisplay.textContent = slider.value;
+            onChange(slider.value);
+        };
+        
+        sliderContainer.appendChild(slider);
+        sliderContainer.appendChild(valueDisplay);
+        
+        container.appendChild(labelElement);
+        container.appendChild(sliderContainer);
+        parent.appendChild(container);
+        
+        return { container, slider, valueDisplay };
+    }
+    
+    /**
+     * Create position adjustment controls
+     */
+    createPositionControls(parent) {
+        const positionSection = document.createElement('div');
+        positionSection.style.marginTop = '15px';
+        positionSection.style.marginBottom = '15px';
+        positionSection.style.padding = '10px';
+        positionSection.style.border = '1px solid #555';
+        positionSection.style.borderRadius = '4px';
+        
+        const positionTitle = document.createElement('h4');
+        positionTitle.textContent = 'Position Adjustment';
+        positionTitle.style.margin = '0 0 10px 0';
+        positionSection.appendChild(positionTitle);
+        
+        // X position
+        this.xPosControl = this.createSliderControl(positionSection, 'X Position', -10, 10, 0.1, 0, (value) => {
+            if (this.game.player && this.game.player.model) {
+                const currentPos = this.game.player.model.getPreviewPosition();
+                this.game.player.model.setPreviewPosition({
+                    x: parseFloat(value),
+                    y: currentPos.y,
+                    z: currentPos.z
+                });
+            }
+        });
+        
+        // Y position
+        this.yPosControl = this.createSliderControl(positionSection, 'Y Position', -5, 10, 0.1, 0, (value) => {
+            if (this.game.player && this.game.player.model) {
+                const currentPos = this.game.player.model.getPreviewPosition();
+                this.game.player.model.setPreviewPosition({
+                    x: currentPos.x,
+                    y: parseFloat(value),
+                    z: currentPos.z
+                });
+            }
+        });
+        
+        // Z position
+        this.zPosControl = this.createSliderControl(positionSection, 'Z Position', -10, 10, 0.1, 0, (value) => {
+            if (this.game.player && this.game.player.model) {
+                const currentPos = this.game.player.model.getPreviewPosition();
+                this.game.player.model.setPreviewPosition({
+                    x: currentPos.x,
+                    y: currentPos.y,
+                    z: parseFloat(value)
+                });
+            }
+        });
+        
+        parent.appendChild(positionSection);
+    }
+    
+    /**
+     * Create rotation adjustment controls
+     */
+    createRotationControls(parent) {
+        const rotationSection = document.createElement('div');
+        rotationSection.style.marginTop = '15px';
+        rotationSection.style.marginBottom = '15px';
+        rotationSection.style.padding = '10px';
+        rotationSection.style.border = '1px solid #555';
+        rotationSection.style.borderRadius = '4px';
+        
+        const rotationTitle = document.createElement('h4');
+        rotationTitle.textContent = 'Rotation Adjustment';
+        rotationTitle.style.margin = '0 0 10px 0';
+        rotationSection.appendChild(rotationTitle);
+        
+        // X rotation
+        this.xRotControl = this.createSliderControl(rotationSection, 'X Rotation', -3.14, 3.14, 0.1, 0, (value) => {
+            if (this.game.player && this.game.player.model) {
+                const currentRot = this.game.player.model.getPreviewRotation();
+                this.game.player.model.setPreviewRotation({
+                    x: parseFloat(value),
+                    y: currentRot.y,
+                    z: currentRot.z
+                });
+            }
+        });
+        
+        // Y rotation
+        this.yRotControl = this.createSliderControl(rotationSection, 'Y Rotation', -3.14, 3.14, 0.1, 0, (value) => {
+            if (this.game.player && this.game.player.model) {
+                const currentRot = this.game.player.model.getPreviewRotation();
+                this.game.player.model.setPreviewRotation({
+                    x: currentRot.x,
+                    y: parseFloat(value),
+                    z: currentRot.z
+                });
+            }
+        });
+        
+        // Z rotation
+        this.zRotControl = this.createSliderControl(rotationSection, 'Z Rotation', -3.14, 3.14, 0.1, 0, (value) => {
+            if (this.game.player && this.game.player.model) {
+                const currentRot = this.game.player.model.getPreviewRotation();
+                this.game.player.model.setPreviewRotation({
+                    x: currentRot.x,
+                    y: currentRot.y,
+                    z: parseFloat(value)
+                });
+            }
+        });
+        
+        parent.appendChild(rotationSection);
+    }
+    
+    /**
+     * Update the model adjustment panel with current values
+     */
+    updateModelAdjustmentPanel() {
+        if (!this.game.player || !this.game.player.model) return;
+        
+        const model = this.game.player.model;
+        
+        // Update base scale
+        if (this.modelAdjustmentPanel.querySelector('input[type="range"]')) {
+            const baseScaleSlider = this.modelAdjustmentPanel.querySelector('input[type="range"]');
+            const baseScaleValue = baseScaleSlider.nextElementSibling;
+            baseScaleSlider.value = model.baseScale;
+            baseScaleValue.textContent = model.baseScale;
+        }
+        
+        // Update size multiplier
+        if (this.modelAdjustmentPanel.querySelectorAll('input[type="range"]')[1]) {
+            const sizeMultiplierSlider = this.modelAdjustmentPanel.querySelectorAll('input[type="range"]')[1];
+            const sizeMultiplierValue = sizeMultiplierSlider.nextElementSibling;
+            sizeMultiplierSlider.value = model.sizeMultiplier;
+            sizeMultiplierValue.textContent = model.sizeMultiplier;
+        }
+        
+        // Update position values
+        const position = model.getPreviewPosition();
+        if (this.xPosControl) {
+            this.xPosControl.slider.value = position.x;
+            this.xPosControl.valueDisplay.textContent = position.x;
+        }
+        if (this.yPosControl) {
+            this.yPosControl.slider.value = position.y;
+            this.yPosControl.valueDisplay.textContent = position.y;
+        }
+        if (this.zPosControl) {
+            this.zPosControl.slider.value = position.z;
+            this.zPosControl.valueDisplay.textContent = position.z;
+        }
+        
+        // Update rotation values
+        const rotation = model.getPreviewRotation();
+        if (this.xRotControl) {
+            this.xRotControl.slider.value = rotation.x;
+            this.xRotControl.valueDisplay.textContent = rotation.x;
+        }
+        if (this.yRotControl) {
+            this.yRotControl.slider.value = rotation.y;
+            this.yRotControl.valueDisplay.textContent = rotation.y;
+        }
+        if (this.zRotControl) {
+            this.zRotControl.slider.value = rotation.z;
+            this.zRotControl.valueDisplay.textContent = rotation.z;
+        }
+    }
+    
+    /**
+     * Save the current model adjustments
+     */
+    saveModelAdjustments() {
+        if (!this.game.player || !this.game.player.model) return;
+        
+        const model = this.game.player.model;
+        const modelId = model.getCurrentModelId();
+        
+        // Create adjustment data
+        const adjustmentData = {
+            modelId: modelId,
+            baseScale: model.baseScale,
+            sizeMultiplier: model.sizeMultiplier,
+            position: model.getPreviewPosition(),
+            rotation: model.getPreviewRotation()
+        };
+        
+        // Save to localStorage
+        const savedAdjustments = JSON.parse(localStorage.getItem('modelAdjustments') || '{}');
+        savedAdjustments[modelId] = adjustmentData;
+        localStorage.setItem('modelAdjustments', JSON.stringify(savedAdjustments));
+        
+        // Show notification
+        this.showNotification(`Model adjustments saved for ${model.currentModel.name}`);
+        
+        console.log(`Saved model adjustments for ${modelId}:`, adjustmentData);
+    }
+    
+    /**
+     * Load saved model adjustments
+     * @param {string} modelId - ID of the model to load adjustments for
+     */
+    loadModelAdjustments(modelId) {
+        if (!this.game.player || !this.game.player.model) return;
+        
+        // Get saved adjustments from localStorage
+        const savedAdjustments = JSON.parse(localStorage.getItem('modelAdjustments') || '{}');
+        const adjustmentData = savedAdjustments[modelId];
+        
+        if (adjustmentData) {
+            const model = this.game.player.model;
+            
+            // Apply saved adjustments
+            model.setBaseScale(adjustmentData.baseScale);
+            model.setSizeMultiplier(adjustmentData.sizeMultiplier);
+            model.setPreviewPosition(adjustmentData.position);
+            model.setPreviewRotation(adjustmentData.rotation);
+            
+            // Update UI
+            this.updateModelAdjustmentPanel();
+            
+            console.log(`Loaded model adjustments for ${modelId}:`, adjustmentData);
+            this.showNotification(`Loaded saved adjustments for ${model.currentModel.name}`);
+            
+            return true;
+        }
+        
+        return false;
     }
     
     createUIContainer() {
