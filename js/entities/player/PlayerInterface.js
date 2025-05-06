@@ -86,6 +86,7 @@ export class IPlayerModel {
     
     // Core methods
     async createModel() {}
+    async setModel() {}
     updateAnimations(delta) {}
     
     // Position and rotation

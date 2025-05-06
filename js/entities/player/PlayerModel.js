@@ -97,20 +97,7 @@ export class PlayerModel extends IPlayerModel {
                     this.animations[clip.name] = this.mixer.clipAction(clip);
                 });
                 
-                const animNames = Object.keys(this.animations);
-                console.log('Available animations:', animNames);
-                
-                // Use AnimationUtils to initialize the first animation
-                // Play idle animation by default if it exists
-                if (this.animations['idle']) {
-                    this.animations['idle'].play();
-                    this.currentAnimation = 'idle';
-                } else if (Object.keys(this.animations).length > 0) {
-                    // Play the first animation if idle doesn't exist
-                    const firstAnim = Object.keys(this.animations)[0];
-                    this.animations[firstAnim].play();
-                    this.currentAnimation = firstAnim;
-                }
+                AnimationUtils.playAnimation(this.animations, null, "idle", "walking")
             }
             
             // Scale and position the model appropriately
