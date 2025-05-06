@@ -47,7 +47,7 @@
 
     <!-- Update Notification -->
     <div id="update-notification"
-        style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.8); color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; text-align: center;">
+        style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.8); color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; text-align: center; min-width: 300px; max-width: 80%;">
         <p style="margin: 0 0 10px 0;">New version available!</p>
         <div class="loading-bar"
             style="height: 5px; width: 100%; background-color: #333; border-radius: 2px; overflow: hidden;">
@@ -55,6 +55,7 @@
                 style="height: 100%; width: 0%; background-color: #4CAF50; transition: width 0.3s;"></div>
         </div>
         <p id="update-status" style="margin: 10px 0 0 0; font-size: 0.9em;">Updating...</p>
+        <p id="file-info" style="margin: 5px 0 0 0; font-size: 0.8em; color: #aaa; display: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
     </div>
 
     <!-- Orientation Lock -->
