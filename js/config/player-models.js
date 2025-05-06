@@ -32,7 +32,7 @@ export const CHARACTER_MODELS = [
         baseScale: 3.0, // Base scale to fit the model to game world
         multiplier: 1.0, // Default multiplier (1x size)
         preview: {
-            position: { x: 0, y: 0, z: 0 },
+            position: { x: 0, y: 2.0, z: 0 }, // Raised y-position to place knight on ground
             rotation: { x: 0, y: 0, z: 0 }
         }
     },

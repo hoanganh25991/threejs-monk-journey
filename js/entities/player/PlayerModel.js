@@ -21,6 +21,7 @@ export class PlayerModel extends IPlayerModel {
         this.currentAnimation = null;
         this.fallbackModel = null;
         this.usingFallbackModel = false;
+        this.game = null; // Reference to the game
         
         // Get default model configuration
         this.currentModelId = DEFAULT_CHARACTER_MODEL;
@@ -31,6 +32,10 @@ export class PlayerModel extends IPlayerModel {
         this.sizeMultiplier = this.currentModel.multiplier; // Size multiplier
         this.modelScale = this.baseScale * this.sizeMultiplier; // Effective scale
         this.modelPath = this.currentModel.path; // Path to the 3D model
+    }
+    
+    setGame(game) {
+        this.game = game;
     }
     
     /**
@@ -354,6 +359,20 @@ export class PlayerModel extends IPlayerModel {
         
         // Create the new model
         await this.createModel();
+        
+        // Adjust player movement height offset based on model
+        if (this.game && this.game.player && this.game.player.movement) {
+            // For knight model, use a larger height offset to keep it above ground
+            if (modelId === 'knight') {
+                this.game.player.movement.heightOffset = 2.0;
+                console.log(`Adjusted height offset for knight model to: 2.0`);
+            } else {
+                // Default height offset for other models
+                this.game.player.movement.heightOffset = 1.0;
+                console.log(`Reset height offset to default: 1.0`);
+            }
+        }
+        
         return true;
     }
     

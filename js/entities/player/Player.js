@@ -62,6 +62,11 @@ export class Player extends IPlayer {
     setGame(game) {
         this.game = game;
         
+        // Pass game reference to model
+        if (this.model) {
+            this.model.setGame(game);
+        }
+        
         // If components are already initialized, pass game reference to them
         if (this.movement && this.skills && this.combat) {
             this.movement.setGame(game);

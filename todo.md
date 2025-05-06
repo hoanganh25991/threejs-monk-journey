@@ -206,3 +206,21 @@ Here are some well-known characters from various media who are famous for using 
 9. **Ezio Auditore** (Assassin's Creed) - Known for his hidden blades and a variety of other weapons.
 10. **Solid Snake** (Metal Gear Solid) - Utilizes a range of firearms and stealth equipment.
 
+Here are some general names for characters or roles that typically use weapons, especially in a medieval or fantasy context:
+
+1. **Knight** - Often depicted with swords, shields, and armor.
+2. **Archer** - Uses bows and arrows.
+3. **Swordsman** - Specializes in sword fighting.
+4. **Spearman** - Wields a spear or lance.
+5. **Axeman** - Known for using axes.
+6. **Paladin** - A holy knight, often using swords and shields.
+7. **Barbarian** - Typically uses heavy weapons like axes or clubs.
+8. **Mercenary** - A soldier for hire, using various weapons.
+9. **Samurai** - A Japanese warrior known for using katanas.
+10. **Viking** - Often depicted with axes and shields.
+11. **Ranger** - Skilled with bows and often uses dual weapons.
+12. **Berserker** - A warrior who fights with intense fury, often using axes or swords.
+13. **Musketeer** - Uses early firearms and swords.
+14. **Gladiator** - A combatant in ancient arenas, using a variety of weapons.
+15. **Cavalier** - A mounted soldier, often using lances and swords.
+
