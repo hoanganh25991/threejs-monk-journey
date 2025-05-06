@@ -174,7 +174,7 @@ export class SevenSidedStrikeEffect extends SkillEffect {
         // Store animation state
         this.sevenSidedStrikeState = {
             currentStrike: -1,
-            strikeDuration: this.skill.duration / this.skill.hits,
+            strikeDuration: this.skill.duration / this.skill.hits / 10,
             strikeTimer: 0,
             vortex: vortex,
             monkTemplate: monkGroup,
@@ -320,7 +320,7 @@ export class SevenSidedStrikeEffect extends SkillEffect {
                     index: newStrikeIndex,
                     active: true,
                     age: 0,
-                    maxAge: this.sevenSidedStrikeState.strikeDuration * 0.8
+                    maxAge: this.sevenSidedStrikeState.strikeDuration * 8
                 };
                 
                 monk.visible = true;
