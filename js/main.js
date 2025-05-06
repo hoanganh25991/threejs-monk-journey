@@ -437,14 +437,46 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
     // Model selector
     const modelContainer = document.createElement('div');
     modelContainer.style.margin = '10px 0';
+    modelContainer.style.display = 'flex';
+    modelContainer.style.alignItems = 'center';
     
     const modelLabel = document.createElement('label');
     modelLabel.textContent = 'Character Model: ';
     modelLabel.style.color = '#fff';
     
+    // Create a container for the model selection controls
+    const modelSelectionContainer = document.createElement('div');
+    modelSelectionContainer.style.display = 'flex';
+    modelSelectionContainer.style.alignItems = 'center';
+    modelSelectionContainer.style.marginLeft = '10px';
+    
+    // Create previous button
+    const prevButton = document.createElement('button');
+    prevButton.textContent = '◀';
+    prevButton.title = 'Previous Model';
+    prevButton.style.padding = '5px 8px';
+    prevButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    prevButton.style.border = '1px solid #6b4c2a';
+    prevButton.style.color = 'white';
+    prevButton.style.cursor = 'pointer';
+    prevButton.style.borderRadius = '4px';
+    prevButton.style.marginRight = '5px';
+    
+    // Create model select dropdown
     const modelSelect = document.createElement('select');
     modelSelect.style.padding = '5px';
-    modelSelect.style.marginLeft = '10px';
+    
+    // Create next button
+    const nextButton = document.createElement('button');
+    nextButton.textContent = '▶';
+    nextButton.title = 'Next Model';
+    nextButton.style.padding = '5px 8px';
+    nextButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    nextButton.style.border = '1px solid #6b4c2a';
+    nextButton.style.color = 'white';
+    nextButton.style.cursor = 'pointer';
+    nextButton.style.borderRadius = '4px';
+    nextButton.style.marginLeft = '5px';
     
     // Add model options
     CHARACTER_MODELS.forEach(model => {
@@ -460,17 +492,69 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
         modelSelect.value = game.player.model.getCurrentModelId();
     }
     
+    // Add event listeners for prev/next buttons
+    prevButton.addEventListener('click', () => {
+        const currentIndex = modelSelect.selectedIndex;
+        const newIndex = (currentIndex > 0) ? currentIndex - 1 : modelSelect.options.length - 1;
+        modelSelect.selectedIndex = newIndex;
+        
+        // Trigger the change event to update the model
+        const event = new Event('change');
+        modelSelect.dispatchEvent(event);
+    });
+    
+    nextButton.addEventListener('click', () => {
+        const currentIndex = modelSelect.selectedIndex;
+        const newIndex = (currentIndex < modelSelect.options.length - 1) ? currentIndex + 1 : 0;
+        modelSelect.selectedIndex = newIndex;
+        
+        // Trigger the change event to update the model
+        const event = new Event('change');
+        modelSelect.dispatchEvent(event);
+    });
+    
     // Size multiplier selector
     const sizeContainer = document.createElement('div');
     sizeContainer.style.margin = '10px 0';
+    sizeContainer.style.display = 'flex';
+    sizeContainer.style.alignItems = 'center';
     
     const sizeLabel = document.createElement('label');
     sizeLabel.textContent = 'Size Multiplier: ';
     sizeLabel.style.color = '#fff';
     
+    // Create a container for the size selection controls
+    const sizeSelectionContainer = document.createElement('div');
+    sizeSelectionContainer.style.display = 'flex';
+    sizeSelectionContainer.style.alignItems = 'center';
+    sizeSelectionContainer.style.marginLeft = '10px';
+    
+    // Create previous size button
+    const prevSizeButton = document.createElement('button');
+    prevSizeButton.textContent = '◀';
+    prevSizeButton.title = 'Smaller Size';
+    prevSizeButton.style.padding = '5px 8px';
+    prevSizeButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    prevSizeButton.style.border = '1px solid #6b4c2a';
+    prevSizeButton.style.color = 'white';
+    prevSizeButton.style.cursor = 'pointer';
+    prevSizeButton.style.borderRadius = '4px';
+    prevSizeButton.style.marginRight = '5px';
+    
     const sizeSelect = document.createElement('select');
     sizeSelect.style.padding = '5px';
-    sizeSelect.style.marginLeft = '10px';
+    
+    // Create next size button
+    const nextSizeButton = document.createElement('button');
+    nextSizeButton.textContent = '▶';
+    nextSizeButton.title = 'Larger Size';
+    nextSizeButton.style.padding = '5px 8px';
+    nextSizeButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    nextSizeButton.style.border = '1px solid #6b4c2a';
+    nextSizeButton.style.color = 'white';
+    nextSizeButton.style.cursor = 'pointer';
+    nextSizeButton.style.borderRadius = '4px';
+    nextSizeButton.style.marginLeft = '5px';
     
     // Add size multiplier options
     MODEL_SIZE_MULTIPLIERS.forEach(multiplier => {
@@ -485,6 +569,27 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
         const currentMultiplier = game.player.model.getCurrentSizeMultiplier();
         sizeSelect.value = currentMultiplier;
     }
+    
+    // Add event listeners for prev/next size buttons
+    prevSizeButton.addEventListener('click', () => {
+        const currentIndex = sizeSelect.selectedIndex;
+        const newIndex = (currentIndex > 0) ? currentIndex - 1 : sizeSelect.options.length - 1;
+        sizeSelect.selectedIndex = newIndex;
+        
+        // Trigger the change event to update the size
+        const event = new Event('change');
+        sizeSelect.dispatchEvent(event);
+    });
+    
+    nextSizeButton.addEventListener('click', () => {
+        const currentIndex = sizeSelect.selectedIndex;
+        const newIndex = (currentIndex < sizeSelect.options.length - 1) ? currentIndex + 1 : 0;
+        sizeSelect.selectedIndex = newIndex;
+        
+        // Trigger the change event to update the size
+        const event = new Event('change');
+        sizeSelect.dispatchEvent(event);
+    });
     
     // Initialize model preview
     setTimeout(() => {
@@ -517,9 +622,11 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
                 const animations = modelPreview.getAnimationNames();
                 
                 if (animations.length > 0) {
-                    // Remove placeholder and enable dropdown
+                    // Remove placeholder and enable dropdown and buttons
                     animationSelect.remove(0);
                     animationSelect.disabled = false;
+                    prevAnimButton.disabled = false;
+                    nextAnimButton.disabled = false;
                     
                     // Add animations to dropdown
                     animations.forEach(animName => {
@@ -544,7 +651,11 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
                     noAnimOption.value = '';
                     noAnimOption.textContent = 'No animations available';
                     animationSelect.appendChild(noAnimOption);
+                    
+                    // Disable dropdown and buttons
                     animationSelect.disabled = true;
+                    prevAnimButton.disabled = true;
+                    nextAnimButton.disabled = true;
                 }
             }, 500);
         }
@@ -611,8 +722,10 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
                 const animations = modelPreview.getAnimationNames();
                 
                 if (animations.length > 0) {
-                    // Enable dropdown
+                    // Enable dropdown and buttons
                     animationSelect.disabled = false;
+                    prevAnimButton.disabled = false;
+                    nextAnimButton.disabled = false;
                     
                     // Add animations to dropdown
                     animations.forEach(animName => {
@@ -633,7 +746,11 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
                     noAnimOption.value = '';
                     noAnimOption.textContent = 'No animations available';
                     animationSelect.appendChild(noAnimOption);
+                    
+                    // Disable dropdown and buttons
                     animationSelect.disabled = true;
+                    prevAnimButton.disabled = true;
+                    nextAnimButton.disabled = true;
                 }
             }, 500);
         }
@@ -661,29 +778,80 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
         }
     });
     
-    // Add model selector to container
+    // Add model selector components to container
     modelContainer.appendChild(modelLabel);
-    modelContainer.appendChild(modelSelect);
+    
+    // Add buttons and select to the selection container
+    modelSelectionContainer.appendChild(prevButton);
+    modelSelectionContainer.appendChild(modelSelect);
+    modelSelectionContainer.appendChild(nextButton);
+    
+    // Add the selection container to the model container
+    modelContainer.appendChild(modelSelectionContainer);
+    
+    // Add the complete model container to the options menu
     optionsMenu.appendChild(modelContainer);
     
-    // Add size multiplier selector to container
+    // Add size multiplier selector components to container
     sizeContainer.appendChild(sizeLabel);
-    sizeContainer.appendChild(sizeSelect);
+    
+    // Add buttons and select to the selection container
+    sizeSelectionContainer.appendChild(prevSizeButton);
+    sizeSelectionContainer.appendChild(sizeSelect);
+    sizeSelectionContainer.appendChild(nextSizeButton);
+    
+    // Add the selection container to the size container
+    sizeContainer.appendChild(sizeSelectionContainer);
+    
+    // Add the complete size container to the options menu
     optionsMenu.appendChild(sizeContainer);
     
     // Animation controls
     const animationContainer = document.createElement('div');
     animationContainer.style.margin = '10px 0';
+    animationContainer.style.display = 'flex';
+    animationContainer.style.alignItems = 'center';
     
     const animationLabel = document.createElement('label');
     animationLabel.textContent = 'Animation: ';
     animationLabel.style.color = '#fff';
     
+    // Create a container for the animation selection controls
+    const animationSelectionContainer = document.createElement('div');
+    animationSelectionContainer.style.display = 'flex';
+    animationSelectionContainer.style.alignItems = 'center';
+    animationSelectionContainer.style.marginLeft = '10px';
+    
+    // Create previous animation button
+    const prevAnimButton = document.createElement('button');
+    prevAnimButton.textContent = '◀';
+    prevAnimButton.title = 'Previous Animation';
+    prevAnimButton.style.padding = '5px 8px';
+    prevAnimButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    prevAnimButton.style.border = '1px solid #6b4c2a';
+    prevAnimButton.style.color = 'white';
+    prevAnimButton.style.cursor = 'pointer';
+    prevAnimButton.style.borderRadius = '4px';
+    prevAnimButton.style.marginRight = '5px';
+    prevAnimButton.disabled = true; // Initially disabled until animations are loaded
+    
     // Use the already declared variable instead of creating a new constant
     animationSelect = document.createElement('select');
     animationSelect.style.padding = '5px';
-    animationSelect.style.marginLeft = '10px';
     animationSelect.disabled = true; // Initially disabled until animations are loaded
+    
+    // Create next animation button
+    const nextAnimButton = document.createElement('button');
+    nextAnimButton.textContent = '▶';
+    nextAnimButton.title = 'Next Animation';
+    nextAnimButton.style.padding = '5px 8px';
+    nextAnimButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    nextAnimButton.style.border = '1px solid #6b4c2a';
+    nextAnimButton.style.color = 'white';
+    nextAnimButton.style.cursor = 'pointer';
+    nextAnimButton.style.borderRadius = '4px';
+    nextAnimButton.style.marginLeft = '5px';
+    nextAnimButton.disabled = true; // Initially disabled until animations are loaded
     
     // Add a placeholder option
     const placeholderOption = document.createElement('option');
@@ -691,9 +859,43 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
     placeholderOption.textContent = 'Loading animations...';
     animationSelect.appendChild(placeholderOption);
     
-    // Add animation selector to container
+    // Add event listeners for prev/next animation buttons
+    prevAnimButton.addEventListener('click', () => {
+        if (animationSelect.options.length > 0 && !animationSelect.disabled) {
+            const currentIndex = animationSelect.selectedIndex;
+            const newIndex = (currentIndex > 0) ? currentIndex - 1 : animationSelect.options.length - 1;
+            animationSelect.selectedIndex = newIndex;
+            
+            // Trigger the change event to update the animation
+            const event = new Event('change');
+            animationSelect.dispatchEvent(event);
+        }
+    });
+    
+    nextAnimButton.addEventListener('click', () => {
+        if (animationSelect.options.length > 0 && !animationSelect.disabled) {
+            const currentIndex = animationSelect.selectedIndex;
+            const newIndex = (currentIndex < animationSelect.options.length - 1) ? currentIndex + 1 : 0;
+            animationSelect.selectedIndex = newIndex;
+            
+            // Trigger the change event to update the animation
+            const event = new Event('change');
+            animationSelect.dispatchEvent(event);
+        }
+    });
+    
+    // Add animation selector components to container
     animationContainer.appendChild(animationLabel);
-    animationContainer.appendChild(animationSelect);
+    
+    // Add buttons and select to the selection container
+    animationSelectionContainer.appendChild(prevAnimButton);
+    animationSelectionContainer.appendChild(animationSelect);
+    animationSelectionContainer.appendChild(nextAnimButton);
+    
+    // Add the selection container to the animation container
+    animationContainer.appendChild(animationSelectionContainer);
+    
+    // Add the complete animation container to the options menu
     optionsMenu.appendChild(animationContainer);
     
     // Add note about model changes

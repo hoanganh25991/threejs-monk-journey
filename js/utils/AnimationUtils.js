@@ -6,7 +6,7 @@
 /**
  * Play a specific animation with crossfade
  * @param {Object} animations - Object containing all available animations
- * @param {string} currentAnimation - Name of the currently playing animation
+ * @param {string|null} currentAnimation - Name of the currently playing animation (can be null)
  * @param {string} primaryName - Primary animation name to play
  * @param {string} fallbackName - Fallback animation name if primary not found (deprecated, kept for compatibility)
  * @param {number} transitionDuration - Duration of crossfade transition in seconds
@@ -50,12 +50,15 @@ export function playAnimation(animations, currentAnimation, primaryName, fallbac
         };
     }
     
+    // Get the name of the animation we're about to play
+    const newAnimationName = animationToPlay._clip.name;
+    
     // If this is already the current animation, don't restart it but return true
-    if (currentAnimation === animationToPlay._clip.name) {
+    if (currentAnimation === newAnimationName) {
         return { 
             success: true, 
             animation: animationToPlay, 
-            currentAnimation: currentAnimation 
+            currentAnimation: newAnimationName 
         };
     }
     
@@ -71,7 +74,7 @@ export function playAnimation(animations, currentAnimation, primaryName, fallbac
     return { 
         success: true, 
         animation: animationToPlay, 
-        currentAnimation: animationToPlay._clip.name 
+        currentAnimation: newAnimationName 
     };
 }
 
