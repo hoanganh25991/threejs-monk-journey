@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { updateAnimation } from '../utils/AnimationUtils.js';
 
 export class ModelPreview {
     constructor(container, width = 300, height = 485) {
@@ -231,11 +232,9 @@ export class ModelPreview {
             // Update controls
             this.controls.update();
             
-            // Update animations
+            // Update animations using AnimationUtils
             const delta = this.clock.getDelta();
-            if (this.mixer) {
-                this.mixer.update(delta);
-            }
+            updateAnimation(this.mixer, delta);
             
             // Manual model rotation is now optional since we have auto-rotation in controls
             // We'll keep this commented out as we're using OrbitControls.autoRotate instead

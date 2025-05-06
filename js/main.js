@@ -236,6 +236,9 @@ function showGameMenu(game) {
 
 // Show options menu
 function showOptionsMenu(game, mainMenu, fromInGame = false) {
+    // Declare animationSelect at the beginning to avoid reference errors
+    let animationSelect;
+    
     // Hide main menu if coming from main menu
     if (mainMenu) {
         mainMenu.style.display = 'none';
@@ -499,9 +502,68 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
             const baseScale = selectedModel.baseScale;
             const multiplier = window.selectedSizeMultiplier;
             const effectiveScale = baseScale * multiplier;
+            
+            // Load the model
             modelPreview.loadModel(selectedModel.path, effectiveScale);
+            
+            // Check for animations after a short delay to ensure model is loaded
+            setTimeout(() => {
+                // Clear existing options except the placeholder
+                while (animationSelect.options.length > 1) {
+                    animationSelect.remove(1);
+                }
+                
+                // Get available animations
+                const animations = modelPreview.getAnimationNames();
+                
+                if (animations.length > 0) {
+                    // Remove placeholder and enable dropdown
+                    animationSelect.remove(0);
+                    animationSelect.disabled = false;
+                    
+                    // Add animations to dropdown
+                    animations.forEach(animName => {
+                        const option = document.createElement('option');
+                        option.value = animName;
+                        option.textContent = animName;
+                        animationSelect.appendChild(option);
+                    });
+                    
+                    // Set current animation as selected
+                    const currentAnim = modelPreview.getCurrentAnimation();
+                    if (currentAnim) {
+                        animationSelect.value = currentAnim;
+                    }
+                } else {
+                    // No animations available
+                    // Clear dropdown and add a "no animations" option
+                    while (animationSelect.options.length > 0) {
+                        animationSelect.remove(0);
+                    }
+                    const noAnimOption = document.createElement('option');
+                    noAnimOption.value = '';
+                    noAnimOption.textContent = 'No animations available';
+                    animationSelect.appendChild(noAnimOption);
+                    animationSelect.disabled = true;
+                }
+            }, 500);
         }
     }, 100);
+    
+    // Add change event for animation selection - only if animationSelect exists
+    if (animationSelect) {
+        animationSelect.addEventListener('change', () => {
+            const animationName = animationSelect.value;
+            if (modelPreview && animationName) {
+                modelPreview.playAnimation(animationName);
+                
+                // If game is running, also play the same animation on the player model
+                if (game.player && game.player.model && !game.player.model.usingFallbackModel) {
+                    game.player.model.playAnimation(animationName);
+                }
+            }
+        });
+    }
     
     // Add change event for model selection
     modelSelect.addEventListener('change', () => {
@@ -511,6 +573,18 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
         if (selectedModel && modelPreview) {
             // Store the selected model ID for use when starting a new game
             window.selectedModelId = modelId;
+            
+            // Reset animation dropdown
+            while (animationSelect.options.length > 0) {
+                animationSelect.remove(0);
+            }
+            
+            // Add loading placeholder
+            const loadingOption = document.createElement('option');
+            loadingOption.value = '';
+            loadingOption.textContent = 'Loading animations...';
+            animationSelect.appendChild(loadingOption);
+            animationSelect.disabled = true;
             
             // Update preview
             const baseScale = selectedModel.baseScale;
@@ -525,6 +599,43 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
                     game.player.model.setSizeMultiplier(multiplier);
                 });
             }
+            
+            // Update animation dropdown after a short delay
+            setTimeout(() => {
+                // Clear existing options
+                while (animationSelect.options.length > 0) {
+                    animationSelect.remove(0);
+                }
+                
+                // Get available animations
+                const animations = modelPreview.getAnimationNames();
+                
+                if (animations.length > 0) {
+                    // Enable dropdown
+                    animationSelect.disabled = false;
+                    
+                    // Add animations to dropdown
+                    animations.forEach(animName => {
+                        const option = document.createElement('option');
+                        option.value = animName;
+                        option.textContent = animName;
+                        animationSelect.appendChild(option);
+                    });
+                    
+                    // Set current animation as selected
+                    const currentAnim = modelPreview.getCurrentAnimation();
+                    if (currentAnim) {
+                        animationSelect.value = currentAnim;
+                    }
+                } else {
+                    // No animations available
+                    const noAnimOption = document.createElement('option');
+                    noAnimOption.value = '';
+                    noAnimOption.textContent = 'No animations available';
+                    animationSelect.appendChild(noAnimOption);
+                    animationSelect.disabled = true;
+                }
+            }, 500);
         }
     });
     
@@ -559,6 +670,31 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
     sizeContainer.appendChild(sizeLabel);
     sizeContainer.appendChild(sizeSelect);
     optionsMenu.appendChild(sizeContainer);
+    
+    // Animation controls
+    const animationContainer = document.createElement('div');
+    animationContainer.style.margin = '10px 0';
+    
+    const animationLabel = document.createElement('label');
+    animationLabel.textContent = 'Animation: ';
+    animationLabel.style.color = '#fff';
+    
+    // Use the already declared variable instead of creating a new constant
+    animationSelect = document.createElement('select');
+    animationSelect.style.padding = '5px';
+    animationSelect.style.marginLeft = '10px';
+    animationSelect.disabled = true; // Initially disabled until animations are loaded
+    
+    // Add a placeholder option
+    const placeholderOption = document.createElement('option');
+    placeholderOption.value = '';
+    placeholderOption.textContent = 'Loading animations...';
+    animationSelect.appendChild(placeholderOption);
+    
+    // Add animation selector to container
+    animationContainer.appendChild(animationLabel);
+    animationContainer.appendChild(animationSelect);
+    optionsMenu.appendChild(animationContainer);
     
     // Add note about model changes
     const modelNote = document.createElement('p');

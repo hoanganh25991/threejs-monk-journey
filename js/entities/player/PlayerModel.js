@@ -8,6 +8,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { IPlayerModel } from './PlayerInterface.js';
 import { FallbackPlayerModel } from './FallbackPlayerModel.js';
 import { CHARACTER_MODELS, DEFAULT_CHARACTER_MODEL } from '../../config/index.js';
+import * as AnimationUtils from '../../utils/AnimationUtils.js';
 
 export class PlayerModel extends IPlayerModel {
     constructor(scene) {
@@ -200,19 +201,18 @@ export class PlayerModel extends IPlayerModel {
         
         // If we have a loaded GLB model with animations
         if (this.mixer && this.gltfModel) {
-            // Update the animation mixer with the delta time
-            this.mixer.update(delta);
+            // Use the AnimationUtils to handle state-based animations
+            const result = AnimationUtils.updateStateBasedAnimations({
+                mixer: this.mixer,
+                animations: this.animations,
+                currentAnimation: this.currentAnimation,
+                playerState: playerState,
+                delta: delta
+            });
             
-            // Handle player state animations
-            if (playerState.isMoving()) {
-                // Play walk/run animation if available
-                this.playAnimation('walk', 'run', 0.3);
-            } else if (playerState.isAttacking()) {
-                // Play attack animation if available
-                this.playAnimation('attack', 'punch', 0.2);
-            } else {
-                // Play idle animation if available
-                this.playAnimation('idle', 'idle', 0.5);
+            // Update the current animation if the utility was successful
+            if (result.success) {
+                this.currentAnimation = result.currentAnimation;
             }
         }
     }
@@ -220,66 +220,21 @@ export class PlayerModel extends IPlayerModel {
     // Helper method to play animations with crossfade
     // Returns true if animation was found and played, false otherwise
     playAnimation(primaryName, fallbackName, transitionDuration = 0.5) {
-        // If we don't have animations, exit early
-        if (!this.animations || Object.keys(this.animations).length === 0) return false;
+        // Use the AnimationUtils to handle animation playback
+        const result = AnimationUtils.playAnimation(
+            this.animations, 
+            this.currentAnimation, 
+            primaryName, 
+            fallbackName, 
+            transitionDuration
+        );
         
-        // If primaryName is null, skip it
-        let animationToPlay = null;
-        if (primaryName) {
-            animationToPlay = this.animations[primaryName];
+        // Update the current animation if the utility was successful
+        if (result.success) {
+            this.currentAnimation = result.currentAnimation;
         }
         
-        // Try fallback if primary not found and fallback is provided
-        if (!animationToPlay && fallbackName) {
-            animationToPlay = this.animations[fallbackName];
-        }
-        
-        // If neither exists, try to find a similar animation by partial name match
-        if (!animationToPlay) {
-            const allAnimNames = Object.keys(this.animations);
-            
-            // Try to find animation that contains the primary name
-            if (primaryName) {
-                const primaryMatch = allAnimNames.find(name => 
-                    name.toLowerCase().includes(primaryName.toLowerCase()));
-                    
-                if (primaryMatch) {
-                    animationToPlay = this.animations[primaryMatch];
-                }
-            }
-            
-            // Try to find animation that contains the fallback name if primary match not found
-            if (!animationToPlay && fallbackName) {
-                const fallbackMatch = allAnimNames.find(name => 
-                    name.toLowerCase().includes(fallbackName.toLowerCase()));
-                    
-                if (fallbackMatch) {
-                    animationToPlay = this.animations[fallbackMatch];
-                }
-            }
-            
-            // If no matching animation is found, return false
-            if (!animationToPlay) {
-                return false;
-            }
-        }
-        
-        // If this is already the current animation, don't restart it but return true
-        if (this.currentAnimation === animationToPlay._clip.name) return true;
-        
-        // Crossfade to the new animation
-        animationToPlay.reset().fadeIn(transitionDuration).play();
-        
-        // If there was a previous animation, fade it out
-        if (this.currentAnimation && this.animations[this.currentAnimation]) {
-            this.animations[this.currentAnimation].fadeOut(transitionDuration);
-        }
-        
-        // Update the current animation
-        this.currentAnimation = animationToPlay._clip.name;
-        
-        // Animation was successfully played
-        return true;
+        return result.success;
     }
     
     setPosition(position) {

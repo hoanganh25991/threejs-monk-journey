@@ -139,3 +139,69 @@ export function getBestMatchingAnimation(animations, typeKeywords) {
     
     return null; // No matches found
 }
+
+/**
+ * Update animation mixer with the given delta time
+ * @param {THREE.AnimationMixer} mixer - The animation mixer to update
+ * @param {number} delta - Delta time in seconds
+ * @returns {boolean} - Whether the update was performed
+ */
+export function updateAnimation(mixer, delta) {
+    if (!mixer) return false;
+    
+    mixer.update(delta);
+    return true;
+}
+
+/**
+ * Update animations based on player state
+ * @param {Object} params - Parameters for updating animations
+ * @param {THREE.AnimationMixer} params.mixer - The animation mixer
+ * @param {Object} params.animations - Object containing all available animations
+ * @param {string} params.currentAnimation - Name of the currently playing animation
+ * @param {Object} params.playerState - Player state object with isMoving(), isAttacking() methods
+ * @param {number} params.delta - Delta time in seconds
+ * @returns {Object} - Object containing success status and updated current animation name
+ */
+export function updateStateBasedAnimations(params) {
+    const { mixer, animations, currentAnimation, playerState, delta } = params;
+    
+    // If we don't have a mixer or animations, exit early
+    if (!mixer || !animations || Object.keys(animations).length === 0) {
+        return { 
+            success: false, 
+            currentAnimation: currentAnimation 
+        };
+    }
+    
+    // Update the animation mixer with the delta time
+    mixer.update(delta);
+    
+    let newCurrentAnimation = currentAnimation;
+    
+    // Handle player state animations
+    if (playerState.isMoving()) {
+        // Play walk/run animation if available
+        const result = playAnimation(animations, currentAnimation, 'walk', 'run', 0.3);
+        if (result.success) {
+            newCurrentAnimation = result.currentAnimation;
+        }
+    } else if (playerState.isAttacking()) {
+        // Play attack animation if available
+        const result = playAnimation(animations, currentAnimation, 'attack', 'punch', 0.2);
+        if (result.success) {
+            newCurrentAnimation = result.currentAnimation;
+        }
+    } else {
+        // Play idle animation if available
+        const result = playAnimation(animations, currentAnimation, 'idle', 'idle', 0.5);
+        if (result.success) {
+            newCurrentAnimation = result.currentAnimation;
+        }
+    }
+    
+    return {
+        success: true,
+        currentAnimation: newCurrentAnimation
+    };
+}
