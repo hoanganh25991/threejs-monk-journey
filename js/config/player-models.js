@@ -77,7 +77,7 @@ export const CHARACTER_MODELS = [
         name: 'Link',
         path: 'assets/models/link.glb',
         description: 'Heroic adventurer with sword and shield',
-        baseScale: 10.0, // Base scale to fit the model to game world
+        baseScale: 20.0, // Base scale to fit the model to game world
         multiplier: 1.0  // Default multiplier (1x size)
         // Preview position and rotation are handled dynamically by the adjustment system
     },
