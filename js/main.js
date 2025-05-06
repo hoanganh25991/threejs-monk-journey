@@ -420,8 +420,6 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
     
     // Create model preview container
     const previewContainer = document.createElement('div');
-    previewContainer.style.width = '300px';
-    previewContainer.style.margin = '10px auto';
     previewContainer.style.border = '1px solid #444';
     previewContainer.style.borderRadius = '5px';
     optionsMenu.appendChild(previewContainer);

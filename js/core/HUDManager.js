@@ -403,7 +403,9 @@ export class HUDManager {
         optionsMenu.style.alignItems = 'center';
         optionsMenu.style.zIndex = '1000';
         optionsMenu.style.overflowY = 'auto';
+        optionsMenu.style.overflowX = 'hidden';
         optionsMenu.style.padding = '20px';
+        optionsMenu.style.maxHeight = '100vh';
         
         // Create title
         const title = document.createElement('h1');

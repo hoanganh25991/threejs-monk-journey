@@ -21,8 +21,46 @@ export class ModelPreview {
         this.mixer = null;
         this.clock = new THREE.Clock();
         this.animationId = null;
+        this.isVisible = true;
+        
+        // Create a wrapper to handle visibility
+        this.wrapper = document.createElement('div');
+        this.wrapper.style.width = `${width}px`;
+        this.wrapper.style.height = `${height}px`;
+        this.container.appendChild(this.wrapper);
+        
+        // Set up intersection observer to pause rendering when not visible
+        this.setupVisibilityObserver();
         
         this.init();
+    }
+    
+    setupVisibilityObserver() {
+        // Create an intersection observer to detect when the preview is visible
+        this.observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                this.isVisible = entry.isIntersecting;
+                
+                if (this.isVisible) {
+                    // Resume animation when visible
+                    if (!this.animationId) {
+                        this.animate();
+                    }
+                } else {
+                    // Pause animation when not visible
+                    if (this.animationId) {
+                        cancelAnimationFrame(this.animationId);
+                        this.animationId = null;
+                    }
+                }
+            });
+        }, {
+            root: null, // Use viewport as root
+            threshold: 0.1 // Trigger when at least 10% is visible
+        });
+        
+        // Start observing the container
+        this.observer.observe(this.wrapper);
     }
     
     init() {
@@ -42,8 +80,8 @@ export class ModelPreview {
         this.renderer.shadowMap.enabled = true;
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
         
-        // Add renderer to container
-        this.container.appendChild(this.renderer.domElement);
+        // Add renderer to wrapper
+        this.wrapper.appendChild(this.renderer.domElement);
         
         // Add orbit controls with enhanced settings for better model viewing
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -186,25 +224,31 @@ export class ModelPreview {
     }
     
     animate() {
-        this.animationId = requestAnimationFrame(() => this.animate());
-        
-        // Update controls
-        this.controls.update();
-        
-        // Update animations
-        const delta = this.clock.getDelta();
-        if (this.mixer) {
-            this.mixer.update(delta);
+        // Only continue animation if visible
+        if (this.isVisible) {
+            this.animationId = requestAnimationFrame(() => this.animate());
+            
+            // Update controls
+            this.controls.update();
+            
+            // Update animations
+            const delta = this.clock.getDelta();
+            if (this.mixer) {
+                this.mixer.update(delta);
+            }
+            
+            // Manual model rotation is now optional since we have auto-rotation in controls
+            // We'll keep this commented out as we're using OrbitControls.autoRotate instead
+            // if (this.model && !this.controls.autoRotate) {
+            //     this.model.rotation.y += 0.005;
+            // }
+            
+            // Render scene
+            this.renderer.render(this.scene, this.camera);
+        } else {
+            // If not visible, don't request another frame
+            this.animationId = null;
         }
-        
-        // Manual model rotation is now optional since we have auto-rotation in controls
-        // We'll keep this commented out as we're using OrbitControls.autoRotate instead
-        // if (this.model && !this.controls.autoRotate) {
-        //     this.model.rotation.y += 0.005;
-        // }
-        
-        // Render scene
-        this.renderer.render(this.scene, this.camera);
     }
     
     setSize(width, height) {
@@ -252,20 +296,40 @@ export class ModelPreview {
         // Stop animation loop
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
+            this.animationId = null;
         }
         
-        // Remove renderer from container
+        // Disconnect the observer
+        if (this.observer) {
+            this.observer.disconnect();
+            this.observer = null;
+        }
+        
+        // Remove renderer from wrapper
         if (this.renderer && this.renderer.domElement) {
-            this.container.removeChild(this.renderer.domElement);
+            this.wrapper.removeChild(this.renderer.domElement);
+        }
+        
+        // Remove wrapper from container
+        if (this.wrapper && this.wrapper.parentNode) {
+            this.container.removeChild(this.wrapper);
         }
         
         // Dispose of resources
         if (this.controls) {
             this.controls.dispose();
+            this.controls = null;
         }
         
         if (this.renderer) {
             this.renderer.dispose();
+            this.renderer = null;
         }
+        
+        // Clear references
+        this.scene = null;
+        this.camera = null;
+        this.model = null;
+        this.mixer = null;
     }
 }
