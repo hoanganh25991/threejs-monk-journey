@@ -62,6 +62,7 @@
     help me rename effect match exactly with the skill name,ex: WaveStrikeEffect, instead of RangedEffect
 
 
+- [ ] Enhance: we have config player-models.js to control the dynamic adjust of model to stay on-top of the ground. We should not have the switch case on the PlayerModel.js, help me move it to config, each adjustment is static inside each model
 
 - [ ] Enhance: review Enemy.js file and optimize it:
     - remove unused method

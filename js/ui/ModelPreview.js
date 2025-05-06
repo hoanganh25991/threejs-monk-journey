@@ -23,6 +23,8 @@ export class ModelPreview {
         this.clock = new THREE.Clock();
         this.animationId = null;
         this.isVisible = true;
+        this.animations = {};
+        this.currentAnimation = null;
         
         // Create a wrapper to handle visibility
         this.wrapper = document.createElement('div');
@@ -152,8 +154,10 @@ export class ModelPreview {
             this.model = null;
         }
         
-        // Reset mixer
+        // Reset mixer and animations
         this.mixer = null;
+        this.animations = {};
+        this.currentAnimation = null;
         
         // Load new model
         const loader = new GLTFLoader();
@@ -174,9 +178,34 @@ export class ModelPreview {
                 if (gltf.animations && gltf.animations.length > 0) {
                     this.mixer = new THREE.AnimationMixer(this.model);
                     
-                    // Play the first animation
-                    const action = this.mixer.clipAction(gltf.animations[0]);
-                    action.play();
+                    // Store all animations
+                    this.animations = {};
+                    gltf.animations.forEach(animation => {
+                        // Make sure animation has a name
+                        if (!animation.name || animation.name === '') {
+                            animation.name = `animation_${gltf.animations.indexOf(animation)}`;
+                            console.log(`ModelPreview: Unnamed animation detected, assigned name: ${animation.name}`);
+                        }
+                        
+                        const action = this.mixer.clipAction(animation);
+                        this.animations[animation.name] = action;
+                    });
+                    
+                    // Log all available animations
+                    const animationNames = Object.keys(this.animations);
+                    console.log(`ModelPreview: Loaded ${animationNames.length} animations:`, animationNames.join(', '));
+                    
+                    // Play the first animation if we have any
+                    if (animationNames.length > 0) {
+                        const firstAnimName = animationNames[0];
+                        this.animations[firstAnimName].play();
+                        this.currentAnimation = firstAnimName;
+                        console.log(`ModelPreview: Playing initial animation "${firstAnimName}"`);
+                    } else {
+                        console.warn('ModelPreview: No animations available to play');
+                    }
+                } else {
+                    console.log('ModelPreview: Model has no animations');
                 }
                 
                 // Scale the model
@@ -234,7 +263,9 @@ export class ModelPreview {
             
             // Update animations using AnimationUtils
             const delta = this.clock.getDelta();
-            updateAnimation(this.mixer, delta);
+            if (this.mixer) {
+                updateAnimation(this.mixer, delta);
+            }
             
             // Manual model rotation is now optional since we have auto-rotation in controls
             // We'll keep this commented out as we're using OrbitControls.autoRotate instead
@@ -291,6 +322,64 @@ export class ModelPreview {
         this.controls.reset();
     }
     
+    /**
+     * Get a list of all available animation names
+     * @returns {Array} - Array of animation names
+     */
+    getAnimationNames() {
+        return Object.keys(this.animations);
+    }
+    
+    /**
+     * Get the name of the currently playing animation
+     * @returns {string|null} - Name of the current animation or null if none is playing
+     */
+    getCurrentAnimation() {
+        return this.currentAnimation;
+    }
+    
+    /**
+     * Play a specific animation by name
+     * @param {string} animationName - Name of the animation to play
+     * @param {number} transitionDuration - Duration of crossfade transition in seconds
+     * @returns {boolean} - Whether the animation was successfully played
+     */
+    playAnimation(animationName, transitionDuration = 0.5) {
+        console.log(`ModelPreview: Attempting to play animation "${animationName}"`);
+        console.log(`ModelPreview: Available animations:`, Object.keys(this.animations));
+        
+        // If we don't have animations or the requested animation doesn't exist, return false
+        if (!this.animations || !this.animations[animationName]) {
+            console.warn(`ModelPreview: Animation "${animationName}" not found`);
+            return false;
+        }
+        
+        // If this is already the current animation, don't restart it
+        if (this.currentAnimation === animationName) {
+            console.log(`ModelPreview: Animation "${animationName}" is already playing`);
+            return true;
+        }
+        
+        try {
+            // Crossfade to the new animation
+            this.animations[animationName].reset().fadeIn(transitionDuration).play();
+            
+            // If there was a previous animation, fade it out
+            if (this.currentAnimation && this.animations[this.currentAnimation]) {
+                this.animations[this.currentAnimation].fadeOut(transitionDuration);
+            }
+            
+            // Update current animation
+            this.currentAnimation = animationName;
+            console.log(`ModelPreview: Successfully playing animation "${animationName}"`);
+            
+            return true;
+        } catch (error) {
+            console.error(`ModelPreview: Error playing animation "${animationName}":`, error);
+            return false;
+        }
+    }
+    
     dispose() {
         // Stop animation loop
         if (this.animationId) {
@@ -330,5 +419,7 @@ export class ModelPreview {
         this.camera = null;
         this.model = null;
         this.mixer = null;
+        this.animations = {};
+        this.currentAnimation = null;
     }
 }
