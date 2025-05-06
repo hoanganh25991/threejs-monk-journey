@@ -8,7 +8,7 @@
  * @param {Object} animations - Object containing all available animations
  * @param {string} currentAnimation - Name of the currently playing animation
  * @param {string} primaryName - Primary animation name to play
- * @param {string} fallbackName - Fallback animation name if primary not found
+ * @param {string} fallbackName - Fallback animation name if primary not found (deprecated, kept for compatibility)
  * @param {number} transitionDuration - Duration of crossfade transition in seconds
  * @returns {Object} - Object containing success status, animation played, and updated current animation name
  */
@@ -25,8 +25,6 @@ export function playAnimation(animations, currentAnimation, primaryName, fallbac
     
     // Get all available animation names
     const allAnimNames = Object.keys(animations);
-    
-    // If primaryName is null, skip it
     let animationToPlay = null;
     
     // Check if primaryName is a direct animation name
@@ -34,69 +32,17 @@ export function playAnimation(animations, currentAnimation, primaryName, fallbac
         animationToPlay = animations[primaryName];
         console.log(`AnimationUtils: Found direct animation match: ${primaryName}`);
     }
-    // Try fallback if primary not found and fallback is provided
-    else if (!animationToPlay && fallbackName && animations[fallbackName]) {
-        animationToPlay = animations[fallbackName];
-        console.log(`AnimationUtils: Using fallback animation: ${fallbackName}`);
-    }
     
-    // If neither exists, try to find a similar animation by partial name match
-    if (!animationToPlay) {
-        console.log(`AnimationUtils: Searching for similar animations among: ${allAnimNames.join(', ')}`);
-        
-        // Try to find animation that contains the primary name
-        if (primaryName) {
-            // First try exact substring match
-            let primaryMatch = allAnimNames.find(name => 
-                name.toLowerCase().includes(primaryName.toLowerCase()));
-            
-            // If no match, try more flexible matching for skeleton king animations
-            if (!primaryMatch && primaryName === 'attack') {
-                // For attack animations, look for specific skeleton king attack patterns
-                primaryMatch = allAnimNames.find(name => 
-                    name.includes('_attack') || 
-                    name.includes('_stab') || 
-                    name.includes('_kick'));
-            } else if (!primaryMatch && (primaryName === 'walk' || primaryName === 'run')) {
-                // For movement animations, try to find any "versus" animation for skeleton king
-                primaryMatch = allAnimNames.find(name => 
-                    name.includes('_versus') && !name.includes('_attack'));
-            } else if (!primaryMatch && primaryName === 'idle') {
-                // For idle, try to find generic animations
-                primaryMatch = allAnimNames.find(name => 
-                    name.includes('generic') || 
-                    name.includes('taunt') || 
-                    name === 'Take 001');
-            }
-                
-            if (primaryMatch) {
-                animationToPlay = animations[primaryMatch];
-                console.log(`AnimationUtils: Found partial match for ${primaryName}: ${primaryMatch}`);
-            }
-        }
-        
-        // Try to find animation that contains the fallback name if primary match not found
-        if (!animationToPlay && fallbackName) {
-            const fallbackMatch = allAnimNames.find(name => 
-                name.toLowerCase().includes(fallbackName.toLowerCase()));
-                
-            if (fallbackMatch) {
-                animationToPlay = animations[fallbackMatch];
-                console.log(`AnimationUtils: Found partial match for fallback ${fallbackName}: ${fallbackMatch}`);
-            }
-        }
-    }
-    
-    // If still no match, just use the first animation as a last resort
+    // If no match found, use the first animation as fallback
     if (!animationToPlay && allAnimNames.length > 0) {
         const firstAnim = allAnimNames[0];
         animationToPlay = animations[firstAnim];
-        console.log(`AnimationUtils: No specific match found, using first available animation: ${firstAnim}`);
+        console.log(`AnimationUtils: Using first available animation as fallback: ${firstAnim}`);
     }
     
     // If no matching animation is found after all attempts, return false
     if (!animationToPlay) {
-        console.warn(`AnimationUtils: No matching animation found for ${primaryName} or ${fallbackName}, and no animations available to fall back to`);
+        console.warn(`AnimationUtils: No matching animation found for ${primaryName} and no animations available to fall back to`);
         return { 
             success: false, 
             animation: null, 
