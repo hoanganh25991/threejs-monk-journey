@@ -341,6 +341,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CHARACTER_MODELS } from './js/config.js';
 
         // Main variables
         let allModelOptions = []; // Store all model options
@@ -773,8 +774,7 @@
                         boundingBox.getCenter(center);
                     }
 
-                    // Center the model at origin (middle of the net)
-                    // First, check if the model already has a position set in its file
+                    // Store original position
                     const originalPosition = {
                         x: model.position.x,
                         y: model.position.y,
@@ -788,10 +788,37 @@
                     boundingBox.setFromObject(model);
                     boundingBox.getCenter(center);
 
-                    // Center the model at origin (middle of the net)
-                    model.position.x = -center.x;
-                    model.position.y = -center.y;
-                    model.position.z = -center.z;
+                    // Check if this model has a preview configuration in CHARACTER_MODELS
+                    let previewConfig = null;
+                    const modelName = selectedPath.split('/').pop().replace('.js', '');
+                    
+                    // Try to find matching model in CHARACTER_MODELS
+                    for (const charModel of CHARACTER_MODELS) {
+                        if (charModel.path && charModel.path.includes(modelName)) {
+                            previewConfig = charModel.preview;
+                            console.log(`Found preview config for ${modelName}:`, previewConfig);
+                            break;
+                        }
+                    }
+                    
+                    if (previewConfig && previewConfig.position) {
+                        // Use position from preview configuration
+                        const pos = previewConfig.position;
+                        model.position.set(pos.x, pos.y, pos.z);
+                        console.log(`Applied position from config: X: ${pos.x}, Y: ${pos.y}, Z: ${pos.z}`);
+                        
+                        // Apply rotation if available
+                        if (previewConfig.rotation) {
+                            const rot = previewConfig.rotation;
+                            model.rotation.set(rot.x, rot.y, rot.z);
+                            console.log(`Applied rotation from config: X: ${rot.x}, Y: ${rot.y}, Z: ${rot.z}`);
+                        }
+                    } else {
+                        // Default centering behavior if no preview config is found
+                        model.position.x = -center.x;
+                        model.position.y = -center.y;
+                        model.position.z = -center.z;
+                    }
 
                     // Log the centering process
                     console.log(`Original model position: X: ${originalPosition.x}, Y: ${originalPosition.y}, Z: ${originalPosition.z}`);
@@ -1235,6 +1262,47 @@
                                 Z: ${formatNum(origPos.z)}
                             </p>
                         `;
+                    }
+                    
+                    // Check if this model has a preview configuration in CHARACTER_MODELS
+                    const modelName = path.split('/').pop().replace('.js', '');
+                    let previewConfig = null;
+                    
+                    // Try to find matching model in CHARACTER_MODELS
+                    for (const charModel of CHARACTER_MODELS) {
+                        if (charModel.path && charModel.path.includes(modelName)) {
+                            previewConfig = charModel.preview;
+                            break;
+                        }
+                    }
+                    
+                    // Add preview configuration if available
+                    if (previewConfig) {
+                        positionInfo += `
+                            <h4>Preview Configuration</h4>
+                        `;
+                        
+                        if (previewConfig.position) {
+                            const pos = previewConfig.position;
+                            positionInfo += `
+                                <p><strong>Preview Position:</strong> 
+                                    X: ${formatNum(pos.x)}, 
+                                    Y: ${formatNum(pos.y)}, 
+                                    Z: ${formatNum(pos.z)}
+                                </p>
+                            `;
+                        }
+                        
+                        if (previewConfig.rotation) {
+                            const rot = previewConfig.rotation;
+                            positionInfo += `
+                                <p><strong>Preview Rotation:</strong> 
+                                    X: ${formatNum(rot.x)}, 
+                                    Y: ${formatNum(rot.y)}, 
+                                    Z: ${formatNum(rot.z)}
+                                </p>
+                            `;
+                        }
                     }
                 }
             }

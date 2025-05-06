@@ -8,7 +8,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 export class ModelPreview {
-    constructor(container, width = 300, height = 450) {
+    constructor(container, width = 300, height = 485) {
         this.container = container;
         this.width = width;
         this.height = height;

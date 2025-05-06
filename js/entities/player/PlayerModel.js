@@ -112,11 +112,25 @@ export class PlayerModel extends IPlayerModel {
                 this.modelScale
             ); // Scale according to configuration
             
-            // No rotation needed for the current model
-            // this.gltfModel.rotation.x = Math.PI; // Commented out as it was causing upside-down orientation
-            
-            this.gltfModel.position.set(0, 0, 0); // Adjust position as needed
-            
+            this.gltfModel.position.set(0, 0, 0);
+            this.gltfModel.rotation.set(0, 0, 0);
+
+            // Apply position and rotation from the model configuration if available
+            if (this.currentModel.preview && this.currentModel.preview.position) {
+                // Apply position from config
+                const pos = this.currentModel.preview.position;
+                this.gltfModel.position.set(pos.x, pos.y, pos.z);
+                console.log(`Applied position from config: X: ${pos.x}, Y: ${pos.y}, Z: ${pos.z}`);
+                
+                
+            }
+            if (this.currentModel.preview && this.currentModel.preview.rotation) {
+                // Apply rotation from config
+                const rot = this.currentModel.preview.rotation;
+                this.gltfModel.rotation.set(rot.x, rot.y, rot.z);
+                console.log(`Applied rotation from config: X: ${rot.x}, Y: ${rot.y}, Z: ${rot.z}`);
+            }
+
             // Add the loaded model to our group
             this.modelGroup.add(this.gltfModel);
             
