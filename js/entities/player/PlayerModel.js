@@ -22,7 +22,7 @@ export class PlayerModel extends IPlayerModel {
         this.usingFallbackModel = false;
         
         // Configuration options
-        this.modelScale = 1.2; // Scale factor for the model (1/100 of original size)
+        this.modelScale = 1.3; // Scale factor for the model
         this.modelPath = 'assets/models/monk.glb'; // Path to the 3D model
     }
     

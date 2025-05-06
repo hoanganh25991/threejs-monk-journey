@@ -36,8 +36,8 @@ export class TerrainChunk {
             this.resolution
         );
         
-        // Create terrain material
-        const grassTexture = TextureGenerator.createProceduralTexture(0x2d572c, 0x1e3b1e, 512);
+        // Create terrain material with lighter green color
+        const grassTexture = TextureGenerator.createProceduralTexture(0x4a9e4a, 0x3a7a3a, 512);
         
         // Create terrain material with grass texture
         const material = new THREE.MeshStandardMaterial({
@@ -75,8 +75,8 @@ export class TerrainChunk {
         const positions = terrain.geometry.attributes.position.array;
         
         for (let i = 0; i < positions.length; i += 3) {
-            // Use grass color with slight variations
-            const baseColor = new THREE.Color(0x2d572c); // Base grass color
+            // Use lighter grass color with slight variations
+            const baseColor = new THREE.Color(0x4a9e4a); // Lighter base grass color
             
             // Add some variation to make the grass look more natural
             const variation = Math.random() * 0.1 - 0.05;
