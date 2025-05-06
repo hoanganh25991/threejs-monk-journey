@@ -78,9 +78,9 @@ if (!adjustmentsLoaded) {
         // Add other model-specific defaults as needed
 }
 
-- [] Enhance: show message already have queue to quickly remove old message and add new one. problem: i still hit issue where too many messages cause screen flood with messages. i guess we should improve max_size, where new message added and quickly drop bunch of old messages.
 
-- [] Enhance: refactor playSound by let the sound at config/skills.js file
+
+- [x] Enhance: refactor playSound by let the sound at config/skills.js file
     add missing sound, all skills when cast should have sound
     add sound to effect if needed, effect-start, effect-end,...
 
@@ -157,12 +157,16 @@ if (!adjustmentsLoaded) {
 
 - [ ] Enhance: createWaveEffect, add config at top of this method, allow me to control the size of the bell, if i want to bell 2 times bigger then current, i just x2 that bell size number
 
+- [] Enhance: show message already have queue to quickly remove old message and add new one. problem: i still hit issue where too many messages cause screen flood with messages. i guess we should improve max_size, where new message added and quickly drop bunch of old messages.
+
 - [ ] Enhance: new Skill({
                 name: 'Mystic Ally',
                 description: 'Summon a spirit ally to fight alongside you',
                 type: 'summon',
-    have you see this skill in diablo immortal, where it create 2 allies as clone of hero, they in blue, help me add that
-    then, they can fight (punch action) and random cast skill as hero, they just cast skill with long interval, each time cast is random
+    have you see this skill in diablo immortal:
+    1. where it create 2 allies as clone of heroplease use the model of hero
+    2. allies not solid, transparent like spirit, with texture color 0x0x00ffff
+    3. they can fight (punch action) and random cast skill as hero, they just cast skill with long interval, each time cast is random
 
 - [ ] Enhance: new Skill({
                 name: 'Seven-Sided Strike',

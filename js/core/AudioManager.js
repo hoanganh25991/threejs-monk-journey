@@ -139,34 +139,34 @@ export class AudioManager {
         this.sounds.levelUp = this.createSimulatedSound('levelUp', 440, 1.0, 0.4);
         
         // Skill cast sounds
-        this.sounds.skillWaveStrike = this.createSimulatedSound('skillWaveStrike', 280, 0.8, 0.3);
-        this.sounds.skillCycloneStrike = this.createSimulatedSound('skillCycloneStrike', 320, 0.8, 0.4);
-        this.sounds.skillSevenSidedStrike = this.createSimulatedSound('skillSevenSidedStrike', 380, 0.8, 0.5);
-        this.sounds.skillInnerSanctuary = this.createSimulatedSound('skillInnerSanctuary', 180, 0.6, 0.6);
-        this.sounds.skillFistOfThunder = this.createSimulatedSound('skillFistOfThunder', 440, 0.8, 0.3);
-        this.sounds.skillMysticAlly = this.createSimulatedSound('skillMysticAlly', 260, 0.7, 0.5);
-        this.sounds.skillWaveOfLight = this.createSimulatedSound('skillWaveOfLight', 220, 0.9, 0.6);
-        this.sounds.skillExplodingPalm = this.createSimulatedSound('skillExplodingPalm', 300, 0.8, 0.4);
+        this.sounds.skillWaveStrike = this.createSimulatedSound('skillWaveStrike', 280, 0.8, 0.3); // Water-based - medium frequency
+        this.sounds.skillCycloneStrike = this.createSimulatedSound('skillCycloneStrike', 350, 0.8, 0.4); // Wind-based - increased frequency
+        this.sounds.skillSevenSidedStrike = this.createSimulatedSound('skillSevenSidedStrike', 380, 0.8, 0.5); // Physical attack - kept as is
+        this.sounds.skillInnerSanctuary = this.createSimulatedSound('skillInnerSanctuary', 180, 0.6, 0.6); // Protective - low frequency
+        this.sounds.skillFistOfThunder = this.createSimulatedSound('skillFistOfThunder', 520, 0.8, 0.3); // Thunder - increased frequency
+        this.sounds.skillMysticAlly = this.createSimulatedSound('skillMysticAlly', 260, 0.7, 0.5); // Spiritual - kept as is
+        this.sounds.skillWaveOfLight = this.createSimulatedSound('skillWaveOfLight', 420, 0.9, 0.6); // Light-based - increased frequency
+        this.sounds.skillExplodingPalm = this.createSimulatedSound('skillExplodingPalm', 340, 0.8, 0.4); // Explosive - increased frequency
         
         // Skill impact sounds
-        this.sounds.waterImpact = this.createSimulatedSound('waterImpact', 350, 0.7, 0.2);
-        this.sounds.windPull = this.createSimulatedSound('windPull', 290, 0.7, 0.3);
-        this.sounds.rapidStrike = this.createSimulatedSound('rapidStrike', 420, 0.8, 0.2);
-        this.sounds.barrierForm = this.createSimulatedSound('barrierForm', 200, 0.6, 0.4);
-        this.sounds.allySummonComplete = this.createSimulatedSound('allySummonComplete', 280, 0.7, 0.3);
-        this.sounds.bellRing = this.createSimulatedSound('bellRing', 600, 0.9, 0.7);
-        this.sounds.markApplied = this.createSimulatedSound('markApplied', 320, 0.7, 0.3);
-        this.sounds.thunderStrike = this.createSimulatedSound('thunderStrike', 480, 0.8, 0.2);
+        this.sounds.waterImpact = this.createSimulatedSound('waterImpact', 350, 0.7, 0.2); // Water - kept as is
+        this.sounds.windPull = this.createSimulatedSound('windPull', 330, 0.7, 0.3); // Wind - increased frequency
+        this.sounds.rapidStrike = this.createSimulatedSound('rapidStrike', 420, 0.8, 0.2); // Physical - kept as is
+        this.sounds.barrierForm = this.createSimulatedSound('barrierForm', 200, 0.6, 0.4); // Protective - kept as is
+        this.sounds.allySummonComplete = this.createSimulatedSound('allySummonComplete', 280, 0.7, 0.3); // Spiritual - kept as is
+        this.sounds.bellRing = this.createSimulatedSound('bellRing', 600, 0.9, 0.7); // Bell - kept as is
+        this.sounds.markApplied = this.createSimulatedSound('markApplied', 320, 0.7, 0.3); // Mark - kept as is
+        this.sounds.thunderStrike = this.createSimulatedSound('thunderStrike', 550, 0.8, 0.2); // Thunder - increased frequency
         
         // Skill end sounds
-        this.sounds.waterDissipate = this.createSimulatedSound('waterDissipate', 240, 0.6, 0.4);
-        this.sounds.windDissipate = this.createSimulatedSound('windDissipate', 260, 0.6, 0.4);
-        this.sounds.strikeComplete = this.createSimulatedSound('strikeComplete', 400, 0.7, 0.3);
-        this.sounds.barrierDissipate = this.createSimulatedSound('barrierDissipate', 160, 0.5, 0.5);
-        this.sounds.allyDismiss = this.createSimulatedSound('allyDismiss', 220, 0.6, 0.4);
-        this.sounds.bellFade = this.createSimulatedSound('bellFade', 500, 0.7, 0.5);
-        this.sounds.massiveExplosion = this.createSimulatedSound('massiveExplosion', 120, 0.9, 0.6);
-        this.sounds.thunderEcho = this.createSimulatedSound('thunderEcho', 380, 0.6, 0.4);
+        this.sounds.waterDissipate = this.createSimulatedSound('waterDissipate', 240, 0.6, 0.4); // Water - kept as is
+        this.sounds.windDissipate = this.createSimulatedSound('windDissipate', 300, 0.6, 0.4); // Wind - increased frequency
+        this.sounds.strikeComplete = this.createSimulatedSound('strikeComplete', 400, 0.7, 0.3); // Physical - kept as is
+        this.sounds.barrierDissipate = this.createSimulatedSound('barrierDissipate', 160, 0.5, 0.5); // Protective - kept as is
+        this.sounds.allyDismiss = this.createSimulatedSound('allyDismiss', 220, 0.6, 0.4); // Spiritual - kept as is
+        this.sounds.bellFade = this.createSimulatedSound('bellFade', 500, 0.7, 0.5); // Bell - kept as is
+        this.sounds.massiveExplosion = this.createSimulatedSound('massiveExplosion', 220, 0.9, 0.6); // Explosion - increased frequency
+        this.sounds.thunderEcho = this.createSimulatedSound('thunderEcho', 450, 0.6, 0.4); // Thunder - increased frequency
         
         // Enemy sounds
         this.sounds.enemyAttack = this.createSimulatedSound('enemyAttack', 200, 0.6, 0.2);
