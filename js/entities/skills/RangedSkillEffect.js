@@ -30,9 +30,9 @@ export class RangedSkillEffect extends SkillEffect {
         
         // Special handling for Wave Strike
         if (this.skill.name === 'Wave Strike') {
-            this._createWaveStrikeEffect(effectGroup);
+            this.createWaveStrikeEffect(effectGroup);
         } else {
-            this._createDefaultRangedEffect(effectGroup);
+            this.createDefaultRangedEffect(effectGroup);
         }
         
         // Position effect
@@ -47,48 +47,11 @@ export class RangedSkillEffect extends SkillEffect {
     }
 
     /**
-     * Create the default ranged projectile effect
-     * @param {THREE.Group} effectGroup - Group to add the effect to
-     * @private
-     */
-    _createDefaultRangedEffect(effectGroup) {
-        // Create a projectile (cone)
-        const projectileGeometry = new THREE.ConeGeometry(0.3, 1.5, 8);
-        const projectileMaterial = new THREE.MeshBasicMaterial({
-            color: this.skill.color,
-            transparent: true,
-            opacity: 0.8
-        });
-        
-        const projectile = new THREE.Mesh(projectileGeometry, projectileMaterial);
-        projectile.rotation.x = Math.PI / 2;
-        
-        // Add projectile to group
-        effectGroup.add(projectile);
-        
-        // Add trail particles
-        const trailCount = 10;
-        for (let i = 0; i < trailCount; i++) {
-            const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-            const particleMaterial = new THREE.MeshBasicMaterial({
-                color: this.skill.color,
-                transparent: true,
-                opacity: 0.5
-            });
-            
-            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-            particle.position.z = -i * 0.1;
-            
-            effectGroup.add(particle);
-        }
-    }
-
-    /**
      * Create the Wave Strike special effect
      * @param {THREE.Group} effectGroup - Group to add the effect to
      * @private
      */
-    _createWaveStrikeEffect(effectGroup) {
+    createWaveStrikeEffect(effectGroup) {
         // Create main wave body - a curved plane
         const waveGroup = new THREE.Group();
         
@@ -261,6 +224,7 @@ export class RangedSkillEffect extends SkillEffect {
         // Check if effect has expired
         if (this.elapsedTime >= this.skill.duration) {
             this.isActive = false;
+            this.dispose(); // Properly dispose of the effect when it expires
             return;
         }
         
@@ -276,16 +240,7 @@ export class RangedSkillEffect extends SkillEffect {
         // Update distance traveled
         this.distanceTraveled += moveDistance;
         
-        // Check if projectile has reached maximum range
-        if (this.distanceTraveled >= this.skill.range) {
-            this.isActive = false;
-            return;
-        }
-        
-        // Special handling for Wave Strike
-        if (this.skill.name === 'Wave Strike' && this.waveState) {
-            this._updateWaveStrikeEffect(delta);
-        }
+        this.updateWaveStrikeEffect(delta);
     }
 
     /**
@@ -293,7 +248,7 @@ export class RangedSkillEffect extends SkillEffect {
      * @param {number} delta - Time since last update in seconds
      * @private
      */
-    _updateWaveStrikeEffect(delta) {
+    updateWaveStrikeEffect(delta) {
         // Update wave state
         this.waveState.age += delta;
         
@@ -323,5 +278,96 @@ export class RangedSkillEffect extends SkillEffect {
                 child.rotation.z = child.userData.initialAngle + (Math.PI/2) + (this.waveState.age * child.userData.rotationSpeed);
             }
         }
+    }
+
+    /**
+     * Enhanced dispose method to properly clean up all resources
+     * Overrides the base class dispose method with more thorough cleanup
+     */
+    dispose() {
+        if (!this.effect) return;
+        
+        // Clean up Wave Strike specific resources
+        if (this.skill.name === 'Wave Strike' && this.waveState) {
+            // Clear droplet references
+            if (this.waveState.droplets) {
+                this.waveState.droplets.length = 0;
+            }
+            
+            // Clear wave state
+            this.waveState = null;
+        }
+        
+        // Recursively dispose of geometries and materials
+        this.effect.traverse(child => {
+            // Dispose of geometries
+            if (child.geometry) {
+                child.geometry.dispose();
+            }
+            
+            // Dispose of materials
+            if (child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(material => {
+                        // Dispose of any textures
+                        if (material.map) material.map.dispose();
+                        if (material.normalMap) material.normalMap.dispose();
+                        if (material.specularMap) material.specularMap.dispose();
+                        if (material.emissiveMap) material.emissiveMap.dispose();
+                        
+                        // Dispose of the material itself
+                        material.dispose();
+                    });
+                } else {
+                    // Dispose of any textures
+                    if (child.material.map) child.material.map.dispose();
+                    if (child.material.normalMap) child.material.normalMap.dispose();
+                    if (child.material.specularMap) child.material.specularMap.dispose();
+                    if (child.material.emissiveMap) child.material.emissiveMap.dispose();
+                    
+                    // Dispose of the material itself
+                    child.material.dispose();
+                }
+            }
+            
+            // Clear any userData
+            if (child.userData) {
+                // If userData contains Vector3 objects, null them out
+                if (child.userData.initialPos) {
+                    child.userData.initialPos = null;
+                }
+                if (child.userData.direction) {
+                    child.userData.direction = null;
+                }
+                
+                // Clear the userData object
+                child.userData = {};
+            }
+        });
+        
+        // Remove from parent
+        if (this.effect.parent) {
+            this.effect.parent.remove(this.effect);
+        }
+        
+        // Clear references
+        this.effect = null;
+        this.isActive = false;
+        this.distanceTraveled = 0;
+    }
+    
+    /**
+     * Override the reset method to properly clean up all resources
+     */
+    reset() {
+        // Call the dispose method to clean up resources
+        this.dispose();
+        
+        // Reset state variables
+        this.isActive = false;
+        this.elapsedTime = 0;
+        this.distanceTraveled = 0;
+        this.initialPosition.set(0, 0, 0);
+        this.direction.set(0, 0, 0);
     }
 }
