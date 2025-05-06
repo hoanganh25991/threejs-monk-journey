@@ -17,6 +17,8 @@ export class CycloneStrikeEffect extends SkillEffect {
      * @returns {THREE.Group} - The created effect
      */
     create(position, direction) {
+        position = position.clone();
+        position.y -= 3.0;
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
