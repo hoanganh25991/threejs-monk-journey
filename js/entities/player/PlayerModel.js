@@ -118,37 +118,36 @@ export class PlayerModel extends IPlayerModel {
                 adjustmentsLoaded = this.game.uiManager.loadModelAdjustments(this.currentModelId);
             }
             
-            // If no saved adjustments, apply model-specific default positions
+            // If no saved adjustments, apply model-specific default positions from config
             if (!adjustmentsLoaded) {
-                // Apply default position based on model type
-                let defaultPosition = { x: 0, y: 0, z: 0 };
-                let defaultRotation = { x: 0, y: 0, z: 0 };
-                
-                // Set model-specific default positions
-                switch(this.currentModelId) {
-                    case 'knight':
-                        defaultPosition.y = 2.0; // Knight needs to be raised
-                        break;
-                    case 'skeleton':
-                        defaultPosition.y = 0.5; // Skeleton needs slight adjustment
-                        break;
-                    // Add other model-specific defaults as needed
-                }
+                // Get default adjustments from the model configuration
+                const defaultAdjustments = this.currentModel.defaultAdjustments || {
+                    position: { x: 0, y: 0, z: 0 },
+                    rotation: { x: 0, y: 0, z: 0 }
+                };
                 
                 // Apply the default position
-                this.gltfModel.position.set(defaultPosition.x, defaultPosition.y, defaultPosition.z);
-                console.log(`Applied default position: X: ${defaultPosition.x}, Y: ${defaultPosition.y}, Z: ${defaultPosition.z}`);
+                this.gltfModel.position.set(
+                    defaultAdjustments.position.x, 
+                    defaultAdjustments.position.y, 
+                    defaultAdjustments.position.z
+                );
+                console.log(`Applied default position from config: X: ${defaultAdjustments.position.x}, Y: ${defaultAdjustments.position.y}, Z: ${defaultAdjustments.position.z}`);
                 
                 // Apply the default rotation
-                this.gltfModel.rotation.set(defaultRotation.x, defaultRotation.y, defaultRotation.z);
-                console.log(`Applied default rotation: X: ${defaultRotation.x}, Y: ${defaultRotation.y}, Z: ${defaultRotation.z}`);
+                this.gltfModel.rotation.set(
+                    defaultAdjustments.rotation.x, 
+                    defaultAdjustments.rotation.y, 
+                    defaultAdjustments.rotation.z
+                );
+                console.log(`Applied default rotation from config: X: ${defaultAdjustments.rotation.x}, Y: ${defaultAdjustments.rotation.y}, Z: ${defaultAdjustments.rotation.z}`);
                 
                 // Store these defaults in the model's preview property for later reference
                 if (!this.currentModel.preview) {
                     this.currentModel.preview = {};
                 }
-                this.currentModel.preview.position = defaultPosition;
-                this.currentModel.preview.rotation = defaultRotation;
+                this.currentModel.preview.position = { ...defaultAdjustments.position };
+                this.currentModel.preview.rotation = { ...defaultAdjustments.rotation };
             }
 
             // Add the loaded model to our group

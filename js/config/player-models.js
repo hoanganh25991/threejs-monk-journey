@@ -6,7 +6,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/monk.glb',
         description: 'Default monk character model',
         baseScale: 1.3, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
@@ -15,7 +20,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/monk-v2.glb',
         description: 'Enhanced monk character model',
         baseScale: 1.3, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
@@ -24,7 +34,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/knight-of-valor.glb',
         description: 'Valorous knight character model',
         baseScale: 1.5, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 2.0, z: 0 }, // Knight needs to be raised
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
@@ -33,7 +48,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/skeleton-king.glb',
         description: 'Undead skeleton king character model',
         baseScale: 1.0, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0.5, z: 0 }, // Skeleton needs slight adjustment
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
@@ -42,7 +62,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/fantasy-dark-cyborg.glb',
         description: 'Futuristic dark cyborg warrior',
         baseScale: 1.5, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
@@ -51,7 +76,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/scifi-robotskeleton-warrior.glb',
         description: 'Sci-fi robotic skeleton warrior',
         baseScale: 1.5, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
@@ -60,7 +90,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/black-knight.glb',
         description: 'Mysterious black knight warrior',
         baseScale: 1.3, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
@@ -69,7 +104,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/ebon-knight.glb',
         description: 'Powerful ebon knight warrior',
         baseScale: 2.0, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
@@ -78,7 +118,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/link.glb',
         description: 'Heroic adventurer with sword and shield',
         baseScale: 20.0, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
@@ -87,7 +132,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/cartoonish-skeleton-with-a-large-skull.glb',
         description: 'Playful skeleton character with an oversized skull',
         baseScale: 1.5, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
@@ -96,7 +146,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/chibi-songoku.glb',
         description: 'Cute chibi-style warrior with spiky hair',
         baseScale: 1.2, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
@@ -105,7 +160,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/warhammer-orange-crest.glb',
         description: 'Heavily armored knight with distinctive orange crest',
         baseScale: 2.2, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
@@ -114,7 +174,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/dagger-assassin.glb',
         description: 'Stealthy assassin armed with deadly daggers',
         baseScale: 1.4, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
@@ -123,7 +188,12 @@ export const CHARACTER_MODELS = [
         path: 'assets/models/fantasy-aztec-stone.glb',
         description: 'Ancient stone warrior with Aztec-inspired design',
         baseScale: 2.0, // Base scale to fit the model to game world
-        multiplier: 1.0  // Default multiplier (1x size)
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 }
+        }
         // Preview position and rotation are handled dynamically by the adjustment system
     }
 ];

@@ -41,15 +41,13 @@
     - remove the origin file, integrate with new code base
     - move unrelated methods, logic to proper categorized file
 
-
 - [x] Enhance: review Skill.js file and optimize it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
 
-
-- [] Currently we have effect as:
+- [x] Currently we have effect as:
     - Wave Strike (Ranged)
     - Cyclone Strike (AoE)
     - Wave of Light (Wave)
@@ -61,10 +59,6 @@
     - Exploding Palm (Mark)
 
     help me rename effect match exactly with the skill name,ex: WaveStrikeEffect, instead of RangedEffect
-
-- [] Enhance: refactor playSound by let the sound at config/skills.js file
-    add missing sound, all skills when cast should have sound
-    add sound to effect if needed, effect-start, effect-end,...
 
 - [ ] Enhance: we have config player-models.js to control the dynamic adjust of model to stay on-top of the ground. We should not have the switch case on the PlayerModel.js, help me move it to config:
 //  PlayerModel.js code not correct
@@ -83,6 +77,10 @@ if (!adjustmentsLoaded) {
             break;
         // Add other model-specific defaults as needed
 }
+
+- [] Enhance: refactor playSound by let the sound at config/skills.js file
+    add missing sound, all skills when cast should have sound
+    add sound to effect if needed, effect-start, effect-end,...
 
 - [ ] Enhance: review Enemy.js file and optimize it:
     - remove unused method
