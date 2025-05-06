@@ -4,7 +4,7 @@
  */
 
 const CACHE_NAME = 'diablo-immortal-cache';
-const CACHE_VERSION = '8';
+const CACHE_VERSION = '9';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 const ASSETS_TO_CACHE = [
@@ -12,7 +12,9 @@ const ASSETS_TO_CACHE = [
   'index.html',
   'manifest.json',
   'css/style.css',
-  'js/config.js',
+  'js/config/index.js',
+  'js/config/player-models.js',
+  'js/config/skills.js',
   'js/core/AudioManager.js',
   'js/core/CollisionManager.js',
   'js/core/DifficultyManager.js',
@@ -24,6 +26,7 @@ const ASSETS_TO_CACHE = [
   'js/core/SaveManager.js',
   'js/entities/Enemy.js',
   'js/entities/EnemyManager.js',
+  'js/entities/player/FallbackPlayerModel.js',
   'js/entities/player/Player.js',
   'js/entities/player/PlayerCombat.js',
   'js/entities/player/PlayerInterface.js',
@@ -45,6 +48,7 @@ const ASSETS_TO_CACHE = [
   'js/entities/skills/TeleportSkillEffect.js',
   'js/entities/skills/WaveSkillEffect.js',
   'js/main.js',
+  'js/ui/ModelPreview.js',
   'js/world/WorldManager.js',
   'js/world/environment/Bush.js',
   'js/world/environment/EnvironmentManager.js',

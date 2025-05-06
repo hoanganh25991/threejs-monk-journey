@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { IPlayerModel } from './PlayerInterface.js';
 import { FallbackPlayerModel } from './FallbackPlayerModel.js';
-import { CHARACTER_MODELS, DEFAULT_CHARACTER_MODEL } from '../../config.js';
+import { CHARACTER_MODELS, DEFAULT_CHARACTER_MODEL } from '../../config/index.js';
 
 export class PlayerModel extends IPlayerModel {
     constructor(scene) {
@@ -261,6 +261,7 @@ export class PlayerModel extends IPlayerModel {
         
         if (this.modelGroup) {
             this.modelGroup.position.copy(position);
+            console.log("PlayerModel: Position updated to:", this.modelGroup.position);
         }
     }
     
@@ -272,6 +273,7 @@ export class PlayerModel extends IPlayerModel {
         
         if (this.modelGroup) {
             this.modelGroup.rotation.y = rotation.y;
+            console.log("PlayerModel: Rotation updated to:", this.modelGroup.rotation.y);
         }
     }
     

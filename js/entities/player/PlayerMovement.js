@@ -57,16 +57,17 @@ export class PlayerMovement extends IPlayerMovement {
                 this.position.x = newPosition.x;
                 this.position.z = newPosition.z;
                 
-                // Update model position
+                // Update model position - use the full position vector to ensure proper update
                 if (this.modelGroup) {
-                    this.modelGroup.position.x = this.position.x;
-                    this.modelGroup.position.z = this.position.z;
+                    this.modelGroup.position.set(this.position.x, this.modelGroup.position.y, this.position.z);
+                    console.log("Model position updated to:", this.modelGroup.position);
                 }
                 
                 // Update rotation to face movement direction
                 this.rotation.y = Math.atan2(direction.x, direction.z);
                 if (this.modelGroup) {
                     this.modelGroup.rotation.y = this.rotation.y;
+                    console.log("Model rotation updated to:", this.rotation.y);
                 }
             } else {
                 // Reached target
@@ -100,16 +101,17 @@ export class PlayerMovement extends IPlayerMovement {
             this.position.x = newPosition.x;
             this.position.z = newPosition.z;
             
-            // Update model position
+            // Update model position - use the full position vector to ensure proper update
             if (this.modelGroup) {
-                this.modelGroup.position.x = this.position.x;
-                this.modelGroup.position.z = this.position.z;
+                this.modelGroup.position.set(this.position.x, this.modelGroup.position.y, this.position.z);
+                console.log("Keyboard movement - Model position updated to:", this.modelGroup.position);
             }
             
             // Update rotation to face movement direction
             this.rotation.y = Math.atan2(direction.x, direction.z);
             if (this.modelGroup) {
                 this.modelGroup.rotation.y = this.rotation.y;
+                console.log("Keyboard movement - Model rotation updated to:", this.rotation.y);
             }
             
             // Set moving state
@@ -138,9 +140,10 @@ export class PlayerMovement extends IPlayerMovement {
                 this.position.y = targetHeight;
             }
             
-            // Update model position
+            // Update model position - use the full position vector to ensure proper update
             if (this.modelGroup) {
-                this.modelGroup.position.y = this.position.y;
+                this.modelGroup.position.set(this.position.x, this.position.y, this.position.z);
+                console.log("Terrain height - Model position updated to:", this.modelGroup.position);
             }
         }
     }
@@ -202,9 +205,10 @@ export class PlayerMovement extends IPlayerMovement {
         // Update position
         this.position.set(x, y, z);
         
-        // Update model position (if it exists)
+        // Update model position (if it exists) - use the full position vector to ensure proper update
         if (this.modelGroup) {
-            this.modelGroup.position.copy(this.position);
+            this.modelGroup.position.set(x, y, z);
+            console.log("setPosition - Model position updated to:", this.modelGroup.position);
         }
     }
     

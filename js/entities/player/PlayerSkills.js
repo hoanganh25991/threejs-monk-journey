@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { Skill } from '../skills/Skill.js';
 import { IPlayerSkills } from './PlayerInterface.js';
 import { SkillEffectFactory } from '../skills/SkillEffectFactory.js';
-import { SKILLS } from '../../config.js';
+import { SKILLS } from '../../config/index.js';
 
 export class PlayerSkills extends IPlayerSkills {
     constructor(scene, playerStats, playerPosition, playerRotation) {
@@ -31,7 +31,7 @@ export class PlayerSkills extends IPlayerSkills {
     }
     
     initializeSkills() {
-        // Initialize monk skills using the configuration from config.js
+        // Initialize monk skills using the configuration from config/index.js
         this.skills = SKILLS.map(skillConfig => new Skill(skillConfig));
     }
     

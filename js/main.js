@@ -1,8 +1,12 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Game } from './core/Game.js';
 import { ModelPreview } from './ui/ModelPreview.js';
-import { CHARACTER_MODELS, MODEL_SIZE_MULTIPLIERS } from './config.js';
+import { CHARACTER_MODELS, MODEL_SIZE_MULTIPLIERS, DEFAULT_CHARACTER_MODEL } from './config/index.js';
+
+// Store the selected model and size for use when starting a new game
+// Make these variables available globally for the Game class to access
+window.selectedModelId = DEFAULT_CHARACTER_MODEL;
+window.selectedSizeMultiplier = 1.0;
 
 // Initialize the game when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -485,11 +489,15 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
         modelPreview = new ModelPreview(previewContainer);
         
         // Load the current model
-        const selectedModelId = modelSelect.value;
-        const selectedModel = CHARACTER_MODELS.find(m => m.id === selectedModelId);
+        const modelId = modelSelect.value;
+        const selectedModel = CHARACTER_MODELS.find(m => m.id === modelId);
         if (selectedModel) {
+            // Store the initial values
+            window.selectedModelId = modelId;
+            window.selectedSizeMultiplier = parseFloat(sizeSelect.value);
+            
             const baseScale = selectedModel.baseScale;
-            const multiplier = parseFloat(sizeSelect.value);
+            const multiplier = window.selectedSizeMultiplier;
             const effectiveScale = baseScale * multiplier;
             modelPreview.loadModel(selectedModel.path, effectiveScale);
         }
@@ -497,10 +505,13 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
     
     // Add change event for model selection
     modelSelect.addEventListener('change', () => {
-        const selectedModelId = modelSelect.value;
-        const selectedModel = CHARACTER_MODELS.find(m => m.id === selectedModelId);
+        const modelId = modelSelect.value;
+        const selectedModel = CHARACTER_MODELS.find(m => m.id === modelId);
         
         if (selectedModel && modelPreview) {
+            // Store the selected model ID for use when starting a new game
+            window.selectedModelId = modelId;
+            
             // Update preview
             const baseScale = selectedModel.baseScale;
             const multiplier = parseFloat(sizeSelect.value);
@@ -520,10 +531,13 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
     // Add change event for size multiplier
     sizeSelect.addEventListener('change', () => {
         const multiplier = parseFloat(sizeSelect.value);
-        const selectedModelId = modelSelect.value;
-        const selectedModel = CHARACTER_MODELS.find(m => m.id === selectedModelId);
+        const modelId = modelSelect.value;
+        const selectedModel = CHARACTER_MODELS.find(m => m.id === modelId);
         
         if (selectedModel && modelPreview) {
+            // Store the selected size multiplier for use when starting a new game
+            window.selectedSizeMultiplier = multiplier;
+            
             // Update preview
             const baseScale = selectedModel.baseScale;
             const effectiveScale = baseScale * multiplier;

@@ -103,6 +103,14 @@ export class Game {
         this.player.setGame(this);
         await this.player.init();
         
+        // Apply selected model and size if available from main.js
+        if (window.selectedModelId) {
+            await this.player.model.setModel(window.selectedModelId);
+        }
+        if (window.selectedSizeMultiplier) {
+            this.player.model.setSizeMultiplier(window.selectedSizeMultiplier);
+        }
+        
         // Ensure game reference is set after initialization
         this.player.setGame(this);
         

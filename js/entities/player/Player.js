@@ -54,6 +54,8 @@ export class Player extends IPlayer {
             this.combat.setGame(this.game);
         }
         
+        console.log("Player initialized with model group:", this.model.getModelGroup());
+        
         return true;
     }
     
@@ -94,6 +96,14 @@ export class Player extends IPlayer {
         
         // Update animations
         this.model.updateAnimations(delta, this.state);
+        
+        // Sync model position with movement position
+        const currentPosition = this.movement.getPosition();
+        this.model.setPosition(currentPosition);
+        
+        // Sync model rotation with movement rotation
+        const currentRotation = this.movement.getRotation();
+        this.model.setRotation(currentRotation);
         
         // Update combo punch system
         this.combat.updateComboPunch(delta);
