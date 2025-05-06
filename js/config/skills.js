@@ -71,15 +71,16 @@ export const SKILLS = [
     },
     {
         name: 'Mystic Ally',
-        description: 'Summon a spirit ally to fight alongside you',
+        description: 'Summon spirit allies to fight alongside you',
         type: 'summon',
-        damage: 8,
+        damage: 12,
         manaCost: 35,
         cooldown: 0.5, // Reduced cooldown
-        range: 2,
-        radius: 1,
-        duration: 20, // Further increased duration from 15 to 20
+        range: 5, // Increased range for summoning
+        radius: 10, // Increased radius for summoning circle
+        duration: 10, // Increased duration to 30 seconds
         color: 0x00ffff,
+        allyCount: 2, // Number of allies to summon
         sounds: {
             cast: 'skillMysticAlly', // Mystical summoning incantation
             impact: 'allySummonComplete', // Sound of ally materializing

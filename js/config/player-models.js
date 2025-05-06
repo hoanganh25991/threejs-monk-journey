@@ -209,6 +209,36 @@ export const CHARACTER_MODELS = [
             heightOffset: 1.0 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
+    },
+    {
+        id: 'barbarian',
+        name: 'Barbarian',
+        path: 'assets/models/barbarian.glb',
+        description: 'Powerful barbarian warrior with brute strength',
+        baseScale: 1.5, // Base scale to fit the model to game world
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.0 // Default height offset for movement
+        }
+        // Preview position and rotation are handled dynamically by the adjustment system
+    },
+    {
+        id: 'angel',
+        name: 'Angel',
+        path: 'assets/models/angel.glb',
+        description: 'Divine angel with celestial powers',
+        baseScale: 1.8, // Base scale to fit the model to game world
+        multiplier: 1.0,  // Default multiplier (1x size)
+        // Default position and rotation adjustments
+        defaultAdjustments: {
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.0 // Default height offset for movement
+        }
+        // Preview position and rotation are handled dynamically by the adjustment system
     }
 ];
 
