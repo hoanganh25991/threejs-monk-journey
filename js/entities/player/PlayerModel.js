@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { IPlayerModel } from './PlayerInterface.js';
 import { FallbackPlayerModel } from './FallbackPlayerModel.js';
+import { CHARACTER_MODELS, DEFAULT_CHARACTER_MODEL } from '../../config.js';
 
 export class PlayerModel extends IPlayerModel {
     constructor(scene) {
@@ -21,9 +22,25 @@ export class PlayerModel extends IPlayerModel {
         this.fallbackModel = null;
         this.usingFallbackModel = false;
         
+        // Get default model configuration
+        this.currentModelId = DEFAULT_CHARACTER_MODEL;
+        this.currentModel = this.getModelConfig(this.currentModelId);
+        
         // Configuration options
-        this.modelScale = 1.3; // Scale factor for the model
-        this.modelPath = 'assets/models/monk.glb'; // Path to the 3D model
+        this.baseScale = this.currentModel.baseScale; // Base scale factor for the model
+        this.sizeMultiplier = this.currentModel.multiplier; // Size multiplier
+        this.modelScale = this.baseScale * this.sizeMultiplier; // Effective scale
+        this.modelPath = this.currentModel.path; // Path to the 3D model
+    }
+    
+    /**
+     * Get model configuration by ID
+     * @param {string} modelId - The ID of the model to get
+     * @returns {Object} The model configuration
+     */
+    getModelConfig(modelId) {
+        const model = CHARACTER_MODELS.find(m => m.id === modelId);
+        return model || CHARACTER_MODELS.find(m => m.id === DEFAULT_CHARACTER_MODEL);
     }
     
     async createModel() {
@@ -88,6 +105,7 @@ export class PlayerModel extends IPlayerModel {
             }
             
             // Scale and position the model appropriately
+            // Apply the effective scale (baseScale * sizeMultiplier)
             this.gltfModel.scale.set(
                 this.modelScale, 
                 this.modelScale, 
@@ -252,23 +270,97 @@ export class PlayerModel extends IPlayerModel {
     }
     
     /**
-     * Set the scale of the model
-     * @param {number} scale - Scale factor to apply to the model
+     * Set the base scale of the model
+     * @param {number} scale - Base scale factor to apply to the model
      */
-    setModelScale(scale) {
-        this.modelScale = scale;
+    setBaseScale(scale) {
+        this.baseScale = scale;
+        this.updateEffectiveScale();
+        console.log(`Model base scale set to: ${scale}`);
+    }
+    
+    /**
+     * Set the size multiplier of the model
+     * @param {number} multiplier - Size multiplier to apply to the model
+     */
+    setSizeMultiplier(multiplier) {
+        this.sizeMultiplier = multiplier;
+        this.updateEffectiveScale();
+        console.log(`Model size multiplier set to: ${multiplier}x`);
+    }
+    
+    /**
+     * Update the effective scale based on base scale and multiplier
+     */
+    updateEffectiveScale() {
+        this.modelScale = this.baseScale * this.sizeMultiplier;
         
         // Apply the new scale if the model is loaded
         if (this.gltfModel) {
-            this.gltfModel.scale.set(scale, scale, scale);
+            this.gltfModel.scale.set(
+                this.modelScale, 
+                this.modelScale, 
+                this.modelScale
+            );
         }
         
-        console.log(`Model scale set to: ${scale}`);
+        console.log(`Model effective scale updated to: ${this.modelScale}`);
+    }
+    
+    /**
+     * Set the model by ID
+     * @param {string} modelId - ID of the model to set
+     * @returns {Promise<boolean>} - True if model was changed successfully
+     */
+    async setModel(modelId) {
+        // Get the model configuration
+        const modelConfig = this.getModelConfig(modelId);
+        if (!modelConfig) {
+            console.error(`Model with ID ${modelId} not found`);
+            return false;
+        }
+        
+        // Update model properties
+        this.currentModelId = modelId;
+        this.currentModel = modelConfig;
+        this.modelPath = modelConfig.path;
+        this.baseScale = modelConfig.baseScale;
+        
+        // Keep the current multiplier
+        this.updateEffectiveScale();
+        
+        console.log(`Model set to: ${modelConfig.name} (${modelId})`);
+        
+        // Remove the current model from the scene
+        if (this.modelGroup) {
+            this.scene.remove(this.modelGroup);
+        }
+        
+        // Create the new model
+        await this.createModel();
+        return true;
+    }
+    
+    /**
+     * Get the current model ID
+     * @returns {string} The current model ID
+     */
+    getCurrentModelId() {
+        return this.currentModelId;
+    }
+    
+    /**
+     * Get the current size multiplier
+     * @returns {number} The current size multiplier
+     */
+    getCurrentSizeMultiplier() {
+        return this.sizeMultiplier;
     }
     
     /**
      * Set the path to the 3D model
      * @param {string} path - Path to the 3D model file
+     * @deprecated Use setModel instead
      */
     setModelPath(path) {
         this.modelPath = path;

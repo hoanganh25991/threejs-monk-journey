@@ -18,6 +18,7 @@
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
     - remove the origin file, integrate with new code base
+    - move unrelated methods, logic to proper categorized file
 - [x] Enhance: manage memory leak, manage object better to achieve fast render 60 FPS, add memory usage in MB also
 - [x] Fix issue: change currentQuality to lower like medium, minimal, but the FPS not increase???, the "high" option is good enough, but the game really blur. I want "medium" is good to play already, help me update the division of threshold better.
 - [x] Enhance: auto pause music in background, specially on phone, when i don't play the game
@@ -32,15 +33,16 @@
 
 - [x] ~~Fix issue: ParticleManager.js has dispose method, is it should be called by PerformanceManager.js, i dont see where this method called~~
 
-- [x] Enhance: review Player.js file and optimise it:
+- [x] Enhance: review Player.js file and optimize it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
     - remove the origin file, integrate with new code base
+    - move unrelated methods, logic to proper categorized file
 
 
-- [x] Enhance: review Skill.js file and optimise it:
+- [x] Enhance: review Skill.js file and optimize it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
@@ -61,7 +63,7 @@
 
 
 
-- [ ] Enhance: review Enemy.js file and optimise it:
+- [ ] Enhance: review Enemy.js file and optimize it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
@@ -80,31 +82,34 @@
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
 
-- [ ] Enhance: review main.js file and optimise it:
+- [ ] Enhance: review main.js file and optimize it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
     - remove the origin file, integrate with new code base
+    - move unrelated methods, logic to proper categorized file
 
-- [ ] Enhance: review Game.js file and optimise it:
+- [ ] Enhance: review Game.js file and optimize it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
     - remove the origin file, integrate with new code base
+    - move unrelated methods, logic to proper categorized file
 
-- [ ] Enhance: review PerformanceManager.js file and optimise it:
+- [ ] Enhance: review PerformanceManager.js file and optimize it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
     - remove the origin file, integrate with new code base
+    - move unrelated methods, logic to proper categorized file
 
 - [] Enhance: PerformanceManager.js should not render UI directly with DOM manipulation, it should expose the DTO only, let HUDManager handle actual render.
 
 
-- [ ] Enhance: review HUDManager.js file and optimise it:
+- [ ] Enhance: review HUDManager.js file and optimize it:
     - Remove unused methods.
     - Remove duplicate methods.
     - Define common methods for shared use.

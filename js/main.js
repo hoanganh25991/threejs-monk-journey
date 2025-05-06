@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Game } from './core/Game.js';
+import { ModelPreview } from './ui/ModelPreview.js';
+import { CHARACTER_MODELS, MODEL_SIZE_MULTIPLIERS } from './config.js';
 
 // Initialize the game when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -407,6 +409,153 @@ function showOptionsMenu(game, mainMenu, fromInGame = false) {
     difficultyContainer.appendChild(difficultyLabel);
     difficultyContainer.appendChild(difficultySelect);
     optionsMenu.appendChild(difficultyContainer);
+    
+    // Character model settings
+    const characterTitle = document.createElement('h2');
+    characterTitle.textContent = 'Character Model';
+    characterTitle.style.color = '#fff';
+    characterTitle.style.fontSize = '24px';
+    characterTitle.style.marginTop = '20px';
+    optionsMenu.appendChild(characterTitle);
+    
+    // Create model preview container
+    const previewContainer = document.createElement('div');
+    previewContainer.style.width = '300px';
+    previewContainer.style.margin = '10px auto';
+    previewContainer.style.border = '1px solid #444';
+    previewContainer.style.borderRadius = '5px';
+    optionsMenu.appendChild(previewContainer);
+    
+    // Create model preview
+    let modelPreview = null;
+    
+    // Model selector
+    const modelContainer = document.createElement('div');
+    modelContainer.style.margin = '10px 0';
+    
+    const modelLabel = document.createElement('label');
+    modelLabel.textContent = 'Character Model: ';
+    modelLabel.style.color = '#fff';
+    
+    const modelSelect = document.createElement('select');
+    modelSelect.style.padding = '5px';
+    modelSelect.style.marginLeft = '10px';
+    
+    // Add model options
+    CHARACTER_MODELS.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.id;
+        option.textContent = model.name;
+        option.title = model.description;
+        modelSelect.appendChild(option);
+    });
+    
+    // Set current model
+    if (game.player && game.player.model) {
+        modelSelect.value = game.player.model.getCurrentModelId();
+    }
+    
+    // Size multiplier selector
+    const sizeContainer = document.createElement('div');
+    sizeContainer.style.margin = '10px 0';
+    
+    const sizeLabel = document.createElement('label');
+    sizeLabel.textContent = 'Size Multiplier: ';
+    sizeLabel.style.color = '#fff';
+    
+    const sizeSelect = document.createElement('select');
+    sizeSelect.style.padding = '5px';
+    sizeSelect.style.marginLeft = '10px';
+    
+    // Add size multiplier options
+    MODEL_SIZE_MULTIPLIERS.forEach(multiplier => {
+        const option = document.createElement('option');
+        option.value = multiplier.value;
+        option.textContent = multiplier.label;
+        sizeSelect.appendChild(option);
+    });
+    
+    // Set current size multiplier
+    if (game.player && game.player.model) {
+        const currentMultiplier = game.player.model.getCurrentSizeMultiplier();
+        sizeSelect.value = currentMultiplier;
+    }
+    
+    // Initialize model preview
+    setTimeout(() => {
+        // Create model preview after a short delay to ensure the container is in the DOM
+        modelPreview = new ModelPreview(previewContainer);
+        
+        // Load the current model
+        const selectedModelId = modelSelect.value;
+        const selectedModel = CHARACTER_MODELS.find(m => m.id === selectedModelId);
+        if (selectedModel) {
+            const baseScale = selectedModel.baseScale;
+            const multiplier = parseFloat(sizeSelect.value);
+            const effectiveScale = baseScale * multiplier;
+            modelPreview.loadModel(selectedModel.path, effectiveScale);
+        }
+    }, 100);
+    
+    // Add change event for model selection
+    modelSelect.addEventListener('change', () => {
+        const selectedModelId = modelSelect.value;
+        const selectedModel = CHARACTER_MODELS.find(m => m.id === selectedModelId);
+        
+        if (selectedModel && modelPreview) {
+            // Update preview
+            const baseScale = selectedModel.baseScale;
+            const multiplier = parseFloat(sizeSelect.value);
+            const effectiveScale = baseScale * multiplier;
+            modelPreview.loadModel(selectedModel.path, effectiveScale);
+            
+            // Update player model if game is running
+            if (game.player && game.player.model) {
+                game.player.model.setModel(selectedModelId).then(() => {
+                    // After model is loaded, apply the size multiplier
+                    game.player.model.setSizeMultiplier(multiplier);
+                });
+            }
+        }
+    });
+    
+    // Add change event for size multiplier
+    sizeSelect.addEventListener('change', () => {
+        const multiplier = parseFloat(sizeSelect.value);
+        const selectedModelId = modelSelect.value;
+        const selectedModel = CHARACTER_MODELS.find(m => m.id === selectedModelId);
+        
+        if (selectedModel && modelPreview) {
+            // Update preview
+            const baseScale = selectedModel.baseScale;
+            const effectiveScale = baseScale * multiplier;
+            modelPreview.loadModel(selectedModel.path, effectiveScale);
+            
+            // Update player model if game is running
+            if (game.player && game.player.model) {
+                game.player.model.setSizeMultiplier(multiplier);
+            }
+        }
+    });
+    
+    // Add model selector to container
+    modelContainer.appendChild(modelLabel);
+    modelContainer.appendChild(modelSelect);
+    optionsMenu.appendChild(modelContainer);
+    
+    // Add size multiplier selector to container
+    sizeContainer.appendChild(sizeLabel);
+    sizeContainer.appendChild(sizeSelect);
+    optionsMenu.appendChild(sizeContainer);
+    
+    // Add note about model changes
+    const modelNote = document.createElement('p');
+    modelNote.textContent = 'Note: Model changes will take effect immediately.';
+    modelNote.style.color = '#aaa';
+    modelNote.style.fontSize = '12px';
+    modelNote.style.margin = '5px 0 20px 0';
+    modelNote.style.fontStyle = 'italic';
+    optionsMenu.appendChild(modelNote);
     
     // Audio settings
     const audioTitle = document.createElement('h2');
