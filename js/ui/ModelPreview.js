@@ -30,9 +30,10 @@ export class ModelPreview {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x111111);
         
-        // Create camera
+        // Create camera with wider field of view for better model visibility
         this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.1, 1000);
-        this.camera.position.set(0, 1.5, 4);
+        // Position camera further back (z-axis) and slightly higher (y-axis) to see the whole model
+        this.camera.position.set(0, 2.0, 6.0); // Zoomed out by 1.5x from original z=4 position
         
         // Create renderer
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -44,12 +45,15 @@ export class ModelPreview {
         // Add renderer to container
         this.container.appendChild(this.renderer.domElement);
         
-        // Add orbit controls
+        // Add orbit controls with enhanced settings for better model viewing
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
-        this.controls.minDistance = 2;
-        this.controls.maxDistance = 10;
+        this.controls.minDistance = 3; // Increased minimum distance to prevent clipping into model
+        this.controls.maxDistance = 12; // Increased maximum distance for better zooming capability
+        this.controls.enablePan = true; // Allow panning for better positioning
+        this.controls.autoRotate = false; // Can be enabled for automatic rotation
+        this.controls.autoRotateSpeed = 1.0; // Speed of auto-rotation if enabled
         
         // Add lights
         this.addLights();
@@ -170,6 +174,15 @@ export class ModelPreview {
         // Position the model so it's standing on the ground
         const size = box.getSize(new THREE.Vector3());
         this.model.position.y = -box.min.y;
+        
+        // Adjust camera position based on model size if needed
+        const maxDimension = Math.max(size.x, size.y, size.z);
+        if (maxDimension > 4) {
+            // For larger models, move camera back proportionally
+            const distanceFactor = maxDimension / 4;
+            this.camera.position.z = Math.min(15, 6.0 * distanceFactor);
+            this.camera.updateProjectionMatrix();
+        }
     }
     
     animate() {
@@ -184,10 +197,11 @@ export class ModelPreview {
             this.mixer.update(delta);
         }
         
-        // Rotate model slowly if it exists
-        if (this.model) {
-            this.model.rotation.y += 0.005;
-        }
+        // Manual model rotation is now optional since we have auto-rotation in controls
+        // We'll keep this commented out as we're using OrbitControls.autoRotate instead
+        // if (this.model && !this.controls.autoRotate) {
+        //     this.model.rotation.y += 0.005;
+        // }
         
         // Render scene
         this.renderer.render(this.scene, this.camera);
@@ -203,6 +217,35 @@ export class ModelPreview {
         
         // Update renderer size
         this.renderer.setSize(width, height);
+    }
+    
+    /**
+     * Toggle auto-rotation of the model
+     * @param {boolean} enabled - Whether auto-rotation should be enabled
+     */
+    toggleAutoRotation(enabled) {
+        if (this.controls) {
+            this.controls.autoRotate = enabled;
+        }
+    }
+    
+    /**
+     * Set the rotation speed of the model
+     * @param {number} speed - Rotation speed (default is 1.0)
+     */
+    setRotationSpeed(speed) {
+        if (this.controls) {
+            this.controls.autoRotateSpeed = speed;
+        }
+    }
+    
+    /**
+     * Reset camera to default position
+     */
+    resetCamera() {
+        this.camera.position.set(0, 2.0, 6.0);
+        this.camera.lookAt(0, 0, 0);
+        this.controls.reset();
     }
     
     dispose() {
