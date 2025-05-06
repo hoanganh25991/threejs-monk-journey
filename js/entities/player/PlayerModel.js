@@ -20,7 +20,7 @@ export class PlayerModel extends IPlayerModel {
         
         // Configuration options
         this.modelScale = 1.2; // Scale factor for the model (1/100 of original size)
-        this.modelPath = 'assets/models/chinese_warrior_monk.glb'; // Path to the 3D model
+        this.modelPath = 'assets/models/monk.glb'; // Path to the 3D model
     }
     
     async createModel() {
