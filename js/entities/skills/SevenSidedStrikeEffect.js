@@ -125,7 +125,7 @@ export class SevenSidedStrikeEffect extends SkillEffect {
         const strikePoints = [];
         const radius = this.skill.radius || 5;
         
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < this.skill.hits; i++) {
             const angle = (i / 7) * Math.PI * 2;
             const x = Math.cos(angle) * radius;
             const z = Math.sin(angle) * radius;
@@ -162,7 +162,7 @@ export class SevenSidedStrikeEffect extends SkillEffect {
         
         const vortex = new THREE.Mesh(vortexGeometry, vortexMaterial);
         vortex.rotation.x = -Math.PI / 2; // Lay flat
-        vortex.position.y = 0.05; // Slightly above ground
+        vortex.position.y = -2.5; // On the ground
         
         // Store rotation data for animation
         vortex.userData = {
@@ -174,7 +174,7 @@ export class SevenSidedStrikeEffect extends SkillEffect {
         // Store animation state
         this.sevenSidedStrikeState = {
             currentStrike: -1,
-            strikeDuration: this.skill.duration / this.skill.hits / 10,
+            strikeDuration: this.skill.duration / this.skill.hits / 5 ,
             strikeTimer: 0,
             vortex: vortex,
             monkTemplate: monkGroup,
@@ -222,7 +222,7 @@ export class SevenSidedStrikeEffect extends SkillEffect {
         const newStrikeIndex = Math.floor(this.elapsedTime / this.sevenSidedStrikeState.strikeDuration);
         
         // If we've moved to a new strike
-        if (newStrikeIndex !== this.sevenSidedStrikeState.currentStrike && newStrikeIndex < this.skill.hits) {
+        if (newStrikeIndex !== this.sevenSidedStrikeState.currentStrike) {
             // Update current strike index
             this.sevenSidedStrikeState.currentStrike = newStrikeIndex;
             this.sevenSidedStrikeState.strikeTimer = 0;

@@ -43,7 +43,7 @@ export const SKILLS = [
         cooldown: 0.5, // Reduced cooldown
         range: 6,
         radius: 10,
-        duration: 5.0, // Further increased duration from 3.5 to 5.0
+        duration: 2.5,
         color: 0xff0000,
         hits: 7,
         sounds: {
