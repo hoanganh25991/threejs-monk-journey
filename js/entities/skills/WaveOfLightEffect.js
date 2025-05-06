@@ -310,6 +310,11 @@ export class WaveOfLightEffect extends SkillEffect {
                     this.bellState.phase = 'impact';
                     this.bellState.impactTime = 0;
                     
+                    // Play bell ring sound
+                    if (this.skill && this.skill.game && this.skill.game.audioManager) {
+                        this.skill.playSound('impact');
+                    }
+                    
                     // Make impact area visible and expand it
                     impactArea.material.opacity = 0.7;
                     impactArea.scale.set(0.1, 0.1, 0.1); // Start small

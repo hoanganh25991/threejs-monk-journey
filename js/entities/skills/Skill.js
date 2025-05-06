@@ -22,6 +22,13 @@ export class Skill {
         this.color = config.color || 0xffffff;
         this.hits = config.hits || 1;
         
+        // Sound configuration
+        this.sounds = config.sounds || {
+            cast: null,
+            impact: null,
+            end: null
+        };
+        
         // Skill state
         this.currentCooldown = 0;
         this.isActive = false;
@@ -114,6 +121,9 @@ export class Skill {
             // Use a default direction
             this.direction.set(0, 0, 1);
         }
+        
+        // Play the cast sound
+        this.playSound('cast');
         
         // Create effect using the effect handler
         try {
@@ -253,6 +263,22 @@ export class Skill {
      */
     getRadius() {
         return this.radius;
+    }
+    
+    /**
+     * Play a sound associated with this skill
+     * @param {string} type - The type of sound to play ('cast', 'impact', or 'end')
+     * @returns {boolean} - Whether the sound was played successfully
+     */
+    playSound(type) {
+        if (!this.game || !this.game.audioManager) return false;
+        
+        const soundName = this.sounds && this.sounds[type];
+        if (soundName) {
+            return this.game.audioManager.playSound(soundName);
+        }
+        
+        return false;
     }
     
     /**

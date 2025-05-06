@@ -88,6 +88,10 @@ export class AudioManager {
         this.sounds.skillWaveOfLight = this.createSound('skillWaveOfLight', 'wave_of_light.mp3', 0.9);
         this.sounds.skillExplodingPalm = this.createSound('skillExplodingPalm', 'exploding_palm.mp3', 0.8);
         
+        // Skill effect sounds
+        this.sounds.bellRing = this.createSound('bellRing', 'bell_ring.mp3', 0.9);
+        this.sounds.explosion = this.createSound('explosion', 'explosion.mp3', 0.8);
+        
         // Enemy sounds
         this.sounds.enemyAttack = this.createSound('enemyAttack', 'enemy_attack.mp3', 0.6);
         this.sounds.enemyHit = this.createSound('enemyHit', 'enemy_hit.mp3', 0.7);
@@ -127,6 +131,10 @@ export class AudioManager {
         this.sounds.skillMysticAlly = this.createSimulatedSound('skillMysticAlly', 260, 0.7, 0.5);
         this.sounds.skillWaveOfLight = this.createSimulatedSound('skillWaveOfLight', 220, 0.9, 0.6);
         this.sounds.skillExplodingPalm = this.createSimulatedSound('skillExplodingPalm', 300, 0.8, 0.4);
+        
+        // Skill effect sounds
+        this.sounds.bellRing = this.createSimulatedSound('bellRing', 600, 0.9, 0.7);
+        this.sounds.explosion = this.createSimulatedSound('explosion', 120, 0.8, 0.5);
         
         // Enemy sounds
         this.sounds.enemyAttack = this.createSimulatedSound('enemyAttack', 200, 0.6, 0.2);

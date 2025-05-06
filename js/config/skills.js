@@ -10,7 +10,12 @@ export const SKILLS = [
         range: 25,
         radius: 2,
         duration: 3.5, // Further increased duration from 2.5 to 3.5
-        color: 0x00ffff
+        color: 0x00ffff,
+        sounds: {
+            cast: 'skillWaveStrike',
+            impact: 'enemyHit',
+            end: null
+        }
     },
     {
         name: 'Cyclone Strike',
@@ -22,7 +27,12 @@ export const SKILLS = [
         range: 5,
         radius: 4,
         duration: 2.5, // Further increased duration from 1.5 to 2.5
-        color: 0xffcc00
+        color: 0xffcc00,
+        sounds: {
+            cast: 'skillCycloneStrike',
+            impact: 'enemyHit',
+            end: null
+        }
     },
     {
         name: 'Seven-Sided Strike',
@@ -35,7 +45,12 @@ export const SKILLS = [
         radius: 10,
         duration: 5.0, // Further increased duration from 3.5 to 5.0
         color: 0xff0000,
-        hits: 7
+        hits: 7,
+        sounds: {
+            cast: 'skillSevenSidedStrike',
+            impact: 'enemyHit',
+            end: null
+        }
     },
     {
         name: 'Inner Sanctuary',
@@ -47,7 +62,12 @@ export const SKILLS = [
         range: 0,
         radius: 5,
         duration: 10, // Further increased duration from 7 to 10
-        color: 0xffffff
+        color: 0xffffff,
+        sounds: {
+            cast: 'skillInnerSanctuary',
+            impact: null,
+            end: null
+        }
     },
     {
         name: 'Mystic Ally',
@@ -59,7 +79,12 @@ export const SKILLS = [
         range: 2,
         radius: 1,
         duration: 20, // Further increased duration from 15 to 20
-        color: 0x00ffff
+        color: 0x00ffff,
+        sounds: {
+            cast: 'skillMysticAlly',
+            impact: null,
+            end: null
+        }
     },
     {
         name: 'Wave of Light',
@@ -71,7 +96,12 @@ export const SKILLS = [
         range: 25,
         radius: 5,
         duration: 5.0, // Further increased duration from 3.5 to 5.0
-        color: 0xffdd22 // Golden color for the bell's light
+        color: 0xffdd22, // Golden color for the bell's light
+        sounds: {
+            cast: 'skillWaveOfLight',
+            impact: 'bellRing', // New sound for bell impact
+            end: null
+        }
     },
     {
         name: 'Exploding Palm',
@@ -83,7 +113,12 @@ export const SKILLS = [
         range: 30,
         radius: 5,
         duration: 5, // Further increased duration from 15 to 20 seconds
-        color: 0xff3333
+        color: 0xff3333,
+        sounds: {
+            cast: 'skillExplodingPalm',
+            impact: 'enemyHit',
+            end: 'explosion'
+        }
     },
     {
         name: 'Fist of Thunder',
@@ -96,6 +131,11 @@ export const SKILLS = [
         radius: 2, // Area of effect after teleport
         duration: 1.0, // Short duration
         color: 0x4169e1, // Royal blue color for lightning
-        basicAttack: true
+        basicAttack: true,
+        sounds: {
+            cast: 'skillFistOfThunder',
+            impact: 'enemyHit',
+            end: null
+        }
     }
 ];

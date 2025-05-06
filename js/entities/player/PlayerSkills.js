@@ -258,33 +258,7 @@ export class PlayerSkills extends IPlayerSkills {
             }
         }
         
-        // Play skill sound
-        if (this.game && this.game.audioManager) {
-            // Play specific skill sound based on skill name
-            switch (skillTemplate.name) {
-                case 'Fist of Thunder':
-                    this.game.audioManager.playSound('playerAttack');
-                    break;
-                case 'Wave Strike':
-                    this.game.audioManager.playSound('skillWaveStrike');
-                    break;
-                case 'Cyclone Strike':
-                    this.game.audioManager.playSound('skillCycloneStrike');
-                    break;
-                case 'Seven-Sided Strike':
-                    this.game.audioManager.playSound('skillSevenSidedStrike');
-                    break;
-                case 'Inner Sanctuary':
-                    this.game.audioManager.playSound('skillInnerSanctuary');
-                    break;
-                case 'Exploding Palm':
-                    this.game.audioManager.playSound('skillExplodingPalm');
-                    break;
-                default:
-                    // Generic skill sound
-                    this.game.audioManager.playSound('playerAttack');
-            }
-        }
+        // Sound is now handled by the skill itself in createEffect method
         
         // Add to active skills
         this.activeSkills.push(newSkillInstance);
