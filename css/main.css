@@ -1,0 +1,22 @@
+/* 
+ * main.css - Main CSS file that imports all modular CSS files
+ * Part of the Diablo Immortal CSS optimization
+ */
+
+/* Import reset styles */
+@import 'reset.css';
+
+/* Import layout styles */
+@import 'layout.css';
+
+/* Import component styles */
+@import 'components.css';
+
+/* Import animation styles */
+@import 'animations.css';
+
+/* Import utility classes */
+@import 'utilities.css';
+
+/* Import mobile-specific styles (should be last to override previous styles) */
+@import 'mobile.css';

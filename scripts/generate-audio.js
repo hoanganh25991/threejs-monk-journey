@@ -6,7 +6,7 @@ const path = require('path');
 const { exec } = require('child_process');
 
 // Create audio directory if it doesn't exist
-const audioDir = path.join(__dirname, 'assets', 'audio');
+const audioDir = path.join('assets', 'audio');
 if (!fs.existsSync(audioDir)) {
     fs.mkdirSync(audioDir, { recursive: true });
     console.log(`Created directory: ${audioDir}`);

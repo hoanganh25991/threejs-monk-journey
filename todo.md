@@ -78,18 +78,15 @@ if (!adjustmentsLoaded) {
         // Add other model-specific defaults as needed
 }
 
-
-
 - [x] Enhance: refactor playSound by let the sound at config/skills.js file
     add missing sound, all skills when cast should have sound
     add sound to effect if needed, effect-start, effect-end,...
 
-- [ ] Enhance: review Enemy.js file and optimize it:
+- [?] Enhance: review Enemy.js file and optimize it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
-
 
 - [ ] Enhance: review EnemyManager.js file and optimize it:
     - remove unused method
@@ -97,7 +94,7 @@ if (!adjustmentsLoaded) {
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
 
-- [ ] Enhance: review style.css file and optimize it:
+- [?] Enhance: review style.css file and optimize it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
@@ -119,7 +116,7 @@ if (!adjustmentsLoaded) {
     - remove the origin file, integrate with new code base
     - move unrelated methods, logic to proper categorized file
 
-- [ ] Enhance: review PerformanceManager.js file and optimize it:
+- [?] Enhance: review PerformanceManager.js file and optimize it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
@@ -127,10 +124,9 @@ if (!adjustmentsLoaded) {
     - remove the origin file, integrate with new code base
     - move unrelated methods, logic to proper categorized file
 
-- [] Enhance: PerformanceManager.js should not render UI directly with DOM manipulation, it should expose the DTO only, let HUDManager handle actual render.
+- [ ] Enhance: PerformanceManager.js should not render UI directly with DOM manipulation, it should expose the DTO only, let HUDManager handle actual render.
 
-
-- [ ] Enhance: review HUDManager.js file and optimize it:
+- [?] Enhance: review HUDManager.js file and optimize it:
     - Remove unused methods.
     - Remove duplicate methods.
     - Define common methods for shared use.
@@ -144,8 +140,6 @@ if (!adjustmentsLoaded) {
     - should move methods not related to HUD to proper file, ex: createBleedingEffect
 
 - [ ] Enhance: add config to creaeTeleportEffect, allow to easily say increase size of effect 2 times, than the skill effect 2 times bigger
-
-- [ ] Enhance: when punch automatically, it will be 1,2, 1,2,3, 1,2, 1,2,3,... but at 5 times of this loop, it create thunder punch, which like a ball of thunder energy at top of his punch and effect damage to all enemies close to that, radius default 20, knock back enemies affected
 
 - [ ] Enhance: remove the first terrain, replace with the ground with grey colour, something special to mark that, this is initial place, like our village, add some structures to it. Then only spawn enemies on other dynamic generated terrain.
 

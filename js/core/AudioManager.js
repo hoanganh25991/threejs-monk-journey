@@ -133,40 +133,133 @@ export class AudioManager {
     
     createSimulatedSoundEffects() {
         // Player sounds
-        this.sounds.playerAttack = this.createSimulatedSound('playerAttack', 220, 0.7, 0.3);
-        this.sounds.playerHit = this.createSimulatedSound('playerHit', 330, 0.8, 0.2);
-        this.sounds.playerDeath = this.createSimulatedSound('playerDeath', 110, 1.0, 0.5);
-        this.sounds.levelUp = this.createSimulatedSound('levelUp', 440, 1.0, 0.4);
+        this.sounds.playerAttack = this.createSimulatedSound('playerAttack', 220, 0.7, 0.3, false, { type: 'sawtooth', decay: true });
+        this.sounds.playerHit = this.createSimulatedSound('playerHit', 330, 0.8, 0.2, false, { type: 'sine', decay: true });
+        this.sounds.playerDeath = this.createSimulatedSound('playerDeath', 110, 1.0, 0.5, false, { type: 'sine', decay: true, slide: -20 });
+        this.sounds.levelUp = this.createSimulatedSound('levelUp', [440, 550, 660], 1.0, 0.4, false, { type: 'sine', decay: false });
         
         // Skill cast sounds
-        this.sounds.skillWaveStrike = this.createSimulatedSound('skillWaveStrike', 280, 0.8, 0.3); // Water-based - medium frequency
-        this.sounds.skillCycloneStrike = this.createSimulatedSound('skillCycloneStrike', 350, 0.8, 0.4); // Wind-based - increased frequency
-        this.sounds.skillSevenSidedStrike = this.createSimulatedSound('skillSevenSidedStrike', 380, 0.8, 0.5); // Physical attack - kept as is
-        this.sounds.skillInnerSanctuary = this.createSimulatedSound('skillInnerSanctuary', 180, 0.6, 0.6); // Protective - low frequency
-        this.sounds.skillFistOfThunder = this.createSimulatedSound('skillFistOfThunder', 520, 0.8, 0.3); // Thunder - increased frequency
-        this.sounds.skillMysticAlly = this.createSimulatedSound('skillMysticAlly', 260, 0.7, 0.5); // Spiritual - kept as is
-        this.sounds.skillWaveOfLight = this.createSimulatedSound('skillWaveOfLight', 420, 0.9, 0.6); // Light-based - increased frequency
-        this.sounds.skillExplodingPalm = this.createSimulatedSound('skillExplodingPalm', 340, 0.8, 0.4); // Explosive - increased frequency
+        this.sounds.skillWaveStrike = this.createSimulatedSound('skillWaveStrike', 
+            [280, 310, 260], 0.8, 0.3, false, 
+            { type: 'sine', decay: true, slide: 50, noise: 0.05, filter: 'lowpass' }
+        ); // Water-based - complex water frequencies
+        
+        this.sounds.skillCycloneStrike = this.createSimulatedSound('skillCycloneStrike', 
+            [350, 370, 330], 0.8, 0.4, false, 
+            { type: 'sawtooth', decay: true, vibrato: 15, tremolo: 8, noise: 0.1, filter: 'bandpass' }
+        ); // Wind-based - complex wind frequencies
+        
+        this.sounds.skillSevenSidedStrike = this.createSimulatedSound('skillSevenSidedStrike', 
+            [380, 400, 420, 440, 460, 480, 500], 0.8, 0.5, false, 
+            { type: 'square', decay: true, attack: 0.01, filter: 'highpass' }
+        ); // Physical attack - seven distinct tones
+        
+        this.sounds.skillInnerSanctuary = this.createSimulatedSound('skillInnerSanctuary', 
+            [180, 270, 360], 0.6, 0.6, false, 
+            { type: 'sine', decay: false, reverb: true }
+        ); // Protective - harmonic chord with reverb
+        
+        this.sounds.skillFistOfThunder = this.createSimulatedSound('skillFistOfThunder', 
+            [520, 780], 0.8, 0.3, false, 
+            { type: 'sine', decay: true, slide: 80, vibrato: 20, noise: 0.2, distortion: 0.3, filter: 'highpass' }
+        ); // Thunder - complex thunder crack
+        
+        this.sounds.skillMysticAlly = this.createSimulatedSound('skillMysticAlly', 
+            [260, 390, 520], 0.7, 0.5, false, 
+            { type: 'sine', decay: false }
+        ); // Spiritual - mystical chord progression
+        
+        this.sounds.skillWaveOfLight = this.createSimulatedSound('skillWaveOfLight', 
+            [420, 630, 840], 0.9, 0.6, false, 
+            { type: 'triangle', decay: true, slide: -30, reverb: true, filter: 'highpass' }
+        ); // Light-based - harmonic light frequencies
+        
+        this.sounds.skillExplodingPalm = this.createSimulatedSound('skillExplodingPalm', 
+            [340, 170, 510], 0.8, 0.4, false, 
+            { type: 'sawtooth', decay: true, slide: 40, attack: 0.01, noise: 0.15, distortion: 0.4 }
+        ); // Explosive - complex explosion frequencies
         
         // Skill impact sounds
-        this.sounds.waterImpact = this.createSimulatedSound('waterImpact', 350, 0.7, 0.2); // Water - kept as is
-        this.sounds.windPull = this.createSimulatedSound('windPull', 330, 0.7, 0.3); // Wind - increased frequency
-        this.sounds.rapidStrike = this.createSimulatedSound('rapidStrike', 420, 0.8, 0.2); // Physical - kept as is
-        this.sounds.barrierForm = this.createSimulatedSound('barrierForm', 200, 0.6, 0.4); // Protective - kept as is
-        this.sounds.allySummonComplete = this.createSimulatedSound('allySummonComplete', 280, 0.7, 0.3); // Spiritual - kept as is
-        this.sounds.bellRing = this.createSimulatedSound('bellRing', 600, 0.9, 0.7); // Bell - kept as is
-        this.sounds.markApplied = this.createSimulatedSound('markApplied', 320, 0.7, 0.3); // Mark - kept as is
-        this.sounds.thunderStrike = this.createSimulatedSound('thunderStrike', 550, 0.8, 0.2); // Thunder - increased frequency
+        this.sounds.waterImpact = this.createSimulatedSound('waterImpact', 
+            [350, 175, 525], 0.7, 0.2, false, 
+            { type: 'sine', decay: true, slide: -20, noise: 0.2, filter: 'lowpass' }
+        ); // Water - realistic splash
+        
+        this.sounds.windPull = this.createSimulatedSound('windPull', 
+            [330, 165, 495], 0.7, 0.3, false, 
+            { type: 'sawtooth', decay: true, vibrato: 20, tremolo: 10, noise: 0.15, filter: 'bandpass' }
+        ); // Wind - complex wind pull
+        
+        this.sounds.rapidStrike = this.createSimulatedSound('rapidStrike', 
+            [420, 440, 460, 480, 500, 520, 540], 0.8, 0.2, false, 
+            { type: 'square', decay: true, attack: 0.005, filter: 'highpass' }
+        ); // Physical - rapid succession of impacts
+        
+        this.sounds.barrierForm = this.createSimulatedSound('barrierForm', 
+            [200, 300, 400], 0.6, 0.4, false, 
+            { type: 'sine', decay: false, reverb: true }
+        ); // Protective - barrier formation chord
+        
+        this.sounds.allySummonComplete = this.createSimulatedSound('allySummonComplete', 
+            [280, 420, 560], 0.7, 0.3, false, 
+            { type: 'sine', decay: false, reverb: true }
+        ); // Spiritual - complex summoning
+        
+        this.sounds.bellRing = this.createSimulatedSound('bellRing', 
+            [600, 900, 1200, 1500], 0.9, 0.7, false, 
+            { type: 'sine', decay: true, reverb: true }
+        ); // Bell - complex bell harmonics
+        
+        this.sounds.markApplied = this.createSimulatedSound('markApplied', 
+            [320, 480], 0.7, 0.3, false, 
+            { type: 'sawtooth', decay: true, slide: 30, filter: 'bandpass', distortion: 0.2 }
+        ); // Mark - complex mark application
+        
+        this.sounds.thunderStrike = this.createSimulatedSound('thunderStrike', 
+            [550, 825, 275], 0.8, 0.2, false, 
+            { type: 'sawtooth', decay: true, slide: -40, noise: 0.25, distortion: 0.4, filter: 'highpass' }
+        ); // Thunder - complex lightning strike
         
         // Skill end sounds
-        this.sounds.waterDissipate = this.createSimulatedSound('waterDissipate', 240, 0.6, 0.4); // Water - kept as is
-        this.sounds.windDissipate = this.createSimulatedSound('windDissipate', 300, 0.6, 0.4); // Wind - increased frequency
-        this.sounds.strikeComplete = this.createSimulatedSound('strikeComplete', 400, 0.7, 0.3); // Physical - kept as is
-        this.sounds.barrierDissipate = this.createSimulatedSound('barrierDissipate', 160, 0.5, 0.5); // Protective - kept as is
-        this.sounds.allyDismiss = this.createSimulatedSound('allyDismiss', 220, 0.6, 0.4); // Spiritual - kept as is
-        this.sounds.bellFade = this.createSimulatedSound('bellFade', 500, 0.7, 0.5); // Bell - kept as is
-        this.sounds.massiveExplosion = this.createSimulatedSound('massiveExplosion', 220, 0.9, 0.6); // Explosion - increased frequency
-        this.sounds.thunderEcho = this.createSimulatedSound('thunderEcho', 450, 0.6, 0.4); // Thunder - increased frequency
+        this.sounds.waterDissipate = this.createSimulatedSound('waterDissipate', 
+            [240, 120, 360], 0.6, 0.4, false, 
+            { type: 'sine', decay: true, slide: -30, noise: 0.1, filter: 'lowpass' }
+        ); // Water - realistic dissipation
+        
+        this.sounds.windDissipate = this.createSimulatedSound('windDissipate', 
+            [300, 150, 450], 0.6, 0.4, false, 
+            { type: 'sine', decay: true, slide: -40, vibrato: 10, tremolo: 5, noise: 0.08, filter: 'bandpass' }
+        ); // Wind - complex wind fade
+        
+        this.sounds.strikeComplete = this.createSimulatedSound('strikeComplete', 
+            [400, 600], 0.7, 0.3, false, 
+            { type: 'square', decay: true, slide: -20, attack: 0.01, filter: 'highpass' }
+        ); // Physical - final strike impact
+        
+        this.sounds.barrierDissipate = this.createSimulatedSound('barrierDissipate', 
+            [160, 240, 320], 0.5, 0.5, false, 
+            { type: 'sine', decay: true, slide: -30, reverb: true }
+        ); // Protective - barrier fading chord
+        
+        this.sounds.allyDismiss = this.createSimulatedSound('allyDismiss', 
+            [220, 330, 440], 0.6, 0.4, false, 
+            { type: 'sine', decay: true, reverb: true }
+        ); // Spiritual - complex dismissal
+        
+        this.sounds.bellFade = this.createSimulatedSound('bellFade', 
+            [500, 750, 1000, 1250], 0.7, 0.5, false, 
+            { type: 'sine', decay: true, slide: -50, reverb: true }
+        ); // Bell - complex bell fade harmonics
+        
+        this.sounds.massiveExplosion = this.createSimulatedSound('massiveExplosion', 
+            [220, 110, 330, 440], 0.9, 0.6, false, 
+            { type: 'sawtooth', decay: true, slide: -30, noise: 0.3, distortion: 0.5, filter: 'lowpass', attack: 0.01 }
+        ); // Explosion - complex explosion with rumble
+        
+        this.sounds.thunderEcho = this.createSimulatedSound('thunderEcho', 
+            [450, 225, 675], 0.6, 0.4, false, 
+            { type: 'sine', decay: true, reverb: true, noise: 0.15, filter: 'bandpass' }
+        ); // Thunder - complex thunder echo
         
         // Enemy sounds
         this.sounds.enemyAttack = this.createSimulatedSound('enemyAttack', 200, 0.6, 0.2);
@@ -227,7 +320,7 @@ export class AudioManager {
         }
     }
     
-    createSimulatedSound(name, frequency = 220, volume = 1.0, duration = 0.5, loop = false) {
+    createSimulatedSound(name, frequency = 220, volume = 1.0, duration = 0.5, loop = false, options = {}) {
         try {
             // Create audio object
             const sound = new THREE.Audio(this.listener);
@@ -237,8 +330,15 @@ export class AudioManager {
             sound.setVolume(volume);
             sound.setLoop(loop);
             
-            // Create a simulated buffer
-            this.simulateAudioBuffer(sound, frequency, duration);
+            // Handle frequency as array or single value
+            let freqValue = frequency;
+            if (Array.isArray(frequency)) {
+                // If it's an array, we'll create a complex sound with multiple frequencies
+                this.simulateComplexAudioBuffer(sound, frequency, duration, options);
+            } else {
+                // Create a simulated buffer with a single frequency
+                this.simulateAudioBuffer(sound, freqValue, duration, options);
+            }
             
             return sound;
         } catch (error) {
@@ -247,19 +347,179 @@ export class AudioManager {
         }
     }
     
-    simulateAudioBuffer(sound, frequency = 220, duration = 0.5) {
+    simulateAudioBuffer(sound, frequency = 220, duration = 0.5, options = {}) {
         // Create a simple oscillator-based sound as a placeholder
         const context = this.listener.context;
         const sampleRate = context.sampleRate;
         const buffer = context.createBuffer(1, sampleRate * duration, sampleRate);
         
-        // Fill the buffer with a simple sine wave
+        // Extract options
+        const waveType = options.type || 'sine';
+        const slide = options.slide || 0;
+        const vibrato = options.vibrato || 0;
+        const tremolo = options.tremolo || 0;
+        const noise = options.noise || 0;
+        const attack = options.attack || 0.01;
+        const decay = options.decay !== undefined ? options.decay : true;
+        
+        // Fill the buffer with the appropriate waveform
         const data = buffer.getChannelData(0);
         for (let i = 0; i < buffer.length; i++) {
-            // Create a decaying sine wave
+            // Time in seconds
             const t = i / sampleRate;
-            const decay = 1 - t / duration;
-            data[i] = Math.sin(2 * Math.PI * frequency * t) * 0.5 * decay;
+            
+            // Calculate amplitude envelope
+            let amplitude = 0.5;
+            if (decay) {
+                // Attack-decay envelope
+                const attackTime = Math.min(attack, duration * 0.5);
+                const attackPhase = Math.min(t / attackTime, 1);
+                const decayPhase = 1 - ((t - attackTime) / (duration - attackTime));
+                amplitude = t < attackTime ? attackPhase * 0.5 : decayPhase * 0.5;
+            }
+            
+            // Apply frequency slide if needed
+            const slideAmount = slide * (t / duration);
+            const currentFreq = frequency + slideAmount;
+            
+            // Apply vibrato if needed
+            const vibratoFreq = 5; // 5 Hz vibrato
+            const vibratoAmount = vibrato * Math.sin(2 * Math.PI * vibratoFreq * t) * 10;
+            
+            // Apply tremolo if needed
+            const tremoloFreq = 8; // 8 Hz tremolo
+            const tremoloAmount = 1 - (tremolo * 0.5 * (1 + Math.sin(2 * Math.PI * tremoloFreq * t)));
+            
+            // Generate the waveform
+            let sample = 0;
+            const phase = 2 * Math.PI * (currentFreq + vibratoAmount) * t;
+            
+            switch (waveType) {
+                case 'sine':
+                    sample = Math.sin(phase);
+                    break;
+                case 'square':
+                    sample = Math.sign(Math.sin(phase));
+                    break;
+                case 'sawtooth':
+                    sample = 2 * ((t * (currentFreq + vibratoAmount)) % 1) - 1;
+                    break;
+                case 'triangle':
+                    sample = 2 * Math.abs(2 * ((t * (currentFreq + vibratoAmount)) % 1) - 1) - 1;
+                    break;
+                default:
+                    sample = Math.sin(phase);
+            }
+            
+            // Add noise if needed
+            if (noise > 0) {
+                sample = sample * (1 - noise) + (Math.random() * 2 - 1) * noise;
+            }
+            
+            // Apply amplitude and tremolo
+            data[i] = sample * amplitude * tremoloAmount;
+        }
+        
+        sound.setBuffer(buffer);
+    }
+    
+    simulateComplexAudioBuffer(sound, frequencies = [220], duration = 0.5, options = {}) {
+        // Create a complex sound with multiple frequencies
+        const context = this.listener.context;
+        const sampleRate = context.sampleRate;
+        const buffer = context.createBuffer(1, sampleRate * duration, sampleRate);
+        const data = buffer.getChannelData(0);
+        
+        // Clear the buffer
+        for (let i = 0; i < buffer.length; i++) {
+            data[i] = 0;
+        }
+        
+        // Generate each frequency component and mix them
+        frequencies.forEach((freq, index) => {
+            // Create a temporary buffer for this frequency
+            const tempBuffer = new Float32Array(buffer.length);
+            
+            // Extract options
+            const waveType = options.type || 'sine';
+            const slide = options.slide || 0;
+            const vibrato = options.vibrato || 0;
+            const tremolo = options.tremolo || 0;
+            const noise = options.noise || 0;
+            const attack = options.attack || 0.01;
+            const decay = options.decay !== undefined ? options.decay : true;
+            
+            // Adjust amplitude for multiple frequencies to prevent clipping
+            const baseAmplitude = 0.5 / Math.sqrt(frequencies.length);
+            
+            // Generate the waveform for this frequency
+            for (let i = 0; i < buffer.length; i++) {
+                // Time in seconds
+                const t = i / sampleRate;
+                
+                // Calculate amplitude envelope
+                let amplitude = baseAmplitude;
+                if (decay) {
+                    // Attack-decay envelope
+                    const attackTime = Math.min(attack, duration * 0.5);
+                    const attackPhase = Math.min(t / attackTime, 1);
+                    const decayPhase = 1 - ((t - attackTime) / (duration - attackTime));
+                    amplitude = t < attackTime ? attackPhase * baseAmplitude : decayPhase * baseAmplitude;
+                }
+                
+                // Apply frequency slide if needed - alternate direction for harmonics
+                const slideDirection = index % 2 === 0 ? 1 : -0.5;
+                const slideAmount = slide * (t / duration) * slideDirection;
+                const currentFreq = freq + slideAmount;
+                
+                // Apply vibrato if needed
+                const vibratoFreq = 5 + index; // Slightly different vibrato for each harmonic
+                const vibratoAmount = vibrato * Math.sin(2 * Math.PI * vibratoFreq * t) * 10;
+                
+                // Apply tremolo if needed
+                const tremoloFreq = 8 - index * 0.5; // Slightly different tremolo for each harmonic
+                const tremoloAmount = 1 - (tremolo * 0.5 * (1 + Math.sin(2 * Math.PI * tremoloFreq * t)));
+                
+                // Generate the waveform
+                let sample = 0;
+                const phase = 2 * Math.PI * (currentFreq + vibratoAmount) * t;
+                
+                switch (waveType) {
+                    case 'sine':
+                        sample = Math.sin(phase);
+                        break;
+                    case 'square':
+                        sample = Math.sign(Math.sin(phase));
+                        break;
+                    case 'sawtooth':
+                        sample = 2 * ((t * (currentFreq + vibratoAmount)) % 1) - 1;
+                        break;
+                    case 'triangle':
+                        sample = 2 * Math.abs(2 * ((t * (currentFreq + vibratoAmount)) % 1) - 1) - 1;
+                        break;
+                    default:
+                        sample = Math.sin(phase);
+                }
+                
+                // Add noise if needed - less noise for higher harmonics
+                if (noise > 0) {
+                    const noiseAmount = noise / (index + 1);
+                    sample = sample * (1 - noiseAmount) + (Math.random() * 2 - 1) * noiseAmount;
+                }
+                
+                // Apply amplitude and tremolo
+                tempBuffer[i] = sample * amplitude * tremoloAmount;
+            }
+            
+            // Mix this frequency component into the main buffer
+            for (let i = 0; i < buffer.length; i++) {
+                data[i] += tempBuffer[i];
+            }
+        });
+        
+        // Apply some basic limiting to prevent clipping
+        for (let i = 0; i < buffer.length; i++) {
+            data[i] = Math.max(-0.99, Math.min(0.99, data[i]));
         }
         
         sound.setBuffer(buffer);
