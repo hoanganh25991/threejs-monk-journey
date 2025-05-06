@@ -326,22 +326,24 @@ export class SevenSidedStrikeEffect extends SkillEffect {
                 monk.visible = true;
                 this.effect.add(monk);
                 
-                // Create a connecting line from center to strike point
-                const lineGeometry = new THREE.BufferGeometry();
-                const lineMaterial = new THREE.LineBasicMaterial({
+                // Create a connecting line from center to strike point - using a tube geometry for thicker lines
+                const startPoint = new THREE.Vector3(0, 0.1, 0);
+                const endPoint = new THREE.Vector3(nextPoint.position.x, 0.1, nextPoint.position.z);
+                
+                // Create a path for the tube
+                const path = new THREE.LineCurve3(startPoint, endPoint);
+                
+                // Create a tube geometry with radius 0.05 (3x thicker than default line)
+                const lineGeometry = new THREE.TubeGeometry(path, 1, 0.05, 8, false);
+                
+                const lineMaterial = new THREE.MeshBasicMaterial({
                     color: this.skill.color,
                     transparent: true,
                     opacity: 0.7
                 });
                 
-                // Create line from center to strike point
-                const points = [
-                    new THREE.Vector3(0, 0.1, 0),
-                    new THREE.Vector3(nextPoint.position.x, 0.1, nextPoint.position.z)
-                ];
-                
-                lineGeometry.setFromPoints(points);
-                const line = new THREE.Line(lineGeometry, lineMaterial);
+                // Create a mesh instead of a line
+                const line = new THREE.Mesh(lineGeometry, lineMaterial);
                 line.userData = {
                     isConnectingLine: true,
                     age: 0,
