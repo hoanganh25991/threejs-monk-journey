@@ -13,15 +13,18 @@
  * @returns {Object} - Object containing success status, animation played, and updated current animation name
  */
 export function playAnimation(animations, currentAnimation, primaryName, fallbackName = null, transitionDuration = 0.5) {
-    // If we don't have animations, exit early
+    // If we don't have animations, exit early with a warning
     if (!animations || Object.keys(animations).length === 0) {
-        console.log('AnimationUtils: No animations available to play');
+        console.warn('AnimationUtils: No animations available to play');
         return { 
             success: false, 
             animation: null, 
             currentAnimation: currentAnimation 
         };
     }
+    
+    // Get all available animation names
+    const allAnimNames = Object.keys(animations);
     
     // If primaryName is null, skip it
     let animationToPlay = null;
@@ -39,13 +42,32 @@ export function playAnimation(animations, currentAnimation, primaryName, fallbac
     
     // If neither exists, try to find a similar animation by partial name match
     if (!animationToPlay) {
-        const allAnimNames = Object.keys(animations);
         console.log(`AnimationUtils: Searching for similar animations among: ${allAnimNames.join(', ')}`);
         
         // Try to find animation that contains the primary name
         if (primaryName) {
-            const primaryMatch = allAnimNames.find(name => 
+            // First try exact substring match
+            let primaryMatch = allAnimNames.find(name => 
                 name.toLowerCase().includes(primaryName.toLowerCase()));
+            
+            // If no match, try more flexible matching for skeleton king animations
+            if (!primaryMatch && primaryName === 'attack') {
+                // For attack animations, look for specific skeleton king attack patterns
+                primaryMatch = allAnimNames.find(name => 
+                    name.includes('_attack') || 
+                    name.includes('_stab') || 
+                    name.includes('_kick'));
+            } else if (!primaryMatch && (primaryName === 'walk' || primaryName === 'run')) {
+                // For movement animations, try to find any "versus" animation for skeleton king
+                primaryMatch = allAnimNames.find(name => 
+                    name.includes('_versus') && !name.includes('_attack'));
+            } else if (!primaryMatch && primaryName === 'idle') {
+                // For idle, try to find generic animations
+                primaryMatch = allAnimNames.find(name => 
+                    name.includes('generic') || 
+                    name.includes('taunt') || 
+                    name === 'Take 001');
+            }
                 
             if (primaryMatch) {
                 animationToPlay = animations[primaryMatch];
@@ -63,16 +85,23 @@ export function playAnimation(animations, currentAnimation, primaryName, fallbac
                 console.log(`AnimationUtils: Found partial match for fallback ${fallbackName}: ${fallbackMatch}`);
             }
         }
-        
-        // If no matching animation is found, return false
-        if (!animationToPlay) {
-            console.log(`AnimationUtils: No matching animation found for ${primaryName} or ${fallbackName}`);
-            return { 
-                success: false, 
-                animation: null, 
-                currentAnimation: currentAnimation 
-            };
-        }
+    }
+    
+    // If still no match, just use the first animation as a last resort
+    if (!animationToPlay && allAnimNames.length > 0) {
+        const firstAnim = allAnimNames[0];
+        animationToPlay = animations[firstAnim];
+        console.log(`AnimationUtils: No specific match found, using first available animation: ${firstAnim}`);
+    }
+    
+    // If no matching animation is found after all attempts, return false
+    if (!animationToPlay) {
+        console.warn(`AnimationUtils: No matching animation found for ${primaryName} or ${fallbackName}, and no animations available to fall back to`);
+        return { 
+            success: false, 
+            animation: null, 
+            currentAnimation: currentAnimation 
+        };
     }
     
     // If this is already the current animation, don't restart it but return true
@@ -154,6 +183,42 @@ export function updateAnimation(mixer, delta) {
 }
 
 /**
+ * Detect the model type based on animation names
+ * @param {Array} animationNames - Array of animation names
+ * @returns {Object} - Object containing model type information
+ */
+export function detectModelType(animationNames) {
+    if (!animationNames || animationNames.length === 0) {
+        return {
+            isSkeletonKing: false,
+            isStandardModel: false,
+            modelType: 'unknown'
+        };
+    }
+    
+    // Check for Skeleton King model
+    const isSkeletonKing = animationNames.some(name => 
+        name.includes('_sk_') || name.includes('wk_'));
+    
+    // Check for standard model with common animation names
+    const hasStandardAnims = animationNames.some(name => 
+        name === 'idle' || name === 'walk' || name === 'run' || name === 'attack');
+    
+    let modelType = 'unknown';
+    if (isSkeletonKing) {
+        modelType = 'skeleton-king';
+    } else if (hasStandardAnims) {
+        modelType = 'standard';
+    }
+    
+    return {
+        isSkeletonKing,
+        isStandardModel: hasStandardAnims,
+        modelType
+    };
+}
+
+/**
  * Update animations based on player state
  * @param {Object} params - Parameters for updating animations
  * @param {THREE.AnimationMixer} params.mixer - The animation mixer
@@ -179,25 +244,88 @@ export function updateStateBasedAnimations(params) {
     
     let newCurrentAnimation = currentAnimation;
     
-    // Handle player state animations
+    // Get all animation names for logging/debugging
+    const animNames = Object.keys(animations);
+    console.log(`Available animations: ${animNames.join(', ')}`);
+    
+    // Use the detectModelType utility to determine the model type
+    const modelInfo = detectModelType(animNames);
+    
+    // If no animation is currently playing, start one (similar to ModelViewer.js)
+    if (!currentAnimation && animNames.length > 0) {
+        console.log("No animation currently playing, starting the first available animation");
+        const firstAnim = animNames[0];
+        animations[firstAnim].play();
+        return {
+            success: true,
+            currentAnimation: firstAnim
+        };
+    }
+    
+    // For Skeleton King model, we'll use a simpler approach to ensure animations play
+    if (modelInfo.isSkeletonKing) {
+        // If we already have an animation playing, just keep updating it
+        if (currentAnimation && animations[currentAnimation]) {
+            console.log(`Continuing to play current animation: ${currentAnimation}`);
+            return {
+                success: true,
+                currentAnimation: currentAnimation
+            };
+        }
+        
+        // If no animation is playing, pick one based on state
+        if (playerState.isAttacking()) {
+            // Try to find an attack animation
+            const attackAnims = animNames.filter(name => 
+                name.includes('_attack') || 
+                name.includes('_stab') || 
+                name.includes('_kick'));
+            
+            if (attackAnims.length > 0) {
+                const attackAnim = attackAnims[0];
+                animations[attackAnim].play();
+                console.log(`Playing attack animation: ${attackAnim}`);
+                return {
+                    success: true,
+                    currentAnimation: attackAnim
+                };
+            }
+        }
+        
+        // If no attack animation or not attacking, just play the first animation
+        const firstAnim = animNames[0];
+        animations[firstAnim].play();
+        console.log(`Playing first available animation: ${firstAnim}`);
+        return {
+            success: true,
+            currentAnimation: firstAnim
+        };
+    }
+    
+    // Standard animation handling for other models
     if (playerState.isMoving()) {
-        // Play walk/run animation if available
         const result = playAnimation(animations, currentAnimation, 'walk', 'run', 0.3);
         if (result.success) {
             newCurrentAnimation = result.currentAnimation;
         }
     } else if (playerState.isAttacking()) {
-        // Play attack animation if available
         const result = playAnimation(animations, currentAnimation, 'attack', 'punch', 0.2);
         if (result.success) {
             newCurrentAnimation = result.currentAnimation;
         }
     } else {
-        // Play idle animation if available
         const result = playAnimation(animations, currentAnimation, 'idle', 'idle', 0.5);
         if (result.success) {
             newCurrentAnimation = result.currentAnimation;
         }
+    }
+    
+    // If we still don't have an animation playing, force play the first one
+    if (!newCurrentAnimation && animNames.length > 0) {
+        const firstAnim = animNames[0];
+        animations[firstAnim].play();
+        console.log(`Forcing first animation to play: ${firstAnim}`);
+        newCurrentAnimation = firstAnim;
     }
     
     return {

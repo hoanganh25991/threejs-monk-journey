@@ -39,7 +39,7 @@ export const CHARACTER_MODELS = [
 ];
 
 // Default character model ID
-export const DEFAULT_CHARACTER_MODEL = 'monk';
+export const DEFAULT_CHARACTER_MODEL = 'skeleton';
 
 // Available model size multipliers
 export const MODEL_SIZE_MULTIPLIERS = [

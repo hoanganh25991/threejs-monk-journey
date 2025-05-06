@@ -23,6 +23,7 @@ export class PlayerModel extends IPlayerModel {
         this.fallbackModel = null;
         this.usingFallbackModel = false;
         this.game = null; // Reference to the game
+        this.clock = new THREE.Clock(); // Add a clock for animation timing
         
         // Get default model configuration
         this.currentModelId = DEFAULT_CHARACTER_MODEL;
@@ -96,8 +97,10 @@ export class PlayerModel extends IPlayerModel {
                     this.animations[clip.name] = this.mixer.clipAction(clip);
                 });
                 
-                console.log('Available animations:', Object.keys(this.animations));
+                const animNames = Object.keys(this.animations);
+                console.log('Available animations:', animNames);
                 
+                // Use AnimationUtils to initialize the first animation
                 // Play idle animation by default if it exists
                 if (this.animations['idle']) {
                     this.animations['idle'].play();
@@ -201,18 +204,79 @@ export class PlayerModel extends IPlayerModel {
         
         // If we have a loaded GLB model with animations
         if (this.mixer && this.gltfModel) {
-            // Use the AnimationUtils to handle state-based animations
-            const result = AnimationUtils.updateStateBasedAnimations({
-                mixer: this.mixer,
-                animations: this.animations,
-                currentAnimation: this.currentAnimation,
-                playerState: playerState,
-                delta: delta
-            });
+            // Get delta time from the clock, just like in ModelPreview.js
+            // This ensures smooth animation timing
+            const clockDelta = this.clock.getDelta();
             
-            // Update the current animation if the utility was successful
-            if (result.success) {
-                this.currentAnimation = result.currentAnimation;
+            // Use a minimum delta time to ensure animations always progress
+            // This prevents the animation from freezing when delta is too small
+            const effectiveDelta = Math.max(clockDelta, 0.008); // Minimum 8ms delta (roughly 120fps)
+            
+            // First, always update the mixer with effective delta time
+            // This is crucial for proper animation timing
+            this.mixer.update(effectiveDelta);
+            
+            // For models with animations
+            if (this.animations && Object.keys(this.animations).length > 0) {
+                const animNames = Object.keys(this.animations);
+                
+                // Check if this is a Skeleton King model
+                const isSkeletonKing = animNames.some(name => 
+                    name.includes('_sk_') || name.includes('wk_'));
+                
+                // For Skeleton King models, use a simpler approach
+                if (isSkeletonKing) {
+                    // If we don't have an animation playing yet, start one
+                    if (!this.currentAnimation && animNames.length > 0) {
+                        // If no animation is currently playing, start the first one
+                        const takeAnim = animNames.find(name => name === 'Take 001');
+                        const animToPlay = takeAnim || animNames[0];
+                        
+                        this.animations[animToPlay].reset().play();
+                        this.currentAnimation = animToPlay;
+                        console.log(`Started animation for Skeleton King: ${animToPlay}`);
+                        
+                        // Update the mixer multiple times to ensure the animation starts playing immediately
+                        for (let i = 0; i < 3; i++) {
+                            this.mixer.update(0.016);
+                        }
+                    } 
+                    // If player is attacking, try to play an attack animation
+                    else if (playerState && playerState.isAttacking() && this.currentAnimation !== 'wk_arc_sk_attack_versus') {
+                        // Look for attack animations
+                        const attackAnims = animNames.filter(name => 
+                            name.includes('_attack') || 
+                            name.includes('_stab') || 
+                            name.includes('_kick'));
+                            
+                        if (attackAnims.length > 0) {
+                            const attackAnim = attackAnims[0];
+                            this.animations[attackAnim].reset().fadeIn(0.2).play();
+                            
+                            // If there was a previous animation, fade it out
+                            if (this.currentAnimation && this.animations[this.currentAnimation]) {
+                                this.animations[this.currentAnimation].fadeOut(0.2);
+                            }
+                            
+                            this.currentAnimation = attackAnim;
+                            console.log(`Playing attack animation for Skeleton King: ${attackAnim}`);
+                        }
+                    }
+                } else {
+                    // For standard models, use the state-based animation system
+                    const result = AnimationUtils.updateStateBasedAnimations({
+                        mixer: this.mixer,
+                        animations: this.animations,
+                        currentAnimation: this.currentAnimation,
+                        playerState: playerState,
+                        delta: effectiveDelta // Use the effective delta for consistent timing
+                    });
+                    
+                    // Update the current animation if the utility was successful
+                    if (result.success) {
+                        this.currentAnimation = result.currentAnimation;
+                    }
+                }
             }
         }
     }
