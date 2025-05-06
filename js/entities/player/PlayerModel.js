@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { IPlayerModel } from './PlayerInterface.js';
+import { FallbackPlayerModel } from './FallbackPlayerModel.js';
 
 export class PlayerModel extends IPlayerModel {
     constructor(scene) {
@@ -17,6 +18,8 @@ export class PlayerModel extends IPlayerModel {
         this.mixer = null;
         this.animations = {};
         this.currentAnimation = null;
+        this.fallbackModel = null;
+        this.usingFallbackModel = false;
         
         // Configuration options
         this.modelScale = 1.2; // Scale factor for the model (1/100 of original size)
@@ -114,71 +117,26 @@ export class PlayerModel extends IPlayerModel {
         return this.modelGroup;
     }
     
-    // Fallback model creation in case the GLB model fails to load
+    // Create and use the fallback model when the GLB model fails to load
     createFallbackModel() {
-        console.warn("Using fallback geometric model");
+        // Remove the existing model group from the scene if it exists
+        if (this.modelGroup) {
+            this.scene.remove(this.modelGroup);
+        }
         
-        // Create body (cube)
-        const bodyGeometry = new THREE.BoxGeometry(0.8, 1.2, 0.4);
-        const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xffcc88 });
-        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-        body.position.y = 0.6;
-        body.castShadow = true;
-        
-        this.modelGroup.add(body);
-        
-        // Create head (sphere)
-        const headGeometry = new THREE.SphereGeometry(0.25, 16, 16);
-        const headMaterial = new THREE.MeshStandardMaterial({ color: 0xffcc88 });
-        const head = new THREE.Mesh(headGeometry, headMaterial);
-        head.position.y = 1.4;
-        head.castShadow = true;
-        
-        this.modelGroup.add(head);
-        
-        // Create arms (cylinders)
-        const armGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.8, 8);
-        const armMaterial = new THREE.MeshStandardMaterial({ color: 0xffcc88 });
-        
-        // Left arm
-        const leftArm = new THREE.Mesh(armGeometry, armMaterial);
-        leftArm.position.set(-0.5, 0.6, 0);
-        leftArm.rotation.z = Math.PI / 2;
-        leftArm.castShadow = true;
-        
-        this.modelGroup.add(leftArm);
-        
-        // Right arm
-        const rightArm = new THREE.Mesh(armGeometry, armMaterial);
-        rightArm.position.set(0.5, 0.6, 0);
-        rightArm.rotation.z = -Math.PI / 2;
-        rightArm.castShadow = true;
-        
-        this.modelGroup.add(rightArm);
-        
-        // Create legs (cylinders)
-        const legGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.6, 8);
-        const legMaterial = new THREE.MeshStandardMaterial({ color: 0x555555 });
-        
-        // Left leg
-        const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-        leftLeg.position.set(-0.25, 0, 0);
-        leftLeg.castShadow = true;
-        
-        this.modelGroup.add(leftLeg);
-        
-        // Right leg
-        const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-        rightLeg.position.set(0.25, 0, 0);
-        rightLeg.castShadow = true;
-        
-        this.modelGroup.add(rightLeg);
-        
-        // Add model to scene
-        this.scene.add(this.modelGroup);
+        // Create a new fallback model
+        this.fallbackModel = new FallbackPlayerModel(this.scene);
+        this.modelGroup = this.fallbackModel.createModel();
+        this.usingFallbackModel = true;
     }
     
     updateAnimations(delta, playerState) {
+        // If using fallback model, delegate to it
+        if (this.usingFallbackModel && this.fallbackModel) {
+            this.fallbackModel.updateAnimations(delta, playerState);
+            return;
+        }
+        
         // If we have a loaded GLB model with animations
         if (this.mixer && this.gltfModel) {
             // Update the animation mixer with the delta time
@@ -194,55 +152,6 @@ export class PlayerModel extends IPlayerModel {
             } else {
                 // Play idle animation if available
                 this.playAnimation('idle', 'idle', 0.5);
-            }
-        } 
-        // Fallback to simple geometric model animations
-        else if (this.modelGroup && this.modelGroup.children.length >= 6) {
-            // Simple animations for the fallback geometric model
-            if (playerState.isMoving()) {
-                // Walking animation
-                const walkSpeed = 5;
-                const walkAmplitude = 0.1;
-                
-                // Animate legs
-                const leftLeg = this.modelGroup.children[4];
-                const rightLeg = this.modelGroup.children[5];
-                
-                if (leftLeg && rightLeg) {
-                    leftLeg.position.z = Math.sin(Date.now() * 0.01 * walkSpeed) * walkAmplitude;
-                    rightLeg.position.z = -Math.sin(Date.now() * 0.01 * walkSpeed) * walkAmplitude;
-                }
-                
-                // Animate arms
-                const leftArm = this.modelGroup.children[2];
-                const rightArm = this.modelGroup.children[3];
-                
-                if (leftArm && rightArm) {
-                    leftArm.rotation.x = Math.sin(Date.now() * 0.01 * walkSpeed) * 0.2;
-                    rightArm.rotation.x = -Math.sin(Date.now() * 0.01 * walkSpeed) * 0.2;
-                }
-            } else {
-                // Reset to idle position
-                const leftLeg = this.modelGroup.children[4];
-                const rightLeg = this.modelGroup.children[5];
-                const leftArm = this.modelGroup.children[2];
-                const rightArm = this.modelGroup.children[3];
-                
-                if (leftLeg && rightLeg && leftArm && rightArm) {
-                    leftLeg.position.z = 0;
-                    rightLeg.position.z = 0;
-                    leftArm.rotation.x = 0;
-                    rightArm.rotation.x = 0;
-                }
-            }
-            
-            // Attack animation
-            if (playerState.isAttacking()) {
-                // Simple attack animation
-                const rightArm = this.modelGroup.children[3];
-                if (rightArm) {
-                    rightArm.rotation.x = Math.sin(Date.now() * 0.02) * 0.5;
-                }
             }
         }
     }
@@ -313,15 +222,33 @@ export class PlayerModel extends IPlayerModel {
     }
     
     setPosition(position) {
+        if (this.usingFallbackModel && this.fallbackModel) {
+            this.fallbackModel.setPosition(position);
+            return;
+        }
+        
         if (this.modelGroup) {
             this.modelGroup.position.copy(position);
         }
     }
     
     setRotation(rotation) {
+        if (this.usingFallbackModel && this.fallbackModel) {
+            this.fallbackModel.setRotation(rotation);
+            return;
+        }
+        
         if (this.modelGroup) {
             this.modelGroup.rotation.y = rotation.y;
         }
+    }
+    
+    /**
+     * Get the model group
+     * @returns {THREE.Group} The model group
+     */
+    getModelGroup() {
+        return this.modelGroup;
     }
     
     /**
@@ -351,6 +278,12 @@ export class PlayerModel extends IPlayerModel {
     
     // Left jab - quick straight punch with left hand
     createLeftPunchAnimation() {
+        // If using fallback model, delegate to it
+        if (this.usingFallbackModel && this.fallbackModel) {
+            this.fallbackModel.createLeftPunchAnimation();
+            return;
+        }
+        
         // If we have a GLB model with animations
         if (this.gltfModel && this.mixer) {
             // Try to play a left punch animation from the model
@@ -372,42 +305,16 @@ export class PlayerModel extends IPlayerModel {
                 return;
             }
         }
-        
-        // Fallback to geometric model animation
-        const leftArm = this.modelGroup.children.find(child => 
-            child.position.x < 0 && Math.abs(child.position.y - 0.6) < 0.1);
-        
-        if (!leftArm) return;
-        
-        // Store original rotation
-        const originalRotation = leftArm.rotation.clone();
-        
-        // Create punch animation sequence
-        const punchSequence = () => {
-            // Quick wind up
-            leftArm.rotation.z = Math.PI / 6; // Pull back slightly
-            
-            // After a short delay, punch forward
-            setTimeout(() => {
-                // Punch forward animation - straight jab
-                leftArm.rotation.z = Math.PI / 3; // Extend forward
-                
-                // Create punch effect - blue color for left hand
-                this.createPunchEffect('left', 0x4169e1); // Royal blue
-                
-                // Return to original position quickly (jab is fast)
-                setTimeout(() => {
-                    leftArm.rotation.copy(originalRotation);
-                }, 100);
-            }, 30);
-        };
-        
-        // Execute punch animation sequence
-        punchSequence();
     }
     
     // Right cross - powerful straight punch with right hand
     createRightPunchAnimation() {
+        // If using fallback model, delegate to it
+        if (this.usingFallbackModel && this.fallbackModel) {
+            this.fallbackModel.createRightPunchAnimation();
+            return;
+        }
+        
         // If we have a GLB model with animations
         if (this.gltfModel && this.mixer) {
             // Try to play a right punch animation from the model
@@ -429,42 +336,16 @@ export class PlayerModel extends IPlayerModel {
                 return;
             }
         }
-        
-        // Fallback to geometric model animation
-        const rightArm = this.modelGroup.children.find(child => 
-            child.position.x > 0 && Math.abs(child.position.y - 0.6) < 0.1);
-        
-        if (!rightArm) return;
-        
-        // Store original rotation
-        const originalRotation = rightArm.rotation.clone();
-        
-        // Create punch animation sequence
-        const punchSequence = () => {
-            // Wind up animation (pull arm back)
-            rightArm.rotation.z = -Math.PI / 5; // Pull back
-            
-            // After a short delay, punch forward
-            setTimeout(() => {
-                // Punch forward animation - cross punch
-                rightArm.rotation.z = -Math.PI / 2.5; // Extend further forward
-                
-                // Create punch effect - red color for right hand
-                this.createPunchEffect('right', 0xff4500); // OrangeRed
-                
-                // Return to original position after the punch
-                setTimeout(() => {
-                    rightArm.rotation.copy(originalRotation);
-                }, 150);
-            }, 50);
-        };
-        
-        // Execute punch animation sequence
-        punchSequence();
     }
     
     // Left hook - circular punch with left hand
     createLeftHookAnimation() {
+        // If using fallback model, delegate to it
+        if (this.usingFallbackModel && this.fallbackModel) {
+            this.fallbackModel.createLeftHookAnimation();
+            return;
+        }
+        
         // If we have a GLB model with animations
         if (this.gltfModel && this.mixer) {
             // Try to play a left hook animation from the model
@@ -540,6 +421,12 @@ export class PlayerModel extends IPlayerModel {
     
     // Heavy uppercut - powerful upward punch with right hand
     createHeavyPunchAnimation() {
+        // If using fallback model, delegate to it
+        if (this.usingFallbackModel && this.fallbackModel) {
+            this.fallbackModel.createHeavyPunchAnimation();
+            return;
+        }
+        
         // If we have a GLB model with animations
         if (this.gltfModel && this.mixer) {
             // Try to play an uppercut animation from the model
@@ -618,6 +505,12 @@ export class PlayerModel extends IPlayerModel {
     
     // Standard punch effect for normal punches
     createPunchEffect(hand, color) {
+        // If using fallback model, delegate to it
+        if (this.usingFallbackModel && this.fallbackModel) {
+            this.fallbackModel.createPunchEffect(hand, color);
+            return;
+        }
+        
         // Calculate position in front of the player based on hand
         const direction = new THREE.Vector3(0, 0, -1).applyEuler(this.modelGroup.rotation);
         let sideOffset = 0;
