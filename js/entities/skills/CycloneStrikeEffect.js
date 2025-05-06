@@ -2,16 +2,16 @@ import * as THREE from 'three';
 import { SkillEffect } from './SkillEffect.js';
 
 /**
- * Specialized effect for area of effect skills
+ * Specialized effect for Cyclone Strike skill
  */
-export class AoESkillEffect extends SkillEffect {
+export class CycloneStrikeEffect extends SkillEffect {
     constructor(skill) {
         super(skill);
         this.cycloneState = null;
     }
 
     /**
-     * Create an area of effect
+     * Create a Cyclone Strike effect
      * @param {THREE.Vector3} position - Center position
      * @param {THREE.Vector3} direction - Direction (for oriented AoEs)
      * @returns {THREE.Group} - The created effect
@@ -20,7 +20,7 @@ export class AoESkillEffect extends SkillEffect {
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
-        // Special handling for Cyclone Strike
+        // Create the Cyclone Strike effect
         this.createCycloneStrikeEffect(effectGroup);
         
         // Position effect
@@ -183,7 +183,7 @@ export class AoESkillEffect extends SkillEffect {
     }
 
     /**
-     * Update the AoE effect
+     * Update the Cyclone Strike effect
      * @param {number} delta - Time since last update in seconds
      */
     update(delta) {
@@ -194,6 +194,7 @@ export class AoESkillEffect extends SkillEffect {
         // Check if effect has expired
         if (this.elapsedTime >= this.skill.duration) {
             this.isActive = false;
+            this.dispose(); // Properly dispose of the effect when it expires
             return;
         }
         
@@ -201,7 +202,7 @@ export class AoESkillEffect extends SkillEffect {
         // This is crucial for collision detection in CollisionManager
         this.skill.position.copy(this.effect.position);
         
-        // Special handling for Cyclone Strike
+        // Update the Cyclone Strike effect
         this.updateCycloneStrikeEffect(delta);
     }
 
@@ -283,5 +284,88 @@ export class AoESkillEffect extends SkillEffect {
                 particle.rotation.z += delta * particle.userData.rotationSpeed * 0.5;
             }
         }
+    }
+
+    /**
+     * Enhanced dispose method to properly clean up all resources
+     * Overrides the base class dispose method with more thorough cleanup
+     */
+    dispose() {
+        if (!this.effect) return;
+        
+        // Clean up Cyclone Strike specific resources
+        if (this.cycloneState) {
+            // Clear layer references
+            if (this.cycloneState.layers) {
+                this.cycloneState.layers.length = 0;
+            }
+            
+            // Clear particle references
+            if (this.cycloneState.particles) {
+                this.cycloneState.particles.length = 0;
+            }
+            
+            // Clear cyclone state
+            this.cycloneState = null;
+        }
+        
+        // Recursively dispose of geometries and materials
+        this.effect.traverse(child => {
+            // Dispose of geometries
+            if (child.geometry) {
+                child.geometry.dispose();
+            }
+            
+            // Dispose of materials
+            if (child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(material => {
+                        // Dispose of any textures
+                        if (material.map) material.map.dispose();
+                        if (material.normalMap) material.normalMap.dispose();
+                        if (material.specularMap) material.specularMap.dispose();
+                        if (material.emissiveMap) material.emissiveMap.dispose();
+                        
+                        // Dispose of the material itself
+                        material.dispose();
+                    });
+                } else {
+                    // Dispose of any textures
+                    if (child.material.map) child.material.map.dispose();
+                    if (child.material.normalMap) child.material.normalMap.dispose();
+                    if (child.material.specularMap) child.material.specularMap.dispose();
+                    if (child.material.emissiveMap) child.material.emissiveMap.dispose();
+                    
+                    // Dispose of the material itself
+                    child.material.dispose();
+                }
+            }
+            
+            // Clear any userData
+            if (child.userData) {
+                child.userData = {};
+            }
+        });
+        
+        // Remove from parent
+        if (this.effect.parent) {
+            this.effect.parent.remove(this.effect);
+        }
+        
+        // Clear references
+        this.effect = null;
+        this.isActive = false;
+    }
+    
+    /**
+     * Override the reset method to properly clean up all resources
+     */
+    reset() {
+        // Call the dispose method to clean up resources
+        this.dispose();
+        
+        // Reset state variables
+        this.isActive = false;
+        this.elapsedTime = 0;
     }
 }

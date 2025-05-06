@@ -6,8 +6,8 @@
 
 Monk Journey is an action RPG game where you play as a monk with powerful martial arts abilities. Navigate through procedurally generated terrains, defeat enemies, and master a variety of special skills to become the ultimate warrior monk.
 
+![monk-journey-164330-20250506](screenshots/monk-journey-164330-20250506.jpg)
 ![monk-journey-20250504-183600](screenshots/monk-journey-20250504-183000.png)
-![monk-journey-20250504-183600](screenshots/monk-journey-20250504-183100.png)
 
 ## Features
 

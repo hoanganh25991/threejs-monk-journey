@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import { SkillEffect } from './SkillEffect.js';
 
 /**
- * Specialized effect for wave-based skills
+ * Specialized effect for Wave of Light skill
  */
-export class WaveSkillEffect extends SkillEffect {
+export class WaveOfLightEffect extends SkillEffect {
     constructor(skill) {
         super(skill);
         this.waveSpeed = 10; // Units per second
@@ -23,7 +23,7 @@ export class WaveSkillEffect extends SkillEffect {
     }
 
     /**
-     * Create a wave effect
+     * Create a Wave of Light effect
      * @param {THREE.Vector3} position - Starting position
      * @param {THREE.Vector3} direction - Direction to travel
      * @returns {THREE.Group} - The created effect
@@ -37,7 +37,7 @@ export class WaveSkillEffect extends SkillEffect {
         this.direction.copy(direction);
         this.distanceTraveled = 0;
         
-        // Check if this is the Wave of Light skill (bell)
+        // Create the Wave of Light effect (bell)
         this.createWaveEffect(effectGroup);
         
         // Position effect
@@ -235,10 +235,6 @@ export class WaveSkillEffect extends SkillEffect {
             }
         }
         
-        // Store effect
-        this.effect = effectGroup;
-        this.isActive = true;
-        
         // Store animation state with configuration and target position
         this.bellState = {
             phase: 'descending', // 'descending', 'impact', 'ascending'
@@ -252,7 +248,7 @@ export class WaveSkillEffect extends SkillEffect {
     }
 
     /**
-     * Update the wave effect
+     * Update the Wave of Light effect
      * @param {number} delta - Time since last update in seconds
      */
     update(delta) {
@@ -264,11 +260,16 @@ export class WaveSkillEffect extends SkillEffect {
             // Check if effect has expired
             if (this.elapsedTime >= this.skill.duration) {
                 this.isActive = false;
+                this.dispose(); // Properly dispose of the effect when it expires
                 return;
             }
             
-            // Handle different updates based on effect type
+            // Update the Wave of Light effect
             this.updateWaveEffect(delta);
+            
+            // IMPORTANT: Update the skill's position property to match the effect's position
+            // This is crucial for collision detection in CollisionManager
+            this.skill.position.copy(this.effect.position);
         } catch (error) {
             console.error(`Error updating effect: ${error.message}`);
 
@@ -328,95 +329,162 @@ export class WaveSkillEffect extends SkillEffect {
                 // Fade impact area as it expands
                 impactArea.material.opacity = 0.7 * (1 - (currentScale / maxScale));
                 
-                // Make bell vibrate during impact - scale vibration with bell size
-                const vibrationIntensity = 0.2 * config.bellSizeMultiplier * (1 - (this.bellState.impactTime / 0.5));
-                bellGroup.rotation.z = Math.sin(this.bellState.impactTime * 40) * vibrationIntensity;
-                
-                // Animate light rays
-                for (let i = 2; i < 2 + 8; i++) { // Rays are children 2-9
-                    if (this.effect.children[i]) {
-                        const ray = this.effect.children[i];
-                        ray.scale.z = 1 + Math.sin(this.bellState.impactTime * 10) * 0.5 * config.bellSizeMultiplier;
-                        ray.material.opacity = 0.5 * (1 - (this.bellState.impactTime / 0.5));
-                    }
-                }
+                // Bell vibrates during impact
+                const vibrationAmount = 0.1 * config.bellSizeMultiplier;
+                bellGroup.position.x = Math.sin(this.bellState.impactTime * 30) * vibrationAmount;
+                bellGroup.position.z = Math.cos(this.bellState.impactTime * 25) * vibrationAmount;
                 
                 // After impact time, switch to ascending phase
-                if (this.bellState.impactTime >= 0.5) {
+                if (this.bellState.impactTime > 1.0) {
                     this.bellState.phase = 'ascending';
                 }
                 break;
                 
             case 'ascending':
-                // Bell ascends back to the sky - scale speed with bell size
-                const ascentSpeed = 10 * Math.sqrt(config.bellSizeMultiplier);
+                // Bell ascends back to the sky
+                const ascentSpeed = 10 * Math.sqrt(config.bellSizeMultiplier); // Scale speed with bell size
                 bellGroup.position.y += ascentSpeed * delta;
                 
-                // Gradually fade out the bell as it ascends
-                if (bellGroup.children.length > 0) {
-                    for (let i = 0; i < bellGroup.children.length; i++) {
-                        const part = bellGroup.children[i];
-                        if (part.material) {
-                            part.material.opacity = Math.max(0, part.material.opacity - delta);
-                        }
+                // Fade out bell as it ascends
+                bellGroup.traverse(child => {
+                    if (child.material && child.material.opacity !== undefined) {
+                        child.material.opacity = Math.max(0, child.material.opacity - delta);
                     }
-                }
+                });
                 
-                // Fade out impact area and rays
-                impactArea.material.opacity = Math.max(0, impactArea.material.opacity - delta);
-                
-                for (let i = 2; i < 2 + 8; i++) { // Rays are children 2-9
-                    if (this.effect.children[i]) {
-                        const ray = this.effect.children[i];
-                        ray.material.opacity = Math.max(0, ray.material.opacity - delta);
-                    }
-                }
-                
-                // Animate particles (last children of effect group)
-                for (let i = 2 + 8; i < this.effect.children.length; i++) {
-                    const particle = this.effect.children[i];
-                    
-                    // Move particles outward and upward - scale movement with bell size
-                    const directionToCenter = new THREE.Vector3(
-                        particle.position.x,
-                        0,
-                        particle.position.z
-                    ).normalize();
-                    
-                    particle.position.x += directionToCenter.x * delta * 2 * config.bellSizeMultiplier;
-                    particle.position.z += directionToCenter.z * delta * 2 * config.bellSizeMultiplier;
-                    particle.position.y += delta * 3 * config.bellSizeMultiplier;
-                    
-                    // Fade out particles
-                    particle.material.opacity = Math.max(0, particle.material.opacity - delta);
+                // When bell reaches its initial height or becomes invisible, end the effect
+                if (bellGroup.position.y >= this.bellState.initialHeight || 
+                    bellGroup.children[0].material.opacity <= 0.05) {
+                    // The effect will be removed in the next update cycle when duration is checked
                 }
                 break;
         }
+        
+        // Animate light rays and particles
+        for (let i = 2; i < this.effect.children.length; i++) {
+            const child = this.effect.children[i];
+            
+            // Animate light rays (box geometries)
+            if (child.geometry && child.geometry.type === 'BoxGeometry') {
+                // Pulse opacity based on impact phase
+                if (this.bellState.phase === 'impact') {
+                    child.material.opacity = 0.5 + 0.3 * Math.sin(this.bellState.impactTime * 10);
+                    
+                    // Extend rays during impact
+                    const pulseScale = 1.0 + 0.3 * Math.sin(this.bellState.impactTime * 5);
+                    child.scale.z = pulseScale;
+                } else if (this.bellState.phase === 'ascending') {
+                    // Fade out rays during ascent
+                    child.material.opacity = Math.max(0, child.material.opacity - delta * 0.5);
+                }
+            }
+            
+            // Animate particles (sphere geometries)
+            if (child.geometry && child.geometry.type === 'SphereGeometry' && child !== bellGroup.children[0]) {
+                if (this.bellState.phase === 'impact') {
+                    // Move particles outward during impact
+                    const direction = new THREE.Vector3(
+                        child.position.x,
+                        0,
+                        child.position.z
+                    ).normalize();
+                    
+                    const moveSpeed = 2 * config.bellSizeMultiplier * delta;
+                    child.position.x += direction.x * moveSpeed;
+                    child.position.z += direction.z * moveSpeed;
+                    
+                    // Bounce particles
+                    child.position.y = Math.abs(Math.sin(this.bellState.impactTime * 5 + i)) * 0.5;
+                    
+                    // Fade particles based on distance from center
+                    const distanceFromCenter = Math.sqrt(
+                        child.position.x * child.position.x + 
+                        child.position.z * child.position.z
+                    );
+                    
+                    child.material.opacity = Math.max(0, 0.7 - (distanceFromCenter / (impactArea.scale.x * safeRadius)));
+                } else if (this.bellState.phase === 'ascending') {
+                    // Fade out particles during ascent
+                    child.material.opacity = Math.max(0, child.material.opacity - delta);
+                }
+            }
+        }
+    }
+
+    /**
+     * Enhanced dispose method to properly clean up all resources
+     * Overrides the base class dispose method with more thorough cleanup
+     */
+    dispose() {
+        if (!this.effect) return;
+        
+        // Clean up Wave of Light specific resources
+        if (this.bellState) {
+            // Clear bell state
+            this.bellState = null;
+        }
+        
+        // Recursively dispose of geometries and materials
+        this.effect.traverse(child => {
+            // Dispose of geometries
+            if (child.geometry) {
+                child.geometry.dispose();
+            }
+            
+            // Dispose of materials
+            if (child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(material => {
+                        // Dispose of any textures
+                        if (material.map) material.map.dispose();
+                        if (material.normalMap) material.normalMap.dispose();
+                        if (material.specularMap) material.specularMap.dispose();
+                        if (material.emissiveMap) material.emissiveMap.dispose();
+                        
+                        // Dispose of the material itself
+                        material.dispose();
+                    });
+                } else {
+                    // Dispose of any textures
+                    if (child.material.map) child.material.map.dispose();
+                    if (child.material.normalMap) child.material.normalMap.dispose();
+                    if (child.material.specularMap) child.material.specularMap.dispose();
+                    if (child.material.emissiveMap) child.material.emissiveMap.dispose();
+                    
+                    // Dispose of the material itself
+                    child.material.dispose();
+                }
+            }
+            
+            // Clear any userData
+            if (child.userData) {
+                child.userData = {};
+            }
+        });
+        
+        // Remove from parent
+        if (this.effect.parent) {
+            this.effect.parent.remove(this.effect);
+        }
+        
+        // Clear references
+        this.effect = null;
+        this.isActive = false;
+        this.distanceTraveled = 0;
+        this.initialPosition.set(0, 0, 0);
+        this.direction.set(0, 0, 0);
     }
     
     /**
-     * Reset the wave effect to its initial state
-     * Overrides the base class reset method to handle wave-specific state
+     * Override the reset method to properly clean up all resources
      */
     reset() {
-        // Call the parent class reset method first
-        super.reset();
+        // Call the dispose method to clean up resources
+        this.dispose();
         
-        // Reset wave-specific properties
-        this.distanceTraveled = 0;
+        // Reset state variables
+        this.isActive = false;
+        this.elapsedTime = 0;
         this.bellCreated = false;
-        this.initialPosition = new THREE.Vector3();
-        this.direction = new THREE.Vector3();
-        
-        // Reset bell state if it exists
-        if (this.bellState) {
-            this.bellState = {
-                phase: 'descending',
-                initialHeight: this.bellState.config ? this.bellState.config.bellHeight : 8,
-                impactTime: 0,
-                config: this.bellState.config,
-                targetPosition: null
-            };
-        }
     }
 }

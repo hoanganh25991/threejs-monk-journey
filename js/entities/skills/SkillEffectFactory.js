@@ -1,19 +1,19 @@
 import { SkillEffect } from './SkillEffect.js';
-import { RangedSkillEffect } from './RangedSkillEffect.js';
-import { AoESkillEffect } from './AoESkillEffect.js';
-import { MultiSkillEffect } from './MultiSkillEffect.js';
-import { TeleportSkillEffect } from './TeleportSkillEffect.js';
-import { BuffSkillEffect } from './BuffSkillEffect.js';
-import { WaveSkillEffect } from './WaveSkillEffect.js';
-import { SummonSkillEffect } from './SummonSkillEffect.js';
-import { MarkSkillEffect } from './MarkSkillEffect.js';
+import { WaveStrikeEffect } from './WaveStrikeEffect.js';
+import { CycloneStrikeEffect } from './CycloneStrikeEffect.js';
+import { SevenSidedStrikeEffect } from './SevenSidedStrikeEffect.js';
+import { FistOfThunderEffect } from './FistOfThunderEffect.js';
+import { InnerSanctuaryEffect } from './InnerSanctuaryEffect.js';
+import { WaveOfLightEffect } from './WaveOfLightEffect.js';
+import { MysticAllyEffect } from './MysticAllyEffect.js';
+import { ExplodingPalmEffect } from './ExplodingPalmEffect.js';
 
 /**
  * Factory class for creating skill effects
  */
 export class SkillEffectFactory {
     /**
-     * Create a skill effect based on the skill type
+     * Create a skill effect based on the skill name
      * @param {Skill} skill - The skill to create an effect for
      * @returns {SkillEffect} - The created skill effect
      */
@@ -21,38 +21,38 @@ export class SkillEffectFactory {
         console.log(`SkillEffectFactory.createEffect called for skill: ${skill.name}, type: ${skill.type}`);
         
         let effect;
-        switch (skill.type) {
-            case 'ranged':
-                console.log(`Creating RangedSkillEffect for ${skill.name}`);
-                effect = new RangedSkillEffect(skill);
+        switch (skill.name) {
+            case 'Wave Strike':
+                console.log(`Creating WaveStrikeEffect for ${skill.name}`);
+                effect = new WaveStrikeEffect(skill);
                 break;
-            case 'aoe':
-                console.log(`Creating AoESkillEffect for ${skill.name}`);
-                effect = new AoESkillEffect(skill);
+            case 'Cyclone Strike':
+                console.log(`Creating CycloneStrikeEffect for ${skill.name}`);
+                effect = new CycloneStrikeEffect(skill);
                 break;
-            case 'multi':
-                console.log(`Creating MultiSkillEffect for ${skill.name}`);
-                effect = new MultiSkillEffect(skill);
+            case 'Seven-Sided Strike':
+                console.log(`Creating SevenSidedStrikeEffect for ${skill.name}`);
+                effect = new SevenSidedStrikeEffect(skill);
                 break;
-            case 'teleport':
-                console.log(`Creating TeleportSkillEffect for ${skill.name}`);
-                effect = new TeleportSkillEffect(skill);
+            case 'Fist of Thunder':
+                console.log(`Creating FistOfThunderEffect for ${skill.name}`);
+                effect = new FistOfThunderEffect(skill);
                 break;
-            case 'buff':
-                console.log(`Creating BuffSkillEffect for ${skill.name}`);
-                effect = new BuffSkillEffect(skill);
+            case 'Inner Sanctuary':
+                console.log(`Creating InnerSanctuaryEffect for ${skill.name}`);
+                effect = new InnerSanctuaryEffect(skill);
                 break;
-            case 'wave':
-                console.log(`Creating WaveSkillEffect for ${skill.name}`);
-                effect = new WaveSkillEffect(skill);
+            case 'Wave of Light':
+                console.log(`Creating WaveOfLightEffect for ${skill.name}`);
+                effect = new WaveOfLightEffect(skill);
                 break;
-            case 'summon':
-                console.log(`Creating SummonSkillEffect for ${skill.name}`);
-                effect = new SummonSkillEffect(skill);
+            case 'Mystic Ally':
+                console.log(`Creating MysticAllyEffect for ${skill.name}`);
+                effect = new MysticAllyEffect(skill);
                 break;
-            case 'mark':
-                console.log(`Creating MarkSkillEffect for ${skill.name}`);
-                effect = new MarkSkillEffect(skill);
+            case 'Exploding Palm':
+                console.log(`Creating ExplodingPalmEffect for ${skill.name}`);
+                effect = new ExplodingPalmEffect(skill);
                 break;
             default:
                 console.log(`Creating default SkillEffect for ${skill.name}`);

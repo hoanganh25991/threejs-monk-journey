@@ -48,6 +48,7 @@
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
 
+
 - [] Currently we have effect as:
     - Wave Strike (Ranged)
     - Cyclone Strike (AoE)
@@ -61,8 +62,27 @@
 
     help me rename effect match exactly with the skill name,ex: WaveStrikeEffect, instead of RangedEffect
 
+- [] Enhance: refactor playSound by let the sound at config/skills.js file
+    add missing sound, all skills when cast should have sound
+    add sound to effect if needed, effect-start, effect-end,...
 
-- [ ] Enhance: we have config player-models.js to control the dynamic adjust of model to stay on-top of the ground. We should not have the switch case on the PlayerModel.js, help me move it to config, each adjustment is static inside each model
+- [ ] Enhance: we have config player-models.js to control the dynamic adjust of model to stay on-top of the ground. We should not have the switch case on the PlayerModel.js, help me move it to config:
+//  PlayerModel.js code not correct
+if (!adjustmentsLoaded) {
+    // Apply default position based on model type
+    let defaultPosition = { x: 0, y: 0, z: 0 };
+    let defaultRotation = { x: 0, y: 0, z: 0 };
+    
+    // Set model-specific default positions
+    switch(this.currentModelId) {
+        case 'knight':
+            defaultPosition.y = 2.0; // Knight needs to be raised
+            break;
+        case 'skeleton':
+            defaultPosition.y = 0.5; // Skeleton needs slight adjustment
+            break;
+        // Add other model-specific defaults as needed
+}
 
 - [ ] Enhance: review Enemy.js file and optimize it:
     - remove unused method

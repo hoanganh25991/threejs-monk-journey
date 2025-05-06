@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import { SkillEffect } from './SkillEffect.js';
 
 /**
- * Specialized effect for ranged skills
+ * Specialized effect for Wave Strike skill
  */
-export class RangedSkillEffect extends SkillEffect {
+export class WaveStrikeEffect extends SkillEffect {
     constructor(skill) {
         super(skill);
         this.projectileSpeed = 15; // Units per second
@@ -14,7 +14,7 @@ export class RangedSkillEffect extends SkillEffect {
     }
 
     /**
-     * Create a ranged projectile effect
+     * Create a Wave Strike projectile effect
      * @param {THREE.Vector3} position - Starting position
      * @param {THREE.Vector3} direction - Direction to travel
      * @returns {THREE.Group} - The created effect
@@ -28,12 +28,8 @@ export class RangedSkillEffect extends SkillEffect {
         this.direction.copy(direction);
         this.distanceTraveled = 0;
         
-        // Special handling for Wave Strike
-        if (this.skill.name === 'Wave Strike') {
-            this.createWaveStrikeEffect(effectGroup);
-        } else {
-            this.createDefaultRangedEffect(effectGroup);
-        }
+        // Create the Wave Strike effect
+        this.createWaveStrikeEffect(effectGroup);
         
         // Position effect
         effectGroup.position.copy(position);
@@ -213,7 +209,7 @@ export class RangedSkillEffect extends SkillEffect {
     }
 
     /**
-     * Update the ranged effect
+     * Update the Wave Strike effect
      * @param {number} delta - Time since last update in seconds
      */
     update(delta) {
@@ -288,7 +284,7 @@ export class RangedSkillEffect extends SkillEffect {
         if (!this.effect) return;
         
         // Clean up Wave Strike specific resources
-        if (this.skill.name === 'Wave Strike' && this.waveState) {
+        if (this.waveState) {
             // Clear droplet references
             if (this.waveState.droplets) {
                 this.waveState.droplets.length = 0;
