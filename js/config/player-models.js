@@ -129,7 +129,7 @@ export const CHARACTER_MODELS = [
 ];
 
 // Default character model ID
-export const DEFAULT_CHARACTER_MODEL = 'scifi-robotskeleton-warrior';
+export const DEFAULT_CHARACTER_MODEL = 'knight-of-valor';
 
 // Available model size multipliers
 export const MODEL_SIZE_MULTIPLIERS = [
