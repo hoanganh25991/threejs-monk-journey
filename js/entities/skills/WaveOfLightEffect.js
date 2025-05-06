@@ -407,6 +407,9 @@ export class WaveOfLightEffect extends SkillEffect {
                         child.position.z * child.position.z
                     );
                     
+                    // Ensure radius is valid (same as in createWaveEffect method)
+                    const safeRadius = isNaN(this.radius) || this.radius <= 0 ? 2.0 : this.radius;
+                    
                     child.material.opacity = Math.max(0, 0.7 - (distanceFromCenter / (impactArea.scale.x * safeRadius)));
                 } else if (this.bellState.phase === 'ascending') {
                     // Fade out particles during ascent
