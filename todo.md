@@ -82,6 +82,24 @@ if (!adjustmentsLoaded) {
     add missing sound, all skills when cast should have sound
     add sound to effect if needed, effect-start, effect-end,...
 
+- [ ] Enhance: new Skill({
+                name: 'Mystic Ally',
+                description: 'Summon a spirit ally to fight alongside you',
+                type: 'summon',
+    have you see this skill in diablo immortal:
+    1. where it create 2 allies as clone of heroplease use the model of hero
+    2. allies not solid, transparent like spirit, with texture color 0x0x00ffff
+    3. they can fight (punch action) and random cast skill as hero, they just cast skill with long interval, each time cast is random
+
+- [ ] Enhance: Seven-Sided Strike, make it like descroption "Rapidly attack multiple enemies", which allow monk cloned show faster
+
+- [] Enhance: problem: i still hit issue where too many messages cause screen flood with messages. showMessage, i guess:
+  1. we should improve max_size, where new message added too fast -> quickly drop bunch of old messages to maintain max_size
+  2. by doing that, we may not yet render old messages, as they already dropped
+  3. we should have pop mechanism, to pop message from the queue, not synchrous show message directly
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 - [?] Enhance: review Enemy.js file and optimize it:
     - remove unused method
     - remove duplicate methods
@@ -139,44 +157,18 @@ if (!adjustmentsLoaded) {
     ```
     - should move methods not related to HUD to proper file, ex: createBleedingEffect
 
-- [ ] Enhance: add config to creaeTeleportEffect, allow to easily say increase size of effect 2 times, than the skill effect 2 times bigger
+- [ ] Enhance: add config to createTeleportEffect, allow to easily say increase size of effect 2 times, than the skill effect 2 times bigger
 
 - [ ] Enhance: remove the first terrain, replace with the ground with grey colour, something special to mark that, this is initial place, like our village, add some structures to it. Then only spawn enemies on other dynamic generated terrain.
 
 - [ ] Enhance: add sound to skill has multiple effects if has something special, generate-audio.js is what help me generate audio before.
 
-- [ ] Enhance: draw hero model similar to man monk, provide much complex look for man monk, muscle, head, chest, hand, leg. Add action when moving, add action for legs and hands.
+- [x] ~~Enhance: draw hero model similar to man monk, provide much complex look for man monk, muscle, head, chest, hand, leg. Add action when moving, add action for legs and hands.~~ -> resolve by 3d model glb
 
-- [ ] Enhance: draw complex model for skeleton monster, close to skeleton, not solid box
+- [x] ~~Enhance: draw complex model for skeleton monster, close to skeleton, not solid box~~ -> resolve by 3d model glb
 
 - [ ] Enhance: createWaveEffect, add config at top of this method, allow me to control the size of the bell, if i want to bell 2 times bigger then current, i just x2 that bell size number
-
-- [] Enhance: show message already have queue to quickly remove old message and add new one. problem: i still hit issue where too many messages cause screen flood with messages. i guess we should improve max_size, where new message added and quickly drop bunch of old messages.
-
-- [ ] Enhance: new Skill({
-                name: 'Mystic Ally',
-                description: 'Summon a spirit ally to fight alongside you',
-                type: 'summon',
-    have you see this skill in diablo immortal:
-    1. where it create 2 allies as clone of heroplease use the model of hero
-    2. allies not solid, transparent like spirit, with texture color 0x0x00ffff
-    3. they can fight (punch action) and random cast skill as hero, they just cast skill with long interval, each time cast is random
-
-- [ ] Enhance: new Skill({
-                name: 'Seven-Sided Strike',
-                description: 'Rapidly attack multiple enemies',
-    you have create multiple cloned hero at random position around the hero to fight, that's good
-    however, strike animation and duration short make skill animation unclear
-    help me make:
-    1. duration longer, 3 seconds at least
-    2. allow the cloned hero in flying kick shape (show flying leg)
-    3. flying in different direction around the hero
-    4. when we have enemies near by the hero, allow some random cloned hero kick to that direction
-    5. radius to check for near by enemies default is 50
-
-
-
-
+  -> we may need to allow to do this to all skills
 
 - [ ] Process all progress log files in the "progress" directory and update details in "functional-requirement":
   - Use `readme.md` as the central file linking everything.

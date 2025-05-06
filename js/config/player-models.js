@@ -10,7 +10,8 @@ export const CHARACTER_MODELS = [
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.0 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -24,7 +25,8 @@ export const CHARACTER_MODELS = [
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.0 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -38,7 +40,8 @@ export const CHARACTER_MODELS = [
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 2.0, z: 0 }, // Knight needs to be raised
-            rotation: { x: 0, y: 0, z: 0 }
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 2.0 // Height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -52,7 +55,8 @@ export const CHARACTER_MODELS = [
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 0.5, z: 0 }, // Skeleton needs slight adjustment
-            rotation: { x: 0, y: 0, z: 0 }
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.5 // Height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -66,7 +70,8 @@ export const CHARACTER_MODELS = [
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.0 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -80,7 +85,8 @@ export const CHARACTER_MODELS = [
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.0 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -94,7 +100,8 @@ export const CHARACTER_MODELS = [
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.0 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -107,8 +114,9 @@ export const CHARACTER_MODELS = [
         multiplier: 1.0,  // Default multiplier (1x size)
         // Default position and rotation adjustments
         defaultAdjustments: {
-            position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
+            position: { x: 0, y: 0, z: 0 }, // Raised to prevent being half-buried
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 2.5 // Height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -122,7 +130,8 @@ export const CHARACTER_MODELS = [
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.0 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -136,7 +145,8 @@ export const CHARACTER_MODELS = [
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.0 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -150,7 +160,8 @@ export const CHARACTER_MODELS = [
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.0 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -164,7 +175,8 @@ export const CHARACTER_MODELS = [
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.0 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -178,7 +190,8 @@ export const CHARACTER_MODELS = [
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.0 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -192,14 +205,15 @@ export const CHARACTER_MODELS = [
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
+            rotation: { x: 0, y: 0, z: 0 },
+            heightOffset: 1.0 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     }
 ];
 
 // Default character model ID
-export const DEFAULT_CHARACTER_MODEL = 'knight-of-valor';
+export const DEFAULT_CHARACTER_MODEL = 'ebon-knight';
 
 // Available model size multipliers
 export const MODEL_SIZE_MULTIPLIERS = [

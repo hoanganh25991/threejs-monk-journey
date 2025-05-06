@@ -320,6 +320,90 @@ export class PlayerModel extends IPlayerModel {
     }
     
     /**
+     * Clone the player model for use by other entities (like Mystic Ally)
+     * @param {number} opacity - Opacity for the cloned model (0.0 to 1.0)
+     * @param {number} emissiveColor - Emissive color for the cloned model (hex value)
+     * @param {number} emissiveIntensity - Intensity of the emissive effect (0.0 to 1.0)
+     * @returns {THREE.Group} The cloned model group
+     */
+    cloneModel(opacity = 0.7, emissiveColor = 0x00ffff, emissiveIntensity = 0.8) {
+        // Create a new group for the cloned model
+        const clonedGroup = new THREE.Group();
+        
+        // If using fallback model, delegate to it
+        if (this.usingFallbackModel && this.fallbackModel) {
+            // Clone the fallback model
+            const fallbackClone = this.fallbackModel.createModel();
+            
+            // Apply spirit appearance to the fallback model
+            fallbackClone.traverse(child => {
+                if (child.isMesh && child.material) {
+                    // Clone the material to avoid affecting the original
+                    if (Array.isArray(child.material)) {
+                        child.material = child.material.map(mat => {
+                            const newMat = mat.clone();
+                            newMat.transparent = true;
+                            newMat.opacity = opacity;
+                            newMat.emissive = new THREE.Color(emissiveColor);
+                            newMat.emissiveIntensity = emissiveIntensity;
+                            return newMat;
+                        });
+                    } else {
+                        child.material = child.material.clone();
+                        child.material.transparent = true;
+                        child.material.opacity = opacity;
+                        child.material.emissive = new THREE.Color(emissiveColor);
+                        child.material.emissiveIntensity = emissiveIntensity;
+                    }
+                }
+            });
+            
+            return fallbackClone;
+        }
+        
+        // If we have a loaded GLB model
+        if (this.gltfModel) {
+            try {
+                // Clone the model
+                const clonedModel = this.gltfModel.clone(true); // Deep clone
+                
+                // Apply spirit appearance to the cloned model
+                clonedModel.traverse(child => {
+                    if (child.isMesh && child.material) {
+                        // Clone the material to avoid affecting the original
+                        if (Array.isArray(child.material)) {
+                            child.material = child.material.map(mat => {
+                                const newMat = mat.clone();
+                                newMat.transparent = true;
+                                newMat.opacity = opacity;
+                                newMat.emissive = new THREE.Color(emissiveColor);
+                                newMat.emissiveIntensity = emissiveIntensity;
+                                return newMat;
+                            });
+                        } else {
+                            child.material = child.material.clone();
+                            child.material.transparent = true;
+                            child.material.opacity = opacity;
+                            child.material.emissive = new THREE.Color(emissiveColor);
+                            child.material.emissiveIntensity = emissiveIntensity;
+                        }
+                    }
+                });
+                
+                // Add the cloned model to our group
+                clonedGroup.add(clonedModel);
+                
+                return clonedGroup;
+            } catch (error) {
+                console.error("Error cloning player model:", error);
+                return null;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
      * Set the base scale of the model
      * @param {number} scale - Base scale factor to apply to the model
      */
@@ -457,16 +541,16 @@ export class PlayerModel extends IPlayerModel {
         // Create the new model
         await this.createModel();
         
-        // Adjust player movement height offset based on model
+        // Adjust player movement height offset based on model configuration
         if (this.game && this.game.player && this.game.player.movement) {
-            // For knight model, use a larger height offset to keep it above ground
-            if (modelId === 'knight') {
-                this.game.player.movement.heightOffset = 2.0;
-                console.log(`Adjusted height offset for knight model to: 2.0`);
-            } else {
-                // Default height offset for other models
-                this.game.player.movement.heightOffset = 1.0;
-                console.log(`Reset height offset to default: 1.0`);
+            // Get the height offset from the model configuration
+            const heightOffset = modelConfig.defaultAdjustments?.heightOffset || 1.0;
+            this.game.player.movement.heightOffset = heightOffset;
+            console.log(`Adjusted height offset for ${modelId} model to: ${heightOffset}`);
+            
+            // For the Ebon Knight model, clear any saved adjustments to ensure our new settings take effect
+            if (modelId === 'ebon-knight') {
+                this.clearSavedAdjustments(modelId);
             }
         }
         
@@ -489,7 +573,25 @@ export class PlayerModel extends IPlayerModel {
      * @param {string} modelId - ID of the model to adjust
      */
     applyModelSpecificAdjustments(modelId) {
-        // Default positions and rotations for different model types
+        // Try to get default adjustments from the model configuration first
+        const modelConfig = CHARACTER_MODELS.find(model => model.id === modelId);
+        if (modelConfig && modelConfig.defaultAdjustments) {
+            // Use the configuration from player-models.js
+            const defaultPosition = { ...modelConfig.defaultAdjustments.position };
+            const defaultRotation = { ...modelConfig.defaultAdjustments.rotation };
+            
+            // Apply the default position and rotation
+            this.setPreviewPosition(defaultPosition);
+            this.setPreviewRotation(defaultRotation);
+            
+            console.log(`Applied ${modelId} adjustments from config:`, 
+                `Position: X: ${defaultPosition.x}, Y: ${defaultPosition.y}, Z: ${defaultPosition.z}`,
+                `Rotation: X: ${defaultRotation.x}, Y: ${defaultRotation.y}, Z: ${defaultRotation.z}`);
+            
+            return;
+        }
+        
+        // Fallback to hardcoded adjustments if no config is found
         let defaultPosition = { x: 0, y: 0, z: 0 };
         let defaultRotation = { x: 0, y: 0, z: 0 };
         
@@ -503,6 +605,11 @@ export class PlayerModel extends IPlayerModel {
             case 'skeleton':
                 // Skeleton-specific adjustments
                 defaultPosition = { x: 0, y: 0.5, z: 0 }; // Skeleton needs slight adjustment
+                break;
+                
+            case 'ebon-knight':
+                // Ebon Knight-specific adjustments
+                defaultPosition = { x: 0, y: 5.0, z: 0 }; // Ebon Knight needs to be raised significantly
                 break;
                 
             case 'monk':
@@ -523,7 +630,7 @@ export class PlayerModel extends IPlayerModel {
         this.setPreviewPosition(defaultPosition);
         this.setPreviewRotation(defaultRotation);
         
-        console.log(`Applied ${modelId}-specific adjustments:`, 
+        console.log(`Applied ${modelId}-specific adjustments from hardcoded values:`, 
             `Position: X: ${defaultPosition.x}, Y: ${defaultPosition.y}, Z: ${defaultPosition.z}`,
             `Rotation: X: ${defaultRotation.x}, Y: ${defaultRotation.y}, Z: ${defaultRotation.z}`);
     }
@@ -542,6 +649,28 @@ export class PlayerModel extends IPlayerModel {
      */
     getCurrentModel() {
         return this.currentModel;
+    }
+    
+    /**
+     * Clear saved adjustments for a specific model
+     * @param {string} modelId - ID of the model to clear adjustments for
+     */
+    clearSavedAdjustments(modelId) {
+        try {
+            // Get current saved adjustments
+            const savedAdjustments = JSON.parse(localStorage.getItem('modelAdjustments') || '{}');
+            
+            // Remove adjustments for the specified model
+            if (savedAdjustments[modelId]) {
+                delete savedAdjustments[modelId];
+                
+                // Save back to localStorage
+                localStorage.setItem('modelAdjustments', JSON.stringify(savedAdjustments));
+                console.log(`Cleared saved adjustments for model: ${modelId}`);
+            }
+        } catch (error) {
+            console.error('Error clearing saved adjustments:', error);
+        }
     }
     
     /**

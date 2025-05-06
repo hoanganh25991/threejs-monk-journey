@@ -52,7 +52,7 @@ export class MysticAllyEffect extends SkillEffect {
         const summoningGroup = new THREE.Group();
         
         // Create base summoning circle
-        const circleGeometry = new THREE.CircleGeometry(2, 32);
+        const circleGeometry = new THREE.CircleGeometry(2, 32 * 5);
         const circleMaterial = new THREE.MeshStandardMaterial({
             color: this.skill.color,
             transparent: true,
