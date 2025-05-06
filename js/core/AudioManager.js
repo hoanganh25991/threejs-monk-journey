@@ -78,7 +78,7 @@ export class AudioManager {
         this.sounds.playerDeath = this.createSound('playerDeath', 'player_death.mp3', 1.0);
         this.sounds.levelUp = this.createSound('levelUp', 'level_up.mp3', 1.0);
         
-        // Skill sounds
+        // Skill cast sounds
         this.sounds.skillWaveStrike = this.createSound('skillWaveStrike', 'wave_strike.mp3', 0.8);
         this.sounds.skillCycloneStrike = this.createSound('skillCycloneStrike', 'cyclone_strike.mp3', 0.8);
         this.sounds.skillSevenSidedStrike = this.createSound('skillSevenSidedStrike', 'seven_sided_strike.mp3', 0.8);
@@ -88,9 +88,25 @@ export class AudioManager {
         this.sounds.skillWaveOfLight = this.createSound('skillWaveOfLight', 'wave_of_light.mp3', 0.9);
         this.sounds.skillExplodingPalm = this.createSound('skillExplodingPalm', 'exploding_palm.mp3', 0.8);
         
-        // Skill effect sounds
+        // Skill impact sounds
+        this.sounds.waterImpact = this.createSound('waterImpact', 'water_impact.mp3', 0.7);
+        this.sounds.windPull = this.createSound('windPull', 'wind_pull.mp3', 0.7);
+        this.sounds.rapidStrike = this.createSound('rapidStrike', 'rapid_strike.mp3', 0.8);
+        this.sounds.barrierForm = this.createSound('barrierForm', 'barrier_form.mp3', 0.6);
+        this.sounds.allySummonComplete = this.createSound('allySummonComplete', 'ally_summon.mp3', 0.7);
         this.sounds.bellRing = this.createSound('bellRing', 'bell_ring.mp3', 0.9);
-        this.sounds.explosion = this.createSound('explosion', 'explosion.mp3', 0.8);
+        this.sounds.markApplied = this.createSound('markApplied', 'mark_applied.mp3', 0.7);
+        this.sounds.thunderStrike = this.createSound('thunderStrike', 'thunder_strike.mp3', 0.8);
+        
+        // Skill end sounds
+        this.sounds.waterDissipate = this.createSound('waterDissipate', 'water_dissipate.mp3', 0.6);
+        this.sounds.windDissipate = this.createSound('windDissipate', 'wind_dissipate.mp3', 0.6);
+        this.sounds.strikeComplete = this.createSound('strikeComplete', 'strike_complete.mp3', 0.7);
+        this.sounds.barrierDissipate = this.createSound('barrierDissipate', 'barrier_dissipate.mp3', 0.5);
+        this.sounds.allyDismiss = this.createSound('allyDismiss', 'ally_dismiss.mp3', 0.6);
+        this.sounds.bellFade = this.createSound('bellFade', 'bell_fade.mp3', 0.7);
+        this.sounds.massiveExplosion = this.createSound('massiveExplosion', 'massive_explosion.mp3', 0.9);
+        this.sounds.thunderEcho = this.createSound('thunderEcho', 'thunder_echo.mp3', 0.6);
         
         // Enemy sounds
         this.sounds.enemyAttack = this.createSound('enemyAttack', 'enemy_attack.mp3', 0.6);
@@ -122,7 +138,7 @@ export class AudioManager {
         this.sounds.playerDeath = this.createSimulatedSound('playerDeath', 110, 1.0, 0.5);
         this.sounds.levelUp = this.createSimulatedSound('levelUp', 440, 1.0, 0.4);
         
-        // Skill sounds
+        // Skill cast sounds
         this.sounds.skillWaveStrike = this.createSimulatedSound('skillWaveStrike', 280, 0.8, 0.3);
         this.sounds.skillCycloneStrike = this.createSimulatedSound('skillCycloneStrike', 320, 0.8, 0.4);
         this.sounds.skillSevenSidedStrike = this.createSimulatedSound('skillSevenSidedStrike', 380, 0.8, 0.5);
@@ -132,9 +148,25 @@ export class AudioManager {
         this.sounds.skillWaveOfLight = this.createSimulatedSound('skillWaveOfLight', 220, 0.9, 0.6);
         this.sounds.skillExplodingPalm = this.createSimulatedSound('skillExplodingPalm', 300, 0.8, 0.4);
         
-        // Skill effect sounds
+        // Skill impact sounds
+        this.sounds.waterImpact = this.createSimulatedSound('waterImpact', 350, 0.7, 0.2);
+        this.sounds.windPull = this.createSimulatedSound('windPull', 290, 0.7, 0.3);
+        this.sounds.rapidStrike = this.createSimulatedSound('rapidStrike', 420, 0.8, 0.2);
+        this.sounds.barrierForm = this.createSimulatedSound('barrierForm', 200, 0.6, 0.4);
+        this.sounds.allySummonComplete = this.createSimulatedSound('allySummonComplete', 280, 0.7, 0.3);
         this.sounds.bellRing = this.createSimulatedSound('bellRing', 600, 0.9, 0.7);
-        this.sounds.explosion = this.createSimulatedSound('explosion', 120, 0.8, 0.5);
+        this.sounds.markApplied = this.createSimulatedSound('markApplied', 320, 0.7, 0.3);
+        this.sounds.thunderStrike = this.createSimulatedSound('thunderStrike', 480, 0.8, 0.2);
+        
+        // Skill end sounds
+        this.sounds.waterDissipate = this.createSimulatedSound('waterDissipate', 240, 0.6, 0.4);
+        this.sounds.windDissipate = this.createSimulatedSound('windDissipate', 260, 0.6, 0.4);
+        this.sounds.strikeComplete = this.createSimulatedSound('strikeComplete', 400, 0.7, 0.3);
+        this.sounds.barrierDissipate = this.createSimulatedSound('barrierDissipate', 160, 0.5, 0.5);
+        this.sounds.allyDismiss = this.createSimulatedSound('allyDismiss', 220, 0.6, 0.4);
+        this.sounds.bellFade = this.createSimulatedSound('bellFade', 500, 0.7, 0.5);
+        this.sounds.massiveExplosion = this.createSimulatedSound('massiveExplosion', 120, 0.9, 0.6);
+        this.sounds.thunderEcho = this.createSimulatedSound('thunderEcho', 380, 0.6, 0.4);
         
         // Enemy sounds
         this.sounds.enemyAttack = this.createSimulatedSound('enemyAttack', 200, 0.6, 0.2);

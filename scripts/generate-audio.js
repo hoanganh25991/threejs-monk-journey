@@ -20,7 +20,7 @@ const sounds = {
     'player_death.mp3': { frequency: 110, duration: 0.5, type: 'sine', volume: 1.0, decay: true, slide: -20 },
     'level_up.mp3': { frequency: 440, duration: 0.4, type: 'sine', volume: 1.0, decay: false, arpeggio: [1, 1.25, 1.5] },
     
-    // Skill sounds
+    // Skill cast sounds
     'wave_strike.mp3': { frequency: 280, duration: 0.3, type: 'sine', volume: 0.8, decay: true, slide: 50 },
     'cyclone_strike.mp3': { frequency: 320, duration: 0.4, type: 'sawtooth', volume: 0.8, decay: true, vibrato: 10 },
     'seven_sided_strike.mp3': { frequency: 380, duration: 0.5, type: 'square', volume: 0.8, decay: true, arpeggio: [1, 1.5, 2, 1.5, 1, 1.5, 2] },
@@ -29,6 +29,26 @@ const sounds = {
     'mystic_ally.mp3': { frequency: 260, duration: 0.5, type: 'sine', volume: 0.7, decay: false, arpeggio: [1, 1.3, 1.6, 1.3] },
     'wave_of_light.mp3': { frequency: 220, duration: 0.6, type: 'triangle', volume: 0.9, decay: true, slide: -30, reverb: true },
     'exploding_palm.mp3': { frequency: 300, duration: 0.4, type: 'sawtooth', volume: 0.8, decay: true, arpeggio: [1, 1.2], slide: 40 },
+    
+    // Skill impact sounds
+    'water_impact.mp3': { frequency: 350, duration: 0.2, type: 'sine', volume: 0.7, decay: true, slide: -20 },
+    'wind_pull.mp3': { frequency: 290, duration: 0.3, type: 'sawtooth', volume: 0.7, decay: true, vibrato: 15 },
+    'rapid_strike.mp3': { frequency: 420, duration: 0.2, type: 'square', volume: 0.8, decay: true, arpeggio: [1, 1.2, 1.4, 1.6, 1.8, 2.0, 1.8] },
+    'barrier_form.mp3': { frequency: 200, duration: 0.4, type: 'sine', volume: 0.6, decay: false, reverb: true },
+    'ally_summon.mp3': { frequency: 280, duration: 0.3, type: 'sine', volume: 0.7, decay: false, arpeggio: [1, 1.5, 2] },
+    'bell_ring.mp3': { frequency: 600, duration: 0.7, type: 'sine', volume: 0.9, decay: true, reverb: true },
+    'mark_applied.mp3': { frequency: 320, duration: 0.3, type: 'sawtooth', volume: 0.7, decay: true, slide: 30 },
+    'thunder_strike.mp3': { frequency: 480, duration: 0.2, type: 'sawtooth', volume: 0.8, decay: true, slide: -40 },
+    
+    // Skill end sounds
+    'water_dissipate.mp3': { frequency: 240, duration: 0.4, type: 'sine', volume: 0.6, decay: true, slide: -30 },
+    'wind_dissipate.mp3': { frequency: 260, duration: 0.4, type: 'sine', volume: 0.6, decay: true, slide: -40 },
+    'strike_complete.mp3': { frequency: 400, duration: 0.3, type: 'square', volume: 0.7, decay: true, slide: -20 },
+    'barrier_dissipate.mp3': { frequency: 160, duration: 0.5, type: 'sine', volume: 0.5, decay: true, slide: -30 },
+    'ally_dismiss.mp3': { frequency: 220, duration: 0.4, type: 'sine', volume: 0.6, decay: true, arpeggio: [2, 1.5, 1] },
+    'bell_fade.mp3': { frequency: 500, duration: 0.5, type: 'sine', volume: 0.7, decay: true, slide: -50, reverb: true },
+    'massive_explosion.mp3': { frequency: 120, duration: 0.6, type: 'sawtooth', volume: 0.9, decay: true, slide: -30 },
+    'thunder_echo.mp3': { frequency: 380, duration: 0.4, type: 'sine', volume: 0.6, decay: true, reverb: true },
     
     // Enemy sounds
     'enemy_attack.mp3': { frequency: 200, duration: 0.2, type: 'sawtooth', volume: 0.6, decay: true },

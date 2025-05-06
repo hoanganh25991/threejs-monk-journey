@@ -12,9 +12,9 @@ export const SKILLS = [
         duration: 3.5, // Further increased duration from 2.5 to 3.5
         color: 0x00ffff,
         sounds: {
-            cast: 'skillWaveStrike',
-            impact: 'enemyHit',
-            end: null
+            cast: 'skillWaveStrike', // Monk channels energy and releases a wave
+            impact: 'waterImpact', // Watery impact sound when hitting enemies
+            end: 'waterDissipate' // Sound of water energy dissipating
         }
     },
     {
@@ -29,9 +29,9 @@ export const SKILLS = [
         duration: 2.5, // Further increased duration from 1.5 to 2.5
         color: 0xffcc00,
         sounds: {
-            cast: 'skillCycloneStrike',
-            impact: 'enemyHit',
-            end: null
+            cast: 'skillCycloneStrike', // Powerful wind gathering sound
+            impact: 'windPull', // Sound of enemies being pulled by wind
+            end: 'windDissipate' // Wind dissipating after the cyclone ends
         }
     },
     {
@@ -47,9 +47,9 @@ export const SKILLS = [
         color: 0xff0000,
         hits: 7,
         sounds: {
-            cast: 'skillSevenSidedStrike',
-            impact: 'enemyHit',
-            end: null
+            cast: 'skillSevenSidedStrike', // Monk chanting and focusing energy
+            impact: 'rapidStrike', // Quick succession of strike impacts
+            end: 'strikeComplete' // Final strike with emphasis
         }
     },
     {
@@ -64,9 +64,9 @@ export const SKILLS = [
         duration: 10, // Further increased duration from 7 to 10
         color: 0xffffff,
         sounds: {
-            cast: 'skillInnerSanctuary',
-            impact: null,
-            end: null
+            cast: 'skillInnerSanctuary', // Monk chanting a protection mantra
+            impact: 'barrierForm', // Sound of protective barrier forming
+            end: 'barrierDissipate' // Sound of barrier fading away
         }
     },
     {
@@ -81,9 +81,9 @@ export const SKILLS = [
         duration: 20, // Further increased duration from 15 to 20
         color: 0x00ffff,
         sounds: {
-            cast: 'skillMysticAlly',
-            impact: null,
-            end: null
+            cast: 'skillMysticAlly', // Mystical summoning incantation
+            impact: 'allySummonComplete', // Sound of ally materializing
+            end: 'allyDismiss' // Sound of ally returning to spirit realm
         }
     },
     {
@@ -98,9 +98,9 @@ export const SKILLS = [
         duration: 5.0, // Further increased duration from 3.5 to 5.0
         color: 0xffdd22, // Golden color for the bell's light
         sounds: {
-            cast: 'skillWaveOfLight',
-            impact: 'bellRing', // New sound for bell impact
-            end: null
+            cast: 'skillWaveOfLight', // Monk summoning the bell with chanting
+            impact: 'bellRing', // Deep, resonant bell sound
+            end: 'bellFade' // Bell sound fading with reverberations
         }
     },
     {
@@ -115,9 +115,9 @@ export const SKILLS = [
         duration: 5, // Further increased duration from 15 to 20 seconds
         color: 0xff3333,
         sounds: {
-            cast: 'skillExplodingPalm',
-            impact: 'enemyHit',
-            end: 'explosion'
+            cast: 'skillExplodingPalm', // Sound of monk focusing deadly energy
+            impact: 'markApplied', // Sound of mark being applied to enemy
+            end: 'massiveExplosion' // Powerful explosion when mark detonates
         }
     },
     {
@@ -133,9 +133,9 @@ export const SKILLS = [
         color: 0x4169e1, // Royal blue color for lightning
         basicAttack: true,
         sounds: {
-            cast: 'skillFistOfThunder',
-            impact: 'enemyHit',
-            end: null
+            cast: 'skillFistOfThunder', // Sound of lightning charging
+            impact: 'thunderStrike', // Crackling lightning impact
+            end: 'thunderEcho' // Echo of thunder after strike
         }
     }
 ];

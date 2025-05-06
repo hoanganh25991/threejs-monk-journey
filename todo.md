@@ -66,7 +66,7 @@ if (!adjustmentsLoaded) {
     // Apply default position based on model type
     let defaultPosition = { x: 0, y: 0, z: 0 };
     let defaultRotation = { x: 0, y: 0, z: 0 };
-    
+
     // Set model-specific default positions
     switch(this.currentModelId) {
         case 'knight':
@@ -77,6 +77,8 @@ if (!adjustmentsLoaded) {
             break;
         // Add other model-specific defaults as needed
 }
+
+- [] Enhance: show message already have queue to quickly remove old message and add new one. problem: i still hit issue where too many messages cause screen flood with messages. i guess we should improve max_size, where new message added and quickly drop bunch of old messages.
 
 - [] Enhance: refactor playSound by let the sound at config/skills.js file
     add missing sound, all skills when cast should have sound
@@ -242,4 +244,3 @@ Here are some general names for characters or roles that typically use weapons, 
 13. **Musketeer** - Uses early firearms and swords.
 14. **Gladiator** - A combatant in ancient arenas, using a variety of weapons.
 15. **Cavalier** - A mounted soldier, often using lances and swords.
-
