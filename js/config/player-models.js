@@ -5,13 +5,13 @@ export const CHARACTER_MODELS = [
         name: 'Monk',
         path: 'assets/models/monk.glb',
         description: 'Default monk character model',
-        baseScale: 1.3, // Base scale to fit the model to game world
+        baseScale: 1.5, // Base scale to fit the model to game world
         multiplier: 1.0,  // Default multiplier (1x size)
         // Default position and rotation adjustments
         defaultAdjustments: {
             position: { x: 0, y: 0, z: 0 },
             rotation: { x: 0, y: 0, z: 0 },
-            heightOffset: 1.0 // Default height offset for movement
+            heightOffset: 2.0 // Default height offset for movement
         }
         // Preview position and rotation are handled dynamically by the adjustment system
     },
@@ -243,7 +243,7 @@ export const CHARACTER_MODELS = [
 ];
 
 // Default character model ID
-export const DEFAULT_CHARACTER_MODEL = 'ebon-knight';
+export const DEFAULT_CHARACTER_MODEL = 'monk';
 
 // Available model size multipliers
 export const MODEL_SIZE_MULTIPLIERS = [
