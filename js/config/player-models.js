@@ -23,7 +23,7 @@ export const CHARACTER_MODELS = [
         name: 'Knight of Valor',
         path: 'assets/models/knight-of-valor.glb',
         description: 'Valorous knight character model',
-        baseScale: 3.0, // Base scale to fit the model to game world
+        baseScale: 1.5, // Base scale to fit the model to game world
         multiplier: 1.0  // Default multiplier (1x size)
         // Preview position and rotation are handled dynamically by the adjustment system
     },
