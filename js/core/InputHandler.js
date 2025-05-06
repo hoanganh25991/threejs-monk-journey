@@ -17,7 +17,8 @@ export const INPUT_CONFIG = {
             { keys: ['KeyH'], description: 'Basic Attack (Fist of Thunder)' },
             { keys: ['KeyE'], description: 'Interact with objects' },
             { keys: ['KeyY'], description: 'Toggle Inventory' },
-            { keys: ['Escape'], description: 'Pause Menu' }
+            { keys: ['Escape'], description: 'Pause Menu' },
+            { keys: ['KeyG'], description: 'Start New Game' }
         ]
     },
     skills: {
@@ -162,6 +163,38 @@ export class InputHandler {
                 case 'KeyE':
                     // Interact with objects
                     this.game.player.interact();
+                    break;
+                    
+                case 'KeyG':
+                    // Only allow starting a new game when the game is not already running
+                    if (this.game.isPaused && document.getElementById('game-menu')) {
+                        console.log('G key pressed - starting new game');
+                        
+                        // Hide any existing game menu
+                        const existingGameMenu = document.getElementById('game-menu');
+                        if (existingGameMenu) {
+                            existingGameMenu.style.display = 'none';
+                        }
+                        
+                        // Hide any existing options menu
+                        const existingOptionsMenu = document.getElementById('main-options-menu');
+                        if (existingOptionsMenu) {
+                            existingOptionsMenu.style.display = 'none';
+                        }
+                        
+                        // Start the game
+                        this.game.start();
+                        
+                        // Make sure settings button is visible
+                        const settingsButton = document.getElementById('settings-button');
+                        if (settingsButton) {
+                            settingsButton.style.display = 'block';
+                        }
+                        
+                        console.log("Game started via G key - enemies and player are now active");
+                    } else {
+                        console.log('G key pressed but game is already running or not at main menu');
+                    }
                     break;
                     
                 // Handle all alternative keys
