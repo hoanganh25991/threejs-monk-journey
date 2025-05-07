@@ -4,8 +4,8 @@
  * Enhanced with detailed progress reporting
  */
 
-const CACHE_NAME = 'diablo-immortal-cache';
-const CACHE_VERSION = '11'; // Incremented version to force update
+const CACHE_NAME = 'monk-journey-cache';
+const CACHE_VERSION = '13'; // Incremented version to force update
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Communication channel
@@ -127,7 +127,9 @@ const ASSETS_TO_CACHE = [
   'assets/audio/wave_strike.mp3',
   'assets/audio/wind_dissipate.mp3',
   'assets/audio/wind_pull.mp3',
-  'assets/images/background.jpg'
+  'assets/images/background.jpg',
+  'pwa/orientation-lock.js',
+  'pwa/registration.js'
 ];
 
 // Function to send progress updates to the client
