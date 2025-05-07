@@ -88,7 +88,7 @@ export class PerformanceManager {
             }
         };
         
-        this.currentQuality = 'high'; // Start with high quality by default
+        this.currentQuality = 'ultra'; // Start with high quality by default
         this.stats = null;
         this.memoryDisplay = null;
         this.disposalQueue = []; // Queue for objects to be disposed
