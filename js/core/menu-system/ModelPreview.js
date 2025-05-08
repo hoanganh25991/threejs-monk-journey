@@ -7,10 +7,23 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { updateAnimation } from '../../utils/AnimationUtils.js';
+import { UIComponent } from '../../core/UIComponent.js';
 
-export class ModelPreview {
+export class ModelPreview extends UIComponent {
     constructor(container, width = 300, height = 485) {
-        this.container = container;
+        // If container is a string (ID), use it directly, otherwise use the element's ID or create a fallback ID
+        const containerId = typeof container === 'string' 
+            ? container 
+            : (container.id || 'model-preview-container');
+        
+        // Call parent constructor with containerId and null for game (not needed for model preview)
+        super(containerId, null);
+        
+        // Store the original container reference if it's an element
+        if (typeof container !== 'string') {
+            this.container = container;
+        }
+        
         this.width = width;
         this.height = height;
         
@@ -26,11 +39,19 @@ export class ModelPreview {
         this.animations = {};
         this.currentAnimation = null;
         
-        // Create a wrapper to handle visibility
-        this.wrapper = document.createElement('div');
+        // Use the wrapper div that should be defined in HTML
+        // If it doesn't exist, we'll create it with a specific class for styling
+        this.wrapper = this.container.querySelector('.model-preview-wrapper');
+        if (!this.wrapper) {
+            // Create wrapper only if it doesn't exist in HTML
+            this.wrapper = document.createElement('div');
+            this.wrapper.className = 'model-preview-wrapper';
+            this.container.appendChild(this.wrapper);
+        }
+        
+        // Set dimensions
         this.wrapper.style.width = `${width}px`;
         this.wrapper.style.height = `${height}px`;
-        this.container.appendChild(this.wrapper);
         
         // Set up intersection observer to pause rendering when not visible
         this.setupVisibilityObserver();
@@ -66,7 +87,14 @@ export class ModelPreview {
         this.observer.observe(this.wrapper);
     }
     
+    /**
+     * Initialize the component
+     * @returns {boolean} - True if initialization was successful
+     */
     init() {
+        // Call parent init method
+        super.init();
+        
         // Create scene
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x111111);
@@ -380,6 +408,9 @@ export class ModelPreview {
         }
     }
     
+    /**
+     * Clean up the component
+     */
     dispose() {
         // Stop animation loop
         if (this.animationId) {
@@ -394,13 +425,14 @@ export class ModelPreview {
         }
         
         // Remove renderer from wrapper
-        if (this.renderer && this.renderer.domElement) {
+        if (this.renderer && this.renderer.domElement && this.wrapper.contains(this.renderer.domElement)) {
             this.wrapper.removeChild(this.renderer.domElement);
         }
         
-        // Remove wrapper from container
-        if (this.wrapper && this.wrapper.parentNode) {
-            this.container.removeChild(this.wrapper);
+        // Note: We don't remove the wrapper from container anymore since it's defined in HTML
+        // Instead, we just clear its contents
+        if (this.wrapper) {
+            this.wrapper.innerHTML = '';
         }
         
         // Dispose of resources
