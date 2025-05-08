@@ -3,8 +3,8 @@
  * Manages the settings button UI component
  */
 
-import { SettingsMenu } from '../../ui/SettingsMenu.js';
-import { UIComponent } from '../../ui/UIComponent.js';
+import { SettingsMenu } from '../menu-system/SettingsMenu.js';
+import { UIComponent } from '../UIComponent.js';
 
 export class SettingsButton extends UIComponent {
     /**

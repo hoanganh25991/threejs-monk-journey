@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { updateAnimation } from '../utils/AnimationUtils.js';
+import { updateAnimation } from '../../utils/AnimationUtils.js';
 
 export class ModelPreview {
     constructor(container, width = 300, height = 485) {

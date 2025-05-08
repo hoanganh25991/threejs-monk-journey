@@ -9,8 +9,11 @@
 /* Import layout styles */
 @import 'layout.css';
 
-/* Import UI styles */
-@import 'ui.css';
+/* Import HUD Manager styles */
+@import 'core/hud-manager.css';
+
+/* Import Menu System styles */
+@import 'core/menu-system.css';
 
 /* Import animation styles */
 @import 'animations.css';

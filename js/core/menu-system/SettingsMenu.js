@@ -4,8 +4,8 @@
  */
 
 import { ModelPreview } from './ModelPreview.js';
-import { CHARACTER_MODELS, MODEL_SIZE_MULTIPLIERS } from '../config/index.js';
-import { UIComponent } from './UIComponent.js';
+import { CHARACTER_MODELS, MODEL_SIZE_MULTIPLIERS } from '../../config/index.js';
+import { UIComponent } from '../UIComponent.js';
 
 export class SettingsMenu extends UIComponent {
     /**

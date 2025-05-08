@@ -1,4 +1,4 @@
-import { UIComponent } from '../../ui/UIComponent.js';
+import { UIComponent } from '../UIComponent.js';
 
 /**
  * Inventory UI component

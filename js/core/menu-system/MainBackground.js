@@ -3,7 +3,7 @@
  * Manages the main background image UI component
  */
 
-import { UIComponent } from './UIComponent.js';
+import { UIComponent } from '../UIComponent.js';
 
 export class MainBackground extends UIComponent {
     /**

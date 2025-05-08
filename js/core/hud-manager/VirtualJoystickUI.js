@@ -1,5 +1,5 @@
-import { UIComponent } from '../../ui/UIComponent.js';
-import { INPUT_CONFIG } from '../../core/InputHandler.js';
+import { UIComponent } from '../UIComponent.js';
+import { INPUT_CONFIG } from '../InputHandler.js';
 
 /**
  * Virtual Joystick UI component

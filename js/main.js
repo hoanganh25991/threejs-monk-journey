@@ -5,8 +5,8 @@
 
 import { Game } from './core/game/Game.js';
 import { DEFAULT_CHARACTER_MODEL } from './config/index.js';
-import { LoadingScreen } from './ui/LoadingScreen.js';
-import { GameMenu } from './ui/GameMenu.js';
+import { LoadingScreen } from './core/menu-system/LoadingScreen.js';
+import { GameMenu } from './core/menu-system/GameMenu.js';
 
 // Store the selected model and size for use when starting a new game
 // Make these variables available globally for the Game class to access

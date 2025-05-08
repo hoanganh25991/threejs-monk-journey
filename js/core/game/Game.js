@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { WorldManager } from '../../world/WorldManager.js';
 import { Player } from '../../entities/player/Player.js';
 import { InputHandler } from '../InputHandler.js';
-import { HUDManager } from '../HUDManager.js';
+import { HUDManager } from '../hud-manager/HUDManager.js';
 import { EnemyManager } from '../../entities/EnemyManager.js';
 import { CollisionManager } from '../CollisionManager.js';
 import { QuestManager } from '../QuestManager.js';

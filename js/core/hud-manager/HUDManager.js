@@ -1,15 +1,15 @@
-import { PlayerUI } from './hud/PlayerUI.js';
-import { EnemyUI } from './hud/EnemyUI.js';
-import { SkillsUI } from './hud/SkillsUI.js';
-import { DialogUI } from './hud/DialogUI.js';
-import { InventoryUI } from './hud/InventoryUI.js';
-import { VirtualJoystickUI } from './hud/VirtualJoystickUI.js';
-import { DeathScreenUI } from './hud/DeathScreenUI.js';
-import { NotificationsUI } from './hud/NotificationsUI.js';
-import { QuestLogUI } from './hud/QuestLogUI.js';
-import { EffectsManager } from './hud/EffectsManager.js';
-import { MainBackground } from '../ui/MainBackground.js';
-import { SettingsButton } from './hud/SettingsButton.js';
+import { PlayerUI } from './PlayerUI.js';
+import { EnemyUI } from './EnemyUI.js';
+import { SkillsUI } from './SkillsUI.js';
+import { DialogUI } from './DialogUI.js';
+import { InventoryUI } from './InventoryUI.js';
+import { VirtualJoystickUI } from './VirtualJoystickUI.js';
+import { DeathScreenUI } from './DeathScreenUI.js';
+import { NotificationsUI } from './NotificationsUI.js';
+import { QuestLogUI } from './QuestLogUI.js';
+import { EffectsManager } from './EffectsManager.js';
+import { MainBackground } from '../menu-system/MainBackground.js';
+import { SettingsButton } from './SettingsButton.js';
 
 /**
  * HUD Manager
