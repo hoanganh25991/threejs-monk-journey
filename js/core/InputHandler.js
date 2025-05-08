@@ -126,9 +126,9 @@ export class InputHandler {
                     console.log('Toggling inventory with KeyY');
                     break;
                     
+                // Escape key functionality has been removed
                 case 'Escape':
-                    // Toggle pause menu
-                    this.game.uiManager.togglePauseMenu();
+                    // Do nothing when Escape is pressed
                     break;
                     
                 case 'KeyH':
