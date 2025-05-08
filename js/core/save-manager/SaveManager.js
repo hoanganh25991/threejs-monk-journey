@@ -314,7 +314,10 @@ export class SaveManager extends ISaveSystem {
             
             // Update UI elements
             if (this.game.isRunning && this.game.uiManager) {
-                this.game.uiManager.updatePlayerUI();
+                // Update player UI by accessing the PlayerUI component directly
+                if (this.game.uiManager.components && this.game.uiManager.components.playerUI) {
+                    this.game.uiManager.components.playerUI.update();
+                }
                 this.game.uiManager.updateQuestLog(this.game.questManager.activeQuests);
             }
             

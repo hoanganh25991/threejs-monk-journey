@@ -127,11 +127,10 @@ help me refactor the setting menu
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-- [ ] Help me show progress when "Load Game" and "Save Game"
+- [x] Help me show progress when "Load Game" and "Save Game"
   - Not just like "freezing", then game started show up
 
-
-- [ ] Enhance: review SaveManager.js file and optimize it:
+- [x] Enhance: review SaveManager.js file and optimize it:
     - remove unused method
     - remove duplicate methods
     - define common methods to be shared
