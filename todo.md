@@ -111,20 +111,25 @@ help me refactor the setting menu
 - [x] Section should be break to not long too much
 - [x] ModelPreview should consume a whole tab for better preview, on left is model, on right is select model/animation
 
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-- [ ] Enhance: review HUDManager.js file and optimize it:
-    - [ ] Remove unused methods.
-    - [ ] Remove duplicate methods.
-    - [ ] Define common methods for shared use.
-    - [ ] Design each container UI to be easily reusable, requiring only a parent `div` and an `id` to mount itself, facilitating standalone rendering later.
-    - [ ] Define container `div` elements in `index.html` instead of creating them dynamically. Comment the code block to retrieve these existing DOM elements, and add validation to ensure they are defined in `index.html`, alerting and providing a fix if not.
-    - [ ] Organize code into multiple files for easier maintenance, defining interfaces where necessary.
-    - [ ] using template style, ex:
+- [x] Enhance: review HUDManager.js file and optimize it:
+    - [x] Remove unused methods.
+    - [x] Remove duplicate methods.
+    - [x] Define common methods for shared use.
+    - [x] Design each container UI to be easily reusable, requiring only a parent `div` and an `id` to mount itself, facilitating standalone rendering later.
+    - [x] Define container `div` elements in `index.html` instead of creating them dynamically. Comment the code block to retrieve these existing DOM elements, and add validation to ensure they are defined in `index.html`, alerting and providing a fix if not.
+    - [x] Organize code into multiple files for easier maintenance, defining interfaces where necessary.
+    - [x] using template style, ex:
     ```js
     return `<div style="color: #4CAF50; font-weight: bold; margin-bottom: 5px;">GPU INFORMATION</div><div><span style="color: #aaa;">Vendor:</span> ${gpuVendor}</div>`
     ```
-    - [ ] should move methods not related to HUD to proper file, ex: createBleedingEffect
+    - [x] should move methods not related to HUD to proper file, ex: createBleedingEffect
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+- [ ] Help me show progress when "Load Game" and "Save Game"
+  - Not just like "freezing", then game started show up
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

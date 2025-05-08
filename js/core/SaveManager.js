@@ -167,40 +167,41 @@ export class SaveManager {
                                 }
                                 console.log('World data loaded successfully');
                                 
-                                try {
-                                    // Load game settings
-                                    if (saveData.settings) {
-                                        console.log('Loading game settings...');
+                                // Load game settings - handle errors separately to prevent blocking game load
+                                if (saveData.settings) {
+                                    console.log('Loading game settings...');
+                                    try {
                                         this.loadGameSettings(saveData.settings);
                                         console.log('Game settings loaded successfully');
-                                    } else {
-                                        console.warn('No settings data found in save');
+                                    } catch (settingsError) {
+                                        console.error('Error loading game settings:', settingsError);
+                                        // Continue loading the game with default settings
+                                        console.log('Continuing with default settings');
                                     }
-                                    
-                                    // Update last save level to prevent immediate re-saving
-                                    if (saveData.player && saveData.player.level) {
-                                        this.lastSaveLevel = saveData.player.level;
-                                    }
-                                    
-                                    // Update last save time
-                                    this.lastSaveTime = Date.now();
-                                    
-                                    console.log('Game loaded successfully');
-                                    
-                                    // Show notification if game is running
-                                    if (this.game.isRunning && this.game.uiManager) {
-                                        this.game.uiManager.showNotification('Game loaded successfully');
-                                        
-                                        // Update UI elements
-                                        this.game.uiManager.updatePlayerUI();
-                                        this.game.uiManager.updateQuestLog(this.game.questManager.activeQuests);
-                                    }
-                                    
-                                    return true;
-                                } catch (settingsError) {
-                                    console.error('Error loading game settings:', settingsError);
-                                    throw settingsError;
+                                } else {
+                                    console.warn('No settings data found in save');
                                 }
+                                
+                                // Update last save level to prevent immediate re-saving
+                                if (saveData.player && saveData.player.level) {
+                                    this.lastSaveLevel = saveData.player.level;
+                                }
+                                
+                                // Update last save time
+                                this.lastSaveTime = Date.now();
+                                
+                                console.log('Game loaded successfully');
+                                
+                                // Show notification if game is running
+                                if (this.game.isRunning && this.game.uiManager) {
+                                    this.game.uiManager.showNotification('Game loaded successfully');
+                                    
+                                    // Update UI elements
+                                    this.game.uiManager.updatePlayerUI();
+                                    this.game.uiManager.updateQuestLog(this.game.questManager.activeQuests);
+                                }
+                                
+                                return true;
                             } catch (worldError) {
                                 console.error('Error loading world data:', worldError);
                                 throw worldError;
@@ -410,14 +411,38 @@ export class SaveManager {
     }
     
     getGameSettings() {
-        return {
-            difficulty: this.game.difficultyManager.getCurrentDifficultyIndex(),
-            audioSettings: {
-                isMuted: this.game.audioManager.isMuted,
-                musicVolume: this.game.audioManager.musicVolume,
-                sfxVolume: this.game.audioManager.sfxVolume
+        try {
+            const settings = {
+                difficulty: this.game.difficultyManager ? 
+                    this.game.difficultyManager.getCurrentDifficultyIndex() : 0,
+                audioSettings: {}
+            };
+            
+            // Only add audio settings if audioManager exists and is initialized
+            if (this.game.audioManager) {
+                settings.audioSettings = {
+                    isMuted: this.game.audioManager.isMuted !== undefined ? 
+                        this.game.audioManager.isMuted : false,
+                    musicVolume: this.game.audioManager.musicVolume !== undefined ? 
+                        this.game.audioManager.musicVolume : 0.5,
+                    sfxVolume: this.game.audioManager.sfxVolume !== undefined ? 
+                        this.game.audioManager.sfxVolume : 0.8
+                };
             }
-        };
+            
+            return settings;
+        } catch (error) {
+            console.warn('Error getting game settings, returning defaults:', error);
+            // Return default settings if there's an error
+            return {
+                difficulty: 0,
+                audioSettings: {
+                    isMuted: false,
+                    musicVolume: 0.5,
+                    sfxVolume: 0.8
+                }
+            };
+        }
     }
     
     loadPlayerData(playerData) {
@@ -910,24 +935,42 @@ export class SaveManager {
     loadGameSettings(settings) {
         if (!settings) return;
         
-        // Load difficulty
-        if (settings.difficulty !== undefined) {
-            this.game.difficultyManager.setDifficulty(settings.difficulty);
-        }
-        
-        // Load audio settings
-        if (settings.audioSettings) {
-            if (settings.audioSettings.isMuted !== undefined) {
-                this.game.audioManager.isMuted = settings.audioSettings.isMuted;
+        try {
+            // Load difficulty
+            if (settings.difficulty !== undefined && this.game.difficultyManager) {
+                this.game.difficultyManager.setDifficulty(settings.difficulty);
             }
             
-            if (settings.audioSettings.musicVolume !== undefined) {
-                this.game.audioManager.setMusicVolume(settings.audioSettings.musicVolume);
+            // Load audio settings
+            if (settings.audioSettings && this.game.audioManager) {
+                // Check if audioManager exists and is initialized
+                if (settings.audioSettings.isMuted !== undefined) {
+                    this.game.audioManager.isMuted = settings.audioSettings.isMuted;
+                }
+                
+                if (settings.audioSettings.musicVolume !== undefined) {
+                    try {
+                        this.game.audioManager.setMusicVolume(settings.audioSettings.musicVolume);
+                    } catch (audioError) {
+                        console.warn('Error setting music volume:', audioError);
+                        // Continue with other settings
+                    }
+                }
+                
+                if (settings.audioSettings.sfxVolume !== undefined) {
+                    try {
+                        this.game.audioManager.setSFXVolume(settings.audioSettings.sfxVolume);
+                    } catch (audioError) {
+                        console.warn('Error setting SFX volume:', audioError);
+                        // Continue with other settings
+                    }
+                }
+            } else if (settings.audioSettings) {
+                console.warn('Audio manager not available, skipping audio settings');
             }
-            
-            if (settings.audioSettings.sfxVolume !== undefined) {
-                this.game.audioManager.setSFXVolume(settings.audioSettings.sfxVolume);
-            }
+        } catch (error) {
+            console.warn('Error applying game settings, continuing with defaults:', error);
+            // Don't throw the error - allow the game to continue loading with default settings
         }
     }
     
