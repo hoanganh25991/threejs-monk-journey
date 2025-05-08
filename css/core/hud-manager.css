@@ -425,6 +425,50 @@
     font-style: italic;
 }
 
+/* Mini Map */
+#mini-map-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
+    z-index: 100;
+}
+
+#mini-map-header {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 5px 10px;
+    border-radius: 10px 10px 0 0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-bottom: none;
+}
+
+#mini-map-header:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+#mini-map {
+    width: 200px; /* This will be dynamically set based on mapSize in JavaScript */
+    height: 200px;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding: 10px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.3s;
+}
+
+#mini-map-canvas {
+    border-radius: 50%;
+    display: block;
+}
+
 /* Update Notification */
 #update-notification {
     display: none;

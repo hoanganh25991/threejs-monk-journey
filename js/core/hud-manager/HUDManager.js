@@ -7,6 +7,7 @@ import { VirtualJoystickUI } from './VirtualJoystickUI.js';
 import { DeathScreenUI } from './DeathScreenUI.js';
 import { NotificationsUI } from './NotificationsUI.js';
 import { QuestLogUI } from './QuestLogUI.js';
+import { MiniMapUI } from './MiniMapUI.js';
 import { EffectsManager } from './EffectsManager.js';
 import { MainBackground } from '../menu-system/MainBackground.js';
 import { HomeButton } from './HomeButton.js';
@@ -123,6 +124,10 @@ export class HUDManager {
         this.components.notificationsUI = new NotificationsUI(this.game);
         this.components.notificationsUI.init();
         
+        // Create mini map UI
+        this.components.miniMapUI = new MiniMapUI(this.game);
+        this.components.miniMapUI.init();
+        
         // Create quest log UI
         this.components.questLogUI = new QuestLogUI(this.game);
         this.components.questLogUI.init();
@@ -153,6 +158,9 @@ export class HUDManager {
         
         // Update skills UI
         this.components.skillsUI.update(delta);
+        
+        // Update mini map UI
+        this.components.miniMapUI.update(delta);
         
         // Update notifications UI
         this.components.notificationsUI.update(delta);
@@ -251,6 +259,24 @@ export class HUDManager {
      */
     getJoystickDirection() {
         return this.components.joystickUI.getJoystickDirection();
+    }
+    
+    /**
+     * Toggle mini map visibility
+     * @returns {boolean} - New visibility state
+     */
+    toggleMiniMap() {
+        return this.components.miniMapUI.toggleMiniMap();
+    }
+    
+    /**
+     * Set mini map scale
+     * @param {number} scale - New scale factor
+     */
+    setMiniMapScale(scale) {
+        if (this.components.miniMapUI) {
+            this.components.miniMapUI.setScale(scale);
+        }
     }
     
     /**
