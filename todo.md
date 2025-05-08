@@ -131,6 +131,14 @@ help me refactor the setting menu
   - Not just like "freezing", then game started show up
 
 
+- [ ] Enhance: review SaveManager.js file and optimize it:
+    - remove unused method
+    - remove duplicate methods
+    - define common methods to be shared
+    - separate into multiple files for easier to maintain, define interface when needed
+    - remove the origin file, integrate with new code base
+    - move unrelated methods, logic to proper categorized file
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Help me improve movement of Player:

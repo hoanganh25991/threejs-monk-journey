@@ -8,7 +8,7 @@ import { EnemyManager } from '../../entities/EnemyManager.js';
 import { CollisionManager } from '../CollisionManager.js';
 import { QuestManager } from '../QuestManager.js';
 import { AudioManager } from '../AudioManager.js';
-import { SaveManager } from '../SaveManager.js';
+import { SaveManager } from '../save/SaveManager.js';
 import { DifficultyManager } from '../DifficultyManager.js';
 import { PerformanceManager } from '../PerformanceManager.js';
 import { GameState } from './GameState.js';
