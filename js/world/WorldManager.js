@@ -31,6 +31,13 @@ export class WorldManager {
         
         // For save/load functionality
         this.savedData = null;
+        
+        // For minimap features
+        this.terrainFeatures = [];
+        this.trees = [];
+        this.rocks = [];
+        this.buildings = [];
+        this.paths = [];
     }
     
     /**
@@ -181,5 +188,192 @@ export class WorldManager {
         this.environmentManager.load(worldState.environment);
         this.interactiveManager.load(worldState.interactive);
         this.zoneManager.load(worldState.zones);
+    }
+    
+    /**
+     * Get all entities in the world for the minimap
+     * @returns {Array} - Array of entities
+     */
+    getEntities() {
+        const entities = [];
+        
+        // Add enemies if available
+        if (this.game && this.game.enemyManager) {
+            entities.push(...this.game.enemyManager.enemies);
+        }
+        
+        // Add interactive objects if available
+        if (this.interactiveManager && this.interactiveManager.objects) {
+            entities.push(...this.interactiveManager.objects);
+        }
+        
+        return entities;
+    }
+    
+    /**
+     * Get terrain features for the minimap
+     * @returns {Array} - Array of terrain features
+     */
+    getTerrainFeatures() {
+        // Collect terrain features from various sources
+        this.terrainFeatures = [];
+        
+        // Add terrain features from terrain manager
+        if (this.terrainManager && this.terrainManager.terrainMeshes) {
+            // Add terrain boundaries as walls
+            const terrainSize = this.terrainManager.terrainSize || 100;
+            const halfSize = terrainSize / 2;
+            
+            // Add boundary walls
+            for (let i = -halfSize; i <= halfSize; i += 5) {
+                // North wall
+                this.terrainFeatures.push({
+                    type: 'wall',
+                    position: { x: i, y: 0, z: -halfSize }
+                });
+                
+                // South wall
+                this.terrainFeatures.push({
+                    type: 'wall',
+                    position: { x: i, y: 0, z: halfSize }
+                });
+                
+                // East wall
+                this.terrainFeatures.push({
+                    type: 'wall',
+                    position: { x: halfSize, y: 0, z: i }
+                });
+                
+                // West wall
+                this.terrainFeatures.push({
+                    type: 'wall',
+                    position: { x: -halfSize, y: 0, z: i }
+                });
+            }
+        }
+        
+        // Add structures as walls
+        if (this.structureManager && this.structureManager.structures) {
+            this.structureManager.structures.forEach(structure => {
+                this.terrainFeatures.push({
+                    type: 'wall',
+                    position: structure.position
+                });
+            });
+        }
+        
+        // Add environment objects
+        if (this.environmentManager) {
+            // Add trees
+            if (this.environmentManager.trees) {
+                this.environmentManager.trees.forEach(tree => {
+                    this.terrainFeatures.push({
+                        type: 'tree',
+                        position: tree.position
+                    });
+                });
+            }
+            
+            // Add rocks
+            if (this.environmentManager.rocks) {
+                this.environmentManager.rocks.forEach(rock => {
+                    this.terrainFeatures.push({
+                        type: 'rock',
+                        position: rock.position
+                    });
+                });
+            }
+            
+            // Add water bodies
+            if (this.environmentManager.waterBodies) {
+                this.environmentManager.waterBodies.forEach(water => {
+                    this.terrainFeatures.push({
+                        type: 'water',
+                        position: water.position
+                    });
+                });
+            }
+        }
+        
+        return this.terrainFeatures;
+    }
+    
+    /**
+     * Get trees for the minimap
+     * @returns {Array} - Array of trees
+     */
+    getTrees() {
+        this.trees = [];
+        
+        // Add trees from environment manager
+        if (this.environmentManager && this.environmentManager.trees) {
+            this.environmentManager.trees.forEach(tree => {
+                this.trees.push({
+                    position: tree.position
+                });
+            });
+        }
+        
+        return this.trees;
+    }
+    
+    /**
+     * Get rocks for the minimap
+     * @returns {Array} - Array of rocks
+     */
+    getRocks() {
+        this.rocks = [];
+        
+        // Add rocks from environment manager
+        if (this.environmentManager && this.environmentManager.rocks) {
+            this.environmentManager.rocks.forEach(rock => {
+                this.rocks.push({
+                    position: rock.position
+                });
+            });
+        }
+        
+        return this.rocks;
+    }
+    
+    /**
+     * Get buildings for the minimap
+     * @returns {Array} - Array of buildings
+     */
+    getBuildings() {
+        this.buildings = [];
+        
+        // Add buildings from structure manager
+        if (this.structureManager && this.structureManager.structures) {
+            this.structureManager.structures.forEach(structure => {
+                if (structure.type === 'building') {
+                    this.buildings.push({
+                        position: structure.position
+                    });
+                }
+            });
+        }
+        
+        return this.buildings;
+    }
+    
+    /**
+     * Get paths for the minimap
+     * @returns {Array} - Array of paths
+     */
+    getPaths() {
+        this.paths = [];
+        
+        // Add paths from environment manager or other sources
+        if (this.environmentManager && this.environmentManager.paths) {
+            this.environmentManager.paths.forEach(path => {
+                this.paths.push({
+                    position: path.position,
+                    nextPoint: path.nextPoint
+                });
+            });
+        }
+        
+        return this.paths;
     }
 }

@@ -22,10 +22,11 @@ export class MiniMapUI extends UIComponent {
         this.canvas = null;
         this.ctx = null;
         this.mapSize = 200; // Size of the mini map in pixels
-        this.scale = 0.1; // Scale factor for the world to mini map conversion
+        this.scale = 0.5; // Increased scale factor for better world coverage
         this.lastRenderTime = 0;
         this.renderInterval = 100; // Render every 100ms for performance
         this.isVisible = true;
+        this.maxDrawDistance = this.mapSize / 2 - 2; // Maximum draw distance from center
     }
     
     /**
@@ -465,7 +466,26 @@ export class MiniMapUI extends UIComponent {
      * @param {number} scale - New scale factor
      */
     setScale(scale) {
+        // Ensure scale is within reasonable bounds
+        if (scale < 0.1) scale = 0.1; // Minimum scale
+        if (scale > 2.0) scale = 2.0; // Maximum scale
+        
         this.scale = scale;
+        console.log(`Mini map scale set to: ${scale}`);
+    }
+    
+    /**
+     * Increase the scale factor (zoom out)
+     */
+    increaseScale() {
+        this.setScale(this.scale * 1.2);
+    }
+    
+    /**
+     * Decrease the scale factor (zoom in)
+     */
+    decreaseScale() {
+        this.setScale(this.scale / 1.2);
     }
     
     /**
