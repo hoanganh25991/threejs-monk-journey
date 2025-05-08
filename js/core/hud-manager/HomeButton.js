@@ -6,7 +6,7 @@
 import { SettingsMenu } from '../menu-system/SettingsMenu.js';
 import { UIComponent } from '../UIComponent.js';
 
-export class SettingsButton extends UIComponent {
+export class HomeButton extends UIComponent {
     /**
      * Create a settings button
      * @param {Game} game - The game instance

@@ -9,7 +9,7 @@ import { NotificationsUI } from './NotificationsUI.js';
 import { QuestLogUI } from './QuestLogUI.js';
 import { EffectsManager } from './EffectsManager.js';
 import { MainBackground } from '../menu-system/MainBackground.js';
-import { SettingsButton } from './SettingsButton.js';
+import { HomeButton } from './HomeButton.js';
 
 /**
  * HUD Manager
@@ -128,7 +128,7 @@ export class HUDManager {
         this.components.questLogUI.init();
         
         // Create settings button
-        this.components.settingsButton = new SettingsButton(this.game);
+        this.components.settingsButton = new HomeButton(this.game);
         // Note: SettingsButton initializes itself in its constructor
     }
     
