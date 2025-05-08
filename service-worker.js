@@ -5,7 +5,7 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '14'; // Incremented version to force update
+const CACHE_VERSION = '15'; // Incremented version to force update
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Communication channel
@@ -17,6 +17,7 @@ const ASSETS_TO_CACHE = [
   'index.html',
   'manifest.json',
   'css/animations.css',
+  'css/core/game.css',
   'css/core/hud-manager.css',
   'css/core/menu-system.css',
   'css/layout.css',
@@ -46,6 +47,7 @@ const ASSETS_TO_CACHE = [
   'js/core/hud-manager/HUDManager.js',
   'js/core/hud-manager/HomeButton.js',
   'js/core/hud-manager/InventoryUI.js',
+  'js/core/hud-manager/MiniMapUI.js',
   'js/core/hud-manager/NotificationsUI.js',
   'js/core/hud-manager/PlayerUI.js',
   'js/core/hud-manager/QuestLogUI.js',
@@ -60,11 +62,11 @@ const ASSETS_TO_CACHE = [
   'js/core/save-manager/IStorageAdapter.js',
   'js/core/save-manager/LocalStorageAdapter.js',
   'js/core/save-manager/SaveManager.js',
-  'js/core/save-manager/index.js',
   'js/core/save-manager/serializers/PlayerSerializer.js',
   'js/core/save-manager/serializers/QuestSerializer.js',
   'js/core/save-manager/serializers/SettingsSerializer.js',
   'js/core/save-manager/serializers/WorldSerializer.js',
+  'js/core/save-manager/utils/SaveOperationProgress.js',
   'js/core/save-manager/utils/SaveUtils.js',
   'js/entities/Enemy.js',
   'js/entities/EnemyManager.js',
