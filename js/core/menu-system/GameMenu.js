@@ -38,8 +38,9 @@ export class GameMenu {
                     if (this.game.uiManager && this.game.uiManager.mainBackground) {
                         this.game.uiManager.mainBackground.hide();
                     }
-                    
+
                     // Resume the game
+                    this.newGameButton.textContent = "Resume Game";
                     this.game.resume();
                     
                     // Show all HUD elements

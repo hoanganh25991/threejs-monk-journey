@@ -124,9 +124,6 @@ help me refactor the setting menu
     ```
     - [x] should move methods not related to HUD to proper file, ex: createBleedingEffect
 
-
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 - [x] Help me show progress when "Load Game" and "Save Game"
   - Not just like "freezing", then game started show up
 
@@ -138,6 +135,15 @@ help me refactor the setting menu
     - remove the origin file, integrate with new code base
     - move unrelated methods, logic to proper categorized file
     - dont create index.js just to re-export
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+- [ ] Help me create mini map in HUDManager
+  - At top-right
+  - Move Quest Log from top-right to below player-stats-container
+  - Minimap render world in simpler way, focus on performance
+
+- [ ] Help me add level progress
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
