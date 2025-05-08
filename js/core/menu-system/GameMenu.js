@@ -42,9 +42,9 @@ export class GameMenu {
                 this.game.start();
                 
                 // Make sure settings button is visible
-                const settingsButton = document.getElementById('home-button');
-                if (settingsButton) {
-                    settingsButton.style.display = 'block';
+                const homeButton = document.getElementById('home-button');
+                if (homeButton) {
+                    homeButton.style.display = 'block';
                 }
                 
                 // Show all HUD elements
@@ -92,9 +92,9 @@ export class GameMenu {
                         this.game.start();
                         
                         // Make sure settings button is visible
-                        const settingsButton = document.getElementById('home-button');
-                        if (settingsButton) {
-                            settingsButton.style.display = 'block';
+                        const homeButton = document.getElementById('home-button');
+                        if (homeButton) {
+                            homeButton.style.display = 'block';
                         }
                         
                         // Show all HUD elements

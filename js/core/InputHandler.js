@@ -195,9 +195,9 @@ export class InputHandler {
                         this.game.start();
                         
                         // Make sure settings button is visible
-                        const settingsButton = document.getElementById('home-button');
-                        if (settingsButton) {
-                            settingsButton.style.display = 'block';
+                        const homeButton = document.getElementById('home-button');
+                        if (homeButton) {
+                            homeButton.style.display = 'block';
                         }
                         
                         console.log("Game started via G key - enemies and player are now active");

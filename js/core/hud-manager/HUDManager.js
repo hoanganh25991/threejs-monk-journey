@@ -128,7 +128,7 @@ export class HUDManager {
         this.components.questLogUI.init();
         
         // Create settings button
-        this.components.settingsButton = new HomeButton(this.game);
+        this.components.homeButton = new HomeButton(this.game);
         // Note: SettingsButton initializes itself in its constructor
     }
     
@@ -158,7 +158,7 @@ export class HUDManager {
         this.components.notificationsUI.update(delta);
         
         // Update settings button
-        this.components.settingsButton.update(delta);
+        this.components.homeButton.update(delta);
         
         // Update effects manager
         this.effectsManager.update(delta);
@@ -263,9 +263,9 @@ export class HUDManager {
         
         // Don't hide the settings button when paused if the settings menu is open
         const settingsMenu = document.getElementById('main-options-menu');
-        const settingsButton = document.getElementById('home-button');
-        if (settingsButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
-            settingsButton.style.display = 'none';
+        const homeButton = document.getElementById('home-button');
+        if (homeButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
+            homeButton.style.display = 'none';
         }
     }
     
@@ -278,9 +278,9 @@ export class HUDManager {
         }
         
         // Explicitly show the settings button since it's outside the UI container
-        const settingsButton = document.getElementById('home-button');
-        if (settingsButton) {
-            settingsButton.style.display = 'block';
+        const homeButton = document.getElementById('home-button');
+        if (homeButton) {
+            homeButton.style.display = 'block';
         }
     }
     
