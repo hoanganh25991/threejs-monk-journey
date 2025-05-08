@@ -350,7 +350,7 @@
 #home-button {
     position: absolute;
     top: 20px;
-    right: 20px;
+    right: 240px;
     width: 50px;
     height: 50px;
     border-radius: 50%;
@@ -494,6 +494,7 @@
     display: block;
     width: 100%;
     height: 100%;
+    opacity: 0.6;
 }
 
 /* Update Notification */
