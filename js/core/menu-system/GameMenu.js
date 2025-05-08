@@ -30,7 +30,8 @@ export class GameMenu {
         // New Game/Resume Game button
         if (this.newGameButton) {
             this.newGameButton.addEventListener('click', () => {
-                if (this.game.isRunning) {
+                if (this.game.hasStarted && !this.game.isRunning) {
+                    // Game has been started but is currently paused
                     console.log("Resume Game button clicked - resuming game...");
                     this.hide();
                     
@@ -40,7 +41,6 @@ export class GameMenu {
                     }
 
                     // Resume the game
-                    this.newGameButton.textContent = "Resume Game";
                     this.game.resume();
                     
                     // Show all HUD elements
@@ -49,8 +49,9 @@ export class GameMenu {
                     }
                     
                     console.log("Game resumed - enemies and player are now active");
-                } else {
-                    console.log("New Game button clicked - starting game...");
+                } else if (!this.game.hasStarted) {
+                    // Game has never been started - start a new game
+                    console.log("New Game button clicked - starting new game...");
                     this.hide();
                     
                     // Hide the main background when starting the game
@@ -72,7 +73,7 @@ export class GameMenu {
                         this.game.hudManager.showAllUI();
                     }
                     
-                    console.log("Game started - enemies and player are now active");
+                    console.log("New game started - enemies and player are now active");
                 }
             });
         }
@@ -176,7 +177,7 @@ export class GameMenu {
             
             // Update New Game button text based on game state
             if (this.newGameButton) {
-                if (this.game.isRunning) {
+                if (this.game.hasStarted) {
                     this.newGameButton.textContent = 'Resume Game';
                 } else {
                     this.newGameButton.textContent = 'New Game';

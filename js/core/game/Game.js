@@ -66,6 +66,14 @@ export class Game {
     }
     
     /**
+     * Check if the game has been started at least once
+     * @returns {boolean} True if the game has been started
+     */
+    get hasStarted() {
+        return this.state.hasStarted();
+    }
+    
+    /**
      * Initialize the game
      * @returns {Promise<boolean>} True if initialization was successful
      */

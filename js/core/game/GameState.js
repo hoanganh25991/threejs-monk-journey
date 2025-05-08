@@ -4,6 +4,7 @@
 export class GameState {
     constructor() {
         this._isPaused = true; // Game starts in paused state
+        this._hasStarted = false; // Track if game has been started at least once
     }
     
     /**
@@ -23,6 +24,14 @@ export class GameState {
     }
     
     /**
+     * Check if the game has been started at least once
+     * @returns {boolean} True if the game has been started
+     */
+    hasStarted() {
+        return this._hasStarted;
+    }
+    
+    /**
      * Set the game to paused state
      */
     setPaused() {
@@ -34,6 +43,7 @@ export class GameState {
      */
     setRunning() {
         this._isPaused = false;
+        this._hasStarted = true; // Mark that game has been started
     }
     
     /**
