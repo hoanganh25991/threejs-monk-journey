@@ -19,6 +19,9 @@ export class Enemy {
         this.scale = config.scale || 1;
         this.isBoss = config.isBoss || false;
         
+        // Flag for minimap identification
+        this.isEnemy = true;
+        
         // Enemy state
         this.state = {
             isMoving: false,
