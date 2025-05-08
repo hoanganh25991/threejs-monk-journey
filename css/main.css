@@ -9,6 +9,9 @@
 /* Import layout styles */
 @import 'layout.css';
 
+/* Import Game styles */
+@import 'core/game.css';
+
 /* Import HUD Manager styles */
 @import 'core/hud-manager.css';
 
