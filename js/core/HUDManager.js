@@ -354,21 +354,34 @@ export class HUDManager {
             this.uiContainer.style.display = 'none';
         }
         
-        // Hide any other UI elements that might not be in the container
+        // Hide player-related UI elements
         const playerStatsContainer = document.getElementById('player-stats-container');
         if (playerStatsContainer) playerStatsContainer.style.display = 'none';
         
+        const heroPortrait = document.getElementById('player-portrait');
+        if (heroPortrait) heroPortrait.style.display = 'none';
+        
+        const healthBar = document.getElementById('health-bar');
+        if (healthBar) healthBar.style.display = 'none';
+        
+        const manaBar = document.getElementById('mana-bar');
+        if (manaBar) manaBar.style.display = 'none';
+        
+        const experienceBar = document.getElementById('experience-bar');
+        if (experienceBar) experienceBar.style.display = 'none';
+        
+        // Hide skill-related UI elements
         const skillsContainer = document.getElementById('skills-container');
         if (skillsContainer) skillsContainer.style.display = 'none';
         
+        // Hide enemy-related UI elements
         const enemyInfoContainer = document.getElementById('enemy-info-container');
         if (enemyInfoContainer) enemyInfoContainer.style.display = 'none';
         
-        // Hide virtual joystick (correct IDs)
+        // Hide control-related UI elements
         const joystickContainer = document.getElementById('virtual-joystick-container');
         if (joystickContainer) joystickContainer.style.display = 'none';
         
-        // Also try the old ID just in case
         const virtualJoystick = document.getElementById('virtual-joystick');
         if (virtualJoystick) virtualJoystick.style.display = 'none';
         
@@ -384,32 +397,13 @@ export class HUDManager {
             this.uiContainer.style.display = 'block';
         }
         
-        // Show any other UI elements that might not be in the container
+        // Show player-related UI elements
         const playerStatsContainer = document.getElementById('player-stats-container');
         if (playerStatsContainer) playerStatsContainer.style.display = 'block';
         
-        const skillsContainer = document.getElementById('skills-container');
-        if (skillsContainer) skillsContainer.style.display = 'block';
-        
-        const enemyInfoContainer = document.getElementById('enemy-info-container');
-        if (enemyInfoContainer) enemyInfoContainer.style.display = 'block';
-        
-        // Show virtual joystick (correct IDs)
-        const joystickContainer = document.getElementById('virtual-joystick-container');
-        if (joystickContainer) joystickContainer.style.display = 'block';
-        
-        // Also try the old ID just in case
-        const virtualJoystick = document.getElementById('virtual-joystick');
-        if (virtualJoystick) virtualJoystick.style.display = 'block';
-        
-        const mobileButtons = document.getElementById('mobile-buttons');
-        if (mobileButtons) mobileButtons.style.display = 'block';
-        
-        // Show hero portrait
         const heroPortrait = document.getElementById('player-portrait');
         if (heroPortrait) heroPortrait.style.display = 'block';
         
-        // Show any other HUD elements that might need to be visible
         const healthBar = document.getElementById('health-bar');
         if (healthBar) healthBar.style.display = 'block';
         
@@ -418,6 +412,24 @@ export class HUDManager {
         
         const experienceBar = document.getElementById('experience-bar');
         if (experienceBar) experienceBar.style.display = 'block';
+        
+        // Show skill-related UI elements
+        const skillsContainer = document.getElementById('skills-container');
+        if (skillsContainer) skillsContainer.style.display = 'block';
+        
+        // Show enemy-related UI elements
+        const enemyInfoContainer = document.getElementById('enemy-info-container');
+        if (enemyInfoContainer) enemyInfoContainer.style.display = 'block';
+        
+        // Show control-related UI elements
+        const joystickContainer = document.getElementById('virtual-joystick-container');
+        if (joystickContainer) joystickContainer.style.display = 'block';
+        
+        const virtualJoystick = document.getElementById('virtual-joystick');
+        if (virtualJoystick) virtualJoystick.style.display = 'block';
+        
+        const mobileButtons = document.getElementById('mobile-buttons');
+        if (mobileButtons) mobileButtons.style.display = 'block';
     }
     
     createPlayerUI() {
@@ -725,12 +737,12 @@ export class HUDManager {
             }
         });
         
-        // Create options button
+        // Create settings button
         const optionsButton = document.createElement('button');
         optionsButton.className = 'menu-button';
-        optionsButton.textContent = 'Options';
+        optionsButton.textContent = 'Settings';
         optionsButton.addEventListener('click', () => {
-            this.showOptionsMenu();
+            this.showSettingsMenu();
         });
         
         // Create quit button
@@ -750,38 +762,38 @@ export class HUDManager {
         document.body.appendChild(this.pauseMenu);
     }
     
-    showOptionsMenu() {
+    showSettingsMenu() {
         // Hide pause menu
         this.pauseMenu.style.display = 'none';
         
-        // Remove any existing options menu
-        const existingOptionsMenu = document.getElementById('options-menu');
-        if (existingOptionsMenu) {
-            existingOptionsMenu.remove();
+        // Remove any existing settings menu
+        const existingSettingsMenu = document.getElementById('settings-menu');
+        if (existingSettingsMenu) {
+            existingSettingsMenu.remove();
         }
         
-        // Create options menu
-        const optionsMenu = document.createElement('div');
-        optionsMenu.id = 'options-menu';
-        optionsMenu.style.position = 'absolute';
-        optionsMenu.style.top = '0';
-        optionsMenu.style.left = '0';
-        optionsMenu.style.width = '100%';
-        optionsMenu.style.height = '100%';
-        optionsMenu.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
-        optionsMenu.style.display = 'flex';
-        optionsMenu.style.flexDirection = 'column';
-        optionsMenu.style.justifyContent = 'flex-start';
-        optionsMenu.style.alignItems = 'center';
-        optionsMenu.style.zIndex = '1000';
-        optionsMenu.style.overflowY = 'auto';
-        optionsMenu.style.overflowX = 'hidden';
-        optionsMenu.style.padding = '20px';
-        optionsMenu.style.maxHeight = '100vh';
+        // Create settings menu
+        const settingsMenu = document.createElement('div');
+        settingsMenu.id = 'settings-menu';
+        settingsMenu.style.position = 'absolute';
+        settingsMenu.style.top = '0';
+        settingsMenu.style.left = '0';
+        settingsMenu.style.width = '100%';
+        settingsMenu.style.height = '100%';
+        settingsMenu.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+        settingsMenu.style.display = 'flex';
+        settingsMenu.style.flexDirection = 'column';
+        settingsMenu.style.justifyContent = 'flex-start';
+        settingsMenu.style.alignItems = 'center';
+        settingsMenu.style.zIndex = '1000';
+        settingsMenu.style.overflowY = 'auto';
+        settingsMenu.style.overflowX = 'hidden';
+        settingsMenu.style.padding = '20px';
+        settingsMenu.style.maxHeight = '100vh';
         
         // Create title
         const title = document.createElement('h1');
-        title.textContent = 'Options';
+        title.textContent = 'Settings';
         title.style.color = '#f5f5f5';
         title.style.fontSize = '48px';
         title.style.marginBottom = '40px';
@@ -928,7 +940,7 @@ export class HUDManager {
         });
         
         backButton.addEventListener('click', () => {
-            optionsMenu.remove();
+            settingsMenu.remove();
             this.pauseMenu.style.display = 'flex';
         });
         
@@ -1170,22 +1182,22 @@ export class HUDManager {
         perfStatsContainer.appendChild(perfStatsLabel);
         graphicsContainer.appendChild(perfStatsContainer);
         
-        // Add all elements to options menu
-        optionsMenu.appendChild(title);
-        optionsMenu.appendChild(graphicsTitle);
-        optionsMenu.appendChild(graphicsContainer);
-        optionsMenu.appendChild(controlsTitle);
-        optionsMenu.appendChild(controlsContainer);
-        optionsMenu.appendChild(uiTitle);
-        optionsMenu.appendChild(uiContainer);
-        optionsMenu.appendChild(audioTitle);
-        optionsMenu.appendChild(audioDisabledMessage);
-        optionsMenu.appendChild(backButton);
+        // Add all elements to settings menu
+        settingsMenu.appendChild(title);
+        settingsMenu.appendChild(graphicsTitle);
+        settingsMenu.appendChild(graphicsContainer);
+        settingsMenu.appendChild(controlsTitle);
+        settingsMenu.appendChild(controlsContainer);
+        settingsMenu.appendChild(uiTitle);
+        settingsMenu.appendChild(uiContainer);
+        settingsMenu.appendChild(audioTitle);
+        settingsMenu.appendChild(audioDisabledMessage);
+        settingsMenu.appendChild(backButton);
         
         // Add to document body
-        document.body.appendChild(optionsMenu);
+        document.body.appendChild(settingsMenu);
         
-        console.log('Options menu created and added to DOM');
+        console.log('Settings menu created and added to DOM');
     }
     
     createVirtualJoystick() {
