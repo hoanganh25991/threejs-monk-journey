@@ -5,12 +5,12 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '20'; // Incremented version to force update
+const CACHE_VERSION = '21'; // Incremented version to force update
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 10389167;
-const TOTAL_CACHE_SIZE_MB = 9.91;
+const TOTAL_CACHE_SIZE_BYTES = 10385771;
+const TOTAL_CACHE_SIZE_MB = 9.90;
 
 // Communication channel
 let messagePort = null;
