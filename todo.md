@@ -91,6 +91,41 @@ Enhance: review main.js file and optimize it:
     - [x] move unrelated methods, logic to proper categorized file
     - [x] move ui logic to ui/XXX.js, define dom element in index.html
 
+- [x] Enhance: review Game.js file and optimize it:
+    - remove unused method
+    - remove duplicate methods
+    - define common methods to be shared
+    - separate into multiple files for easier to maintain, define interface when needed
+    - remove the origin file, integrate with new code base
+    - move unrelated methods, logic to proper categorized file
+
+- [x] Enhance: review style.css file and optimize it:
+    - remove unused method
+    - remove duplicate methods
+    - define common methods to be shared
+    - separate into multiple files for easier to maintain, define interface when needed
+
+help me refactor the setting menu
+- [x] Setting menu should break into multiple tabs for sections
+- [x] Should consume 80% width of the page, 80% of the height
+- [x] Section should be break to not long too much
+- [x] ModelPreview should consume a whole tab for better preview, on left is model, on right is select model/animation
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+- [ ] Enhance: review HUDManager.js file and optimize it:
+    - [ ] Remove unused methods.
+    - [ ] Remove duplicate methods.
+    - [ ] Define common methods for shared use.
+    - [ ] Design each container UI to be easily reusable, requiring only a parent `div` and an `id` to mount itself, facilitating standalone rendering later.
+    - [ ] Define container `div` elements in `index.html` instead of creating them dynamically. Comment the code block to retrieve these existing DOM elements, and add validation to ensure they are defined in `index.html`, alerting and providing a fix if not.
+    - [ ] Organize code into multiple files for easier maintenance, defining interfaces where necessary.
+    - [ ] using template style, ex:
+    ```js
+    return `<div style="color: #4CAF50; font-weight: bold; margin-bottom: 5px;">GPU INFORMATION</div><div><span style="color: #aaa;">Vendor:</span> ${gpuVendor}</div>`
+    ```
+    - [ ] should move methods not related to HUD to proper file, ex: createBleedingEffect
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Help me improve movement of Player:
@@ -99,16 +134,6 @@ Help me improve movement of Player:
   - [ ] Only 1 case: for now, the game place character at position has multiple objects, hero like at locked position, help me update
     - [] Init place like Diablo should be teleport point in village
     - [] Update this init terrain into village, no enemy
-
-- [ ] Enhance: review Game.js file and optimize it:
-    - remove unused method
-    - remove duplicate methods
-    - define common methods to be shared
-    - separate into multiple files for easier to maintain, define interface when needed
-    - remove the origin file, integrate with new code base
-    - move unrelated methods, logic to proper categorized file
-
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 - [?] Enhance: review Enemy.js file and optimize it:
     - remove unused method
@@ -122,20 +147,6 @@ Help me improve movement of Player:
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
 
-- [?] Enhance: review style.css file and optimize it:
-    - remove unused method
-    - remove duplicate methods
-    - define common methods to be shared
-    - separate into multiple files for easier to maintain, define interface when needed
-
-help me refactor the setting menu
-- [ ] Setting menu should break into multiple tabs for sections
-- [ ] Should consume 80% width of the page, 80% of the height
-- [ ] Section should be break to not long too much
-- [ ] ModelPreview should consume a whole tab for better preview, on left is model, on right is select model/animation
-
-
-
 - [?] Enhance: review PerformanceManager.js file and optimize it:
     - remove unused method
     - remove duplicate methods
@@ -145,19 +156,6 @@ help me refactor the setting menu
     - move unrelated methods, logic to proper categorized file
 
 - [ ] Enhance: PerformanceManager.js should not render UI directly with DOM manipulation, it should expose the DTO only, let HUDManager handle actual render.
-
-- [?] Enhance: review HUDManager.js file and optimize it:
-    - Remove unused methods.
-    - Remove duplicate methods.
-    - Define common methods for shared use.
-    - Design each container UI to be easily reusable, requiring only a parent `div` and an `id` to mount itself, facilitating standalone rendering later.
-    - Define container `div` elements in `index.html` instead of creating them dynamically. Comment the code block to retrieve these existing DOM elements, and add validation to ensure they are defined in `index.html`, alerting and providing a fix if not.
-    - Organize code into multiple files for easier maintenance, defining interfaces where necessary.
-    - using template style, ex:
-    ```js
-    return `<div style="color: #4CAF50; font-weight: bold; margin-bottom: 5px;">GPU INFORMATION</div><div><span style="color: #aaa;">Vendor:</span> ${gpuVendor}</div>`
-    ```
-    - should move methods not related to HUD to proper file, ex: createBleedingEffect
 
 - [ ] Enhance: add config to createTeleportEffect, allow to easily say increase size of effect 2 times, than the skill effect 2 times bigger
 

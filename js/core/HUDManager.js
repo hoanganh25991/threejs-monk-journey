@@ -1,45 +1,71 @@
-import { INPUT_CONFIG } from './InputHandler.js';
+import { PlayerUI } from '../ui/components/PlayerUI.js';
+import { EnemyUI } from '../ui/components/EnemyUI.js';
+import { SkillsUI } from '../ui/components/SkillsUI.js';
+import { DialogUI } from '../ui/components/DialogUI.js';
+import { InventoryUI } from '../ui/components/InventoryUI.js';
+import { VirtualJoystickUI } from '../ui/components/VirtualJoystickUI.js';
+import { DeathScreenUI } from '../ui/components/DeathScreenUI.js';
+import { NotificationsUI } from '../ui/components/NotificationsUI.js';
+import { QuestLogUI } from '../ui/components/QuestLogUI.js';
+import { EffectsManager } from '../ui/components/EffectsManager.js';
 import { MainBackground } from '../ui/MainBackground.js';
 
+/**
+ * HUD Manager
+ * Manages all UI components and provides a central interface for UI interactions
+ */
 export class HUDManager {
+    /**
+     * Create a new HUD Manager
+     * @param {Object} game - Reference to the game instance
+     */
     constructor(game) {
         this.game = game;
-        this.notifications = [];
-        this.damageNumbers = [];
-        this.isInventoryOpen = false;
-        this.isDialogOpen = false;
-        this.isDeathScreenOpen = false;
+        
+        // Initialize UI components
+        this.components = {};
+        this.effectsManager = null;
     }
     
+    /**
+     * Initialize the HUD Manager and all UI components
+     * @returns {boolean} - True if initialization was successful
+     */
     init() {
-        // Create UI container
-        this.createUIContainer();
+        // Validate UI container exists
+        this.validateUIContainer();
         
         // Create main background
         this.createMainBackground();
         
-        // Create player UI
-        this.createPlayerUI();
+        // Create UI components
+        this.createUIComponents();
         
-        // Create enemy UI
-        this.createEnemyUI();
-        
-        // Create skills UI
-        this.createSkillsUI();
-        
-        // Create dialog box
-        this.createDialogBox();
-        
-        // Create inventory
-        this.createInventory();
-        
-        // Create death screen
-        this.createDeathScreen();
-        
-        // Create virtual joystick for touch devices
-        this.createVirtualJoystick();
+        // Create effects manager
+        this.createEffectsManager();
         
         return true;
+    }
+    
+    /**
+     * Validate that the UI container exists in the DOM
+     * If not, create it
+     */
+    validateUIContainer() {
+        this.uiContainer = document.getElementById('ui-container');
+        
+        if (!this.uiContainer) {
+            console.error('UI container not found in DOM. Creating it dynamically.');
+            
+            // Create UI container
+            this.uiContainer = document.createElement('div');
+            this.uiContainer.id = 'ui-container';
+            this.uiContainer.style.zIndex = 1000;
+            document.body.appendChild(this.uiContainer);
+        }
+        
+        // Make sure UI container is visible
+        this.uiContainer.style.display = 'block';
     }
     
     /**
@@ -54,6 +80,76 @@ export class HUDManager {
     }
     
     /**
+     * Create all UI components
+     */
+    createUIComponents() {
+        // Create player UI
+        this.components.playerUI = new PlayerUI(this.game);
+        this.components.playerUI.init();
+        
+        // Create enemy UI
+        this.components.enemyUI = new EnemyUI(this.game);
+        this.components.enemyUI.init();
+        
+        // Create skills UI
+        this.components.skillsUI = new SkillsUI(this.game);
+        this.components.skillsUI.init();
+        
+        // Create dialog UI
+        this.components.dialogUI = new DialogUI(this.game);
+        this.components.dialogUI.init();
+        
+        // Create inventory UI
+        this.components.inventoryUI = new InventoryUI(this.game);
+        this.components.inventoryUI.init();
+        
+        // Create virtual joystick UI
+        this.components.joystickUI = new VirtualJoystickUI(this.game);
+        this.components.joystickUI.init();
+        
+        // Create death screen UI
+        this.components.deathScreenUI = new DeathScreenUI(this.game);
+        this.components.deathScreenUI.init();
+        
+        // Create notifications UI
+        this.components.notificationsUI = new NotificationsUI(this.game);
+        this.components.notificationsUI.init();
+        
+        // Create quest log UI
+        this.components.questLogUI = new QuestLogUI(this.game);
+        this.components.questLogUI.init();
+    }
+    
+    /**
+     * Create the effects manager
+     */
+    createEffectsManager() {
+        this.effectsManager = new EffectsManager(this.game);
+        this.effectsManager.init();
+    }
+    
+    /**
+     * Update all UI components
+     * @param {number} delta - Time since last update in seconds
+     */
+    update(delta) {
+        // Update player UI
+        this.components.playerUI.update(delta);
+        
+        // Update enemy UI
+        this.components.enemyUI.update(delta);
+        
+        // Update skills UI
+        this.components.skillsUI.update(delta);
+        
+        // Update notifications UI
+        this.components.notificationsUI.update(delta);
+        
+        // Update effects manager
+        this.effectsManager.update(delta);
+    }
+    
+    /**
      * Set a new background image
      * @param {string} imagePath - Path to the new background image
      */
@@ -64,282 +160,82 @@ export class HUDManager {
     }
     
     /**
-     * Create a slider control for the adjustment panel
+     * Show a notification message
+     * @param {string} message - Message to display
      */
-    createSliderControl(parent, label, min, max, step, defaultValue, onChange) {
-        const container = document.createElement('div');
-        container.style.marginBottom = '10px';
-        
-        const labelElement = document.createElement('label');
-        labelElement.textContent = label;
-        labelElement.style.display = 'block';
-        labelElement.style.marginBottom = '5px';
-        
-        const sliderContainer = document.createElement('div');
-        sliderContainer.style.display = 'flex';
-        sliderContainer.style.alignItems = 'center';
-        
-        const slider = document.createElement('input');
-        slider.type = 'range';
-        slider.min = min;
-        slider.max = max;
-        slider.step = step;
-        slider.value = defaultValue;
-        slider.style.flex = '1';
-        slider.style.marginRight = '10px';
-        
-        const valueDisplay = document.createElement('span');
-        valueDisplay.textContent = defaultValue;
-        valueDisplay.style.minWidth = '40px';
-        valueDisplay.style.textAlign = 'right';
-        
-        slider.oninput = () => {
-            valueDisplay.textContent = slider.value;
-            onChange(slider.value);
-        };
-        
-        sliderContainer.appendChild(slider);
-        sliderContainer.appendChild(valueDisplay);
-        
-        container.appendChild(labelElement);
-        container.appendChild(sliderContainer);
-        parent.appendChild(container);
-        
-        return { container, slider, valueDisplay };
+    showNotification(message) {
+        this.components.notificationsUI.showNotification(message);
     }
     
     /**
-     * Create position adjustment controls
+     * Show a dialog with title and text
+     * @param {string} title - Dialog title
+     * @param {string} text - Dialog text
      */
-    createPositionControls(parent) {
-        const positionSection = document.createElement('div');
-        positionSection.style.marginTop = '15px';
-        positionSection.style.marginBottom = '15px';
-        positionSection.style.padding = '10px';
-        positionSection.style.border = '1px solid #555';
-        positionSection.style.borderRadius = '4px';
-        
-        const positionTitle = document.createElement('h4');
-        positionTitle.textContent = 'Position Adjustment';
-        positionTitle.style.margin = '0 0 10px 0';
-        positionSection.appendChild(positionTitle);
-        
-        // X position
-        this.xPosControl = this.createSliderControl(positionSection, 'X Position', -10, 10, 0.1, 0, (value) => {
-            if (this.game.player && this.game.player.model) {
-                const currentPos = this.game.player.model.getPreviewPosition();
-                this.game.player.model.setPreviewPosition({
-                    x: parseFloat(value),
-                    y: currentPos.y,
-                    z: currentPos.z
-                });
-            }
-        });
-        
-        // Y position
-        this.yPosControl = this.createSliderControl(positionSection, 'Y Position', -5, 10, 0.1, 0, (value) => {
-            if (this.game.player && this.game.player.model) {
-                const currentPos = this.game.player.model.getPreviewPosition();
-                this.game.player.model.setPreviewPosition({
-                    x: currentPos.x,
-                    y: parseFloat(value),
-                    z: currentPos.z
-                });
-            }
-        });
-        
-        // Z position
-        this.zPosControl = this.createSliderControl(positionSection, 'Z Position', -10, 10, 0.1, 0, (value) => {
-            if (this.game.player && this.game.player.model) {
-                const currentPos = this.game.player.model.getPreviewPosition();
-                this.game.player.model.setPreviewPosition({
-                    x: currentPos.x,
-                    y: currentPos.y,
-                    z: parseFloat(value)
-                });
-            }
-        });
-        
-        parent.appendChild(positionSection);
+    showDialog(title, text) {
+        this.components.dialogUI.showDialog(title, text);
     }
     
     /**
-     * Create rotation adjustment controls
+     * Hide the dialog
      */
-    createRotationControls(parent) {
-        const rotationSection = document.createElement('div');
-        rotationSection.style.marginTop = '15px';
-        rotationSection.style.marginBottom = '15px';
-        rotationSection.style.padding = '10px';
-        rotationSection.style.border = '1px solid #555';
-        rotationSection.style.borderRadius = '4px';
-        
-        const rotationTitle = document.createElement('h4');
-        rotationTitle.textContent = 'Rotation Adjustment';
-        rotationTitle.style.margin = '0 0 10px 0';
-        rotationSection.appendChild(rotationTitle);
-        
-        // X rotation
-        this.xRotControl = this.createSliderControl(rotationSection, 'X Rotation', -3.14, 3.14, 0.1, 0, (value) => {
-            if (this.game.player && this.game.player.model) {
-                const currentRot = this.game.player.model.getPreviewRotation();
-                this.game.player.model.setPreviewRotation({
-                    x: parseFloat(value),
-                    y: currentRot.y,
-                    z: currentRot.z
-                });
-            }
-        });
-        
-        // Y rotation
-        this.yRotControl = this.createSliderControl(rotationSection, 'Y Rotation', -3.14, 3.14, 0.1, 0, (value) => {
-            if (this.game.player && this.game.player.model) {
-                const currentRot = this.game.player.model.getPreviewRotation();
-                this.game.player.model.setPreviewRotation({
-                    x: currentRot.x,
-                    y: parseFloat(value),
-                    z: currentRot.z
-                });
-            }
-        });
-        
-        // Z rotation
-        this.zRotControl = this.createSliderControl(rotationSection, 'Z Rotation', -3.14, 3.14, 0.1, 0, (value) => {
-            if (this.game.player && this.game.player.model) {
-                const currentRot = this.game.player.model.getPreviewRotation();
-                this.game.player.model.setPreviewRotation({
-                    x: currentRot.x,
-                    y: currentRot.y,
-                    z: parseFloat(value)
-                });
-            }
-        });
-        
-        parent.appendChild(rotationSection);
+    hideDialog() {
+        this.components.dialogUI.hideDialog();
     }
     
     /**
-     * Update the model adjustment panel with current values
+     * Toggle inventory visibility
      */
-    updateModelAdjustmentPanel() {
-        if (!this.game.player || !this.game.player.model) return;
-        
-        const model = this.game.player.model;
-        
-        // Update base scale
-        if (this.modelAdjustmentPanel.querySelector('input[type="range"]')) {
-            const baseScaleSlider = this.modelAdjustmentPanel.querySelector('input[type="range"]');
-            const baseScaleValue = baseScaleSlider.nextElementSibling;
-            baseScaleSlider.value = model.baseScale;
-            baseScaleValue.textContent = model.baseScale;
-        }
-        
-        // Update size multiplier
-        if (this.modelAdjustmentPanel.querySelectorAll('input[type="range"]')[1]) {
-            const sizeMultiplierSlider = this.modelAdjustmentPanel.querySelectorAll('input[type="range"]')[1];
-            const sizeMultiplierValue = sizeMultiplierSlider.nextElementSibling;
-            sizeMultiplierSlider.value = model.sizeMultiplier;
-            sizeMultiplierValue.textContent = model.sizeMultiplier;
-        }
-        
-        // Update position values
-        const position = model.getPreviewPosition();
-        if (this.xPosControl) {
-            this.xPosControl.slider.value = position.x;
-            this.xPosControl.valueDisplay.textContent = position.x;
-        }
-        if (this.yPosControl) {
-            this.yPosControl.slider.value = position.y;
-            this.yPosControl.valueDisplay.textContent = position.y;
-        }
-        if (this.zPosControl) {
-            this.zPosControl.slider.value = position.z;
-            this.zPosControl.valueDisplay.textContent = position.z;
-        }
-        
-        // Update rotation values
-        const rotation = model.getPreviewRotation();
-        if (this.xRotControl) {
-            this.xRotControl.slider.value = rotation.x;
-            this.xRotControl.valueDisplay.textContent = rotation.x;
-        }
-        if (this.yRotControl) {
-            this.yRotControl.slider.value = rotation.y;
-            this.yRotControl.valueDisplay.textContent = rotation.y;
-        }
-        if (this.zRotControl) {
-            this.zRotControl.slider.value = rotation.z;
-            this.zRotControl.valueDisplay.textContent = rotation.z;
-        }
+    toggleInventory() {
+        this.components.inventoryUI.toggleInventory();
     }
     
     /**
-     * Save the current model adjustments
+     * Show the death screen
      */
-    saveModelAdjustments() {
-        if (!this.game.player || !this.game.player.model) return;
-        
-        const model = this.game.player.model;
-        const modelId = model.getCurrentModelId();
-        
-        // Create adjustment data
-        const adjustmentData = {
-            modelId: modelId,
-            baseScale: model.baseScale,
-            sizeMultiplier: model.sizeMultiplier,
-            position: model.getPreviewPosition(),
-            rotation: model.getPreviewRotation()
-        };
-        
-        // Save to localStorage
-        const savedAdjustments = JSON.parse(localStorage.getItem('modelAdjustments') || '{}');
-        savedAdjustments[modelId] = adjustmentData;
-        localStorage.setItem('modelAdjustments', JSON.stringify(savedAdjustments));
-        
-        // Show notification
-        this.showNotification(`Model adjustments saved for ${model.currentModel.name}`);
-        
-        console.log(`Saved model adjustments for ${modelId}:`, adjustmentData);
+    showDeathScreen() {
+        this.components.deathScreenUI.showDeathScreen();
     }
     
     /**
-     * Load saved model adjustments
-     * @param {string} modelId - ID of the model to load adjustments for
+     * Hide the death screen
      */
-    loadModelAdjustments(modelId) {
-        if (!this.game.player || !this.game.player.model) return;
-        
-        // Get saved adjustments from localStorage
-        const savedAdjustments = JSON.parse(localStorage.getItem('modelAdjustments') || '{}');
-        const adjustmentData = savedAdjustments[modelId];
-        
-        if (adjustmentData) {
-            const model = this.game.player.model;
-            
-            // Apply saved adjustments
-            model.setBaseScale(adjustmentData.baseScale);
-            model.setSizeMultiplier(adjustmentData.sizeMultiplier);
-            model.setPreviewPosition(adjustmentData.position);
-            model.setPreviewRotation(adjustmentData.rotation);
-            
-            // Update UI
-            this.updateModelAdjustmentPanel();
-            
-            console.log(`Loaded model adjustments for ${modelId}:`, adjustmentData);
-            this.showNotification(`Loaded saved adjustments for ${model.currentModel.name}`);
-            
-            return true;
-        }
-        
-        return false;
+    hideDeathScreen() {
+        this.components.deathScreenUI.hideDeathScreen();
     }
     
-    createUIContainer() {
-        // Create UI container
-        this.uiContainer = document.createElement('div');
-        this.uiContainer.id = 'ui-container';
-        this.uiContainer.style.zIndex = 1000;
-        document.body.appendChild(this.uiContainer);
+    /**
+     * Show level up animation
+     * @param {number} level - New level
+     */
+    showLevelUp(level) {
+        this.components.notificationsUI.showLevelUp(level);
+    }
+    
+    /**
+     * Update the quest log with active quests
+     * @param {Array} activeQuests - Array of active quests
+     */
+    updateQuestLog(activeQuests) {
+        this.components.questLogUI.updateQuestLog(activeQuests);
+    }
+    
+    /**
+     * Create a bleeding effect at the given position
+     * @param {number} amount - Damage amount
+     * @param {Object} position - 3D position {x, y, z}
+     * @param {boolean} isPlayerDamage - Whether the damage was caused by the player
+     */
+    createBleedingEffect(amount, position, isPlayerDamage = false) {
+        this.effectsManager.createBleedingEffect(amount, position, isPlayerDamage);
+    }
+    
+    /**
+     * Get the current joystick direction
+     * @returns {Object} - Direction vector {x, y}
+     */
+    getJoystickDirection() {
+        return this.components.joystickUI.getJoystickDirection();
     }
     
     /**
@@ -349,40 +245,6 @@ export class HUDManager {
         if (this.uiContainer) {
             this.uiContainer.style.display = 'none';
         }
-        
-        // Hide player-related UI elements
-        const playerStatsContainer = document.getElementById('player-stats-container');
-        if (playerStatsContainer) playerStatsContainer.style.display = 'none';
-        
-        const heroPortrait = document.getElementById('player-portrait');
-        if (heroPortrait) heroPortrait.style.display = 'none';
-        
-        const healthBar = document.getElementById('health-bar');
-        if (healthBar) healthBar.style.display = 'none';
-        
-        const manaBar = document.getElementById('mana-bar');
-        if (manaBar) manaBar.style.display = 'none';
-        
-        const experienceBar = document.getElementById('experience-bar');
-        if (experienceBar) experienceBar.style.display = 'none';
-        
-        // Hide skill-related UI elements
-        const skillsContainer = document.getElementById('skills-container');
-        if (skillsContainer) skillsContainer.style.display = 'none';
-        
-        // Hide enemy-related UI elements
-        const enemyInfoContainer = document.getElementById('enemy-info-container');
-        if (enemyInfoContainer) enemyInfoContainer.style.display = 'none';
-        
-        // Hide control-related UI elements
-        const joystickContainer = document.getElementById('virtual-joystick-container');
-        if (joystickContainer) joystickContainer.style.display = 'none';
-        
-        const virtualJoystick = document.getElementById('virtual-joystick');
-        if (virtualJoystick) virtualJoystick.style.display = 'none';
-        
-        const mobileButtons = document.getElementById('mobile-buttons');
-        if (mobileButtons) mobileButtons.style.display = 'none';
     }
     
     /**
@@ -391,1306 +253,6 @@ export class HUDManager {
     showAllUI() {
         if (this.uiContainer) {
             this.uiContainer.style.display = 'block';
-        }
-        
-        // Show player-related UI elements
-        const playerStatsContainer = document.getElementById('player-stats-container');
-        if (playerStatsContainer) playerStatsContainer.style.display = 'block';
-        
-        const heroPortrait = document.getElementById('player-portrait');
-        if (heroPortrait) heroPortrait.style.display = 'block';
-        
-        const healthBar = document.getElementById('health-bar');
-        if (healthBar) healthBar.style.display = 'block';
-        
-        const manaBar = document.getElementById('mana-bar');
-        if (manaBar) manaBar.style.display = 'block';
-        
-        const experienceBar = document.getElementById('experience-bar');
-        if (experienceBar) experienceBar.style.display = 'block';
-        
-        // Show skill-related UI elements
-        const skillsContainer = document.getElementById('skills-container');
-        if (skillsContainer) skillsContainer.style.display = 'block';
-        
-        // Show enemy-related UI elements
-        const enemyInfoContainer = document.getElementById('enemy-info-container');
-        if (enemyInfoContainer) enemyInfoContainer.style.display = 'block';
-        
-        // Show control-related UI elements
-        const joystickContainer = document.getElementById('virtual-joystick-container');
-        if (joystickContainer) joystickContainer.style.display = 'block';
-        
-        const virtualJoystick = document.getElementById('virtual-joystick');
-        if (virtualJoystick) virtualJoystick.style.display = 'block';
-        
-        const mobileButtons = document.getElementById('mobile-buttons');
-        if (mobileButtons) mobileButtons.style.display = 'block';
-    }
-    
-    createPlayerUI() {
-        // Create player stats container
-        this.playerStatsContainer = document.createElement('div');
-        this.playerStatsContainer.id = 'player-stats-container';
-        
-        // Create player header (portrait and info)
-        const playerHeader = document.createElement('div');
-        playerHeader.id = 'player-header';
-        
-        // Create player portrait
-        const playerPortrait = document.createElement('div');
-        playerPortrait.id = 'player-portrait';
-        playerPortrait.textContent = '🧘'; // Monk emoji
-        playerHeader.appendChild(playerPortrait);
-        
-        // Create player info container
-        const playerInfo = document.createElement('div');
-        playerInfo.id = 'player-info';
-        
-        // Create player name
-        const playerName = document.createElement('div');
-        playerName.id = 'player-name';
-        playerName.textContent = 'Monk';
-        playerInfo.appendChild(playerName);
-        
-        // Create level indicator
-        this.levelIndicator = document.createElement('div');
-        this.levelIndicator.id = 'level-indicator';
-        this.levelIndicator.textContent = `Level: ${this.game.player.getLevel()}`;
-        playerInfo.appendChild(this.levelIndicator);
-        
-        // Add player info to header
-        playerHeader.appendChild(playerInfo);
-        
-        // Add header to stats container
-        this.playerStatsContainer.appendChild(playerHeader);
-        
-        // Create health bar container
-        this.healthBarContainer = document.createElement('div');
-        this.healthBarContainer.id = 'health-bar-container';
-        
-        // Create health icon
-        const healthIcon = document.createElement('div');
-        healthIcon.id = 'health-icon';
-        healthIcon.textContent = '❤️';
-        this.healthBarContainer.appendChild(healthIcon);
-        
-        // Create health bar
-        this.healthBar = document.createElement('div');
-        this.healthBar.id = 'health-bar';
-        this.healthBarContainer.appendChild(this.healthBar);
-        
-        // Create health text
-        this.healthText = document.createElement('div');
-        this.healthText.id = 'health-text';
-        this.healthBarContainer.appendChild(this.healthText);
-        
-        // Add health bar to stats container
-        this.playerStatsContainer.appendChild(this.healthBarContainer);
-        
-        // Create mana bar container
-        this.manaBarContainer = document.createElement('div');
-        this.manaBarContainer.id = 'mana-bar-container';
-        
-        // Create mana icon
-        const manaIcon = document.createElement('div');
-        manaIcon.id = 'mana-icon';
-        manaIcon.textContent = '🔷';
-        this.manaBarContainer.appendChild(manaIcon);
-        
-        // Create mana bar
-        this.manaBar = document.createElement('div');
-        this.manaBar.id = 'mana-bar';
-        this.manaBarContainer.appendChild(this.manaBar);
-        
-        // Create mana text
-        this.manaText = document.createElement('div');
-        this.manaText.id = 'mana-text';
-        this.manaBarContainer.appendChild(this.manaText);
-        
-        // Add mana bar to stats container
-        this.playerStatsContainer.appendChild(this.manaBarContainer);
-        
-        // Add stats container to UI
-        this.uiContainer.appendChild(this.playerStatsContainer);
-    }
-    
-    createEnemyUI() {
-        // Create enemy health container
-        this.enemyHealthContainer = document.createElement('div');
-        this.enemyHealthContainer.id = 'enemy-health-container';
-        
-        // Create enemy name
-        this.enemyName = document.createElement('div');
-        this.enemyName.id = 'enemy-name';
-        
-        // Create enemy health bar
-        this.enemyHealthBar = document.createElement('div');
-        this.enemyHealthBar.id = 'enemy-health-bar';
-        
-        this.enemyHealthContainer.appendChild(this.enemyName);
-        this.enemyHealthContainer.appendChild(this.enemyHealthBar);
-        this.uiContainer.appendChild(this.enemyHealthContainer);
-    }
-    
-    // Helper method to get the visual position of a skill button in the grid (for debugging only)
-    getVisualPositionInGrid(skillButton) {
-        // Get all skill buttons
-        const allButtons = Array.from(this.skillsContainer.querySelectorAll('.skill-button'));
-        
-        // Find the index of this button in the DOM
-        const buttonIndex = allButtons.indexOf(skillButton);
-        
-        // Return the visual position for debugging
-        return buttonIndex;
-    }
-    
-    createSkillsUI() {
-        // Create skills container
-        this.skillsContainer = document.createElement('div');
-        this.skillsContainer.id = 'skills-container';
-        
-        // Create skill buttons
-        const skills = this.game.player.getSkills();
-        
-        // Define skill icons and colors based on skill type
-        const skillIcons = {
-            'Fist of Thunder': '⚡', // Lightning emoji
-            'Wave Strike': '🌊', // Wave emoji
-            'Cyclone Strike': '🌀', // Cyclone emoji
-            'Seven-Sided Strike': '🔄', // Cycle emoji
-            'Inner Sanctuary': '🛡️', // Shield emoji
-            'Mystic Ally': '👤', // Person emoji
-            'Wave of Light': '🔔', // Bell emoji
-            'Exploding Palm': '💥', // Explosion emoji
-        };
-        
-        const skillColors = {
-            'teleport': '#4169e1', // Royal blue for teleport
-            'ranged': '#00ffff',
-            'aoe': '#ffcc00',
-            'multi': '#ff0000',
-            'buff': '#ffffff',
-            'summon': '#00ffff',
-            'wave': '#ffdd22',
-            'mark': '#ff3333'
-        };
-        
-        skills.forEach((skill, index) => {
-            // Create skill button
-            const skillButton = document.createElement('div');
-            skillButton.className = 'skill-button';
-            skillButton.setAttribute('data-skill-type', skill.type);
-            
-            // Create skill name tooltip
-            const skillName = document.createElement('div');
-            skillName.className = 'skill-name';
-            skillName.textContent = skill.name;
-            skillButton.appendChild(skillName);
-            
-            // Create skill icon
-            const skillIcon = document.createElement('div');
-            skillIcon.className = 'skill-icon';
-            skillIcon.textContent = skillIcons[skill.name] || '✨'; // Default to sparkle if no icon
-            skillIcon.style.color = skillColors[skill.type] || '#ffffff';
-            skillIcon.style.fontSize = '30px';
-            skillIcon.style.textShadow = `0 0 10px ${skillColors[skill.type] || '#ffffff'}`;
-            skillButton.appendChild(skillIcon);
-            
-            // Create key indicator
-            const skillKey = document.createElement('div');
-            skillKey.className = 'skill-key';
-            
-            // Adjust key display to match our grid layout (4,5,6,7 on top, 1,2,3,h below)
-            const keyDisplay = skill.basicAttack ? "h" : `${index +  1}`;
-            skillKey.textContent = keyDisplay;
-            skillButton.appendChild(skillKey);
-            
-            // Create cooldown overlay
-            const cooldownOverlay = document.createElement('div');
-            cooldownOverlay.className = 'skill-cooldown';
-            skillButton.appendChild(cooldownOverlay);
-            
-            // Set button border color based on skill type
-            skillButton.style.borderColor = skillColors[skill.type] || '#6b4c2a';
-            
-            // Add click event
-            skillButton.addEventListener('click', () => {
-                // Store the actual index for this skill button
-                const actualIndex = index;
-                
-                console.log(`Skill clicked: ${skill.name}, Index: ${actualIndex}`);
-                
-                // Check if this is the basic attack skill
-                if (skill.basicAttack) {
-                    // Use the basic attack method for the 'h' skill
-                    console.log('Using basic attack (h key skill)');
-                    this.game.player.useBasicAttack();
-                } else {
-                    // Use the regular skill method for numbered skills
-                    console.log('Using regular skill');
-                    this.game.player.useSkill(actualIndex);
-                }
-                
-                // Add click animation
-                skillButton.classList.add('skill-activated');
-                setTimeout(() => {
-                    skillButton.classList.remove('skill-activated');
-                }, 300);
-            });
-            
-            // Add tooltip with description on hover
-            skillButton.title = `${skill.name}: ${skill.description}`;
-            
-            this.skillsContainer.appendChild(skillButton);
-        });
-        
-        this.uiContainer.appendChild(this.skillsContainer);
-    }
-    
-    createDialogBox() {
-        // Create dialog box
-        this.dialogBox = document.createElement('div');
-        this.dialogBox.id = 'dialog-box';
-        
-        // Create dialog text
-        this.dialogText = document.createElement('div');
-        this.dialogText.id = 'dialog-text';
-        
-        // Create dialog continue button
-        this.dialogContinue = document.createElement('div');
-        this.dialogContinue.id = 'dialog-continue';
-        this.dialogContinue.textContent = 'Click to continue...';
-        
-        // Add click event to close dialog
-        this.dialogBox.addEventListener('click', () => {
-            this.hideDialog();
-        });
-        
-        this.dialogBox.appendChild(this.dialogText);
-        this.dialogBox.appendChild(this.dialogContinue);
-        this.uiContainer.appendChild(this.dialogBox);
-    }
-    
-    createInventory() {
-        // Create inventory
-        this.inventory = document.createElement('div');
-        this.inventory.id = 'inventory';
-        
-        // Create inventory title
-        this.inventoryTitle = document.createElement('div');
-        this.inventoryTitle.id = 'inventory-title';
-        this.inventoryTitle.textContent = 'Inventory';
-        
-        // Create inventory grid
-        this.inventoryGrid = document.createElement('div');
-        this.inventoryGrid.id = 'inventory-grid';
-        
-        // Create inventory close button
-        this.inventoryClose = document.createElement('div');
-        this.inventoryClose.id = 'inventory-close';
-        this.inventoryClose.textContent = 'X';
-        
-        // Add click event to close inventory
-        this.inventoryClose.addEventListener('click', () => {
-            this.toggleInventory();
-        });
-        
-        this.inventory.appendChild(this.inventoryTitle);
-        this.inventory.appendChild(this.inventoryGrid);
-        this.inventory.appendChild(this.inventoryClose);
-        this.uiContainer.appendChild(this.inventory);
-    }
-    
-    // Pause menu has been removed
-    
-    // Settings menu functionality has been removed
-    
-    createVirtualJoystick() {
-        // Get joystick configuration from INPUT_CONFIG
-        const joystickConfig = INPUT_CONFIG.ui.joystick;
-        const sizeMultiplier = joystickConfig.sizeMultiplier;
-        const baseSize = joystickConfig.baseSize;
-        const handleSize = joystickConfig.handleSize;
-        
-        // Create virtual joystick container
-        this.joystickContainer = document.createElement('div');
-        this.joystickContainer.id = 'virtual-joystick-container';
-        
-        // Apply size multiplier to joystick container
-        const scaledBaseSize = baseSize * sizeMultiplier;
-        this.joystickContainer.style.width = `${scaledBaseSize}px`;
-        this.joystickContainer.style.height = `${scaledBaseSize}px`;
-        
-        // Create joystick base
-        this.joystickBase = document.createElement('div');
-        this.joystickBase.id = 'virtual-joystick-base';
-        
-        // Create joystick handle
-        this.joystickHandle = document.createElement('div');
-        this.joystickHandle.id = 'virtual-joystick-handle';
-        
-        // Apply size multiplier to joystick handle
-        const scaledHandleSize = handleSize * sizeMultiplier;
-        this.joystickHandle.style.width = `${scaledHandleSize}px`;
-        this.joystickHandle.style.height = `${scaledHandleSize}px`;
-        
-        // Add elements to container
-        this.joystickContainer.appendChild(this.joystickBase);
-        this.joystickContainer.appendChild(this.joystickHandle);
-        
-        // Add container to UI
-        this.uiContainer.appendChild(this.joystickContainer);
-        
-        // Initialize joystick state
-        this.joystickState = {
-            active: false,
-            centerX: 0,
-            centerY: 0,
-            currentX: 0,
-            currentY: 0,
-            direction: { x: 0, y: 0 }
-        };
-        
-        // Set up touch event listeners
-        this.setupJoystickEvents();
-    }
-    
-    setupJoystickEvents() {
-        // Touch start event
-        this.joystickContainer.addEventListener('touchstart', (event) => {
-            event.preventDefault();
-            this.handleJoystickStart(event.touches[0].clientX, event.touches[0].clientY);
-        });
-        
-        // Mouse down event (for testing on desktop)
-        this.joystickContainer.addEventListener('mousedown', (event) => {
-            event.preventDefault();
-            this.handleJoystickStart(event.clientX, event.clientY);
-            
-            // Add global mouse move and up events
-            document.addEventListener('mousemove', this.handleMouseMove);
-            document.addEventListener('mouseup', this.handleMouseUp);
-        });
-        
-        // Touch move event
-        this.joystickContainer.addEventListener('touchmove', (event) => {
-            event.preventDefault();
-            if (this.joystickState.active) {
-                this.handleJoystickMove(event.touches[0].clientX, event.touches[0].clientY);
-            }
-        });
-        
-        // Touch end event
-        this.joystickContainer.addEventListener('touchend', (event) => {
-            event.preventDefault();
-            this.handleJoystickEnd();
-        });
-        
-        // Touch cancel event
-        this.joystickContainer.addEventListener('touchcancel', (event) => {
-            event.preventDefault();
-            this.handleJoystickEnd();
-        });
-        
-        // Mouse move handler (defined as property to allow removal)
-        this.handleMouseMove = (event) => {
-            event.preventDefault();
-            if (this.joystickState.active) {
-                this.handleJoystickMove(event.clientX, event.clientY);
-            }
-        };
-        
-        // Mouse up handler (defined as property to allow removal)
-        this.handleMouseUp = (event) => {
-            event.preventDefault();
-            this.handleJoystickEnd();
-            
-            // Remove global mouse move and up events
-            document.removeEventListener('mousemove', this.handleMouseMove);
-            document.removeEventListener('mouseup', this.handleMouseUp);
-        };
-    }
-    
-    handleJoystickStart(clientX, clientY) {
-        // Get joystick container position
-        const rect = this.joystickContainer.getBoundingClientRect();
-        
-        // Set joystick state
-        this.joystickState.active = true;
-        this.joystickState.centerX = rect.left + rect.width / 2;
-        this.joystickState.centerY = rect.top + rect.height / 2;
-        
-        // Update joystick position
-        this.handleJoystickMove(clientX, clientY);
-    }
-    
-    handleJoystickMove(clientX, clientY) {
-        if (!this.joystickState.active) return;
-        
-        // Calculate distance from center
-        const deltaX = clientX - this.joystickState.centerX;
-        const deltaY = clientY - this.joystickState.centerY;
-        
-        // Calculate distance
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        
-        // Get joystick container radius
-        const rect = this.joystickContainer.getBoundingClientRect();
-        const radius = rect.width / 2;
-        
-        // Limit distance to radius
-        const limitedDistance = Math.min(distance, radius);
-        
-        // Calculate normalized direction
-        const normalizedX = deltaX / distance;
-        const normalizedY = deltaY / distance;
-        
-        // Calculate new position
-        const newX = normalizedX * limitedDistance;
-        const newY = normalizedY * limitedDistance;
-        
-        // Update joystick handle position
-        this.joystickHandle.style.transform = `translate(calc(-50% + ${newX}px), calc(-50% + ${newY}px))`;
-        
-        // Update joystick state
-        this.joystickState.currentX = newX;
-        this.joystickState.currentY = newY;
-        
-        // Update direction (normalized)
-        this.joystickState.direction = {
-            x: newX / radius,
-            y: newY / radius
-        };
-    }
-    
-    handleJoystickEnd() {
-        // Reset joystick state
-        this.joystickState.active = false;
-        this.joystickState.direction = { x: 0, y: 0 };
-        
-        // Reset joystick handle position
-        this.joystickHandle.style.transform = 'translate(-50%, -50%)';
-    }
-    
-    getJoystickDirection() {
-        return this.joystickState.direction;
-    }
-    
-    createDeathScreen() {
-        // Create death screen
-        this.deathScreen = document.createElement('div');
-        this.deathScreen.id = 'death-screen';
-        this.deathScreen.className = 'game-menu';
-        this.deathScreen.style.display = 'none';
-        
-        // Create death screen title
-        const title = document.createElement('h1');
-        title.textContent = 'You Died';
-        title.style.color = '#ff0000';
-        
-        // Create respawn button
-        const respawnButton = document.createElement('button');
-        respawnButton.className = 'menu-button';
-        respawnButton.textContent = 'Respawn';
-        respawnButton.addEventListener('click', () => {
-            this.game.player.revive();
-        });
-        
-        // Create quit button
-        const quitButton = document.createElement('button');
-        quitButton.className = 'menu-button';
-        quitButton.textContent = 'Quit Game';
-        quitButton.addEventListener('click', () => {
-            // Reload page to restart game
-            location.reload();
-        });
-        
-        this.deathScreen.appendChild(title);
-        this.deathScreen.appendChild(respawnButton);
-        this.deathScreen.appendChild(quitButton);
-        document.body.appendChild(this.deathScreen);
-    }
-    
-    update() {
-        // Update player UI
-        this.updatePlayerUI();
-        
-        // Update enemy UI
-        this.updateEnemyUI();
-        
-        // Update skills UI
-        this.updateSkillsUI();
-        
-        // Update notifications
-        this.updateNotifications();
-        
-        // Update damage numbers
-        this.updateDamageNumbers();
-    }
-    
-    updatePlayerUI() {
-        // Update level indicator
-        this.levelIndicator.textContent = `Level: ${this.game.player.getLevel()}`;
-        
-        // Get health values
-        const currentHealth = Math.round(this.game.player.getHealth());
-        const maxHealth = this.game.player.getMaxHealth();
-        const healthPercent = (currentHealth / maxHealth) * 100;
-        
-        // Update health bar
-        this.healthBar.style.width = `${healthPercent}%`;
-        
-        // Update health text
-        this.healthText.textContent = `${currentHealth}/${maxHealth}`;
-        
-        // Get mana values
-        const currentMana = Math.round(this.game.player.getMana());
-        const maxMana = this.game.player.getMaxMana();
-        const manaPercent = (currentMana / maxMana) * 100;
-        
-        // Update mana bar
-        this.manaBar.style.width = `${manaPercent}%`;
-        
-        // Update mana text
-        this.manaText.textContent = `${currentMana}/${maxMana}`;
-        
-        // Change health bar color based on health percentage
-        if (healthPercent < 25) {
-            this.healthBar.style.backgroundColor = '#ff3333'; // Bright red when low
-            this.healthBar.style.boxShadow = '0 0 8px #ff3333';
-        } else if (healthPercent < 50) {
-            this.healthBar.style.backgroundColor = '#ff6633'; // Orange-red when medium
-            this.healthBar.style.boxShadow = '0 0 5px #ff6633';
-        } else {
-            this.healthBar.style.backgroundColor = '#ff0000'; // Normal red when high
-            this.healthBar.style.boxShadow = 'none';
-        }
-    }
-    
-    updateEnemyUI() {
-        // Find closest enemy
-        const playerPosition = this.game.player.getPosition();
-        const closestEnemy = this.game.enemyManager.getClosestEnemy(playerPosition, 10);
-        
-        if (closestEnemy && !closestEnemy.isDead()) {
-            // Show enemy health bar
-            this.enemyHealthContainer.style.display = 'block';
-            
-            // Update enemy name
-            this.enemyName.textContent = closestEnemy.getName();
-            
-            // Update enemy health bar
-            const healthPercent = (closestEnemy.getHealth() / closestEnemy.getMaxHealth()) * 100;
-            this.enemyHealthBar.style.width = `${healthPercent}%`;
-        } else {
-            // Hide enemy health bar
-            this.enemyHealthContainer.style.display = 'none';
-        }
-    }
-    
-    updateSkillsUI() {
-        // Update skill cooldowns
-        const skills = this.game.player.getSkills();
-        const skillButtons = this.skillsContainer.querySelectorAll('.skill-button');
-        
-        skills.forEach((skill, index) => {
-            const skillButton = skillButtons[index];
-            const cooldownOverlay = skillButton.querySelector('.skill-cooldown');
-            const cooldownPercent = skill.getCooldownPercent() * 100;
-            
-            // Update cooldown overlay
-            cooldownOverlay.style.height = `${cooldownPercent}%`;
-            
-            // Add visual feedback based on cooldown state
-            if (cooldownPercent > 0) {
-                // Skill is on cooldown
-                skillButton.style.opacity = '0.7';
-                
-                // Show cooldown time if significant
-                if (cooldownPercent > 5) {
-                    const skillIcon = skillButton.querySelector('.skill-icon');
-                    if (skillIcon) {
-                        // If cooldown is active, show the remaining time
-                        const remainingTime = (skill.cooldown * (cooldownPercent / 100)).toFixed(1);
-                        if (remainingTime > 0.1) {
-                            skillIcon.setAttribute('data-cooldown', remainingTime);
-                            skillIcon.classList.add('showing-cooldown');
-                        } else {
-                            skillIcon.removeAttribute('data-cooldown');
-                            skillIcon.classList.remove('showing-cooldown');
-                        }
-                    }
-                }
-            } else {
-                // Skill is ready
-                skillButton.style.opacity = '1';
-                
-                const skillIcon = skillButton.querySelector('.skill-icon');
-                if (skillIcon) {
-                    skillIcon.removeAttribute('data-cooldown');
-                    skillIcon.classList.remove('showing-cooldown');
-                }
-                
-                // Add subtle pulsing effect to ready skills
-                if (!skillButton.classList.contains('ready-pulse')) {
-                    skillButton.classList.add('ready-pulse');
-                }
-            }
-            
-            // Check if player has enough mana for this skill
-            const hasEnoughMana = this.game.player.getMana() >= skill.manaCost;
-            
-            if (!hasEnoughMana) {
-                skillButton.classList.add('not-enough-mana');
-            } else {
-                skillButton.classList.remove('not-enough-mana');
-            }
-        });
-    }
-    
-    updateNotifications() {
-        // Update existing notifications
-        let needsReorganization = false;
-        
-        // Calculate message rate to determine if we need to expire messages faster
-        const messageRate = this.getMessageRate();
-        const fastExpiry = messageRate > 3; // If messages are coming in quickly
-        
-        for (let i = this.notifications.length - 1; i >= 0; i--) {
-            const notification = this.notifications[i];
-            
-            // Update notification lifetime - expire faster if many messages are coming in
-            const expiryRate = fastExpiry ? 1.5 / 60 : 1 / 60;
-            notification.lifetime -= expiryRate;
-            
-            // Remove expired notifications
-            if (notification.lifetime <= 0) {
-                notification.element.remove();
-                this.notifications.splice(i, 1);
-                needsReorganization = true;
-            } else {
-                // Update opacity for fade out - start fading earlier
-                const fadeStartThreshold = fastExpiry ? 1.2 : 1;
-                if (notification.lifetime < fadeStartThreshold) {
-                    notification.element.style.opacity = notification.lifetime / fadeStartThreshold;
-                }
-                
-                // Faster slide up for smoother animation - speed based on message rate
-                const slideSpeed = fastExpiry ? 1.2 : 0.8;
-                const currentTop = parseInt(notification.element.style.top);
-                notification.element.style.top = `${currentTop - slideSpeed}px`;
-            }
-        }
-        
-        // If we removed notifications or have too many, reorganize the remaining ones
-        if ((needsReorganization && this.notifications.length > 0) || 
-            (this.notifications.length > 3 && fastExpiry)) {
-            
-            // Get screen height to calculate maximum notification area
-            const screenHeight = window.innerHeight;
-            const maxNotificationAreaHeight = screenHeight / 5;
-            
-            // Calculate total height of all notifications
-            let totalHeight = 0;
-            for (let i = 0; i < this.notifications.length; i++) {
-                const notif = this.notifications[i];
-                const height = notif.element.offsetHeight + 5; // Height + smaller margin
-                totalHeight += height;
-            }
-            
-            // If we exceed the max height, compress the notifications
-            if (totalHeight > maxNotificationAreaHeight) {
-                this.compressNotifications(maxNotificationAreaHeight);
-            } else {
-                // Just reposition notifications with proper spacing
-                let currentTop = 80; // Start from the top position
-                
-                for (let i = 0; i < this.notifications.length; i++) {
-                    const notification = this.notifications[i];
-                    
-                    // Reset transform in case it was previously compressed
-                    if (notification.element.style.transform.includes('scale')) {
-                        notification.element.style.transform = 'translateX(-50%)';
-                    }
-                    
-                    notification.element.style.top = `${currentTop}px`;
-                    currentTop += notification.element.offsetHeight + 5; // Height + smaller margin
-                }
-            }
-        }
-    }
-    
-    updateDamageNumbers() {
-        // Update existing damage numbers
-        for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
-            const damageNumber = this.damageNumbers[i];
-            
-            // Update lifetime
-            damageNumber.lifetime -= 1 / 60;
-            
-            // Remove expired damage numbers
-            if (damageNumber.lifetime <= 0) {
-                damageNumber.element.remove();
-                this.damageNumbers.splice(i, 1);
-            } else {
-                // Update opacity for fade out
-                if (damageNumber.lifetime < 0.5) {
-                    damageNumber.element.style.opacity = damageNumber.lifetime * 2;
-                }
-                
-                // Update position for float up
-                const currentTop = parseInt(damageNumber.element.style.top);
-                damageNumber.element.style.top = `${currentTop - 1}px`;
-            }
-        }
-    }
-    
-    showNotification(message) {
-        // Get screen height to calculate maximum notification area (1/5 of screen height)
-        const screenHeight = window.innerHeight;
-        const maxNotificationAreaHeight = screenHeight / 5;
-        
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.style.position = 'absolute';
-        notification.style.top = '80px';
-        notification.style.left = '50%';
-        notification.style.transform = 'translateX(-50%)';
-        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        notification.style.color = 'white';
-        notification.style.padding = '6px 12px'; // Even smaller padding for compactness
-        notification.style.borderRadius = '5px';
-        notification.style.zIndex = '100';
-        notification.style.transition = 'opacity 0.3s, top 0.2s'; // Faster transitions
-        notification.style.fontSize = '13px'; // Smaller font size for compactness
-        notification.style.maxWidth = '80%'; // Limit width
-        notification.style.textAlign = 'center'; // Center text
-        notification.style.overflow = 'hidden'; // Prevent text overflow
-        notification.style.textOverflow = 'ellipsis'; // Add ellipsis for long text
-        notification.style.whiteSpace = 'nowrap'; // Keep text on one line
-        notification.textContent = message;
-        
-        // Add notification to UI container
-        this.uiContainer.appendChild(notification);
-        
-        // Calculate how many notifications we can fit in the max area
-        // Estimate each notification height (including margin) as about 40px
-        const estimatedNotificationHeight = 40;
-        const maxNotifications = Math.floor(maxNotificationAreaHeight / estimatedNotificationHeight);
-        
-        // If we have too many notifications, remove the oldest ones
-        // Remove more aggressively when many new messages are coming in
-        const messageRate = this.getMessageRate();
-        const notificationsToKeep = messageRate > 3 ? 
-            Math.max(2, maxNotifications - 2) : // High message rate - keep fewer
-            maxNotifications; // Normal rate - keep max allowed
-            
-        while (this.notifications.length >= notificationsToKeep) {
-            // Remove oldest notification
-            const oldestNotification = this.notifications.shift();
-            oldestNotification.element.remove();
-        }
-        
-        // Add to notifications array with dynamic lifetime based on message rate
-        const lifetime = messageRate > 3 ? 1.5 : 2.5; // Shorter lifetime when messages come quickly
-        
-        this.notifications.push({
-            element: notification,
-            lifetime: lifetime,
-            message: message, // Store message for deduplication
-            timestamp: Date.now() // Store timestamp for message rate calculation
-        });
-        
-        // Check for duplicate messages and reduce their lifetime
-        this.deduplicateNotifications();
-        
-        // Adjust position for multiple notifications
-        if (this.notifications.length > 1) {
-            // Calculate total height of all notifications
-            let totalHeight = 0;
-            let availableHeight = maxNotificationAreaHeight;
-            
-            // Calculate how much space we need
-            for (let i = 0; i < this.notifications.length - 1; i++) {
-                const notif = this.notifications[i];
-                const height = notif.element.offsetHeight + 5; // Height + smaller margin
-                totalHeight += height;
-            }
-            
-            // If we exceed the max height, compress the notifications
-            if (totalHeight > availableHeight) {
-                // Compress notifications to fit in the available space
-                this.compressNotifications(availableHeight);
-            } else {
-                // Just position the new notification below the last one
-                const previousNotification = this.notifications[this.notifications.length - 2];
-                const previousHeight = previousNotification.element.offsetHeight;
-                const previousTop = parseInt(previousNotification.element.style.top);
-                notification.style.top = `${previousTop + previousHeight + 5}px`; // Smaller margin
-            }
-        }
-    }
-    
-    // Helper method to calculate message rate (messages per second)
-    getMessageRate() {
-        if (this.notifications.length < 2) return 1; // Default rate
-        
-        // Calculate time window (in seconds) for the last few messages
-        const now = Date.now();
-        const oldestTimestamp = this.notifications[0].timestamp;
-        const timeWindow = (now - oldestTimestamp) / 1000;
-        
-        // Avoid division by zero
-        if (timeWindow < 0.1) return 10; // Very high rate
-        
-        // Calculate messages per second
-        return this.notifications.length / timeWindow;
-    }
-    
-    // Helper method to compress notifications to fit in available space
-    compressNotifications(availableHeight) {
-        // Calculate how much space each notification can take
-        const notificationCount = this.notifications.length;
-        const spacePerNotification = availableHeight / notificationCount;
-        
-        // Position each notification with compressed spacing
-        let currentTop = 80; // Start from the top position
-        
-        for (let i = 0; i < this.notifications.length; i++) {
-            const notification = this.notifications[i];
-            
-            // Apply a slight scale reduction for better compactness
-            const scale = Math.max(0.85, 1 - (notificationCount * 0.02));
-            notification.element.style.transform = `translateX(-50%) scale(${scale})`;
-            
-            // Set position
-            notification.element.style.top = `${currentTop}px`;
-            
-            // Move to next position (use smaller spacing when compressed)
-            // Use a minimum spacing to prevent overlap
-            currentTop += Math.max(25, spacePerNotification);
-        }
-    }
-    
-    // Helper method to deduplicate notifications
-    deduplicateNotifications() {
-        // Create a map to count occurrences of each message
-        const messageCounts = {};
-        const messageIndices = {}; // Track indices of first occurrence
-        
-        // Count occurrences and track first occurrence
-        for (let i = 0; i < this.notifications.length; i++) {
-            const notification = this.notifications[i];
-            const message = notification.message;
-            
-            if (messageCounts[message] === undefined) {
-                messageIndices[message] = i; // First occurrence
-            }
-            
-            messageCounts[message] = (messageCounts[message] || 0) + 1;
-        }
-        
-        // Handle duplicate messages
-        for (let i = this.notifications.length - 1; i >= 0; i--) {
-            const notification = this.notifications[i];
-            const message = notification.message;
-            
-            if (messageCounts[message] > 1) {
-                // If this is not the first occurrence of the message
-                if (messageIndices[message] !== i) {
-                    // For duplicates, either remove them or reduce their lifetime drastically
-                    if (messageCounts[message] > 2) {
-                        // If more than 2 duplicates, remove all but the first occurrence
-                        notification.element.remove();
-                        this.notifications.splice(i, 1);
-                    } else {
-                        // For just 2 duplicates, drastically reduce lifetime
-                        notification.lifetime = Math.min(notification.lifetime, 0.8);
-                    }
-                } else {
-                    // For the first occurrence, update the text to show count
-                    if (messageCounts[message] > 2) {
-                        notification.element.textContent = `${message} (${messageCounts[message]}x)`;
-                    }
-                    // Slightly reduce lifetime of first occurrence too
-                    notification.lifetime = Math.min(notification.lifetime, 2.0);
-                }
-            }
-        }
-    }
-    
-    createBleedingEffect(amount, position, isPlayerDamage = false) {
-        // Only show damage particles for player-caused damage
-        if (!isPlayerDamage) return;
-        
-        // Convert 3D position to screen position
-        const vector = position.clone();
-        vector.project(this.game.camera);
-        
-        const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-        const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
-        
-        // Create blood particle container
-        const particleContainer = document.createElement('div');
-        particleContainer.style.position = 'absolute';
-        particleContainer.style.top = `${y}px`;
-        particleContainer.style.left = `${x}px`;
-        particleContainer.style.width = '0';
-        particleContainer.style.height = '0';
-        particleContainer.style.zIndex = '100';
-        
-        // Determine particle count and color based on damage amount
-        const minParticles = 3;
-        const maxParticles = 15;
-        const particleCount = Math.min(maxParticles, minParticles + Math.floor(amount / 10));
-        
-        // Determine color based on damage amount
-        // Higher damage = brighter/more intense red
-        let baseColor;
-        if (amount < 10) {
-            baseColor = [120, 0, 0]; // Dark red for low damage
-        } else if (amount < 30) {
-            baseColor = [180, 0, 0]; // Medium red
-        } else if (amount < 50) {
-            baseColor = [220, 0, 0]; // Bright red
-        } else {
-            baseColor = [255, 30, 30]; // Intense red with slight glow for high damage
-        }
-        
-        // Create blood particles
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            
-            // Randomize particle size based on damage
-            const minSize = 3;
-            const maxSize = 8 + (amount / 20); // Larger particles for higher damage
-            const size = minSize + Math.random() * (maxSize - minSize);
-            
-            // Randomize particle color slightly
-            const colorVariation = 30; // Amount of random variation
-            const r = Math.max(0, Math.min(255, baseColor[0] + (Math.random() * colorVariation - colorVariation/2)));
-            const g = Math.max(0, Math.min(255, baseColor[1] + (Math.random() * colorVariation - colorVariation/2)));
-            const b = Math.max(0, Math.min(255, baseColor[2] + (Math.random() * colorVariation - colorVariation/2)));
-            
-            // Set particle styles
-            particle.style.position = 'absolute';
-            particle.style.width = `${size}px`;
-            particle.style.height = `${size}px`;
-            particle.style.borderRadius = '50%';
-            particle.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-            particle.style.boxShadow = `0 0 ${size/2}px rgba(${r}, ${g}, ${b}, 0.7)`;
-            
-            // Randomize particle position
-            const spread = 30 + (amount / 5); // Higher damage = wider spread
-            const posX = (Math.random() * spread * 2) - spread;
-            const posY = (Math.random() * spread * 2) - spread;
-            particle.style.transform = `translate(${posX}px, ${posY}px)`;
-            
-            // Add animation for particle
-            const duration = 0.5 + (Math.random() * 1);
-            particle.style.transition = `all ${duration}s ease-out`;
-            
-            // Add particle to container
-            particleContainer.appendChild(particle);
-            
-            // Animate particle after a small delay
-            setTimeout(() => {
-                // Move particle outward
-                const distance = 20 + (Math.random() * 40);
-                const angle = Math.random() * Math.PI * 2;
-                const endX = posX + Math.cos(angle) * distance;
-                const endY = posY + Math.sin(angle) * distance;
-                
-                // Apply gravity effect
-                const gravity = 20 + (Math.random() * 30);
-                
-                // Update particle position and fade out
-                particle.style.transform = `translate(${endX}px, ${endY + gravity}px)`;
-                particle.style.opacity = '0';
-            }, 10);
-        }
-        
-        // Add particle container to UI
-        this.uiContainer.appendChild(particleContainer);
-        
-        // Add to damage numbers array for cleanup
-        this.damageNumbers.push({
-            element: particleContainer,
-            lifetime: 2.0 // Slightly longer lifetime for particles
-        });
-        
-        // For very high damage, add a brief screen flash effect
-        if (amount > 40) {
-            const flash = document.createElement('div');
-            flash.style.position = 'absolute';
-            flash.style.top = '0';
-            flash.style.left = '0';
-            flash.style.width = '100%';
-            flash.style.height = '100%';
-            flash.style.backgroundColor = 'rgba(255, 0, 0, 0.15)';
-            flash.style.pointerEvents = 'none';
-            flash.style.zIndex = '90';
-            flash.style.transition = 'opacity 0.5s';
-            
-            this.uiContainer.appendChild(flash);
-            
-            // Fade out and remove after a short time
-            setTimeout(() => {
-                flash.style.opacity = '0';
-                setTimeout(() => {
-                    flash.remove();
-                }, 500);
-            }, 100);
-        }
-    }
-    
-    showDialog(title, text) {
-        // Update dialog text
-        this.dialogText.innerHTML = `<h3>${title}</h3><p>${text}</p>`;
-        
-        // Show dialog box
-        this.dialogBox.style.display = 'block';
-        this.isDialogOpen = true;
-        
-        // Pause game
-        this.game.pause();
-    }
-    
-    hideDialog() {
-        // Hide dialog box
-        this.dialogBox.style.display = 'none';
-        this.isDialogOpen = false;
-        
-        // Resume game
-        this.game.resume();
-    }
-    
-    toggleInventory() {
-        if (this.isInventoryOpen) {
-            // Hide inventory
-            this.inventory.style.display = 'none';
-            this.isInventoryOpen = false;
-            
-            // Resume game
-            this.game.resume();
-        } else {
-            // Update inventory items
-            this.updateInventoryItems();
-            
-            // Show inventory
-            this.inventory.style.display = 'block';
-            this.isInventoryOpen = true;
-            
-            // Pause game
-            this.game.pause();
-        }
-    }
-    
-    updateInventoryItems() {
-        // Clear inventory grid
-        this.inventoryGrid.innerHTML = '';
-        
-        // Get player inventory
-        const inventory = this.game.player.getInventory();
-        
-        // Add items to inventory grid
-        inventory.forEach(item => {
-            // Create item element
-            const itemElement = document.createElement('div');
-            itemElement.className = 'inventory-item';
-            itemElement.textContent = `${item.name} x${item.amount}`;
-            
-            // Add click event for item use
-            itemElement.addEventListener('click', () => {
-                // Handle item use
-                this.useItem(item);
-            });
-            
-            this.inventoryGrid.appendChild(itemElement);
-        });
-        
-        // Add empty slots
-        const totalSlots = 20;
-        const emptySlots = totalSlots - inventory.length;
-        
-        for (let i = 0; i < emptySlots; i++) {
-            const emptySlot = document.createElement('div');
-            emptySlot.className = 'inventory-item';
-            this.inventoryGrid.appendChild(emptySlot);
-        }
-    }
-    
-    useItem(item) {
-        // Handle different item types
-        if (item.name === 'Health Potion') {
-            // Heal player
-            // Use proper methods instead of direct access
-            const newHealth = this.game.player.getHealth() + 50;
-            const maxHealth = this.game.player.getMaxHealth();
-            this.game.player.getStatsObject().setHealth(Math.min(newHealth, maxHealth));
-            
-            // Remove item from inventory
-            this.game.player.removeFromInventory(item.name, 1);
-            
-            // Show notification
-            this.showNotification('Used Health Potion: +50 Health');
-            
-            // Update inventory
-            this.updateInventoryItems();
-        } else if (item.name === 'Mana Potion') {
-            // Restore mana
-            // Use proper methods instead of direct access
-            const newMana = this.game.player.getMana() + 50;
-            const maxMana = this.game.player.getMaxMana();
-            this.game.player.getStatsObject().setMana(Math.min(newMana, maxMana));
-            
-            // Remove item from inventory
-            this.game.player.removeFromInventory(item.name, 1);
-            
-            // Show notification
-            this.showNotification('Used Mana Potion: +50 Mana');
-            
-            // Update inventory
-            this.updateInventoryItems();
-        } else {
-            // Show item description
-            this.showNotification(`Item: ${item.name}`);
-        }
-    }
-    
-    // Toggle pause menu has been removed
-    
-    showDeathScreen() {
-        // Show death screen
-        this.deathScreen.style.display = 'flex';
-        this.isDeathScreenOpen = true;
-        
-        // Pause game
-        this.game.pause();
-    }
-    
-    hideDeathScreen() {
-        // Hide death screen
-        this.deathScreen.style.display = 'none';
-        this.isDeathScreenOpen = false;
-        
-        // Resume game
-        this.game.resume();
-    }
-    
-    showLevelUp(level) {
-        // Create level up element
-        const levelUp = document.createElement('div');
-        levelUp.style.position = 'absolute';
-        levelUp.style.top = '50%';
-        levelUp.style.left = '50%';
-        levelUp.style.transform = 'translate(-50%, -50%)';
-        levelUp.style.color = '#ffcc00';
-        levelUp.style.fontSize = '48px';
-        levelUp.style.fontWeight = 'bold';
-        levelUp.style.textShadow = '0 0 10px #ff6600';
-        levelUp.style.zIndex = '100';
-        levelUp.textContent = `Level Up! ${level}`;
-        
-        // Add level up to UI container
-        this.uiContainer.appendChild(levelUp);
-        
-        // Animate level up
-        let scale = 1;
-        const animation = setInterval(() => {
-            scale += 0.05;
-            levelUp.style.transform = `translate(-50%, -50%) scale(${scale})`;
-            levelUp.style.opacity = 2 - scale;
-            
-            if (scale >= 2) {
-                clearInterval(animation);
-                levelUp.remove();
-            }
-        }, 50);
-        
-        // Show notification
-        this.showNotification(`Level Up! You are now level ${level}`);
-    }
-    
-    updateQuestLog(activeQuests) {
-        // Create or update quest log
-        if (!this.questLog) {
-            // Create quest log
-            this.questLog = document.createElement('div');
-            this.questLog.style.position = 'absolute';
-            this.questLog.style.top = '20px';
-            this.questLog.style.right = '20px';
-            this.questLog.style.width = '250px';
-            this.questLog.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-            this.questLog.style.color = 'white';
-            this.questLog.style.padding = '10px';
-            this.questLog.style.borderRadius = '5px';
-            this.questLog.style.zIndex = '100';
-            
-            // Create quest log title
-            const title = document.createElement('div');
-            title.style.fontSize = '18px';
-            title.style.fontWeight = 'bold';
-            title.style.marginBottom = '10px';
-            title.textContent = 'Active Quests';
-            
-            this.questLog.appendChild(title);
-            
-            // Create quest list
-            this.questList = document.createElement('div');
-            this.questLog.appendChild(this.questList);
-            
-            // Add quest log to UI container
-            this.uiContainer.appendChild(this.questLog);
-        }
-        
-        // Update quest list
-        this.questList.innerHTML = '';
-        
-        if (activeQuests.length === 0) {
-            // No active quests
-            const noQuests = document.createElement('div');
-            noQuests.style.fontStyle = 'italic';
-            noQuests.textContent = 'No active quests';
-            this.questList.appendChild(noQuests);
-        } else {
-            // Add active quests
-            activeQuests.forEach(quest => {
-                // Create quest item
-                const questItem = document.createElement('div');
-                questItem.style.marginBottom = '10px';
-                
-                // Create quest title
-                const questTitle = document.createElement('div');
-                questTitle.style.fontWeight = 'bold';
-                questTitle.style.color = quest.isMainQuest ? '#ffcc00' : 'white';
-                questTitle.textContent = quest.name;
-                
-                // Create quest objective
-                const questObjective = document.createElement('div');
-                questObjective.style.fontSize = '14px';
-                
-                // Format objective based on type
-                switch (quest.objective.type) {
-                    case 'kill':
-                        questObjective.textContent = `Kill ${quest.objective.progress}/${quest.objective.count} enemies`;
-                        break;
-                    case 'interact':
-                        questObjective.textContent = `Find ${quest.objective.progress}/${quest.objective.count} ${quest.objective.target}s`;
-                        break;
-                    case 'explore':
-                        questObjective.textContent = `Discover ${quest.objective.progress}/${quest.objective.count} zones`;
-                        break;
-                    default:
-                        questObjective.textContent = quest.description;
-                        break;
-                }
-                
-                questItem.appendChild(questTitle);
-                questItem.appendChild(questObjective);
-                this.questList.appendChild(questItem);
-            });
         }
     }
 }
