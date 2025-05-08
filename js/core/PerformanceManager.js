@@ -141,7 +141,7 @@ export class PerformanceManager {
         element.style.fontSize = '11px';
         element.style.fontFamily = 'monospace';
         element.style.borderRadius = '3px 0 0 3px';
-        element.style.zIndex = '1001';
+        element.style.zIndex = '100';
         element.style.opacity = '0.5';
         element.style.transition = 'opacity 0.2s';
         element.style.boxSizing = 'border-box'; // Ensure padding is included in width

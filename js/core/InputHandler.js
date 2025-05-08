@@ -36,7 +36,10 @@ export const INPUT_CONFIG = {
     ui: {
         title: 'UI Settings',
         controls: [
-            { keys: ['KeyF'], description: 'Toggle HUD Visibility' }
+            { keys: ['KeyF'], description: 'Toggle HUD Visibility' },
+            { keys: ['KeyM'], description: 'Toggle Mini Map' },
+            { keys: ['BracketLeft'], description: 'Zoom In Mini Map' },
+            { keys: ['BracketRight'], description: 'Zoom Out Mini Map' }
         ],
         joystick: {
             sizeMultiplier: 1, // Default to 80% of original size
@@ -133,6 +136,22 @@ export class InputHandler {
                     // Toggle HUD visibility with F key
                     const hudVisible = this.game.uiManager.toggleHUD();
                     console.log(`HUD visibility toggled: ${hudVisible ? 'visible' : 'hidden'}`);
+                    break;
+                    
+                case 'KeyM':
+                    // Toggle minimap visibility with M key
+                    const minimapVisible = this.game.uiManager.toggleMiniMap();
+                    console.log(`Mini map visibility toggled: ${minimapVisible ? 'visible' : 'hidden'}`);
+                    break;
+                    
+                case 'BracketLeft':
+                    // Zoom in minimap with [ key
+                    this.game.uiManager.decreaseMiniMapScale();
+                    break;
+                    
+                case 'BracketRight':
+                    // Zoom out minimap with ] key
+                    this.game.uiManager.increaseMiniMapScale();
                     break;
                     
                 // Escape key functionality has been removed

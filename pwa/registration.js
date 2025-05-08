@@ -49,17 +49,38 @@
         }
     }
 
+    // Format file size in human-readable format
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
     // Update loading progress
-    function updateLoadingProgress(percent, status, fileInfo) {
+    function updateLoadingProgress(percent, status, fileInfo, loadedBytes, totalBytes, totalSizeMB) {
         const progressBar = getElement('loading-progress');
         if (progressBar) {
             progressBar.style.width = percent + '%';
         }
         
+        // Update status text with size information if available
         if (status) {
             const statusElement = getElement('update-status');
             if (statusElement) {
-                statusElement.textContent = status;
+                let statusText = status;
+                
+                // Add size information if available
+                if (loadedBytes !== undefined && totalBytes !== undefined) {
+                    const loadedFormatted = formatFileSize(loadedBytes);
+                    const totalFormatted = totalSizeMB ? `${totalSizeMB} MB` : formatFileSize(totalBytes);
+                    statusText += ` (${loadedFormatted} / ${totalFormatted})`;
+                }
+                
+                statusElement.textContent = statusText;
             }
         }
         
@@ -68,6 +89,16 @@
         if (!fileInfoElement) return;
         
         if (fileInfo) {
+            // If we have the file size, add it to the info
+            if (loadedBytes !== undefined && fileInfo.startsWith('Caching:')) {
+                const filePath = fileInfo.substring(9).trim();
+                const fileSize = window.FILE_SIZES && window.FILE_SIZES[filePath];
+                
+                if (fileSize) {
+                    fileInfo += ` (${formatFileSize(fileSize)})`;
+                }
+            }
+            
             fileInfoElement.textContent = fileInfo;
             fileInfoElement.style.display = 'block';
         } else {
@@ -91,18 +122,33 @@
                     const data = event.data;
                     
                     if (data && data.type === 'CACHE_PROGRESS') {
-                        const { completed, total, currentFile } = data;
+                        const { completed, total, currentFile, loadedBytes, totalBytes, totalSizeMB } = data;
                         const percent = Math.round((completed / total) * 100);
                         const fileInfo = currentFile ? `Caching: ${currentFile}` : '';
+                        
+                        // Store file sizes and total size in window object for reference
+                        if (data.FILE_SIZES && !window.FILE_SIZES) {
+                            window.FILE_SIZES = data.FILE_SIZES;
+                        }
+                        
+                        // Store total size for reference in other parts of the code
+                        if (data.totalSizeMB && !window.TOTAL_CACHE_SIZE_MB) {
+                            window.TOTAL_CACHE_SIZE_MB = data.totalSizeMB;
+                        }
                         
                         updateLoadingProgress(
                             percent, 
                             `Downloading files (${completed}/${total})`, 
-                            fileInfo
+                            fileInfo,
+                            loadedBytes,
+                            totalBytes,
+                            totalSizeMB
                         );
                         
-                        // Log progress to console
-                        console.log(`Cache progress: ${percent}% (${completed}/${total}) - ${currentFile || 'N/A'}`);
+                        // Log progress to console with size information
+                        const loadedMB = loadedBytes ? (loadedBytes / (1024 * 1024)).toFixed(2) : '?';
+                        const totalMB = totalSizeMB || (totalBytes ? (totalBytes / (1024 * 1024)).toFixed(2) : '?');
+                        console.log(`Cache progress: ${percent}% (${completed}/${total}) - ${loadedMB}MB/${totalMB}MB - ${currentFile || 'N/A'}`);
                     }
                 } catch (error) {
                     console.error('Error processing message from service worker:', error);
@@ -191,7 +237,13 @@
                                             updateLoadingProgress(5, 'Installing update...', 'Preparing to download files');
                                             break;
                                         case 'installed':
-                                            updateLoadingProgress(90, 'Update installed, reloading...', null);
+                                            // Try to get the total size from the service worker
+                                            let totalSizeText = '';
+                                            if (window.TOTAL_CACHE_SIZE_MB) {
+                                                totalSizeText = ` (${window.TOTAL_CACHE_SIZE_MB} MB)`;
+                                            }
+                                            
+                                            updateLoadingProgress(90, `Update installed${totalSizeText}, reloading...`, null);
                                             // If there's a controller, it means the page is being controlled by an old SW
                                             if (navigator.serviceWorker.controller) {
                                                 // New content is available, reload to activate the new service worker
@@ -201,7 +253,7 @@
                                                 }, 1000);
                                             } else {
                                                 // First time install, no need to reload
-                                                updateLoadingProgress(100, 'Ready!', null);
+                                                updateLoadingProgress(100, `Ready!${totalSizeText}`, null);
                                                 setTimeout(hideUpdateNotification, 1000);
                                             }
                                             break;
@@ -209,7 +261,13 @@
                                             updateLoadingProgress(95, 'Activating...', null);
                                             break;
                                         case 'activated':
-                                            updateLoadingProgress(100, 'Complete!', null);
+                                            // Try to get the total size from the service worker
+                                            let completedSizeText = '';
+                                            if (window.TOTAL_CACHE_SIZE_MB) {
+                                                completedSizeText = ` (${window.TOTAL_CACHE_SIZE_MB} MB)`;
+                                            }
+                                            
+                                            updateLoadingProgress(100, `Complete!${completedSizeText}`, null);
                                             setTimeout(hideUpdateNotification, 1000);
                                             break;
                                         case 'redundant':

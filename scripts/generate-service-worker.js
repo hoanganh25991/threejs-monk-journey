@@ -24,7 +24,7 @@ const directoriesToScan = [
 const fileExtensions = [
   '.html', '.css', '.js', '.json', 
   '.png', '.jpg', '.jpeg', '.svg', '.ico',
-  '.mp3', '.wav', '.ogg'
+  '.mp3', '.wav', '.ogg', ".glb"
 ];
 
 // Files to always include
@@ -71,8 +71,17 @@ function scanDirectory(dir, baseDir = '') {
       const fileName = path.basename(file);
       
       if (fileExtensions.includes(ext)) {
+        // Get file size in bytes
+        const fileSize = stat.size;
+        
         // Convert Windows path separators to web format
-        results.push(relativePath.replace(/\\/g, '/'));
+        const webPath = relativePath.replace(/\\/g, '/');
+        
+        // Store both path and size
+        results.push({
+          path: webPath,
+          size: fileSize
+        });
       }
     }
   }
@@ -84,8 +93,26 @@ function scanDirectory(dir, baseDir = '') {
  * Get all files to cache
  */
 function getFilesToCache() {
-  let allFiles = [...alwaysInclude];
+  // Convert always include files to objects with path and size=0 (we'll get actual size if file exists)
+  let allFiles = alwaysInclude.map(path => {
+    // For root path, use index.html
+    const filePath = path === '' ? './index.html' : `./${path}`;
+    
+    // Get file size if it exists
+    let size = 0;
+    try {
+      if (fs.existsSync(filePath)) {
+        const stat = fs.statSync(filePath);
+        size = stat.size;
+      }
+    } catch (err) {
+      console.warn(`Could not get size for ${filePath}:`, err.message);
+    }
+    
+    return { path, size };
+  });
   
+  // Scan directories
   for (const dir of directoriesToScan) {
     try {
       if (fs.existsSync(dir)) {
@@ -98,8 +125,18 @@ function getFilesToCache() {
     }
   }
   
-  // Remove duplicates
-  return [...new Set(allFiles)];
+  // Remove duplicates by path
+  const uniqueFiles = [];
+  const paths = new Set();
+  
+  for (const file of allFiles) {
+    if (!paths.has(file.path)) {
+      paths.add(file.path);
+      uniqueFiles.push(file);
+    }
+  }
+  
+  return uniqueFiles;
 }
 
 /**
@@ -109,10 +146,26 @@ function createServiceWorker() {
   // Get the files to cache
   const filesToCache = getFilesToCache();
   
-  // Format the files array
+  // Calculate total size in bytes
+  const totalSizeBytes = filesToCache.reduce((total, file) => total + file.size, 0);
+  
+  // Convert to MB with 2 decimal places
+  const totalSizeMB = (totalSizeBytes / (1024 * 1024)).toFixed(2);
+  
+  // Format the files array with paths only for backward compatibility
   const filesArrayString = filesToCache
-    .map(file => `  '${file}'`)
+    .map(file => `  '${file.path}'`)
     .join(',\n');
+  
+  // Create file size map as JSON string
+  const fileSizesMapString = JSON.stringify(
+    filesToCache.reduce((map, file) => {
+      map[file.path] = file.size;
+      return map;
+    }, {}),
+    null,
+    2
+  ).replace(/^/gm, '  '); // Add indentation
   
   // Create the service worker content
   const serviceWorkerContent = `/**
@@ -124,20 +177,101 @@ const CACHE_NAME = 'monk-journey-cache';
 const CACHE_VERSION = '1';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
+// Total cache size in bytes and MB
+const TOTAL_CACHE_SIZE_BYTES = ${totalSizeBytes};
+const TOTAL_CACHE_SIZE_MB = ${totalSizeMB};
+
+// Assets to cache
 const ASSETS_TO_CACHE = [
 ${filesArrayString}
 ];
 
-// Install event - cache all static assets
+// File sizes in bytes for progress reporting
+const FILE_SIZES = ${fileSizesMapString};
+
+// Function to send progress updates to the client
+function sendProgressUpdate(completed, total, currentFile, loadedBytes, totalBytes) {
+  if (messagePort) {
+    messagePort.postMessage({
+      type: 'CACHE_PROGRESS',
+      completed,
+      total,
+      currentFile,
+      loadedBytes,
+      totalBytes,
+      totalSizeMB: TOTAL_CACHE_SIZE_MB
+    });
+  }
+}
+
+// Communication channel
+let messagePort = null;
+
+// Listen for messages from the client
+self.addEventListener('message', event => {
+  // Check if it's the initialization message with the port
+  if (event.data && event.data.type === 'INIT_PORT') {
+    messagePort = event.data.port;
+    console.log('Communication channel established with client');
+  }
+});
+
+// Function to cache files with progress tracking
+async function cacheFilesWithProgress(cache) {
+  const total = ASSETS_TO_CACHE.length;
+  let completed = 0;
+  let loadedBytes = 0;
+  
+  // Process files sequentially to ensure accurate progress tracking
+  for (const url of ASSETS_TO_CACHE) {
+    try {
+      // Get file size (or 0 if not available)
+      const fileSize = FILE_SIZES[url] || 0;
+      
+      // Send progress update before starting the fetch
+      sendProgressUpdate(completed, total, url, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
+      
+      // Fetch and cache the file
+      const response = await fetch(url);
+      if (response.ok) {
+        await cache.put(url, response);
+        completed++;
+        loadedBytes += fileSize;
+        
+        // Send progress update after successful caching
+        sendProgressUpdate(completed, total, url, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
+      } else {
+        console.warn(\`Failed to cache \${url}: \${response.status} \${response.statusText}\`);
+        // Still increment completed to keep progress moving
+        completed++;
+        sendProgressUpdate(completed, total, \`Failed: \${url}\`, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
+      }
+    } catch (error) {
+      console.error(\`Error caching \${url}:\`, error);
+      // Still increment completed to keep progress moving
+      completed++;
+      sendProgressUpdate(completed, total, \`Error: \${url}\`, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
+    }
+  }
+  
+  return completed;
+}
+
+// Install event - cache all static assets with progress tracking
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_KEY)
       .then(cache => {
-        console.log('Caching app assets');
-        return cache.addAll(ASSETS_TO_CACHE);
+        console.log('Caching app assets with progress tracking');
+        console.log(\`Total cache size: \${TOTAL_CACHE_SIZE_MB} MB with progress tracking\`);
+        return cacheFilesWithProgress(cache);
       })
-      .then(() => {
+      .then(completedCount => {
+        console.log(\`Cached \${completedCount} files successfully\`);
         return self.skipWaiting();
+      })
+      .catch(error => {
+        console.error('Failed to cache assets:', error);
       })
   );
 });
@@ -170,6 +304,10 @@ self.addEventListener('fetch', event => {
         }
         return fetch(event.request);
       })
+      .catch(error => {
+        console.error('Fetch error:', error);
+        // You could return a custom offline page here
+      })
   );
 });
 `;
@@ -180,6 +318,7 @@ self.addEventListener('fetch', event => {
   console.log(`✅ Service worker created successfully!`);
   console.log(`📦 Cache version set to: 1`);
   console.log(`🔢 Total files to cache: ${filesToCache.length}`);
+  console.log(`📊 Total cache size: ${totalSizeMB} MB`);
 }
 
 /**
@@ -197,8 +336,8 @@ function updateServiceWorker() {
     // Read the current service worker file
     let serviceWorkerContent = fs.readFileSync(serviceWorkerPath, 'utf8');
     
-    // Extract the current version
-    const versionMatch = serviceWorkerContent.match(/const CACHE_VERSION = ['"](\d+)['"]/);
+    // Extract the current version - handle case with comments after the version
+    const versionMatch = serviceWorkerContent.match(/const CACHE_VERSION = ['"](\d+)['"](?:.*)?;/);
     if (!versionMatch) {
       throw new Error('Could not find CACHE_VERSION in service-worker.js');
     }
@@ -207,19 +346,69 @@ function updateServiceWorker() {
     const currentVersion = parseInt(versionMatch[1], 10);
     const newVersion = currentVersion + 1;
     
-    // Update the version in the file
-    serviceWorkerContent = serviceWorkerContent.replace(
-      /const CACHE_VERSION = ['"](\d+)['"]/,
-      `const CACHE_VERSION = '${newVersion}'`
-    );
+    // Check if there's a comment after the version
+    const hasComment = versionMatch[0].includes('//');
+    
+    // Update the version in the file, preserving any comments
+    if (hasComment) {
+      // Extract the comment
+      const commentMatch = versionMatch[0].match(/(\/\/.*)/);
+      const comment = commentMatch ? commentMatch[1] : '';
+      
+      serviceWorkerContent = serviceWorkerContent.replace(
+        /const CACHE_VERSION = ['"](\d+)['"](?:.*)?;/,
+        `const CACHE_VERSION = '${newVersion}'; ${comment}`
+      );
+    } else {
+      serviceWorkerContent = serviceWorkerContent.replace(
+        /const CACHE_VERSION = ['"](\d+)['"](?:.*)?;/,
+        `const CACHE_VERSION = '${newVersion}';`
+      );
+    }
     
     // Get the files to cache
     const filesToCache = getFilesToCache();
     
-    // Format the files array
+    // Calculate total size in bytes
+    const totalSizeBytes = filesToCache.reduce((total, file) => total + file.size, 0);
+    
+    // Convert to MB with 2 decimal places
+    const totalSizeMB = (totalSizeBytes / (1024 * 1024)).toFixed(2);
+    
+    // Format the files array with paths only for backward compatibility
     const filesArrayString = filesToCache
-      .map(file => `  '${file}'`)
+      .map(file => `  '${file.path}'`)
       .join(',\n');
+    
+    // Create file size map as JSON string
+    const fileSizesMapString = JSON.stringify(
+      filesToCache.reduce((map, file) => {
+        map[file.path] = file.size;
+        return map;
+      }, {}),
+      null,
+      2
+    ).replace(/^/gm, '  '); // Add indentation
+    
+    // Update the total cache size constants
+    if (serviceWorkerContent.includes('TOTAL_CACHE_SIZE_BYTES')) {
+      // Update existing size constants
+      serviceWorkerContent = serviceWorkerContent.replace(
+        /const TOTAL_CACHE_SIZE_BYTES = \d+;/,
+        `const TOTAL_CACHE_SIZE_BYTES = ${totalSizeBytes};`
+      );
+      
+      serviceWorkerContent = serviceWorkerContent.replace(
+        /const TOTAL_CACHE_SIZE_MB = [\d\.]+;/,
+        `const TOTAL_CACHE_SIZE_MB = ${totalSizeMB};`
+      );
+    } else {
+      // Add size constants if they don't exist
+      serviceWorkerContent = serviceWorkerContent.replace(
+        /(const CACHE_KEY = CACHE_NAME \+ '-v' \+ CACHE_VERSION;)/,
+        `$1\n\n// Total cache size in bytes and MB\nconst TOTAL_CACHE_SIZE_BYTES = ${totalSizeBytes};\nconst TOTAL_CACHE_SIZE_MB = ${totalSizeMB};`
+      );
+    }
     
     // Replace the ASSETS_TO_CACHE array
     serviceWorkerContent = serviceWorkerContent.replace(
@@ -227,12 +416,99 @@ function updateServiceWorker() {
       `const ASSETS_TO_CACHE = [\n${filesArrayString}\n];`
     );
     
+    // Update or add the FILE_SIZES map
+    if (serviceWorkerContent.includes('const FILE_SIZES =')) {
+      serviceWorkerContent = serviceWorkerContent.replace(
+        /const FILE_SIZES = \{([\s\S]*?)\};/,
+        `const FILE_SIZES = ${fileSizesMapString};`
+      );
+    } else {
+      serviceWorkerContent = serviceWorkerContent.replace(
+        /const ASSETS_TO_CACHE = \[([\s\S]*?)\];/,
+        `const ASSETS_TO_CACHE = [\n${filesArrayString}\n];\n\n// File sizes in bytes for progress reporting\nconst FILE_SIZES = ${fileSizesMapString};`
+      );
+    }
+    
+    // Make sure the sendProgressUpdate function includes size information
+    if (serviceWorkerContent.includes('function sendProgressUpdate(')) {
+      // Check if the function already has size parameters
+      if (!serviceWorkerContent.includes('loadedBytes, totalBytes')) {
+        serviceWorkerContent = serviceWorkerContent.replace(
+          /function sendProgressUpdate\(completed, total, currentFile\) \{([\s\S]*?)}/,
+          `function sendProgressUpdate(completed, total, currentFile, loadedBytes, totalBytes) {
+  if (messagePort) {
+    messagePort.postMessage({
+      type: 'CACHE_PROGRESS',
+      completed,
+      total,
+      currentFile,
+      loadedBytes,
+      totalBytes,
+      totalSizeMB: TOTAL_CACHE_SIZE_MB
+    });
+  }
+}`
+        );
+      }
+    }
+    
+    // Make sure the cacheFilesWithProgress function tracks size
+    if (serviceWorkerContent.includes('function cacheFilesWithProgress(') && 
+        !serviceWorkerContent.includes('loadedBytes = 0')) {
+      serviceWorkerContent = serviceWorkerContent.replace(
+        /function cacheFilesWithProgress\(cache\) \{([\s\S]*?)let completed = 0;/,
+        `function cacheFilesWithProgress(cache) {$1let completed = 0;\n  let loadedBytes = 0;`
+      );
+      
+      // Update the file size tracking in the loop
+      if (!serviceWorkerContent.includes('const fileSize = FILE_SIZES[url]')) {
+        serviceWorkerContent = serviceWorkerContent.replace(
+          /for \(const url of ASSETS_TO_CACHE\) \{([\s\S]*?)sendProgressUpdate\(completed, total, url\);/,
+          `for (const url of ASSETS_TO_CACHE) {$1
+      // Get file size (or 0 if not available)
+      const fileSize = FILE_SIZES[url] || 0;
+      
+      // Send progress update before starting the fetch
+      sendProgressUpdate(completed, total, url, loadedBytes, TOTAL_CACHE_SIZE_BYTES);`
+        );
+        
+        // Update the progress after successful caching
+        serviceWorkerContent = serviceWorkerContent.replace(
+          /completed\+\+;([\s\S]*?)sendProgressUpdate\(completed, total, url\);/,
+          `completed++;\n        loadedBytes += fileSize;$1
+        // Send progress update after successful caching
+        sendProgressUpdate(completed, total, url, loadedBytes, TOTAL_CACHE_SIZE_BYTES);`
+        );
+        
+        // Update the error cases
+        serviceWorkerContent = serviceWorkerContent.replace(
+          /sendProgressUpdate\(completed, total, `Failed: \${url}`\);/g,
+          `sendProgressUpdate(completed, total, \`Failed: \${url}\`, loadedBytes, TOTAL_CACHE_SIZE_BYTES);`
+        );
+        
+        serviceWorkerContent = serviceWorkerContent.replace(
+          /sendProgressUpdate\(completed, total, `Error: \${url}`\);/g,
+          `sendProgressUpdate(completed, total, \`Error: \${url}\`, loadedBytes, TOTAL_CACHE_SIZE_BYTES);`
+        );
+      }
+    }
+    
+    // Add logging for total cache size
+    if (serviceWorkerContent.includes('console.log(\'Caching app assets') && 
+        !serviceWorkerContent.includes('Total cache size:')) {
+      serviceWorkerContent = serviceWorkerContent.replace(
+        /console\.log\('Caching app assets/,
+        `console.log('Caching app assets with progress tracking');\n        console.log(\`Total cache size: \${TOTAL_CACHE_SIZE_MB} MB with progress tracking\`)`
+      );
+    }
+    
     // Write the updated service worker file
     fs.writeFileSync(serviceWorkerPath, serviceWorkerContent);
     
     console.log(`✅ Service worker updated successfully!`);
     console.log(`📦 Cache version incremented to: ${newVersion}`);
     console.log(`🔢 Total files to cache: ${filesToCache.length}`);
+    console.log(`📊 Total cache size: ${totalSizeMB} MB`);
   } catch (err) {
     console.error('Error updating service worker:', err);
     

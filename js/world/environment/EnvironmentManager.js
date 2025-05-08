@@ -32,6 +32,14 @@ export class EnvironmentManager {
         
         // For save/load functionality
         this.savedEnvironmentObjects = null;
+        
+        // For minimap functionality
+        this.trees = [];
+        this.rocks = [];
+        this.bushes = [];
+        this.flowers = [];
+        this.waterBodies = [];
+        this.paths = [];
     }
     
     /**
@@ -54,6 +62,9 @@ export class EnvironmentManager {
         
         // Update visible chunks
         this.updateVisibleChunks(chunkX, chunkZ, drawDistanceMultiplier);
+        
+        // Update environment collections for minimap
+        this.updateEnvironmentCollections();
     }
     
     /**
@@ -386,5 +397,100 @@ export class EnvironmentManager {
         if (!environmentState || !environmentState.objects) return;
         
         this.savedEnvironmentObjects = environmentState.objects;
+    }
+    
+    /**
+     * Update the collections of environment objects for the minimap
+     * This should be called before accessing the collections
+     */
+    updateEnvironmentCollections() {
+        // Clear existing collections
+        this.trees = [];
+        this.rocks = [];
+        this.bushes = [];
+        this.flowers = [];
+        
+        // Populate collections from visible chunks
+        for (const chunkKey in this.visibleChunks) {
+            if (this.environmentObjects[chunkKey]) {
+                this.environmentObjects[chunkKey].forEach(item => {
+                    switch (item.type) {
+                        case 'tree':
+                            this.trees.push({
+                                position: item.position
+                            });
+                            break;
+                        case 'rock':
+                            this.rocks.push({
+                                position: item.position
+                            });
+                            break;
+                        case 'bush':
+                            this.bushes.push({
+                                position: item.position
+                            });
+                            break;
+                        case 'flower':
+                            this.flowers.push({
+                                position: item.position
+                            });
+                            break;
+                    }
+                });
+            }
+        }
+        
+        // Add some sample water bodies if none exist
+        if (this.waterBodies.length === 0) {
+            // Add a small lake
+            this.waterBodies.push({
+                position: new THREE.Vector3(20, 0, 20),
+                size: 10
+            });
+            
+            // Add a river
+            for (let i = -50; i <= 50; i += 5) {
+                this.waterBodies.push({
+                    position: new THREE.Vector3(i, 0, i * 0.5),
+                    size: 3
+                });
+            }
+        }
+        
+        // Add some sample paths if none exist
+        if (this.paths.length === 0) {
+            // Add a path from origin to positive x
+            for (let i = 0; i < 50; i += 5) {
+                const currentPos = new THREE.Vector3(i, 0, 0);
+                const nextPos = new THREE.Vector3(i + 5, 0, 0);
+                
+                this.paths.push({
+                    position: currentPos,
+                    nextPoint: nextPos
+                });
+            }
+            
+            // Add a curved path
+            for (let i = 0; i < 10; i++) {
+                const angle = i * Math.PI / 5;
+                const currentPos = new THREE.Vector3(
+                    30 * Math.cos(angle), 
+                    0, 
+                    30 * Math.sin(angle)
+                );
+                
+                const nextAngle = (i + 1) * Math.PI / 5;
+                const nextPos = new THREE.Vector3(
+                    30 * Math.cos(nextAngle), 
+                    0, 
+                    30 * Math.sin(nextAngle)
+                );
+                
+                this.paths.push({
+                    position: currentPos,
+                    nextPoint: nextPos
+                });
+            }
+        }
     }
 }

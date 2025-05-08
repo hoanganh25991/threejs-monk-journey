@@ -280,6 +280,34 @@ export class HUDManager {
     }
     
     /**
+     * Increase mini map scale (zoom out)
+     */
+    increaseMiniMapScale() {
+        if (this.components.miniMapUI) {
+            this.components.miniMapUI.increaseScale();
+        }
+    }
+    
+    /**
+     * Decrease mini map scale (zoom in)
+     */
+    decreaseMiniMapScale() {
+        if (this.components.miniMapUI) {
+            this.components.miniMapUI.decreaseScale();
+        }
+    }
+    
+    /**
+     * Resize the mini map
+     * @param {number} size - New size in pixels
+     */
+    resizeMiniMap(size) {
+        if (this.components.miniMapUI) {
+            this.components.miniMapUI.resize(size);
+        }
+    }
+    
+    /**
      * Hide all UI elements
      */
     hideAllUI() {

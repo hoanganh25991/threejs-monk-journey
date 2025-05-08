@@ -22,10 +22,12 @@ export class MiniMapUI extends UIComponent {
         this.canvas = null;
         this.ctx = null;
         this.mapSize = 200; // Size of the mini map in pixels
-        this.scale = 0.1; // Scale factor for the world to mini map conversion
+        this.canvasSize = this.mapSize; // Canvas size matches map size
+        this.scale = 0.5; // Increased scale factor for better world coverage
         this.lastRenderTime = 0;
         this.renderInterval = 100; // Render every 100ms for performance
         this.isVisible = true;
+        this.maxDrawDistance = this.mapSize / 2 - 2; // Maximum draw distance from center
     }
     
     /**
@@ -34,9 +36,12 @@ export class MiniMapUI extends UIComponent {
      */
     init() {
         const template = `
-            <div id="mini-map-header" class="mini-map-header">Mini Map</div>
+            <div class="mini-map-header-container">
+                <span id="mini-map-title">Mini Map</span>
+                <button id="mini-map-toggle-btn" class="mini-map-toggle-btn" type="button">Toggle</button>
+            </div>
             <div id="mini-map">
-                <canvas id="mini-map-canvas" width="${this.mapSize}" height="${this.mapSize}"></canvas>
+                <canvas id="mini-map-canvas" width="${this.canvasSize}" height="${this.canvasSize}"></canvas>
             </div>
         `;
         
@@ -44,19 +49,33 @@ export class MiniMapUI extends UIComponent {
         this.render(template);
         
         // Store references to elements we need to update
-        this.headerElement = document.getElementById('mini-map-header');
         this.mapElement = document.getElementById('mini-map');
         this.canvas = document.getElementById('mini-map-canvas');
         this.ctx = this.canvas.getContext('2d');
         
-        // Make the header clickable to toggle the map
-        this.headerElement.addEventListener('click', () => {
-            this.toggleMiniMap();
-        });
+        // Add event listener to the toggle button
+        const toggleButton = document.getElementById('mini-map-toggle-btn');
+        if (toggleButton) {
+            console.log('Adding click event listener to mini-map toggle button');
+            toggleButton.addEventListener('click', (e) => {
+                console.log('Mini-map toggle button clicked');
+                this.toggleMiniMap();
+            });
+        } else {
+            console.error('Mini-map toggle button element not found');
+        }
         
-        // Update the container width based on mapSize
+        // Set exact dimensions for both container and canvas
         this.mapElement.style.width = `${this.mapSize}px`;
         this.mapElement.style.height = `${this.mapSize}px`;
+        
+        // Ensure canvas has the correct dimensions
+        this.canvas.width = this.canvasSize;
+        this.canvas.height = this.canvasSize;
+        
+        // Apply CSS to ensure canvas fits perfectly in the container
+        this.canvas.style.width = '100%';
+        this.canvas.style.height = '100%';
         
         return true;
     }
@@ -103,7 +122,17 @@ export class MiniMapUI extends UIComponent {
         this.ctx.clip();
         
         // Draw background
-        this.ctx.fillStyle = 'rgba(17, 17, 17, 0.6)'; // Semi-transparent dark background
+        this.ctx.fillStyle = 'rgba(10, 10, 15, 0.75)'; // Darker, more opaque background
+        this.ctx.fillRect(0, 0, this.mapSize, this.mapSize);
+        
+        // Add a subtle radial gradient for depth
+        const gradient = this.ctx.createRadialGradient(
+            centerX, centerY, radius * 0.1,
+            centerX, centerY, radius
+        );
+        gradient.addColorStop(0, 'rgba(30, 30, 40, 0.1)');
+        gradient.addColorStop(1, 'rgba(5, 5, 10, 0.3)');
+        this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.mapSize, this.mapSize);
         
         // Draw grid lines for reference
@@ -116,27 +145,50 @@ export class MiniMapUI extends UIComponent {
         this.drawEntities(playerX, playerY, centerX, centerY);
         
         // Draw player (always in center)
-        this.ctx.fillStyle = '#00ff00';
+        // First draw a white halo/glow effect
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        this.ctx.beginPath();
+        this.ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Draw player marker
+        this.ctx.fillStyle = '#00ff00'; // Bright green
         this.ctx.beginPath();
         this.ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
         this.ctx.fill();
         
+        // Add a white border to make it pop
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+        this.ctx.stroke();
+        
         // Draw player direction indicator
         const playerRotation = player.getRotation().y;
         this.ctx.strokeStyle = '#00ff00';
+        this.ctx.lineWidth = 2;
         this.ctx.beginPath();
         this.ctx.moveTo(centerX, centerY);
         this.ctx.lineTo(
-            centerX + Math.sin(playerRotation) * 8,
-            centerY + Math.cos(playerRotation) * 8
+            centerX + Math.sin(playerRotation) * 10,
+            centerY + Math.cos(playerRotation) * 10
         );
         this.ctx.stroke();
         
         // Restore context and draw border
         this.ctx.restore();
         
-        // Draw circular border
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        // Draw circular border with gradient
+        const borderGradient = this.ctx.createLinearGradient(
+            centerX - radius, centerY - radius,
+            centerX + radius, centerY + radius
+        );
+        borderGradient.addColorStop(0, 'rgba(100, 100, 180, 0.7)');
+        borderGradient.addColorStop(0.5, 'rgba(200, 200, 255, 0.7)');
+        borderGradient.addColorStop(1, 'rgba(100, 100, 180, 0.7)');
+        
+        this.ctx.strokeStyle = borderGradient;
         this.ctx.lineWidth = 2;
         this.ctx.beginPath();
         this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
@@ -153,18 +205,26 @@ export class MiniMapUI extends UIComponent {
      * @param {number} radius - Radius of the mini map
      */
     drawGrid(centerX, centerY, radius) {
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        // More subtle grid lines
+        this.ctx.strokeStyle = 'rgba(100, 100, 150, 0.08)';
         this.ctx.lineWidth = 1;
         
         // Draw concentric circles
-        for (let r = radius / 3; r <= radius; r += radius / 3) {
+        for (let r = radius / 4; r <= radius; r += radius / 4) {
             this.ctx.beginPath();
             this.ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
             this.ctx.stroke();
         }
         
         // Draw radial lines
-        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
+        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            // Make cardinal directions slightly more visible
+            if (angle % (Math.PI/2) < 0.01) {
+                this.ctx.strokeStyle = 'rgba(100, 100, 150, 0.15)';
+            } else {
+                this.ctx.strokeStyle = 'rgba(100, 100, 150, 0.08)';
+            }
+            
             this.ctx.beginPath();
             this.ctx.moveTo(centerX, centerY);
             this.ctx.lineTo(
@@ -182,8 +242,11 @@ export class MiniMapUI extends UIComponent {
      * @param {number} radius - Radius of the mini map
      */
     drawCardinalDirections(centerX, centerY, radius) {
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        this.ctx.font = '12px Arial';
+        // Create a glow effect for the text
+        this.ctx.shadowColor = 'rgba(100, 100, 255, 0.8)';
+        this.ctx.shadowBlur = 4;
+        this.ctx.fillStyle = 'rgba(220, 220, 255, 0.9)';
+        this.ctx.font = 'bold 12px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         
@@ -198,6 +261,9 @@ export class MiniMapUI extends UIComponent {
         
         // West
         this.ctx.fillText('W', centerX - radius + 10, centerY);
+        
+        // Reset shadow
+        this.ctx.shadowBlur = 0;
     }
     
     /**
@@ -409,6 +475,9 @@ export class MiniMapUI extends UIComponent {
         // Get all entities
         const entities = this.game.world.getEntities ? this.game.world.getEntities() : [];
         
+        // Reset any shadow effects before starting
+        this.ctx.shadowBlur = 0;
+        
         entities.forEach(entity => {
             // Skip player entity
             if (entity === this.game.player) return;
@@ -430,16 +499,20 @@ export class MiniMapUI extends UIComponent {
             // Only draw if within circular mini map bounds
             if (distFromCenter <= (this.mapSize / 2 - 2)) {
                 // Determine color based on entity type
-                let color = 'rgba(255, 255, 255, 0.8)'; // Default white
+                let color = 'rgba(255, 255, 255, 0.5)'; // Default white, more transparent
                 let size = 2;
+                let strokeColor = null;
                 
                 if (entity.isEnemy) {
-                    color = 'rgba(255, 0, 0, 0.8)'; // Red for enemies
-                    size = 3; // Slightly larger for enemies
+                    // Bright red with higher opacity for enemies
+                    color = 'rgba(255, 0, 0, 0.8)'; 
+                    strokeColor = 'rgba(255, 50, 50, 0.9)';
+                    size = 2; // Smaller size for enemies (was 4)
                 } else if (entity.isNPC) {
-                    color = 'rgba(255, 255, 0, 0.8)'; // Yellow for NPCs
+                    color = 'rgba(200, 200, 0, 0.6)'; // Darker yellow for NPCs
+                    strokeColor = 'rgba(255, 255, 0, 0.7)';
                 } else if (entity.isItem) {
-                    color = 'rgba(0, 255, 255, 0.8)'; // Cyan for items
+                    color = 'rgba(0, 180, 180, 0.6)'; // Darker cyan for items
                 }
                 
                 // Draw entity dot
@@ -448,9 +521,26 @@ export class MiniMapUI extends UIComponent {
                 this.ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
                 this.ctx.fill();
                 
-                // Draw a small pulse effect for important entities
-                if (entity.isEnemy || entity.isNPC) {
-                    this.ctx.strokeStyle = color;
+                // Draw a circle outline for enemies with glow effect
+                if (entity.isEnemy) {
+                    // Reduced glow effect
+                    this.ctx.shadowColor = 'rgba(255, 0, 0, 0.6)';
+                    this.ctx.shadowBlur = 3; // Reduced from 6
+                    
+                    // Draw main outline only (removed outer glow ring)
+                    this.ctx.strokeStyle = strokeColor || color;
+                    this.ctx.lineWidth = 1; // Thinner line (was 1.5)
+                    this.ctx.beginPath();
+                    this.ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                    
+                    // Reset shadow
+                    this.ctx.shadowBlur = 0;
+                }
+                
+                // Draw a small pulse effect for NPCs only
+                if (entity.isNPC && strokeColor) {
+                    this.ctx.strokeStyle = strokeColor;
                     this.ctx.lineWidth = 1;
                     this.ctx.beginPath();
                     this.ctx.arc(screenX, screenY, size + 2, 0, Math.PI * 2);
@@ -458,6 +548,10 @@ export class MiniMapUI extends UIComponent {
                 }
             }
         });
+        
+        // Ensure shadow effects are reset after all entities are drawn
+        this.ctx.shadowBlur = 0;
+        this.ctx.shadowColor = 'transparent';
     }
     
     /**
@@ -465,7 +559,57 @@ export class MiniMapUI extends UIComponent {
      * @param {number} scale - New scale factor
      */
     setScale(scale) {
+        // Ensure scale is within reasonable bounds
+        if (scale < 0.1) scale = 0.1; // Minimum scale
+        if (scale > 2.0) scale = 2.0; // Maximum scale
+        
         this.scale = scale;
+        
+        // Recalculate maxDrawDistance based on current scale
+        this.maxDrawDistance = this.mapSize / 2 - 2;
+        
+        // Force a redraw of the minimap
+        this.renderMiniMap();
+        
+        console.log(`Mini map scale set to: ${scale}`);
+    }
+    
+    /**
+     * Resize the minimap
+     * @param {number} size - New size in pixels
+     */
+    resize(size) {
+        // Update sizes
+        this.mapSize = size;
+        this.canvasSize = size;
+        
+        // Update container dimensions
+        this.mapElement.style.width = `${this.mapSize}px`;
+        this.mapElement.style.height = `${this.mapSize}px`;
+        
+        // Update canvas dimensions
+        this.canvas.width = this.canvasSize;
+        this.canvas.height = this.canvasSize;
+        
+        // Recalculate maxDrawDistance
+        this.maxDrawDistance = this.mapSize / 2 - 2;
+        
+        // Force a redraw
+        this.renderMiniMap();
+    }
+    
+    /**
+     * Increase the scale factor (zoom out)
+     */
+    increaseScale() {
+        this.setScale(this.scale * 1.2);
+    }
+    
+    /**
+     * Decrease the scale factor (zoom in)
+     */
+    decreaseScale() {
+        this.setScale(this.scale / 1.2);
     }
     
     /**
