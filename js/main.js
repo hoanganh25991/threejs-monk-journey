@@ -3,7 +3,7 @@
  * Entry point for the game application
  */
 
-import { GameFacade } from './core/GameFacade.js';
+import { Game } from './core/Game.js';
 import { DEFAULT_CHARACTER_MODEL } from './config/index.js';
 import { LoadingScreen } from './ui/LoadingScreen.js';
 import { GameMenu } from './ui/GameMenu.js';
@@ -30,7 +30,7 @@ function startGame() {
     loadingScreen.show();
     
     // Initialize the game using the GameFacade
-    const game = new GameFacade();
+    const game = new Game();
     console.log("Game instance created:", game);
     
     // Initialize the game but keep it paused
