@@ -35,6 +35,9 @@ export const INPUT_CONFIG = {
     },
     ui: {
         title: 'UI Settings',
+        controls: [
+            { keys: ['KeyF'], description: 'Toggle HUD Visibility' }
+        ],
         joystick: {
             sizeMultiplier: 1, // Default to 80% of original size
             baseSize: 140, // Original base size in pixels
@@ -124,6 +127,12 @@ export class InputHandler {
                     // Toggle inventory with Y key
                     this.game.uiManager.toggleInventory();
                     console.log('Toggling inventory with KeyY');
+                    break;
+                    
+                case 'KeyF':
+                    // Toggle HUD visibility with F key
+                    const hudVisible = this.game.uiManager.toggleHUD();
+                    console.log(`HUD visibility toggled: ${hudVisible ? 'visible' : 'hidden'}`);
                     break;
                     
                 // Escape key functionality has been removed

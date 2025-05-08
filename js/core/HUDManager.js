@@ -10,6 +10,7 @@ import { QuestLogUI } from '../ui/components/QuestLogUI.js';
 import { EffectsManager } from '../ui/components/EffectsManager.js';
 import { MainBackground } from '../ui/MainBackground.js';
 import { SettingsButton } from '../ui/SettingsButton.js';
+import { HUDToggleButton } from '../ui/HUDToggleButton.js';
 
 /**
  * HUD Manager
@@ -130,6 +131,9 @@ export class HUDManager {
         // Create settings button
         this.components.settingsButton = new SettingsButton(this.game);
         // Note: SettingsButton initializes itself in its constructor
+        
+        // Create HUD toggle button
+        this.components.hudToggleButton = new HUDToggleButton(this.game);
     }
     
     /**
@@ -260,6 +264,21 @@ export class HUDManager {
         if (this.uiContainer) {
             this.uiContainer.style.display = 'none';
         }
+        
+        // Don't hide the settings button when paused if the settings menu is open
+        const settingsMenu = document.getElementById('main-options-menu');
+        const settingsButton = document.getElementById('settings-button');
+        if (settingsButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
+            settingsButton.style.display = 'none';
+        }
+        
+        // Always keep the HUD toggle button visible
+        const hudToggleButton = document.getElementById('hud-toggle-button');
+        if (hudToggleButton) {
+            hudToggleButton.style.display = 'flex';
+            hudToggleButton.classList.add('hud-hidden');
+            hudToggleButton.textContent = '👁️‍🗨️';
+        }
     }
     
     /**
@@ -269,6 +288,38 @@ export class HUDManager {
         if (this.uiContainer) {
             this.uiContainer.style.display = 'block';
         }
+        
+        // Explicitly show the settings button since it's outside the UI container
+        const settingsButton = document.getElementById('settings-button');
+        if (settingsButton) {
+            settingsButton.style.display = 'block';
+        }
+        
+        // Update HUD toggle button appearance
+        const hudToggleButton = document.getElementById('hud-toggle-button');
+        if (hudToggleButton) {
+            hudToggleButton.style.display = 'flex';
+            hudToggleButton.classList.remove('hud-hidden');
+            hudToggleButton.textContent = '👁️';
+        }
+    }
+    
+    /**
+     * Toggle the visibility of all UI elements
+     * @returns {boolean} - The new visibility state (true if visible, false if hidden)
+     */
+    toggleHUD() {
+        if (this.uiContainer) {
+            const isCurrentlyVisible = this.uiContainer.style.display !== 'none';
+            if (isCurrentlyVisible) {
+                this.hideAllUI();
+                return false;
+            } else {
+                this.showAllUI();
+                return true;
+            }
+        }
+        return false;
     }
     
     /**

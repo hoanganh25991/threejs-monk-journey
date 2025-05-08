@@ -80,11 +80,17 @@
         
         <!-- Notifications Container -->
         <div id="notifications-container"></div>
+
+        <!-- Effects Container -->
+        <div id="effects-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 90;"></div>
+
+        <!-- Settings Button -->
+        <button id="settings-button" class="settings-button" style="display: none;">⚙️</button>
+        
+        <!-- HUD Toggle Button -->
+        <button id="hud-toggle-button" class="hud-toggle-button" style="display: none;">👁️</button>
     </div>
     
-    <!-- Effects Container -->
-    <div id="effects-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 90;"></div>
-
     <!-- Game Menu -->
     <div id="game-menu" class="game-menu" style="display: none;">
         <h1>Monk Journey</h1>
@@ -198,6 +204,10 @@
                                 <span class="control-key">Space</span>
                                 <span class="control-description">Interact</span>
                             </div>
+                            <div class="control-row">
+                                <span class="control-key">F</span>
+                                <span class="control-description">Toggle HUD Visibility</span>
+                            </div>
                             <!-- Escape key functionality has been removed -->
                         </div>
                     </div>
@@ -216,6 +226,10 @@
                             <div class="control-row">
                                 <span class="control-key">Tap Object</span>
                                 <span class="control-description">Interact</span>
+                            </div>
+                            <div class="control-row">
+                                <span class="control-key">HUD Button</span>
+                                <span class="control-description">Toggle HUD Visibility</span>
                             </div>
                         </div>
                     </div>
@@ -276,20 +290,14 @@
         </div>
     </div>
 
-    <!-- Settings Button -->
-    <button id="settings-button" class="settings-button" style="display: none;">⚙️</button>
-
     <!-- Update Notification -->
-    <div id="update-notification"
-        style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.3); color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; text-align: center; min-width: 300px; max-width: 80%;">
-        <p style="margin: 0 0 10px 0;">New version available!</p>
-        <div class="loading-bar"
-            style="height: 5px; width: 100%; background-color: rgba(51, 51, 51, 0.5); border-radius: 2px; overflow: hidden;">
-            <div id="loading-progress"
-                style="height: 100%; width: 0%; background-color: #4CAF50; transition: width 0.3s;"></div>
+    <div id="update-notification">
+        <p>New version available!</p>
+        <div class="loading-bar">
+            <div id="loading-progress"></div>
         </div>
-        <p id="update-status" style="margin: 10px 0 0 0; font-size: 0.9em;">Updating...</p>
-        <p id="file-info" style="margin: 5px 0 0 0; font-size: 0.8em; color: #ddd; display: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
+        <p id="update-status">Updating...</p>
+        <p id="file-info"></p>
     </div>
 
     <!-- Orientation Lock -->
