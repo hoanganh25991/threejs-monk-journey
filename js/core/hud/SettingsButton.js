@@ -3,8 +3,8 @@
  * Manages the settings button UI component
  */
 
-import { SettingsMenu } from './SettingsMenu.js';
-import { UIComponent } from './UIComponent.js';
+import { SettingsMenu } from '../../ui/SettingsMenu.js';
+import { UIComponent } from '../../ui/UIComponent.js';
 
 export class SettingsButton extends UIComponent {
     /**
@@ -12,7 +12,7 @@ export class SettingsButton extends UIComponent {
      * @param {Game} game - The game instance
      */
     constructor(game) {
-        super('settings-button', game);
+        super('home-button', game);
         this.settingsMenu = null;
         
         this.init();
@@ -23,9 +23,6 @@ export class SettingsButton extends UIComponent {
      * @returns {boolean} - True if initialization was successful
      */
     init() {
-        // Add gear icon to the button
-        this.container.innerHTML = '⚙️';
-        
         // Setup event listeners
         this.setupEventListeners();
         

@@ -1,16 +1,15 @@
-import { PlayerUI } from '../ui/components/PlayerUI.js';
-import { EnemyUI } from '../ui/components/EnemyUI.js';
-import { SkillsUI } from '../ui/components/SkillsUI.js';
-import { DialogUI } from '../ui/components/DialogUI.js';
-import { InventoryUI } from '../ui/components/InventoryUI.js';
-import { VirtualJoystickUI } from '../ui/components/VirtualJoystickUI.js';
-import { DeathScreenUI } from '../ui/components/DeathScreenUI.js';
-import { NotificationsUI } from '../ui/components/NotificationsUI.js';
-import { QuestLogUI } from '../ui/components/QuestLogUI.js';
-import { EffectsManager } from '../ui/components/EffectsManager.js';
+import { PlayerUI } from './hud/PlayerUI.js';
+import { EnemyUI } from './hud/EnemyUI.js';
+import { SkillsUI } from './hud/SkillsUI.js';
+import { DialogUI } from './hud/DialogUI.js';
+import { InventoryUI } from './hud/InventoryUI.js';
+import { VirtualJoystickUI } from './hud/VirtualJoystickUI.js';
+import { DeathScreenUI } from './hud/DeathScreenUI.js';
+import { NotificationsUI } from './hud/NotificationsUI.js';
+import { QuestLogUI } from './hud/QuestLogUI.js';
+import { EffectsManager } from './hud/EffectsManager.js';
 import { MainBackground } from '../ui/MainBackground.js';
-import { SettingsButton } from '../ui/SettingsButton.js';
-import { HUDToggleButton } from '../ui/HUDToggleButton.js';
+import { SettingsButton } from './hud/SettingsButton.js';
 
 /**
  * HUD Manager
@@ -131,9 +130,6 @@ export class HUDManager {
         // Create settings button
         this.components.settingsButton = new SettingsButton(this.game);
         // Note: SettingsButton initializes itself in its constructor
-        
-        // Create HUD toggle button
-        this.components.hudToggleButton = new HUDToggleButton(this.game);
     }
     
     /**
@@ -267,17 +263,9 @@ export class HUDManager {
         
         // Don't hide the settings button when paused if the settings menu is open
         const settingsMenu = document.getElementById('main-options-menu');
-        const settingsButton = document.getElementById('settings-button');
+        const settingsButton = document.getElementById('home-button');
         if (settingsButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
             settingsButton.style.display = 'none';
-        }
-        
-        // Always keep the HUD toggle button visible
-        const hudToggleButton = document.getElementById('hud-toggle-button');
-        if (hudToggleButton) {
-            hudToggleButton.style.display = 'flex';
-            hudToggleButton.classList.add('hud-hidden');
-            hudToggleButton.textContent = '👁️‍🗨️';
         }
     }
     
@@ -290,17 +278,9 @@ export class HUDManager {
         }
         
         // Explicitly show the settings button since it's outside the UI container
-        const settingsButton = document.getElementById('settings-button');
+        const settingsButton = document.getElementById('home-button');
         if (settingsButton) {
             settingsButton.style.display = 'block';
-        }
-        
-        // Update HUD toggle button appearance
-        const hudToggleButton = document.getElementById('hud-toggle-button');
-        if (hudToggleButton) {
-            hudToggleButton.style.display = 'flex';
-            hudToggleButton.classList.remove('hud-hidden');
-            hudToggleButton.textContent = '👁️';
         }
     }
     

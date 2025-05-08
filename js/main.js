@@ -7,7 +7,6 @@ import { Game } from './core/Game.js';
 import { DEFAULT_CHARACTER_MODEL } from './config/index.js';
 import { LoadingScreen } from './ui/LoadingScreen.js';
 import { GameMenu } from './ui/GameMenu.js';
-import { SettingsButton } from './ui/SettingsButton.js';
 
 // Store the selected model and size for use when starting a new game
 // Make these variables available globally for the Game class to access
@@ -46,9 +45,6 @@ function startGame() {
         const gameMenu = new GameMenu(game);
         gameMenu.show();
         console.log("Game menu displayed - waiting for user input to start game");
-        
-        // Create settings button that will be visible during gameplay
-        const settingsButton = new SettingsButton(game);
     }).catch(error => {
         console.error("Error initializing game:", error);
     });

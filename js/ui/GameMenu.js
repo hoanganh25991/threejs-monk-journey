@@ -42,7 +42,7 @@ export class GameMenu {
                 this.game.start();
                 
                 // Make sure settings button is visible
-                const settingsButton = document.getElementById('settings-button');
+                const settingsButton = document.getElementById('home-button');
                 if (settingsButton) {
                     settingsButton.style.display = 'block';
                 }
@@ -92,7 +92,7 @@ export class GameMenu {
                         this.game.start();
                         
                         // Make sure settings button is visible
-                        const settingsButton = document.getElementById('settings-button');
+                        const settingsButton = document.getElementById('home-button');
                         if (settingsButton) {
                             settingsButton.style.display = 'block';
                         }

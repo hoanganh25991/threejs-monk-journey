@@ -1,5 +1,4 @@
-import { UIComponent } from '../UIComponent.js';
-
+import { UIComponent } from '../../ui/UIComponent.js';
 /**
  * Notifications UI component
  * Displays game notifications and messages

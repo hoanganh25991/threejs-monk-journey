@@ -1,5 +1,4 @@
-import { UIComponent } from '../UIComponent.js';
-
+import { UIComponent } from '../../ui/UIComponent.js';
 /**
  * Skills UI component
  * Displays player skills and cooldowns
