@@ -138,6 +138,7 @@ help me refactor the setting menu
     - separate into multiple files for easier to maintain, define interface when needed
     - remove the origin file, integrate with new code base
     - move unrelated methods, logic to proper categorized file
+    - dont create index.js just to re-export
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

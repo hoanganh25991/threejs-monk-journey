@@ -3,6 +3,48 @@
  */
 export class WorldSerializer {
     /**
+     * Process chunk data and add it to the world
+     * @param {Object} world - The world object
+     * @param {Object} chunkData - The chunk data to process
+     */
+    static processChunkData(world, chunkData) {
+        if (!world || !chunkData) {
+            console.warn('World or chunk data is null or undefined');
+            return;
+        }
+        
+        const chunkKey = chunkData.key;
+        
+        // Process environment objects
+        if (chunkData.environmentObjects && chunkData.environmentObjects.length > 0) {
+            // Store environment objects for this chunk
+            if (world.environmentManager) {
+                if (!world.environmentManager.savedObjects) {
+                    world.environmentManager.savedObjects = {};
+                }
+                world.environmentManager.savedObjects[chunkKey] = chunkData.environmentObjects;
+            } else {
+                if (!world.savedEnvironmentObjects) {
+                    world.savedEnvironmentObjects = {};
+                }
+                world.savedEnvironmentObjects[chunkKey] = chunkData.environmentObjects;
+            }
+        }
+        
+        // Mark this chunk as existing
+        if (world.terrainManager) {
+            if (!world.terrainManager.savedChunks) {
+                world.terrainManager.savedChunks = {};
+            }
+            world.terrainManager.savedChunks[chunkKey] = true;
+        } else {
+            if (!world.savedTerrainChunks) {
+                world.savedTerrainChunks = {};
+            }
+            world.savedTerrainChunks[chunkKey] = true;
+        }
+    }
+    /**
      * Serialize world metadata for saving
      * @param {Object} world - The world object
      * @returns {Object} Serialized world metadata
