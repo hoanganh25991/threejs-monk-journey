@@ -27,32 +27,52 @@ export class GameMenu {
      * @private
      */
     setupEventListeners() {
-        // New Game button
+        // New Game/Resume Game button
         if (this.newGameButton) {
             this.newGameButton.addEventListener('click', () => {
-                console.log("New Game button clicked - starting game...");
-                this.hide();
-                
-                // Hide the main background when starting the game
-                if (this.game.uiManager && this.game.uiManager.mainBackground) {
-                    this.game.uiManager.mainBackground.hide();
+                if (this.game.isRunning) {
+                    console.log("Resume Game button clicked - resuming game...");
+                    this.hide();
+                    
+                    // Hide the main background when resuming the game
+                    if (this.game.uiManager && this.game.uiManager.mainBackground) {
+                        this.game.uiManager.mainBackground.hide();
+                    }
+                    
+                    // Resume the game
+                    this.game.resume();
+                    
+                    // Show all HUD elements
+                    if (this.game.hudManager) {
+                        this.game.hudManager.showAllUI();
+                    }
+                    
+                    console.log("Game resumed - enemies and player are now active");
+                } else {
+                    console.log("New Game button clicked - starting game...");
+                    this.hide();
+                    
+                    // Hide the main background when starting the game
+                    if (this.game.uiManager && this.game.uiManager.mainBackground) {
+                        this.game.uiManager.mainBackground.hide();
+                    }
+                    
+                    // Start the game - this will set isPaused to false and start the game loop
+                    this.game.start();
+                    
+                    // Make sure settings button is visible
+                    const homeButton = document.getElementById('home-button');
+                    if (homeButton) {
+                        homeButton.style.display = 'block';
+                    }
+                    
+                    // Show all HUD elements
+                    if (this.game.hudManager) {
+                        this.game.hudManager.showAllUI();
+                    }
+                    
+                    console.log("Game started - enemies and player are now active");
                 }
-                
-                // Start the game - this will set isPaused to false and start the game loop
-                this.game.start();
-                
-                // Make sure settings button is visible
-                const homeButton = document.getElementById('home-button');
-                if (homeButton) {
-                    homeButton.style.display = 'block';
-                }
-                
-                // Show all HUD elements
-                if (this.game.hudManager) {
-                    this.game.hudManager.showAllUI();
-                }
-                
-                console.log("Game started - enemies and player are now active");
             });
         }
         
@@ -151,6 +171,15 @@ export class GameMenu {
             // Update load game button visibility based on save data
             if (this.loadGameButton && this.game.saveManager) {
                 this.loadGameButton.style.display = this.game.saveManager.hasSaveData() ? 'block' : 'none';
+            }
+            
+            // Update New Game button text based on game state
+            if (this.newGameButton) {
+                if (this.game.isRunning) {
+                    this.newGameButton.textContent = 'Resume Game';
+                } else {
+                    this.newGameButton.textContent = 'New Game';
+                }
             }
 
             // Hide all HUD UI elements using the HUDManager
