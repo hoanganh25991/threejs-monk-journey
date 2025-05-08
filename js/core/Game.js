@@ -250,8 +250,8 @@ export class Game {
         this.audioManager.playMusic();
         
         // Make sure all HUD elements are visible
-        if (this.hudManager) {
-            this.hudManager.showAllUI();
+        if (this.uiManager) {
+            this.uiManager.showAllUI();
         }
         
         // Dispatch event that game has started
@@ -328,7 +328,7 @@ export class Game {
         this.collisionManager.update();
         
         // Update UI
-        this.uiManager.update();
+        this.uiManager.update(delta);
         
         // Render scene with potential optimizations
         this.renderer.render(this.scene, this.camera);

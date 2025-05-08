@@ -16,20 +16,13 @@ export class EffectsManager {
      * Initialize the effects manager
      */
     init() {
-        // Create effects container if it doesn't exist
-        if (!document.getElementById('effects-container')) {
-            this.container = document.createElement('div');
-            this.container.id = 'effects-container';
-            this.container.style.position = 'absolute';
-            this.container.style.top = '0';
-            this.container.style.left = '0';
-            this.container.style.width = '100%';
-            this.container.style.height = '100%';
-            this.container.style.pointerEvents = 'none';
-            this.container.style.zIndex = '90';
-            document.body.appendChild(this.container);
-        } else {
-            this.container = document.getElementById('effects-container');
+        // Get the effects container that is defined in index.html
+        this.container = document.getElementById('effects-container');
+        
+        // Ensure the container exists
+        if (!this.container) {
+            console.error('Effects container not found in the DOM. Make sure it is defined in index.html.');
+            return false;
         }
         
         return true;

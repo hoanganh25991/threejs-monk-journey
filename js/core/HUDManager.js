@@ -9,6 +9,7 @@ import { NotificationsUI } from '../ui/components/NotificationsUI.js';
 import { QuestLogUI } from '../ui/components/QuestLogUI.js';
 import { EffectsManager } from '../ui/components/EffectsManager.js';
 import { MainBackground } from '../ui/MainBackground.js';
+import { SettingsButton } from '../ui/SettingsButton.js';
 
 /**
  * HUD Manager
@@ -25,6 +26,9 @@ export class HUDManager {
         // Initialize UI components
         this.components = {};
         this.effectsManager = null;
+        
+        // Add event listener for game state changes
+        this.game.addEventListener('gameStateChanged', (state) => this.handleGameStateChange(state));
     }
     
     /**
@@ -44,6 +48,11 @@ export class HUDManager {
         // Create effects manager
         this.createEffectsManager();
         
+        // Initially hide UI if game is not running
+        if (!this.game.isRunning) {
+            this.hideAllUI();
+        }
+        
         return true;
     }
     
@@ -55,7 +64,7 @@ export class HUDManager {
         this.uiContainer = document.getElementById('ui-container');
         
         if (!this.uiContainer) {
-            console.error('UI container not found in DOM. Creating it dynamically.');
+            console.log('UI container not found in DOM. Creating it dynamically.');
             
             // Create UI container
             this.uiContainer = document.createElement('div');
@@ -64,8 +73,7 @@ export class HUDManager {
             document.body.appendChild(this.uiContainer);
         }
         
-        // Make sure UI container is visible
-        this.uiContainer.style.display = 'block';
+        // Don't force visibility here - it will be controlled by game state
     }
     
     /**
@@ -118,6 +126,10 @@ export class HUDManager {
         // Create quest log UI
         this.components.questLogUI = new QuestLogUI(this.game);
         this.components.questLogUI.init();
+        
+        // Create settings button
+        this.components.settingsButton = new SettingsButton(this.game);
+        // Note: SettingsButton initializes itself in its constructor
     }
     
     /**
@@ -144,6 +156,9 @@ export class HUDManager {
         
         // Update notifications UI
         this.components.notificationsUI.update(delta);
+        
+        // Update settings button
+        this.components.settingsButton.update(delta);
         
         // Update effects manager
         this.effectsManager.update(delta);
@@ -253,6 +268,18 @@ export class HUDManager {
     showAllUI() {
         if (this.uiContainer) {
             this.uiContainer.style.display = 'block';
+        }
+    }
+    
+    /**
+     * Handle game state changes
+     * @param {string} state - Current game state ('running' or 'paused')
+     */
+    handleGameStateChange(state) {
+        if (state === 'running') {
+            this.showAllUI();
+        } else if (state === 'paused') {
+            this.hideAllUI();
         }
     }
 }

@@ -23,7 +23,19 @@ export class SettingsButton extends UIComponent {
      * @returns {boolean} - True if initialization was successful
      */
     init() {
+        // Add gear icon to the button
+        this.container.innerHTML = '⚙️';
+        
+        // Setup event listeners
         this.setupEventListeners();
+        
+        // Show the button initially if game is running
+        if (this.game.isRunning) {
+            this.show();
+        } else {
+            this.hide();
+        }
+        
         return true;
     }
     
