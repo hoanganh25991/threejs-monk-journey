@@ -81,6 +81,7 @@
     padding: 0;
     box-sizing: border-box;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    color: white; /* Added white text color */
 }
 
 /* Settings Menu Layout */
@@ -111,7 +112,7 @@
     padding: 15px;
     background: none;
     border: none;
-    color: #ccc;
+    color: white; /* Changed from #ccc to white */
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 16px;
@@ -159,6 +160,16 @@
     margin-bottom: 20px;
     width: 100%;
     box-sizing: border-box;
+}
+
+/* Add white color to all text elements in settings */
+#main-options-menu h2, 
+#main-options-menu h3,
+#main-options-menu label,
+#main-options-menu span,
+#main-options-menu p,
+#main-options-menu div:not(.menu-button):not(select):not(button) {
+    color: white;
 }
 
 .setting-item {
@@ -252,6 +263,7 @@
 
 .control-description {
     flex: 1;
+    color: white;
 }
 
 /* Camera Controls */
