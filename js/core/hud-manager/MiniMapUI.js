@@ -128,7 +128,7 @@ export class MiniMapUI extends UIComponent {
         this.ctx.moveTo(centerX, centerY);
         this.ctx.lineTo(
             centerX + Math.sin(playerRotation) * 8,
-            centerY - Math.cos(playerRotation) * 8
+            centerY + Math.cos(playerRotation) * 8
         );
         this.ctx.stroke();
         
