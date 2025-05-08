@@ -3,9 +3,8 @@
  * Entry point for the game application
  */
 
-import * as THREE from 'three';
-import { Game } from './core/Game.js';
-import { CHARACTER_MODELS, MODEL_SIZE_MULTIPLIERS, DEFAULT_CHARACTER_MODEL } from './config/index.js';
+import { GameFacade } from './core/GameFacade.js';
+import { DEFAULT_CHARACTER_MODEL } from './config/index.js';
 import { LoadingScreen } from './ui/LoadingScreen.js';
 import { GameMenu } from './ui/GameMenu.js';
 import { SettingsButton } from './ui/SettingsButton.js';
@@ -30,8 +29,8 @@ function startGame() {
     const loadingScreen = new LoadingScreen();
     loadingScreen.show();
     
-    // Initialize the game
-    const game = new Game();
+    // Initialize the game using the GameFacade
+    const game = new GameFacade();
     console.log("Game instance created:", game);
     
     // Initialize the game but keep it paused

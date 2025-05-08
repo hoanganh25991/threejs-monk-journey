@@ -64,102 +64,222 @@
 
     <!-- Settings Menu -->
     <div id="main-options-menu" class="game-menu" style="display: none;">
-        <h1>Settings</h1>
-        
-        <!-- Performance Settings -->
-        <h2 id="performance-title">Performance Settings</h2>
-        <div id="performance-container">
-            <div id="quality-container">
-                <label for="quality-select">Quality Preset: </label>
-                <select id="quality-select"></select>
-            </div>
-            <div id="adaptive-container">
-                <label for="adaptive-checkbox">Adaptive Quality: </label>
-                <input type="checkbox" id="adaptive-checkbox">
-            </div>
-            <div id="fps-container">
-                <label for="fps-slider">Target FPS: </label>
-                <input type="range" id="fps-slider" min="30" max="120" step="5" value="60">
-                <span id="fps-value">60 FPS</span>
-            </div>
+        <div class="settings-header">
+            <h1>Settings</h1>
         </div>
         
-        <!-- Game Settings -->
-        <h2 id="game-title">Game Settings</h2>
-        <div id="difficulty-container">
-            <label for="difficulty-select">Difficulty: </label>
-            <select id="difficulty-select"></select>
+        <div class="settings-tabs">
+            <button id="tab-performance" class="tab-button active">Performance</button>
+            <button id="tab-game" class="tab-button">Game</button>
+            <button id="tab-audio" class="tab-button">Audio</button>
+            <button id="tab-controls" class="tab-button">Controls</button>
+            <button id="tab-model-preview" class="tab-button">Model Preview</button>
+            <button id="tab-model-settings" class="tab-button">Model Settings</button>
         </div>
         
-        <!-- Character Model Settings -->
-        <h2 id="character-title">Character Model</h2>
-        <div id="model-preview-container"></div>
-        
-        <div id="model-container">
-            <label for="model-select">Character Model: </label>
-            <div id="model-selection-container">
-                <button id="prev-model-button">◀</button>
-                <select id="model-select"></select>
-                <button id="next-model-button">▶</button>
+        <div class="settings-content">
+            <!-- Performance Settings Tab -->
+            <div id="performance-tab" class="tab-content active">
+                <h2 id="performance-title">Performance Settings</h2>
+                <div id="performance-container" class="settings-section">
+                    <div id="quality-container" class="setting-item">
+                        <label for="quality-select">Quality Preset: </label>
+                        <select id="quality-select"></select>
+                    </div>
+                    <div id="adaptive-container" class="setting-item">
+                        <label for="adaptive-checkbox">Adaptive Quality: </label>
+                        <input type="checkbox" id="adaptive-checkbox">
+                    </div>
+                    <div id="fps-container" class="setting-item">
+                        <label for="fps-slider">Target FPS: </label>
+                        <input type="range" id="fps-slider" min="30" max="120" step="5" value="60">
+                        <span id="fps-value">60 FPS</span>
+                    </div>
+                </div>
             </div>
-        </div>
-        
-        <div id="size-container">
-            <label for="size-select">Size Multiplier: </label>
-            <div id="size-selection-container">
-                <button id="prev-size-button">◀</button>
-                <select id="size-select"></select>
-                <button id="next-size-button">▶</button>
+            
+            <!-- Game Settings Tab -->
+            <div id="game-tab" class="tab-content">
+                <h2 id="game-title">Game Settings</h2>
+                <div class="settings-section">
+                    <div id="difficulty-container" class="setting-item">
+                        <label for="difficulty-select">Difficulty: </label>
+                        <select id="difficulty-select"></select>
+                    </div>
+                </div>
             </div>
-        </div>
-        
-        <div id="animation-container">
-            <label for="animation-select">Animation: </label>
-            <div id="animation-selection-container">
-                <button id="prev-anim-button">◀</button>
-                <select id="animation-select"></select>
-                <button id="next-anim-button">▶</button>
+            
+            <!-- Audio Settings Tab -->
+            <div id="audio-tab" class="tab-content">
+                <h2 id="audio-title">Audio Settings</h2>
+                <div id="audio-controls-container" class="settings-section">
+                    <div id="mute-container" class="setting-item">
+                        <label for="mute-checkbox">Mute Audio: </label>
+                        <input type="checkbox" id="mute-checkbox">
+                    </div>
+                    <div id="auto-pause-container" class="setting-item">
+                        <label for="auto-pause-checkbox">Auto-pause music when inactive: </label>
+                        <input type="checkbox" id="auto-pause-checkbox">
+                    </div>
+                    <div id="music-volume-container" class="setting-item">
+                        <label for="music-volume-slider">Music Volume: </label>
+                        <input type="range" id="music-volume-slider" min="0" max="100" value="80">
+                        <span id="music-volume-value">80%</span>
+                    </div>
+                    <div id="sfx-volume-container" class="setting-item">
+                        <label for="sfx-volume-slider">SFX Volume: </label>
+                        <input type="range" id="sfx-volume-slider" min="0" max="100" value="80">
+                        <span id="sfx-volume-value">80%</span>
+                    </div>
+                    <div id="test-sound-container" class="setting-item">
+                        <button id="test-sound-button" class="menu-button">Test Sound</button>
+                    </div>
+                    
+                    <div id="audio-disabled-message" style="display: none;">
+                        Audio is currently disabled. Audio files need to be added to the assets/audio directory.
+                    </div>
+                    
+                    <div id="simulated-audio-note" style="display: none;">
+                        Using simulated audio. For better audio experience, add audio files to the assets/audio directory.
+                    </div>
+                </div>
             </div>
-        </div>
-        
-        <p id="model-note">Note: Model changes will take effect immediately.</p>
-        
-        <!-- Audio Settings -->
-        <h2 id="audio-title">Audio Settings</h2>
-        <div id="audio-controls-container">
-            <div id="mute-container">
-                <label for="mute-checkbox">Mute Audio: </label>
-                <input type="checkbox" id="mute-checkbox">
+            
+            <!-- Controls Settings Tab -->
+            <div id="controls-tab" class="tab-content">
+                <h2 id="controls-title">Controls Settings</h2>
+                <div class="settings-section">
+                    <div id="keyboard-controls-container" class="setting-item">
+                        <h3>Keyboard Controls</h3>
+                        <div class="controls-info">
+                            <div class="control-row">
+                                <span class="control-key">W, A, S, D</span>
+                                <span class="control-description">Movement</span>
+                            </div>
+                            <div class="control-row">
+                                <span class="control-key">1-4</span>
+                                <span class="control-description">Skills</span>
+                            </div>
+                            <div class="control-row">
+                                <span class="control-key">Space</span>
+                                <span class="control-description">Interact</span>
+                            </div>
+                            <div class="control-row">
+                                <span class="control-key">Esc</span>
+                                <span class="control-description">Pause/Menu</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="mobile-controls-container" class="setting-item">
+                        <h3>Mobile Controls</h3>
+                        <div class="controls-info">
+                            <div class="control-row">
+                                <span class="control-key">Left Joystick</span>
+                                <span class="control-description">Movement</span>
+                            </div>
+                            <div class="control-row">
+                                <span class="control-key">Skill Buttons</span>
+                                <span class="control-description">Activate Skills</span>
+                            </div>
+                            <div class="control-row">
+                                <span class="control-key">Tap Object</span>
+                                <span class="control-description">Interact</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div id="auto-pause-container">
-                <label for="auto-pause-checkbox">Auto-pause music when inactive: </label>
-                <input type="checkbox" id="auto-pause-checkbox">
+            
+            <!-- Model Preview Tab (Dedicated) -->
+            <div id="model-preview-tab" class="tab-content">
+                <h2 id="model-preview-title">Model Preview</h2>
+                <div class="model-preview-fullscreen-layout">
+                    <div class="model-preview-fullscreen-section">
+                        <div id="model-preview-fullscreen-container"></div>
+                    </div>
+                    <div class="model-preview-controls-section">
+                        <div id="model-preview-selection" class="setting-item">
+                            <label for="model-preview-select">Character Model: </label>
+                            <div id="model-preview-selection-container">
+                                <button id="prev-model-preview-button">◀</button>
+                                <select id="model-preview-select"></select>
+                                <button id="next-model-preview-button">▶</button>
+                            </div>
+                        </div>
+                        
+                        <div id="animation-preview-container" class="setting-item">
+                            <label for="animation-preview-select">Animation: </label>
+                            <div id="animation-preview-selection-container">
+                                <button id="prev-anim-preview-button">◀</button>
+                                <select id="animation-preview-select"></select>
+                                <button id="next-anim-preview-button">▶</button>
+                            </div>
+                        </div>
+                        
+                        <div id="camera-controls-container" class="setting-item">
+                            <h3>Camera Controls</h3>
+                            <div class="camera-controls">
+                                <button id="reset-camera-button" class="menu-button">Reset Camera</button>
+                                <div class="camera-control-row">
+                                    <label for="auto-rotate-checkbox">Auto Rotate: </label>
+                                    <input type="checkbox" id="auto-rotate-checkbox">
+                                </div>
+                                <div class="camera-control-row">
+                                    <label for="rotation-speed-slider">Rotation Speed: </label>
+                                    <input type="range" id="rotation-speed-slider" min="0.5" max="5" step="0.5" value="1">
+                                    <span id="rotation-speed-value">1.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div id="music-volume-container">
-                <label for="music-volume-slider">Music Volume: </label>
-                <input type="range" id="music-volume-slider" min="0" max="100" value="80">
-                <span id="music-volume-value">80%</span>
+            
+            <!-- Model Settings Tab -->
+            <div id="model-settings-tab" class="tab-content">
+                <h2 id="model-settings-title">Model Settings</h2>
+                <div class="settings-section">
+                    <div id="model-container" class="setting-item">
+                        <label for="model-select">Character Model: </label>
+                        <div id="model-selection-container">
+                            <button id="prev-model-button">◀</button>
+                            <select id="model-select"></select>
+                            <button id="next-model-button">▶</button>
+                        </div>
+                    </div>
+                    
+                    <div id="size-container" class="setting-item">
+                        <label for="size-select">Size Multiplier: </label>
+                        <div id="size-selection-container">
+                            <button id="prev-size-button">◀</button>
+                            <select id="size-select"></select>
+                            <button id="next-size-button">▶</button>
+                        </div>
+                    </div>
+                    
+                    <div id="animation-container" class="setting-item">
+                        <label for="animation-select">Animation: </label>
+                        <div id="animation-selection-container">
+                            <button id="prev-anim-button">◀</button>
+                            <select id="animation-select"></select>
+                            <button id="next-anim-button">▶</button>
+                        </div>
+                    </div>
+                    
+                    <div id="model-preview-mini-container" class="setting-item">
+                        <div id="model-preview-container"></div>
+                    </div>
+                    
+                    <p id="model-note">Note: Model changes will take effect immediately.</p>
+                </div>
             </div>
-            <div id="sfx-volume-container">
-                <label for="sfx-volume-slider">SFX Volume: </label>
-                <input type="range" id="sfx-volume-slider" min="0" max="100" value="80">
-                <span id="sfx-volume-value">80%</span>
-            </div>
-            <div id="test-sound-container">
-                <button id="test-sound-button" class="menu-button">Test Sound</button>
-            </div>
-        </div>
-        
-        <div id="audio-disabled-message" style="display: none;">
-            Audio is currently disabled. Audio files need to be added to the assets/audio directory.
-        </div>
-        
-        <div id="simulated-audio-note" style="display: none;">
-            Using simulated audio. For better audio experience, add audio files to the assets/audio directory.
         </div>
         
         <!-- Back Button -->
-        <button id="settings-back-button" class="menu-button">Back</button>
+        <div class="settings-footer">
+            <button id="settings-back-button" class="menu-button">Back</button>
+        </div>
     </div>
 
     <!-- Settings Button -->

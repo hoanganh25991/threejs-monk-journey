@@ -82,21 +82,31 @@ if (!adjustmentsLoaded) {
     add missing sound, all skills when cast should have sound
     add sound to effect if needed, effect-start, effect-end,...
 
-- [ ] Enhance: new Skill({
-                name: 'Mystic Ally',
-                description: 'Summon a spirit ally to fight alongside you',
-                type: 'summon',
-    have you see this skill in diablo immortal:
-    1. where it create 2 allies as clone of heroplease use the model of hero
-    2. allies not solid, transparent like spirit, with texture color 0x0x00ffff
-    3. they can fight (punch action) and random cast skill as hero, they just cast skill with long interval, each time cast is random
+Enhance: review main.js file and optimize it:
+    - [x] remove unused method
+    - [x] remove duplicate methods
+    - [x] define common methods to be shared
+    - [x] separate into multiple files for easier to maintain, define interface when needed
+    - [x] remove the origin file, integrate with new code base
+    - [x] move unrelated methods, logic to proper categorized file
+    - [x] move ui logic to ui/XXX.js, define dom element in index.html
 
-- [ ] Enhance: Seven-Sided Strike, make it like descroption "Rapidly attack multiple enemies", which allow monk cloned show faster
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-- [] Enhance: problem: i still hit issue where too many messages cause screen flood with messages. showMessage, i guess:
-  1. we should improve max_size, where new message added too fast -> quickly drop bunch of old messages to maintain max_size
-  2. by doing that, we may not yet render old messages, as they already dropped
-  3. we should have pop mechanism, to pop message from the queue, not synchrous show message directly
+Help me improve movement of Player:
+  - [ ] Warning: Attempted to set invalid player position: 13.298149548811804 2 NaN
+  - [ ] Should be come logic to check when move, collision should prevent from go through objects
+  - [ ] Only 1 case: for now, the game place character at position has multiple objects, hero like at locked position, help me update
+    - [] Init place like Diablo should be teleport point in village
+    - [] Update this init terrain into village, no enemy
+
+- [ ] Enhance: review Game.js file and optimize it:
+    - remove unused method
+    - remove duplicate methods
+    - define common methods to be shared
+    - separate into multiple files for easier to maintain, define interface when needed
+    - remove the origin file, integrate with new code base
+    - move unrelated methods, logic to proper categorized file
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -118,29 +128,13 @@ if (!adjustmentsLoaded) {
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
 
-Enhance: review main.js file and optimize it:
-    - [ ] remove unused method
-    - [ ] remove duplicate methods
-    - [ ] define common methods to be shared
-    - [ ] separate into multiple files for easier to maintain, define interface when needed
-    - [ ] remove the origin file, integrate with new code base
-    - [ ] move unrelated methods, logic to proper categorized file
-    - [ ] move ui logic to ui/XXX.js, define dom element in index.html
+help me refactor the setting menu
+- [ ] Setting menu should break into multiple tabs for sections
+- [ ] Should consume 80% width of the page, 80% of the height
+- [ ] Section should be break to not long too much
+- [ ] ModelPreview should consume a whole tab for better preview, on left is model, on right is select model/animation
 
-Help me improve movement of Player:
-  - [ ] Warning: Attempted to set invalid player position: 13.298149548811804 2 NaN
-  - [ ] Should be come logic to check when move, collision should prevent from go through objects
-  - [ ] Only 1 case: for now, the game place character at position has multiple objects, hero like at locked position, help me update
-    - [] Init place like Diablo should be teleport point in village
-    - [] Update this init terrain into village, no enemy
 
-- [ ] Enhance: review Game.js file and optimize it:
-    - remove unused method
-    - remove duplicate methods
-    - define common methods to be shared
-    - separate into multiple files for easier to maintain, define interface when needed
-    - remove the origin file, integrate with new code base
-    - move unrelated methods, logic to proper categorized file
 
 - [?] Enhance: review PerformanceManager.js file and optimize it:
     - remove unused method
@@ -183,7 +177,21 @@ Help me improve movement of Player:
   - Organize `xxx.md` documents into categories like functional and non-functional.
   - Focus on documents, ignoring bug fixes unless they clarify documentation needs.
 
+- [ ] Enhance: new Skill({
+                name: 'Mystic Ally',
+                description: 'Summon a spirit ally to fight alongside you',
+                type: 'summon',
+    have you see this skill in diablo immortal:
+    1. where it create 2 allies as clone of heroplease use the model of hero
+    2. allies not solid, transparent like spirit, with texture color 0x0x00ffff
+    3. they can fight (punch action) and random cast skill as hero, they just cast skill with long interval, each time cast is random
 
+- [ ] Enhance: Seven-Sided Strike, make it like descroption "Rapidly attack multiple enemies", which allow monk cloned show faster
+
+- [] Enhance: problem: i still hit issue where too many messages cause screen flood with messages. showMessage, i guess:
+  1. we should improve max_size, where new message added too fast -> quickly drop bunch of old messages to maintain max_size
+  2. by doing that, we may not yet render old messages, as they already dropped
+  3. we should have pop mechanism, to pop message from the queue, not synchrous show message directly
 
 
 

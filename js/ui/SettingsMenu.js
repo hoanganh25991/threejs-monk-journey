@@ -36,6 +36,19 @@ export class SettingsMenu extends UIComponent {
         this.prevAnimButton = document.getElementById('prev-anim-button');
         this.nextAnimButton = document.getElementById('next-anim-button');
         
+        // Fullscreen model preview elements
+        this.modelPreviewFullscreenContainer = document.getElementById('model-preview-fullscreen-container');
+        this.modelPreviewSelect = document.getElementById('model-preview-select');
+        this.prevModelPreviewButton = document.getElementById('prev-model-preview-button');
+        this.nextModelPreviewButton = document.getElementById('next-model-preview-button');
+        this.animationPreviewSelect = document.getElementById('animation-preview-select');
+        this.prevAnimPreviewButton = document.getElementById('prev-anim-preview-button');
+        this.nextAnimPreviewButton = document.getElementById('next-anim-preview-button');
+        this.resetCameraButton = document.getElementById('reset-camera-button');
+        this.autoRotateCheckbox = document.getElementById('auto-rotate-checkbox');
+        this.rotationSpeedSlider = document.getElementById('rotation-speed-slider');
+        this.rotationSpeedValue = document.getElementById('rotation-speed-value');
+        
         // Audio settings elements
         this.muteCheckbox = document.getElementById('mute-checkbox');
         this.autoPauseCheckbox = document.getElementById('auto-pause-checkbox');
@@ -51,6 +64,7 @@ export class SettingsMenu extends UIComponent {
         this.backButton = document.getElementById('settings-back-button');
         
         this.modelPreview = null;
+        this.modelPreviewFullscreen = null;
         this.fromInGame = false;
         this.mainMenu = null;
         
@@ -63,7 +77,88 @@ export class SettingsMenu extends UIComponent {
      */
     init() {
         this.initializeSettings();
+        this.initializeTabs();
         return true;
+    }
+    
+    /**
+     * Initialize tab functionality
+     * @private
+     */
+    initializeTabs() {
+        // Get all tab buttons and content
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // Add click event to each tab button
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked button
+                button.classList.add('active');
+                
+                // Get the tab id from the button id
+                const tabId = button.id.replace('tab-', '');
+                
+                // Show the corresponding tab content
+                const tabContent = document.getElementById(`${tabId}-tab`);
+                if (tabContent) {
+                    tabContent.classList.add('active');
+                    
+                    // Handle model preview resizing based on tab
+                    if (tabId === 'model-settings' && this.modelPreview) {
+                        // Use setTimeout to ensure the tab is visible before resizing
+                        setTimeout(() => {
+                            this.resizeModelPreview();
+                        }, 50);
+                    } else if (tabId === 'model-preview' && this.modelPreviewFullscreen) {
+                        // Use setTimeout to ensure the tab is visible before resizing
+                        setTimeout(() => {
+                            this.resizeModelPreviewFullscreen();
+                        }, 50);
+                    }
+                }
+            });
+        });
+    }
+    
+    /**
+     * Resize the model preview to fit the container
+     * @private
+     */
+    resizeModelPreview() {
+        if (!this.modelPreview) return;
+        
+        const container = document.querySelector('.model-preview-section');
+        if (!container) return;
+        
+        // Get the container dimensions
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        
+        // Update the model preview size
+        this.modelPreview.setSize(width, height);
+    }
+    
+    /**
+     * Resize the fullscreen model preview to fit the container
+     * @private
+     */
+    resizeModelPreviewFullscreen() {
+        if (!this.modelPreviewFullscreen) return;
+        
+        const container = document.querySelector('.model-preview-fullscreen-section');
+        if (!container) return;
+        
+        // Get the container dimensions
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        
+        // Update the model preview size
+        this.modelPreviewFullscreen.setSize(width, height);
     }
     
     /**
@@ -187,38 +282,92 @@ export class SettingsMenu extends UIComponent {
      * @private
      */
     initializeCharacterModelSettings() {
+        // Initialize both model selects with available models
+        this.initializeModelOptions(this.modelSelect);
+        this.initializeModelOptions(this.modelPreviewSelect);
+        
+        // Initialize size multiplier options
+        this.initializeSizeOptions();
+        
+        // Set up navigation buttons for model settings tab
+        this.setupModelNavigationButtons();
+        
+        // Set up navigation buttons for model preview tab
+        this.setupModelPreviewNavigationButtons();
+        
+        // Initialize model preview in settings tab
+        this.initializeModelPreviewInSettings();
+        
+        // Initialize fullscreen model preview
+        this.initializeFullscreenModelPreview();
+        
+        // Add window resize handler to update model preview sizes
+        window.addEventListener('resize', () => {
+            this.resizeModelPreview();
+            this.resizeModelPreviewFullscreen();
+        });
+    }
+    
+    /**
+     * Initialize model options in a select element
+     * @param {HTMLSelectElement} selectElement - The select element to populate
+     * @private
+     */
+    initializeModelOptions(selectElement) {
+        if (!selectElement) return;
+        
+        // Clear existing options
+        while (selectElement.options.length > 0) {
+            selectElement.remove(0);
+        }
+        
         // Add model options
-        if (this.modelSelect) {
-            CHARACTER_MODELS.forEach(model => {
-                const option = document.createElement('option');
-                option.value = model.id;
-                option.textContent = model.name;
-                option.title = model.description;
-                this.modelSelect.appendChild(option);
-            });
-            
-            // Set current model
-            if (this.game.player && this.game.player.model) {
-                this.modelSelect.value = this.game.player.model.getCurrentModelId();
-            }
+        CHARACTER_MODELS.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model.id;
+            option.textContent = model.name;
+            option.title = model.description;
+            selectElement.appendChild(option);
+        });
+        
+        // Set current model
+        if (this.game.player && this.game.player.model) {
+            selectElement.value = this.game.player.model.getCurrentModelId();
+        }
+    }
+    
+    /**
+     * Initialize size multiplier options
+     * @private
+     */
+    initializeSizeOptions() {
+        if (!this.sizeSelect) return;
+        
+        // Clear existing options
+        while (this.sizeSelect.options.length > 0) {
+            this.sizeSelect.remove(0);
         }
         
         // Add size multiplier options
-        if (this.sizeSelect) {
-            MODEL_SIZE_MULTIPLIERS.forEach(multiplier => {
-                const option = document.createElement('option');
-                option.value = multiplier.value;
-                option.textContent = multiplier.label;
-                this.sizeSelect.appendChild(option);
-            });
-            
-            // Set current size multiplier
-            if (this.game.player && this.game.player.model) {
-                const currentMultiplier = this.game.player.model.getCurrentSizeMultiplier();
-                this.sizeSelect.value = currentMultiplier;
-            }
-        }
+        MODEL_SIZE_MULTIPLIERS.forEach(multiplier => {
+            const option = document.createElement('option');
+            option.value = multiplier.value;
+            option.textContent = multiplier.label;
+            this.sizeSelect.appendChild(option);
+        });
         
+        // Set current size multiplier
+        if (this.game.player && this.game.player.model) {
+            const currentMultiplier = this.game.player.model.getCurrentSizeMultiplier();
+            this.sizeSelect.value = currentMultiplier;
+        }
+    }
+    
+    /**
+     * Set up navigation buttons for model settings tab
+     * @private
+     */
+    setupModelNavigationButtons() {
         // Add event listeners for prev/next model buttons
         if (this.prevModelButton && this.modelSelect) {
             this.prevModelButton.addEventListener('click', () => {
@@ -305,6 +454,12 @@ export class SettingsMenu extends UIComponent {
                 if (this.modelPreview && animationName) {
                     this.modelPreview.playAnimation(animationName);
                     
+                    // If fullscreen preview exists, sync the animation
+                    if (this.modelPreviewFullscreen && this.animationPreviewSelect) {
+                        this.modelPreviewFullscreen.playAnimation(animationName);
+                        this.syncAnimationSelect(this.animationPreviewSelect, animationName);
+                    }
+                    
                     // If game is running, also play the same animation on the player model
                     if (this.game.player && this.game.player.model && !this.game.player.model.usingFallbackModel) {
                         this.game.player.model.playAnimation(animationName);
@@ -324,22 +479,19 @@ export class SettingsMenu extends UIComponent {
                     window.selectedModelId = modelId;
                     
                     // Reset animation dropdown
-                    while (this.animationSelect.options.length > 0) {
-                        this.animationSelect.remove(0);
-                    }
-                    
-                    // Add loading placeholder
-                    const loadingOption = document.createElement('option');
-                    loadingOption.value = '';
-                    loadingOption.textContent = 'Loading animations...';
-                    this.animationSelect.appendChild(loadingOption);
-                    this.animationSelect.disabled = true;
+                    this.resetAnimationSelect(this.animationSelect);
                     
                     // Update preview
                     const baseScale = selectedModel.baseScale;
                     const multiplier = parseFloat(this.sizeSelect.value);
                     const effectiveScale = baseScale * multiplier;
                     this.modelPreview.loadModel(selectedModel.path, effectiveScale);
+                    
+                    // Sync with fullscreen preview if it exists
+                    if (this.modelPreviewFullscreen && this.modelPreviewSelect) {
+                        this.modelPreviewFullscreen.loadModel(selectedModel.path, effectiveScale);
+                        this.syncModelSelect(this.modelPreviewSelect, modelId);
+                    }
                     
                     // Update player model if game is running
                     if (this.game.player && this.game.player.model) {
@@ -351,44 +503,16 @@ export class SettingsMenu extends UIComponent {
                     
                     // Update animation dropdown after a short delay
                     setTimeout(() => {
-                        // Clear existing options
-                        while (this.animationSelect.options.length > 0) {
-                            this.animationSelect.remove(0);
-                        }
+                        this.updateAnimationOptions(this.modelPreview, this.animationSelect, this.prevAnimButton, this.nextAnimButton);
                         
-                        // Get available animations
-                        const animations = this.modelPreview.getAnimationNames();
-                        
-                        if (animations.length > 0) {
-                            // Enable dropdown and buttons
-                            this.animationSelect.disabled = false;
-                            if (this.prevAnimButton) this.prevAnimButton.disabled = false;
-                            if (this.nextAnimButton) this.nextAnimButton.disabled = false;
-                            
-                            // Add animations to dropdown
-                            animations.forEach(animName => {
-                                const option = document.createElement('option');
-                                option.value = animName;
-                                option.textContent = animName;
-                                this.animationSelect.appendChild(option);
-                            });
-                            
-                            // Set current animation as selected
-                            const currentAnim = this.modelPreview.getCurrentAnimation();
-                            if (currentAnim) {
-                                this.animationSelect.value = currentAnim;
-                            }
-                        } else {
-                            // No animations available
-                            const noAnimOption = document.createElement('option');
-                            noAnimOption.value = '';
-                            noAnimOption.textContent = 'No animations available';
-                            this.animationSelect.appendChild(noAnimOption);
-                            
-                            // Disable dropdown and buttons
-                            this.animationSelect.disabled = true;
-                            if (this.prevAnimButton) this.prevAnimButton.disabled = true;
-                            if (this.nextAnimButton) this.nextAnimButton.disabled = true;
+                        // Also update fullscreen preview animations if it exists
+                        if (this.modelPreviewFullscreen && this.animationPreviewSelect) {
+                            this.updateAnimationOptions(
+                                this.modelPreviewFullscreen, 
+                                this.animationPreviewSelect, 
+                                this.prevAnimPreviewButton, 
+                                this.nextAnimPreviewButton
+                            );
                         }
                     }, 500);
                 }
@@ -411,6 +535,11 @@ export class SettingsMenu extends UIComponent {
                     const effectiveScale = baseScale * multiplier;
                     this.modelPreview.loadModel(selectedModel.path, effectiveScale);
                     
+                    // Sync with fullscreen preview if it exists
+                    if (this.modelPreviewFullscreen) {
+                        this.modelPreviewFullscreen.loadModel(selectedModel.path, effectiveScale);
+                    }
+                    
                     // Update player model if game is running
                     if (this.game.player && this.game.player.model) {
                         this.game.player.model.setSizeMultiplier(multiplier);
@@ -418,75 +547,377 @@ export class SettingsMenu extends UIComponent {
                 }
             });
         }
+    }
+    
+    /**
+     * Set up navigation buttons for model preview tab
+     * @private
+     */
+    setupModelPreviewNavigationButtons() {
+        // Add event listeners for prev/next model preview buttons
+        if (this.prevModelPreviewButton && this.modelPreviewSelect) {
+            this.prevModelPreviewButton.addEventListener('click', () => {
+                const currentIndex = this.modelPreviewSelect.selectedIndex;
+                const newIndex = (currentIndex > 0) ? currentIndex - 1 : this.modelPreviewSelect.options.length - 1;
+                this.modelPreviewSelect.selectedIndex = newIndex;
+                
+                // Trigger the change event to update the model
+                const event = new Event('change');
+                this.modelPreviewSelect.dispatchEvent(event);
+            });
+        }
         
-        // Initialize model preview
-        if (this.modelPreviewContainer) {
-            setTimeout(() => {
-                // Create model preview after a short delay to ensure the container is in the DOM
-                this.modelPreview = new ModelPreview(this.modelPreviewContainer);
+        if (this.nextModelPreviewButton && this.modelPreviewSelect) {
+            this.nextModelPreviewButton.addEventListener('click', () => {
+                const currentIndex = this.modelPreviewSelect.selectedIndex;
+                const newIndex = (currentIndex < this.modelPreviewSelect.options.length - 1) ? currentIndex + 1 : 0;
+                this.modelPreviewSelect.selectedIndex = newIndex;
                 
-                // Load the current model
-                const modelId = this.modelSelect ? this.modelSelect.value : null;
-                const selectedModel = modelId ? CHARACTER_MODELS.find(m => m.id === modelId) : null;
+                // Trigger the change event to update the model
+                const event = new Event('change');
+                this.modelPreviewSelect.dispatchEvent(event);
+            });
+        }
+        
+        // Add event listeners for prev/next animation preview buttons
+        if (this.prevAnimPreviewButton && this.animationPreviewSelect) {
+            this.prevAnimPreviewButton.addEventListener('click', () => {
+                if (this.animationPreviewSelect.options.length > 0 && !this.animationPreviewSelect.disabled) {
+                    const currentIndex = this.animationPreviewSelect.selectedIndex;
+                    const newIndex = (currentIndex > 0) ? currentIndex - 1 : this.animationPreviewSelect.options.length - 1;
+                    this.animationPreviewSelect.selectedIndex = newIndex;
+                    
+                    // Trigger the change event to update the animation
+                    const event = new Event('change');
+                    this.animationPreviewSelect.dispatchEvent(event);
+                }
+            });
+        }
+        
+        if (this.nextAnimPreviewButton && this.animationPreviewSelect) {
+            this.nextAnimPreviewButton.addEventListener('click', () => {
+                if (this.animationPreviewSelect.options.length > 0 && !this.animationPreviewSelect.disabled) {
+                    const currentIndex = this.animationPreviewSelect.selectedIndex;
+                    const newIndex = (currentIndex < this.animationPreviewSelect.options.length - 1) ? currentIndex + 1 : 0;
+                    this.animationPreviewSelect.selectedIndex = newIndex;
+                    
+                    // Trigger the change event to update the animation
+                    const event = new Event('change');
+                    this.animationPreviewSelect.dispatchEvent(event);
+                }
+            });
+        }
+        
+        // Add change event for animation preview selection
+        if (this.animationPreviewSelect) {
+            this.animationPreviewSelect.addEventListener('change', () => {
+                const animationName = this.animationPreviewSelect.value;
+                if (this.modelPreviewFullscreen && animationName) {
+                    this.modelPreviewFullscreen.playAnimation(animationName);
+                    
+                    // Sync with regular model preview
+                    if (this.modelPreview && this.animationSelect) {
+                        this.modelPreview.playAnimation(animationName);
+                        this.syncAnimationSelect(this.animationSelect, animationName);
+                    }
+                    
+                    // If game is running, also play the same animation on the player model
+                    if (this.game.player && this.game.player.model && !this.game.player.model.usingFallbackModel) {
+                        this.game.player.model.playAnimation(animationName);
+                    }
+                }
+            });
+        }
+        
+        // Add change event for model preview selection
+        if (this.modelPreviewSelect && this.animationPreviewSelect) {
+            this.modelPreviewSelect.addEventListener('change', () => {
+                const modelId = this.modelPreviewSelect.value;
+                const selectedModel = CHARACTER_MODELS.find(m => m.id === modelId);
                 
-                if (selectedModel) {
-                    // Store the initial values
+                if (selectedModel && this.modelPreviewFullscreen) {
+                    // Store the selected model ID for use when starting a new game
                     window.selectedModelId = modelId;
-                    window.selectedSizeMultiplier = parseFloat(this.sizeSelect ? this.sizeSelect.value : 1.0);
                     
+                    // Reset animation dropdown
+                    this.resetAnimationSelect(this.animationPreviewSelect);
+                    
+                    // Get size multiplier (use the one from settings tab)
+                    const multiplier = parseFloat(this.sizeSelect ? this.sizeSelect.value : 1.0);
+                    
+                    // Update preview
                     const baseScale = selectedModel.baseScale;
-                    const multiplier = window.selectedSizeMultiplier;
                     const effectiveScale = baseScale * multiplier;
+                    this.modelPreviewFullscreen.loadModel(selectedModel.path, effectiveScale);
                     
-                    // Load the model
-                    this.modelPreview.loadModel(selectedModel.path, effectiveScale);
+                    // Sync with regular model preview
+                    if (this.modelPreview && this.modelSelect) {
+                        this.modelPreview.loadModel(selectedModel.path, effectiveScale);
+                        this.syncModelSelect(this.modelSelect, modelId);
+                    }
                     
-                    // Check for animations after a short delay to ensure model is loaded
+                    // Update player model if game is running
+                    if (this.game.player && this.game.player.model) {
+                        this.game.player.model.setModel(modelId).then(() => {
+                            // After model is loaded, apply the size multiplier
+                            this.game.player.model.setSizeMultiplier(multiplier);
+                        });
+                    }
+                    
+                    // Update animation dropdown after a short delay
                     setTimeout(() => {
-                        if (this.animationSelect) {
-                            // Clear existing options
-                            while (this.animationSelect.options.length > 0) {
-                                this.animationSelect.remove(0);
-                            }
-                            
-                            // Get available animations
-                            const animations = this.modelPreview.getAnimationNames();
-                            
-                            if (animations.length > 0) {
-                                // Enable dropdown and buttons
-                                this.animationSelect.disabled = false;
-                                if (this.prevAnimButton) this.prevAnimButton.disabled = false;
-                                if (this.nextAnimButton) this.nextAnimButton.disabled = false;
-                                
-                                // Add animations to dropdown
-                                animations.forEach(animName => {
-                                    const option = document.createElement('option');
-                                    option.value = animName;
-                                    option.textContent = animName;
-                                    this.animationSelect.appendChild(option);
-                                });
-                                
-                                // Set current animation as selected
-                                const currentAnim = this.modelPreview.getCurrentAnimation();
-                                if (currentAnim) {
-                                    this.animationSelect.value = currentAnim;
-                                }
-                            } else {
-                                // No animations available
-                                const noAnimOption = document.createElement('option');
-                                noAnimOption.value = '';
-                                noAnimOption.textContent = 'No animations available';
-                                this.animationSelect.appendChild(noAnimOption);
-                                
-                                // Disable dropdown and buttons
-                                this.animationSelect.disabled = true;
-                                if (this.prevAnimButton) this.prevAnimButton.disabled = true;
-                                if (this.nextAnimButton) this.nextAnimButton.disabled = true;
-                            }
+                        this.updateAnimationOptions(
+                            this.modelPreviewFullscreen, 
+                            this.animationPreviewSelect, 
+                            this.prevAnimPreviewButton, 
+                            this.nextAnimPreviewButton
+                        );
+                        
+                        // Also update regular preview animations
+                        if (this.modelPreview && this.animationSelect) {
+                            this.updateAnimationOptions(
+                                this.modelPreview, 
+                                this.animationSelect, 
+                                this.prevAnimButton, 
+                                this.nextAnimButton
+                            );
                         }
                     }, 500);
                 }
-            }, 100);
+            });
+        }
+        
+        // Add camera control events
+        if (this.resetCameraButton && this.modelPreviewFullscreen) {
+            this.resetCameraButton.addEventListener('click', () => {
+                if (this.modelPreviewFullscreen) {
+                    this.modelPreviewFullscreen.resetCamera();
+                }
+            });
+        }
+        
+        if (this.autoRotateCheckbox && this.modelPreviewFullscreen) {
+            this.autoRotateCheckbox.addEventListener('change', () => {
+                if (this.modelPreviewFullscreen) {
+                    this.modelPreviewFullscreen.toggleAutoRotation(this.autoRotateCheckbox.checked);
+                }
+            });
+        }
+        
+        if (this.rotationSpeedSlider && this.rotationSpeedValue && this.modelPreviewFullscreen) {
+            this.rotationSpeedSlider.addEventListener('input', () => {
+                const speed = parseFloat(this.rotationSpeedSlider.value);
+                if (this.modelPreviewFullscreen) {
+                    this.modelPreviewFullscreen.setRotationSpeed(speed);
+                }
+                this.rotationSpeedValue.textContent = speed.toFixed(1);
+            });
+        }
+    }
+    
+    /**
+     * Initialize model preview in settings tab
+     * @private
+     */
+    initializeModelPreviewInSettings() {
+        if (!this.modelPreviewContainer) return;
+        
+        setTimeout(() => {
+            // Get the container dimensions for a more appropriate size
+            const container = document.querySelector('.model-preview-section');
+            let width = 300;
+            let height = 300;
+            
+            if (container) {
+                width = container.clientWidth;
+                height = container.clientHeight || 300;
+            }
+            
+            // Create model preview with dynamic size
+            this.modelPreview = new ModelPreview(this.modelPreviewContainer, width, height);
+            
+            // Load the current model
+            const modelId = this.modelSelect ? this.modelSelect.value : null;
+            const selectedModel = modelId ? CHARACTER_MODELS.find(m => m.id === modelId) : null;
+            
+            if (selectedModel) {
+                // Store the initial values
+                window.selectedModelId = modelId;
+                window.selectedSizeMultiplier = parseFloat(this.sizeSelect ? this.sizeSelect.value : 1.0);
+                
+                const baseScale = selectedModel.baseScale;
+                const multiplier = window.selectedSizeMultiplier;
+                const effectiveScale = baseScale * multiplier;
+                
+                // Load the model
+                this.modelPreview.loadModel(selectedModel.path, effectiveScale);
+                
+                // Check for animations after a short delay to ensure model is loaded
+                setTimeout(() => {
+                    this.updateAnimationOptions(
+                        this.modelPreview, 
+                        this.animationSelect, 
+                        this.prevAnimButton, 
+                        this.nextAnimButton
+                    );
+                }, 500);
+            }
+        }, 100);
+    }
+    
+    /**
+     * Initialize fullscreen model preview
+     * @private
+     */
+    initializeFullscreenModelPreview() {
+        if (!this.modelPreviewFullscreenContainer) return;
+        
+        setTimeout(() => {
+            // Get the container dimensions for a more appropriate size
+            const container = document.querySelector('.model-preview-fullscreen-section');
+            let width = 500;
+            let height = 400;
+            
+            if (container) {
+                width = container.clientWidth;
+                height = container.clientHeight || 400;
+            }
+            
+            // Create model preview with dynamic size
+            this.modelPreviewFullscreen = new ModelPreview(this.modelPreviewFullscreenContainer, width, height);
+            
+            // Enable auto-rotation by default for the fullscreen preview
+            this.modelPreviewFullscreen.toggleAutoRotation(true);
+            if (this.autoRotateCheckbox) {
+                this.autoRotateCheckbox.checked = true;
+            }
+            
+            // Load the current model
+            const modelId = this.modelPreviewSelect ? this.modelPreviewSelect.value : 
+                           (this.modelSelect ? this.modelSelect.value : null);
+            const selectedModel = modelId ? CHARACTER_MODELS.find(m => m.id === modelId) : null;
+            
+            if (selectedModel) {
+                const baseScale = selectedModel.baseScale;
+                const multiplier = window.selectedSizeMultiplier || 1.0;
+                const effectiveScale = baseScale * multiplier;
+                
+                // Load the model
+                this.modelPreviewFullscreen.loadModel(selectedModel.path, effectiveScale);
+                
+                // Check for animations after a short delay to ensure model is loaded
+                setTimeout(() => {
+                    this.updateAnimationOptions(
+                        this.modelPreviewFullscreen, 
+                        this.animationPreviewSelect, 
+                        this.prevAnimPreviewButton, 
+                        this.nextAnimPreviewButton
+                    );
+                }, 500);
+            }
+        }, 100);
+    }
+    
+    /**
+     * Reset animation select dropdown and add loading placeholder
+     * @param {HTMLSelectElement} selectElement - The select element to reset
+     * @private
+     */
+    resetAnimationSelect(selectElement) {
+        if (!selectElement) return;
+        
+        // Clear existing options
+        while (selectElement.options.length > 0) {
+            selectElement.remove(0);
+        }
+        
+        // Add loading placeholder
+        const loadingOption = document.createElement('option');
+        loadingOption.value = '';
+        loadingOption.textContent = 'Loading animations...';
+        selectElement.appendChild(loadingOption);
+        selectElement.disabled = true;
+    }
+    
+    /**
+     * Update animation options in a select element
+     * @param {ModelPreview} modelPreview - The model preview instance
+     * @param {HTMLSelectElement} selectElement - The select element to update
+     * @param {HTMLButtonElement} prevButton - The previous button
+     * @param {HTMLButtonElement} nextButton - The next button
+     * @private
+     */
+    updateAnimationOptions(modelPreview, selectElement, prevButton, nextButton) {
+        if (!modelPreview || !selectElement) return;
+        
+        // Clear existing options
+        while (selectElement.options.length > 0) {
+            selectElement.remove(0);
+        }
+        
+        // Get available animations
+        const animations = modelPreview.getAnimationNames();
+        
+        if (animations.length > 0) {
+            // Enable dropdown and buttons
+            selectElement.disabled = false;
+            if (prevButton) prevButton.disabled = false;
+            if (nextButton) nextButton.disabled = false;
+            
+            // Add animations to dropdown
+            animations.forEach(animName => {
+                const option = document.createElement('option');
+                option.value = animName;
+                option.textContent = animName;
+                selectElement.appendChild(option);
+            });
+            
+            // Set current animation as selected
+            const currentAnim = modelPreview.getCurrentAnimation();
+            if (currentAnim) {
+                selectElement.value = currentAnim;
+            }
+        } else {
+            // No animations available
+            const noAnimOption = document.createElement('option');
+            noAnimOption.value = '';
+            noAnimOption.textContent = 'No animations available';
+            selectElement.appendChild(noAnimOption);
+            
+            // Disable dropdown and buttons
+            selectElement.disabled = true;
+            if (prevButton) prevButton.disabled = true;
+            if (nextButton) nextButton.disabled = true;
+        }
+    }
+    
+    /**
+     * Sync model selection between two select elements
+     * @param {HTMLSelectElement} selectElement - The select element to update
+     * @param {string} modelId - The model ID to select
+     * @private
+     */
+    syncModelSelect(selectElement, modelId) {
+        if (!selectElement || !modelId) return;
+        
+        selectElement.value = modelId;
+    }
+    
+    /**
+     * Sync animation selection between two select elements
+     * @param {HTMLSelectElement} selectElement - The select element to update
+     * @param {string} animationName - The animation name to select
+     * @private
+     */
+    syncAnimationSelect(selectElement, animationName) {
+        if (!selectElement || !animationName) return;
+        
+        // Only set if the animation exists in the dropdown
+        for (let i = 0; i < selectElement.options.length; i++) {
+            if (selectElement.options[i].value === animationName) {
+                selectElement.value = animationName;
+                break;
+            }
         }
     }
 
@@ -623,12 +1054,32 @@ export class SettingsMenu extends UIComponent {
         if (this.container) {
             this.container.style.display = 'flex';
         }
+        
+        // Resize model preview if it exists
+        if (this.modelPreview) {
+            // Use setTimeout to ensure the menu is fully visible
+            setTimeout(() => {
+                this.resizeModelPreview();
+                
+                // Make sure the model tab is visible if we're coming from model selection
+                const modelTab = document.getElementById('tab-model');
+                if (window.lastActiveSettingsTab === 'model' && modelTab) {
+                    modelTab.click();
+                }
+            }, 100);
+        }
     }
-
+    
     /**
      * Hide the settings menu
      */
     hide() {
+        // Store the last active tab
+        const activeTab = document.querySelector('.tab-button.active');
+        if (activeTab) {
+            window.lastActiveSettingsTab = activeTab.id.replace('tab-', '');
+        }
+        
         if (this.container) {
             this.container.style.display = 'none';
         }
@@ -649,10 +1100,15 @@ export class SettingsMenu extends UIComponent {
         // Call the parent class dispose method
         super.dispose();
         
+        // Clean up model previews
         if (this.modelPreview) {
             this.modelPreview.dispose();
+            this.modelPreview = null;
         }
         
-        this.modelPreview = null;
+        if (this.modelPreviewFullscreen) {
+            this.modelPreviewFullscreen.dispose();
+            this.modelPreviewFullscreen = null;
+        }
     }
 }
