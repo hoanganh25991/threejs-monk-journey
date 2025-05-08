@@ -27,6 +27,10 @@
 </head>
 
 <body>
+    <!-- Main Background -->
+    <div id="main-background" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; background-image: url('assets/images/background.jpg'); background-size: cover; background-position: center center; background-repeat: no-repeat;"></div>
+    
+    <!-- Orientation Message -->
     <div id="orientation-message">
         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
             <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
@@ -35,27 +39,143 @@
         <p>Please rotate your device to landscape mode for the best experience</p>
     </div>
 
+    <!-- Game Container -->
     <div id="game-container">
-        <!-- Game Canvas -->
         <canvas id="game-canvas"></canvas>
     </div>
 
-    <!-- Game UI will be dynamically created by HUDManager -->
+    <!-- Loading Screen -->
+    <div id="loading-screen" style="display: none;">
+        <h2>Loading Monk Journey...</h2>
+        <div id="loading-bar-container">
+            <div id="loading-bar"></div>
+        </div>
+    </div>
 
-    <!-- Main script module -->
-    <script type="module" src="js/main.js"></script>
+    <!-- Game Menu -->
+    <div id="game-menu" class="game-menu" style="display: none;">
+        <h1>Monk Journey</h1>
+        <div class="menu-button-container">
+            <button id="new-game-button" class="menu-button">New Game</button>
+            <button id="load-game-button" class="menu-button" style="display: none;">Load Game</button>
+            <button id="settings-menu-button" class="menu-button">Settings</button>
+        </div>
+    </div>
+
+    <!-- Settings Menu -->
+    <div id="main-options-menu" class="game-menu" style="display: none;">
+        <h1>Settings</h1>
+        
+        <!-- Performance Settings -->
+        <h2 id="performance-title">Performance Settings</h2>
+        <div id="performance-container">
+            <div id="quality-container">
+                <label for="quality-select">Quality Preset: </label>
+                <select id="quality-select"></select>
+            </div>
+            <div id="adaptive-container">
+                <label for="adaptive-checkbox">Adaptive Quality: </label>
+                <input type="checkbox" id="adaptive-checkbox">
+            </div>
+            <div id="fps-container">
+                <label for="fps-slider">Target FPS: </label>
+                <input type="range" id="fps-slider" min="30" max="120" step="5" value="60">
+                <span id="fps-value">60 FPS</span>
+            </div>
+        </div>
+        
+        <!-- Game Settings -->
+        <h2 id="game-title">Game Settings</h2>
+        <div id="difficulty-container">
+            <label for="difficulty-select">Difficulty: </label>
+            <select id="difficulty-select"></select>
+        </div>
+        
+        <!-- Character Model Settings -->
+        <h2 id="character-title">Character Model</h2>
+        <div id="model-preview-container"></div>
+        
+        <div id="model-container">
+            <label for="model-select">Character Model: </label>
+            <div id="model-selection-container">
+                <button id="prev-model-button">◀</button>
+                <select id="model-select"></select>
+                <button id="next-model-button">▶</button>
+            </div>
+        </div>
+        
+        <div id="size-container">
+            <label for="size-select">Size Multiplier: </label>
+            <div id="size-selection-container">
+                <button id="prev-size-button">◀</button>
+                <select id="size-select"></select>
+                <button id="next-size-button">▶</button>
+            </div>
+        </div>
+        
+        <div id="animation-container">
+            <label for="animation-select">Animation: </label>
+            <div id="animation-selection-container">
+                <button id="prev-anim-button">◀</button>
+                <select id="animation-select"></select>
+                <button id="next-anim-button">▶</button>
+            </div>
+        </div>
+        
+        <p id="model-note">Note: Model changes will take effect immediately.</p>
+        
+        <!-- Audio Settings -->
+        <h2 id="audio-title">Audio Settings</h2>
+        <div id="audio-controls-container">
+            <div id="mute-container">
+                <label for="mute-checkbox">Mute Audio: </label>
+                <input type="checkbox" id="mute-checkbox">
+            </div>
+            <div id="auto-pause-container">
+                <label for="auto-pause-checkbox">Auto-pause music when inactive: </label>
+                <input type="checkbox" id="auto-pause-checkbox">
+            </div>
+            <div id="music-volume-container">
+                <label for="music-volume-slider">Music Volume: </label>
+                <input type="range" id="music-volume-slider" min="0" max="100" value="80">
+                <span id="music-volume-value">80%</span>
+            </div>
+            <div id="sfx-volume-container">
+                <label for="sfx-volume-slider">SFX Volume: </label>
+                <input type="range" id="sfx-volume-slider" min="0" max="100" value="80">
+                <span id="sfx-volume-value">80%</span>
+            </div>
+            <div id="test-sound-container">
+                <button id="test-sound-button" class="menu-button">Test Sound</button>
+            </div>
+        </div>
+        
+        <div id="audio-disabled-message" style="display: none;">
+            Audio is currently disabled. Audio files need to be added to the assets/audio directory.
+        </div>
+        
+        <div id="simulated-audio-note" style="display: none;">
+            Using simulated audio. For better audio experience, add audio files to the assets/audio directory.
+        </div>
+        
+        <!-- Back Button -->
+        <button id="settings-back-button" class="menu-button">Back</button>
+    </div>
+
+    <!-- Settings Button -->
+    <button id="settings-button" class="settings-button" style="display: none;">⚙️</button>
 
     <!-- Update Notification -->
     <div id="update-notification"
-        style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.8); color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; text-align: center; min-width: 300px; max-width: 80%;">
+        style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.3); color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; text-align: center; min-width: 300px; max-width: 80%;">
         <p style="margin: 0 0 10px 0;">New version available!</p>
         <div class="loading-bar"
-            style="height: 5px; width: 100%; background-color: #333; border-radius: 2px; overflow: hidden;">
+            style="height: 5px; width: 100%; background-color: rgba(51, 51, 51, 0.5); border-radius: 2px; overflow: hidden;">
             <div id="loading-progress"
                 style="height: 100%; width: 0%; background-color: #4CAF50; transition: width 0.3s;"></div>
         </div>
         <p id="update-status" style="margin: 10px 0 0 0; font-size: 0.9em;">Updating...</p>
-        <p id="file-info" style="margin: 5px 0 0 0; font-size: 0.8em; color: #aaa; display: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
+        <p id="file-info" style="margin: 5px 0 0 0; font-size: 0.8em; color: #ddd; display: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
     </div>
 
     <!-- Orientation Lock -->
@@ -63,6 +183,9 @@
 
     <!-- Service Worker Registration -->
     <script src="pwa/registration.js"></script>
+    
+    <!-- Main script module -->
+    <script type="module" src="js/main.js"></script>
 </body>
 
 </html>

@@ -12,6 +12,9 @@
 /* Import component styles */
 @import 'components.css';
 
+/* Import UI styles */
+@import 'ui.css';
+
 /* Import animation styles */
 @import 'animations.css';
 

@@ -1,4 +1,5 @@
 import { INPUT_CONFIG } from './InputHandler.js';
+import { MainBackground } from '../ui/MainBackground.js';
 
 export class HUDManager {
     constructor(game) {
@@ -14,6 +15,9 @@ export class HUDManager {
     init() {
         // Create UI container
         this.createUIContainer();
+        
+        // Create main background
+        this.createMainBackground();
         
         // Create player UI
         this.createPlayerUI();
@@ -40,6 +44,27 @@ export class HUDManager {
         this.createVirtualJoystick();
         
         return true;
+    }
+    
+    /**
+     * Create the main background
+     */
+    createMainBackground() {
+        // Initialize the main background
+        this.mainBackground = new MainBackground(this.game);
+        
+        // Show the background
+        this.mainBackground.show();
+    }
+    
+    /**
+     * Set a new background image
+     * @param {string} imagePath - Path to the new background image
+     */
+    setBackgroundImage(imagePath) {
+        if (this.mainBackground) {
+            this.mainBackground.setBackgroundImage(imagePath);
+        }
     }
     
     /**

@@ -18,7 +18,7 @@
 body {
     overflow: hidden;
     font-family: Arial, sans-serif;
-    background-color: #000;
+    background-color: transparent; /* Changed from #000 to transparent */
     -webkit-tap-highlight-color: transparent !important;
 }
 

@@ -118,13 +118,21 @@ if (!adjustmentsLoaded) {
     - define common methods to be shared
     - separate into multiple files for easier to maintain, define interface when needed
 
-- [ ] Enhance: review main.js file and optimize it:
-    - remove unused method
-    - remove duplicate methods
-    - define common methods to be shared
-    - separate into multiple files for easier to maintain, define interface when needed
-    - remove the origin file, integrate with new code base
-    - move unrelated methods, logic to proper categorized file
+Enhance: review main.js file and optimize it:
+    - [ ] remove unused method
+    - [ ] remove duplicate methods
+    - [ ] define common methods to be shared
+    - [ ] separate into multiple files for easier to maintain, define interface when needed
+    - [ ] remove the origin file, integrate with new code base
+    - [ ] move unrelated methods, logic to proper categorized file
+    - [ ] move ui logic to ui/XXX.js, define dom element in index.html
+
+Help me improve movement of Player:
+  - [ ] Warning: Attempted to set invalid player position: 13.298149548811804 2 NaN
+  - [ ] Should be come logic to check when move, collision should prevent from go through objects
+  - [ ] Only 1 case: for now, the game place character at position has multiple objects, hero like at locked position, help me update
+    - [] Init place like Diablo should be teleport point in village
+    - [] Update this init terrain into village, no enemy
 
 - [ ] Enhance: review Game.js file and optimize it:
     - remove unused method
