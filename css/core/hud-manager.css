@@ -453,20 +453,24 @@
 }
 
 #mini-map {
-    width: 200px; /* This will be dynamically set based on mapSize in JavaScript */
-    height: 200px;
+    /* Size will be set dynamically in JavaScript */
     background-color: rgba(0, 0, 0, 0.4);
-    padding: 10px;
     border-radius: 50%;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     transition: opacity 0.3s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0; /* Remove padding */
 }
 
 #mini-map-canvas {
     border-radius: 50%;
     display: block;
+    width: 100%;
+    height: 100%;
 }
 
 /* Update Notification */

@@ -22,6 +22,7 @@ export class MiniMapUI extends UIComponent {
         this.canvas = null;
         this.ctx = null;
         this.mapSize = 200; // Size of the mini map in pixels
+        this.canvasSize = this.mapSize; // Canvas size matches map size
         this.scale = 0.5; // Increased scale factor for better world coverage
         this.lastRenderTime = 0;
         this.renderInterval = 100; // Render every 100ms for performance
@@ -37,7 +38,7 @@ export class MiniMapUI extends UIComponent {
         const template = `
             <div id="mini-map-header" class="mini-map-header">Mini Map</div>
             <div id="mini-map">
-                <canvas id="mini-map-canvas" width="${this.mapSize}" height="${this.mapSize}"></canvas>
+                <canvas id="mini-map-canvas" width="${this.canvasSize}" height="${this.canvasSize}"></canvas>
             </div>
         `;
         
@@ -55,9 +56,17 @@ export class MiniMapUI extends UIComponent {
             this.toggleMiniMap();
         });
         
-        // Update the container width based on mapSize
+        // Set exact dimensions for both container and canvas
         this.mapElement.style.width = `${this.mapSize}px`;
         this.mapElement.style.height = `${this.mapSize}px`;
+        
+        // Ensure canvas has the correct dimensions
+        this.canvas.width = this.canvasSize;
+        this.canvas.height = this.canvasSize;
+        
+        // Apply CSS to ensure canvas fits perfectly in the container
+        this.canvas.style.width = '100%';
+        this.canvas.style.height = '100%';
         
         return true;
     }
@@ -531,7 +540,38 @@ export class MiniMapUI extends UIComponent {
         if (scale > 2.0) scale = 2.0; // Maximum scale
         
         this.scale = scale;
+        
+        // Recalculate maxDrawDistance based on current scale
+        this.maxDrawDistance = this.mapSize / 2 - 2;
+        
+        // Force a redraw of the minimap
+        this.renderMiniMap();
+        
         console.log(`Mini map scale set to: ${scale}`);
+    }
+    
+    /**
+     * Resize the minimap
+     * @param {number} size - New size in pixels
+     */
+    resize(size) {
+        // Update sizes
+        this.mapSize = size;
+        this.canvasSize = size;
+        
+        // Update container dimensions
+        this.mapElement.style.width = `${this.mapSize}px`;
+        this.mapElement.style.height = `${this.mapSize}px`;
+        
+        // Update canvas dimensions
+        this.canvas.width = this.canvasSize;
+        this.canvas.height = this.canvasSize;
+        
+        // Recalculate maxDrawDistance
+        this.maxDrawDistance = this.mapSize / 2 - 2;
+        
+        // Force a redraw
+        this.renderMiniMap();
     }
     
     /**
