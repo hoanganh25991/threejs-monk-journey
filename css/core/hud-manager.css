@@ -427,11 +427,11 @@
 
 /* Mini Map */
 #mini-map-container {
-    position: absolute;
+    position: fixed;
     top: 20px;
     right: 20px;
     color: white;
-    z-index: 100;
+    z-index: 200;
     pointer-events: auto; /* Ensure clicks are registered */
 }
 

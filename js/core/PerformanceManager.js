@@ -98,13 +98,13 @@ export class PerformanceManager {
     
     init() {
         // Initialize Stats.js for FPS monitoring
-        // this.stats = new Stats();
-        // this.applyStandardIndicatorStyle(this.stats.dom, 0);
+        this.stats = new Stats();
+        this.applyStandardIndicatorStyle(this.stats.dom, 0);
         
         // Modify Stats.js to show 1.5x FPS
-        // this.modifyStatsDisplay();
+        this.modifyStatsDisplay();
         
-        // document.body.appendChild(this.stats.dom);
+        document.body.appendChild(this.stats.dom);
         
         // Create memory usage display
         this.createMemoryDisplay();
@@ -141,7 +141,7 @@ export class PerformanceManager {
         element.style.fontSize = '11px';
         element.style.fontFamily = 'monospace';
         element.style.borderRadius = '3px 0 0 3px';
-        element.style.zIndex = '1001';
+        element.style.zIndex = '100';
         element.style.opacity = '0.5';
         element.style.transition = 'opacity 0.2s';
         element.style.boxSizing = 'border-box'; // Ensure padding is included in width

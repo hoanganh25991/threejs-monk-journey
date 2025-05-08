@@ -507,7 +507,7 @@ export class MiniMapUI extends UIComponent {
                     // Bright red with higher opacity for enemies
                     color = 'rgba(255, 0, 0, 0.8)'; 
                     strokeColor = 'rgba(255, 50, 50, 0.9)';
-                    size = 4; // Larger for enemies
+                    size = 2; // Smaller size for enemies (was 4)
                 } else if (entity.isNPC) {
                     color = 'rgba(200, 200, 0, 0.6)'; // Darker yellow for NPCs
                     strokeColor = 'rgba(255, 255, 0, 0.7)';
@@ -523,20 +523,13 @@ export class MiniMapUI extends UIComponent {
                 
                 // Draw a circle outline for enemies with glow effect
                 if (entity.isEnemy) {
-                    // Add a subtle glow effect
-                    this.ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
-                    this.ctx.shadowBlur = 6;
+                    // Reduced glow effect
+                    this.ctx.shadowColor = 'rgba(255, 0, 0, 0.6)';
+                    this.ctx.shadowBlur = 3; // Reduced from 6
                     
-                    // Draw outer glow ring
-                    this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.4)';
-                    this.ctx.lineWidth = 1;
-                    this.ctx.beginPath();
-                    this.ctx.arc(screenX, screenY, size + 2, 0, Math.PI * 2);
-                    this.ctx.stroke();
-                    
-                    // Draw main outline
+                    // Draw main outline only (removed outer glow ring)
                     this.ctx.strokeStyle = strokeColor || color;
-                    this.ctx.lineWidth = 1.5;
+                    this.ctx.lineWidth = 1; // Thinner line (was 1.5)
                     this.ctx.beginPath();
                     this.ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
                     this.ctx.stroke();
