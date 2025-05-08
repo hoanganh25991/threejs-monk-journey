@@ -3,7 +3,7 @@
  * Entry point for the game application
  */
 
-import { Game } from './core/Game.js';
+import { Game } from './core/game/Game.js';
 import { DEFAULT_CHARACTER_MODEL } from './config/index.js';
 import { LoadingScreen } from './ui/LoadingScreen.js';
 import { GameMenu } from './ui/GameMenu.js';
