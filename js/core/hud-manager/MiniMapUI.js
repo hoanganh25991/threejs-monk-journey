@@ -475,6 +475,9 @@ export class MiniMapUI extends UIComponent {
         // Get all entities
         const entities = this.game.world.getEntities ? this.game.world.getEntities() : [];
         
+        // Reset any shadow effects before starting
+        this.ctx.shadowBlur = 0;
+        
         entities.forEach(entity => {
             // Skip player entity
             if (entity === this.game.player) return;
@@ -501,9 +504,9 @@ export class MiniMapUI extends UIComponent {
                 let strokeColor = null;
                 
                 if (entity.isEnemy) {
-                    // Darker red with less opacity for enemies
-                    color = 'rgba(180, 0, 0, 0.6)'; 
-                    strokeColor = 'rgba(220, 0, 0, 0.7)';
+                    // Bright red with higher opacity for enemies
+                    color = 'rgba(255, 0, 0, 0.8)'; 
+                    strokeColor = 'rgba(255, 50, 50, 0.9)';
                     size = 4; // Larger for enemies
                 } else if (entity.isNPC) {
                     color = 'rgba(200, 200, 0, 0.6)'; // Darker yellow for NPCs
@@ -518,13 +521,28 @@ export class MiniMapUI extends UIComponent {
                 this.ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
                 this.ctx.fill();
                 
-                // Draw a circle outline for enemies
+                // Draw a circle outline for enemies with glow effect
                 if (entity.isEnemy) {
+                    // Add a subtle glow effect
+                    this.ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
+                    this.ctx.shadowBlur = 6;
+                    
+                    // Draw outer glow ring
+                    this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.4)';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.beginPath();
+                    this.ctx.arc(screenX, screenY, size + 2, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                    
+                    // Draw main outline
                     this.ctx.strokeStyle = strokeColor || color;
                     this.ctx.lineWidth = 1.5;
                     this.ctx.beginPath();
                     this.ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
                     this.ctx.stroke();
+                    
+                    // Reset shadow
+                    this.ctx.shadowBlur = 0;
                 }
                 
                 // Draw a small pulse effect for NPCs only
@@ -537,6 +555,10 @@ export class MiniMapUI extends UIComponent {
                 }
             }
         });
+        
+        // Ensure shadow effects are reset after all entities are drawn
+        this.ctx.shadowBlur = 0;
+        this.ctx.shadowColor = 'transparent';
     }
     
     /**
