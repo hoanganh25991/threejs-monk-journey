@@ -109,12 +109,7 @@ export class SettingsMenu extends UIComponent {
                     tabContent.classList.add('active');
                     
                     // Handle model preview resizing based on tab
-                    if (tabId === 'model-settings' && this.modelPreview) {
-                        // Use setTimeout to ensure the tab is visible before resizing
-                        setTimeout(() => {
-                            this.resizeModelPreview();
-                        }, 50);
-                    } else if (tabId === 'model-preview' && this.modelPreviewFullscreen) {
+                    if (tabId === 'model-preview' && this.modelPreviewFullscreen) {
                         // Use setTimeout to ensure the tab is visible before resizing
                         setTimeout(() => {
                             this.resizeModelPreviewFullscreen();
@@ -125,23 +120,7 @@ export class SettingsMenu extends UIComponent {
         });
     }
     
-    /**
-     * Resize the model preview to fit the container
-     * @private
-     */
-    resizeModelPreview() {
-        if (!this.modelPreview) return;
-        
-        const container = document.querySelector('.model-preview-section');
-        if (!container) return;
-        
-        // Get the container dimensions
-        const width = container.clientWidth;
-        const height = container.clientHeight;
-        
-        // Update the model preview size
-        this.modelPreview.setSize(width, height);
-    }
+    // Model preview resize method removed
     
     /**
      * Resize the fullscreen model preview to fit the container
@@ -282,30 +261,21 @@ export class SettingsMenu extends UIComponent {
      * @private
      */
     initializeCharacterModelSettings() {
-        // Initialize both model selects with available models
-        this.initializeModelOptions(this.modelSelect);
+        // Initialize model select for the preview tab
         this.initializeModelOptions(this.modelPreviewSelect);
-        
-        // Initialize size multiplier options
-        this.initializeSizeOptions();
-        
-        // Set up navigation buttons for model settings tab
-        this.setupModelNavigationButtons();
         
         // Set up navigation buttons for model preview tab
         this.setupModelPreviewNavigationButtons();
-        
-        // Initialize model preview in settings tab
-        this.initializeModelPreviewInSettings();
         
         // Initialize fullscreen model preview
         this.initializeFullscreenModelPreview();
         
         // Add window resize handler to update model preview sizes
         window.addEventListener('resize', () => {
-            this.resizeModelPreview();
             this.resizeModelPreviewFullscreen();
         });
+        
+        // Note: Model Settings tab has been removed
     }
     
     /**
@@ -716,11 +686,11 @@ export class SettingsMenu extends UIComponent {
     }
     
     /**
-     * Initialize model preview in settings tab
+     * Initialize model preview in settings tab - REMOVED
      * @private
      */
     initializeModelPreviewInSettings() {
-        if (!this.modelPreviewContainer) return;
+        return; // Method disabled
         
         setTimeout(() => {
             // Get the container dimensions for a more appropriate size
@@ -1042,6 +1012,11 @@ export class SettingsMenu extends UIComponent {
             mainMenu.style.display = 'none';
         }
         
+        // Hide all UI elements
+        if (this.game.hudManager) {
+            this.game.hudManager.hideAllUI();
+        }
+        
         // Show the main background when opening settings
         if (this.game.uiManager && this.game.uiManager.mainBackground) {
             this.game.uiManager.mainBackground.show();
@@ -1055,17 +1030,11 @@ export class SettingsMenu extends UIComponent {
             this.container.style.display = 'flex';
         }
         
-        // Resize model preview if it exists
-        if (this.modelPreview) {
+        // Resize model preview fullscreen if needed
+        if (this.modelPreviewFullscreen) {
             // Use setTimeout to ensure the menu is fully visible
             setTimeout(() => {
-                this.resizeModelPreview();
-                
-                // Make sure the model tab is visible if we're coming from model selection
-                const modelTab = document.getElementById('tab-model');
-                if (window.lastActiveSettingsTab === 'model' && modelTab) {
-                    modelTab.click();
-                }
+                this.resizeModelPreviewFullscreen();
             }, 100);
         }
     }
@@ -1084,8 +1053,14 @@ export class SettingsMenu extends UIComponent {
             this.container.style.display = 'none';
         }
         
-        // If returning to game, hide the background
+        // If returning to game, show UI elements and hide the background
         if (this.fromInGame && this.game.isRunning) {
+            // Show all UI elements
+            if (this.game.hudManager) {
+                this.game.hudManager.showAllUI();
+            }
+            
+            // Hide the background
             if (this.game.uiManager && this.game.uiManager.mainBackground) {
                 this.game.uiManager.mainBackground.hide();
             }

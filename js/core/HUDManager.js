@@ -346,6 +346,56 @@ export class HUDManager {
         document.body.appendChild(this.uiContainer);
     }
     
+    /**
+     * Hide all UI elements
+     */
+    hideAllUI() {
+        if (this.uiContainer) {
+            this.uiContainer.style.display = 'none';
+        }
+        
+        // Hide any other UI elements that might not be in the container
+        const playerStatsContainer = document.getElementById('player-stats-container');
+        if (playerStatsContainer) playerStatsContainer.style.display = 'none';
+        
+        const skillsContainer = document.getElementById('skills-container');
+        if (skillsContainer) skillsContainer.style.display = 'none';
+        
+        const enemyInfoContainer = document.getElementById('enemy-info-container');
+        if (enemyInfoContainer) enemyInfoContainer.style.display = 'none';
+        
+        const virtualJoystick = document.getElementById('virtual-joystick');
+        if (virtualJoystick) virtualJoystick.style.display = 'none';
+        
+        const mobileButtons = document.getElementById('mobile-buttons');
+        if (mobileButtons) mobileButtons.style.display = 'none';
+    }
+    
+    /**
+     * Show all UI elements
+     */
+    showAllUI() {
+        if (this.uiContainer) {
+            this.uiContainer.style.display = 'block';
+        }
+        
+        // Show any other UI elements that might not be in the container
+        const playerStatsContainer = document.getElementById('player-stats-container');
+        if (playerStatsContainer) playerStatsContainer.style.display = 'block';
+        
+        const skillsContainer = document.getElementById('skills-container');
+        if (skillsContainer) skillsContainer.style.display = 'block';
+        
+        const enemyInfoContainer = document.getElementById('enemy-info-container');
+        if (enemyInfoContainer) enemyInfoContainer.style.display = 'block';
+        
+        const virtualJoystick = document.getElementById('virtual-joystick');
+        if (virtualJoystick) virtualJoystick.style.display = 'block';
+        
+        const mobileButtons = document.getElementById('mobile-buttons');
+        if (mobileButtons) mobileButtons.style.display = 'block';
+    }
+    
     createPlayerUI() {
         // Create player stats container
         this.playerStatsContainer = document.createElement('div');

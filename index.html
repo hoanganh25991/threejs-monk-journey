@@ -68,16 +68,17 @@
             <h1>Settings</h1>
         </div>
         
-        <div class="settings-tabs">
-            <button id="tab-performance" class="tab-button active">Performance</button>
-            <button id="tab-game" class="tab-button">Game</button>
-            <button id="tab-audio" class="tab-button">Audio</button>
-            <button id="tab-controls" class="tab-button">Controls</button>
-            <button id="tab-model-preview" class="tab-button">Model Preview</button>
-            <button id="tab-model-settings" class="tab-button">Model Settings</button>
-        </div>
-        
-        <div class="settings-content">
+        <div class="settings-container">
+            <div class="settings-tabs">
+                <button id="tab-performance" class="tab-button active">Performance</button>
+                <button id="tab-game" class="tab-button">Game</button>
+                <button id="tab-audio" class="tab-button">Audio</button>
+                <button id="tab-controls" class="tab-button">Controls</button>
+                <button id="tab-model-preview" class="tab-button">Model Preview</button>
+                <!-- More tabs can be added here -->
+            </div>
+            
+            <div class="settings-content">
             <!-- Performance Settings Tab -->
             <div id="performance-tab" class="tab-content active">
                 <h2 id="performance-title">Performance Settings</h2>
@@ -236,44 +237,7 @@
                 </div>
             </div>
             
-            <!-- Model Settings Tab -->
-            <div id="model-settings-tab" class="tab-content">
-                <h2 id="model-settings-title">Model Settings</h2>
-                <div class="settings-section">
-                    <div id="model-container" class="setting-item">
-                        <label for="model-select">Character Model: </label>
-                        <div id="model-selection-container">
-                            <button id="prev-model-button">◀</button>
-                            <select id="model-select"></select>
-                            <button id="next-model-button">▶</button>
-                        </div>
-                    </div>
-                    
-                    <div id="size-container" class="setting-item">
-                        <label for="size-select">Size Multiplier: </label>
-                        <div id="size-selection-container">
-                            <button id="prev-size-button">◀</button>
-                            <select id="size-select"></select>
-                            <button id="next-size-button">▶</button>
-                        </div>
-                    </div>
-                    
-                    <div id="animation-container" class="setting-item">
-                        <label for="animation-select">Animation: </label>
-                        <div id="animation-selection-container">
-                            <button id="prev-anim-button">◀</button>
-                            <select id="animation-select"></select>
-                            <button id="next-anim-button">▶</button>
-                        </div>
-                    </div>
-                    
-                    <div id="model-preview-mini-container" class="setting-item">
-                        <div id="model-preview-container"></div>
-                    </div>
-                    
-                    <p id="model-note">Note: Model changes will take effect immediately.</p>
-                </div>
-            </div>
+            <!-- Model Settings Tab removed -->
         </div>
         
         <!-- Back Button -->
