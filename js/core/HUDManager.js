@@ -364,6 +364,11 @@ export class HUDManager {
         const enemyInfoContainer = document.getElementById('enemy-info-container');
         if (enemyInfoContainer) enemyInfoContainer.style.display = 'none';
         
+        // Hide virtual joystick (correct IDs)
+        const joystickContainer = document.getElementById('virtual-joystick-container');
+        if (joystickContainer) joystickContainer.style.display = 'none';
+        
+        // Also try the old ID just in case
         const virtualJoystick = document.getElementById('virtual-joystick');
         if (virtualJoystick) virtualJoystick.style.display = 'none';
         
@@ -389,6 +394,11 @@ export class HUDManager {
         const enemyInfoContainer = document.getElementById('enemy-info-container');
         if (enemyInfoContainer) enemyInfoContainer.style.display = 'block';
         
+        // Show virtual joystick (correct IDs)
+        const joystickContainer = document.getElementById('virtual-joystick-container');
+        if (joystickContainer) joystickContainer.style.display = 'block';
+        
+        // Also try the old ID just in case
         const virtualJoystick = document.getElementById('virtual-joystick');
         if (virtualJoystick) virtualJoystick.style.display = 'block';
         

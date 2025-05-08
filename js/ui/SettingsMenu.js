@@ -1051,7 +1051,11 @@ export class SettingsMenu extends UIComponent {
         const heroPortrait = document.getElementById('player-portrait');
         if (heroPortrait) heroPortrait.style.display = 'none';
         
-        // Hide joystick
+        // Hide joystick (correct IDs)
+        const joystickContainer = document.getElementById('virtual-joystick-container');
+        if (joystickContainer) joystickContainer.style.display = 'none';
+        
+        // Also try the old ID just in case
         const joystick = document.getElementById('virtual-joystick');
         if (joystick) joystick.style.display = 'none';
         

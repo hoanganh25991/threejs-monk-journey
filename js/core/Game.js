@@ -249,6 +249,11 @@ export class Game {
         // Start background music
         this.audioManager.playMusic();
         
+        // Make sure all HUD elements are visible
+        if (this.hudManager) {
+            this.hudManager.showAllUI();
+        }
+        
         // Dispatch event that game has started
         this.dispatchEvent('gameStateChanged', 'running');
         
