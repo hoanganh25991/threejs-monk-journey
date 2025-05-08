@@ -104,7 +104,17 @@ export class MiniMapUI extends UIComponent {
         this.ctx.clip();
         
         // Draw background
-        this.ctx.fillStyle = 'rgba(17, 17, 17, 0.6)'; // Semi-transparent dark background
+        this.ctx.fillStyle = 'rgba(10, 10, 15, 0.75)'; // Darker, more opaque background
+        this.ctx.fillRect(0, 0, this.mapSize, this.mapSize);
+        
+        // Add a subtle radial gradient for depth
+        const gradient = this.ctx.createRadialGradient(
+            centerX, centerY, radius * 0.1,
+            centerX, centerY, radius
+        );
+        gradient.addColorStop(0, 'rgba(30, 30, 40, 0.1)');
+        gradient.addColorStop(1, 'rgba(5, 5, 10, 0.3)');
+        this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.mapSize, this.mapSize);
         
         // Draw grid lines for reference
@@ -117,27 +127,50 @@ export class MiniMapUI extends UIComponent {
         this.drawEntities(playerX, playerY, centerX, centerY);
         
         // Draw player (always in center)
-        this.ctx.fillStyle = '#00ff00';
+        // First draw a white halo/glow effect
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        this.ctx.beginPath();
+        this.ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Draw player marker
+        this.ctx.fillStyle = '#00ff00'; // Bright green
         this.ctx.beginPath();
         this.ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
         this.ctx.fill();
         
+        // Add a white border to make it pop
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+        this.ctx.stroke();
+        
         // Draw player direction indicator
         const playerRotation = player.getRotation().y;
         this.ctx.strokeStyle = '#00ff00';
+        this.ctx.lineWidth = 2;
         this.ctx.beginPath();
         this.ctx.moveTo(centerX, centerY);
         this.ctx.lineTo(
-            centerX + Math.sin(playerRotation) * 8,
-            centerY + Math.cos(playerRotation) * 8
+            centerX + Math.sin(playerRotation) * 10,
+            centerY + Math.cos(playerRotation) * 10
         );
         this.ctx.stroke();
         
         // Restore context and draw border
         this.ctx.restore();
         
-        // Draw circular border
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        // Draw circular border with gradient
+        const borderGradient = this.ctx.createLinearGradient(
+            centerX - radius, centerY - radius,
+            centerX + radius, centerY + radius
+        );
+        borderGradient.addColorStop(0, 'rgba(100, 100, 180, 0.7)');
+        borderGradient.addColorStop(0.5, 'rgba(200, 200, 255, 0.7)');
+        borderGradient.addColorStop(1, 'rgba(100, 100, 180, 0.7)');
+        
+        this.ctx.strokeStyle = borderGradient;
         this.ctx.lineWidth = 2;
         this.ctx.beginPath();
         this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
@@ -154,18 +187,26 @@ export class MiniMapUI extends UIComponent {
      * @param {number} radius - Radius of the mini map
      */
     drawGrid(centerX, centerY, radius) {
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        // More subtle grid lines
+        this.ctx.strokeStyle = 'rgba(100, 100, 150, 0.08)';
         this.ctx.lineWidth = 1;
         
         // Draw concentric circles
-        for (let r = radius / 3; r <= radius; r += radius / 3) {
+        for (let r = radius / 4; r <= radius; r += radius / 4) {
             this.ctx.beginPath();
             this.ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
             this.ctx.stroke();
         }
         
         // Draw radial lines
-        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
+        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            // Make cardinal directions slightly more visible
+            if (angle % (Math.PI/2) < 0.01) {
+                this.ctx.strokeStyle = 'rgba(100, 100, 150, 0.15)';
+            } else {
+                this.ctx.strokeStyle = 'rgba(100, 100, 150, 0.08)';
+            }
+            
             this.ctx.beginPath();
             this.ctx.moveTo(centerX, centerY);
             this.ctx.lineTo(
@@ -183,8 +224,11 @@ export class MiniMapUI extends UIComponent {
      * @param {number} radius - Radius of the mini map
      */
     drawCardinalDirections(centerX, centerY, radius) {
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        this.ctx.font = '12px Arial';
+        // Create a glow effect for the text
+        this.ctx.shadowColor = 'rgba(100, 100, 255, 0.8)';
+        this.ctx.shadowBlur = 4;
+        this.ctx.fillStyle = 'rgba(220, 220, 255, 0.9)';
+        this.ctx.font = 'bold 12px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         
@@ -199,6 +243,9 @@ export class MiniMapUI extends UIComponent {
         
         // West
         this.ctx.fillText('W', centerX - radius + 10, centerY);
+        
+        // Reset shadow
+        this.ctx.shadowBlur = 0;
     }
     
     /**
@@ -431,16 +478,20 @@ export class MiniMapUI extends UIComponent {
             // Only draw if within circular mini map bounds
             if (distFromCenter <= (this.mapSize / 2 - 2)) {
                 // Determine color based on entity type
-                let color = 'rgba(255, 255, 255, 0.8)'; // Default white
+                let color = 'rgba(255, 255, 255, 0.5)'; // Default white, more transparent
                 let size = 2;
+                let strokeColor = null;
                 
                 if (entity.isEnemy) {
-                    color = 'rgba(255, 0, 0, 0.8)'; // Red for enemies
-                    size = 3; // Slightly larger for enemies
+                    // Darker red with less opacity for enemies
+                    color = 'rgba(180, 0, 0, 0.6)'; 
+                    strokeColor = 'rgba(220, 0, 0, 0.7)';
+                    size = 4; // Larger for enemies
                 } else if (entity.isNPC) {
-                    color = 'rgba(255, 255, 0, 0.8)'; // Yellow for NPCs
+                    color = 'rgba(200, 200, 0, 0.6)'; // Darker yellow for NPCs
+                    strokeColor = 'rgba(255, 255, 0, 0.7)';
                 } else if (entity.isItem) {
-                    color = 'rgba(0, 255, 255, 0.8)'; // Cyan for items
+                    color = 'rgba(0, 180, 180, 0.6)'; // Darker cyan for items
                 }
                 
                 // Draw entity dot
@@ -449,9 +500,18 @@ export class MiniMapUI extends UIComponent {
                 this.ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
                 this.ctx.fill();
                 
-                // Draw a small pulse effect for important entities
-                if (entity.isEnemy || entity.isNPC) {
-                    this.ctx.strokeStyle = color;
+                // Draw a circle outline for enemies
+                if (entity.isEnemy) {
+                    this.ctx.strokeStyle = strokeColor || color;
+                    this.ctx.lineWidth = 1.5;
+                    this.ctx.beginPath();
+                    this.ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                }
+                
+                // Draw a small pulse effect for NPCs only
+                if (entity.isNPC && strokeColor) {
+                    this.ctx.strokeStyle = strokeColor;
                     this.ctx.lineWidth = 1;
                     this.ctx.beginPath();
                     this.ctx.arc(screenX, screenY, size + 2, 0, Math.PI * 2);
