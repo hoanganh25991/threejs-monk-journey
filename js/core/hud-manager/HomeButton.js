@@ -1,19 +1,19 @@
 /**
- * SettingsButton.js
- * Manages the settings button UI component
+ * HomeButton.js
+ * Manages the home button UI component
  */
 
-import { SettingsMenu } from '../menu-system/SettingsMenu.js';
+import { GameMenu } from '../menu-system/GameMenu.js';
 import { UIComponent } from '../UIComponent.js';
 
 export class HomeButton extends UIComponent {
     /**
-     * Create a settings button
+     * Create a home button
      * @param {Game} game - The game instance
      */
     constructor(game) {
         super('home-button', game);
-        this.settingsMenu = null;
+        this.gameMenu = null;
         
         this.init();
     }
@@ -50,23 +50,23 @@ export class HomeButton extends UIComponent {
      */
     setupEventListeners() {
         if (this.container) {
-            // Add click event to show settings menu
+            // Add click event to show game menu
             this.container.addEventListener('click', () => {
                 // Pause the game
                 this.game.pause();
                 
-                // Show the main background when opening settings
+                // Show the main background when opening game menu
                 if (this.game.uiManager && this.game.uiManager.mainBackground) {
                     this.game.uiManager.mainBackground.show();
                 }
                 
-                // Show settings menu
-                if (!this.settingsMenu) {
-                    this.settingsMenu = new SettingsMenu(this.game);
+                // Show game menu
+                if (!this.gameMenu) {
+                    this.gameMenu = new GameMenu(this.game);
                 }
-                this.settingsMenu.show(null, true);
+                this.gameMenu.show();
                 
-                console.log("Settings button clicked - game paused and settings menu opened");
+                console.log("Home button clicked - game paused and game menu opened");
             });
             
             // Add event listener to show/hide settings button based on game state
@@ -122,10 +122,10 @@ export class HomeButton extends UIComponent {
         // Call the parent class dispose method
         super.dispose();
         
-        if (this.settingsMenu) {
-            this.settingsMenu.dispose();
+        if (this.gameMenu) {
+            this.gameMenu.dispose();
         }
         
-        this.settingsMenu = null;
+        this.gameMenu = null;
     }
 }

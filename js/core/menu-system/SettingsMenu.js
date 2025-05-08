@@ -6,6 +6,7 @@
 import { ModelPreview } from './ModelPreview.js';
 import { CHARACTER_MODELS, MODEL_SIZE_MULTIPLIERS } from '../../config/index.js';
 import { UIComponent } from '../UIComponent.js';
+import { GameMenu } from './GameMenu.js';
 
 export class SettingsMenu extends UIComponent {
     /**
@@ -724,13 +725,11 @@ export class SettingsMenu extends UIComponent {
             this.backButton.addEventListener('click', () => {
                 this.hide();
                 
-                if (this.fromInGame) {
-                    // Resume the game if we came from in-game
-                    this.game.resume();
-                } else if (this.mainMenu) {
-                    // Return to main menu
-                    this.mainMenu.style.display = 'flex';
-                }
+                // Show the GameMenu instead of resuming the game
+                const gameMenu = new GameMenu(this.game);
+                gameMenu.show();
+                
+                console.log("Settings back button clicked - returning to game menu");
             });
         }
     }

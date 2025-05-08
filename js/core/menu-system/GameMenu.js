@@ -152,14 +152,7 @@ export class GameMenu {
             if (this.loadGameButton && this.game.saveManager) {
                 this.loadGameButton.style.display = this.game.saveManager.hasSaveData() ? 'block' : 'none';
             }
-            
-            // Update save game button visibility based on game state
-            if (this.saveGameButton) {
-                // Show save button only if the game has been started and player exists
-                const gameStarted = this.game.isRunning && this.game.player;
-                this.saveGameButton.style.display = gameStarted ? 'block' : 'none';
-            }
-            
+
             // Hide all HUD UI elements using the HUDManager
             if (this.game.hudManager) {
                 this.game.hudManager.hideAllUI();
