@@ -1012,10 +1012,13 @@ export class SettingsMenu extends UIComponent {
             mainMenu.style.display = 'none';
         }
         
-        // Hide all UI elements
+        // Hide all UI elements (HUD, joystick, skills, etc.)
         if (this.game.hudManager) {
             this.game.hudManager.hideAllUI();
         }
+        
+        // Hide specific HUD elements that might not be covered by hideAllUI
+        this.hideHUDElements();
         
         // Show the main background when opening settings
         if (this.game.uiManager && this.game.uiManager.mainBackground) {
@@ -1037,6 +1040,36 @@ export class SettingsMenu extends UIComponent {
                 this.resizeModelPreviewFullscreen();
             }, 100);
         }
+    }
+    
+    /**
+     * Hide HUD UI elements when settings menu is open
+     * @private
+     */
+    hideHUDElements() {
+        // Hide hero portrait
+        const heroPortrait = document.getElementById('player-portrait');
+        if (heroPortrait) heroPortrait.style.display = 'none';
+        
+        // Hide joystick
+        const joystick = document.getElementById('virtual-joystick');
+        if (joystick) joystick.style.display = 'none';
+        
+        // Hide skill buttons
+        const skillsContainer = document.getElementById('skills-container');
+        if (skillsContainer) skillsContainer.style.display = 'none';
+        
+        // Hide mobile buttons
+        const mobileButtons = document.getElementById('mobile-buttons');
+        if (mobileButtons) mobileButtons.style.display = 'none';
+        
+        // Hide player stats
+        const playerStats = document.getElementById('player-stats-container');
+        if (playerStats) playerStats.style.display = 'none';
+        
+        // Hide enemy info
+        const enemyInfo = document.getElementById('enemy-info-container');
+        if (enemyInfo) enemyInfo.style.display = 'none';
     }
     
     /**

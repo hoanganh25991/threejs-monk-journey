@@ -114,6 +114,9 @@ export class GameMenu {
                 this.loadGameButton.style.display = this.game.saveManager.hasSaveData() ? 'block' : 'none';
             }
             
+            // Hide all HUD UI elements
+            this.hideHUDElements();
+            
             // Show the main background when showing the game menu
             if (this.game.uiManager && this.game.uiManager.mainBackground) {
                 this.game.uiManager.mainBackground.show();
@@ -122,6 +125,41 @@ export class GameMenu {
             // Make sure the menu is visible
             this.element.style.display = 'flex';
         }
+    }
+    
+    /**
+     * Hide HUD UI elements when game menu is open
+     * @private
+     */
+    hideHUDElements() {
+        // Hide all UI elements if HUD manager is available
+        if (this.game.hudManager) {
+            this.game.hudManager.hideAllUI();
+        }
+        
+        // Hide hero portrait
+        const heroPortrait = document.getElementById('player-portrait');
+        if (heroPortrait) heroPortrait.style.display = 'none';
+        
+        // Hide joystick
+        const joystick = document.getElementById('virtual-joystick');
+        if (joystick) joystick.style.display = 'none';
+        
+        // Hide skill buttons
+        const skillsContainer = document.getElementById('skills-container');
+        if (skillsContainer) skillsContainer.style.display = 'none';
+        
+        // Hide mobile buttons
+        const mobileButtons = document.getElementById('mobile-buttons');
+        if (mobileButtons) mobileButtons.style.display = 'none';
+        
+        // Hide player stats
+        const playerStats = document.getElementById('player-stats-container');
+        if (playerStats) playerStats.style.display = 'none';
+        
+        // Hide enemy info
+        const enemyInfo = document.getElementById('enemy-info-container');
+        if (enemyInfo) enemyInfo.style.display = 'none';
     }
 
     /**

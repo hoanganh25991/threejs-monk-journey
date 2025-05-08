@@ -394,6 +394,20 @@ export class HUDManager {
         
         const mobileButtons = document.getElementById('mobile-buttons');
         if (mobileButtons) mobileButtons.style.display = 'block';
+        
+        // Show hero portrait
+        const heroPortrait = document.getElementById('player-portrait');
+        if (heroPortrait) heroPortrait.style.display = 'block';
+        
+        // Show any other HUD elements that might need to be visible
+        const healthBar = document.getElementById('health-bar');
+        if (healthBar) healthBar.style.display = 'block';
+        
+        const manaBar = document.getElementById('mana-bar');
+        if (manaBar) manaBar.style.display = 'block';
+        
+        const experienceBar = document.getElementById('experience-bar');
+        if (experienceBar) experienceBar.style.display = 'block';
     }
     
     createPlayerUI() {
