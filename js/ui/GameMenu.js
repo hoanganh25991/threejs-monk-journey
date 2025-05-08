@@ -15,6 +15,7 @@ export class GameMenu {
         this.element = document.getElementById('game-menu');
         this.newGameButton = document.getElementById('new-game-button');
         this.loadGameButton = document.getElementById('load-game-button');
+        this.saveGameButton = document.getElementById('save-game-button');
         this.settingsMenuButton = document.getElementById('settings-menu-button');
         this.settingsMenu = null;
         
@@ -112,6 +113,34 @@ export class GameMenu {
                 this.loadGameButton.style.display = 'none';
             }
         }
+        
+        // Save Game button - show only if game is running
+        if (this.saveGameButton) {
+            this.saveGameButton.addEventListener('click', () => {
+                console.log("Save Game button clicked - attempting to save game...");
+                if (this.game.saveManager) {
+                    // Force save the game
+                    if (this.game.saveManager.saveGame(true)) {
+                        console.log("Game data saved successfully");
+                        
+                        // Show notification
+                        if (this.game.uiManager) {
+                            this.game.uiManager.showNotification('Game saved successfully', 2000, 'success');
+                        }
+                    } else {
+                        console.error("Failed to save game data");
+                        
+                        // Show error notification
+                        if (this.game.uiManager) {
+                            this.game.uiManager.showNotification('Failed to save game', 3000, 'error');
+                        }
+                    }
+                } else {
+                    console.error("Save manager not available");
+                    alert('Save functionality is not available.');
+                }
+            });
+        }
     }
 
     /**
@@ -122,6 +151,13 @@ export class GameMenu {
             // Update load game button visibility based on save data
             if (this.loadGameButton && this.game.saveManager) {
                 this.loadGameButton.style.display = this.game.saveManager.hasSaveData() ? 'block' : 'none';
+            }
+            
+            // Update save game button visibility based on game state
+            if (this.saveGameButton) {
+                // Show save button only if the game has been started and player exists
+                const gameStarted = this.game.isRunning && this.game.player;
+                this.saveGameButton.style.display = gameStarted ? 'block' : 'none';
             }
             
             // Hide all HUD UI elements using the HUDManager
