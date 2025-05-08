@@ -18,6 +18,7 @@ export class MiniMapUI extends UIComponent {
     constructor(game) {
         super('mini-map-container', game);
         this.mapElement = null;
+        this.headerElement = null;
         this.canvas = null;
         this.ctx = null;
         this.mapSize = 200; // Size of the mini map in pixels
@@ -35,9 +36,9 @@ export class MiniMapUI extends UIComponent {
      */
     init() {
         const template = `
-            <div id="mini-map-header" class="mini-map-header">
-                Mini Map
-                <button id="mini-map-toggle-btn" class="mini-map-toggle-btn">Toggle</button>
+            <div class="mini-map-header-container">
+                <span id="mini-map-title">Mini Map</span>
+                <button id="mini-map-toggle-btn" class="mini-map-toggle-btn" type="button">Toggle</button>
             </div>
             <div id="mini-map">
                 <canvas id="mini-map-canvas" width="${this.canvasSize}" height="${this.canvasSize}"></canvas>
@@ -54,9 +55,15 @@ export class MiniMapUI extends UIComponent {
         
         // Add event listener to the toggle button
         const toggleButton = document.getElementById('mini-map-toggle-btn');
-        toggleButton.addEventListener('click', () => {
-            this.toggleMiniMap();
-        });
+        if (toggleButton) {
+            console.log('Adding click event listener to mini-map toggle button');
+            toggleButton.addEventListener('click', (e) => {
+                console.log('Mini-map toggle button clicked');
+                this.toggleMiniMap();
+            });
+        } else {
+            console.error('Mini-map toggle button element not found');
+        }
         
         // Set exact dimensions for both container and canvas
         this.mapElement.style.width = `${this.mapSize}px`;

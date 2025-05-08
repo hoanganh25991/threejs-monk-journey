@@ -432,26 +432,27 @@
     right: 20px;
     color: white;
     z-index: 100;
+    pointer-events: auto; /* Ensure clicks are registered */
 }
 
-#mini-map-header {
-    font-size: 14px;
-    font-weight: bold;
-    margin-bottom: 5px;
-    text-align: center;
-    background-color: rgba(0, 0, 0, 0.6);
-    padding: 5px 10px;
-    border-radius: 10px;
-    transition: background-color 0.2s;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-bottom: none;
+.mini-map-header-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 5px;
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 5px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-bottom: none;
+    color: white;
+    pointer-events: auto;
+    z-index: 101; /* Ensure it's above other elements */
 }
 
-#mini-map-header:hover {
-    background-color: rgba(0, 0, 0, 0.8);
+#mini-map-title {
+    font-size: 14px;
+    font-weight: bold;
 }
 
 .mini-map-toggle-btn {
