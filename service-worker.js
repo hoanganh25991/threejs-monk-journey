@@ -5,12 +5,12 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '17'; // Incremented version to force update
+const CACHE_VERSION = '18'; // Incremented version to force update
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 2346331;
-const TOTAL_CACHE_SIZE_MB = 2.24;
+const TOTAL_CACHE_SIZE_BYTES = 10387526;
+const TOTAL_CACHE_SIZE_MB = 9.91;
 
 // Communication channel
 let messagePort = null;
@@ -164,6 +164,9 @@ const ASSETS_TO_CACHE = [
   'assets/audio/wind_dissipate.mp3',
   'assets/audio/wind_pull.mp3',
   'assets/images/background.jpg',
+  'assets/models/monk-v3.glb',
+  'assets/models/monk.glb',
+  'assets/models/songoku.glb',
   'pwa/orientation-lock.js',
   'pwa/registration.js'
 ];
