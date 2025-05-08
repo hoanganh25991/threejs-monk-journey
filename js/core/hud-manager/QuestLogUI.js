@@ -20,7 +20,7 @@ export class QuestLogUI extends UIComponent {
      */
     init() {
         const template = `
-            <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Active Quests</div>
+            <div class="quest-title">Active Quests</div>
             <div id="quest-list"></div>
         `;
         
@@ -29,17 +29,6 @@ export class QuestLogUI extends UIComponent {
         
         // Store references to elements we need to update
         this.questList = document.getElementById('quest-list');
-        
-        // Set styles for quest log
-        this.container.style.position = 'absolute';
-        this.container.style.top = '20px';
-        this.container.style.right = '20px';
-        this.container.style.width = '250px';
-        this.container.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        this.container.style.color = 'white';
-        this.container.style.padding = '10px';
-        this.container.style.borderRadius = '5px';
-        this.container.style.zIndex = '100';
         
         return true;
     }
@@ -55,7 +44,7 @@ export class QuestLogUI extends UIComponent {
         if (activeQuests.length === 0) {
             // No active quests
             const noQuests = document.createElement('div');
-            noQuests.style.fontStyle = 'italic';
+            noQuests.className = 'no-quests';
             noQuests.textContent = 'No active quests';
             this.questList.appendChild(noQuests);
         } else {
@@ -63,9 +52,9 @@ export class QuestLogUI extends UIComponent {
             activeQuests.forEach(quest => {
                 // Create quest item HTML
                 const questHTML = `
-                    <div style="margin-bottom: 10px;">
-                        <div style="font-weight: bold; color: ${quest.isMainQuest ? '#ffcc00' : 'white'};">${quest.name}</div>
-                        <div style="font-size: 14px;">${this.formatObjective(quest.objective)}</div>
+                    <div class="quest-item">
+                        <div class="quest-name ${quest.isMainQuest ? 'main-quest' : ''}">${quest.name}</div>
+                        <div class="quest-objective">${this.formatObjective(quest.objective)}</div>
                     </div>
                 `;
                 
