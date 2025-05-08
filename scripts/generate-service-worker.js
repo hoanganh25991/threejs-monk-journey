@@ -24,7 +24,7 @@ const directoriesToScan = [
 const fileExtensions = [
   '.html', '.css', '.js', '.json', 
   '.png', '.jpg', '.jpeg', '.svg', '.ico',
-  '.mp3', '.wav', '.ogg'
+  '.mp3', '.wav', '.ogg', ".glb"
 ];
 
 // Files to always include
