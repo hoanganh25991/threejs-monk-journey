@@ -128,17 +128,23 @@ export class LoadingScreen {
                 console.log(`Loading completed in ${loadTime}s`);
             }
             
-            // Hide immediately - we were delaying this which caused the stuck screen
+            // Hide immediately - no delay to prevent stuck screen
             this.element.style.display = 'none';
             console.log('Loading screen hidden');
+            
+            // Force a repaint to ensure the loading screen is actually hidden
+            document.body.offsetHeight;
             
             // Double-check that the loading screen is actually hidden
             setTimeout(() => {
                 if (this.element && window.getComputedStyle(this.element).display !== 'none') {
                     console.warn('Loading screen still visible after hide() call, forcing hide');
                     this.element.style.display = 'none';
+                    
+                    // Force another repaint
+                    document.body.offsetHeight;
                 }
-            }, 100);
+            }, 50);
         } else {
             console.warn('Loading screen element not found when trying to hide');
         }
@@ -153,6 +159,18 @@ export class LoadingScreen {
                 console.error('Error removing initial loading indicator:', error);
             }
         }
+        
+        // Make sure the game menu is visible
+        setTimeout(() => {
+            const gameMenu = document.getElementById('game-menu');
+            if (gameMenu && gameMenu.style.display !== 'flex') {
+                console.log('Forcing game menu to be visible');
+                gameMenu.style.display = 'flex';
+                
+                // Force a repaint
+                document.body.offsetHeight;
+            }
+        }, 100);
     }
 
     /**

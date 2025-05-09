@@ -37,10 +37,6 @@ function startGame() {
     game.init().then(() => {
         console.log("Game initialized successfully - game is in paused state");
         
-        // Hide loading screen when game is initialized
-        console.log("Hiding loading screen...");
-        loadingScreen.hide();
-        
         // Make sure the game is paused
         console.log("Pausing game...");
         game.pause();
@@ -48,6 +44,10 @@ function startGame() {
         // Show game menu - game will remain paused until user clicks "New Game" or "Load Game"
         console.log("Creating game menu...");
         const gameMenu = new GameMenu(game);
+        
+        // Hide loading screen when game is initialized
+        console.log("Hiding loading screen...");
+        loadingScreen.hide();
         
         // Force a small delay to ensure DOM updates have completed
         setTimeout(() => {
@@ -58,8 +58,17 @@ function startGame() {
             const menuElement = document.getElementById('game-menu');
             console.log("Game menu element display style:", menuElement ? menuElement.style.display : "Element not found");
             
+            // Force the menu to be visible if it's not already
+            if (menuElement && menuElement.style.display !== 'flex') {
+                console.log("Forcing game menu to be visible");
+                menuElement.style.display = 'flex';
+                
+                // Force a repaint
+                document.body.offsetHeight;
+            }
+            
             console.log("Game menu displayed - waiting for user input to start game");
-        }, 100);
+        }, 200);
     }).catch(error => {
         console.error("Error initializing game:", error);
     });
