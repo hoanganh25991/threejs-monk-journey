@@ -5,7 +5,6 @@
 
 import { Game } from './core/game/Game.js';
 import { DEFAULT_CHARACTER_MODEL } from './config/index.js';
-import { LoadingScreen } from './core/menu-system/LoadingScreen.js';
 import { GameMenu } from './core/menu-system/GameMenu.js';
 
 // Store the selected model and size for use when starting a new game
@@ -14,19 +13,13 @@ window.selectedModelId = DEFAULT_CHARACTER_MODEL;
 window.selectedSizeMultiplier = 1.0;
 
 // Initialize the game when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(startGame, 300);
-});
+document.addEventListener('DOMContentLoaded', startGame);
 
 /**
  * Initialize and start the game
  */
 function startGame() {
     console.log("DOM loaded, initializing game...");
-    
-    // Create loading screen
-    const loadingScreen = new LoadingScreen();
-    loadingScreen.show();
     
     // Initialize the game using the GameFacade
     const game = new Game();
@@ -44,10 +37,6 @@ function startGame() {
         // Show game menu - game will remain paused until user clicks "New Game" or "Load Game"
         console.log("Creating game menu...");
         const gameMenu = new GameMenu(game);
-        
-        // Hide loading screen when game is initialized
-        console.log("Hiding loading screen...");
-        loadingScreen.hide();
         
         // Force a small delay to ensure DOM updates have completed
         setTimeout(() => {

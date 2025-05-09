@@ -29,27 +29,13 @@ export class LoadingScreen {
         this.loadingText = document.getElementById('loading-text');
         this.loadingInfo = document.getElementById('loading-info');
         
-        // If not, create them
-        if (!this.loadingText && this.element) {
-            this.loadingText = document.createElement('p');
-            this.loadingText.id = 'loading-text';
-            this.loadingText.style.fontSize = '14px';
-            this.loadingText.style.color = '#ccc';
-            this.loadingText.style.margin = '10px 0';
-            this.loadingText.textContent = 'Loading game assets...';
-            this.element.appendChild(this.loadingText);
+        // If not, log error
+        if (!this.loadingText) {
+            console.error('Loading text element not found');
         }
         
-        if (!this.loadingInfo && this.element) {
-            this.loadingInfo = document.createElement('p');
-            this.loadingInfo.id = 'loading-info';
-            this.loadingInfo.style.fontSize = '12px';
-            this.loadingInfo.style.color = '#999';
-            this.loadingInfo.style.margin = '5px 0';
-            this.loadingInfo.style.maxWidth = '80%';
-            this.loadingInfo.style.textAlign = 'center';
-            this.loadingInfo.textContent = 'Initializing game engine...';
-            this.element.appendChild(this.loadingInfo);
+        if (!this.loadingInfo) {
+            console.error('Loading info element not found');
         }
     }
 
@@ -90,6 +76,7 @@ export class LoadingScreen {
             }
             
             // Start tracking loading progress
+            console.log('Using resource-based progress tracking');
             this.trackLoadingProgress();
             
             // Make sure the game menu is hidden while loading
@@ -266,6 +253,13 @@ export class LoadingScreen {
      * @param {string} detail - Detailed information
      */
     updateProgress(percent, status, detail) {
+        // Clear any existing interval
+        if (this.intervalId) {
+            console.log('Received external progress update, clearing interval');
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+        
         // Update loading bar
         if (this.loadingBar) {
             this.loadingBar.style.width = `${percent}%`;
@@ -283,12 +277,6 @@ export class LoadingScreen {
         
         // Store progress
         this.totalProgress = percent;
-        
-        // If we're at 100%, clear any running interval
-        if (percent >= 100 && this.intervalId) {
-            clearInterval(this.intervalId);
-            this.intervalId = null;
-        }
     }
 
     /**

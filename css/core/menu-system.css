@@ -326,6 +326,21 @@
     transition: width 0.3s;
 }
 
+/* Loading Text and Info Elements */
+#loading-text {
+    font-size: 14px;
+    color: #ccc;
+    margin: 10px 0;
+}
+
+#loading-info {
+    font-size: 12px;
+    color: #999;
+    margin: 5px 0;
+    max-width: 80%;
+    text-align: center;
+}
+
 /* Menu Buttons - Monk Style Ghibli */
 .menu-button {
     background-color: rgba(255, 204, 0, 0.7);
