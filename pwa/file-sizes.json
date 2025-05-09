@@ -1,0 +1,66 @@
+{
+  "totalSizeBytes": 10416407,
+  "totalSizeMB": "9.93",
+  "totalFiles": 156,
+  "fileSizes": {
+    "index.html": 46832,
+    "css/animations.css": 34661,
+    "js/config/index.js": 962903,
+    "images/logo-192.png": 544413,
+    "assets/audio/ally_dismiss.mp3": 786426,
+    "assets/models/monk-v3.glb": 8041172
+  },
+  "fileCategories": {
+    "other": [
+      "index.html"
+    ],
+    "css": [
+      "css/animations.css"
+    ],
+    "js": [
+      "js/config/index.js"
+    ],
+    "images": [
+      "images/logo-192.png"
+    ],
+    "audio": [
+      "assets/audio/ally_dismiss.mp3"
+    ],
+    "models": [
+      "assets/models/monk-v3.glb"
+    ]
+  },
+  "categorySizes": {
+    "other": {
+      "count": 4,
+      "sizeBytes": 46832,
+      "sizeMB": "0.04"
+    },
+    "css": {
+      "count": 12,
+      "sizeBytes": 34661,
+      "sizeMB": "0.03"
+    },
+    "js": {
+      "count": 92,
+      "sizeBytes": 962903,
+      "sizeMB": "0.92"
+    },
+    "images": {
+      "count": 5,
+      "sizeBytes": 544413,
+      "sizeMB": "0.52"
+    },
+    "audio": {
+      "count": 40,
+      "sizeBytes": 786426,
+      "sizeMB": "0.75"
+    },
+    "models": {
+      "count": 3,
+      "sizeBytes": 8041172,
+      "sizeMB": "7.67"
+    }
+  },
+  "generatedAt": "2025-05-09T14:19:03.115Z"
+}

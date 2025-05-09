@@ -18,7 +18,6 @@ import { LoadingScreen } from './LoadingScreen.js';
     let totalFilesSize = 0;
     let loadedBytes = 0;
     let fileCategories = [];
-    let currentFileIndex = 0;
     let filesData = null;
     
     // Initialize loading indicator
@@ -39,120 +38,51 @@ import { LoadingScreen } from './LoadingScreen.js';
                 trackProgressWithFileSize();
             })
             .catch(error => {
-                console.warn('Could not get file sizes from service worker:', error);
-                // Fall back to simulated progress
-                trackProgressSimulated();
+                console.error('Could not get file sizes from service worker:', error);
+                // Do nothing as we don't have info to handle
             });
     }
     
     /**
-     * Fetch file sizes from the service worker
-     * @returns {Promise} Resolves when file sizes are loaded
+     * Fetch total file size from the JSON file
+     * @returns {Promise} Resolves when total file size is loaded
      */
     function fetchFileSizesFromServiceWorker() {
         return new Promise((resolve, reject) => {
-            // Check if we already have file sizes in window object (from service worker)
-            if (window.FILE_SIZES && Object.keys(window.FILE_SIZES).length > 0) {
-                console.log('Using file sizes from window.FILE_SIZES');
-                filesData = window.FILE_SIZES;
-                setupFileCategories();
-                resolve();
-                return;
-            }
-            
-            // Try to fetch the service worker file to extract file sizes
-            fetch('../service-worker.js')
+            // Try to fetch the file sizes JSON file
+            fetch('pwa/file-sizes.json')
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error(`Failed to fetch service worker: ${response.status}`);
+                        throw new Error(`Failed to fetch file sizes: ${response.status}`);
                     }
-                    return response.text();
+                    return response.json();
                 })
-                .then(text => {
-                    // Extract FILE_SIZES object from service worker
-                    const fileSizesMatch = text.match(/const FILE_SIZES = ({[\s\S]*?});/);
-                    if (fileSizesMatch && fileSizesMatch[1]) {
-                        try {
-                            // Parse the FILE_SIZES object
-                            // Need to clean up the string first (remove indentation)
-                            const cleanJson = fileSizesMatch[1].replace(/^\s+/gm, '');
-                            filesData = JSON.parse(cleanJson);
-                            console.log(`Extracted file sizes for ${Object.keys(filesData).length} files`);
-                            
-                            // Also try to get total cache size
-                            const totalSizeMatch = text.match(/const TOTAL_CACHE_SIZE_BYTES = (\d+);/);
-                            if (totalSizeMatch && totalSizeMatch[1]) {
-                                totalFilesSize = parseInt(totalSizeMatch[1], 10);
-                                console.log(`Total cache size: ${formatFileSize(totalFilesSize)}`);
-                            } else {
-                                // Calculate total size from file sizes
-                                totalFilesSize = Object.values(filesData).reduce((sum, size) => sum + size, 0);
-                                console.log(`Calculated total size: ${formatFileSize(totalFilesSize)}`);
-                            }
-                            
-                            // Setup file categories
-                            setupFileCategories();
-                            resolve();
-                        } catch (error) {
-                            console.error('Error parsing FILE_SIZES from service worker:', error);
-                            reject(error);
+                .then(data => {
+                    try {
+                        // Get total cache size - this is the only value we need
+                        totalFilesSize = data.totalSizeBytes;
+                        console.log(`Total cache size: ${formatFileSize(totalFilesSize)} (${data.totalFiles || 0} files)`);
+                        
+                        // Log category sizes if available (for information only)
+                        if (data.categorySizes) {
+                            console.log('File categories:');
+                            Object.entries(data.categorySizes).forEach(([category, info]) => {
+                                console.log(`- ${category}: ${info.count} files, ${info.sizeMB} MB`);
+                            });
                         }
-                    } else {
-                        reject(new Error('Could not find FILE_SIZES in service worker'));
+                        
+                        // We don't need file categories or file sizes anymore
+                        // The network observer will track actual downloads
+                        resolve();
+                    } catch (error) {
+                        console.error('Error processing file sizes JSON:', error);
+                        reject(error);
                     }
                 })
-                .catch(reject);
-        });
-    }
-    
-    /**
-     * Setup file categories for more realistic loading simulation
-     */
-    function setupFileCategories() {
-        if (!filesData) return;
-        
-        // Group files by type/category
-        const categories = {
-            models: [],
-            images: [],
-            audio: [],
-            js: [],
-            css: [],
-            other: []
-        };
-        
-        // Categorize files
-        Object.entries(filesData).forEach(([path, size]) => {
-            if (path.includes('.glb')) {
-                categories.models.push({ path, size });
-            } else if (path.includes('.jpg') || path.includes('.png') || path.includes('.svg')) {
-                categories.images.push({ path, size });
-            } else if (path.includes('.mp3') || path.includes('.wav') || path.includes('.ogg')) {
-                categories.audio.push({ path, size });
-            } else if (path.includes('.js')) {
-                categories.js.push({ path, size });
-            } else if (path.includes('.css')) {
-                categories.css.push({ path, size });
-            } else {
-                categories.other.push({ path, size });
-            }
-        });
-        
-        // Create a loading sequence that feels natural
-        // Usually JS and CSS load first, then images, then models and audio
-        fileCategories = [
-            { name: 'Core Files', files: categories.other, loadingSpeed: 500000 }, // Fast loading for small files
-            { name: 'JavaScript', files: categories.js, loadingSpeed: 300000 },    // ~300KB/s
-            { name: 'Stylesheets', files: categories.css, loadingSpeed: 400000 },  // ~400KB/s
-            { name: 'Images', files: categories.images, loadingSpeed: 200000 },    // ~200KB/s
-            { name: 'Audio', files: categories.audio, loadingSpeed: 150000 },      // ~150KB/s
-            { name: 'Models', files: categories.models, loadingSpeed: 100000 }     // ~100KB/s (3D models are large)
-        ];
-        
-        // Log category sizes
-        fileCategories.forEach(category => {
-            const categorySize = category.files.reduce((sum, file) => sum + file.size, 0);
-            console.log(`${category.name}: ${category.files.length} files, ${formatFileSize(categorySize)}`);
+                .catch(error => {
+                    console.error('Error fetching file sizes JSON:', error);
+                    reject(error);
+                });
         });
     }
     
@@ -170,95 +100,144 @@ import { LoadingScreen } from './LoadingScreen.js';
     }
     
     /**
-     * Track loading progress based on file sizes
+     * Track loading progress based on actual network activity
+     * Uses file sizes from file-sizes.json only for the total expected download size
+     * All file tracking is based on actual network events
      */
     function trackProgressWithFileSize() {
-        if (!filesData || !fileCategories || fileCategories.length === 0) {
-            console.warn('No file data available, falling back to simulated progress');
-            trackProgressSimulated();
+        if (!totalFilesSize) {
+            console.error('No total file size available, cannot track progress');
             return;
         }
         
-        console.log('Starting file-size based progress tracking');
+        console.log('Starting pure network progress tracking');
         
-        let currentCategory = 0;
-        let currentFile = 0;
-        let categoryLoadedBytes = 0;
-        let lastUpdateTime = Date.now();
+        // Initialize tracking variables
+        let downloadedResources = new Map(); // Map to track downloaded resources
+        let lastProgressUpdate = Date.now();
+        let progressUpdateInterval = null;
         
-        const progressInterval = setInterval(() => {
-            const now = Date.now();
-            const deltaTime = now - lastUpdateTime;
-            lastUpdateTime = now;
+        // Function to determine file category based on extension
+        function getFileCategory(url) {
+            const ext = url.split('.').pop().toLowerCase();
             
-            // Get current category
-            const category = fileCategories[currentCategory];
-            if (!category) {
-                // All categories completed
-                finishLoading(progressInterval);
-                return;
-            }
+            if (['glb', 'gltf'].includes(ext)) return 'Models';
+            if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'ico'].includes(ext)) return 'Images';
+            if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) return 'Audio';
+            if (ext === 'js') return 'JavaScript';
+            if (ext === 'css') return 'Stylesheets';
+            if (ext === 'html') return 'HTML';
+            if (ext === 'json') return 'Data';
+            return 'Resources';
+        }
+        
+        // Function to update the progress display
+        function updateProgressDisplay() {
+            // Calculate total downloaded bytes
+            loadedBytes = Array.from(downloadedResources.values()).reduce((sum, size) => sum + size, 0);
             
-            // Get current file in category
-            const file = category.files[currentFile];
-            if (!file) {
-                // Category completed, move to next
-                currentCategory++;
-                currentFile = 0;
-                categoryLoadedBytes = 0;
-                
-                // Check if we've completed all categories
-                if (currentCategory >= fileCategories.length) {
-                    finishLoading(progressInterval);
-                    return;
-                }
-                
-                // Continue with next category
-                return;
-            }
+            // Calculate progress percentage
+            const progress = Math.min(Math.floor((loadedBytes / totalFilesSize) * 100), 100);
             
-            // Calculate how many bytes to load in this update
-            const bytesToLoad = Math.min(
-                Math.floor(category.loadingSpeed * (deltaTime / 1000)), // Bytes per second * fraction of second
-                file.size - categoryLoadedBytes // Remaining bytes in file
-            );
+            // Get the most recently downloaded file for display
+            const lastDownloadedFile = downloadedResources.size > 0 ? 
+                Array.from(downloadedResources.keys())[downloadedResources.size - 1] : '';
             
-            // Update loaded bytes
-            categoryLoadedBytes += bytesToLoad;
-            loadedBytes += bytesToLoad;
-            
-            // Check if file is complete
-            if (categoryLoadedBytes >= file.size) {
-                // Move to next file
-                currentFile++;
-                categoryLoadedBytes = 0;
-            }
-            
-            // Calculate overall progress percentage
-            const progress = Math.min(Math.floor((loadedBytes / totalFilesSize) * 100), 99);
-            
-            // Get current file name for display
-            const currentFileName = file.path.split('/').pop();
-            const categoryName = category.name;
+            // Get the file name and category
+            const fileName = lastDownloadedFile.split('/').pop();
+            const categoryName = getFileCategory(fileName);
             
             // Update loading screen
             loadingScreen.updateProgress(
                 progress,
                 `Loading resources... ${progress}% (${formatFileSize(loadedBytes)} / ${formatFileSize(totalFilesSize)})`,
-                `${categoryName}: ${currentFileName}`
+                `${categoryName}: ${fileName}`
             );
             
             // If window has loaded and we're at 99%, finish up
             if (windowLoaded && progress >= 99) {
-                finishLoading(progressInterval);
+                finishLoading(progressUpdateInterval);
             }
             
-        }, 100); // Update every 100ms
+            // Log progress every 5 seconds
+            const now = Date.now();
+            if (now - lastProgressUpdate > 5000) {
+                console.log(`Loading progress: ${progress}% (${formatFileSize(loadedBytes)} / ${formatFileSize(totalFilesSize)})`);
+                lastProgressUpdate = now;
+            }
+        }
+        
+        // Set up network request interception using Performance Observer
+        if (window.PerformanceObserver) {
+            try {
+                const observer = new PerformanceObserver((list) => {
+                    list.getEntries().forEach((entry) => {
+                        // Only process completed resource loads
+                        if (entry.entryType === 'resource') {
+                            const url = entry.name;
+                            const transferSize = entry.transferSize || 0;
+                            
+                            // Skip tracking for analytics, tracking pixels, etc.
+                            if (url.includes('analytics') || url.includes('tracking') || 
+                                url.includes('beacon') || url.includes('file-sizes.json')) {
+                                return;
+                            }
+                            
+                            // Extract the file name from the URL
+                            const fileName = url.split('/').pop();
+                            
+                            // Store the downloaded resource size
+                            if (transferSize > 0) {
+                                downloadedResources.set(url, transferSize);
+                                
+                                // Update progress display
+                                updateProgressDisplay();
+                                
+                                // Log detailed info for debugging
+                                console.debug(`Downloaded: ${fileName} (${formatFileSize(transferSize)})`);
+                            }
+                        }
+                    });
+                });
+                
+                // Observe resource timing entries
+                observer.observe({ entryTypes: ['resource'] });
+                console.log('Network performance observer started');
+            } catch (error) {
+                console.error('Error setting up PerformanceObserver:', error);
+            }
+        } else {
+            console.warn('PerformanceObserver not supported, cannot track network activity');
+            
+            // Show a basic loading message without progress percentage
+            loadingScreen.updateProgress(
+                10,
+                'Loading resources...',
+                'Please wait while the game loads'
+            );
+        }
+        
+        // Set up a regular interval to update progress display
+        // This ensures smooth updates even when network activity is sparse
+        progressUpdateInterval = setInterval(() => {
+            updateProgressDisplay();
+        }, 250); // Update every 250ms
         
         // Listen for window load event
         window.addEventListener('load', () => {
             console.log('Window load event fired');
             windowLoaded = true;
+            
+            // Force a final progress update
+            setTimeout(() => {
+                // If we've loaded at least 95% by this point, consider it complete
+                if ((loadedBytes / totalFilesSize) >= 0.95) {
+                    finishLoading(progressUpdateInterval);
+                } else {
+                    // Otherwise, give it a bit more time for any pending resources
+                    updateProgressDisplay();
+                }
+            }, 1000);
         });
         
         // Safety cleanup - hide our loading screen after a reasonable time
@@ -272,6 +251,7 @@ import { LoadingScreen } from './LoadingScreen.js';
     
     /**
      * Finish loading and show completion message
+     * Exposes loading screen to main.js for final initialization
      */
     function finishLoading(intervalId) {
         if (intervalId) {
@@ -280,130 +260,29 @@ import { LoadingScreen } from './LoadingScreen.js';
         
         const loadTime = ((Date.now() - loadingStartTime) / 1000).toFixed(1);
         
-        // Show initial completion message
+        // Show 100% completion message
         loadingScreen.updateProgress(
             100,
             `Assets loaded in ${loadTime}s (${formatFileSize(totalFilesSize)})`,
-            'Starting game engine (3s remaining)...'
+            'Initializing game engine...'
         );
         
-        // After 1.5 seconds, update to game.start() message
-        setTimeout(() => {
-            loadingScreen.updateProgress(
-                100,
-                `Assets loaded in ${loadTime}s (${formatFileSize(totalFilesSize)})`,
-                'Executing game.start() (1.5s remaining)...'
-            );
-            
-            // Hide loading screen after another 1.5 seconds
-            setTimeout(() => {
-                if (loadingScreen) {
-                    loadingScreen.hide();
-                }
-            }, 1500);
-        }, 1500);
+        // Expose loading screen instance to window so main.js can access it
+        window.gameLoadingScreen = loadingScreen;
+        
+        // Dispatch a custom event to notify main.js that assets are loaded
+        const assetsLoadedEvent = new CustomEvent('gameAssetsLoaded', {
+            detail: {
+                loadTime: loadTime,
+                totalSize: totalFilesSize
+            }
+        });
+        window.dispatchEvent(assetsLoadedEvent);
+        
+        console.log('Assets loaded, control passed to main.js');
     }
     
-    /**
-     * Fallback to simulated progress tracking (similar to original implementation)
-     */
-    function trackProgressSimulated() {
-        console.log('Using simulated progress tracking');
-        
-        let lastProgress = 5;
-        const ESTIMATED_LOADING_TIME = 20000; // 20 seconds
-        
-        const progressInterval = setInterval(() => {
-            // Calculate progress based on elapsed time
-            const elapsedTime = Date.now() - loadingStartTime;
-            let progress = Math.min((elapsedTime / ESTIMATED_LOADING_TIME) * 100, 99);
-            
-            // If window has loaded, go to 100%
-            if (windowLoaded) {
-                progress = 100;
-            }
-            
-            // Round progress
-            progress = Math.round(progress);
-            
-            // Only update if progress has changed
-            if (progress !== lastProgress) {
-                lastProgress = progress;
-                
-                // Determine loading info message based on progress
-                // All progress percentages here are for downloading files only
-                let infoMessage = 'Downloading game assets...';
-                let currentFile = '';
-                
-                if (progress < 20) {
-                    infoMessage = 'Downloading core game files...';
-                    currentFile = 'Loading essential files';
-                } else if (progress < 40) {
-                    infoMessage = 'Downloading game assets...';
-                    currentFile = 'Loading textures and models';
-                } else if (progress < 60) {
-                    infoMessage = 'Downloading game resources...';
-                    currentFile = 'Loading audio and visual assets';
-                } else if (progress < 80) {
-                    infoMessage = 'Downloading additional content...';
-                    currentFile = 'Preparing final assets';
-                } else if (progress < 99) {
-                    infoMessage = 'Download almost complete...';
-                    currentFile = 'Finalizing download';
-                } else if (progress >= 99 && progress < 100) {
-                    infoMessage = 'Initializing main.js...';
-                    currentFile = 'Setting up game environment';
-                } else {
-                    infoMessage = 'Starting game engine...';
-                    currentFile = 'Launching game.int';
-                }
-                
-                // Update loading screen
-                loadingScreen.updateProgress(
-                    progress,
-                    `Loading resources... ${progress}%`,
-                    `${infoMessage} (${currentFile})`
-                );
-                
-                // If we're at 100%, show completion message and clean up
-                if (progress >= 100) {
-                    clearInterval(progressInterval);
-                    
-                    const loadTime = ((Date.now() - loadingStartTime) / 1000).toFixed(1);
-                    
-                    // Show game initialization message
-                    loadingScreen.updateProgress(
-                        100,
-                        `Assets loaded in ${loadTime}s`,
-                        'Starting game engine (3s remaining)...'
-                    );
-                    
-                    // After 1.5 seconds, update to game.start() message
-                    setTimeout(() => {
-                        loadingScreen.updateProgress(
-                            100,
-                            `Assets loaded in ${loadTime}s`,
-                            'Executing game.start() (1.5s remaining)...'
-                        );
-                    }, 500);
-                }
-            }
-        }, 100);
-        
-        // Listen for window load event
-        window.addEventListener('load', () => {
-            console.log('Window load event fired');
-            windowLoaded = true;
-        });
-        
-        // Safety cleanup - hide our loading screen after a reasonable time
-        // This ensures we don't block the game if something goes wrong
-        setTimeout(() => {
-            if (loadingScreen) {
-                loadingScreen.hide();
-            }
-        }, 30000); // 30 seconds should be more than enough for initial loading
-    }
+    // trackProgressSimulated function has been removed
     
     // Start tracking as soon as possible
     // Use DOMContentLoaded to ensure the DOM is ready
