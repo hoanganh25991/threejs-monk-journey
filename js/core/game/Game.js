@@ -78,102 +78,169 @@ export class Game {
      * @returns {Promise<boolean>} True if initialization was successful
      */
     async init() {
-        // Initialize renderer with GPU acceleration options
-        this.renderer = new THREE.WebGLRenderer({
-            canvas: this.canvas,
-            antialias: true,
-            powerPreference: 'high-performance',
-            precision: 'highp',
-            stencil: false // Disable stencil buffer if not needed
-        });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Better shadow quality
-        this.renderer.outputColorSpace = THREE.SRGBColorSpace; // Correct color space
-        
-        // Initialize scene
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x87CEEB); // Light blue sky color
-        this.scene.fog = new THREE.FogExp2(0x87CEEB, 0.002); // Reduced fog density
-        
-        // Initialize camera
-        this.camera = new THREE.PerspectiveCamera(
-            75, 
-            window.innerWidth / window.innerHeight, 
-            0.1, 
-            1000
-        );
-        this.camera.position.set(0, 10, 20);
-        
-        // Initialize orbit controls (for development)
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.controls.enableDamping = true;
-        this.controls.dampingFactor = 0.05;
-        this.controls.maxPolarAngle = Math.PI / 2 - 0.1; // Prevent camera from going below ground
-        
-        // Initialize performance manager (before other systems)
-        this.performanceManager = new PerformanceManager(this);
-        this.performanceManager.init();
-        
-        // Initialize world
-        this.world = new WorldManager(this.scene, this.loadingManager);
-        this.world.setGame(this);
-        await this.world.init();
-        
-        // Initialize player
-        this.player = new Player(this.scene, this.camera, this.loadingManager);
-        this.player.setGame(this);
-        await this.player.init();
-        
-        // Apply selected model and size if available from main.js
-        if (window.selectedModelId) {
-            await this.player.model.setModel(window.selectedModelId);
+        try {
+            // Get reference to loading screen if available
+            this.loadingScreen = document.getElementById('loading-screen');
+            
+            // Update loading progress
+            this.updateLoadingProgress(5, 'Initializing renderer...', 'Setting up WebGL');
+            
+            // Initialize renderer with GPU acceleration options
+            this.renderer = new THREE.WebGLRenderer({
+                canvas: this.canvas,
+                antialias: true,
+                powerPreference: 'high-performance',
+                precision: 'highp',
+                stencil: false // Disable stencil buffer if not needed
+            });
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.setPixelRatio(window.devicePixelRatio);
+            this.renderer.shadowMap.enabled = true;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Better shadow quality
+            this.renderer.outputColorSpace = THREE.SRGBColorSpace; // Correct color space
+            
+            this.updateLoadingProgress(10, 'Creating game world...', 'Setting up scene');
+            
+            // Initialize scene
+            this.scene = new THREE.Scene();
+            this.scene.background = new THREE.Color(0x87CEEB); // Light blue sky color
+            this.scene.fog = new THREE.FogExp2(0x87CEEB, 0.002); // Reduced fog density
+            
+            // Initialize camera
+            this.camera = new THREE.PerspectiveCamera(
+                75, 
+                window.innerWidth / window.innerHeight, 
+                0.1, 
+                1000
+            );
+            this.camera.position.set(0, 10, 20);
+            
+            // Initialize orbit controls (for development)
+            this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+            this.controls.enableDamping = true;
+            this.controls.dampingFactor = 0.05;
+            this.controls.maxPolarAngle = Math.PI / 2 - 0.1; // Prevent camera from going below ground
+            
+            this.updateLoadingProgress(15, 'Optimizing performance...', 'Initializing performance manager');
+            
+            // Initialize performance manager (before other systems)
+            this.performanceManager = new PerformanceManager(this);
+            this.performanceManager.init();
+            
+            this.updateLoadingProgress(20, 'Building world...', 'Generating terrain and environment');
+            
+            // Initialize world
+            this.world = new WorldManager(this.scene, this.loadingManager);
+            this.world.setGame(this);
+            await this.world.init();
+            
+            this.updateLoadingProgress(40, 'Loading character...', 'Preparing player model and animations');
+            
+            // Initialize player
+            this.player = new Player(this.scene, this.camera, this.loadingManager);
+            this.player.setGame(this);
+            await this.player.init();
+            
+            // Apply selected model and size if available from main.js
+            if (window.selectedModelId) {
+                await this.player.model.setModel(window.selectedModelId);
+            }
+            if (window.selectedSizeMultiplier) {
+                this.player.model.setSizeMultiplier(window.selectedSizeMultiplier);
+            }
+            
+            // Ensure game reference is set after initialization
+            this.player.setGame(this);
+            
+            this.updateLoadingProgress(60, 'Setting up controls...', 'Initializing input handler');
+            
+            // Initialize input handler
+            this.inputHandler = new InputHandler(this);
+            
+            this.updateLoadingProgress(65, 'Creating user interface...', 'Building HUD elements');
+            
+            // Initialize UI manager
+            this.uiManager = new HUDManager(this);
+            await this.uiManager.init();
+            
+            this.updateLoadingProgress(75, 'Spawning enemies...', 'Initializing enemy AI and models');
+            
+            // Initialize enemy manager
+            this.enemyManager = new EnemyManager(this.scene, this.player, this.loadingManager);
+            this.enemyManager.setGame(this);
+            await this.enemyManager.init();
+            
+            this.updateLoadingProgress(80, 'Setting up physics...', 'Initializing collision detection');
+            
+            // Initialize collision manager
+            this.collisionManager = new CollisionManager(this.player, this.enemyManager, this.world);
+            
+            this.updateLoadingProgress(85, 'Loading quests...', 'Initializing quest system');
+            
+            // Initialize quest manager
+            this.questManager = new QuestManager(this);
+            
+            this.updateLoadingProgress(90, 'Loading audio...', 'Initializing sound effects and music');
+            
+            // Initialize audio manager
+            this.audioManager = new AudioManager(this);
+            await this.audioManager.init();
+            
+            this.updateLoadingProgress(95, 'Setting up save system...', 'Initializing game save functionality');
+            
+            // Initialize save manager
+            this.saveManager = new SaveManager(this);
+            await this.saveManager.init();
+            
+            this.updateLoadingProgress(98, 'Applying difficulty settings...', 'Finalizing game setup');
+            
+            // Initialize difficulty manager
+            this.difficultyManager = new DifficultyManager(this);
+            this.difficultyManager.applyDifficultySettings();
+            
+            this.updateLoadingProgress(100, 'Game ready!', 'Initialization complete');
+            
+            // Apply performance optimizations to the scene
+            SceneOptimizer.optimizeScene(this.scene);
+            
+            // Set up event listeners
+            this.setupEventListeners();
+            
+            return true;
+        } catch (error) {
+            console.error('Error initializing game:', error);
+            this.updateLoadingProgress(0, 'Error initializing game', error.message);
+            return false;
         }
-        if (window.selectedSizeMultiplier) {
-            this.player.model.setSizeMultiplier(window.selectedSizeMultiplier);
+    }
+    
+    /**
+     * Update loading progress in the loading screen
+     * @param {number} percent - Progress percentage (0-100)
+     * @param {string} status - Status message
+     * @param {string} detail - Detailed information
+     */
+    updateLoadingProgress(percent, status, detail) {
+        // Update loading bar
+        const loadingBar = document.getElementById('loading-bar');
+        if (loadingBar) {
+            loadingBar.style.width = `${percent}%`;
         }
         
-        // Ensure game reference is set after initialization
-        this.player.setGame(this);
+        // Update loading text
+        const loadingText = document.getElementById('loading-text');
+        if (loadingText && status) {
+            loadingText.textContent = status;
+        }
         
-        // Initialize input handler
-        this.inputHandler = new InputHandler(this);
+        // Update loading info
+        const loadingInfo = document.getElementById('loading-info');
+        if (loadingInfo && detail) {
+            loadingInfo.textContent = detail;
+        }
         
-        // Initialize UI manager
-        this.uiManager = new HUDManager(this);
-        await this.uiManager.init();
-        
-        // Initialize enemy manager
-        this.enemyManager = new EnemyManager(this.scene, this.player, this.loadingManager);
-        this.enemyManager.setGame(this);
-        await this.enemyManager.init();
-        
-        // Initialize collision manager
-        this.collisionManager = new CollisionManager(this.player, this.enemyManager, this.world);
-        
-        // Initialize quest manager
-        this.questManager = new QuestManager(this);
-        
-        // Initialize audio manager
-        this.audioManager = new AudioManager(this);
-        await this.audioManager.init();
-        
-        // Initialize save manager
-        this.saveManager = new SaveManager(this);
-        await this.saveManager.init();
-        
-        // Initialize difficulty manager
-        this.difficultyManager = new DifficultyManager(this);
-        this.difficultyManager.applyDifficultySettings();
-        
-        // Apply performance optimizations to the scene
-        SceneOptimizer.optimizeScene(this.scene);
-        
-        // Set up event listeners
-        this.setupEventListeners();
-        
-        return true;
+        // Log progress to console
+        console.log(`Loading progress: ${percent}% - ${status} - ${detail}`);
     }
     
     /**

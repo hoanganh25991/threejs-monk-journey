@@ -38,13 +38,28 @@ function startGame() {
         console.log("Game initialized successfully - game is in paused state");
         
         // Hide loading screen when game is initialized
+        console.log("Hiding loading screen...");
         loadingScreen.hide();
+        
+        // Make sure the game is paused
+        console.log("Pausing game...");
         game.pause();
         
         // Show game menu - game will remain paused until user clicks "New Game" or "Load Game"
+        console.log("Creating game menu...");
         const gameMenu = new GameMenu(game);
-        gameMenu.show();
-        console.log("Game menu displayed - waiting for user input to start game");
+        
+        // Force a small delay to ensure DOM updates have completed
+        setTimeout(() => {
+            console.log("Showing game menu...");
+            gameMenu.show();
+            
+            // Verify the menu is visible
+            const menuElement = document.getElementById('game-menu');
+            console.log("Game menu element display style:", menuElement ? menuElement.style.display : "Element not found");
+            
+            console.log("Game menu displayed - waiting for user input to start game");
+        }, 100);
     }).catch(error => {
         console.error("Error initializing game:", error);
     });
