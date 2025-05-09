@@ -355,7 +355,7 @@ import { LoadingScreen } from './LoadingScreen.js';
                     currentFile = 'Setting up game environment';
                 } else {
                     infoMessage = 'Starting game engine...';
-                    currentFile = 'Launching game.int()';
+                    currentFile = 'Launching game.int';
                 }
                 
                 // Update loading screen
@@ -385,7 +385,7 @@ import { LoadingScreen } from './LoadingScreen.js';
                             `Assets loaded in ${loadTime}s`,
                             'Executing game.start() (1.5s remaining)...'
                         );
-                    }, 1500);
+                    }, 500);
                 }
             }
         }, 100);
