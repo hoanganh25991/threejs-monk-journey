@@ -279,18 +279,29 @@ import { LoadingScreen } from './LoadingScreen.js';
         }
         
         const loadTime = ((Date.now() - loadingStartTime) / 1000).toFixed(1);
+        
+        // Show initial completion message
         loadingScreen.updateProgress(
             100,
-            `Loading complete in ${loadTime}s (${formatFileSize(totalFilesSize)})`,
-            'Initializing game...'
+            `Assets loaded in ${loadTime}s (${formatFileSize(totalFilesSize)})`,
+            'Starting game engine (3s remaining)...'
         );
         
-        // Hide loading screen after a short delay
+        // After 1.5 seconds, update to game.start() message
         setTimeout(() => {
-            if (loadingScreen) {
-                loadingScreen.hide();
-            }
-        }, 1000);
+            loadingScreen.updateProgress(
+                100,
+                `Assets loaded in ${loadTime}s (${formatFileSize(totalFilesSize)})`,
+                'Executing game.start() (1.5s remaining)...'
+            );
+            
+            // Hide loading screen after another 1.5 seconds
+            setTimeout(() => {
+                if (loadingScreen) {
+                    loadingScreen.hide();
+                }
+            }, 1500);
+        }, 1500);
     }
     
     /**
@@ -320,27 +331,38 @@ import { LoadingScreen } from './LoadingScreen.js';
                 lastProgress = progress;
                 
                 // Determine loading info message based on progress
+                // All progress percentages here are for downloading files only
                 let infoMessage = 'Downloading game assets...';
+                let currentFile = '';
                 
                 if (progress < 20) {
-                    infoMessage = 'Downloading game assets...';
+                    infoMessage = 'Downloading core game files...';
+                    currentFile = 'Loading essential files';
                 } else if (progress < 40) {
-                    infoMessage = 'Loading 3D models...';
+                    infoMessage = 'Downloading game assets...';
+                    currentFile = 'Loading textures and models';
                 } else if (progress < 60) {
-                    infoMessage = 'Preparing game world...';
+                    infoMessage = 'Downloading game resources...';
+                    currentFile = 'Loading audio and visual assets';
                 } else if (progress < 80) {
-                    infoMessage = 'Initializing game engine...';
-                } else if (progress < 100) {
-                    infoMessage = 'Almost ready...';
+                    infoMessage = 'Downloading additional content...';
+                    currentFile = 'Preparing final assets';
+                } else if (progress < 99) {
+                    infoMessage = 'Download almost complete...';
+                    currentFile = 'Finalizing download';
+                } else if (progress >= 99 && progress < 100) {
+                    infoMessage = 'Initializing main.js...';
+                    currentFile = 'Setting up game environment';
                 } else {
-                    infoMessage = 'Starting game...';
+                    infoMessage = 'Starting game engine...';
+                    currentFile = 'Launching game.int()';
                 }
                 
                 // Update loading screen
                 loadingScreen.updateProgress(
                     progress,
                     `Loading resources... ${progress}%`,
-                    infoMessage
+                    `${infoMessage} (${currentFile})`
                 );
                 
                 // If we're at 100%, show completion message and clean up
@@ -348,11 +370,22 @@ import { LoadingScreen } from './LoadingScreen.js';
                     clearInterval(progressInterval);
                     
                     const loadTime = ((Date.now() - loadingStartTime) / 1000).toFixed(1);
+                    
+                    // Show game initialization message
                     loadingScreen.updateProgress(
                         100,
-                        `Loading complete in ${loadTime}s`,
-                        'Initializing game...'
+                        `Assets loaded in ${loadTime}s`,
+                        'Starting game engine (3s remaining)...'
                     );
+                    
+                    // After 1.5 seconds, update to game.start() message
+                    setTimeout(() => {
+                        loadingScreen.updateProgress(
+                            100,
+                            `Assets loaded in ${loadTime}s`,
+                            'Executing game.start() (1.5s remaining)...'
+                        );
+                    }, 1500);
                 }
             }
         }, 100);
