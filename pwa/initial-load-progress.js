@@ -3,7 +3,7 @@
  * Loading progress indicator using LoadingScreen class
  */
 
-import { LoadingScreen } from '../js/core/menu-system/LoadingScreen.js';
+import { LoadingScreen } from './LoadingScreen.js';
 
 (function() {
     // State variables
