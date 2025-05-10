@@ -24,6 +24,9 @@
 /* Import performance manager styles */
 @import 'core/performance-manager.css';
 
+/* Import notifications styles */
+@import 'core/notifications.css';
+
 /* Import initial loading styles */
 @import 'initial-loading.css';
 

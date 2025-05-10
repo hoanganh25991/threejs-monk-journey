@@ -4,7 +4,7 @@
  */
 
 import { Game } from './core/game/Game.js';
-import { DEFAULT_CHARACTER_MODEL } from './config/index.js';
+import { DEFAULT_CHARACTER_MODEL } from './config/player-models.js';
 import { GameMenu } from './core/menu-system/GameMenu.js';
 import { LoadingScreen } from '../pwa/LoadingScreen.js';
 

@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { IPlayerModel } from './PlayerInterface.js';
 import { FallbackPlayerModel } from './FallbackPlayerModel.js';
-import { CHARACTER_MODELS, DEFAULT_CHARACTER_MODEL } from '../../config/index.js';
+import { CHARACTER_MODELS, DEFAULT_CHARACTER_MODEL } from '../../config/player-models.js';
 import * as AnimationUtils from '../../utils/AnimationUtils.js';
 
 export class PlayerModel extends IPlayerModel {

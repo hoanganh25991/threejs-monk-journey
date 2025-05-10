@@ -122,22 +122,8 @@ export class NotificationsUI extends UIComponent {
         
         // Create notification element
         const notification = document.createElement('div');
-        notification.style.position = 'absolute';
-        notification.style.top = '80px';
-        notification.style.left = '50%';
-        notification.style.transform = 'translateX(-50%)';
-        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        notification.style.color = 'white';
-        notification.style.padding = '6px 12px'; // Even smaller padding for compactness
-        notification.style.borderRadius = '5px';
-        notification.style.zIndex = '100';
-        notification.style.transition = 'opacity 0.3s, top 0.2s'; // Faster transitions
-        notification.style.fontSize = '13px'; // Smaller font size for compactness
-        notification.style.maxWidth = '80%'; // Limit width
-        notification.style.textAlign = 'center'; // Center text
-        notification.style.overflow = 'hidden'; // Prevent text overflow
-        notification.style.textOverflow = 'ellipsis'; // Add ellipsis for long text
-        notification.style.whiteSpace = 'nowrap'; // Keep text on one line
+        notification.className = 'notification-item';
+        notification.style.top = '80px'; // Initial position, will be adjusted later
         notification.textContent = message;
         
         // Add notification to container
@@ -162,8 +148,8 @@ export class NotificationsUI extends UIComponent {
         }
         
         // Add to notifications array with dynamic lifetime based on message rate
-        const lifetime = messageRate > 3 ? 1.5 : 2.5; // Shorter lifetime when messages come quickly
-        
+        const lifetime = messageRate > 3 ? 0.7 : 1.5; // Shorter lifetime when messages come quickly
+
         this.notifications.push({
             element: notification,
             lifetime: lifetime,
@@ -313,201 +299,27 @@ export class NotificationsUI extends UIComponent {
     }
     
     /**
-     * Update damage numbers
-     * @param {number} delta - Time since last update in seconds
-     */
-    updateDamageNumbers(delta) {
-        // Update existing damage numbers
-        for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
-            const damageNumber = this.damageNumbers[i];
-            
-            // Update lifetime
-            damageNumber.lifetime -= 1 / 60;
-            
-            // Remove expired damage numbers
-            if (damageNumber.lifetime <= 0) {
-                damageNumber.element.remove();
-                this.damageNumbers.splice(i, 1);
-            } else {
-                // Update opacity for fade out
-                if (damageNumber.lifetime < 0.5) {
-                    damageNumber.element.style.opacity = damageNumber.lifetime * 2;
-                }
-                
-                // Update position for float up
-                const currentTop = parseInt(damageNumber.element.style.top);
-                damageNumber.element.style.top = `${currentTop - 1}px`;
-            }
-        }
-    }
-    
-    /**
-     * Create a bleeding effect at the given position
-     * @param {number} amount - Damage amount
-     * @param {Object} position - 3D position {x, y, z}
-     * @param {boolean} isPlayerDamage - Whether the damage was caused by the player
-     */
-    createBleedingEffect(amount, position, isPlayerDamage = false) {
-        // Only show damage particles for player-caused damage
-        if (!isPlayerDamage) return;
-        
-        // Convert 3D position to screen position
-        const vector = position.clone();
-        vector.project(this.game.camera);
-        
-        const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-        const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
-        
-        // Create blood particle container
-        const particleContainer = document.createElement('div');
-        particleContainer.style.position = 'absolute';
-        particleContainer.style.top = `${y}px`;
-        particleContainer.style.left = `${x}px`;
-        particleContainer.style.width = '0';
-        particleContainer.style.height = '0';
-        particleContainer.style.zIndex = '100';
-        
-        // Determine particle count and color based on damage amount
-        const minParticles = 3;
-        const maxParticles = 15;
-        const particleCount = Math.min(maxParticles, minParticles + Math.floor(amount / 10));
-        
-        // Determine color based on damage amount
-        // Higher damage = brighter/more intense red
-        let baseColor;
-        if (amount < 10) {
-            baseColor = [120, 0, 0]; // Dark red for low damage
-        } else if (amount < 30) {
-            baseColor = [180, 0, 0]; // Medium red
-        } else if (amount < 50) {
-            baseColor = [220, 0, 0]; // Bright red
-        } else {
-            baseColor = [255, 30, 30]; // Intense red with slight glow for high damage
-        }
-        
-        // Create blood particles
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            
-            // Randomize particle size based on damage
-            const minSize = 3;
-            const maxSize = 8 + (amount / 20); // Larger particles for higher damage
-            const size = minSize + Math.random() * (maxSize - minSize);
-            
-            // Randomize particle color slightly
-            const colorVariation = 30; // Amount of random variation
-            const r = Math.max(0, Math.min(255, baseColor[0] + (Math.random() * colorVariation - colorVariation/2)));
-            const g = Math.max(0, Math.min(255, baseColor[1] + (Math.random() * colorVariation - colorVariation/2)));
-            const b = Math.max(0, Math.min(255, baseColor[2] + (Math.random() * colorVariation - colorVariation/2)));
-            
-            // Set particle styles
-            particle.style.position = 'absolute';
-            particle.style.width = `${size}px`;
-            particle.style.height = `${size}px`;
-            particle.style.borderRadius = '50%';
-            particle.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-            particle.style.boxShadow = `0 0 ${size/2}px rgba(${r}, ${g}, ${b}, 0.7)`;
-            
-            // Randomize particle position
-            const spread = 30 + (amount / 5); // Higher damage = wider spread
-            const posX = (Math.random() * spread * 2) - spread;
-            const posY = (Math.random() * spread * 2) - spread;
-            particle.style.transform = `translate(${posX}px, ${posY}px)`;
-            
-            // Add animation for particle
-            const duration = 0.5 + (Math.random() * 1);
-            particle.style.transition = `all ${duration}s ease-out`;
-            
-            // Add particle to container
-            particleContainer.appendChild(particle);
-            
-            // Animate particle after a small delay
-            setTimeout(() => {
-                // Move particle outward
-                const distance = 20 + (Math.random() * 40);
-                const angle = Math.random() * Math.PI * 2;
-                const endX = posX + Math.cos(angle) * distance;
-                const endY = posY + Math.sin(angle) * distance;
-                
-                // Apply gravity effect
-                const gravity = 20 + (Math.random() * 30);
-                
-                // Update particle position and fade out
-                particle.style.transform = `translate(${endX}px, ${endY + gravity}px)`;
-                particle.style.opacity = '0';
-            }, 10);
-        }
-        
-        // Add particle container to UI
-        this.container.appendChild(particleContainer);
-        
-        // Add to damage numbers array for cleanup
-        this.damageNumbers.push({
-            element: particleContainer,
-            lifetime: 2.0 // Slightly longer lifetime for particles
-        });
-        
-        // For very high damage, add a brief screen flash effect
-        if (amount > 40) {
-            const flash = document.createElement('div');
-            flash.style.position = 'absolute';
-            flash.style.top = '0';
-            flash.style.left = '0';
-            flash.style.width = '100%';
-            flash.style.height = '100%';
-            flash.style.backgroundColor = 'rgba(255, 0, 0, 0.15)';
-            flash.style.pointerEvents = 'none';
-            flash.style.zIndex = '90';
-            flash.style.transition = 'opacity 0.5s';
-            
-            this.container.appendChild(flash);
-            
-            // Fade out and remove after a short time
-            setTimeout(() => {
-                flash.style.opacity = '0';
-                setTimeout(() => {
-                    flash.remove();
-                }, 500);
-            }, 100);
-        }
-    }
-    
-    /**
      * Show level up animation
      * @param {number} level - New level
      */
     showLevelUp(level) {
-        // Create level up element
-        const levelUp = document.createElement('div');
-        levelUp.style.position = 'absolute';
-        levelUp.style.top = '50%';
-        levelUp.style.left = '50%';
-        levelUp.style.transform = 'translate(-50%, -50%)';
-        levelUp.style.color = '#ffcc00';
-        levelUp.style.fontSize = '48px';
-        levelUp.style.fontWeight = 'bold';
-        levelUp.style.textShadow = '0 0 10px #ff6600';
-        levelUp.style.zIndex = '100';
-        levelUp.textContent = `Level Up! ${level}`;
+        // Get the level up container and level elements
+        const levelUpContainer = document.getElementById('level-up-container');
+        const levelElement = levelUpContainer.querySelector('.level-up-level');
         
-        // Add level up to container
-        this.container.appendChild(levelUp);
+        // Set the level text
+        levelElement.textContent = level;
         
-        // Animate level up
-        let scale = 1;
-        const animation = setInterval(() => {
-            scale += 0.05;
-            levelUp.style.transform = `translate(-50%, -50%) scale(${scale})`;
-            levelUp.style.opacity = 2 - scale;
-            
-            if (scale >= 2) {
-                clearInterval(animation);
-                levelUp.remove();
-            }
-        }, 50);
+        // Show the level up animation
+        levelUpContainer.classList.remove('hidden');
         
-        // Show notification
-        this.showNotification(`Level Up! You are now level ${level}`);
+        // Hide the level up container after animation completes (0.7s)
+        setTimeout(() => {
+            levelUpContainer.classList.add('hidden');
+        }, 700);
+        
+        // Show notification (bypassing the queue)
+        this.displayNotification(`Level Up! You are now level ${level}`);
     }
     
     /**

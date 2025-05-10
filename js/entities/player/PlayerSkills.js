@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { Skill } from '../skills/Skill.js';
 import { IPlayerSkills } from './PlayerInterface.js';
 import { SkillEffectFactory } from '../skills/SkillEffectFactory.js';
-import { SKILLS } from '../../config/index.js';
+import { SKILLS } from '../../config/skills.js';
 
 export class PlayerSkills extends IPlayerSkills {
     constructor(scene, playerStats, playerPosition, playerRotation) {
@@ -252,12 +252,10 @@ export class PlayerSkills extends IPlayerSkills {
             // Add skill effect to scene
             this.scene.add(skillEffect);
             
-            // Show notification if an enemy was auto-targeted
-            if (targetEnemy && this.game && this.game.uiManager) {
-                this.game.uiManager.showNotification(`Auto-targeting ${targetEnemy.type} with ${skillTemplate.name}`);
-            }
+            // Log enemy was auto-targeted
+            console.log(`Auto-targeting ${targetEnemy.type} with ${skillTemplate.name}`);
         }
-        
+
         // Sound is now handled by the skill itself in createEffect method
         
         // Add to active skills

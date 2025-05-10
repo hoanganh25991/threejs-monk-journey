@@ -4,7 +4,7 @@
  */
 
 import { ModelPreview } from './ModelPreview.js';
-import { CHARACTER_MODELS, MODEL_SIZE_MULTIPLIERS } from '../../config/index.js';
+import { CHARACTER_MODELS } from '../../config/player-models.js';
 import { UIComponent } from '../UIComponent.js';
 import { GameMenu } from './GameMenu.js';
 
