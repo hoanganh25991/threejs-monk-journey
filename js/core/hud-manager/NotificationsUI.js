@@ -309,14 +309,6 @@ export class NotificationsUI extends UIComponent {
         
         // Show the level up animation
         levelUpContainer.classList.remove('hidden');
-        
-        // Hide the level up container after animation completes (0.7s)
-        setTimeout(() => {
-            levelUpContainer.classList.add('hidden');
-        }, 700);
-        
-        // Show notification (bypassing the queue)
-        this.displayNotification(`Level Up! You are now level ${level}`);
     }
     
     /**

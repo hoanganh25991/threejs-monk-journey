@@ -75,9 +75,14 @@ export class PlayerStats extends IPlayerStats {
         this.experience += amount;
         
         // Check for level up
+        let levelChanged = false;
         while (this.experience >= this.experienceToNextLevel) {
             this.levelUp();
+            levelChanged = true;
         }
+        
+        // Return the current level if a level up occurred, otherwise return 0
+        return levelChanged ? this.level : 0;
     }
     
     levelUp() {
