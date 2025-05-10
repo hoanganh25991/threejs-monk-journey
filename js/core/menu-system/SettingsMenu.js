@@ -61,6 +61,10 @@ export class SettingsMenu extends UIComponent {
         this.audioDisabledMessage = document.getElementById('audio-disabled-message');
         this.simulatedAudioNote = document.getElementById('simulated-audio-note');
         
+        // Release settings elements
+        this.updateToLatestButton = document.getElementById('update-to-latest-button');
+        this.currentVersionSpan = document.getElementById('current-version');
+        
         // Back button
         this.backButton = document.getElementById('settings-back-button');
         
@@ -165,6 +169,9 @@ export class SettingsMenu extends UIComponent {
         
         // Initialize audio settings
         this.initializeAudioSettings();
+        
+        // Initialize release settings
+        this.initializeReleaseSettings();
         
         // Set up back button
         this.setupBackButton();
@@ -800,6 +807,68 @@ export class SettingsMenu extends UIComponent {
             if (this.game.uiManager && this.game.uiManager.mainBackground) {
                 this.game.uiManager.mainBackground.hide();
             }
+        }
+    }
+
+    /**
+     * Initialize release settings
+     * @private
+     */
+    initializeReleaseSettings() {
+        // Set current version
+        if (this.currentVersionSpan) {
+            // You can update this with your actual version tracking logic
+            this.currentVersionSpan.textContent = '1.0.0';
+        }
+        
+        // Set up update to latest button
+        if (this.updateToLatestButton) {
+            this.updateToLatestButton.addEventListener('click', () => {
+                console.log("Update to latest button clicked - performing hard reload...");
+                
+                // Show notification before reload
+                if (this.game.uiManager) {
+                    this.game.uiManager.showNotification('Updating to latest version...', 1500, 'info');
+                }
+                
+                // Unregister service worker to ensure clean reload
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        for (let registration of registrations) {
+                            registration.unregister();
+                            console.log('Service worker unregistered');
+                        }
+                        
+                        // Clear caches to ensure fresh content
+                        if ('caches' in window) {
+                            caches.keys().then(cacheNames => {
+                                return Promise.all(
+                                    cacheNames.map(cacheName => {
+                                        console.log(`Deleting cache: ${cacheName}`);
+                                        return caches.delete(cacheName);
+                                    })
+                                );
+                            }).then(() => {
+                                console.log('All caches cleared');
+                                // Reload the page after a short delay
+                                setTimeout(() => {
+                                    window.location.reload(true);
+                                }, 500);
+                            });
+                        } else {
+                            // If caches API is not available, just reload
+                            setTimeout(() => {
+                                window.location.reload(true);
+                            }, 500);
+                        }
+                    });
+                } else {
+                    // If service worker is not supported, just do a hard reload
+                    setTimeout(() => {
+                        window.location.reload(true);
+                    }, 500);
+                }
+            });
         }
     }
 

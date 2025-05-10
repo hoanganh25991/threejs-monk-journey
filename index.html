@@ -136,7 +136,6 @@
             <button id="load-game-button" class="menu-button">Load Game</button>
             <button id="save-game-button" class="menu-button">Save Game</button>
             <button id="settings-menu-button" class="menu-button">Settings</button>
-            <button id="force-reload-button" class="menu-button">Force Reload</button>
         </div>
     </div>
 
@@ -153,6 +152,7 @@
                 <button id="tab-audio" class="tab-button">Audio</button>
                 <button id="tab-controls" class="tab-button">Controls</button>
                 <button id="tab-model-preview" class="tab-button">Model Preview</button>
+                <button id="tab-release" class="tab-button">Release</button>
                 <!-- More tabs can be added here -->
             </div>
 
@@ -318,6 +318,20 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Release Tab -->
+                <div id="release-tab" class="tab-content">
+                    <h2 id="release-title">Release Settings</h2>
+                    <div class="settings-section">
+                        <div class="setting-item">
+                            <p>Update the game to the latest version, clearing the cache and reloading all assets.</p>
+                            <button id="update-to-latest-button" class="menu-button">Update to latest</button>
+                        </div>
+                        <div class="setting-item">
+                            <p>Current version: <span id="current-version">1.0.0</span></p>
                         </div>
                     </div>
                 </div>

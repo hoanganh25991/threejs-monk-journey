@@ -17,7 +17,6 @@ export class GameMenu {
         this.loadGameButton = document.getElementById('load-game-button');
         this.saveGameButton = document.getElementById('save-game-button');
         this.settingsMenuButton = document.getElementById('settings-menu-button');
-        this.forceReloadButton = document.getElementById('force-reload-button');
         this.settingsMenu = null;
         
         this.setupEventListeners();
@@ -165,55 +164,7 @@ export class GameMenu {
             });
         }
         
-        // Force Reload button - performs a hard reload like Ctrl+Shift+R
-        if (this.forceReloadButton) {
-            this.forceReloadButton.addEventListener('click', () => {
-                console.log("Force Reload button clicked - performing hard reload...");
-                
-                // Show notification before reload
-                if (this.game.uiManager) {
-                    this.game.uiManager.showNotification('Performing hard reload...', 1500, 'info');
-                }
-                
-                // Unregister service worker to ensure clean reload
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then(registrations => {
-                        for (let registration of registrations) {
-                            registration.unregister();
-                            console.log('Service worker unregistered');
-                        }
-                        
-                        // Clear caches to ensure fresh content
-                        if ('caches' in window) {
-                            caches.keys().then(cacheNames => {
-                                return Promise.all(
-                                    cacheNames.map(cacheName => {
-                                        console.log(`Deleting cache: ${cacheName}`);
-                                        return caches.delete(cacheName);
-                                    })
-                                );
-                            }).then(() => {
-                                console.log('All caches cleared');
-                                // Reload the page after a short delay
-                                setTimeout(() => {
-                                    window.location.reload(true);
-                                }, 500);
-                            });
-                        } else {
-                            // If caches API is not available, just reload
-                            setTimeout(() => {
-                                window.location.reload(true);
-                            }, 500);
-                        }
-                    });
-                } else {
-                    // If service worker is not supported, just do a hard reload
-                    setTimeout(() => {
-                        window.location.reload(true);
-                    }, 500);
-                }
-            });
-        }
+        // Force Reload button has been moved to Settings > Release tab
     }
 
     /**
