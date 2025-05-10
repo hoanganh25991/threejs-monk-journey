@@ -90,9 +90,6 @@ export class NotificationsUI extends UIComponent {
     update(delta) {
         // Update notifications
         this.updateNotifications(delta);
-        
-        // Update damage numbers
-        this.updateDamageNumbers(delta);
     }
     
     /**
