@@ -19,7 +19,7 @@ export class PerformanceManager {
         this.consecutiveHighFPSCount = 0;
         
         // FPS multiplier for display
-        this.fpsDisplayMultiplier = 1.5; // Display FPS at 1.5x the actual value
+        this.fpsDisplayMultiplier = 1.0; // Display actual FPS value
         
         // Standard width for all indicators
         this.standardIndicatorWidth = '100px';
