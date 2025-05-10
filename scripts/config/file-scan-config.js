@@ -36,6 +36,7 @@ const excludeFiles = [
   'progress',
   'scripts',
   'fuctional-requirement',
+  'file-tracker.js',
   'file-sizes.json', // Exclude the output file itself
 ];
 

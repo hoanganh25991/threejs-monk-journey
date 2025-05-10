@@ -76,6 +76,12 @@ class FileTracker {
         // Track last log time
         this.lastLogTime = Date.now();
         
+        // Store the performance observer instance
+        this.performanceObserver = null;
+        
+        // Store the update interval
+        this.updateInterval = null;
+        
         // Initialize tracking as soon as possible
         this.initTracking();
     }
@@ -98,7 +104,7 @@ class FileTracker {
             this.fetchFileSizesData();
             
             // Set up a regular interval to update the UI
-            setInterval(() => this.updateUI(), 500);
+            this.updateInterval = setInterval(() => this.updateUI(), 500);
         }
     }
     
@@ -171,7 +177,7 @@ class FileTracker {
     setupNetworkObserver() {
         if (window.PerformanceObserver) {
             try {
-                const observer = new PerformanceObserver((list) => {
+                this.performanceObserver = new PerformanceObserver((list) => {
                     list.getEntries().forEach((entry) => {
                         // Only process completed resource loads
                         if (entry.entryType === 'resource') {
@@ -181,7 +187,7 @@ class FileTracker {
                 });
                 
                 // Observe resource timing entries
-                observer.observe({ entryTypes: ['resource'] });
+                this.performanceObserver.observe({ entryTypes: ['resource'] });
                 console.debug('Network performance observer started');
             } catch (error) {
                 console.error('Error setting up PerformanceObserver:', error);
@@ -189,6 +195,38 @@ class FileTracker {
         } else {
             console.warn('PerformanceObserver not supported, cannot track network activity');
         }
+    }
+    
+    /**
+     * Disconnect the network observer to stop tracking
+     * This helps improve performance once the game is loaded
+     * Called from main.js when game is initialized
+     */
+    disconnectNetworkObserver() {
+        if (this.performanceObserver) {
+            try {
+                this.performanceObserver.disconnect();
+                this.performanceObserver = null;
+                console.debug('🚀 Network performance observer disconnected to improve game performance');
+                
+                // Clear any intervals we might have
+                if (this.updateInterval) {
+                    clearInterval(this.updateInterval);
+                    this.updateInterval = null;
+                }
+                
+                // Update UI to show we're no longer tracking
+                if (this.loadingInfoElement) {
+                    this.loadingInfoElement.textContent = 'Network tracking stopped - Game initialized';
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error disconnecting PerformanceObserver:', error);
+                return false;
+            }
+        }
+        return false;
     }
     
     /**
@@ -398,6 +436,17 @@ class FileTracker {
             (allTotalFiles > this.totalFiles * 1.2) ||
             (document.readyState === 'complete' && now - this.startTime > 5000);
             
+        // Check if we should disconnect the observer even if not fully loaded
+        // This helps improve performance as soon as most assets are loaded
+        const shouldDisconnectObserver = 
+            (this.totalFiles > 0 && knownTotalFiles >= this.totalFiles * 0.9) || 
+            (document.readyState === 'complete' && now - this.startTime > 3000);
+            
+        if (shouldDisconnectObserver && this.performanceObserver) {
+            // Disconnect the observer to improve performance
+            this.disconnectNetworkObserver();
+        }
+            
         if (loadingComplete) {
             // If window has loaded, finish up
             if (document.readyState === 'complete') {
@@ -413,6 +462,15 @@ class FileTracker {
         // Only run once
         if (window.fileTrackerFinished) return;
         window.fileTrackerFinished = true;
+        
+        // Disconnect the network observer to improve game performance
+        this.disconnectNetworkObserver();
+        
+        // Clear the update interval if it wasn't cleared by disconnectNetworkObserver
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+            this.updateInterval = null;
+        }
         
         const loadTime = ((Date.now() - this.startTime) / 1000).toFixed(1);
         

@@ -1,7 +1,7 @@
 {
-  "totalSizeBytes": 2897155,
-  "totalSizeMB": "2.76",
-  "totalFiles": 155,
+  "totalSizeBytes": 2911033,
+  "totalSizeMB": "2.78",
+  "totalFiles": 154,
   "fileSizes": {
     "animations.css": {
       "size": 1036,
@@ -16,7 +16,7 @@
       "category": "css"
     },
     "layout.css": {
-      "size": 2162,
+      "size": 2311,
       "category": "css"
     },
     "loading-screen.css": {
@@ -24,7 +24,7 @@
       "category": "css"
     },
     "menu-system.css": {
-      "size": 10699,
+      "size": 11041,
       "category": "css"
     },
     "notifications.css": {
@@ -64,11 +64,11 @@
       "category": "js"
     },
     "AudioManager.js": {
-      "size": 32107,
+      "size": 32121,
       "category": "js"
     },
     "CollisionManager.js": {
-      "size": 12055,
+      "size": 12853,
       "category": "js"
     },
     "DifficultyManager.js": {
@@ -76,11 +76,11 @@
       "category": "js"
     },
     "InputHandler.js": {
-      "size": 23183,
+      "size": 23211,
       "category": "js"
     },
     "PerformanceManager.js": {
-      "size": 41903,
+      "size": 41928,
       "category": "js"
     },
     "QuestManager.js": {
@@ -92,11 +92,11 @@
       "category": "js"
     },
     "EffectsManager.js": {
-      "size": 2573,
+      "size": 3066,
       "category": "js"
     },
     "Game.js": {
-      "size": 16262,
+      "size": 17249,
       "category": "js"
     },
     "GameEvents.js": {
@@ -112,7 +112,7 @@
       "category": "js"
     },
     "SceneOptimizer.js": {
-      "size": 4562,
+      "size": 4564,
       "category": "js"
     },
     "DeathScreenUI.js": {
@@ -120,7 +120,7 @@
       "category": "js"
     },
     "DialogUI.js": {
-      "size": 1909,
+      "size": 2200,
       "category": "js"
     },
     "EnemyUI.js": {
@@ -128,11 +128,11 @@
       "category": "js"
     },
     "HUDManager.js": {
-      "size": 11066,
+      "size": 11068,
       "category": "js"
     },
     "HomeButton.js": {
-      "size": 3824,
+      "size": 3828,
       "category": "js"
     },
     "InventoryUI.js": {
@@ -140,7 +140,7 @@
       "category": "js"
     },
     "MiniMapUI.js": {
-      "size": 24436,
+      "size": 29053,
       "category": "js"
     },
     "NotificationsUI.js": {
@@ -164,7 +164,7 @@
       "category": "js"
     },
     "GameMenu.js": {
-      "size": 11443,
+      "size": 9172,
       "category": "js"
     },
     "MainBackground.js": {
@@ -172,11 +172,11 @@
       "category": "js"
     },
     "ModelPreview.js": {
-      "size": 15507,
+      "size": 16737,
       "category": "js"
     },
     "SettingsMenu.js": {
-      "size": 33476,
+      "size": 37406,
       "category": "js"
     },
     "ISaveSystem.js": {
@@ -192,15 +192,15 @@
       "category": "js"
     },
     "SaveManager.js": {
-      "size": 27248,
+      "size": 28868,
       "category": "js"
     },
     "PlayerSerializer.js": {
-      "size": 4899,
+      "size": 4913,
       "category": "js"
     },
     "QuestSerializer.js": {
-      "size": 3781,
+      "size": 3791,
       "category": "js"
     },
     "SettingsSerializer.js": {
@@ -208,7 +208,7 @@
       "category": "js"
     },
     "WorldSerializer.js": {
-      "size": 14922,
+      "size": 14946,
       "category": "js"
     },
     "SaveOperationProgress.js": {
@@ -216,7 +216,7 @@
       "category": "js"
     },
     "SaveUtils.js": {
-      "size": 2284,
+      "size": 2286,
       "category": "js"
     },
     "Enemy.js": {
@@ -232,11 +232,11 @@
       "category": "js"
     },
     "Player.js": {
-      "size": 10707,
+      "size": 10709,
       "category": "js"
     },
     "PlayerCombat.js": {
-      "size": 14388,
+      "size": 14394,
       "category": "js"
     },
     "PlayerInterface.js": {
@@ -248,15 +248,15 @@
       "category": "js"
     },
     "PlayerModel.js": {
-      "size": 55028,
+      "size": 55066,
       "category": "js"
     },
     "PlayerMovement.js": {
-      "size": 8796,
+      "size": 8229,
       "category": "js"
     },
     "PlayerSkills.js": {
-      "size": 16374,
+      "size": 16586,
       "category": "js"
     },
     "PlayerState.js": {
@@ -268,7 +268,7 @@
       "category": "js"
     },
     "BleedingEffect.js": {
-      "size": 8586,
+      "size": 11860,
       "category": "js"
     },
     "CycloneStrikeEffect.js": {
@@ -276,7 +276,7 @@
       "category": "js"
     },
     "ExplodingPalmEffect.js": {
-      "size": 26265,
+      "size": 26267,
       "category": "js"
     },
     "FistOfThunderEffect.js": {
@@ -296,7 +296,7 @@
       "category": "js"
     },
     "Skill.js": {
-      "size": 9291,
+      "size": 9293,
       "category": "js"
     },
     "SkillEffect.js": {
@@ -304,7 +304,7 @@
       "category": "js"
     },
     "SkillEffectFactory.js": {
-      "size": 2861,
+      "size": 2883,
       "category": "js"
     },
     "TeleportSkillEffect.js": {
@@ -312,7 +312,7 @@
       "category": "js"
     },
     "WaveOfLightEffect.js": {
-      "size": 21304,
+      "size": 21308,
       "category": "js"
     },
     "WaveStrikeEffect.js": {
@@ -320,15 +320,15 @@
       "category": "js"
     },
     "main.js": {
-      "size": 3188,
+      "size": 3552,
       "category": "js"
     },
     "AnimationUtils.js": {
-      "size": 10567,
+      "size": 10583,
       "category": "js"
     },
     "WorldManager.js": {
-      "size": 12437,
+      "size": 18699,
       "category": "js"
     },
     "Bush.js": {
@@ -336,7 +336,7 @@
       "category": "js"
     },
     "EnvironmentManager.js": {
-      "size": 17255,
+      "size": 19812,
       "category": "js"
     },
     "Flower.js": {
@@ -356,7 +356,7 @@
       "category": "js"
     },
     "InteractiveObjectManager.js": {
-      "size": 9077,
+      "size": 9081,
       "category": "js"
     },
     "QuestMarker.js": {
@@ -368,7 +368,7 @@
       "category": "js"
     },
     "LightingManager.js": {
-      "size": 4744,
+      "size": 7061,
       "category": "js"
     },
     "Building.js": {
@@ -384,7 +384,7 @@
       "category": "js"
     },
     "StructureManager.js": {
-      "size": 12135,
+      "size": 16219,
       "category": "js"
     },
     "Tower.js": {
@@ -392,11 +392,11 @@
       "category": "js"
     },
     "TerrainChunk.js": {
-      "size": 4063,
+      "size": 4190,
       "category": "js"
     },
     "TerrainManager.js": {
-      "size": 27961,
+      "size": 32248,
       "category": "js"
     },
     "RandomGenerator.js": {
@@ -600,36 +600,32 @@
       "category": "models"
     },
     "LoadingScreen.js": {
-      "size": 10695,
-      "category": "js"
-    },
-    "file-tracker.js": {
-      "size": 22793,
+      "size": 10721,
       "category": "js"
     },
     "orientation-lock.js": {
-      "size": 525,
+      "size": 527,
       "category": "js"
     },
     "registration.js": {
-      "size": 15834,
+      "size": 16128,
       "category": "js"
     }
   },
   "categories": {
     "other": {
       "count": 2,
-      "size": 17376,
+      "size": 18401,
       "sampleFile": "manifest.json"
     },
     "css": {
       "count": 13,
-      "size": 37001,
+      "size": 37492,
       "sampleFile": "css/animations.css"
     },
     "js": {
-      "count": 93,
-      "size": 990067,
+      "count": 92,
+      "size": 1002429,
       "sampleFile": "js/config/player-models.js"
     },
     "images": {
@@ -648,7 +644,7 @@
       "sampleFile": "assets/models/monk-v3.glb"
     }
   },
-  "generatedAt": "2025-05-10T07:19:21.690Z",
+  "generatedAt": "2025-05-10T16:06:15.595Z",
   "fileList": [
     "animations.css",
     "game.css",
@@ -800,7 +796,6 @@
     "monk-v3.glb",
     "monk.glb",
     "LoadingScreen.js",
-    "file-tracker.js",
     "orientation-lock.js",
     "registration.js"
   ]

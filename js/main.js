@@ -31,6 +31,13 @@ function startGame(event) {
     // This loads all resources but doesn't start the game loop
     game.init().then(() => {
         console.debug("Game initialized successfully - game is in paused state");
+        
+        // Disconnect the network observer as it's no longer needed
+        if (window.fileTracker && typeof window.fileTracker.disconnectNetworkObserver === 'function') {
+            console.debug("Disconnecting network observer to improve performance");
+            window.fileTracker.disconnectNetworkObserver();
+        }
+        
         // Access the loading screen instance exposed by initial-load-progress.js
         const loadingScreen = new LoadingScreen();
         
