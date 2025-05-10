@@ -26,6 +26,9 @@ export class Game {
         this.clock = new THREE.Clock();
         this.debugMode = false; // Set to true to enable debug logging
         
+        // Flag to prevent multiple animation loops
+        this.animationLoopStarted = false;
+        
         // Initialize sub-systems
         this.state = new GameState();
         this.events = new GameEvents();
@@ -289,7 +292,15 @@ export class Game {
         // Start the game loop
         this.state.setRunning();
         this.clock.start();
-        this.animate();
+        
+        // Only start the animation loop if it hasn't been started yet
+        if (!this.animationLoopStarted) {
+            console.log("Starting animation loop");
+            this.animationLoopStarted = true;
+            this.animate();
+        } else {
+            console.warn("Animation loop already started, skipping duplicate start");
+        }
         
         // Start background music
         this.audioManager.playMusic();
@@ -335,6 +346,16 @@ export class Game {
     animate() {
         // Always continue the animation loop regardless of pause state
         requestAnimationFrame(() => this.animate());
+        
+        // Log memory usage every 5 seconds for debugging
+        const now = Date.now();
+        if (!this._lastMemoryLog || now - this._lastMemoryLog > 5000) {
+            if (window.performance && window.performance.memory) {
+                const memoryInfo = window.performance.memory;
+                console.log(`Memory usage: ${Math.round(memoryInfo.usedJSHeapSize / (1024 * 1024))}MB / ${Math.round(memoryInfo.jsHeapSizeLimit / (1024 * 1024))}MB`);
+            }
+            this._lastMemoryLog = now;
+        }
         
         const delta = this.clock.getDelta();
         
