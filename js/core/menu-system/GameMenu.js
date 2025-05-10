@@ -18,19 +18,6 @@ export class GameMenu {
         this.saveGameButton = document.getElementById('save-game-button');
         this.settingsMenuButton = document.getElementById('settings-menu-button');
         this.settingsMenu = null;
-        
-        // Set initial button visibility
-        if (this.loadGameButton && this.game.saveManager) {
-            this.loadGameButton.style.display = this.game.saveManager.hasSaveData() ? 'block' : 'none';
-        }
-        
-        if (this.saveGameButton) {
-            // Initially hide Save Game button if game hasn't started
-            // When "New Game" button is showing, explicitly hide "Save Game" button
-            const isNewGameShowing = !this.game.hasStarted; // At init, if game hasn't started, "New Game" is showing
-            this.saveGameButton.style.display = (this.game.hasStarted && !isNewGameShowing) ? 'block' : 'none';
-        }
-        
         this.setupEventListeners();
     }
 
@@ -190,22 +177,15 @@ export class GameMenu {
             }
             
             // Update New Game button text based on game state
-            if (this.newGameButton) {
+            if (this.newGameButton && this.saveGameButton) {
                 if (this.game.hasStarted) {
                     this.newGameButton.textContent = 'Resume Game';
                 } else {
                     this.newGameButton.textContent = 'New Game';
+                    this.saveGameButton.style.display = 'none';
                 }
             }
             
-            // Update Save Game button visibility based on game state
-            if (this.saveGameButton) {
-                // Only show Save Game button if the game has started
-                // When "New Game" button is showing, explicitly hide "Save Game" button
-                const isNewGameShowing = this.newGameButton && this.newGameButton.textContent === 'New Game';
-                this.saveGameButton.style.display = (this.game.hasStarted && !isNewGameShowing) ? 'block' : 'none';
-            }
-
             // Hide all HUD UI elements using the HUDManager
             if (this.game.hudManager) {
                 this.game.hudManager.hideAllUI();
