@@ -1,4 +1,5 @@
 import { UIComponent } from '../UIComponent.js';
+import * as THREE from 'three';
 
 /**
  * Mini Map UI component
@@ -85,11 +86,46 @@ export class MiniMapUI extends UIComponent {
      * @param {number} delta - Time since last update in seconds
      */
     update(delta) {
+        // Skip updates if map is not visible
+        if (!this.isVisible) {
+            return;
+        }
+        
         const currentTime = Date.now();
         
         // Only render every renderInterval ms for performance
         if (currentTime - this.lastRenderTime >= this.renderInterval) {
-            this.renderMiniMap();
+            // Check if player has moved significantly before rendering
+            const player = this.game.player;
+            if (player) {
+                // Store last position for movement detection
+                if (!this._lastPlayerPos) {
+                    this._lastPlayerPos = new THREE.Vector3();
+                    this._lastPlayerPos.copy(player.getPosition());
+                    this.renderMiniMap();
+                } else {
+                    // Only render if player has moved at least 1 unit or rotated
+                    const currentPos = player.getPosition();
+                    const currentRot = player.getRotation().y;
+                    
+                    if (!this._lastPlayerRot) {
+                        this._lastPlayerRot = currentRot;
+                    }
+                    
+                    const hasMoved = this._lastPlayerPos.distanceTo(currentPos) > 1;
+                    const hasRotated = Math.abs(this._lastPlayerRot - currentRot) > 0.1;
+                    
+                    if (hasMoved || hasRotated) {
+                        this.renderMiniMap();
+                        this._lastPlayerPos.copy(currentPos);
+                        this._lastPlayerRot = currentRot;
+                    }
+                }
+            } else {
+                // No player, just render on interval
+                this.renderMiniMap();
+            }
+            
             this.lastRenderTime = currentTime;
         }
     }
@@ -699,9 +735,25 @@ export class MiniMapUI extends UIComponent {
     toggleMiniMap() {
         // Toggle only the map element, not the header
         if (this.mapElement) {
+            // Get current visibility state
             this.isVisible = this.mapElement.style.display !== 'none';
-            this.mapElement.style.display = this.isVisible ? 'none' : 'block';
-            return !this.isVisible;
+            
+            // Toggle visibility
+            const newVisibility = !this.isVisible;
+            this.mapElement.style.display = newVisibility ? 'block' : 'none';
+            this.isVisible = newVisibility;
+            
+            // If becoming visible, force a render
+            if (newVisibility) {
+                this.renderMiniMap();
+            } else {
+                // If becoming invisible, clear any cached data to free memory
+                this._lastPlayerPos = null;
+                this._lastPlayerRot = null;
+            }
+            
+            console.log(`Mini map visibility set to: ${newVisibility}`);
+            return newVisibility;
         }
         return false;
     }

@@ -38,6 +38,19 @@ export class WorldManager {
         this.rocks = [];
         this.buildings = [];
         this.paths = [];
+        
+        // Memory management
+        this.lastMemoryCheck = Date.now();
+        this.memoryCheckInterval = 10000; // Check every 10 seconds
+        this.lastGarbageCollection = Date.now();
+        this.gcInterval = 30000; // Force GC hint every 30 seconds
+        
+        // Performance monitoring
+        this.frameRateHistory = [];
+        this.frameRateHistoryMaxLength = 60; // Track last 60 frames
+        this.lastPerformanceAdjustment = Date.now();
+        this.performanceAdjustmentInterval = 5000; // Adjust every 5 seconds
+        this.lowPerformanceMode = false;
     }
     
     /**
@@ -87,11 +100,15 @@ export class WorldManager {
      * @param {number} drawDistanceMultiplier - Multiplier for draw distance
      */
     updateWorldForPlayer(playerPosition, drawDistanceMultiplier = 1.0) {
-        // Update terrain chunks
-        this.terrainManager.updateForPlayer(playerPosition, drawDistanceMultiplier);
+        // Apply low performance mode if needed
+        const effectiveDrawDistance = this.lowPerformanceMode ? 
+            Math.min(0.6, drawDistanceMultiplier) : drawDistanceMultiplier;
         
-        // Update environment objects
-        this.environmentManager.updateForPlayer(playerPosition, drawDistanceMultiplier);
+        // Update terrain chunks with potentially reduced draw distance
+        this.terrainManager.updateForPlayer(playerPosition, effectiveDrawDistance);
+        
+        // Update environment objects with potentially reduced draw distance
+        this.environmentManager.updateForPlayer(playerPosition, effectiveDrawDistance);
         
         // Check if player has moved far enough for screen-based enemy spawning
         const distanceMoved = playerPosition.distanceTo(this.lastPlayerPosition);
@@ -108,7 +125,130 @@ export class WorldManager {
         // Update fog density based on draw distance for atmospheric effect
         if (this.game && this.game.scene.fog) {
             // Adjust fog density inversely to draw distance
-            this.game.scene.fog.density = 0.002 * (1 / drawDistanceMultiplier);
+            this.game.scene.fog.density = 0.002 * (1 / effectiveDrawDistance);
+        }
+        
+        // Periodically check memory and performance
+        this.manageMemoryAndPerformance();
+    }
+    
+    /**
+     * Manage memory and performance to prevent memory leaks and maintain frame rate
+     */
+    manageMemoryAndPerformance() {
+        const currentTime = Date.now();
+        
+        // Track frame rate
+        if (this.game && this.game.stats && this.game.stats.fps) {
+            this.frameRateHistory.push(this.game.stats.fps);
+            
+            // Keep history at max length
+            if (this.frameRateHistory.length > this.frameRateHistoryMaxLength) {
+                this.frameRateHistory.shift();
+            }
+        }
+        
+        // Periodically check memory usage
+        if (currentTime - this.lastMemoryCheck > this.memoryCheckInterval) {
+            this.lastMemoryCheck = currentTime;
+            
+            // Check if we need to force cleanup
+            if (this.frameRateHistory.length > 10) {
+                // Calculate average FPS
+                const avgFPS = this.frameRateHistory.reduce((sum, fps) => sum + fps, 0) / 
+                               this.frameRateHistory.length;
+                
+                // If FPS is consistently low, trigger aggressive cleanup
+                if (avgFPS < 30) {
+                    console.log(`Low FPS detected (${avgFPS.toFixed(1)}), performing aggressive cleanup`);
+                    this.performAggressiveCleanup();
+                }
+            }
+        }
+        
+        // Periodically adjust performance settings
+        if (currentTime - this.lastPerformanceAdjustment > this.performanceAdjustmentInterval) {
+            this.lastPerformanceAdjustment = currentTime;
+            
+            if (this.frameRateHistory.length > 10) {
+                // Calculate average FPS
+                const avgFPS = this.frameRateHistory.reduce((sum, fps) => sum + fps, 0) / 
+                               this.frameRateHistory.length;
+                
+                // Adjust performance mode based on FPS
+                const wasLowPerformanceMode = this.lowPerformanceMode;
+                this.lowPerformanceMode = avgFPS < 30;
+                
+                // Notify if performance mode changed
+                if (wasLowPerformanceMode !== this.lowPerformanceMode) {
+                    console.log(`Performance mode changed to: ${this.lowPerformanceMode ? 'LOW' : 'NORMAL'}`);
+                    
+                    // Notify user if performance mode changed
+                    if (this.game && this.game.uiManager) {
+                        const message = this.lowPerformanceMode ? 
+                            "Performance mode: LOW - Reducing visual quality to improve performance" :
+                            "Performance mode: NORMAL - Visual quality restored";
+                        
+                        if (this.game.uiManager.showNotification) {
+                            this.game.uiManager.showNotification(message, 3000);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Periodically hint for garbage collection
+        if (currentTime - this.lastGarbageCollection > this.gcInterval) {
+            this.lastGarbageCollection = currentTime;
+            this.hintGarbageCollection();
+        }
+    }
+    
+    /**
+     * Perform aggressive cleanup to recover memory and improve performance
+     */
+    performAggressiveCleanup() {
+        // Clear terrain and environment caches
+        this.terrainFeatures = [];
+        this.trees = [];
+        this.rocks = [];
+        this.buildings = [];
+        this.paths = [];
+        
+        // Force terrain manager to clear distant chunks
+        if (this.terrainManager && this.terrainManager.clearDistantChunks) {
+            this.terrainManager.clearDistantChunks();
+        }
+        
+        // Clear texture caches if available
+        if (this.game && this.game.renderer) {
+            // Clear WebGL state
+            this.game.renderer.state.reset();
+            
+            // Clear texture cache if available
+            if (THREE.Cache && THREE.Cache.clear) {
+                THREE.Cache.clear();
+            }
+        }
+        
+        // Hint for garbage collection
+        this.hintGarbageCollection();
+        
+        console.log("Aggressive cleanup performed");
+    }
+    
+    /**
+     * Hint for garbage collection
+     */
+    hintGarbageCollection() {
+        // Force garbage collection hint if available
+        if (window.gc) {
+            try {
+                window.gc();
+                console.log("Garbage collection hint triggered");
+            } catch (e) {
+                // Ignore if not available
+            }
         }
     }
     

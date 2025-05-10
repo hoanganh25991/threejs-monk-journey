@@ -673,6 +673,100 @@ export class TerrainManager {
     }
     
     /**
+     * Clear distant terrain chunks to free memory
+     * @param {number} maxDistance - Maximum distance from player to keep chunks (defaults to 2x view distance)
+     */
+    clearDistantChunks(maxDistance) {
+        // Default to 2x the view distance if not specified
+        const clearDistance = maxDistance || (this.terrainChunkViewDistance * 2);
+        
+        // Get current player chunk coordinates
+        let centerX = 0;
+        let centerZ = 0;
+        
+        // If we have a player position, use that
+        if (this.worldManager && this.worldManager.game && this.worldManager.game.player) {
+            const playerPos = this.worldManager.game.player.getPosition();
+            centerX = Math.floor(playerPos.x / this.terrainChunkSize);
+            centerZ = Math.floor(playerPos.z / this.terrainChunkSize);
+        }
+        
+        // Count chunks before cleanup
+        const chunkCountBefore = Object.keys(this.terrainChunks).length;
+        const bufferCountBefore = Object.keys(this.terrainBuffer).length;
+        
+        // Clear distant chunks from active chunks
+        const chunksToRemove = [];
+        for (const chunkKey in this.terrainChunks) {
+            const [x, z] = chunkKey.split(',').map(Number);
+            const distX = Math.abs(x - centerX);
+            const distZ = Math.abs(z - centerZ);
+            
+            // If chunk is too far away, mark for removal
+            if (distX > clearDistance || distZ > clearDistance) {
+                chunksToRemove.push(chunkKey);
+            }
+        }
+        
+        // Remove marked chunks
+        chunksToRemove.forEach(chunkKey => {
+            this.removeTerrainChunk(chunkKey);
+        });
+        
+        // Clear distant chunks from buffer
+        const bufferToRemove = [];
+        for (const chunkKey in this.terrainBuffer) {
+            const [x, z] = chunkKey.split(',').map(Number);
+            const distX = Math.abs(x - centerX);
+            const distZ = Math.abs(z - centerZ);
+            
+            // If chunk is too far away, mark for removal
+            if (distX > clearDistance || distZ > clearDistance) {
+                bufferToRemove.push(chunkKey);
+            }
+        }
+        
+        // Remove marked buffer chunks
+        bufferToRemove.forEach(chunkKey => {
+            const chunk = this.terrainBuffer[chunkKey];
+            
+            // Remove from scene if needed
+            if (chunk && chunk.parent) {
+                this.scene.remove(chunk);
+            }
+            
+            // Dispose of geometry and materials
+            if (chunk && chunk.geometry) {
+                chunk.geometry.dispose();
+            }
+            
+            if (chunk && chunk.material) {
+                const materials = Array.isArray(chunk.material) ? chunk.material : [chunk.material];
+                materials.forEach(material => {
+                    if (material.map) material.map.dispose();
+                    material.dispose();
+                });
+            }
+            
+            // Remove from buffer
+            delete this.terrainBuffer[chunkKey];
+        });
+        
+        // Clear any distant chunks from generation queue
+        this.terrainGenerationQueue = this.terrainGenerationQueue.filter(item => {
+            const distX = Math.abs(item.x - centerX);
+            const distZ = Math.abs(item.z - centerZ);
+            return distX <= clearDistance && distZ <= clearDistance;
+        });
+        
+        // Count chunks after cleanup
+        const chunkCountAfter = Object.keys(this.terrainChunks).length;
+        const bufferCountAfter = Object.keys(this.terrainBuffer).length;
+        
+        console.log(`Cleared distant chunks: ${chunkCountBefore - chunkCountAfter} active, ${bufferCountBefore - bufferCountAfter} buffered`);
+    }
+    
+    /**
      * Save terrain state
      * @returns {object} - The saved terrain state
      */

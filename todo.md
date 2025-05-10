@@ -142,6 +142,20 @@ help me refactor the setting menu
   - [x] Minimap render world in simpler way, focus on performance
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+help me check source deep down to resolve 2 things:
+1. after update a lot of code, now game run as 15 FPS
+2. after update a lot of code, memory consume up to 200MB, 300MB, 500MB, 960MB after 5 minutes
+
+please help me from main.js to Game.js to deep down World, Enemy, Player,... review to find out where may potential cause performance issue
+the game based on threejs for most of obj to render world, load model only < 400kb and whole "js" directory is 965kb, which mean it should be fast
+
+i guess:
+- MiniMap
+- World not clean up when moving
+- SaveManager
+- Memory store too much
+
+
 - [ ] Help me add level progress
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
