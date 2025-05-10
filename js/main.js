@@ -42,10 +42,6 @@ function startGame(event) {
                 `Game initialized`,
                 'Showing Game menu...'
             );
-            
-            // Hide loading screen immediately since game menu will be shown
-            // when game initialization is successful
-            loadingScreen.hide();
         } else {
             console.warn("Loading screen instance not found");
         }
@@ -61,6 +57,13 @@ function startGame(event) {
         // Force a small delay to ensure DOM updates have completed
         setTimeout(() => {
             console.log("Showing game menu...");
+            if (loadingScreen) {
+                // Hide loading screen immediately since game menu will be shown
+                loadingScreen.hide();
+            } else {
+                console.warn("Loading screen instance not found");
+            }
+
             gameMenu.show();
             
             // Verify the menu is visible
