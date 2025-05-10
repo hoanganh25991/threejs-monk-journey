@@ -77,7 +77,7 @@ export class InteractiveObjectManager {
                     
                     // Return some reward
                     return {
-                        type: 'item',
+                        type: 'treasure',
                         item: {
                             name: 'Gold',
                             amount: Math.floor(Math.random() * 100) + 50

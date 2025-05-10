@@ -252,8 +252,12 @@ export class PlayerSkills extends IPlayerSkills {
             // Add skill effect to scene
             this.scene.add(skillEffect);
             
-            // Log enemy was auto-targeted
-            console.log(`Auto-targeting ${targetEnemy.type} with ${skillTemplate.name}`);
+            // Log enemy was auto-targeted (only if an enemy was found)
+            if (targetEnemy) {
+                console.log(`Auto-targeting ${targetEnemy.type} with ${skillTemplate.name}`);
+            } else {
+                console.log(`Using ${skillTemplate.name} without a target`);
+            }
         }
 
         // Sound is now handled by the skill itself in createEffect method

@@ -132,6 +132,17 @@ export class CollisionManager {
         // Call the object's interaction handler
         const result = interactiveObject.onInteract();
         
+        // Check if result is null or undefined before proceeding
+        if (!result) {
+            // No interaction result, possibly already interacted with
+            if (this.player.game && this.player.game.uiManager) {
+                this.player.game.uiManager.showNotification("Nothing happens.");
+            }
+            // Reset interaction state
+            this.player.setInteracting(false);
+            return;
+        }
+        
         // Handle different interaction types
         switch (result.type) {
             case 'quest':
@@ -162,6 +173,14 @@ export class CollisionManager {
                         result.bossType,
                         interactiveObject.position
                     );
+                }
+                break;
+                
+            case 'item':
+                // Handle item interaction
+                if (this.player.game && this.player.game.uiManager) {
+                    this.player.game.uiManager.showNotification(`Found ${result.item.name}!`);
+                    this.player.addToInventory(result.item);
                 }
                 break;
                 
