@@ -84,7 +84,7 @@ export class SaveManager extends ISaveSystem {
     }
     
     /**
-     * Save the current game state with progress indicator
+     * Save the current game state with a simple notification
      * @param {boolean} forceSave - Whether to force save regardless of conditions
      * @returns {Promise<boolean>} Promise resolving to success status
      */
@@ -103,28 +103,10 @@ export class SaveManager extends ISaveSystem {
                 return true; // Skip saving but return success
             }
             
-            // Initialize progress indicator
-            this.saveProgress.start('Preparing to save game...');
-            
             // Create save data object (without full world data)
-            this.saveProgress.update('Collecting player data...', 10);
-            await this.delay(50); // Small delay for UI update
-            
             const playerData = PlayerSerializer.serialize(this.game.player);
-            
-            this.saveProgress.update('Collecting quest data...', 20);
-            await this.delay(50); // Small delay for UI update
-            
             const questData = QuestSerializer.serialize(this.game.questManager);
-            
-            this.saveProgress.update('Collecting settings...', 30);
-            await this.delay(50); // Small delay for UI update
-            
             const settingsData = SettingsSerializer.serialize(this.game);
-            
-            this.saveProgress.update('Collecting world metadata...', 40);
-            await this.delay(50); // Small delay for UI update
-            
             const worldMetaData = WorldSerializer.serializeMetadata(this.game.world);
             
             const saveData = {
@@ -137,9 +119,6 @@ export class SaveManager extends ISaveSystem {
             };
             
             // Save to storage
-            this.saveProgress.update('Writing save data to storage...', 60);
-            await this.delay(100); // Small delay for UI update
-            
             const success = this.storage.saveData(this.saveKey, saveData);
             
             if (!success) {
@@ -148,31 +127,18 @@ export class SaveManager extends ISaveSystem {
             
             // Save chunks separately if at level milestone or forced
             if (shouldSaveByLevel || forceSave) {
-                this.saveProgress.update('Saving world chunks...', 70);
                 await this.saveWorldChunksWithProgress();
                 this.lastSaveLevel = playerLevel;
-            } else {
-                this.saveProgress.update('Skipping world chunks...', 80);
             }
             
             this.lastSaveTime = currentTime;
             
-            this.saveProgress.update('Save complete!', 100);
-            await this.delay(500); // Show completion for a moment
-            
             SaveUtils.log('Game saved successfully');
             SaveUtils.showNotification(this.game, 'Game saved successfully');
-            
-            // Complete the progress indicator
-            this.saveProgress.complete();
             
             return true;
         } catch (error) {
             SaveUtils.log('Error saving game: ' + error.message, 'error');
-            
-            // Show error in progress indicator
-            this.saveProgress.error('Failed to save game: ' + error.message);
-            
             SaveUtils.showNotification(this.game, 'Failed to save game', 3000, 'error');
             
             return false;
@@ -574,42 +540,36 @@ export class SaveManager extends ISaveSystem {
     }
     
     /**
-     * Save world chunks individually to storage with progress updates
+     * Save world chunks individually to storage without progress UI
      * @returns {Promise<Object>} Promise resolving to chunk index
      */
     async saveWorldChunksWithProgress() {
         const world = this.game.world;
         const chunkIndex = {};
         
-        SaveUtils.log('Saving world chunks to local storage with progress...');
+        SaveUtils.log('Saving world chunks to local storage...');
         
         // Check if terrainManager exists and has terrainChunks
         if (!world.terrainManager || !world.terrainManager.terrainChunks) {
             SaveUtils.log('No terrain chunks found to save', 'warn');
-            this.saveProgress.update('No terrain chunks found to save', 75);
             return chunkIndex;
         }
         
-        // Get total number of chunks for progress calculation
+        // Get total number of chunks
         const chunkKeys = Object.keys(world.terrainManager.terrainChunks);
         const totalChunks = chunkKeys.length;
         
         if (totalChunks === 0) {
             SaveUtils.log('No chunks to save', 'warn');
-            this.saveProgress.update('No chunks to save', 75);
             return chunkIndex;
         }
         
-        // Save each chunk individually with progress updates
+        // Save each chunk individually
         for (let i = 0; i < chunkKeys.length; i++) {
             const chunkKey = chunkKeys[i];
             
-            // Update progress (70-90% range for chunks)
-            const progressPercent = 70 + Math.floor((i / totalChunks) * 20);
-            this.saveProgress.update(`Saving chunk ${i+1}/${totalChunks}...`, progressPercent);
-            
             // Small delay to prevent UI freezing
-            await this.delay(10);
+            await this.delay(5);
             
             // Serialize chunk data
             const chunkData = WorldSerializer.serializeChunk(world, chunkKey);
@@ -635,9 +595,6 @@ export class SaveManager extends ISaveSystem {
         }
         
         // Save chunk index
-        this.saveProgress.update('Finalizing chunk index...', 90);
-        await this.delay(50);
-        
         this.storage.saveData(`${this.chunkSaveKeyPrefix}index`, chunkIndex);
         
         SaveUtils.log(`Saved ${Object.keys(chunkIndex).length} chunks to local storage`);
