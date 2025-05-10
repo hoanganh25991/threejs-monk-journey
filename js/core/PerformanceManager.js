@@ -799,17 +799,8 @@ export class PerformanceManager {
         // Update renderer settings
         const renderer = this.game.renderer;
         
-        // Set pixel ratio
-        renderer.setPixelRatio(settings.pixelRatio);
-        
-        // Configure shadows
-        renderer.shadowMap.enabled = settings.shadows;
-        if (settings.shadows) {
-            renderer.shadowMap.autoUpdate = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        } else {
-            renderer.shadowMap.autoUpdate = false;
-        }
+        // Apply renderer settings using Game's applyRendererSettings method
+        this.game.applyRendererSettings(renderer, qualityLevel);
         
         // Update shadow map size for all lights
         this.updateShadowMapSizes(settings.shadowMapSize);
