@@ -485,7 +485,21 @@ export class SettingsMenu extends UIComponent {
      * @private
      */
     initializeFullscreenModelPreview() {
-        if (!this.modelPreviewFullscreenContainer) return;
+        if (!this.modelPreviewFullscreenContainer) {
+            console.error('SettingsMenu: Model preview container not found');
+            return;
+        }
+        
+        console.log('SettingsMenu: Initializing fullscreen model preview');
+        
+        // Clear any existing content in the wrapper
+        const wrapper = document.getElementById('model-preview-fullscreen-wrapper');
+        if (wrapper) {
+            console.log('SettingsMenu: Found existing wrapper');
+            while (wrapper.firstChild) {
+                wrapper.removeChild(wrapper.firstChild);
+            }
+        }
         
         setTimeout(() => {
             // Get the container dimensions for a more appropriate size
@@ -496,9 +510,13 @@ export class SettingsMenu extends UIComponent {
             if (container) {
                 width = container.clientWidth;
                 height = container.clientHeight || 400;
+                console.log('SettingsMenu: Container dimensions', width, height);
+            } else {
+                console.warn('SettingsMenu: Could not find container for dimensions');
             }
             
-            // Create model preview with dynamic size
+            // Create model preview with dynamic size using the container with the wrapper inside
+            console.log('SettingsMenu: Creating new ModelPreview instance');
             this.modelPreviewFullscreen = new ModelPreview(this.modelPreviewFullscreenContainer, width, height);
             
             // Enable auto-rotation by default for the fullscreen preview

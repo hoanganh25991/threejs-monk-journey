@@ -26,11 +26,21 @@ export class ModelPreview {
         this.animations = {};
         this.currentAnimation = null;
         
-        // Create a wrapper to handle visibility
-        this.wrapper = document.createElement('div');
-        this.wrapper.style.width = `${width}px`;
-        this.wrapper.style.height = `${height}px`;
-        this.container.appendChild(this.wrapper);
+        // Check if there's an existing wrapper with ID 'model-preview-fullscreen-wrapper'
+        const existingWrapper = this.container.querySelector('#model-preview-fullscreen-wrapper');
+        
+        if (existingWrapper) {
+            // Use the existing wrapper
+            this.wrapper = existingWrapper;
+            this.wrapper.style.width = `${width}px`;
+            this.wrapper.style.height = `${height}px`;
+        } else {
+            // Create a wrapper to handle visibility
+            this.wrapper = document.createElement('div');
+            this.wrapper.style.width = `${width}px`;
+            this.wrapper.style.height = `${height}px`;
+            this.container.appendChild(this.wrapper);
+        }
         
         // Set up intersection observer to pause rendering when not visible
         this.setupVisibilityObserver();
@@ -39,19 +49,25 @@ export class ModelPreview {
     }
     
     setupVisibilityObserver() {
+        // For debugging - always set visible to true initially
+        this.isVisible = true;
+        
         // Create an intersection observer to detect when the preview is visible
         this.observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
+                console.log('ModelPreview visibility changed:', entry.isIntersecting);
                 this.isVisible = entry.isIntersecting;
                 
                 if (this.isVisible) {
                     // Resume animation when visible
                     if (!this.animationId) {
+                        console.log('ModelPreview: Resuming animation');
                         this.animate();
                     }
                 } else {
                     // Pause animation when not visible
                     if (this.animationId) {
+                        console.log('ModelPreview: Pausing animation');
                         cancelAnimationFrame(this.animationId);
                         this.animationId = null;
                     }
@@ -64,46 +80,55 @@ export class ModelPreview {
         
         // Start observing the container
         this.observer.observe(this.wrapper);
+        console.log('ModelPreview: Visibility observer set up');
     }
     
     init() {
-        // Create scene
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x111111);
+        console.log('ModelPreview: Initializing with dimensions', this.width, this.height);
         
-        // Create camera with wider field of view for better model visibility
-        this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.1, 1000);
-        // Position camera further back (z-axis) and slightly higher (y-axis) to see the whole model
-        this.camera.position.set(0, 2.0, 9.0); // Zoomed out by 2.25x from original z=4 position (1.5x more than before)
-        
-        // Create renderer
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.renderer.setSize(this.width, this.height);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-        
-        // Add renderer to wrapper
-        this.wrapper.appendChild(this.renderer.domElement);
-        
-        // Add orbit controls with enhanced settings for better model viewing
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.controls.enableDamping = true;
-        this.controls.dampingFactor = 0.05;
-        this.controls.minDistance = 3; // Increased minimum distance to prevent clipping into model
-        this.controls.maxDistance = 12; // Increased maximum distance for better zooming capability
-        this.controls.enablePan = true; // Allow panning for better positioning
-        this.controls.autoRotate = false; // Can be enabled for automatic rotation
-        this.controls.autoRotateSpeed = 1.0; // Speed of auto-rotation if enabled
-        
-        // Add lights
-        this.addLights();
-        
-        // Add ground plane
-        this.addGround();
-        
-        // Start animation loop
-        this.animate();
+        try {
+            // Create scene
+            this.scene = new THREE.Scene();
+            this.scene.background = new THREE.Color(0x111111);
+            
+            // Create camera with wider field of view for better model visibility
+            this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.1, 1000);
+            // Position camera further back (z-axis) and slightly higher (y-axis) to see the whole model
+            this.camera.position.set(0, 2.0, 9.0); // Zoomed out by 2.25x from original z=4 position (1.5x more than before)
+            
+            // Create renderer
+            this.renderer = new THREE.WebGLRenderer({ antialias: true });
+            this.renderer.setSize(this.width, this.height);
+            this.renderer.setPixelRatio(window.devicePixelRatio);
+            this.renderer.shadowMap.enabled = true;
+            this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+            
+            // Add renderer to wrapper
+            this.wrapper.appendChild(this.renderer.domElement);
+            console.log('ModelPreview: Renderer added to wrapper');
+            
+            // Add orbit controls with enhanced settings for better model viewing
+            this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+            this.controls.enableDamping = true;
+            this.controls.dampingFactor = 0.05;
+            this.controls.minDistance = 3; // Increased minimum distance to prevent clipping into model
+            this.controls.maxDistance = 12; // Increased maximum distance for better zooming capability
+            this.controls.enablePan = true; // Allow panning for better positioning
+            this.controls.autoRotate = false; // Can be enabled for automatic rotation
+            this.controls.autoRotateSpeed = 1.0; // Speed of auto-rotation if enabled
+            
+            // Add lights
+            this.addLights();
+            
+            // Add ground plane
+            this.addGround();
+            
+            // Start animation loop
+            console.log('ModelPreview: Starting animation loop');
+            this.animate();
+        } catch (error) {
+            console.error('ModelPreview: Error during initialization:', error);
+        }
     }
     
     addLights() {
@@ -267,14 +292,12 @@ export class ModelPreview {
                 updateAnimation(this.mixer, delta);
             }
             
-            // Manual model rotation is now optional since we have auto-rotation in controls
-            // We'll keep this commented out as we're using OrbitControls.autoRotate instead
-            // if (this.model && !this.controls.autoRotate) {
-            //     this.model.rotation.y += 0.005;
-            // }
-            
             // Render scene
-            this.renderer.render(this.scene, this.camera);
+            try {
+                this.renderer.render(this.scene, this.camera);
+            } catch (error) {
+                console.error('ModelPreview: Error rendering scene:', error);
+            }
         } else {
             // If not visible, don't request another frame
             this.animationId = null;
