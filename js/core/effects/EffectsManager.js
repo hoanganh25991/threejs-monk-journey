@@ -84,5 +84,20 @@ export class EffectsManager {
             effect.dispose();
         }
         this.effects = [];
+        
+        // Clean up shared resources
+        if (typeof BleedingEffect.cleanupSharedResources === 'function') {
+            BleedingEffect.cleanupSharedResources();
+        }
+        
+        // Force a garbage collection hint
+        if (window.gc) {
+            try {
+                window.gc();
+                console.log("Manual garbage collection triggered after effects cleanup");
+            } catch (e) {
+                // Ignore if not available
+            }
+        }
     }
 }

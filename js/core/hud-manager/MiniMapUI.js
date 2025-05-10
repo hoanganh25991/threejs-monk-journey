@@ -23,7 +23,7 @@ export class MiniMapUI extends UIComponent {
         this.ctx = null;
         this.mapSize = 200; // Size of the mini map in pixels
         this.canvasSize = this.mapSize; // Canvas size matches map size
-        this.scale = 0.72; // Increased scale factor for better world coverage
+        this.scale = 1; // Increased scale factor for better world coverage
         this.lastRenderTime = 0;
         this.renderInterval = 100; // Render every 100ms for performance
         this.isVisible = true;
@@ -205,12 +205,15 @@ export class MiniMapUI extends UIComponent {
      * @param {number} radius - Radius of the mini map
      */
     drawGrid(centerX, centerY, radius) {
-        // More subtle grid lines
-        this.ctx.strokeStyle = 'rgba(100, 100, 150, 0.08)';
-        this.ctx.lineWidth = 1;
+        // Enhanced grid lines for better visibility
+        this.ctx.lineWidth = 1.5; // Increased line width
         
         // Draw concentric circles
         for (let r = radius / 4; r <= radius; r += radius / 4) {
+            // Make outer circles more visible
+            const opacity = 0.15 + (r / radius) * 0.1; // Gradually increase opacity for outer circles
+            this.ctx.strokeStyle = `rgba(120, 140, 200, ${opacity})`;
+            
             this.ctx.beginPath();
             this.ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
             this.ctx.stroke();
@@ -218,11 +221,19 @@ export class MiniMapUI extends UIComponent {
         
         // Draw radial lines
         for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
-            // Make cardinal directions slightly more visible
+            // Make cardinal directions more visible
             if (angle % (Math.PI/2) < 0.01) {
-                this.ctx.strokeStyle = 'rgba(100, 100, 150, 0.15)';
+                // Cardinal directions (N, E, S, W)
+                this.ctx.strokeStyle = 'rgba(150, 150, 220, 0.35)';
+                this.ctx.lineWidth = 2; // Thicker lines for cardinal directions
+            } else if (angle % (Math.PI/4) < 0.01) {
+                // Intercardinal directions (NE, SE, SW, NW)
+                this.ctx.strokeStyle = 'rgba(120, 120, 180, 0.25)';
+                this.ctx.lineWidth = 1.5;
             } else {
-                this.ctx.strokeStyle = 'rgba(100, 100, 150, 0.08)';
+                // Other angles
+                this.ctx.strokeStyle = 'rgba(100, 100, 150, 0.18)';
+                this.ctx.lineWidth = 1;
             }
             
             this.ctx.beginPath();
