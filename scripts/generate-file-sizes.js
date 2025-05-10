@@ -157,36 +157,85 @@ function generateFileSizesJson() {
   // Convert total size to MB with 2 decimal places
   const totalSizeMB = (stats.totalSize / (1024 * 1024)).toFixed(2);
   
-  // Create minimal file categories for compatibility
-  const fileCategories = {};
+  // Create a map of all file names and their sizes
   const fileSizes = {};
   
-  // For each category, create a minimal array with just one sample file
-  Object.entries(stats.categories).forEach(([category, data]) => {
-    if (data.sampleFile) {
-      fileCategories[category] = [data.sampleFile];
-      fileSizes[data.sampleFile] = data.size;
+  // Track all files and their sizes
+  const allFiles = [];
+  
+  // Function to collect file info
+  function collectFileInfo(dir, baseDir = '') {
+    const files = fs.readdirSync(dir);
+    
+    for (const file of files) {
+      const fullPath = path.join(dir, file);
+      const relativePath = path.join(baseDir, file).replace(/\\/g, '/');
+      
+      // Skip excluded files and directories
+      if (excludeFiles.some(exclude => relativePath.includes(exclude))) {
+        continue;
+      }
+      
+      const stat = fs.statSync(fullPath);
+      
+      if (stat.isDirectory()) {
+        // Recursively scan subdirectories
+        collectFileInfo(fullPath, relativePath);
+      } else {
+        // Check if file extension should be included
+        const ext = path.extname(file).toLowerCase();
+        
+        if (fileExtensions.includes(ext)) {
+          // Get file size in bytes
+          const fileSize = stat.size;
+          
+          // Get simplified filename (just the filename without the path)
+          const simpleName = file;
+          
+          // Store file info with category
+          let category = 'other';
+          if (ext === '.glb') category = 'models';
+          else if (['.jpg', '.png', '.jpeg', '.svg', '.ico'].includes(ext)) category = 'images';
+          else if (['.mp3', '.wav', '.ogg'].includes(ext)) category = 'audio';
+          else if (ext === '.js') category = 'js';
+          else if (ext === '.css') category = 'css';
+          
+          // Add to fileSizes with simple name as key
+          fileSizes[simpleName] = {
+            size: fileSize,
+            category: category
+          };
+          
+          allFiles.push({
+            name: simpleName,
+            path: relativePath,
+            size: fileSize,
+            category: category
+          });
+        }
+      }
     }
-  });
+  }
+  
+  // Collect file info for all directories
+  for (const dir of directoriesToScan) {
+    try {
+      if (fs.existsSync(dir)) {
+        const baseDir = dir === './' ? '' : dir;
+        collectFileInfo(dir, baseDir);
+      }
+    } catch (err) {
+      console.error(`Error scanning directory ${dir}:`, err);
+    }
+  }
   
   // Create the simplified output data
   const outputData = {
     totalSizeBytes: stats.totalSize,
     totalSizeMB,
     totalFiles: stats.fileCount,
-    // Minimal fileSizes map with just sample files for compatibility
-    fileSizes,
-    // Minimal fileCategories with just sample files for compatibility
-    fileCategories,
-    categorySizes: Object.entries(stats.categories).reduce((obj, [category, data]) => {
-      obj[category] = {
-        count: data.count,
-        sizeBytes: data.size,
-        sizeMB: (data.size / (1024 * 1024)).toFixed(2)
-      };
-      return obj;
-    }, {}),
-    generatedAt: new Date().toISOString()
+    // Map of file names and sizes with categories for easy lookup
+    fileSizes
   };
   
   // Write the output file

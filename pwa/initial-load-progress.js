@@ -63,16 +63,30 @@ import { LoadingScreen } from './LoadingScreen.js';
                         totalFilesSize = data.totalSizeBytes;
                         console.log(`Total cache size: ${formatFileSize(totalFilesSize)} (${data.totalFiles || 0} files)`);
                         
-                        // Log category sizes if available (for information only)
-                        if (data.categorySizes) {
+                        // Store file sizes data for potential use
+                        filesData = data.fileSizes;
+                        
+                        // Log file categories if available
+                        if (filesData) {
+                            // Count files by category
+                            const categoryCounts = {};
+                            Object.entries(filesData).forEach(([fileName, fileInfo]) => {
+                                const category = fileInfo.category;
+                                if (!categoryCounts[category]) {
+                                    categoryCounts[category] = { count: 0, size: 0 };
+                                }
+                                categoryCounts[category].count++;
+                                categoryCounts[category].size += fileInfo.size;
+                            });
+                            
+                            // Log category information
                             console.log('File categories:');
-                            Object.entries(data.categorySizes).forEach(([category, info]) => {
-                                console.log(`- ${category}: ${info.count} files, ${info.sizeMB} MB`);
+                            Object.entries(categoryCounts).forEach(([category, info]) => {
+                                const sizeMB = (info.size / (1024 * 1024)).toFixed(2);
+                                console.log(`- ${category}: ${info.count} files, ${sizeMB} MB`);
                             });
                         }
                         
-                        // We don't need file categories or file sizes anymore
-                        // The network observer will track actual downloads
                         resolve();
                     } catch (error) {
                         console.error('Error processing file sizes JSON:', error);
@@ -101,8 +115,8 @@ import { LoadingScreen } from './LoadingScreen.js';
     
     /**
      * Track loading progress based on actual network activity
-     * Uses file sizes from file-sizes.json only for the total expected download size
-     * All file tracking is based on actual network events
+     * Uses file sizes from file-sizes.json for both total expected download size
+     * and for more accurate category-based progress reporting
      */
     function trackProgressWithFileSize() {
         if (!totalFilesSize) {
@@ -110,25 +124,177 @@ import { LoadingScreen } from './LoadingScreen.js';
             return;
         }
         
-        console.log('Starting pure network progress tracking');
+        console.log('Starting enhanced network progress tracking with file-sizes.json data');
         
         // Initialize tracking variables
         let downloadedResources = new Map(); // Map to track downloaded resources
         let lastProgressUpdate = Date.now();
         let progressUpdateInterval = null;
         
-        // Function to determine file category based on extension
-        function getFileCategory(url) {
-            const ext = url.split('.').pop().toLowerCase();
+        // Track progress by category
+        let categoryProgress = {};
+        let categoryTotals = {};
+        
+        // Initialize category tracking if we have file data
+        if (filesData) {
+            // Calculate total size by category
+            Object.entries(filesData).forEach(([fileName, fileInfo]) => {
+                const category = fileInfo.category;
+                if (!categoryTotals[category]) {
+                    categoryTotals[category] = 0;
+                    categoryProgress[category] = 0;
+                }
+                categoryTotals[category] += fileInfo.size;
+            });
             
-            if (['glb', 'gltf'].includes(ext)) return 'Models';
-            if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'ico'].includes(ext)) return 'Images';
-            if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) return 'Audio';
-            if (ext === 'js') return 'JavaScript';
-            if (ext === 'css') return 'Stylesheets';
-            if (ext === 'html') return 'HTML';
-            if (ext === 'json') return 'Data';
-            return 'Resources';
+            // Log category totals
+            console.log('Category size totals:');
+            Object.entries(categoryTotals).forEach(([category, size]) => {
+                console.log(`- ${category}: ${formatFileSize(size)} (${((size / totalFilesSize) * 100).toFixed(1)}% of total)`);
+            });
+            
+            // Store category information for progress display
+            fileCategories = Object.keys(categoryTotals).map(category => ({
+                name: category,
+                totalSize: categoryTotals[category],
+                loadedSize: 0,
+                percentage: 0
+            }));
+        }
+        
+        /**
+         * Determine file category based on file extension
+         * @param {string} ext - File extension
+         * @param {boolean} capitalize - Whether to capitalize the category name
+         * @returns {string} The category name
+         */
+        function getCategoryFromExtension(ext, capitalize = false) {
+            let category;
+            
+            if (['glb', 'gltf'].includes(ext)) category = 'models';
+            else if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'ico'].includes(ext)) category = 'images';
+            else if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) category = 'audio';
+            else if (ext === 'js') category = 'javascript';
+            else if (ext === 'css') category = 'stylesheets';
+            else if (ext === 'html') category = 'html';
+            else if (ext === 'json') category = 'data';
+            else category = 'resources';
+            
+            // Capitalize if requested
+            if (capitalize) {
+                category = category.charAt(0).toUpperCase() + category.slice(1);
+            }
+            
+            return category;
+        }
+        
+        /**
+         * Estimate file size based on category
+         * @param {string} category - File category
+         * @returns {number} Estimated file size in bytes
+         */
+        function getEstimatedSizeForCategory(category) {
+            // Normalize category to lowercase for comparison
+            const normalizedCategory = category.toLowerCase();
+            
+            if (normalizedCategory === 'models') return 500000; // ~500KB for models
+            else if (normalizedCategory === 'images') return 100000; // ~100KB for images
+            else if (normalizedCategory === 'audio') return 200000; // ~200KB for audio
+            else if (normalizedCategory === 'javascript') return 50000; // ~50KB for JS
+            else if (normalizedCategory === 'stylesheets') return 20000; // ~20KB for CSS
+            else if (normalizedCategory === 'html') return 15000; // ~15KB for HTML
+            else if (normalizedCategory === 'data') return 25000; // ~25KB for data files
+            else return 30000; // ~30KB default
+        }
+        
+        /**
+         * Determine file category and size based on filename
+         * @param {string} url - File URL
+         * @returns {Object} Object containing fileName, category, and expectedSize
+         */
+        function getFileInfo(url) {
+            // Extract filename from URL
+            const fileName = url.split('/').pop();
+            
+            // Default values
+            let category = 'unknown';
+            let expectedSize = 0;
+            
+            // Check if we have data for this file in file-sizes.json
+            if (filesData && filesData[fileName]) {
+                category = filesData[fileName].category;
+                expectedSize = filesData[fileName].size;
+                
+                // Convert category to display format (capitalize first letter)
+                category = category.charAt(0).toUpperCase() + category.slice(1);
+            } else {
+                // Fallback to extension-based categorization if file not found in data
+                const ext = url.split('.').pop().toLowerCase();
+                
+                // Get category from extension (with capitalization)
+                category = getCategoryFromExtension(ext, true);
+                
+                // Try to estimate size based on category if we don't have actual data
+                if (expectedSize === 0) {
+                    expectedSize = getEstimatedSizeForCategory(category);
+                }
+            }
+            
+            return { fileName, category, expectedSize };
+        }
+        
+        /**
+         * Update category progress based on loaded file
+         * @param {string} fileName - Name of the loaded file
+         * @param {number} size - Size of the loaded file in bytes
+         */
+        function updateCategoryProgress(fileName, size) {
+            // If we have file data in filesData, use it
+            if (filesData && filesData[fileName]) {
+                const category = filesData[fileName].category;
+                if (categoryProgress[category] !== undefined) {
+                    categoryProgress[category] += size;
+                    
+                    // Update category in fileCategories array
+                    const categoryIndex = fileCategories.findIndex(c => c.name === category);
+                    if (categoryIndex !== -1) {
+                        fileCategories[categoryIndex].loadedSize += size;
+                        fileCategories[categoryIndex].percentage = 
+                            (fileCategories[categoryIndex].loadedSize / fileCategories[categoryIndex].totalSize) * 100;
+                    }
+                }
+                return;
+            }
+            
+            // If file not found in filesData, determine category from extension
+            const ext = fileName.split('.').pop().toLowerCase();
+            const category = getCategoryFromExtension(ext); // Use our utility function
+            
+            // Update the category if it exists in our tracking
+            if (categoryProgress[category] !== undefined) {
+                categoryProgress[category] += size;
+                
+                // Update category in fileCategories array
+                const categoryIndex = fileCategories.findIndex(c => c.name === category);
+                if (categoryIndex !== -1) {
+                    fileCategories[categoryIndex].loadedSize += size;
+                    fileCategories[categoryIndex].percentage = 
+                        (fileCategories[categoryIndex].loadedSize / fileCategories[categoryIndex].totalSize) * 100;
+                }
+            }
+        }
+        
+        // Function to get the current loading focus (which category is most actively loading)
+        function getCurrentLoadingFocus() {
+            if (!fileCategories || fileCategories.length === 0) return 'Resources';
+            
+            // Find the category with the highest recent activity but not complete
+            const activeCategories = fileCategories.filter(c => c.percentage < 99);
+            if (activeCategories.length === 0) return 'Finalizing';
+            
+            // Sort by percentage loading (highest first)
+            activeCategories.sort((a, b) => b.percentage - a.percentage);
+            return activeCategories[0].name.charAt(0).toUpperCase() + activeCategories[0].name.slice(1);
         }
         
         // Function to update the progress display
@@ -143,15 +309,30 @@ import { LoadingScreen } from './LoadingScreen.js';
             const lastDownloadedFile = downloadedResources.size > 0 ? 
                 Array.from(downloadedResources.keys())[downloadedResources.size - 1] : '';
             
-            // Get the file name and category
-            const fileName = lastDownloadedFile.split('/').pop();
-            const categoryName = getFileCategory(fileName);
+            // Get the file info
+            const { fileName, category } = getFileInfo(lastDownloadedFile);
+            
+            // Get the current loading focus
+            const loadingFocus = getCurrentLoadingFocus();
+            
+            // Create a detailed status message
+            let statusMessage = `Loading resources... ${progress}% (${formatFileSize(loadedBytes)} / ${formatFileSize(totalFilesSize)})`;
+            let detailMessage = `${category}: ${fileName}`;
+            
+            // Add category progress if available
+            if (fileCategories && fileCategories.length > 0) {
+                // Find the most active category (highest percentage but not complete)
+                const activeCategory = fileCategories.find(c => c.name.toLowerCase() === loadingFocus.toLowerCase());
+                if (activeCategory) {
+                    detailMessage = `${loadingFocus} (${Math.round(activeCategory.percentage)}%): ${fileName}`;
+                }
+            }
             
             // Update loading screen
             loadingScreen.updateProgress(
                 progress,
-                `Loading resources... ${progress}% (${formatFileSize(loadedBytes)} / ${formatFileSize(totalFilesSize)})`,
-                `${categoryName}: ${fileName}`
+                statusMessage,
+                detailMessage
             );
             
             // If window has loaded and we're at 99%, finish up
@@ -163,6 +344,15 @@ import { LoadingScreen } from './LoadingScreen.js';
             const now = Date.now();
             if (now - lastProgressUpdate > 5000) {
                 console.log(`Loading progress: ${progress}% (${formatFileSize(loadedBytes)} / ${formatFileSize(totalFilesSize)})`);
+                
+                // Log category progress
+                if (fileCategories && fileCategories.length > 0) {
+                    console.log('Category progress:');
+                    fileCategories.forEach(category => {
+                        console.log(`- ${category.name}: ${Math.round(category.percentage)}% (${formatFileSize(category.loadedSize)} / ${formatFileSize(category.totalSize)})`);
+                    });
+                }
+                
                 lastProgressUpdate = now;
             }
         }
@@ -186,15 +376,40 @@ import { LoadingScreen } from './LoadingScreen.js';
                             // Extract the file name from the URL
                             const fileName = url.split('/').pop();
                             
-                            // Store the downloaded resource size
-                            if (transferSize > 0) {
-                                downloadedResources.set(url, transferSize);
+                            // Get expected size from file-sizes.json if available
+                            let expectedSize = 0;
+                            let sizeToRecord = transferSize;
+                            let loadSource = 'network';
+                            let sizeAccuracy = '';
+                            
+                            // Check if we have file size data in file-sizes.json
+                            if (filesData && filesData[fileName]) {
+                                expectedSize = filesData[fileName].size;
+                                
+                                // If transferSize is 0, this is likely a cached resource
+                                // Use the expected size from file-sizes.json instead
+                                if (transferSize === 0) {
+                                    sizeToRecord = expectedSize;
+                                    loadSource = 'cache';
+                                } else {
+                                    // For network transfers, calculate accuracy compared to expected size
+                                    const accuracy = ((transferSize / expectedSize) * 100).toFixed(1);
+                                    sizeAccuracy = ` (${accuracy}% of expected ${formatFileSize(expectedSize)})`;
+                                }
+                            }
+                            
+                            // Store the resource size (either from network or from file-sizes.json for cached resources)
+                            if (sizeToRecord > 0) {
+                                downloadedResources.set(url, sizeToRecord);
+                                
+                                // Update category progress tracking
+                                updateCategoryProgress(fileName, sizeToRecord);
                                 
                                 // Update progress display
                                 updateProgressDisplay();
                                 
                                 // Log detailed info for debugging
-                                console.debug(`Downloaded: ${fileName} (${formatFileSize(transferSize)})`);
+                                console.debug(`${loadSource === 'cache' ? 'Loaded from cache' : 'Downloaded'}: ${fileName} (${formatFileSize(sizeToRecord)}${sizeAccuracy})`);
                             }
                         }
                     });
@@ -202,19 +417,32 @@ import { LoadingScreen } from './LoadingScreen.js';
                 
                 // Observe resource timing entries
                 observer.observe({ entryTypes: ['resource'] });
-                console.log('Network performance observer started');
+                console.log('Enhanced network performance observer started with category tracking');
             } catch (error) {
                 console.error('Error setting up PerformanceObserver:', error);
             }
         } else {
             console.warn('PerformanceObserver not supported, cannot track network activity');
             
-            // Show a basic loading message without progress percentage
-            loadingScreen.updateProgress(
-                10,
-                'Loading resources...',
-                'Please wait while the game loads'
-            );
+            // If we have file size data, we can still show category information
+            if (fileCategories && fileCategories.length > 0) {
+                // Show the largest categories
+                fileCategories.sort((a, b) => b.totalSize - a.totalSize);
+                const largestCategory = fileCategories[0].name;
+                
+                loadingScreen.updateProgress(
+                    10,
+                    `Loading resources... (${formatFileSize(totalFilesSize)} total)`,
+                    `Preparing to load ${largestCategory} files and other assets...`
+                );
+            } else {
+                // Show a basic loading message without progress percentage
+                loadingScreen.updateProgress(
+                    10,
+                    'Loading resources...',
+                    'Please wait while the game loads'
+                );
+            }
         }
         
         // Set up a regular interval to update progress display
@@ -252,6 +480,7 @@ import { LoadingScreen } from './LoadingScreen.js';
     /**
      * Finish loading and show completion message
      * Exposes loading screen to main.js for final initialization
+     * Provides detailed category-based loading statistics
      */
     function finishLoading(intervalId) {
         if (intervalId) {
@@ -260,11 +489,59 @@ import { LoadingScreen } from './LoadingScreen.js';
         
         const loadTime = ((Date.now() - loadingStartTime) / 1000).toFixed(1);
         
+        // Prepare category statistics if available
+        let categoryStats = {};
+        let largestCategory = 'assets';
+        let largestCategorySize = 0;
+        
+        if (fileCategories && fileCategories.length > 0) {
+            // Calculate statistics for each category
+            fileCategories.forEach(category => {
+                categoryStats[category.name] = {
+                    size: category.loadedSize,
+                    percentage: Math.round(category.percentage)
+                };
+                
+                // Track the largest category
+                if (category.totalSize > largestCategorySize) {
+                    largestCategorySize = category.totalSize;
+                    largestCategory = category.name;
+                }
+            });
+            
+            // Log detailed category statistics
+            console.log('Final loading statistics by category:');
+            Object.entries(categoryStats).forEach(([category, stats]) => {
+                console.log(`- ${category}: ${formatFileSize(stats.size)} (${stats.percentage}% loaded)`);
+            });
+        }
+        
+        // Create a more informative completion message
+        let completionMessage = `Assets loaded in ${loadTime}s (${formatFileSize(totalFilesSize)})`;
+        let detailMessage = 'Initializing game engine...';
+        
+        // Add category information if available
+        if (Object.keys(categoryStats).length > 0) {
+            // Count how many categories were fully loaded
+            const fullyLoadedCategories = Object.entries(categoryStats)
+                .filter(([_, stats]) => stats.percentage >= 99)
+                .length;
+                
+            const totalCategories = Object.keys(categoryStats).length;
+            
+            // Add category information to the detail message
+            if (fullyLoadedCategories === totalCategories) {
+                detailMessage = `All ${totalCategories} asset categories loaded successfully`;
+            } else {
+                detailMessage = `${fullyLoadedCategories}/${totalCategories} asset categories loaded`;
+            }
+        }
+        
         // Show 100% completion message
         loadingScreen.updateProgress(
             100,
-            `Assets loaded in ${loadTime}s (${formatFileSize(totalFilesSize)})`,
-            'Initializing game engine...'
+            completionMessage,
+            detailMessage
         );
         
         // Expose loading screen instance to window so main.js can access it
@@ -274,12 +551,14 @@ import { LoadingScreen } from './LoadingScreen.js';
         const assetsLoadedEvent = new CustomEvent('gameAssetsLoaded', {
             detail: {
                 loadTime: loadTime,
-                totalSize: totalFilesSize
+                totalSize: totalFilesSize,
+                categories: categoryStats || null,
+                largestCategory: largestCategory
             }
         });
         window.dispatchEvent(assetsLoadedEvent);
         
-        console.log('Assets loaded, control passed to main.js');
+        console.log(`Assets loaded in ${loadTime}s, control passed to main.js`);
     }
     
     // trackProgressSimulated function has been removed
