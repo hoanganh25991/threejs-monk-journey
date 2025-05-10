@@ -5,12 +5,12 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '23'; // Incremented version to force update
+const CACHE_VERSION = '25'; // Incremented version to force update
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 10385771;
-const TOTAL_CACHE_SIZE_MB = 9.90;
+const TOTAL_CACHE_SIZE_BYTES = 2905409;
+const TOTAL_CACHE_SIZE_MB = 2.77;
 
 // Communication channel
 let messagePort = null;
@@ -23,8 +23,11 @@ const ASSETS_TO_CACHE = [
   'css/animations.css',
   'css/core/game.css',
   'css/core/hud-manager.css',
+  'css/core/layout.css',
+  'css/core/loading-screen.css',
   'css/core/menu-system.css',
-  'css/layout.css',
+  'css/core/performance-manager.css',
+  'css/initial-loading.css',
   'css/main.css',
   'css/mobile.css',
   'css/reset.css',
@@ -58,7 +61,6 @@ const ASSETS_TO_CACHE = [
   'js/core/hud-manager/SkillsUI.js',
   'js/core/hud-manager/VirtualJoystickUI.js',
   'js/core/menu-system/GameMenu.js',
-  'js/core/menu-system/LoadingScreen.js',
   'js/core/menu-system/MainBackground.js',
   'js/core/menu-system/ModelPreview.js',
   'js/core/menu-system/SettingsMenu.js',
@@ -166,7 +168,8 @@ const ASSETS_TO_CACHE = [
   'assets/images/background.jpg',
   'assets/models/monk-v3.glb',
   'assets/models/monk.glb',
-  'assets/models/songoku.glb',
+  'pwa/LoadingScreen.js',
+  'pwa/file-tracker.js',
   'pwa/orientation-lock.js',
   'pwa/registration.js'
 ];

@@ -1,7 +1,7 @@
 {
-  "totalSizeBytes": 10423205,
-  "totalSizeMB": "9.94",
-  "totalFiles": 156,
+  "totalSizeBytes": 2905409,
+  "totalSizeMB": "2.77",
+  "totalFiles": 155,
   "fileSizes": {
     "animations.css": {
       "size": 1036,
@@ -56,7 +56,7 @@
       "category": "js"
     },
     "player-models.js": {
-      "size": 2270,
+      "size": 1618,
       "category": "js"
     },
     "skills.js": {
@@ -316,7 +316,7 @@
       "category": "js"
     },
     "main.js": {
-      "size": 3241,
+      "size": 3180,
       "category": "js"
     },
     "AnimationUtils.js": {
@@ -595,16 +595,12 @@
       "size": 366580,
       "category": "models"
     },
-    "songoku.glb": {
-      "size": 7519300,
-      "category": "models"
-    },
     "LoadingScreen.js": {
       "size": 10695,
       "category": "js"
     },
     "file-tracker.js": {
-      "size": 19963,
+      "size": 22180,
       "category": "js"
     },
     "orientation-lock.js": {
@@ -629,7 +625,7 @@
     },
     "js": {
       "count": 93,
-      "size": 983088,
+      "size": 984592,
       "sampleFile": "js/config/index.js"
     },
     "images": {
@@ -643,12 +639,12 @@
       "sampleFile": "assets/audio/ally_dismiss.mp3"
     },
     "models": {
-      "count": 3,
-      "size": 8041172,
+      "count": 2,
+      "size": 521872,
       "sampleFile": "assets/models/monk-v3.glb"
     }
   },
-  "generatedAt": "2025-05-10T01:42:51.860Z",
+  "generatedAt": "2025-05-10T01:57:41.609Z",
   "fileList": [
     "animations.css",
     "game.css",
@@ -798,7 +794,6 @@
     "background.jpg",
     "monk-v3.glb",
     "monk.glb",
-    "songoku.glb",
     "LoadingScreen.js",
     "file-tracker.js",
     "orientation-lock.js",
