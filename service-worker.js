@@ -5,12 +5,12 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '27'; // Incremented version to force update
+const CACHE_VERSION = '28'; // Incremented version to force update
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 2911033;
-const TOTAL_CACHE_SIZE_MB = 2.78;
+const TOTAL_CACHE_SIZE_BYTES = 2903955;
+const TOTAL_CACHE_SIZE_MB = 2.77;
 
 // Communication channel
 let messagePort = null;
@@ -168,7 +168,7 @@ const ASSETS_TO_CACHE = [
   'assets/images/background.jpg',
   'assets/models/monk-v3.glb',
   'assets/models/monk.glb',
-  'pwa/LoadingScreen.js',
+  'pwa/SimulatedLoadingScreen.js',
   'pwa/orientation-lock.js',
   'pwa/registration.js'
 ];

@@ -25,7 +25,7 @@
     <meta property="og:locale" content="en_US">
  
     <!-- File tracking and initial loading progress -->
-    <!-- <script src="pwa/file-tracker.js" type="module"></script> -->
+    <script src="pwa/initial-loading-progress.js" type="module"></script>
 
     <!-- Import Three.js from CDN -->
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
@@ -40,21 +40,16 @@
 </head>
 
 <body>
-    <!-- Initial Loading Indicator -->
-    <div id="initial-loading-indicator">
-        <h2 class="loading-title">Loading Monk Journey...</h2>
-        <div class="loading-bar-container">
-            <div class="loading-bar"></div>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <h2>Loading Monk Journey...</h2>
+        <div id="loading-bar-container">
+            <div id="loading-bar"></div>
         </div>
-        <p class="loading-text">Loading resources...</p>
-        <p class="loading-info">Downloading game assets...</p>
+        <p id="loading-text">Loading resources...</p>
+        <p id="loading-info">Downloading game assets...</p>
     </div>
     
-    <!-- Main Background -->
-    <div id="main-background"
-        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; background-image: url('assets/images/background.jpg'); background-size: cover; background-position: center center; background-repeat: no-repeat;">
-    </div>
-
     <!-- Orientation Message -->
     <div id="orientation-message">
         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
@@ -64,19 +59,14 @@
         <p>Please rotate your device to landscape mode for the best experience</p>
     </div>
 
+    <!-- Main Background -->
+    <div id="main-background"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; background-image: url('assets/images/background.jpg'); background-size: cover; background-position: center center; background-repeat: no-repeat;">
+    </div>
+
     <!-- Game Container -->
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
-    </div>
-
-    <!-- Loading Screen -->
-    <div id="loading-screen">
-        <h2>Loading Monk Journey...</h2>
-        <div id="loading-bar-container">
-            <div id="loading-bar"></div>
-        </div>
-        <p id="loading-text">Loading resources...</p>
-        <p id="loading-info">Downloading game assets...</p>
     </div>
 
     <!-- HUD Container Elements -->

@@ -6,7 +6,6 @@
 import { Game } from './core/game/Game.js';
 import { DEFAULT_CHARACTER_MODEL } from './config/player-models.js';
 import { GameMenu } from './core/menu-system/GameMenu.js';
-import { LoadingScreen } from '../pwa/LoadingScreen.js';
 
 // Store the selected model and size for use when starting a new game
 // Make these variables available globally for the Game class to access
@@ -38,20 +37,6 @@ function startGame(event) {
             window.fileTracker.disconnectNetworkObserver();
         }
         
-        // Access the loading screen instance exposed by initial-load-progress.js
-        const loadingScreen = new LoadingScreen();
-        
-        if (loadingScreen) {
-            // Update loading screen to show game initialization
-            loadingScreen.updateProgress(
-                100,
-                `Game initialized`,
-                'Showing Game menu...'
-            );
-        } else {
-            console.warn("Loading screen instance not found");
-        }
-        
         // Make sure the game is paused
         console.debug("Pausing game...");
         game.pause();
@@ -63,9 +48,9 @@ function startGame(event) {
         // Force a small delay to ensure DOM updates have completed
         setTimeout(() => {
             console.debug("Showing game menu...");
+            const loadingScreen = document.getElementById('loading-screen');
             if (loadingScreen) {
-                // Hide loading screen immediately since game menu will be shown
-                loadingScreen.hide();
+                loadingScreen.style.display = 'none';
             } else {
                 console.warn("Loading screen instance not found");
             }
