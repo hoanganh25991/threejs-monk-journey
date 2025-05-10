@@ -28,7 +28,6 @@ export class SaveManager extends ISaveSystem {
         this.autoSaveInterval = 60_000; // Auto-save every minute (reduced frequency)
         this.autoSaveTimer = null;
         this.lastSaveLevel = 0; // Track player level at last save
-        this.saveThresholdLevels = [5, 10, 15, 20, 30, 40, 50]; // Save at these level milestones
         this.lastSaveTime = 0; // Track time of last save
         this.minTimeBetweenSaves = 60_000; // Minimum minute between saves
         
@@ -65,8 +64,8 @@ export class SaveManager extends ISaveSystem {
         
         // Set up new timer
         this.autoSaveTimer = setInterval(() => {
-            // Use async saveGame method
-            this.saveGame().catch(error => {
+            // Use async saveGame method with auto=true
+            this.saveGame(false, true).catch(error => {
                 console.error('Auto-save failed:', error);
             });
         }, this.autoSaveInterval);
@@ -86,19 +85,20 @@ export class SaveManager extends ISaveSystem {
     /**
      * Save the current game state with a simple notification
      * @param {boolean} forceSave - Whether to force save regardless of conditions
+     * @param {boolean} auto - Whether this is an auto-save (silent, no UI)
      * @returns {Promise<boolean>} Promise resolving to success status
      */
-    async saveGame(forceSave = false) {
+    async saveGame(forceSave = false, auto = false) {
         try {
             const currentTime = Date.now();
             const playerLevel = this.game.player.stats.level;
             
             // Check if we should save based on level milestones or forced save
-            const shouldSaveByLevel = this.saveThresholdLevels.includes(playerLevel) && playerLevel > this.lastSaveLevel;
             const timeSinceLastSave = currentTime - this.lastSaveTime;
             const enoughTimePassed = timeSinceLastSave > this.minTimeBetweenSaves;
+            const shouldSaveByLevel = playerLevel > this.lastSaveLevel;
             
-            if (!forceSave && !shouldSaveByLevel && !enoughTimePassed) {
+            if (!forceSave && !enoughTimePassed) {
                 SaveUtils.log('Skipping save - not at level milestone or not enough time passed');
                 return true; // Skip saving but return success
             }
@@ -127,19 +127,29 @@ export class SaveManager extends ISaveSystem {
             
             // Save chunks separately if at level milestone or forced
             if (shouldSaveByLevel || forceSave) {
-                await this.saveWorldChunksWithProgress();
+                // Use silent method for auto-saves
+                if (auto) {
+                    await this.saveWorldChunks();
+                } else {
+                    await this.saveWorldChunksWithProgress();
+                }
                 this.lastSaveLevel = playerLevel;
             }
             
             this.lastSaveTime = currentTime;
             
+            // Always log, but only show notification for non-auto saves
             SaveUtils.log('Game saved successfully');
-            SaveUtils.showNotification(this.game, 'Game saved successfully');
+            if (!auto) {
+                SaveUtils.showNotification(this.game, 'Game saved successfully');
+            }
             
             return true;
         } catch (error) {
             SaveUtils.log('Error saving game: ' + error.message, 'error');
-            SaveUtils.showNotification(this.game, 'Failed to save game', 3000, 'error');
+            if (!auto) {
+                SaveUtils.showNotification(this.game, 'Failed to save game', 3000, 'error');
+            }
             
             return false;
         }
