@@ -21,14 +21,6 @@ export class DialogUI extends UIComponent {
      * @returns {boolean} - True if initialization was successful
      */
     init() {
-        const template = `
-            <div id="dialog-text"></div>
-            <div id="dialog-continue">Click to continue...</div>
-        `;
-        
-        // Render the template
-        this.render(template);
-        
         // Store references to elements we need to update
         this.dialogText = document.getElementById('dialog-text');
         this.dialogContinue = document.getElementById('dialog-continue');
@@ -65,7 +57,6 @@ export class DialogUI extends UIComponent {
         this.dialogContinue.style.display = 'block';
         
         // Pause game
-        this.game.pause();
         
         console.log('Dialog opened:', title);
     }
