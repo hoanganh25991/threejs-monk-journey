@@ -145,7 +145,7 @@ export class NotificationsUI extends UIComponent {
         }
         
         // Add to notifications array with dynamic lifetime based on message rate
-        const lifetime = messageRate > 3 ? 0.7 : 1.5; // Shorter lifetime when messages come quickly
+        const lifetime = messageRate > 3 ? 0.3 : 0.7; // Shorter lifetime when messages come quickly
 
         this.notifications.push({
             element: notification,
