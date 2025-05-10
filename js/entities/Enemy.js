@@ -827,7 +827,13 @@ export class Enemy {
         this.createAttackEffect();
         
         // Deal damage to player
-        this.player.takeDamage(this.damage);
+        const damageDealt = this.player.takeDamage(this.damage);
+        
+        // Create bleeding effect at player position
+        if (this.game && this.game.effectsManager) {
+            const playerPosition = this.player.getPosition();
+            this.game.effectsManager.createBleedingEffect(damageDealt, playerPosition, true);
+        }
         
         // Reset attack state after delay
         setTimeout(() => {

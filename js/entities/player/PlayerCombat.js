@@ -142,8 +142,8 @@ export class PlayerCombat extends IPlayerCombat {
         enemy.takeDamage(damage);
         
         // Show damage number
-        if (this.game && this.game.uiManager) {
-            this.game.uiManager.createBleedingEffect(damage, enemyPosition);
+        if (this.game && this.game.effectsManager) {
+            this.game.effectsManager.createBleedingEffect(damage, enemyPosition, false);
         }
         
         // Apply knockback on heavy punch (combo step 3)

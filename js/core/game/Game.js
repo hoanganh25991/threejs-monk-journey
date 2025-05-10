@@ -11,6 +11,7 @@ import { AudioManager } from '../AudioManager.js';
 import { SaveManager } from '../save-manager/SaveManager.js';
 import { DifficultyManager } from '../DifficultyManager.js';
 import { PerformanceManager } from '../PerformanceManager.js';
+import { EffectsManager } from '../effects/EffectsManager.js';
 import { GameState } from './GameState.js';
 import { GameEvents } from './GameEvents.js';
 import { SceneOptimizer } from './SceneOptimizer.js';
@@ -158,6 +159,10 @@ export class Game {
             this.inputHandler = new InputHandler(this);
             
             this.updateLoadingProgress(65, 'Creating user interface...', 'Building HUD elements');
+            
+            // Initialize Effects Manager
+            this.effectsManager = new EffectsManager(this);
+            this.effectsManager.init();
             
             // Initialize UI manager
             this.uiManager = new HUDManager(this);
@@ -366,7 +371,10 @@ export class Game {
         this.collisionManager.update();
         
         // Update UI
-        this.uiManager.update();
+        this.uiManager.update(delta);
+        
+        // Update effects
+        this.effectsManager.update(delta);
         
         // Render scene with potential optimizations
         this.renderer.render(this.scene, this.camera);
