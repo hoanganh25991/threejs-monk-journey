@@ -136,12 +136,11 @@ help me refactor the setting menu
     - move unrelated methods, logic to proper categorized file
     - dont create index.js just to re-export
 
+- [x] Help me create mini map in HUDManager
+  - [x] At top-right
+  - [x] Move Quest Log from top-right to below player-stats-container
+  - [x] Minimap render world in simpler way, focus on performance
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-- [ ] Help me create mini map in HUDManager
-  - At top-right
-  - Move Quest Log from top-right to below player-stats-container
-  - Minimap render world in simpler way, focus on performance
 
 - [ ] Help me add level progress
 
