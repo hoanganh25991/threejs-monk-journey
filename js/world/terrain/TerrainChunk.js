@@ -12,7 +12,7 @@ export class TerrainChunk {
      * @param {number} size - Size of the chunk
      * @param {number} resolution - Resolution of the chunk
      */
-    constructor(chunkX, chunkZ, size = 50, resolution = 16) {
+    constructor(chunkX, chunkZ, size = 100, resolution = 16) {
         this.chunkX = chunkX;
         this.chunkZ = chunkZ;
         this.size = size;
@@ -50,7 +50,10 @@ export class TerrainChunk {
         // Create terrain mesh
         const terrain = new THREE.Mesh(geometry, material);
         terrain.rotation.x = -Math.PI / 2;
+        
+        // CRITICAL FIX: Ensure both receiveShadow and castShadow are set to true
         terrain.receiveShadow = true;
+        terrain.castShadow = true;
         
         // Apply uniform grass coloring with slight variations
         this.colorTerrainUniform(terrain);

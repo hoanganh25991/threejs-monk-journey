@@ -12,15 +12,15 @@ export class TerrainManager {
         this.game = null;
         
         // Terrain properties
-        this.terrainSize = 50; // Base terrain size
+        this.terrainSize = 100; // Base terrain size (INCREASED for better performance)
         this.terrainResolution = 16; // Base terrain resolution
         this.terrainHeight = 10; // Maximum terrain height
         
         // For terrain chunks
         this.terrainChunks = {}; // Store terrain chunks by chunk key
-        this.terrainChunkSize = 50; // Size of each terrain chunk
+        this.terrainChunkSize = 100; // Size of each terrain chunk (INCREASED for better performance)
         this.visibleTerrainChunks = {}; // Store currently visible terrain chunks
-        this.terrainChunkViewDistance = 3; // How many terrain chunks to show in each direction
+        this.terrainChunkViewDistance = 2; // How many terrain chunks to show in each direction (REDUCED to compensate for larger chunks)
         
         // For terrain buffering (pre-rendering)
         this.terrainBuffer = {}; // Store pre-generated terrain chunks that aren't yet visible
@@ -70,43 +70,17 @@ export class TerrainManager {
      * @returns {Promise<void>}
      */
     async createBaseTerrain() {
-        // Create a completely flat terrain for consistency with endless terrain
-        const geometry = new THREE.PlaneGeometry(
-            this.terrainSize, 
-            this.terrainSize, 
-            this.terrainResolution - 1, 
-            this.terrainResolution - 1
+        // Create the base terrain at the center (0,0) using the unified terrain creation method
+        const terrain = this.createTerrainMesh(
+            0, // Center X
+            0, // Center Z
+            this.terrainSize, // Use terrainSize for the base terrain
+            this.terrainResolution - 1, // Use slightly lower resolution for base terrain
+            true, // Is base terrain
+            new THREE.Vector3(0, 0, 0) // Position at center
         );
         
-        // No need to apply heightmap since we want a flat terrain
-        geometry.computeVertexNormals();
-        
-        // Create terrain material with lighter green color
-        const grassTexture = TextureGenerator.createProceduralTexture(0x4a9e4a, 0x3a7a3a, 512);
-        
-        // Create terrain material with grass texture
-        const material = new THREE.MeshStandardMaterial({
-            map: grassTexture,
-            roughness: 0.8,
-            metalness: 0.2,
-            vertexColors: true
-        });
-        
-        // Create terrain mesh
-        const terrain = new THREE.Mesh(geometry, material);
-        terrain.rotation.x = -Math.PI / 2;
-        terrain.receiveShadow = true;
-        terrain.castShadow = true;
-        
-        // Apply uniform grass coloring with slight variations
-        this.colorTerrainUniform(terrain);
-        
-        // Make sure terrain is positioned at the center and exactly at y=0
-        // This is critical to prevent vibration
-        terrain.position.set(0, 0, 0);
-        
-        // Add terrain to scene
-        this.scene.add(terrain);
+        // Store reference to the base terrain
         this.terrain = terrain;
         
         console.log("Flat terrain created and added to scene");
@@ -292,25 +266,26 @@ export class TerrainManager {
     }
     
     /**
-     * Create a new terrain chunk from scratch
-     * @param {number} chunkX - X chunk coordinate
-     * @param {number} chunkZ - Z chunk coordinate
-     * @returns {THREE.Mesh} - The created terrain chunk
+     * Create a unified terrain mesh for both base terrain and chunks
+     * @param {number} x - X coordinate (chunk or world)
+     * @param {number} z - Z coordinate (chunk or world)
+     * @param {number} size - Size of the terrain mesh
+     * @param {number} resolution - Resolution of the terrain mesh
+     * @param {boolean} isBaseTerrain - Whether this is the base terrain or a chunk
+     * @param {THREE.Vector3} position - Position to place the terrain
+     * @returns {THREE.Mesh} - The created terrain mesh
      */
-    createNewTerrainChunk(chunkX, chunkZ) {
-        const chunkKey = `${chunkX},${chunkZ}`;
-        
-        // Calculate world coordinates for this chunk
-        const worldX = chunkX * this.terrainChunkSize;
-        const worldZ = chunkZ * this.terrainChunkSize;
-        
+    createTerrainMesh(x, z, size, resolution, isBaseTerrain = false, position = null) {
         // Create terrain geometry
         const geometry = new THREE.PlaneGeometry(
-            this.terrainChunkSize,
-            this.terrainChunkSize,
-            16, // Lower resolution for better performance
-            16
+            size,
+            size,
+            resolution,
+            resolution
         );
+        
+        // Compute vertex normals for proper lighting
+        geometry.computeVertexNormals();
         
         // Create terrain material with lighter green color
         const grassTexture = TextureGenerator.createProceduralTexture(0x4a9e4a, 0x3a7a3a, 512);
@@ -326,20 +301,51 @@ export class TerrainManager {
         // Create terrain mesh
         const terrain = new THREE.Mesh(geometry, material);
         terrain.rotation.x = -Math.PI / 2;
+        
+        // CRITICAL FIX: Ensure both receiveShadow and castShadow are set to true
         terrain.receiveShadow = true;
+        terrain.castShadow = true;
         
         // Apply uniform grass coloring with slight variations
         this.colorTerrainUniform(terrain);
         
-        // Position the terrain chunk - ensure y=0 exactly to prevent vibration
-        terrain.position.set(
-            worldX + this.terrainChunkSize / 2,
-            0,
-            worldZ + this.terrainChunkSize / 2
-        );
+        // Position the terrain - ensure y=0 exactly to prevent vibration
+        if (position) {
+            terrain.position.copy(position);
+        } else {
+            // Calculate world coordinates for this chunk
+            const worldX = x * this.terrainChunkSize;
+            const worldZ = z * this.terrainChunkSize;
+            
+            terrain.position.set(
+                worldX + this.terrainChunkSize / 2,
+                0,
+                worldZ + this.terrainChunkSize / 2
+            );
+        }
         
         // Add terrain to scene
         this.scene.add(terrain);
+        
+        return terrain;
+    }
+    
+    /**
+     * Create a new terrain chunk from scratch
+     * @param {number} chunkX - X chunk coordinate
+     * @param {number} chunkZ - Z chunk coordinate
+     * @returns {THREE.Mesh} - The created terrain chunk
+     */
+    createNewTerrainChunk(chunkX, chunkZ) {
+        const chunkKey = `${chunkX},${chunkZ}`;
+        
+        // Create the terrain mesh using the unified method
+        const terrain = this.createTerrainMesh(
+            chunkX,
+            chunkZ,
+            this.terrainChunkSize,
+            16 // Lower resolution for better performance
+        );
         
         // Store the terrain chunk
         this.terrainChunks[chunkKey] = terrain;
@@ -441,43 +447,20 @@ export class TerrainManager {
         if (this.game && this.game.saveManager) {
             const loadedChunk = this.game.saveManager.loadChunk(chunkKey);
             if (loadedChunk) {
-                // Create terrain but don't add to scene yet (it's still in buffer)
+                // Calculate world coordinates for position
                 const worldX = chunkX * this.terrainChunkSize;
                 const worldZ = chunkZ * this.terrainChunkSize;
                 
-                // Create terrain geometry
-                const geometry = new THREE.PlaneGeometry(
+                // Create terrain using unified method but remove from scene (it's for buffer)
+                const terrain = this.createTerrainMesh(
+                    chunkX,
+                    chunkZ,
                     this.terrainChunkSize,
-                    this.terrainChunkSize,
-                    16, // Lower resolution for better performance
-                    16
+                    16 // Lower resolution for better performance
                 );
                 
-                // Create terrain material with lighter green color
-                const grassTexture = TextureGenerator.createProceduralTexture(0x4a9e4a, 0x3a7a3a, 512);
-                
-                // Create terrain material with grass texture
-                const material = new THREE.MeshStandardMaterial({
-                    map: grassTexture,
-                    roughness: 0.8,
-                    metalness: 0.2,
-                    vertexColors: true
-                });
-                
-                // Create terrain mesh
-                const terrain = new THREE.Mesh(geometry, material);
-                terrain.rotation.x = -Math.PI / 2;
-                terrain.receiveShadow = true;
-                
-                // Apply uniform grass coloring with slight variations
-                this.colorTerrainUniform(terrain);
-                
-                // Position the terrain chunk - ensure y=0 exactly to prevent vibration
-                terrain.position.set(
-                    worldX + this.terrainChunkSize / 2,
-                    0,
-                    worldZ + this.terrainChunkSize / 2
-                );
+                // Remove from scene since it's going into the buffer
+                this.scene.remove(terrain);
                 
                 // Replace placeholder with real terrain
                 this.terrainBuffer[chunkKey] = terrain;
@@ -493,43 +476,17 @@ export class TerrainManager {
             }
         }
         
-        // If no saved data, create a new chunk
-        const worldX = chunkX * this.terrainChunkSize;
-        const worldZ = chunkZ * this.terrainChunkSize;
-        
-        // Create terrain geometry
-        const geometry = new THREE.PlaneGeometry(
+        // If no saved data, create a new chunk using unified method
+        // Create terrain using unified method but don't add to scene (it's for buffer)
+        const terrain = this.createTerrainMesh(
+            chunkX,
+            chunkZ,
             this.terrainChunkSize,
-            this.terrainChunkSize,
-            16, // Lower resolution for better performance
-            16
+            16 // Lower resolution for better performance
         );
         
-        // Create terrain material with lighter green color
-        const grassTexture = TextureGenerator.createProceduralTexture(0x4a9e4a, 0x3a7a3a, 512);
-        
-        // Create terrain material with grass texture
-        const material = new THREE.MeshStandardMaterial({
-            map: grassTexture,
-            roughness: 0.8,
-            metalness: 0.2,
-            vertexColors: true
-        });
-        
-        // Create terrain mesh
-        const terrain = new THREE.Mesh(geometry, material);
-        terrain.rotation.x = -Math.PI / 2;
-        terrain.receiveShadow = true;
-        
-        // Apply uniform grass coloring with slight variations
-        this.colorTerrainUniform(terrain);
-        
-        // Position the terrain chunk - ensure y=0 exactly to prevent vibration
-        terrain.position.set(
-            worldX + this.terrainChunkSize / 2,
-            0,
-            worldZ + this.terrainChunkSize / 2
-        );
+        // Remove from scene since it's going into the buffer
+        this.scene.remove(terrain);
         
         // Replace placeholder with real terrain
         this.terrainBuffer[chunkKey] = terrain;

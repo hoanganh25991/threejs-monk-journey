@@ -37,16 +37,26 @@ export class LightingManager {
         directionalLight.position.set(50, 100, 50);
         directionalLight.castShadow = true;
         
-        // Configure shadow properties
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
+        // IMPROVED: Configure shadow properties for better coverage and quality
+        directionalLight.shadow.mapSize.width = 4096; // Increased from 2048 for better shadow quality
+        directionalLight.shadow.mapSize.height = 4096; // Increased from 2048 for better shadow quality
         directionalLight.shadow.camera.near = 0.5;
-        directionalLight.shadow.camera.far = 500;
-        directionalLight.shadow.camera.left = -100;
-        directionalLight.shadow.camera.right = 100;
-        directionalLight.shadow.camera.top = 100;
-        directionalLight.shadow.camera.bottom = -100;
+        directionalLight.shadow.camera.far = 1000; // Increased from 500 for better shadow distance
+        directionalLight.shadow.camera.left = -200; // Increased from -100 for wider shadow coverage
+        directionalLight.shadow.camera.right = 200; // Increased from 100 for wider shadow coverage
+        directionalLight.shadow.camera.top = 200; // Increased from 100 for wider shadow coverage
+        directionalLight.shadow.camera.bottom = -200; // Increased from -100 for wider shadow coverage
         
+        // CRITICAL FIX: Add these settings to improve shadow quality and prevent shadow disappearance
+        directionalLight.shadow.bias = -0.0001; // Helps prevent shadow acne
+        directionalLight.shadow.normalBias = 0.02; // Helps with normal-mapped surfaces
+        directionalLight.shadow.radius = 1; // Slight blur for softer shadows
+        
+        // Create a target for the directional light
+        directionalLight.target.position.set(0, 0, 0);
+        this.scene.add(directionalLight.target);
+        
+        // Add the light to the scene
         this.scene.add(directionalLight);
         this.lights.push(directionalLight);
         this.sunLight = directionalLight;
@@ -59,10 +69,11 @@ export class LightingManager {
     }
     
     /**
-     * Update lighting based on time of day
+     * Update lighting based on time of day and player position
      * @param {number} deltaTime - Time since last update
+     * @param {THREE.Vector3} [playerPosition] - Optional player position to update light position
      */
-    update(deltaTime) {
+    update(deltaTime, playerPosition) {
         if (this.dayNightCycle) {
             // Update time of day
             this.timeOfDay += this.dayNightCycleSpeed * deltaTime;
@@ -73,23 +84,53 @@ export class LightingManager {
             // Update lighting based on time of day
             this.updateLightingForTimeOfDay();
         }
+        
+        // If player position is provided, update the shadow camera position
+        if (playerPosition) {
+            this.updateLightPositionForPlayer(playerPosition);
+        }
+    }
+    
+    /**
+     * Update directional light position to follow the player
+     * @param {THREE.Vector3} playerPosition - The player's current position
+     */
+    updateLightPositionForPlayer(playerPosition) {
+        if (!this.sunLight) return;
+        
+        // Get the current sun angle and height from time of day
+        const sunAngle = Math.PI * 2 * this.timeOfDay - Math.PI / 2;
+        const sunHeight = Math.sin(sunAngle);
+        const sunDistance = 100;
+        
+        // Calculate sun position relative to player
+        const relativeX = Math.cos(sunAngle) * sunDistance;
+        const relativeY = Math.max(0.1, sunHeight) * sunDistance;
+        const relativeZ = 0;
+        
+        // Update sun position to be relative to player
+        this.sunLight.position.set(
+            playerPosition.x + relativeX,
+            playerPosition.y + relativeY,
+            playerPosition.z + relativeZ
+        );
+        
+        // Update the target of the directional light to look at the player
+        this.sunLight.target.position.copy(playerPosition);
+        
+        // Make sure the target is added to the scene
+        if (!this.sunLight.target.parent) {
+            this.scene.add(this.sunLight.target);
+        }
     }
     
     /**
      * Update lighting based on current time of day
      */
     updateLightingForTimeOfDay() {
-        // Calculate sun position
+        // Calculate sun angle and height (but don't update position here)
         const sunAngle = Math.PI * 2 * this.timeOfDay - Math.PI / 2;
         const sunHeight = Math.sin(sunAngle);
-        const sunDistance = 100;
-        
-        // Update sun position
-        this.sunLight.position.set(
-            Math.cos(sunAngle) * sunDistance,
-            Math.max(0.1, sunHeight) * sunDistance,
-            0
-        );
         
         // Update sun intensity based on height
         const sunIntensity = Math.max(0, sunHeight);

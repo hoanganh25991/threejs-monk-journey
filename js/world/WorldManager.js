@@ -110,6 +110,11 @@ export class WorldManager {
         // Update environment objects with potentially reduced draw distance
         this.environmentManager.updateForPlayer(playerPosition, effectiveDrawDistance);
         
+        // Update lighting to follow player
+        // Get delta time from game if available
+        const deltaTime = this.game && this.game.clock ? this.game.clock.getDelta() : 0.016;
+        this.lightingManager.update(deltaTime, playerPosition);
+        
         // Check if player has moved far enough for screen-based enemy spawning
         const distanceMoved = playerPosition.distanceTo(this.lastPlayerPosition);
         if (distanceMoved >= this.screenSpawnDistance) {
