@@ -143,7 +143,10 @@
             
             try {
                 const messageChannel = new MessageChannel();
-                const self = this;
+                
+                // Store a reference to this for use in the callback
+                // This is necessary because 'this' context changes in the event handler
+                const instance = this;
                 
                 // Set up message event handler
                 messageChannel.port1.onmessage = (event) => {
@@ -165,7 +168,7 @@
                                 window.TOTAL_CACHE_SIZE_MB = data.totalSizeMB;
                             }
                             
-                            self.updateLoadingProgress(
+                            instance.updateLoadingProgress(
                                 percent, 
                                 `Downloading files (${completed}/${total})`, 
                                 fileInfo,
@@ -230,21 +233,18 @@
                             totalSizeText = ` (${window.TOTAL_CACHE_SIZE_MB} MB)`;
                         }
                         
-                        this.updateLoadingProgress(90, `Update installed${totalSizeText}, reloading...`, null);
-                        // If there's a controller, it means the page is being controlled by an old SW
-                        if (navigator.serviceWorker.controller) {
-                            // New content is available, reload to activate the new service worker
-                            const self = this;
-                            setTimeout(() => {
-                                self.updateLoadingProgress(100, 'Reloading...', null);
-                                window.location.reload();
-                            }, 1000);
-                        } else {
-                            // First time install, no need to reload
-                            this.updateLoadingProgress(100, `Ready!${totalSizeText}`, null);
-                            const self = this;
-                            setTimeout(() => self.hideUpdateNotification(), 1000);
-                        }
+                        this.updateLoadingProgress(90, `Update installed${totalSizeText}`, null);
+                        
+                        // No need to reload regardless of controller status
+                        console.log('Service worker installed - no reload needed');
+                        this.updateLoadingProgress(100, `Ready!${totalSizeText}`, null);
+                        
+                        // Use arrow function to preserve 'this' context
+                        setTimeout(() => this.hideUpdateNotification(), 1000);
+                        
+                        // Note: We don't need to reload the page when the service worker is installed
+                        // The service worker will handle caching at the network level and serve
+                        // cached resources for subsequent requests automatically
                         break;
                     case 'activating':
                         this.updateLoadingProgress(95, 'Activating...', null);
@@ -257,13 +257,11 @@
                         }
                         
                         this.updateLoadingProgress(100, `Complete!${completedSizeText}`, null);
-                        const self = this;
-                        setTimeout(() => self.hideUpdateNotification(), 1000);
+                        setTimeout(() => this.hideUpdateNotification(), 1000);
                         break;
                     case 'redundant':
                         this.updateLoadingProgress(0, 'Update failed!', 'Please refresh the page to try again');
-                        const selfRef = this;
-                        setTimeout(() => selfRef.hideUpdateNotification(), 3000);
+                        setTimeout(() => this.hideUpdateNotification(), 3000);
                         break;
                 }
             } catch (error) {
@@ -277,14 +275,15 @@
         initialize() {
             try {
                 let refreshing = false;
-                const self = this;
 
                 // Handle service worker updates
                 navigator.serviceWorker.addEventListener('controllerchange', () => {
                     if (!refreshing) {
                         refreshing = true;
-                        console.log('Service worker controller changed, reloading page');
-                        window.location.reload();
+                        console.log('Service worker controller changed - no reload needed');
+                        // Note: We don't need to reload the page when the service worker changes
+                        // The service worker handles caching at the network level and will serve
+                        // cached resources for subsequent requests automatically
                     }
                 });
 

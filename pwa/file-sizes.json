@@ -1,6 +1,6 @@
 {
-  "totalSizeBytes": 2905509,
-  "totalSizeMB": "2.77",
+  "totalSizeBytes": 2897155,
+  "totalSizeMB": "2.76",
   "totalFiles": 155,
   "fileSizes": {
     "animations.css": {
@@ -27,6 +27,10 @@
       "size": 10699,
       "category": "css"
     },
+    "notifications.css": {
+      "size": 2271,
+      "category": "css"
+    },
     "performance-manager.css": {
       "size": 1022,
       "category": "css"
@@ -36,7 +40,7 @@
       "category": "css"
     },
     "main.css": {
-      "size": 839,
+      "size": 908,
       "category": "css"
     },
     "mobile.css": {
@@ -50,10 +54,6 @@
     "utilities.css": {
       "size": 2433,
       "category": "css"
-    },
-    "index.js": {
-      "size": 62,
-      "category": "js"
     },
     "player-models.js": {
       "size": 1618,
@@ -91,8 +91,12 @@
       "size": 2518,
       "category": "js"
     },
+    "EffectsManager.js": {
+      "size": 2573,
+      "category": "js"
+    },
     "Game.js": {
-      "size": 15961,
+      "size": 16262,
       "category": "js"
     },
     "GameEvents.js": {
@@ -119,13 +123,12 @@
       "size": 1909,
       "category": "js"
     },
-
     "EnemyUI.js": {
       "size": 1842,
       "category": "js"
     },
     "HUDManager.js": {
-      "size": 10661,
+      "size": 11066,
       "category": "js"
     },
     "HomeButton.js": {
@@ -141,7 +144,7 @@
       "category": "js"
     },
     "NotificationsUI.js": {
-      "size": 21242,
+      "size": 18719,
       "category": "js"
     },
     "PlayerUI.js": {
@@ -161,7 +164,7 @@
       "category": "js"
     },
     "GameMenu.js": {
-      "size": 8911,
+      "size": 11443,
       "category": "js"
     },
     "MainBackground.js": {
@@ -173,7 +176,7 @@
       "category": "js"
     },
     "SettingsMenu.js": {
-      "size": 33492,
+      "size": 33476,
       "category": "js"
     },
     "ISaveSystem.js": {
@@ -189,7 +192,7 @@
       "category": "js"
     },
     "SaveManager.js": {
-      "size": 28982,
+      "size": 27248,
       "category": "js"
     },
     "PlayerSerializer.js": {
@@ -217,7 +220,7 @@
       "category": "js"
     },
     "Enemy.js": {
-      "size": 61987,
+      "size": 62288,
       "category": "js"
     },
     "EnemyManager.js": {
@@ -233,7 +236,7 @@
       "category": "js"
     },
     "PlayerCombat.js": {
-      "size": 14371,
+      "size": 14388,
       "category": "js"
     },
     "PlayerInterface.js": {
@@ -245,7 +248,7 @@
       "category": "js"
     },
     "PlayerModel.js": {
-      "size": 55020,
+      "size": 55028,
       "category": "js"
     },
     "PlayerMovement.js": {
@@ -253,7 +256,7 @@
       "category": "js"
     },
     "PlayerSkills.js": {
-      "size": 16511,
+      "size": 16374,
       "category": "js"
     },
     "PlayerState.js": {
@@ -261,7 +264,11 @@
       "category": "js"
     },
     "PlayerStats.js": {
-      "size": 3245,
+      "size": 3446,
+      "category": "js"
+    },
+    "BleedingEffect.js": {
+      "size": 8586,
       "category": "js"
     },
     "CycloneStrikeEffect.js": {
@@ -313,7 +320,7 @@
       "category": "js"
     },
     "main.js": {
-      "size": 3180,
+      "size": 3188,
       "category": "js"
     },
     "AnimationUtils.js": {
@@ -597,7 +604,7 @@
       "category": "js"
     },
     "file-tracker.js": {
-      "size": 22280,
+      "size": 22793,
       "category": "js"
     },
     "orientation-lock.js": {
@@ -605,25 +612,25 @@
       "category": "js"
     },
     "registration.js": {
-      "size": 14078,
+      "size": 15834,
       "category": "js"
     }
   },
   "categories": {
     "other": {
-      "count": 3,
-      "size": 33445,
-      "sampleFile": "index.html"
+      "count": 2,
+      "size": 17376,
+      "sampleFile": "manifest.json"
     },
     "css": {
-      "count": 12,
-      "size": 34661,
+      "count": 13,
+      "size": 37001,
       "sampleFile": "css/animations.css"
     },
     "js": {
       "count": 93,
-      "size": 984692,
-      "sampleFile": "js/config/index.js"
+      "size": 990067,
+      "sampleFile": "js/config/player-models.js"
     },
     "images": {
       "count": 5,
@@ -641,7 +648,7 @@
       "sampleFile": "assets/models/monk-v3.glb"
     }
   },
-  "generatedAt": "2025-05-10T01:59:16.409Z",
+  "generatedAt": "2025-05-10T07:19:21.690Z",
   "fileList": [
     "animations.css",
     "game.css",
@@ -649,13 +656,13 @@
     "layout.css",
     "loading-screen.css",
     "menu-system.css",
+    "notifications.css",
     "performance-manager.css",
     "initial-loading.css",
     "main.css",
     "mobile.css",
     "reset.css",
     "utilities.css",
-    "index.js",
     "player-models.js",
     "skills.js",
     "AudioManager.js",
@@ -665,6 +672,7 @@
     "PerformanceManager.js",
     "QuestManager.js",
     "UIComponent.js",
+    "EffectsManager.js",
     "Game.js",
     "GameEvents.js",
     "GameState.js",
@@ -672,7 +680,6 @@
     "SceneOptimizer.js",
     "DeathScreenUI.js",
     "DialogUI.js",
-    "EffectsManager.js",
     "EnemyUI.js",
     "HUDManager.js",
     "HomeButton.js",
@@ -709,6 +716,7 @@
     "PlayerSkills.js",
     "PlayerState.js",
     "PlayerStats.js",
+    "BleedingEffect.js",
     "CycloneStrikeEffect.js",
     "ExplodingPalmEffect.js",
     "FistOfThunderEffect.js",

@@ -5,12 +5,12 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '25'; // Incremented version to force update
+const CACHE_VERSION = '26'; // Incremented version to force update
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 2905409;
-const TOTAL_CACHE_SIZE_MB = 2.77;
+const TOTAL_CACHE_SIZE_BYTES = 2897155;
+const TOTAL_CACHE_SIZE_MB = 2.76;
 
 // Communication channel
 let messagePort = null;
@@ -18,7 +18,6 @@ let messagePort = null;
 // Assets to cache - organized by type for better progress reporting
 const ASSETS_TO_CACHE = [
   '',
-  'index.html',
   'manifest.json',
   'css/animations.css',
   'css/core/game.css',
@@ -26,13 +25,13 @@ const ASSETS_TO_CACHE = [
   'css/core/layout.css',
   'css/core/loading-screen.css',
   'css/core/menu-system.css',
+  'css/core/notifications.css',
   'css/core/performance-manager.css',
   'css/initial-loading.css',
   'css/main.css',
   'css/mobile.css',
   'css/reset.css',
   'css/utilities.css',
-  'js/config/index.js',
   'js/config/player-models.js',
   'js/config/skills.js',
   'js/core/AudioManager.js',
@@ -42,6 +41,7 @@ const ASSETS_TO_CACHE = [
   'js/core/PerformanceManager.js',
   'js/core/QuestManager.js',
   'js/core/UIComponent.js',
+  'js/core/effects/EffectsManager.js',
   'js/core/game/Game.js',
   'js/core/game/GameEvents.js',
   'js/core/game/GameState.js',
@@ -85,6 +85,7 @@ const ASSETS_TO_CACHE = [
   'js/entities/player/PlayerSkills.js',
   'js/entities/player/PlayerState.js',
   'js/entities/player/PlayerStats.js',
+  'js/entities/skills/BleedingEffect.js',
   'js/entities/skills/CycloneStrikeEffect.js',
   'js/entities/skills/ExplodingPalmEffect.js',
   'js/entities/skills/FistOfThunderEffect.js',

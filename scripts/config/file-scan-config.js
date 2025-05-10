@@ -24,12 +24,12 @@ const fileExtensions = [
 // Files to always include
 const alwaysInclude = [
   '',
-  'index.html',
   'manifest.json'
 ];
 
 // Files to exclude
 const excludeFiles = [
+  'index.html',
   'node_modules',
   '.git',
   '.vscode',
