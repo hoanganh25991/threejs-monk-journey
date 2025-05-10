@@ -151,6 +151,22 @@ export class WorldManager {
         this.interactiveManager.clear();
         this.zoneManager.clear();
         
+        // Clear cached data to prevent memory leaks
+        this.terrainFeatures = [];
+        this.trees = [];
+        this.rocks = [];
+        this.buildings = [];
+        this.paths = [];
+        
+        // Force garbage collection hint
+        if (window.gc) {
+            try {
+                window.gc();
+            } catch (e) {
+                // Ignore if not available
+            }
+        }
+        
         console.log("World objects cleared for reload");
     }
     

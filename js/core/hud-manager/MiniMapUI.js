@@ -25,7 +25,7 @@ export class MiniMapUI extends UIComponent {
         this.canvasSize = this.mapSize; // Canvas size matches map size
         this.scale = 1; // Increased scale factor for better world coverage
         this.lastRenderTime = 0;
-        this.renderInterval = 100; // Render every 100ms for performance
+        this.renderInterval = 250; // Increased to 250ms for better performance
         this.isVisible = true;
         this.maxDrawDistance = this.mapSize / 2 - 2; // Maximum draw distance from center
     }
@@ -292,7 +292,24 @@ export class MiniMapUI extends UIComponent {
         if (world.getTerrainFeatures) {
             const features = world.getTerrainFeatures();
             
-            features.forEach(feature => {
+            // Limit the number of features to draw for performance
+            const maxFeatures = 100; // Limit to 100 features
+            const featuresToDraw = features.length > maxFeatures ? 
+                features.slice(0, maxFeatures) : features;
+            
+            // Group features by type for batch rendering
+            const featuresByType = {
+                wall: [],
+                door: [],
+                water: [],
+                tree: [],
+                rock: [],
+                path: [],
+                other: []
+            };
+            
+            // Pre-calculate positions and filter out-of-bounds features
+            featuresToDraw.forEach(feature => {
                 // Calculate position relative to player
                 const relX = (feature.position.x - playerX) * this.scale;
                 const relY = (feature.position.z - playerY) * this.scale;
@@ -301,80 +318,91 @@ export class MiniMapUI extends UIComponent {
                 const screenX = centerX + relX;
                 const screenY = centerY + relY;
                 
-                // Calculate distance from center (for circular bounds check)
-                const distFromCenter = Math.sqrt(
-                    Math.pow(screenX - centerX, 2) + 
-                    Math.pow(screenY - centerY, 2)
-                );
+                // Fast distance check (avoid sqrt for performance)
+                const distSquared = (screenX - centerX) * (screenX - centerX) + 
+                                   (screenY - centerY) * (screenY - centerY);
+                const maxDistSquared = (this.mapSize / 2 - 2) * (this.mapSize / 2 - 2);
                 
-                // Only draw if within circular mini map bounds
-                if (distFromCenter <= (this.mapSize / 2 - 2)) {
-                    // Draw based on feature type
-                    switch (feature.type) {
-                        case 'wall':
-                            this.ctx.fillStyle = 'rgba(85, 85, 85, 0.8)';
-                            this.ctx.fillRect(
-                                screenX - 2, 
-                                screenY - 2, 
-                                4, 
-                                4
-                            );
-                            break;
-                        case 'door':
-                            this.ctx.fillStyle = 'rgba(136, 85, 85, 0.8)';
-                            this.ctx.beginPath();
-                            this.ctx.arc(screenX, screenY, 3, 0, Math.PI * 2);
-                            this.ctx.fill();
-                            break;
-                        case 'water':
-                            this.ctx.fillStyle = 'rgba(85, 85, 255, 0.5)';
-                            this.ctx.fillRect(
-                                screenX - 3, 
-                                screenY - 3, 
-                                6, 
-                                6
-                            );
-                            break;
-                        case 'tree':
-                            // Draw trees as green circles
-                            this.ctx.fillStyle = 'rgba(34, 139, 34, 0.7)';
-                            this.ctx.beginPath();
-                            this.ctx.arc(screenX, screenY, 3, 0, Math.PI * 2);
-                            this.ctx.fill();
-                            break;
-                        case 'rock':
-                            // Draw rocks as gray circles
-                            this.ctx.fillStyle = 'rgba(120, 120, 120, 0.7)';
-                            this.ctx.beginPath();
-                            this.ctx.arc(screenX, screenY, 2, 0, Math.PI * 2);
-                            this.ctx.fill();
-                            break;
-                        case 'path':
-                            // Draw paths as light lines
-                            this.ctx.fillStyle = 'rgba(210, 180, 140, 0.5)';
-                            this.ctx.fillRect(
-                                screenX - 2, 
-                                screenY - 2, 
-                                4, 
-                                4
-                            );
-                            break;
-                        default:
-                            // Other features
-                            this.ctx.fillStyle = 'rgba(119, 119, 119, 0.5)';
-                            this.ctx.fillRect(
-                                screenX - 1, 
-                                screenY - 1, 
-                                2, 
-                                2
-                            );
-                    }
+                // Only include if within circular mini map bounds
+                if (distSquared <= maxDistSquared) {
+                    const type = feature.type || 'other';
+                    const group = featuresByType[type] || featuresByType.other;
+                    
+                    group.push({
+                        x: screenX,
+                        y: screenY
+                    });
                 }
             });
+            
+            // Batch render each feature type
+            // Walls
+            if (featuresByType.wall.length > 0) {
+                this.ctx.fillStyle = 'rgba(85, 85, 85, 0.8)';
+                featuresByType.wall.forEach(pos => {
+                    this.ctx.fillRect(pos.x - 2, pos.y - 2, 4, 4);
+                });
+            }
+            
+            // Doors
+            if (featuresByType.door.length > 0) {
+                this.ctx.fillStyle = 'rgba(136, 85, 85, 0.8)';
+                featuresByType.door.forEach(pos => {
+                    this.ctx.beginPath();
+                    this.ctx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+            }
+            
+            // Water
+            if (featuresByType.water.length > 0) {
+                this.ctx.fillStyle = 'rgba(85, 85, 255, 0.5)';
+                featuresByType.water.forEach(pos => {
+                    this.ctx.fillRect(pos.x - 3, pos.y - 3, 6, 6);
+                });
+            }
+            
+            // Trees
+            if (featuresByType.tree.length > 0) {
+                this.ctx.fillStyle = 'rgba(34, 139, 34, 0.7)';
+                featuresByType.tree.forEach(pos => {
+                    this.ctx.beginPath();
+                    this.ctx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+            }
+            
+            // Rocks
+            if (featuresByType.rock.length > 0) {
+                this.ctx.fillStyle = 'rgba(120, 120, 120, 0.7)';
+                featuresByType.rock.forEach(pos => {
+                    this.ctx.beginPath();
+                    this.ctx.arc(pos.x, pos.y, 2, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+            }
+            
+            // Paths
+            if (featuresByType.path.length > 0) {
+                this.ctx.fillStyle = 'rgba(210, 180, 140, 0.5)';
+                featuresByType.path.forEach(pos => {
+                    this.ctx.fillRect(pos.x - 2, pos.y - 2, 4, 4);
+                });
+            }
+            
+            // Other features
+            if (featuresByType.other.length > 0) {
+                this.ctx.fillStyle = 'rgba(119, 119, 119, 0.5)';
+                featuresByType.other.forEach(pos => {
+                    this.ctx.fillRect(pos.x - 1, pos.y - 1, 2, 2);
+                });
+            }
         }
         
-        // Try to draw additional world elements if available
-        this.drawWorldElements(playerX, playerY, centerX, centerY);
+        // Only draw additional world elements if the map is visible
+        if (this.isVisible) {
+            this.drawWorldElements(playerX, playerY, centerX, centerY);
+        }
     }
     
     /**
@@ -486,12 +514,27 @@ export class MiniMapUI extends UIComponent {
         // Get all entities
         const entities = this.game.world.getEntities ? this.game.world.getEntities() : [];
         
+        // Limit the number of entities to draw for performance
+        const maxEntities = 50; // Limit to 50 entities
+        const entitiesToDraw = entities.length > maxEntities ? 
+            entities.slice(0, maxEntities) : entities;
+        
+        // Group entities by type for batch rendering
+        const enemyEntities = [];
+        const npcEntities = [];
+        const itemEntities = [];
+        const otherEntities = [];
+        
         // Reset any shadow effects before starting
         this.ctx.shadowBlur = 0;
         
-        entities.forEach(entity => {
+        // Pre-calculate positions and filter out-of-bounds entities
+        entitiesToDraw.forEach(entity => {
             // Skip player entity
             if (entity === this.game.player) return;
+            
+            // Skip entities without position
+            if (!entity.getPosition) return;
             
             // Calculate position relative to player
             const relX = (entity.getPosition().x - playerX) * this.scale;
@@ -501,66 +544,92 @@ export class MiniMapUI extends UIComponent {
             const screenX = centerX + relX;
             const screenY = centerY + relY;
             
-            // Calculate distance from center (for circular bounds check)
-            const distFromCenter = Math.sqrt(
-                Math.pow(screenX - centerX, 2) + 
-                Math.pow(screenY - centerY, 2)
-            );
+            // Fast distance check (avoid sqrt for performance)
+            const distSquared = (screenX - centerX) * (screenX - centerX) + 
+                               (screenY - centerY) * (screenY - centerY);
+            const maxDistSquared = (this.mapSize / 2 - 2) * (this.mapSize / 2 - 2);
             
-            // Only draw if within circular mini map bounds
-            if (distFromCenter <= (this.mapSize / 2 - 2)) {
-                // Determine color based on entity type
-                let color = 'rgba(255, 255, 255, 0.5)'; // Default white, more transparent
-                let size = 2;
-                let strokeColor = null;
+            // Only include if within circular mini map bounds
+            if (distSquared <= maxDistSquared) {
+                const entityData = {
+                    x: screenX,
+                    y: screenY,
+                    size: 2 // Default size
+                };
                 
+                // Group by entity type
                 if (entity.isEnemy) {
-                    // Bright red with higher opacity for enemies
-                    color = 'rgba(255, 0, 0, 0.8)'; 
-                    strokeColor = 'rgba(255, 50, 50, 0.9)';
-                    size = 2; // Smaller size for enemies (was 4)
+                    enemyEntities.push(entityData);
                 } else if (entity.isNPC) {
-                    color = 'rgba(200, 200, 0, 0.6)'; // Darker yellow for NPCs
-                    strokeColor = 'rgba(255, 255, 0, 0.7)';
+                    npcEntities.push(entityData);
                 } else if (entity.isItem) {
-                    color = 'rgba(0, 180, 180, 0.6)'; // Darker cyan for items
-                }
-                
-                // Draw entity dot
-                this.ctx.fillStyle = color;
-                this.ctx.beginPath();
-                this.ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Draw a circle outline for enemies with glow effect
-                if (entity.isEnemy) {
-                    // Reduced glow effect
-                    this.ctx.shadowColor = 'rgba(255, 0, 0, 0.6)';
-                    this.ctx.shadowBlur = 3; // Reduced from 6
-                    
-                    // Draw main outline only (removed outer glow ring)
-                    this.ctx.strokeStyle = strokeColor || color;
-                    this.ctx.lineWidth = 1; // Thinner line (was 1.5)
-                    this.ctx.beginPath();
-                    this.ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
-                    this.ctx.stroke();
-                    
-                    // Reset shadow
-                    this.ctx.shadowBlur = 0;
-                }
-                
-                // Draw a small pulse effect for NPCs only
-                if (entity.isNPC && strokeColor) {
-                    this.ctx.strokeStyle = strokeColor;
-                    this.ctx.lineWidth = 1;
-                    this.ctx.beginPath();
-                    this.ctx.arc(screenX, screenY, size + 2, 0, Math.PI * 2);
-                    this.ctx.stroke();
+                    itemEntities.push(entityData);
+                } else {
+                    otherEntities.push(entityData);
                 }
             }
         });
         
-        // Ensure shadow effects are reset after all entities are drawn
+        // Batch render each entity type
+        // Enemies - no glow effects for better performance
+        if (enemyEntities.length > 0) {
+            this.ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+            enemyEntities.forEach(entity => {
+                this.ctx.beginPath();
+                this.ctx.arc(entity.x, entity.y, entity.size, 0, Math.PI * 2);
+                this.ctx.fill();
+            });
+            
+            // Draw outlines in a single batch
+            this.ctx.strokeStyle = 'rgba(255, 50, 50, 0.9)';
+            this.ctx.lineWidth = 1;
+            enemyEntities.forEach(entity => {
+                this.ctx.beginPath();
+                this.ctx.arc(entity.x, entity.y, entity.size, 0, Math.PI * 2);
+                this.ctx.stroke();
+            });
+        }
+        
+        // NPCs
+        if (npcEntities.length > 0) {
+            this.ctx.fillStyle = 'rgba(200, 200, 0, 0.6)';
+            npcEntities.forEach(entity => {
+                this.ctx.beginPath();
+                this.ctx.arc(entity.x, entity.y, entity.size, 0, Math.PI * 2);
+                this.ctx.fill();
+            });
+            
+            // Draw outlines in a single batch
+            this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.7)';
+            this.ctx.lineWidth = 1;
+            npcEntities.forEach(entity => {
+                this.ctx.beginPath();
+                this.ctx.arc(entity.x, entity.y, entity.size + 1, 0, Math.PI * 2);
+                this.ctx.stroke();
+            });
+        }
+        
+        // Items
+        if (itemEntities.length > 0) {
+            this.ctx.fillStyle = 'rgba(0, 180, 180, 0.6)';
+            itemEntities.forEach(entity => {
+                this.ctx.beginPath();
+                this.ctx.arc(entity.x, entity.y, entity.size, 0, Math.PI * 2);
+                this.ctx.fill();
+            });
+        }
+        
+        // Other entities
+        if (otherEntities.length > 0) {
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            otherEntities.forEach(entity => {
+                this.ctx.beginPath();
+                this.ctx.arc(entity.x, entity.y, entity.size, 0, Math.PI * 2);
+                this.ctx.fill();
+            });
+        }
+        
+        // No shadow effects for better performance
         this.ctx.shadowBlur = 0;
         this.ctx.shadowColor = 'transparent';
     }
