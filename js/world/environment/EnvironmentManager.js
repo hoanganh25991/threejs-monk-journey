@@ -204,15 +204,63 @@ export class EnvironmentManager {
     /**
      * Remove environment objects for a specific chunk
      * @param {string} chunkKey - The chunk key
+     * @param {boolean} disposeResources - Whether to dispose of geometries and materials
      */
-    removeChunkObjects(chunkKey) {
-        // Remove environment objects from scene but keep their data
+    removeChunkObjects(chunkKey, disposeResources = false) {
+        // Remove environment objects from scene
         if (this.environmentObjects[chunkKey]) {
             this.environmentObjects[chunkKey].forEach(item => {
-                if (item.object && item.object.parent) {
-                    this.scene.remove(item.object);
+                if (item.object) {
+                    // Remove from scene if it's in the scene
+                    if (item.object.parent) {
+                        this.scene.remove(item.object);
+                    }
+                    
+                    // Dispose of geometries and materials if requested
+                    if (disposeResources) {
+                        if (item.object.geometry) {
+                            item.object.geometry.dispose();
+                        }
+                        
+                        if (item.object.material) {
+                            // Handle both single materials and material arrays
+                            if (Array.isArray(item.object.material)) {
+                                item.object.material.forEach(material => {
+                                    if (material.map) material.map.dispose();
+                                    material.dispose();
+                                });
+                            } else {
+                                if (item.object.material.map) item.object.material.map.dispose();
+                                item.object.material.dispose();
+                            }
+                        }
+                        
+                        // Handle child objects if any
+                        if (item.object.children && item.object.children.length > 0) {
+                            item.object.children.forEach(child => {
+                                if (child.geometry) child.geometry.dispose();
+                                if (child.material) {
+                                    if (Array.isArray(child.material)) {
+                                        child.material.forEach(material => {
+                                            if (material.map) material.map.dispose();
+                                            material.dispose();
+                                        });
+                                    } else {
+                                        if (child.material.map) child.material.map.dispose();
+                                        child.material.dispose();
+                                    }
+                                }
+                            });
+                        }
+                    }
                 }
             });
+            
+            // If disposing resources, remove the chunk data completely
+            if (disposeResources) {
+                delete this.environmentObjects[chunkKey];
+                console.log(`Disposed environment objects for chunk ${chunkKey}`);
+            }
         }
         
         // Remove the chunk from the visible chunks

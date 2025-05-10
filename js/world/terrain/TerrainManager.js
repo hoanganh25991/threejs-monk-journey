@@ -606,16 +606,58 @@ export class TerrainManager {
     }
     
     /**
-     * Remove a terrain chunk
+     * Remove a terrain chunk and associated objects
      * @param {string} chunkKey - The chunk key
+     * @param {boolean} cleanupAssociatedObjects - Whether to clean up associated objects (structures, environment)
      */
-    removeTerrainChunk(chunkKey) {
+    removeTerrainChunk(chunkKey, cleanupAssociatedObjects = true) {
         const terrain = this.terrainChunks[chunkKey];
         if (terrain) {
-            this.scene.remove(terrain);
-            terrain.geometry.dispose();
-            terrain.material.dispose();
+            // Remove from scene
+            if (terrain.parent) {
+                this.scene.remove(terrain);
+            }
+            
+            // Dispose of geometry and materials
+            if (terrain.geometry) {
+                terrain.geometry.dispose();
+            }
+            
+            if (terrain.material) {
+                if (Array.isArray(terrain.material)) {
+                    terrain.material.forEach(material => {
+                        if (material.map) material.map.dispose();
+                        material.dispose();
+                    });
+                } else {
+                    if (terrain.material.map) terrain.material.map.dispose();
+                    terrain.material.dispose();
+                }
+            }
+            
+            // Remove from terrainChunks
             delete this.terrainChunks[chunkKey];
+            
+            // Clean up associated objects if requested
+            if (cleanupAssociatedObjects && this.worldManager) {
+                // Clean up environment objects
+                if (this.worldManager.environmentManager) {
+                    this.worldManager.environmentManager.removeChunkObjects(chunkKey, true);
+                }
+                
+                // Clean up structures
+                if (this.worldManager.structureManager) {
+                    this.worldManager.structureManager.removeStructuresInChunk(chunkKey, true);
+                }
+                
+                // Clean up interactive objects if the method exists
+                if (this.worldManager.interactiveManager && 
+                    typeof this.worldManager.interactiveManager.removeObjectsInChunk === 'function') {
+                    this.worldManager.interactiveManager.removeObjectsInChunk(chunkKey, true);
+                }
+                
+                console.log(`Removed terrain chunk ${chunkKey} with associated objects`);
+            }
         }
     }
     

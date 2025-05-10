@@ -297,6 +297,82 @@ export class StructureManager {
     }
     
     /**
+     * Remove structures in a specific chunk
+     * @param {string} chunkKey - The chunk key (x,z format)
+     * @param {boolean} disposeResources - Whether to dispose of geometries and materials
+     */
+    removeStructuresInChunk(chunkKey, disposeResources = false) {
+        // Check if we have structures in this chunk
+        if (this.structuresPlaced[chunkKey]) {
+            // Get structures in this chunk
+            const structuresToRemove = this.structures.filter(structure => {
+                // Check if structure has position data
+                if (structure.userData && structure.userData.chunkKey === chunkKey) {
+                    return true;
+                }
+                return false;
+            });
+            
+            // Remove structures from scene and dispose resources
+            structuresToRemove.forEach(structure => {
+                // Remove from scene
+                if (structure.parent) {
+                    this.scene.remove(structure);
+                }
+                
+                // Dispose of resources if requested
+                if (disposeResources) {
+                    // Dispose of geometry
+                    if (structure.geometry) {
+                        structure.geometry.dispose();
+                    }
+                    
+                    // Dispose of materials
+                    if (structure.material) {
+                        if (Array.isArray(structure.material)) {
+                            structure.material.forEach(material => {
+                                if (material.map) material.map.dispose();
+                                material.dispose();
+                            });
+                        } else {
+                            if (structure.material.map) structure.material.map.dispose();
+                            structure.material.dispose();
+                        }
+                    }
+                    
+                    // Handle child objects
+                    if (structure.children && structure.children.length > 0) {
+                        structure.children.forEach(child => {
+                            if (child.geometry) child.geometry.dispose();
+                            if (child.material) {
+                                if (Array.isArray(child.material)) {
+                                    child.material.forEach(material => {
+                                        if (material.map) material.map.dispose();
+                                        material.dispose();
+                                    });
+                                } else {
+                                    if (child.material.map) child.material.map.dispose();
+                                    child.material.dispose();
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+            
+            // Remove structures from the structures array
+            this.structures = this.structures.filter(structure => {
+                return !(structure.userData && structure.userData.chunkKey === chunkKey);
+            });
+            
+            // Remove from structuresPlaced
+            delete this.structuresPlaced[chunkKey];
+            
+            console.log(`Removed ${structuresToRemove.length} structures from chunk ${chunkKey}`);
+        }
+    }
+    
+    /**
      * Clear all structures
      */
     clear() {
@@ -304,6 +380,24 @@ export class StructureManager {
         this.structures.forEach(structure => {
             if (structure.parent) {
                 this.scene.remove(structure);
+            }
+            
+            // Dispose of geometry
+            if (structure.geometry) {
+                structure.geometry.dispose();
+            }
+            
+            // Dispose of materials
+            if (structure.material) {
+                if (Array.isArray(structure.material)) {
+                    structure.material.forEach(material => {
+                        if (material.map) material.map.dispose();
+                        material.dispose();
+                    });
+                } else {
+                    if (structure.material.map) structure.material.map.dispose();
+                    structure.material.dispose();
+                }
             }
         });
         
