@@ -57,8 +57,17 @@ export class DialogUI extends UIComponent {
         this.show();
         this.isDialogOpen = true;
         
+        // Make sure the dialog is visible and properly positioned
+        this.container.style.display = 'block';
+        this.container.style.zIndex = '1000'; // Ensure it's above other elements
+        
+        // Add a visual indicator that clicking will close the dialog
+        this.dialogContinue.style.display = 'block';
+        
         // Pause game
         this.game.pause();
+        
+        console.log('Dialog opened:', title);
     }
     
     /**
@@ -69,7 +78,12 @@ export class DialogUI extends UIComponent {
         this.hide();
         this.isDialogOpen = false;
         
+        // Ensure the container is hidden
+        this.container.style.display = 'none';
+        
         // Resume game
         this.game.resume();
+        
+        console.log('Dialog closed');
     }
 }

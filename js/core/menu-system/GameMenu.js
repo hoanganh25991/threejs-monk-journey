@@ -154,7 +154,7 @@ export class GameMenu {
                 console.log("Save Game button clicked - attempting to save game...");
                 if (this.game.saveManager) {
                     // Force save the game
-                    if (this.game.saveManager.saveGame(true)) {
+                    if (this.game.saveManager.saveGame(true, false)) {
                         console.log("Game data saved successfully");
                         
                         // Show notification

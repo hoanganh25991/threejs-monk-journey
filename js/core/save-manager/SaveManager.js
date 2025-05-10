@@ -28,6 +28,7 @@ export class SaveManager extends ISaveSystem {
         this.autoSaveInterval = 60_000; // Auto-save every minute (reduced frequency)
         this.autoSaveTimer = null;
         this.lastSaveLevel = 0; // Track player level at last save
+        this.saveThresholdLevels = [5, 10, 15, 20, 30, 40, 50]; // Save at these level milestones
         this.lastSaveTime = 0; // Track time of last save
         this.minTimeBetweenSaves = 60_000; // Minimum minute between saves
         
@@ -64,7 +65,7 @@ export class SaveManager extends ISaveSystem {
         
         // Set up new timer
         this.autoSaveTimer = setInterval(() => {
-            // Use async saveGame method with auto=true
+            // Use async saveGame method
             this.saveGame(false, true).catch(error => {
                 console.error('Auto-save failed:', error);
             });
@@ -83,30 +84,47 @@ export class SaveManager extends ISaveSystem {
     }
     
     /**
-     * Save the current game state with a simple notification
+     * Save the current game state with progress indicator
      * @param {boolean} forceSave - Whether to force save regardless of conditions
-     * @param {boolean} auto - Whether this is an auto-save (silent, no UI)
      * @returns {Promise<boolean>} Promise resolving to success status
      */
-    async saveGame(forceSave = false, auto = false) {
+    async saveGame(forceSave = false, autoSave = false) {
         try {
             const currentTime = Date.now();
             const playerLevel = this.game.player.stats.level;
             
             // Check if we should save based on level milestones or forced save
+            const shouldSaveByLevel = this.saveThresholdLevels.includes(playerLevel) && playerLevel > this.lastSaveLevel;
             const timeSinceLastSave = currentTime - this.lastSaveTime;
             const enoughTimePassed = timeSinceLastSave > this.minTimeBetweenSaves;
-            const shouldSaveByLevel = playerLevel > this.lastSaveLevel;
             
-            if (!forceSave && !enoughTimePassed) {
+            if (!forceSave && !shouldSaveByLevel && !enoughTimePassed) {
                 SaveUtils.log('Skipping save - not at level milestone or not enough time passed');
                 return true; // Skip saving but return success
             }
+
+            // Initialize progress indicator
+            !autoSave && this.saveProgress.start('Preparing to save game...');
             
             // Create save data object (without full world data)
+            !autoSave && this.saveProgress.update('Collecting player data...', 10);
+            await this.delay(50); // Small delay for UI update
+            
             const playerData = PlayerSerializer.serialize(this.game.player);
+            
+            !autoSave && this.saveProgress.update('Collecting quest data...', 20);
+            await this.delay(50); // Small delay for UI update
+            
             const questData = QuestSerializer.serialize(this.game.questManager);
+            
+            !autoSave && this.saveProgress.update('Collecting settings...', 30);
+            await this.delay(50); // Small delay for UI update
+            
             const settingsData = SettingsSerializer.serialize(this.game);
+            
+            !autoSave && this.saveProgress.update('Collecting world metadata...', 40);
+            await this.delay(50); // Small delay for UI update
+            
             const worldMetaData = WorldSerializer.serializeMetadata(this.game.world);
             
             const saveData = {
@@ -118,6 +136,9 @@ export class SaveManager extends ISaveSystem {
                 worldMeta: worldMetaData
             };
             
+            !autoSave &&  this.saveProgress.update('Writing save data to storage...', 60);
+            await this.delay(100); // Small delay for UI update
+        
             // Save to storage
             const success = this.storage.saveData(this.saveKey, saveData);
             
@@ -127,29 +148,32 @@ export class SaveManager extends ISaveSystem {
             
             // Save chunks separately if at level milestone or forced
             if (shouldSaveByLevel || forceSave) {
-                // Use silent method for auto-saves
-                if (auto) {
-                    await this.saveWorldChunks();
-                } else {
-                    await this.saveWorldChunksWithProgress();
-                }
+                this.saveProgress.update('Saving world chunks...', 70);
+                await this.saveWorldChunksWithProgress(autoSave);
                 this.lastSaveLevel = playerLevel;
+            } else {
+                this.saveProgress.update('Skipping world chunks...', 80);
             }
-            
+
             this.lastSaveTime = currentTime;
             
-            // Always log, but only show notification for non-auto saves
+            !autoSave && this.saveProgress.update('Save complete!', 100);
+            await this.delay(500); // Show completion for a moment
+            
             SaveUtils.log('Game saved successfully');
-            if (!auto) {
-                SaveUtils.showNotification(this.game, 'Game saved successfully');
-            }
+            SaveUtils.showNotification(this.game, 'Game saved successfully');
+            
+            // Complete the progress indicator
+            this.saveProgress.complete();
             
             return true;
         } catch (error) {
             SaveUtils.log('Error saving game: ' + error.message, 'error');
-            if (!auto) {
-                SaveUtils.showNotification(this.game, 'Failed to save game', 3000, 'error');
-            }
+            
+            // Show error in progress indicator
+            this.saveProgress.error('Failed to save game: ' + error.message);
+            
+            SaveUtils.showNotification(this.game, 'Failed to save game', 3000, 'error');
             
             return false;
         }
@@ -550,36 +574,42 @@ export class SaveManager extends ISaveSystem {
     }
     
     /**
-     * Save world chunks individually to storage without progress UI
+     * Save world chunks individually to storage with progress updates
      * @returns {Promise<Object>} Promise resolving to chunk index
      */
-    async saveWorldChunksWithProgress() {
+    async saveWorldChunksWithProgress(auto = false) {
         const world = this.game.world;
         const chunkIndex = {};
         
-        SaveUtils.log('Saving world chunks to local storage...');
+        SaveUtils.log('Saving world chunks to local storage with progress...');
         
         // Check if terrainManager exists and has terrainChunks
         if (!world.terrainManager || !world.terrainManager.terrainChunks) {
             SaveUtils.log('No terrain chunks found to save', 'warn');
+            !auto && this.saveProgress.update('No terrain chunks found to save', 75);
             return chunkIndex;
         }
         
-        // Get total number of chunks
+        // Get total number of chunks for progress calculation
         const chunkKeys = Object.keys(world.terrainManager.terrainChunks);
         const totalChunks = chunkKeys.length;
         
         if (totalChunks === 0) {
             SaveUtils.log('No chunks to save', 'warn');
+            !auto && this.saveProgress.update('No chunks to save', 75);
             return chunkIndex;
         }
         
-        // Save each chunk individually
+        // Save each chunk individually with progress updates
         for (let i = 0; i < chunkKeys.length; i++) {
             const chunkKey = chunkKeys[i];
             
+            // Update progress (70-90% range for chunks)
+            const progressPercent = 70 + Math.floor((i / totalChunks) * 20);
+            !auto && this.saveProgress.update(`Saving chunk ${i+1}/${totalChunks}...`, progressPercent);
+            
             // Small delay to prevent UI freezing
-            await this.delay(5);
+            await this.delay(10);
             
             // Serialize chunk data
             const chunkData = WorldSerializer.serializeChunk(world, chunkKey);
@@ -605,6 +635,9 @@ export class SaveManager extends ISaveSystem {
         }
         
         // Save chunk index
+        !auto && this.saveProgress.update('Finalizing chunk index...', 90);
+        await this.delay(50);
+        
         this.storage.saveData(`${this.chunkSaveKeyPrefix}index`, chunkIndex);
         
         SaveUtils.log(`Saved ${Object.keys(chunkIndex).length} chunks to local storage`);
