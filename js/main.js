@@ -15,7 +15,7 @@ window.selectedSizeMultiplier = 1.0;
 
 // Initialize the game when the DOM is loaded
 document.addEventListener('gameAssetsLoaded', startGame);
-// document.addEventListener('DOMContentLoaded', startGame);
+document.addEventListener('DOMContentLoaded', startGame);
 
 /**
  * Initialize and start the game
