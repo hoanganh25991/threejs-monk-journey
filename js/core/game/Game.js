@@ -16,6 +16,7 @@ import { GameState } from './GameState.js';
 import { GameEvents } from './GameEvents.js';
 import { SceneOptimizer } from './SceneOptimizer.js';
 import { LoadingManager } from './LoadingManager.js';
+import { RENDER_CONFIG } from '../../config/render.js';
 
 /**
  * Main Game class that serves as a facade to the underlying game systems
@@ -89,19 +90,9 @@ export class Game {
             // Update loading progress
             this.updateLoadingProgress(5, 'Initializing renderer...', 'Setting up WebGL');
             
-            // Initialize renderer with GPU acceleration options
-            this.renderer = new THREE.WebGLRenderer({
-                canvas: this.canvas,
-                antialias: true,
-                powerPreference: 'high-performance',
-                precision: 'highp',
-                stencil: false // Disable stencil buffer if not needed
-            });
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.renderer.setPixelRatio(window.devicePixelRatio);
-            this.renderer.shadowMap.enabled = true;
-            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Better shadow quality
-            this.renderer.outputColorSpace = THREE.SRGBColorSpace; // Correct color space
+            // Initialize renderer with medium quality settings by default
+            // The PerformanceManager will adjust quality based on device capabilities
+            this.renderer = this.createRenderer('ultra');
             
             this.updateLoadingProgress(10, 'Creating game world...', 'Setting up scene');
             
@@ -475,5 +466,86 @@ export class Game {
     onFocus() {
         // Let visibility change handler handle audio resumption
         this.onVisibilityChange();
+    }
+    
+    /**
+     * Create a WebGLRenderer with settings for the specified quality level
+     * @param {string} qualityLevel - The quality level to use
+     * @returns {THREE.WebGLRenderer} The configured renderer
+     */
+    createRenderer(qualityLevel) {
+        if (!RENDER_CONFIG[qualityLevel]) {
+            console.error(`Unknown quality level: ${qualityLevel}, falling back to medium`);
+            qualityLevel = 'medium';
+        }
+        
+        const config = RENDER_CONFIG[qualityLevel].init;
+        
+        // Create renderer with the specified configuration
+        const renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: config.antialias,
+            powerPreference: config.powerPreference,
+            precision: config.precision,
+            stencil: config.stencil,
+            logarithmicDepthBuffer: config.logarithmicDepthBuffer,
+            depth: config.depth,
+            alpha: config.alpha
+        });
+        
+        // Apply additional settings
+        this.applyRendererSettings(renderer, qualityLevel);
+        
+        // Set size (this is common for all quality levels)
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        return renderer;
+    }
+    
+    /**
+     * Apply renderer settings based on quality level
+     * @param {THREE.WebGLRenderer} renderer - The Three.js renderer
+     * @param {string} qualityLevel - The quality level to apply
+     */
+    applyRendererSettings(renderer, qualityLevel) {
+        if (!RENDER_CONFIG[qualityLevel]) {
+            console.error(`Unknown quality level: ${qualityLevel}`);
+            return;
+        }
+        
+        const settings = RENDER_CONFIG[qualityLevel].settings;
+        
+        // Apply settings
+        renderer.setPixelRatio(settings.pixelRatio);
+        renderer.shadowMap.enabled = settings.shadowMapEnabled;
+        
+        // Apply shadow map type
+        switch (settings.shadowMapType) {
+            case 'PCFSoftShadowMap':
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                break;
+            case 'PCFShadowMap':
+                renderer.shadowMap.type = THREE.PCFShadowMap;
+                break;
+            case 'BasicShadowMap':
+                renderer.shadowMap.type = THREE.BasicShadowMap;
+                break;
+            default:
+                renderer.shadowMap.type = THREE.PCFShadowMap;
+        }
+        
+        // Apply color space
+        switch (settings.outputColorSpace) {
+            case 'SRGBColorSpace':
+                renderer.outputColorSpace = THREE.SRGBColorSpace;
+                break;
+            case 'LinearSRGBColorSpace':
+                renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+                break;
+            default:
+                renderer.outputColorSpace = THREE.SRGBColorSpace;
+        }
+        
+        console.debug(`Applied ${qualityLevel} renderer settings`);
     }
 }
