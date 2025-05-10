@@ -8,5 +8,8 @@ import {SimulatedLoadingScreen} from "./SimulatedLoadingScreen.js"
 
 // Immediately create an instance when the script is loaded
 (function () {
+  if (window.game){
+    return;
+  }
   new SimulatedLoadingScreen(100, 1).start();
 })();

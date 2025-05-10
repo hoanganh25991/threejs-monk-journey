@@ -24,6 +24,7 @@ function startGame(event) {
     
     // Initialize the game using the GameFacade
     const game = new Game();
+    window.game = game;
     console.debug("Game instance created:", game);
     
     // Initialize the game but keep it paused

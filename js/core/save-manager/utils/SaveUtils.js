@@ -20,7 +20,7 @@ export class SaveUtils {
      * @param {string} message - The message to log
      * @param {string} level - Log level (log, warn, error, info)
      */
-    static log(message, level = 'log') {
+    static log(message, level = 'debug') {
         if (typeof console[level] === 'function') {
             console[level](message);
         } else {
