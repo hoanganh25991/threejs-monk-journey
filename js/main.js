@@ -14,7 +14,6 @@ window.selectedModelId = DEFAULT_CHARACTER_MODEL;
 window.selectedSizeMultiplier = 1.0;
 
 // Initialize the game when the DOM is loaded
-document.addEventListener('gameAssetsLoaded', startGame);
 document.addEventListener('DOMContentLoaded', startGame);
 
 /**

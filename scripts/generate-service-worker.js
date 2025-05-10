@@ -10,39 +10,16 @@
 const fs = require('fs');
 const path = require('path');
 
+// Import shared configuration
+const { 
+  directoriesToScan,
+  fileExtensions,
+  alwaysInclude,
+  excludeFiles
+} = require('./config/file-scan-config');
+
 // Configuration
 const serviceWorkerPath = './service-worker.js';
-const directoriesToScan = [
-  './css',
-  './js',
-  './images',
-  './assets',
-  './pwa',
-];
-
-// File extensions to include
-const fileExtensions = [
-  '.html', '.css', '.js', '.json', 
-  '.png', '.jpg', '.jpeg', '.svg', '.ico',
-  '.mp3', '.wav', '.ogg', ".glb"
-];
-
-// Files to always include
-const alwaysInclude = [
-  '',
-  'index.html',
-  'manifest.json'
-];
-
-// Files to exclude
-const excludeFiles = [
-  'node_modules',
-  '.git',
-  '.vscode',
-  'progress',
-  "scripts",
-  "fuctional-requirement",
-];
 
 /**
  * Recursively scan directories for files

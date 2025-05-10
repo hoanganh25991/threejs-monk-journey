@@ -8,39 +8,17 @@
 const fs = require('fs');
 const path = require('path');
 
+// Import shared configuration
+const { 
+  directoriesToScan,
+  fileExtensions,
+  alwaysInclude,
+  excludeFiles,
+  categorizeFileByExtension
+} = require('./config/file-scan-config');
+
 // Configuration
 const outputPath = './pwa/file-sizes.json';
-const directoriesToScan = [
-  './css',
-  './js',
-  './images',
-  './assets',
-  './pwa',
-];
-
-// File extensions to include
-const fileExtensions = [
-  '.html', '.css', '.js', '.json', 
-  '.png', '.jpg', '.jpeg', '.svg', '.ico',
-  '.mp3', '.wav', '.ogg', '.glb'
-];
-
-// Files to always include
-const alwaysInclude = [
-  '',
-  'index.html',
-  'manifest.json'
-];
-
-// Files to exclude
-const excludeFiles = [
-  'node_modules',
-  '.git',
-  '.vscode',
-  'progress',
-  'scripts',
-  'fuctional-requirement',
-];
 
 /**
  * Recursively scan directories for files and calculate total size
@@ -78,13 +56,8 @@ function scanDirectoryForStats(dir, baseDir = '', stats = { totalSize: 0, fileCo
         stats.totalSize += fileSize;
         stats.fileCount++;
         
-        // Categorize file
-        let category = 'other';
-        if (ext === '.glb') category = 'models';
-        else if (['.jpg', '.png', '.jpeg', '.svg', '.ico'].includes(ext)) category = 'images';
-        else if (['.mp3', '.wav', '.ogg'].includes(ext)) category = 'audio';
-        else if (ext === '.js') category = 'js';
-        else if (ext === '.css') category = 'css';
+        // Categorize file using the shared function
+        const category = categorizeFileByExtension(ext);
         
         // Initialize category if it doesn't exist
         if (!stats.categories[category]) {
@@ -192,13 +165,8 @@ function generateFileSizesJson() {
           // Get simplified filename (just the filename without the path)
           const simpleName = file;
           
-          // Store file info with category
-          let category = 'other';
-          if (ext === '.glb') category = 'models';
-          else if (['.jpg', '.png', '.jpeg', '.svg', '.ico'].includes(ext)) category = 'images';
-          else if (['.mp3', '.wav', '.ogg'].includes(ext)) category = 'audio';
-          else if (ext === '.js') category = 'js';
-          else if (ext === '.css') category = 'css';
+          // Store file info with category using the shared function
+          const category = categorizeFileByExtension(ext);
           
           // Add to fileSizes with simple name as key
           fileSizes[simpleName] = {
@@ -235,7 +203,13 @@ function generateFileSizesJson() {
     totalSizeMB,
     totalFiles: stats.fileCount,
     // Map of file names and sizes with categories for easy lookup
-    fileSizes
+    fileSizes,
+    // Add category statistics for better reporting
+    categories: stats.categories,
+    // Add a timestamp for cache validation
+    generatedAt: new Date().toISOString(),
+    // Add a list of all files for easier tracking
+    fileList: allFiles.map(file => file.name)
   };
   
   // Write the output file
