@@ -18,6 +18,12 @@
                 return;
             }
 
+            // Check if running on file:// protocol
+            if (window.location.hostname === 'localhost') {
+                console.warn('Running from localhost hostname. Service workers are not supported when running with localhost.');
+                return;
+            }
+
             // Check if service workers are supported
             if (!('serviceWorker' in navigator)) {
                 console.warn('Service workers are not supported.');
