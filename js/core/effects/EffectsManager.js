@@ -94,7 +94,7 @@ export class EffectsManager {
         if (window.gc) {
             try {
                 window.gc();
-                console.log("Manual garbage collection triggered after effects cleanup");
+                console.debug("Manual garbage collection triggered after effects cleanup");
             } catch (e) {
                 // Ignore if not available
             }

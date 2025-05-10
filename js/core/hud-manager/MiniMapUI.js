@@ -57,9 +57,9 @@ export class MiniMapUI extends UIComponent {
         // Add event listener to the toggle button
         const toggleButton = document.getElementById('mini-map-toggle-btn');
         if (toggleButton) {
-            console.log('Adding click event listener to mini-map toggle button');
+            console.debug('Adding click event listener to mini-map toggle button');
             toggleButton.addEventListener('click', (e) => {
-                console.log('Mini-map toggle button clicked');
+                console.debug('Mini-map toggle button clicked');
                 this.toggleMiniMap();
             });
         } else {
@@ -687,7 +687,7 @@ export class MiniMapUI extends UIComponent {
         // Force a redraw of the minimap
         this.renderMiniMap();
         
-        console.log(`Mini map scale set to: ${scale}`);
+        console.debug(`Mini map scale set to: ${scale}`);
     }
     
     /**
@@ -752,7 +752,7 @@ export class MiniMapUI extends UIComponent {
                 this._lastPlayerRot = null;
             }
             
-            console.log(`Mini map visibility set to: ${newVisibility}`);
+            console.debug(`Mini map visibility set to: ${newVisibility}`);
             return newVisibility;
         }
         return false;

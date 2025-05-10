@@ -30,14 +30,14 @@ export function playAnimation(animations, currentAnimation, primaryName, fallbac
     // Check if primaryName is a direct animation name
     if (primaryName && animations[primaryName]) {
         animationToPlay = animations[primaryName];
-        console.log(`AnimationUtils: Found direct animation match: ${primaryName}`);
+        console.debug(`AnimationUtils: Found direct animation match: ${primaryName}`);
     }
     
     // If no match found, use the first animation as fallback
     if (!animationToPlay && allAnimNames.length > 0) {
         const firstAnim = allAnimNames[0];
         animationToPlay = animations[firstAnim];
-        console.log(`AnimationUtils: Using first available animation as fallback: ${firstAnim}`);
+        console.debug(`AnimationUtils: Using first available animation as fallback: ${firstAnim}`);
     }
     
     // If no matching animation is found after all attempts, return false
@@ -195,14 +195,14 @@ export function updateStateBasedAnimations(params) {
     
     // Get all animation names for logging/debugging
     const animNames = Object.keys(animations);
-    console.log(`Available animations: ${animNames.join(', ')}`);
+    console.debug(`Available animations: ${animNames.join(', ')}`);
     
     // Use the detectModelType utility to determine the model type
     const modelInfo = detectModelType(animNames);
     
     // If no animation is currently playing, start one (similar to ModelViewer.js)
     if (!currentAnimation && animNames.length > 0) {
-        console.log("No animation currently playing, starting the first available animation");
+        console.debug("No animation currently playing, starting the first available animation");
         const firstAnim = animNames[0];
         animations[firstAnim].play();
         return {
@@ -215,7 +215,7 @@ export function updateStateBasedAnimations(params) {
     if (modelInfo.isSkeletonKing) {
         // If we already have an animation playing, just keep updating it
         if (currentAnimation && animations[currentAnimation]) {
-            console.log(`Continuing to play current animation: ${currentAnimation}`);
+            console.debug(`Continuing to play current animation: ${currentAnimation}`);
             return {
                 success: true,
                 currentAnimation: currentAnimation
@@ -233,7 +233,7 @@ export function updateStateBasedAnimations(params) {
             if (attackAnims.length > 0) {
                 const attackAnim = attackAnims[0];
                 animations[attackAnim].play();
-                console.log(`Playing attack animation: ${attackAnim}`);
+                console.debug(`Playing attack animation: ${attackAnim}`);
                 return {
                     success: true,
                     currentAnimation: attackAnim
@@ -244,7 +244,7 @@ export function updateStateBasedAnimations(params) {
         // If no attack animation or not attacking, just play the first animation
         const firstAnim = animNames[0];
         animations[firstAnim].play();
-        console.log(`Playing first available animation: ${firstAnim}`);
+        console.debug(`Playing first available animation: ${firstAnim}`);
         return {
             success: true,
             currentAnimation: firstAnim
@@ -273,7 +273,7 @@ export function updateStateBasedAnimations(params) {
     if (!newCurrentAnimation && animNames.length > 0) {
         const firstAnim = animNames[0];
         animations[firstAnim].play();
-        console.log(`Forcing first animation to play: ${firstAnim}`);
+        console.debug(`Forcing first animation to play: ${firstAnim}`);
         newCurrentAnimation = firstAnim;
     }
     

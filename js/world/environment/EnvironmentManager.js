@@ -259,7 +259,7 @@ export class EnvironmentManager {
             // If disposing resources, remove the chunk data completely
             if (disposeResources) {
                 delete this.environmentObjects[chunkKey];
-                console.log(`Disposed environment objects for chunk ${chunkKey}`);
+                console.debug(`Disposed environment objects for chunk ${chunkKey}`);
             }
         }
         

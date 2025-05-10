@@ -51,7 +51,7 @@ export class StructureManager {
         this.specialStructures['initial_ruins'] = { x: 0, z: 0, type: 'ruins' };
         this.specialStructures['initial_darkSanctum'] = { x: 0, z: -40, type: 'darkSanctum' };
         
-        console.log("Initial structures created");
+        console.debug("Initial structures created");
     }
     
     /**
@@ -368,7 +368,7 @@ export class StructureManager {
             // Remove from structuresPlaced
             delete this.structuresPlaced[chunkKey];
             
-            console.log(`Removed ${structuresToRemove.length} structures from chunk ${chunkKey}`);
+            console.debug(`Removed ${structuresToRemove.length} structures from chunk ${chunkKey}`);
         }
     }
     

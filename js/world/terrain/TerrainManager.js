@@ -83,7 +83,7 @@ export class TerrainManager {
         // Store reference to the base terrain
         this.terrain = terrain;
         
-        console.log("Flat terrain created and added to scene");
+        console.debug("Flat terrain created and added to scene");
     }
     
     /**
@@ -183,7 +183,7 @@ export class TerrainManager {
                     
                     // Remove from buffer
                     delete this.terrainBuffer[chunkKey];
-                    console.log(`Chunk ${chunkKey} moved from buffer to active`);
+                    console.debug(`Chunk ${chunkKey} moved from buffer to active`);
                 } 
                 // If not in buffer, create it immediately
                 else if (!this.terrainChunks[chunkKey]) {
@@ -381,7 +381,7 @@ export class TerrainManager {
             this.worldManager.environmentManager.loadEnvironmentObjectsForChunk(chunkX, chunkZ, chunkData.environmentObjects);
         }
         
-        console.log(`Terrain chunk ${chunkX},${chunkZ} created from saved data`);
+        console.debug(`Terrain chunk ${chunkX},${chunkZ} created from saved data`);
         return terrain;
     }
     
@@ -425,7 +425,7 @@ export class TerrainManager {
             this.worldManager.structureManager.generateStructuresForChunk(chunkX, chunkZ, true); // true = data only
         }
         
-        console.log(`Buffered terrain chunk placeholder created: ${chunkKey}`);
+        console.debug(`Buffered terrain chunk placeholder created: ${chunkKey}`);
     }
     
     /**
@@ -471,7 +471,7 @@ export class TerrainManager {
                     terrain.savedEnvironmentObjects = loadedChunk.environmentObjects;
                 }
                 
-                console.log(`Placeholder converted to real buffered chunk: ${chunkKey}`);
+                console.debug(`Placeholder converted to real buffered chunk: ${chunkKey}`);
                 return;
             }
         }
@@ -491,7 +491,7 @@ export class TerrainManager {
         // Replace placeholder with real terrain
         this.terrainBuffer[chunkKey] = terrain;
         
-        console.log(`Placeholder converted to new buffered chunk: ${chunkKey}`);
+        console.debug(`Placeholder converted to new buffered chunk: ${chunkKey}`);
     }
     
     /**
@@ -613,7 +613,7 @@ export class TerrainManager {
                     this.worldManager.interactiveManager.removeObjectsInChunk(chunkKey, true);
                 }
                 
-                console.log(`Removed terrain chunk ${chunkKey} with associated objects`);
+                console.debug(`Removed terrain chunk ${chunkKey} with associated objects`);
             }
         }
     }
@@ -762,7 +762,7 @@ export class TerrainManager {
         const chunkCountAfter = Object.keys(this.terrainChunks).length;
         const bufferCountAfter = Object.keys(this.terrainBuffer).length;
         
-        console.log(`Cleared distant chunks: ${chunkCountBefore - chunkCountAfter} active, ${bufferCountBefore - bufferCountAfter} buffered`);
+        console.debug(`Cleared distant chunks: ${chunkCountBefore - chunkCountAfter} active, ${bufferCountBefore - bufferCountAfter} buffered`);
     }
     
     /**

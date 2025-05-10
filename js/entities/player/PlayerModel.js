@@ -67,7 +67,7 @@ export class PlayerModel extends IPlayerModel {
                     (gltf) => resolve(gltf),
                     // Called while loading is progressing
                     (xhr) => {
-                        console.log(`Loading model: ${(xhr.loaded / xhr.total * 100)}% loaded`);
+                        console.debug(`Loading model: ${(xhr.loaded / xhr.total * 100)}% loaded`);
                     },
                     // Called when loading has errors
                     (error) => {
@@ -132,7 +132,7 @@ export class PlayerModel extends IPlayerModel {
                     defaultAdjustments.position.y, 
                     defaultAdjustments.position.z
                 );
-                console.log(`Applied default position from config: X: ${defaultAdjustments.position.x}, Y: ${defaultAdjustments.position.y}, Z: ${defaultAdjustments.position.z}`);
+                console.debug(`Applied default position from config: X: ${defaultAdjustments.position.x}, Y: ${defaultAdjustments.position.y}, Z: ${defaultAdjustments.position.z}`);
                 
                 // Apply the default rotation
                 this.gltfModel.rotation.set(
@@ -140,7 +140,7 @@ export class PlayerModel extends IPlayerModel {
                     defaultAdjustments.rotation.y, 
                     defaultAdjustments.rotation.z
                 );
-                console.log(`Applied default rotation from config: X: ${defaultAdjustments.rotation.x}, Y: ${defaultAdjustments.rotation.y}, Z: ${defaultAdjustments.rotation.z}`);
+                console.debug(`Applied default rotation from config: X: ${defaultAdjustments.rotation.x}, Y: ${defaultAdjustments.rotation.y}, Z: ${defaultAdjustments.rotation.z}`);
                 
                 // Store these defaults in the model's preview property for later reference
                 if (!this.currentModel.preview) {
@@ -157,7 +157,7 @@ export class PlayerModel extends IPlayerModel {
             this.scene.add(this.modelGroup);
             
             // Log to confirm player model was added
-            console.log(`Model from ${this.modelPath} loaded and added to scene:`, this.modelGroup);
+            console.debug(`Model from ${this.modelPath} loaded and added to scene:`, this.modelGroup);
         } catch (error) {
             console.error(`Failed to load model from ${this.modelPath}:`, error);
             
@@ -220,7 +220,7 @@ export class PlayerModel extends IPlayerModel {
                         
                         this.animations[animToPlay].reset().play();
                         this.currentAnimation = animToPlay;
-                        console.log(`Started animation for Skeleton King: ${animToPlay}`);
+                        console.debug(`Started animation for Skeleton King: ${animToPlay}`);
                         
                         // Update the mixer multiple times to ensure the animation starts playing immediately
                         for (let i = 0; i < 3; i++) {
@@ -245,7 +245,7 @@ export class PlayerModel extends IPlayerModel {
                             }
                             
                             this.currentAnimation = attackAnim;
-                            console.log(`Playing attack animation for Skeleton King: ${attackAnim}`);
+                            console.debug(`Playing attack animation for Skeleton King: ${attackAnim}`);
                         }
                     }
                 } else {
@@ -295,7 +295,7 @@ export class PlayerModel extends IPlayerModel {
         
         if (this.modelGroup) {
             this.modelGroup.position.copy(position);
-            console.log("PlayerModel: Position updated to:", this.modelGroup.position);
+            console.debug("PlayerModel: Position updated to:", this.modelGroup.position);
         }
     }
     
@@ -307,7 +307,7 @@ export class PlayerModel extends IPlayerModel {
         
         if (this.modelGroup) {
             this.modelGroup.rotation.y = rotation.y;
-            console.log("PlayerModel: Rotation updated to:", this.modelGroup.rotation.y);
+            console.debug("PlayerModel: Rotation updated to:", this.modelGroup.rotation.y);
         }
     }
     
@@ -410,7 +410,7 @@ export class PlayerModel extends IPlayerModel {
     setBaseScale(scale) {
         this.baseScale = scale;
         this.updateEffectiveScale();
-        console.log(`Model base scale set to: ${scale}`);
+        console.debug(`Model base scale set to: ${scale}`);
         
         // Update the model configuration to persist this change
         if (this.currentModel) {
@@ -425,7 +425,7 @@ export class PlayerModel extends IPlayerModel {
     setSizeMultiplier(multiplier) {
         this.sizeMultiplier = multiplier;
         this.updateEffectiveScale();
-        console.log(`Model size multiplier set to: ${multiplier}x`);
+        console.debug(`Model size multiplier set to: ${multiplier}x`);
         
         // Update the model configuration to persist this change
         if (this.currentModel) {
@@ -448,7 +448,7 @@ export class PlayerModel extends IPlayerModel {
             );
         }
         
-        console.log(`Model effective scale updated to: ${this.modelScale}`);
+        console.debug(`Model effective scale updated to: ${this.modelScale}`);
     }
     
     /**
@@ -465,7 +465,7 @@ export class PlayerModel extends IPlayerModel {
         // Apply the new position if the model is loaded
         if (this.gltfModel) {
             this.gltfModel.position.set(position.x, position.y, position.z);
-            console.log(`Model preview position updated to: X: ${position.x}, Y: ${position.y}, Z: ${position.z}`);
+            console.debug(`Model preview position updated to: X: ${position.x}, Y: ${position.y}, Z: ${position.z}`);
         }
     }
     
@@ -483,7 +483,7 @@ export class PlayerModel extends IPlayerModel {
         // Apply the new rotation if the model is loaded
         if (this.gltfModel) {
             this.gltfModel.rotation.set(rotation.x, rotation.y, rotation.z);
-            console.log(`Model preview rotation updated to: X: ${rotation.x}, Y: ${rotation.y}, Z: ${rotation.z}`);
+            console.debug(`Model preview rotation updated to: X: ${rotation.x}, Y: ${rotation.y}, Z: ${rotation.z}`);
         }
     }
     
@@ -531,7 +531,7 @@ export class PlayerModel extends IPlayerModel {
         // Keep the current multiplier
         this.updateEffectiveScale();
         
-        console.log(`Model set to: ${modelConfig.name} (${modelId})`);
+        console.debug(`Model set to: ${modelConfig.name} (${modelId})`);
         
         // Remove the current model from the scene
         if (this.modelGroup) {
@@ -546,7 +546,7 @@ export class PlayerModel extends IPlayerModel {
             // Get the height offset from the model configuration
             const heightOffset = modelConfig.defaultAdjustments?.heightOffset || 1.0;
             this.game.player.movement.heightOffset = heightOffset;
-            console.log(`Adjusted height offset for ${modelId} model to: ${heightOffset}`);
+            console.debug(`Adjusted height offset for ${modelId} model to: ${heightOffset}`);
             
             // For the Ebon Knight model, clear any saved adjustments to ensure our new settings take effect
             if (modelId === 'ebon-knight') {
@@ -584,7 +584,7 @@ export class PlayerModel extends IPlayerModel {
             this.setPreviewPosition(defaultPosition);
             this.setPreviewRotation(defaultRotation);
             
-            console.log(`Applied ${modelId} adjustments from config:`, 
+            console.debug(`Applied ${modelId} adjustments from config:`, 
                 `Position: X: ${defaultPosition.x}, Y: ${defaultPosition.y}, Z: ${defaultPosition.z}`,
                 `Rotation: X: ${defaultRotation.x}, Y: ${defaultRotation.y}, Z: ${defaultRotation.z}`);
             
@@ -630,7 +630,7 @@ export class PlayerModel extends IPlayerModel {
         this.setPreviewPosition(defaultPosition);
         this.setPreviewRotation(defaultRotation);
         
-        console.log(`Applied ${modelId}-specific adjustments from hardcoded values:`, 
+        console.debug(`Applied ${modelId}-specific adjustments from hardcoded values:`, 
             `Position: X: ${defaultPosition.x}, Y: ${defaultPosition.y}, Z: ${defaultPosition.z}`,
             `Rotation: X: ${defaultRotation.x}, Y: ${defaultRotation.y}, Z: ${defaultRotation.z}`);
     }
@@ -666,7 +666,7 @@ export class PlayerModel extends IPlayerModel {
                 
                 // Save back to localStorage
                 localStorage.setItem('modelAdjustments', JSON.stringify(savedAdjustments));
-                console.log(`Cleared saved adjustments for model: ${modelId}`);
+                console.debug(`Cleared saved adjustments for model: ${modelId}`);
             }
         } catch (error) {
             console.error('Error clearing saved adjustments:', error);
@@ -688,7 +688,7 @@ export class PlayerModel extends IPlayerModel {
      */
     setModelPath(path) {
         this.modelPath = path;
-        console.log(`Model path set to: ${path}`);
+        console.debug(`Model path set to: ${path}`);
         // Note: This won't reload the model - call createModel() again if needed
     }
     

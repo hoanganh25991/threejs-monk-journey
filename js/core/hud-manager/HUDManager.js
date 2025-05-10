@@ -60,7 +60,7 @@ export class HUDManager {
         this.uiContainer = document.getElementById('ui-container');
         
         if (!this.uiContainer) {
-            console.log('UI container not found in DOM. Creating it dynamically.');
+            console.debug('UI container not found in DOM. Creating it dynamically.');
             
             // Create UI container
             this.uiContainer = document.createElement('div');

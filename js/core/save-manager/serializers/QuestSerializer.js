@@ -39,7 +39,7 @@ export class QuestSerializer {
             return;
         }
         
-        console.log('Loading quest data:', Object.keys(questData));
+        console.debug('Loading quest data:', Object.keys(questData));
         
         // Reset quest state
         questManager.activeQuests = [];
@@ -47,7 +47,7 @@ export class QuestSerializer {
         
         // Load active quests with their progress
         if (questData.activeQuests && Array.isArray(questData.activeQuests)) {
-            console.log(`Loading ${questData.activeQuests.length} active quests`);
+            console.debug(`Loading ${questData.activeQuests.length} active quests`);
             questManager.activeQuests = questData.activeQuests.map(quest => {
                 try {
                     // Find the original quest template
@@ -73,13 +73,13 @@ export class QuestSerializer {
         
         // Load completed quests
         if (questData.completedQuests && Array.isArray(questData.completedQuests)) {
-            console.log(`Loading ${questData.completedQuests.length} completed quests`);
+            console.debug(`Loading ${questData.completedQuests.length} completed quests`);
             questManager.completedQuests = [...questData.completedQuests];
         }
         
         // Filter available quests to remove active and completed ones
         if (questManager.quests && Array.isArray(questManager.quests)) {
-            console.log('Filtering available quests');
+            console.debug('Filtering available quests');
             questManager.quests = questManager.quests.filter(quest => {
                 const isActive = questManager.activeQuests.some(q => q.id === quest.id);
                 const isCompleted = questManager.completedQuests.some(q => q.id === quest.id);
@@ -87,6 +87,6 @@ export class QuestSerializer {
             });
         }
         
-        console.log('Quest data loaded successfully');
+        console.debug('Quest data loaded successfully');
     }
 }

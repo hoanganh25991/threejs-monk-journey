@@ -66,7 +66,7 @@ export class SceneOptimizer {
             }
         });
         
-        console.log("Scene optimizations applied");
+        console.debug("Scene optimizations applied");
     }
     
     /**

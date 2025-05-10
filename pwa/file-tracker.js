@@ -84,7 +84,7 @@ class FileTracker {
      * Initialize the file tracking system
      */
     initTracking() {
-        console.log('Initializing file tracking system');
+        console.debug('Initializing file tracking system');
         
         // Get references to existing UI elements
         const uiReady = this.setupUI();
@@ -120,7 +120,7 @@ class FileTracker {
             return false;
         }
         
-        console.log('Found loading indicator elements');
+        console.debug('Found loading indicator elements');
         
         // Set initial content
         this.loadingTextElement.textContent = 'Initializing file tracking...';
@@ -146,14 +146,14 @@ class FileTracker {
                 this.totalFiles = data.totalFiles || Object.keys(this.filesData).length;
                 this.totalSizeBytes = data.totalSizeBytes || 0;
                 
-                console.log(`File data loaded: ${this.totalFiles} files, total size: ${this.formatFileSize(this.totalSizeBytes)}`);
+                console.debug(`File data loaded: ${this.totalFiles} files, total size: ${this.formatFileSize(this.totalSizeBytes)}`);
                 
                 // Update UI with initial data
                 this.updateUI();
                 
                 // Check if we've already tracked some files before data was loaded
                 if (this.allDownloadedFiles.size > 0 || this.allCachedFiles.size > 0) {
-                    console.log(`Already tracked ${this.allDownloadedFiles.size + this.allCachedFiles.size} files before file-sizes.json was loaded`);
+                    console.debug(`Already tracked ${this.allDownloadedFiles.size + this.allCachedFiles.size} files before file-sizes.json was loaded`);
                     this.recalculateProgress();
                 }
             })
@@ -182,7 +182,7 @@ class FileTracker {
                 
                 // Observe resource timing entries
                 observer.observe({ entryTypes: ['resource'] });
-                console.log('Network performance observer started');
+                console.debug('Network performance observer started');
             } catch (error) {
                 console.error('Error setting up PerformanceObserver:', error);
             }
@@ -296,8 +296,8 @@ class FileTracker {
      */
     recalculateProgress() {
         // We're now tracking all files directly, so this function is mostly a no-op
-        console.log(`Total tracked files: ${this.allDownloadedFiles.size + this.allCachedFiles.size} (${this.allDownloadedFiles.size} downloaded, ${this.allCachedFiles.size} cached)`);
-        console.log(`Known files from file-sizes.json: ${this.knownFiles.size}/${this.totalFiles}`);
+        console.debug(`Total tracked files: ${this.allDownloadedFiles.size + this.allCachedFiles.size} (${this.allDownloadedFiles.size} downloaded, ${this.allCachedFiles.size} cached)`);
+        console.debug(`Known files from file-sizes.json: ${this.knownFiles.size}/${this.totalFiles}`);
     }
     
     /**
@@ -350,11 +350,11 @@ class FileTracker {
         // Log detailed stats to console for debugging
         const now = Date.now();
         if (typeof this.lastLogTime === 'undefined' || now - this.lastLogTime > 5000) {
-            console.log('--- File Tracker Stats ---');
-            console.log(`Total known files in file-sizes.json: ${this.totalFiles} (${this.formatFileSize(this.totalSizeBytes)})`);
-            console.log(`Known files tracked: ${knownTotalFiles}/${this.totalFiles} (${knownFileCountPercent}% by count, ${knownByteSizePercent}% by size)`);
-            console.log(`All files tracked: ${allTotalFiles} (${this.formatFileSize(allTotalBytes)})`);
-            console.log(`Files not in file-sizes.json: ${allTotalFiles - knownTotalFiles}`);
+            console.debug('--- File Tracker Stats ---');
+            console.debug(`Total known files in file-sizes.json: ${this.totalFiles} (${this.formatFileSize(this.totalSizeBytes)})`);
+            console.debug(`Known files tracked: ${knownTotalFiles}/${this.totalFiles} (${knownFileCountPercent}% by count, ${knownByteSizePercent}% by size)`);
+            console.debug(`All files tracked: ${allTotalFiles} (${this.formatFileSize(allTotalBytes)})`);
+            console.debug(`Files not in file-sizes.json: ${allTotalFiles - knownTotalFiles}`);
             
             // List some files not in file-sizes.json for debugging
             const unknownFiles = Array.from(this.otherFileSizes.entries())
@@ -378,9 +378,9 @@ class FileTracker {
                 .slice(0, 5); // Take top 5
                 
             if (unknownFiles.length > 0) {
-                console.log('Top 5 largest files not in file-sizes.json:');
+                console.debug('Top 5 largest files not in file-sizes.json:');
                 unknownFiles.forEach(([url, size]) => {
-                    console.log(`- ${url.split('/').pop()}: ${this.formatFileSize(size)}`);
+                    console.debug(`- ${url.split('/').pop()}: ${this.formatFileSize(size)}`);
                 });
             }
             
@@ -442,10 +442,10 @@ class FileTracker {
         }
         
         // Log completion to console
-        console.log(`Loading complete in ${loadTime}s`);
-        console.log(`All files loaded: ${allTotalFiles} (${this.allDownloadedFiles.size} downloaded, ${this.allCachedFiles.size} cached)`);
-        console.log(`Known files loaded: ${knownTotalFiles}/${this.totalFiles}`);
-        console.log(`Total size: ${this.formatFileSize(allTotalBytes)} (Known files: ${this.formatFileSize(knownTotalBytes)}/${this.formatFileSize(this.totalSizeBytes)})`);
+        console.debug(`Loading complete in ${loadTime}s`);
+        console.debug(`All files loaded: ${allTotalFiles} (${this.allDownloadedFiles.size} downloaded, ${this.allCachedFiles.size} cached)`);
+        console.debug(`Known files loaded: ${knownTotalFiles}/${this.totalFiles}`);
+        console.debug(`Total size: ${this.formatFileSize(allTotalBytes)} (Known files: ${this.formatFileSize(knownTotalBytes)}/${this.formatFileSize(this.totalSizeBytes)})`);
         
         // Dispatch a custom event to notify that tracking is complete
         const trackingCompleteEvent = new CustomEvent('fileTrackingComplete', {

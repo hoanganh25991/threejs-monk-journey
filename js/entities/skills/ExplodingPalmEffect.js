@@ -54,7 +54,7 @@ export class ExplodingPalmEffect extends SkillEffect {
           // Move the palm group to this position
           this.explodingPalmState.palmGroup.position.add(backwardPosition);
           
-          console.log(`Positioned palm behind the hero at: ${this.explodingPalmState.palmGroup.position.x.toFixed(2)}, ${this.explodingPalmState.palmGroup.position.y.toFixed(2)}, ${this.explodingPalmState.palmGroup.position.z.toFixed(2)}`);
+          console.debug(`Positioned palm behind the hero at: ${this.explodingPalmState.palmGroup.position.x.toFixed(2)}, ${this.explodingPalmState.palmGroup.position.y.toFixed(2)}, ${this.explodingPalmState.palmGroup.position.z.toFixed(2)}`);
         }
       }
     }

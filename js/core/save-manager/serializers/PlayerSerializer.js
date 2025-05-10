@@ -47,11 +47,11 @@ export class PlayerSerializer {
             return;
         }
         
-        console.log('Loading player data:', Object.keys(playerData));
+        console.debug('Loading player data:', Object.keys(playerData));
         
         // Load stats
         if (playerData.stats) {
-            console.log('Loading player stats');
+            console.debug('Loading player stats');
             // Instead of replacing the stats object, update its properties
             Object.keys(playerData.stats).forEach(key => {
                 player.stats[key] = playerData.stats[key];
@@ -60,7 +60,7 @@ export class PlayerSerializer {
         
         // Load position
         if (playerData.position) {
-            console.log('Loading player position');
+            console.debug('Loading player position');
             player.setPosition(
                 playerData.position.x || 0,
                 playerData.position.y || 0,
@@ -72,7 +72,7 @@ export class PlayerSerializer {
         
         // Load inventory
         if (player.inventory) {
-            console.log('Loading player inventory');
+            console.debug('Loading player inventory');
             if (player.inventory.inventory) {
                 player.inventory.inventory = []; // Clear the inventory array
             } else {
@@ -80,7 +80,7 @@ export class PlayerSerializer {
             }
             
             if (playerData.inventory && Array.isArray(playerData.inventory)) {
-                console.log(`Loading ${playerData.inventory.length} inventory items`);
+                console.debug(`Loading ${playerData.inventory.length} inventory items`);
                 playerData.inventory.forEach(item => {
                     if (player.addToInventory) {
                         player.addToInventory(item);
@@ -93,7 +93,7 @@ export class PlayerSerializer {
         
         // Load equipment
         if (playerData.equipment) {
-            console.log('Loading player equipment');
+            console.debug('Loading player equipment');
             // Check if player.equipment exists
             if (!player.equipment) {
                 player.equipment = {};
@@ -135,6 +135,6 @@ export class PlayerSerializer {
             });
         }
         
-        console.log('Player data loaded successfully');
+        console.debug('Player data loaded successfully');
     }
 }

@@ -490,12 +490,12 @@ export class SettingsMenu extends UIComponent {
             return;
         }
         
-        console.log('SettingsMenu: Initializing fullscreen model preview');
+        console.debug('SettingsMenu: Initializing fullscreen model preview');
         
         // Clear any existing content in the wrapper
         const wrapper = document.getElementById('model-preview-fullscreen-wrapper');
         if (wrapper) {
-            console.log('SettingsMenu: Found existing wrapper');
+            console.debug('SettingsMenu: Found existing wrapper');
             while (wrapper.firstChild) {
                 wrapper.removeChild(wrapper.firstChild);
             }
@@ -510,13 +510,13 @@ export class SettingsMenu extends UIComponent {
             if (container) {
                 width = container.clientWidth;
                 height = container.clientHeight || 400;
-                console.log('SettingsMenu: Container dimensions', width, height);
+                console.debug('SettingsMenu: Container dimensions', width, height);
             } else {
                 console.warn('SettingsMenu: Could not find container for dimensions');
             }
             
             // Create model preview with dynamic size using the container with the wrapper inside
-            console.log('SettingsMenu: Creating new ModelPreview instance');
+            console.debug('SettingsMenu: Creating new ModelPreview instance');
             this.modelPreviewFullscreen = new ModelPreview(this.modelPreviewFullscreenContainer, width, height);
             
             // Enable auto-rotation by default for the fullscreen preview
@@ -754,7 +754,7 @@ export class SettingsMenu extends UIComponent {
                 const gameMenu = new GameMenu(this.game);
                 gameMenu.show();
                 
-                console.log("Settings back button clicked - returning to game menu");
+                console.debug("Settings back button clicked - returning to game menu");
             });
         }
     }
@@ -842,7 +842,7 @@ export class SettingsMenu extends UIComponent {
         // Set up update to latest button
         if (this.updateToLatestButton) {
             this.updateToLatestButton.addEventListener('click', () => {
-                console.log("Update to latest button clicked - performing hard reload...");
+                console.debug("Update to latest button clicked - performing hard reload...");
                 
                 // Show notification before reload
                 if (this.game.uiManager) {
@@ -854,7 +854,7 @@ export class SettingsMenu extends UIComponent {
                     navigator.serviceWorker.getRegistrations().then(registrations => {
                         for (let registration of registrations) {
                             registration.unregister();
-                            console.log('Service worker unregistered');
+                            console.debug('Service worker unregistered');
                         }
                         
                         // Clear caches to ensure fresh content
@@ -862,12 +862,12 @@ export class SettingsMenu extends UIComponent {
                             caches.keys().then(cacheNames => {
                                 return Promise.all(
                                     cacheNames.map(cacheName => {
-                                        console.log(`Deleting cache: ${cacheName}`);
+                                        console.debug(`Deleting cache: ${cacheName}`);
                                         return caches.delete(cacheName);
                                     })
                                 );
                             }).then(() => {
-                                console.log('All caches cleared');
+                                console.debug('All caches cleared');
                                 // Reload the page after a short delay
                                 setTimeout(() => {
                                     window.location.reload(true);

@@ -55,19 +55,19 @@ export class ModelPreview {
         // Create an intersection observer to detect when the preview is visible
         this.observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                console.log('ModelPreview visibility changed:', entry.isIntersecting);
+                console.debug('ModelPreview visibility changed:', entry.isIntersecting);
                 this.isVisible = entry.isIntersecting;
                 
                 if (this.isVisible) {
                     // Resume animation when visible
                     if (!this.animationId) {
-                        console.log('ModelPreview: Resuming animation');
+                        console.debug('ModelPreview: Resuming animation');
                         this.animate();
                     }
                 } else {
                     // Pause animation when not visible
                     if (this.animationId) {
-                        console.log('ModelPreview: Pausing animation');
+                        console.debug('ModelPreview: Pausing animation');
                         cancelAnimationFrame(this.animationId);
                         this.animationId = null;
                     }
@@ -80,11 +80,11 @@ export class ModelPreview {
         
         // Start observing the container
         this.observer.observe(this.wrapper);
-        console.log('ModelPreview: Visibility observer set up');
+        console.debug('ModelPreview: Visibility observer set up');
     }
     
     init() {
-        console.log('ModelPreview: Initializing with dimensions', this.width, this.height);
+        console.debug('ModelPreview: Initializing with dimensions', this.width, this.height);
         
         try {
             // Create scene
@@ -105,7 +105,7 @@ export class ModelPreview {
             
             // Add renderer to wrapper
             this.wrapper.appendChild(this.renderer.domElement);
-            console.log('ModelPreview: Renderer added to wrapper');
+            console.debug('ModelPreview: Renderer added to wrapper');
             
             // Add orbit controls with enhanced settings for better model viewing
             this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -124,7 +124,7 @@ export class ModelPreview {
             this.addGround();
             
             // Start animation loop
-            console.log('ModelPreview: Starting animation loop');
+            console.debug('ModelPreview: Starting animation loop');
             this.animate();
         } catch (error) {
             console.error('ModelPreview: Error during initialization:', error);
@@ -209,7 +209,7 @@ export class ModelPreview {
                         // Make sure animation has a name
                         if (!animation.name || animation.name === '') {
                             animation.name = `animation_${gltf.animations.indexOf(animation)}`;
-                            console.log(`ModelPreview: Unnamed animation detected, assigned name: ${animation.name}`);
+                            console.debug(`ModelPreview: Unnamed animation detected, assigned name: ${animation.name}`);
                         }
                         
                         const action = this.mixer.clipAction(animation);
@@ -218,19 +218,19 @@ export class ModelPreview {
                     
                     // Log all available animations
                     const animationNames = Object.keys(this.animations);
-                    console.log(`ModelPreview: Loaded ${animationNames.length} animations:`, animationNames.join(', '));
+                    console.debug(`ModelPreview: Loaded ${animationNames.length} animations:`, animationNames.join(', '));
                     
                     // Play the first animation if we have any
                     if (animationNames.length > 0) {
                         const firstAnimName = animationNames[0];
                         this.animations[firstAnimName].play();
                         this.currentAnimation = firstAnimName;
-                        console.log(`ModelPreview: Playing initial animation "${firstAnimName}"`);
+                        console.debug(`ModelPreview: Playing initial animation "${firstAnimName}"`);
                     } else {
                         console.warn('ModelPreview: No animations available to play');
                     }
                 } else {
-                    console.log('ModelPreview: Model has no animations');
+                    console.debug('ModelPreview: Model has no animations');
                 }
                 
                 // Scale the model
@@ -243,7 +243,7 @@ export class ModelPreview {
                 this.scene.add(this.model);
             },
             (xhr) => {
-                console.log(`Loading model: ${(xhr.loaded / xhr.total * 100)}% loaded`);
+                console.debug(`Loading model: ${(xhr.loaded / xhr.total * 100)}% loaded`);
             },
             (error) => {
                 console.error('Error loading model:', error);
@@ -368,8 +368,8 @@ export class ModelPreview {
      * @returns {boolean} - Whether the animation was successfully played
      */
     playAnimation(animationName, transitionDuration = 0.5) {
-        console.log(`ModelPreview: Attempting to play animation "${animationName}"`);
-        console.log(`ModelPreview: Available animations:`, Object.keys(this.animations));
+        console.debug(`ModelPreview: Attempting to play animation "${animationName}"`);
+        console.debug(`ModelPreview: Available animations:`, Object.keys(this.animations));
         
         // If we don't have animations or the requested animation doesn't exist, return false
         if (!this.animations || !this.animations[animationName]) {
@@ -379,7 +379,7 @@ export class ModelPreview {
         
         // If this is already the current animation, don't restart it
         if (this.currentAnimation === animationName) {
-            console.log(`ModelPreview: Animation "${animationName}" is already playing`);
+            console.debug(`ModelPreview: Animation "${animationName}" is already playing`);
             return true;
         }
         
@@ -394,7 +394,7 @@ export class ModelPreview {
             
             // Update current animation
             this.currentAnimation = animationName;
-            console.log(`ModelPreview: Successfully playing animation "${animationName}"`);
+            console.debug(`ModelPreview: Successfully playing animation "${animationName}"`);
             
             return true;
         } catch (error) {

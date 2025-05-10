@@ -26,7 +26,7 @@ export class AudioManager {
         // Track if auto-pause is enabled
         this.autoPauseEnabled = true;
         
-        console.log('Audio system initialized');
+        console.debug('Audio system initialized');
     }
     
     init() {
@@ -40,7 +40,7 @@ export class AudioManager {
                 this.audioFilesAvailable = available;
                 
                 if (available) {
-                    console.log('Audio files found, initializing audio system');
+                    console.debug('Audio files found, initializing audio system');
                     // Create sound collections
                     this.createSoundEffects();
                     this.createMusic();
@@ -300,11 +300,11 @@ export class AudioManager {
             // Load the actual file
             audioLoader.load(`assets/audio/${filename}`, buffer => {
                 sound.setBuffer(buffer);
-                console.log(`Loaded audio: ${name}`);
+                console.debug(`Loaded audio: ${name}`);
             }, 
             // Progress callback
             (xhr) => {
-                console.log(`${name} loading: ${(xhr.loaded / xhr.total * 100)}% loaded`);
+                console.debug(`${name} loading: ${(xhr.loaded / xhr.total * 100)}% loaded`);
             },
             // Error callback
             (error) => {
@@ -694,13 +694,13 @@ export class AudioManager {
             this.wasMusicPlayingBeforeHidden = this.isMusicPlaying();
             if (this.wasMusicPlayingBeforeHidden) {
                 this.pauseMusic();
-                console.log('Music auto-paused due to page visibility change');
+                console.debug('Music auto-paused due to page visibility change');
             }
         } else {
             // Page is now visible again
             if (this.wasMusicPlayingBeforeHidden && !this.isMuted) {
                 this.resumeMusic();
-                console.log('Music auto-resumed due to page visibility change');
+                console.debug('Music auto-resumed due to page visibility change');
             }
             this.wasMusicPlayingBeforeHidden = false;
         }
@@ -709,7 +709,7 @@ export class AudioManager {
     // Toggle auto-pause feature
     toggleAutoPause() {
         this.autoPauseEnabled = !this.autoPauseEnabled;
-        console.log(`Auto-pause ${this.autoPauseEnabled ? 'enabled' : 'disabled'}`);
+        console.debug(`Auto-pause ${this.autoPauseEnabled ? 'enabled' : 'disabled'}`);
         this.saveSettings();
         return this.autoPauseEnabled;
     }

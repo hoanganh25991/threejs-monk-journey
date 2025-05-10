@@ -796,7 +796,7 @@
                     for (const charModel of CHARACTER_MODELS) {
                         if (charModel.path && charModel.path.includes(modelName)) {
                             previewConfig = charModel.preview;
-                            console.log(`Found preview config for ${modelName}:`, previewConfig);
+                            console.debug(`Found preview config for ${modelName}:`, previewConfig);
                             break;
                         }
                     }
@@ -805,13 +805,13 @@
                         // Use position from preview configuration
                         const pos = previewConfig.position;
                         model.position.set(pos.x, pos.y, pos.z);
-                        console.log(`Applied position from config: X: ${pos.x}, Y: ${pos.y}, Z: ${pos.z}`);
+                        console.debug(`Applied position from config: X: ${pos.x}, Y: ${pos.y}, Z: ${pos.z}`);
                         
                         // Apply rotation if available
                         if (previewConfig.rotation) {
                             const rot = previewConfig.rotation;
                             model.rotation.set(rot.x, rot.y, rot.z);
-                            console.log(`Applied rotation from config: X: ${rot.x}, Y: ${rot.y}, Z: ${rot.z}`);
+                            console.debug(`Applied rotation from config: X: ${rot.x}, Y: ${rot.y}, Z: ${rot.z}`);
                         }
                     } else {
                         // Default centering behavior if no preview config is found
@@ -821,9 +821,9 @@
                     }
 
                     // Log the centering process
-                    console.log(`Original model position: X: ${originalPosition.x}, Y: ${originalPosition.y}, Z: ${originalPosition.z}`);
-                    console.log(`Center offset: X: ${center.x}, Y: ${center.y}, Z: ${center.z}`);
-                    console.log(`New position: X: ${model.position.x}, Y: ${model.position.y}, Z: ${model.position.z}`);
+                    console.debug(`Original model position: X: ${originalPosition.x}, Y: ${originalPosition.y}, Z: ${originalPosition.z}`);
+                    console.debug(`Center offset: X: ${center.x}, Y: ${center.y}, Z: ${center.z}`);
+                    console.debug(`New position: X: ${model.position.x}, Y: ${model.position.y}, Z: ${model.position.z}`);
 
                     // Ensure model is positioned at the center of the net
                     // This is especially important for models that might have an offset center
@@ -848,10 +848,10 @@
                     // Update model info display with size and scale
                     updateModelInfo(selectedPath, modelInfo, model.userData);
 
-                    console.log(`Loaded model: ${modelInfo.name}`);
-                    console.log(`Original size: ${JSON.stringify(model.userData.originalSize)}`);
-                    console.log(`Current size: ${JSON.stringify(model.userData.currentSize)}`);
-                    console.log(`Scale: ${model.userData.scale}`);
+                    console.debug(`Loaded model: ${modelInfo.name}`);
+                    console.debug(`Original size: ${JSON.stringify(model.userData.originalSize)}`);
+                    console.debug(`Current size: ${JSON.stringify(model.userData.currentSize)}`);
+                    console.debug(`Scale: ${model.userData.scale}`);
                 } else {
                     console.error('Failed to create model instance');
                 }
@@ -1041,7 +1041,7 @@
                 // Reset camera to view the skill visualizer
                 resetView();
                 
-                console.log(`Loaded skill: ${skillInfo.name}`);
+                console.debug(`Loaded skill: ${skillInfo.name}`);
             } catch (error) {
                 console.error('Error loading skill:', error);
                 alert(`Error loading skill: ${error.message}`);
@@ -1053,7 +1053,7 @@
             if (currentSkillVisualizer) {
                 const activated = currentSkillVisualizer.activateSkill();
                 if (activated) {
-                    console.log('Skill activated');
+                    console.debug('Skill activated');
                     
                     // Update skill info to show active state
                     const selectedPath = document.getElementById('skill-selector').value;
@@ -1080,7 +1080,7 @@
                         }, skill.duration * 1000);
                     }
                 } else {
-                    console.log('Could not activate skill (on cooldown or insufficient mana)');
+                    console.debug('Could not activate skill (on cooldown or insufficient mana)');
                     alert('Could not activate skill (on cooldown or insufficient mana)');
                 }
             }

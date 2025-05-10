@@ -32,7 +32,7 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-  console.log(`${req.method} ${req.url}`);
+  console.debug(`${req.method} ${req.url}`);
   
   // Parse URL
   const parsedUrl = url.parse(req.url);
@@ -74,6 +74,6 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}/`);
-  console.log(`Press Ctrl+C to stop the server`);
+  console.debug(`Server running at http://localhost:${PORT}/`);
+  console.debug(`Press Ctrl+C to stop the server`);
 });

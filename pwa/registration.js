@@ -7,7 +7,7 @@
         constructor() {
             // Check if this file is being opened directly
             if (document.title === 'registration.js') {
-                console.log('This is a service worker registration script. It should be included in an HTML page, not opened directly.');
+                console.debug('This is a service worker registration script. It should be included in an HTML page, not opened directly.');
                 document.body.innerHTML = '<h1>Service Worker Registration Script</h1><p>This JavaScript file is meant to be included in an HTML page, not opened directly.</p>';
                 return;
             }
@@ -186,7 +186,7 @@
                             // Log progress to console with size information
                             const loadedMB = loadedBytes ? (loadedBytes / (1024 * 1024)).toFixed(2) : '?';
                             const totalMB = totalSizeMB || (totalBytes ? (totalBytes / (1024 * 1024)).toFixed(2) : '?');
-                            console.log(`Cache progress: ${percent}% (${completed}/${total}) - ${loadedMB}MB/${totalMB}MB - ${currentFile || 'N/A'}`);
+                            console.debug(`Cache progress: ${percent}% (${completed}/${total}) - ${loadedMB}MB/${totalMB}MB - ${currentFile || 'N/A'}`);
                         }
                     } catch (error) {
                         console.error('Error processing message from service worker:', error);
@@ -225,7 +225,7 @@
          */
         handleStateChange(worker) {
             try {
-                console.log(`Service worker state changed to: ${worker.state}`);
+                console.debug(`Service worker state changed to: ${worker.state}`);
                 
                 // Update based on the new service worker's state
                 switch (worker.state) {
@@ -242,7 +242,7 @@
                         this.updateLoadingProgress(90, `Update installed${totalSizeText}`, null);
                         
                         // No need to reload regardless of controller status
-                        console.log('Service worker installed - no reload needed');
+                        console.debug('Service worker installed - no reload needed');
                         this.updateLoadingProgress(100, `Ready!${totalSizeText}`, null);
                         
                         // Use arrow function to preserve 'this' context
@@ -286,7 +286,7 @@
                 navigator.serviceWorker.addEventListener('controllerchange', () => {
                     if (!refreshing) {
                         refreshing = true;
-                        console.log('Service worker controller changed - no reload needed');
+                        console.debug('Service worker controller changed - no reload needed');
                         // Note: We don't need to reload the page when the service worker changes
                         // The service worker handles caching at the network level and will serve
                         // cached resources for subsequent requests automatically
@@ -301,11 +301,11 @@
                     swPath = '../service-worker.js';
                 }
 
-                console.log(`Registering service worker from: ${swPath}`);
+                console.debug(`Registering service worker from: ${swPath}`);
                 
                 navigator.serviceWorker.register(swPath)
                     .then(registration => {
-                        console.log('Service Worker registered with scope:', registration.scope);
+                        console.debug('Service Worker registered with scope:', registration.scope);
                         
                         // Check for updates
                         registration.addEventListener('updatefound', () => {

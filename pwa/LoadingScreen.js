@@ -53,7 +53,7 @@ export class LoadingScreen {
             // Check if there's an initial loading indicator to remove
             const initialIndicator = document.getElementById('initial-loading-indicator');
             if (initialIndicator) {
-                console.log('Found initial loading indicator, removing it');
+                console.debug('Found initial loading indicator, removing it');
                 
                 // Transfer progress from initial indicator if possible
                 if (this.loadingBar) {
@@ -62,28 +62,28 @@ export class LoadingScreen {
                         const width = initialBar.style.width;
                         this.loadingBar.style.width = width;
                         this.totalProgress = parseInt(width, 10) || 0;
-                        console.log(`Transferred progress: ${width}`);
+                        console.debug(`Transferred progress: ${width}`);
                     }
                 }
                 
                 // Remove the initial indicator
                 try {
                     initialIndicator.parentNode.removeChild(initialIndicator);
-                    console.log('Initial loading indicator removed successfully');
+                    console.debug('Initial loading indicator removed successfully');
                 } catch (error) {
                     console.error('Error removing initial loading indicator:', error);
                 }
             }
             
             // Start tracking loading progress
-            console.log('Using resource-based progress tracking');
+            console.debug('Using resource-based progress tracking');
             this.trackLoadingProgress();
             
             // Make sure the game menu is hidden while loading
             const gameMenu = document.getElementById('game-menu');
             if (gameMenu) {
                 gameMenu.style.display = 'none';
-                console.log('Game menu hidden during loading');
+                console.debug('Game menu hidden during loading');
             }
         }
     }
@@ -92,32 +92,32 @@ export class LoadingScreen {
      * Hide the loading screen
      */
     hide() {
-        console.log('Hiding loading screen');
+        console.debug('Hiding loading screen');
         
         // Clear the interval if it's running
         if (this.intervalId) {
             clearInterval(this.intervalId);
             this.intervalId = null;
-            console.log('Cleared loading progress interval');
+            console.debug('Cleared loading progress interval');
         }
         
         if (this.element) {
             // Ensure we show 100% before hiding
             if (this.loadingBar) {
                 this.loadingBar.style.width = '100%';
-                console.log('Set loading bar to 100%');
+                console.debug('Set loading bar to 100%');
             }
             
             // Calculate and show loading time
             const loadTime = ((Date.now() - this.loadStartTime) / 1000).toFixed(1);
             if (this.loadingText) {
                 this.loadingText.textContent = `Loading complete in ${loadTime}s`;
-                console.log(`Loading completed in ${loadTime}s`);
+                console.debug(`Loading completed in ${loadTime}s`);
             }
             
             // Hide immediately - no delay to prevent stuck screen
             this.element.style.display = 'none';
-            console.log('Loading screen hidden');
+            console.debug('Loading screen hidden');
             
             // Force a repaint to ensure the loading screen is actually hidden
             document.body.offsetHeight;
@@ -139,7 +139,7 @@ export class LoadingScreen {
         // Make sure any initial loading indicator is also removed
         const initialIndicator = document.getElementById('initial-loading-indicator');
         if (initialIndicator) {
-            console.log('Found and removing initial loading indicator during hide()');
+            console.debug('Found and removing initial loading indicator during hide()');
             try {
                 initialIndicator.parentNode.removeChild(initialIndicator);
             } catch (error) {
@@ -151,7 +151,7 @@ export class LoadingScreen {
         setTimeout(() => {
             const gameMenu = document.getElementById('game-menu');
             if (gameMenu && gameMenu.style.display !== 'flex') {
-                console.log('Forcing game menu to be visible');
+                console.debug('Forcing game menu to be visible');
                 gameMenu.style.display = 'flex';
                 
                 // Force a repaint
@@ -255,7 +255,7 @@ export class LoadingScreen {
     updateProgress(percent, status, detail) {
         // Clear any existing interval
         if (this.intervalId) {
-            console.log('Received external progress update, clearing interval');
+            console.debug('Received external progress update, clearing interval');
             clearInterval(this.intervalId);
             this.intervalId = null;
         }

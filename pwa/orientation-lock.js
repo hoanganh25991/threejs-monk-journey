@@ -2,7 +2,7 @@
 function lockScreenToLandscape() {
   if (screen.orientation && screen.orientation.lock) {
     screen.orientation.lock("landscape").catch(function (error) {
-      console.log("Screen orientation lock failed: ", error);
+      console.debug("Screen orientation lock failed: ", error);
     });
   }
 }

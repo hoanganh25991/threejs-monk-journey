@@ -391,7 +391,7 @@ self.addEventListener('message', event => {
   // Check if it's the initialization message with the port
   if (event.data && event.data.type === 'INIT_PORT') {
     messagePort = event.data.port;
-    console.log('Communication channel established with client');
+    console.debug('Communication channel established with client');
   }
 });
 
@@ -400,12 +400,12 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_KEY)
       .then(cache => {
-        console.log('Caching app assets with progress tracking');
-        console.log(`Total cache size: ${TOTAL_CACHE_SIZE_MB} MB with progress tracking`);
+        console.debug('Caching app assets with progress tracking');
+        console.debug(`Total cache size: ${TOTAL_CACHE_SIZE_MB} MB with progress tracking`);
         return cacheFilesWithProgress(cache);
       })
       .then(completedCount => {
-        console.log(`Cached ${completedCount} files successfully`);
+        console.debug(`Cached ${completedCount} files successfully`);
         return self.skipWaiting();
       })
       .catch(error => {
@@ -422,7 +422,7 @@ self.addEventListener('activate', event => {
         cacheNames.filter(cacheName => {
           return cacheName.startsWith(CACHE_NAME) && cacheName !== CACHE_KEY;
         }).map(cacheName => {
-          console.log('Deleting old cache:', cacheName);
+          console.debug('Deleting old cache:', cacheName);
           return caches.delete(cacheName);
         })
       );

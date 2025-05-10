@@ -9,7 +9,7 @@ const { exec } = require('child_process');
 const audioDir = path.join('assets', 'audio');
 if (!fs.existsSync(audioDir)) {
     fs.mkdirSync(audioDir, { recursive: true });
-    console.log(`Created directory: ${audioDir}`);
+    console.debug(`Created directory: ${audioDir}`);
 }
 
 // Sound definitions
@@ -73,7 +73,7 @@ const sounds = {
 
 // Generate audio files using SoX
 function generateAudioFiles() {
-    console.log('Generating audio files...');
+    console.debug('Generating audio files...');
     
     // Check if SoX is installed
     exec('which sox', (error, stdout, stderr) => {
@@ -122,12 +122,12 @@ function generateAudioFiles() {
                     console.error(`Error generating ${filename}:`, error);
                     return;
                 }
-                console.log(`Generated ${filename}`);
+                console.debug(`Generated ${filename}`);
                 
                 // Special handling for music files to make them longer
                 if (filename.includes('theme')) {
                     // For now, let's skip the extension since it's causing issues
-                    console.log(`Generated ${filename} (skipping extension due to format issues)`);
+                    console.debug(`Generated ${filename} (skipping extension due to format issues)`);
                 }
             });
         });
@@ -136,7 +136,7 @@ function generateAudioFiles() {
 
 // Generate placeholder audio files if SoX is not available
 function generatePlaceholderFiles() {
-    console.log('Generating placeholder audio files...');
+    console.debug('Generating placeholder audio files...');
     
     Object.keys(sounds).forEach(filename => {
         const outputPath = path.join(audioDir, filename);
@@ -159,7 +159,7 @@ function generatePlaceholderFiles() {
             0x00, 0x00, 0x00, 0x00  // Data size (0)
         ]));
         
-        console.log(`Generated placeholder for ${filename}`);
+        console.debug(`Generated placeholder for ${filename}`);
     });
 }
 
@@ -171,9 +171,9 @@ setTimeout(() => {
     // Check if any files were created
     const files = fs.readdirSync(audioDir);
     if (files.length === 0) {
-        console.log('SoX audio generation failed or took too long, creating placeholders...');
+        console.debug('SoX audio generation failed or took too long, creating placeholders...');
         generatePlaceholderFiles();
     }
 }, 5000);
 
-console.log('Audio generation script started. Check the assets/audio directory for the generated files.');
+console.debug('Audio generation script started. Check the assets/audio directory for the generated files.');

@@ -52,7 +52,7 @@ export class PlayerCombat extends IPlayerCombat {
             // Reset combo if time window expires
             if (this.punchSystem.comboTimer <= 0) {
                 this.punchSystem.comboCount = 0;
-                console.log("Combo reset: time window expired");
+                console.debug("Combo reset: time window expired");
             }
         }
         
@@ -85,7 +85,7 @@ export class PlayerCombat extends IPlayerCombat {
         } else if (this.punchSystem.comboCount > 0 && !this.playerState.isAttacking()) {
             // If H key is released and we're in the middle of a combo, let the combo expire naturally
             // but don't start new punches
-            console.log("H key released, waiting for combo to expire");
+            console.debug("H key released, waiting for combo to expire");
             
             // Reset teleport counter when H key is released
             this.punchSystem.teleportCounter = 0;
@@ -117,7 +117,7 @@ export class PlayerCombat extends IPlayerCombat {
         const comboStep = this.punchSystem.comboCount;
         
         // Log combo step
-        console.log(`Executing combo punch ${comboStep + 1}`);
+        console.debug(`Executing combo punch ${comboStep + 1}`);
         
         // Create appropriate punch animation based on combo step
         switch (comboStep) {

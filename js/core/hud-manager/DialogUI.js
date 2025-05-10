@@ -58,7 +58,7 @@ export class DialogUI extends UIComponent {
         
         // Pause game
         
-        console.log('Dialog opened:', title);
+        console.debug('Dialog opened:', title);
     }
     
     /**
@@ -75,6 +75,6 @@ export class DialogUI extends UIComponent {
         // Resume game
         this.game.resume();
         
-        console.log('Dialog closed');
+        console.debug('Dialog closed');
     }
 }

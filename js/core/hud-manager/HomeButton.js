@@ -66,12 +66,12 @@ export class HomeButton extends UIComponent {
                 }
                 this.gameMenu.show();
                 
-                console.log("Home button clicked - game paused and game menu opened");
+                console.debug("Home button clicked - game paused and game menu opened");
             });
             
             // Add event listener to show/hide settings button based on game state
             this.game.addEventListener('gameStateChanged', (state) => {
-                console.log('Game state changed:', state);
+                console.debug('Game state changed:', state);
                 if (state === 'running') {
                     // Show settings button when game is running
                     this.show();

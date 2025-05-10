@@ -39,4 +39,4 @@ ctx512.fillText('🧘', 256, 256);
 const buffer512 = canvas512.toBuffer('image/png');
 fs.writeFileSync('./images/logo-512.png', buffer512);
 
-console.log('Logo images created successfully!');
+console.debug('Logo images created successfully!');

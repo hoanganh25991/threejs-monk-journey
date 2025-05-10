@@ -31,7 +31,7 @@ export class GameMenu {
             this.newGameButton.addEventListener('click', () => {
                 if (this.game.hasStarted && !this.game.isRunning) {
                     // Game has been started but is currently paused
-                    console.log("Resume Game button clicked - resuming game...");
+                    console.debug("Resume Game button clicked - resuming game...");
                     this.hide();
                     
                     // Hide the main background when resuming the game
@@ -47,10 +47,10 @@ export class GameMenu {
                         this.game.hudManager.showAllUI();
                     }
                     
-                    console.log("Game resumed - enemies and player are now active");
+                    console.debug("Game resumed - enemies and player are now active");
                 } else if (!this.game.hasStarted) {
                     // Game has never been started - start a new game
-                    console.log("New Game button clicked - starting new game...");
+                    console.debug("New Game button clicked - starting new game...");
                     this.hide();
                     
                     // Hide the main background when starting the game
@@ -72,7 +72,7 @@ export class GameMenu {
                         this.game.hudManager.showAllUI();
                     }
                     
-                    console.log("New game started - enemies and player are now active");
+                    console.debug("New game started - enemies and player are now active");
                 }
             });
         }
@@ -99,9 +99,9 @@ export class GameMenu {
                 this.loadGameButton.style.display = 'block';
                 
                 this.loadGameButton.addEventListener('click', () => {
-                    console.log("Load Game button clicked - attempting to load saved game...");
+                    console.debug("Load Game button clicked - attempting to load saved game...");
                     if (this.game.saveManager.loadGame()) {
-                        console.log("Game data loaded successfully");
+                        console.debug("Game data loaded successfully");
                         this.hide();
                         
                         // Hide the main background when loading a game
@@ -123,7 +123,7 @@ export class GameMenu {
                             this.game.hudManager.showAllUI();
                         }
                         
-                        console.log("Game started with loaded data - enemies and player are now active");
+                        console.debug("Game started with loaded data - enemies and player are now active");
                     } else {
                         console.error("Failed to load game data");
                         alert('Failed to load game data.');
@@ -138,11 +138,11 @@ export class GameMenu {
         // Save Game button - show only if game is running
         if (this.saveGameButton) {
             this.saveGameButton.addEventListener('click', () => {
-                console.log("Save Game button clicked - attempting to save game...");
+                console.debug("Save Game button clicked - attempting to save game...");
                 if (this.game.saveManager) {
                     // Force save the game
                     if (this.game.saveManager.saveGame(true, false)) {
-                        console.log("Game data saved successfully");
+                        console.debug("Game data saved successfully");
                         
                         // Show notification
                         if (this.game.uiManager) {

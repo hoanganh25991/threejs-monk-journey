@@ -129,7 +129,7 @@ export class Skill {
         try {
             const effect = this.effectHandler.create(this.position, this.direction);
             this.isActive = true;
-            console.log(`Created new effect for skill: ${this.name}`);
+            console.debug(`Created new effect for skill: ${this.name}`);
             return effect;
         } catch (error) {
             console.error(`Error creating effect for skill ${this.name}:`, error);

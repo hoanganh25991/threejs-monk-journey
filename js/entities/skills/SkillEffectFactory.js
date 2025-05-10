@@ -18,49 +18,49 @@ export class SkillEffectFactory {
      * @returns {SkillEffect} - The created skill effect
      */
     static createEffect(skill) {
-        console.log(`SkillEffectFactory.createEffect called for skill: ${skill.name}, type: ${skill.type}`);
+        console.debug(`SkillEffectFactory.createEffect called for skill: ${skill.name}, type: ${skill.type}`);
         
         let effect;
         switch (skill.name) {
             case 'Wave Strike':
-                console.log(`Creating WaveStrikeEffect for ${skill.name}`);
+                console.debug(`Creating WaveStrikeEffect for ${skill.name}`);
                 effect = new WaveStrikeEffect(skill);
                 break;
             case 'Cyclone Strike':
-                console.log(`Creating CycloneStrikeEffect for ${skill.name}`);
+                console.debug(`Creating CycloneStrikeEffect for ${skill.name}`);
                 effect = new CycloneStrikeEffect(skill);
                 break;
             case 'Seven-Sided Strike':
-                console.log(`Creating SevenSidedStrikeEffect for ${skill.name}`);
+                console.debug(`Creating SevenSidedStrikeEffect for ${skill.name}`);
                 effect = new SevenSidedStrikeEffect(skill);
                 break;
             case 'Fist of Thunder':
-                console.log(`Creating FistOfThunderEffect for ${skill.name}`);
+                console.debug(`Creating FistOfThunderEffect for ${skill.name}`);
                 effect = new FistOfThunderEffect(skill);
                 break;
             case 'Inner Sanctuary':
-                console.log(`Creating InnerSanctuaryEffect for ${skill.name}`);
+                console.debug(`Creating InnerSanctuaryEffect for ${skill.name}`);
                 effect = new InnerSanctuaryEffect(skill);
                 break;
             case 'Wave of Light':
-                console.log(`Creating WaveOfLightEffect for ${skill.name}`);
+                console.debug(`Creating WaveOfLightEffect for ${skill.name}`);
                 effect = new WaveOfLightEffect(skill);
                 break;
             case 'Mystic Ally':
-                console.log(`Creating MysticAllyEffect for ${skill.name}`);
+                console.debug(`Creating MysticAllyEffect for ${skill.name}`);
                 effect = new MysticAllyEffect(skill);
                 break;
             case 'Exploding Palm':
-                console.log(`Creating ExplodingPalmEffect for ${skill.name}`);
+                console.debug(`Creating ExplodingPalmEffect for ${skill.name}`);
                 effect = new ExplodingPalmEffect(skill);
                 break;
             default:
-                console.log(`Creating default SkillEffect for ${skill.name}`);
+                console.debug(`Creating default SkillEffect for ${skill.name}`);
                 effect = new SkillEffect(skill);
                 break;
         }
         
-        console.log(`Effect created: ${effect.constructor.name}`);
+        console.debug(`Effect created: ${effect.constructor.name}`);
         return effect;
     }
 }

@@ -142,12 +142,12 @@ export class WorldSerializer {
             return;
         }
         
-        console.log('Loading world data:', Object.keys(worldData));
+        console.debug('Loading world data:', Object.keys(worldData));
         
         try {
             // Mark discovered zones - check if zoneManager exists
             if (worldData.discoveredZones && Array.isArray(worldData.discoveredZones)) {
-                console.log(`Loading ${worldData.discoveredZones.length} discovered zones`);
+                console.debug(`Loading ${worldData.discoveredZones.length} discovered zones`);
                 
                 if (world.zoneManager && world.zoneManager.zones) {
                     worldData.discoveredZones.forEach(zoneName => {
@@ -155,7 +155,7 @@ export class WorldSerializer {
                             const zone = world.zoneManager.zones.find(z => z.name === zoneName);
                             if (zone) {
                                 zone.discovered = true;
-                                console.log(`Marked zone as discovered: ${zoneName}`);
+                                console.debug(`Marked zone as discovered: ${zoneName}`);
                             }
                         } catch (zoneError) {
                             console.warn(`Error processing zone ${zoneName}:`, zoneError);
@@ -166,7 +166,7 @@ export class WorldSerializer {
             
             // Restore interactive objects state - check if interactiveManager exists
             if (worldData.interactiveObjects && Array.isArray(worldData.interactiveObjects)) {
-                console.log(`Loading ${worldData.interactiveObjects.length} interactive objects`);
+                console.debug(`Loading ${worldData.interactiveObjects.length} interactive objects`);
                 
                 if (world.interactiveManager && world.interactiveManager.objects) {
                     worldData.interactiveObjects.forEach(savedObj => {
@@ -180,7 +180,7 @@ export class WorldSerializer {
                             if (obj) {
                                 obj.isOpen = savedObj.isOpen || false;
                                 obj.isCompleted = savedObj.isCompleted || false;
-                                console.log(`Restored interactive object state: ${obj.type}`);
+                                console.debug(`Restored interactive object state: ${obj.type}`);
                             }
                         } catch (objError) {
                             console.warn(`Error processing interactive object:`, objError, savedObj);
@@ -191,7 +191,7 @@ export class WorldSerializer {
             
             // Restore current chunk
             if (worldData.currentChunk) {
-                console.log(`Setting current chunk to: ${worldData.currentChunk}`);
+                console.debug(`Setting current chunk to: ${worldData.currentChunk}`);
                 if (world.terrainManager) {
                     world.terrainManager.currentChunk = worldData.currentChunk;
                 } else {
@@ -201,7 +201,7 @@ export class WorldSerializer {
             
             // Clear existing terrain and environment objects if method exists
             if (world.clearWorldObjects) {
-                console.log('Clearing existing world objects');
+                console.debug('Clearing existing world objects');
                 world.clearWorldObjects();
             }
             
@@ -223,7 +223,7 @@ export class WorldSerializer {
                 const playerChunkZ = Math.floor(playerPos.z / terrainChunkSize);
                 const loadDistance = 2; // Only load chunks within 2 chunks of player
                 
-                console.log(`Player is at chunk (${playerChunkX}, ${playerChunkZ}), loading chunks within distance ${loadDistance}`);
+                console.debug(`Player is at chunk (${playerChunkX}, ${playerChunkZ}), loading chunks within distance ${loadDistance}`);
                 
                 // Create temporary storage for environment objects and terrain chunks
                 const savedEnvironmentObjects = {};
@@ -241,7 +241,7 @@ export class WorldSerializer {
                         const distanceZ = Math.abs(chunkZ - playerChunkZ);
                         
                         if (distanceX <= loadDistance && distanceZ <= loadDistance) {
-                            console.log(`Loading chunk ${chunkKey} (within range of player)`);
+                            console.debug(`Loading chunk ${chunkKey} (within range of player)`);
                             
                             // Load this chunk from storage
                             const chunkData = loadChunk(chunkKey);
@@ -262,7 +262,7 @@ export class WorldSerializer {
                     }
                 }
                 
-                console.log(`Loaded ${loadedChunkCount} chunks near player position`);
+                console.debug(`Loaded ${loadedChunkCount} chunks near player position`);
                 
                 // Store the loaded data for world to use
                 if (world.environmentManager) {
@@ -307,7 +307,7 @@ export class WorldSerializer {
                 }
             }
             
-            console.log('World data loaded successfully');
+            console.debug('World data loaded successfully');
             
             // Update the world based on player position to regenerate necessary chunks
             if (game && game.player) {
@@ -316,7 +316,7 @@ export class WorldSerializer {
                     game.player.position;
                 
                 if (playerPos && world.updateWorldForPlayer) {
-                    console.log('Updating world for player position');
+                    console.debug('Updating world for player position');
                     world.updateWorldForPlayer(playerPos);
                 }
             }

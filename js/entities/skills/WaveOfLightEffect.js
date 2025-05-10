@@ -226,14 +226,14 @@ export class WaveOfLightEffect extends SkillEffect {
                 // Move the effect group to the target position
                 effectGroup.position.copy(targetPosition);
                 
-                console.log(`Wave of Light targeting enemy at position: ${targetPosition.x}, ${targetPosition.z}`);
+                console.debug(`Wave of Light targeting enemy at position: ${targetPosition.x}, ${targetPosition.z}`);
                 
                 // Show notification if UI manager is available
                 if (this.game.player && this.game.player.game && this.game.player.game.uiManager) {
                     this.game.player.game.uiManager.showNotification(`Wave of Light targeting ${nearestEnemy.type}`);
                 }
             } else {
-                console.log('No enemy in range for Wave of Light, dropping bell at current position');
+                console.debug('No enemy in range for Wave of Light, dropping bell at current position');
             }
         }
         

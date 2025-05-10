@@ -57,7 +57,7 @@ export class PlayerSkills extends IPlayerSkills {
             
             // Remove expired skills
             if (skill.isExpired()) {
-                console.log(`Removing expired skill ${skill.name}`);
+                console.debug(`Removing expired skill ${skill.name}`);
                 skill.remove();
                 this.activeSkills.splice(i, 1);
                 continue;
@@ -82,14 +82,14 @@ export class PlayerSkills extends IPlayerSkills {
         // Log only if there are multiple instances of any skill
         const multipleInstances = Object.entries(skillCounts).filter(([_, count]) => count > 1);
         if (multipleInstances.length > 0) {
-            console.log("Multiple skill instances active:", 
+            console.debug("Multiple skill instances active:", 
                 multipleInstances.map(([name, count]) => `${name}: ${count}`).join(", "));
         }
         
         // Perform a final cleanup pass to remove any null or undefined skills
         for (let i = this.activeSkills.length - 1; i >= 0; i--) {
             if (!this.activeSkills[i] || !this.activeSkills[i].isActive) {
-                console.log(`Removing invalid skill at index ${i}`);
+                console.debug(`Removing invalid skill at index ${i}`);
                 if (this.activeSkills[i]) {
                     this.activeSkills[i].remove();
                 }
@@ -102,27 +102,27 @@ export class PlayerSkills extends IPlayerSkills {
     }
     
     useSkill(skillIndex) {
-        console.log('PlayerSkills.useSkill called with index:', skillIndex);
+        console.debug('PlayerSkills.useSkill called with index:', skillIndex);
         
         // Check if skill index is valid
         if (skillIndex < 0 || skillIndex >= this.skills.length) {
-            console.log('Invalid skill index:', skillIndex, 'Max index:', this.skills.length - 1);
+            console.debug('Invalid skill index:', skillIndex, 'Max index:', this.skills.length - 1);
             return false;
         }
         
         // Get skill template
         const skillTemplate = this.skills[skillIndex];
-        console.log('Using skill:', skillTemplate.name);
+        console.debug('Using skill:', skillTemplate.name);
         
         // Check if skill is on cooldown
         if (skillTemplate.isOnCooldown()) {
-            console.log('Skill is on cooldown:', skillTemplate.name);
+            console.debug('Skill is on cooldown:', skillTemplate.name);
             return false;
         }
         
         // Check if player has enough mana
         if (this.playerStats.getMana() < skillTemplate.manaCost) {
-            console.log('Not enough mana for skill:', skillTemplate.name);
+            console.debug('Not enough mana for skill:', skillTemplate.name);
             return false;
         }
         
@@ -134,11 +134,11 @@ export class PlayerSkills extends IPlayerSkills {
         
         // We no longer clean up existing instances of this skill
         // This allows multiple instances of the same skill to exist simultaneously
-        console.log(`Creating a new instance of ${skillTemplate.name} while keeping existing instances`);
+        console.debug(`Creating a new instance of ${skillTemplate.name} while keeping existing instances`);
         
         // Optional: Log how many instances of this skill are currently active
         const activeInstancesCount = this.activeSkills.filter(s => s && s.name === skillTemplate.name).length;
-        console.log(`Currently active instances of ${skillTemplate.name}: ${activeInstancesCount}`);
+        console.debug(`Currently active instances of ${skillTemplate.name}: ${activeInstancesCount}`);
         
         // Find the nearest enemy for auto-targeting (for all skill types)
         let targetEnemy = null;
@@ -159,7 +159,7 @@ export class PlayerSkills extends IPlayerSkills {
                 // Update player rotation to face enemy
                 this.playerRotation.y = Math.atan2(targetDirection.x, targetDirection.z);
                 
-                console.log(`Auto-targeting enemy for skill ${skillTemplate.name}, facing direction: ${this.playerRotation.y}`);
+                console.debug(`Auto-targeting enemy for skill ${skillTemplate.name}, facing direction: ${this.playerRotation.y}`);
             }
         }
         
@@ -227,7 +227,7 @@ export class PlayerSkills extends IPlayerSkills {
             // First priority: If there's a target enemy, face that direction (already handled above)
             if (targetEnemy) {
                 // Direction already set in the code above
-                console.log("Using enemy direction for skill cast");
+                console.debug("Using enemy direction for skill cast");
             } 
             // Second priority: If player is moving, use movement direction
             else if (this.game && this.game.inputHandler) {
@@ -236,15 +236,15 @@ export class PlayerSkills extends IPlayerSkills {
                 if (moveDir.length() > 0) {
                     // Player is actively moving - use that direction
                     this.playerRotation.y = Math.atan2(moveDir.x, moveDir.z);
-                    console.log(`Using movement direction for skill: ${moveDir.x.toFixed(2)}, ${moveDir.z.toFixed(2)}`);
+                    console.debug(`Using movement direction for skill: ${moveDir.x.toFixed(2)}, ${moveDir.z.toFixed(2)}`);
                 } else {
                     // Player is not moving - use current facing direction
-                    console.log(`Using current facing direction: ${Math.sin(this.playerRotation.y).toFixed(2)}, ${Math.cos(this.playerRotation.y).toFixed(2)}`);
+                    console.debug(`Using current facing direction: ${Math.sin(this.playerRotation.y).toFixed(2)}, ${Math.cos(this.playerRotation.y).toFixed(2)}`);
                 }
             }
             
             // Log the final direction that will be used
-            console.log(`Final rotation for skill cast: ${this.playerRotation.y.toFixed(2)} radians`);
+            console.debug(`Final rotation for skill cast: ${this.playerRotation.y.toFixed(2)} radians`);
             
             // Create the skill effect with the player's position and rotation
             const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
@@ -254,9 +254,9 @@ export class PlayerSkills extends IPlayerSkills {
             
             // Log enemy was auto-targeted (only if an enemy was found)
             if (targetEnemy) {
-                console.log(`Auto-targeting ${targetEnemy.type} with ${skillTemplate.name}`);
+                console.debug(`Auto-targeting ${targetEnemy.type} with ${skillTemplate.name}`);
             } else {
-                console.log(`Using ${skillTemplate.name} without a target`);
+                console.debug(`Using ${skillTemplate.name} without a target`);
             }
         }
 
@@ -276,7 +276,7 @@ export class PlayerSkills extends IPlayerSkills {
         // If no basic attack skill is found, use the first skill as fallback
         const skillTemplate = basicAttackSkill || this.skills[0];
         
-        console.log('Using basic attack skill:', skillTemplate.name);
+        console.debug('Using basic attack skill:', skillTemplate.name);
         
         // Check if skill is on cooldown
         if (skillTemplate.isOnCooldown()) {

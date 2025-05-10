@@ -248,7 +248,7 @@ export class Game {
         }
         
         // Log progress to console
-        console.log(`Loading progress: ${percent}% - ${status} - ${detail}`);
+        console.debug(`Loading progress: ${percent}% - ${status} - ${detail}`);
     }
     
     /**
@@ -274,7 +274,7 @@ export class Game {
      * Start the game
      */
     start() {
-        console.log("Game starting...");
+        console.debug("Game starting...");
         
         // Make sure the canvas is visible
         this.canvas.style.display = 'block';
@@ -295,7 +295,7 @@ export class Game {
         
         // Only start the animation loop if it hasn't been started yet
         if (!this.animationLoopStarted) {
-            console.log("Starting animation loop");
+            console.debug("Starting animation loop");
             this.animationLoopStarted = true;
             this.animate();
         } else {
@@ -308,7 +308,7 @@ export class Game {
         // Dispatch event that game has started
         this.events.dispatch('gameStateChanged', 'running');
         
-        console.log("Game started successfully");
+        console.debug("Game started successfully");
     }
     
     /**
@@ -336,7 +336,7 @@ export class Game {
     togglePause() {
         const isPaused = this.state.togglePause();
         this.events.dispatch('gameStateChanged', isPaused ? 'paused' : 'running');
-        console.log(`Game ${isPaused ? 'paused' : 'resumed'}`);
+        console.debug(`Game ${isPaused ? 'paused' : 'resumed'}`);
         return isPaused;
     }
     
@@ -352,7 +352,7 @@ export class Game {
         if (!this._lastMemoryLog || now - this._lastMemoryLog > 5000) {
             if (window.performance && window.performance.memory) {
                 const memoryInfo = window.performance.memory;
-                console.log(`Memory usage: ${Math.round(memoryInfo.usedJSHeapSize / (1024 * 1024))}MB / ${Math.round(memoryInfo.jsHeapSizeLimit / (1024 * 1024))}MB`);
+                console.debug(`Memory usage: ${Math.round(memoryInfo.usedJSHeapSize / (1024 * 1024))}MB / ${Math.round(memoryInfo.jsHeapSizeLimit / (1024 * 1024))}MB`);
             }
             this._lastMemoryLog = now;
         }
@@ -436,7 +436,7 @@ export class Game {
             const wasPlaying = this.audioManager.isMusicPlaying();
             if (wasPlaying) {
                 this.audioManager.pauseMusic();
-                console.log('Music paused due to page hide event');
+                console.debug('Music paused due to page hide event');
             }
         }
         
@@ -464,7 +464,7 @@ export class Game {
             const wasPlaying = this.audioManager.isMusicPlaying();
             if (wasPlaying) {
                 this.audioManager.pauseMusic();
-                console.log('Music paused due to window blur event');
+                console.debug('Music paused due to window blur event');
             }
         }
     }

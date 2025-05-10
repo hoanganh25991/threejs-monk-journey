@@ -73,7 +73,7 @@ export class WorldManager {
      * @returns {Promise<boolean>} - True if initialization was successful
      */
     async init() {
-        console.log("Initializing world...");
+        console.debug("Initializing world...");
         
         // Initialize lighting
         this.lightingManager.init();
@@ -90,7 +90,7 @@ export class WorldManager {
         // Initialize interactive objects
         this.interactiveManager.init();
         
-        console.log("World initialization complete");
+        console.debug("World initialization complete");
         return true;
     }
     
@@ -165,7 +165,7 @@ export class WorldManager {
                 
                 // If FPS is consistently low, trigger aggressive cleanup
                 if (avgFPS < 30) {
-                    console.log(`Low FPS detected (${avgFPS.toFixed(1)}), performing aggressive cleanup`);
+                    console.debug(`Low FPS detected (${avgFPS.toFixed(1)}), performing aggressive cleanup`);
                     this.performAggressiveCleanup();
                 }
             }
@@ -186,7 +186,7 @@ export class WorldManager {
                 
                 // Notify if performance mode changed
                 if (wasLowPerformanceMode !== this.lowPerformanceMode) {
-                    console.log(`Performance mode changed to: ${this.lowPerformanceMode ? 'LOW' : 'NORMAL'}`);
+                    console.debug(`Performance mode changed to: ${this.lowPerformanceMode ? 'LOW' : 'NORMAL'}`);
                     
                     // Notify user if performance mode changed
                     if (this.game && this.game.uiManager) {
@@ -239,7 +239,7 @@ export class WorldManager {
         // Hint for garbage collection
         this.hintGarbageCollection();
         
-        console.log("Aggressive cleanup performed");
+        console.debug("Aggressive cleanup performed");
     }
     
     /**
@@ -250,7 +250,7 @@ export class WorldManager {
         if (window.gc) {
             try {
                 window.gc();
-                console.log("Garbage collection hint triggered");
+                console.debug("Garbage collection hint triggered");
             } catch (e) {
                 // Ignore if not available
             }
@@ -312,7 +312,7 @@ export class WorldManager {
             }
         }
         
-        console.log("World objects cleared for reload");
+        console.debug("World objects cleared for reload");
     }
     
     /**

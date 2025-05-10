@@ -189,7 +189,7 @@ self.addEventListener('message', event => {
   // Check if it's the initialization message with the port
   if (event.data && event.data.type === 'INIT_PORT') {
     messagePort = event.data.port;
-    console.log('Communication channel established with client');
+    console.debug('Communication channel established with client');
   }
 });
 
@@ -239,12 +239,12 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_KEY)
       .then(cache => {
-        console.log('Caching app assets with progress tracking');
-        console.log(\`Total cache size: \${TOTAL_CACHE_SIZE_MB} MB with progress tracking\`);
+        console.debug('Caching app assets with progress tracking');
+        console.debug(\`Total cache size: \${TOTAL_CACHE_SIZE_MB} MB with progress tracking\`);
         return cacheFilesWithProgress(cache);
       })
       .then(completedCount => {
-        console.log(\`Cached \${completedCount} files successfully\`);
+        console.debug(\`Cached \${completedCount} files successfully\`);
         return self.skipWaiting();
       })
       .catch(error => {
@@ -261,7 +261,7 @@ self.addEventListener('activate', event => {
         cacheNames.filter(cacheName => {
           return cacheName.startsWith(CACHE_NAME) && cacheName !== CACHE_KEY;
         }).map(cacheName => {
-          console.log('Deleting old cache:', cacheName);
+          console.debug('Deleting old cache:', cacheName);
           return caches.delete(cacheName);
         })
       );
@@ -292,10 +292,10 @@ self.addEventListener('fetch', event => {
   // Write the new service worker file
   fs.writeFileSync(serviceWorkerPath, serviceWorkerContent);
   
-  console.log(`✅ Service worker created successfully!`);
-  console.log(`📦 Cache version set to: 1`);
-  console.log(`🔢 Total files to cache: ${filesToCache.length}`);
-  console.log(`📊 Total cache size: ${totalSizeMB} MB`);
+  console.debug(`✅ Service worker created successfully!`);
+  console.debug(`📦 Cache version set to: 1`);
+  console.debug(`🔢 Total files to cache: ${filesToCache.length}`);
+  console.debug(`📊 Total cache size: ${totalSizeMB} MB`);
 }
 
 /**
@@ -305,7 +305,7 @@ function updateServiceWorker() {
   try {
     // Check if service worker file exists
     if (!fs.existsSync(serviceWorkerPath)) {
-      console.log('Service worker does not exist. Creating a new one...');
+      console.debug('Service worker does not exist. Creating a new one...');
       createServiceWorker();
       return;
     }
@@ -471,26 +471,26 @@ function updateServiceWorker() {
     }
     
     // Add logging for total cache size
-    if (serviceWorkerContent.includes('console.log(\'Caching app assets') && 
+    if (serviceWorkerContent.includes('console.debug(\'Caching app assets') && 
         !serviceWorkerContent.includes('Total cache size:')) {
       serviceWorkerContent = serviceWorkerContent.replace(
         /console\.log\('Caching app assets/,
-        `console.log('Caching app assets with progress tracking');\n        console.log(\`Total cache size: \${TOTAL_CACHE_SIZE_MB} MB with progress tracking\`)`
+        `console.debug('Caching app assets with progress tracking');\n        console.debug(\`Total cache size: \${TOTAL_CACHE_SIZE_MB} MB with progress tracking\`)`
       );
     }
     
     // Write the updated service worker file
     fs.writeFileSync(serviceWorkerPath, serviceWorkerContent);
     
-    console.log(`✅ Service worker updated successfully!`);
-    console.log(`📦 Cache version incremented to: ${newVersion}`);
-    console.log(`🔢 Total files to cache: ${filesToCache.length}`);
-    console.log(`📊 Total cache size: ${totalSizeMB} MB`);
+    console.debug(`✅ Service worker updated successfully!`);
+    console.debug(`📦 Cache version incremented to: ${newVersion}`);
+    console.debug(`🔢 Total files to cache: ${filesToCache.length}`);
+    console.debug(`📊 Total cache size: ${totalSizeMB} MB`);
   } catch (err) {
     console.error('Error updating service worker:', err);
     
     // If there was an error updating, try creating a new one
-    console.log('Attempting to create a new service worker...');
+    console.debug('Attempting to create a new service worker...');
     createServiceWorker();
   }
 }

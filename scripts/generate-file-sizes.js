@@ -215,15 +215,15 @@ function generateFileSizesJson() {
   // Write the output file
   fs.writeFileSync(outputPath, JSON.stringify(outputData, null, 2));
   
-  console.log(`✅ File sizes JSON generated successfully at ${outputPath}`);
-  console.log(`🔢 Total files: ${stats.fileCount}`);
-  console.log(`📊 Total size: ${totalSizeMB} MB`);
+  console.debug(`✅ File sizes JSON generated successfully at ${outputPath}`);
+  console.debug(`🔢 Total files: ${stats.fileCount}`);
+  console.debug(`📊 Total size: ${totalSizeMB} MB`);
   
   // Log category counts
-  console.log('\nFile categories:');
+  console.debug('\nFile categories:');
   Object.entries(stats.categories).forEach(([category, data]) => {
     const sizeMB = (data.size / (1024 * 1024)).toFixed(2);
-    console.log(`- ${category}: ${data.count} files, ${sizeMB} MB`);
+    console.debug(`- ${category}: ${data.count} files, ${sizeMB} MB`);
   });
 }
 

@@ -54,7 +54,7 @@ export class Player extends IPlayer {
             this.combat.setGame(this.game);
         }
         
-        console.log("Player initialized with model group:", this.model.getModelGroup());
+        console.debug("Player initialized with model group:", this.model.getModelGroup());
         
         return true;
     }

@@ -124,7 +124,7 @@ export class PerformanceManager {
         // Initialize garbage collection helper
         this.initGarbageCollectionHelper();
         
-        console.log("Performance Manager initialized with quality:", this.currentQuality);
+        console.debug("Performance Manager initialized with quality:", this.currentQuality);
         
         return this;
     }
@@ -295,9 +295,9 @@ export class PerformanceManager {
             if (window.gc) {
                 try {
                     window.gc();
-                    console.log("Manual garbage collection triggered");
+                    console.debug("Manual garbage collection triggered");
                 } catch (e) {
-                    console.log("Manual garbage collection not available");
+                    console.debug("Manual garbage collection not available");
                 }
             }
         }, 60000); // Every minute
@@ -503,7 +503,7 @@ export class PerformanceManager {
             
             // If memory usage is very high, force quality reduction
             if (percentUsed > 90 && this.currentQuality !== 'minimal') {
-                console.log(`High memory usage detected (${percentUsed.toFixed(1)}%), reducing quality`);
+                console.debug(`High memory usage detected (${percentUsed.toFixed(1)}%), reducing quality`);
                 this.decreaseQuality(avgFPS, true);
             }
         } else {
@@ -517,7 +517,7 @@ export class PerformanceManager {
     processDisposalQueue() {
         if (this.disposalQueue.length === 0) return;
         
-        console.log(`Processing disposal queue: ${this.disposalQueue.length} items`);
+        console.debug(`Processing disposal queue: ${this.disposalQueue.length} items`);
         
         // Process a batch of items from the queue
         const batchSize = Math.min(20, this.disposalQueue.length);
@@ -619,7 +619,7 @@ export class PerformanceManager {
                 // We have substantial and consistent headroom to increase quality
                 this.increaseQuality();
                 this.consecutiveHighFPSCount = 0; // Reset after adjustment
-                console.log(`Quality increase triggered after ${this.requiredChecksForIncrease} consecutive high FPS readings`);
+                console.debug(`Quality increase triggered after ${this.requiredChecksForIncrease} consecutive high FPS readings`);
             }
         } 
         // Check for low FPS (potential quality decrease)
@@ -632,7 +632,7 @@ export class PerformanceManager {
                 // We have consistent performance issues, decrease quality
                 this.decreaseQuality(currentFPS);
                 this.consecutiveLowFPSCount = 0; // Reset after adjustment
-                console.log(`Quality decrease triggered after ${this.requiredChecksForDecrease} consecutive low FPS readings`);
+                console.debug(`Quality decrease triggered after ${this.requiredChecksForDecrease} consecutive low FPS readings`);
             }
         }
         // Special case for very low FPS - decrease more quickly
@@ -644,7 +644,7 @@ export class PerformanceManager {
             if (this.consecutiveLowFPSCount >= Math.ceil(this.requiredChecksForDecrease / 2) && this.currentQuality !== 'minimal') {
                 this.decreaseQuality(currentFPS, true); // Force immediate decrease
                 this.consecutiveLowFPSCount = 0;
-                console.log(`Emergency quality decrease triggered due to very low FPS: ${Math.round(currentFPS)}`);
+                console.debug(`Emergency quality decrease triggered due to very low FPS: ${Math.round(currentFPS)}`);
             }
         }
         // FPS is within acceptable range
@@ -657,7 +657,7 @@ export class PerformanceManager {
         // Log current status periodically
         this.qualityCheckCounter++;
         if (this.qualityCheckCounter % 10 === 0) {
-            console.log(`Quality check #${this.qualityCheckCounter}: FPS=${Math.round(currentFPS)}, ` +
+            console.debug(`Quality check #${this.qualityCheckCounter}: FPS=${Math.round(currentFPS)}, ` +
                         `Quality=${this.currentQuality}, ` +
                         `High FPS streak=${this.consecutiveHighFPSCount}/${this.requiredChecksForIncrease}, ` +
                         `Low FPS streak=${this.consecutiveLowFPSCount}/${this.requiredChecksForDecrease}`);
@@ -677,7 +677,7 @@ export class PerformanceManager {
             if (now - this.lastOptimizationTime > this.optimizationInterval * 3) {
                 // Apply the new quality settings
                 this.applyQualitySettings(newQuality);
-                console.log(`Increasing quality to ${newQuality}`);
+                console.debug(`Increasing quality to ${newQuality}`);
                 
                 // Show notification for significant quality increases
                 if (newQuality === 'high' || newQuality === 'ultra') {
@@ -714,7 +714,7 @@ export class PerformanceManager {
                 if (currentIndex > 1 && currentFPS < this.targetFPS * 0.3) { // More conservative threshold (0.3 instead of 0.4)
                     const twoLevelsDown = qualityLevels[currentIndex - 2];
                     this.applyQualitySettings(twoLevelsDown);
-                    console.log(`Severely decreasing quality to ${twoLevelsDown} (FPS: ${Math.round(currentFPS)})`);
+                    console.debug(`Severely decreasing quality to ${twoLevelsDown} (FPS: ${Math.round(currentFPS)})`);
                     
                     this.showQualityChangeNotification(
                         `Graphics quality lowered to ${twoLevelsDown} to improve performance. ` +
@@ -722,7 +722,7 @@ export class PerformanceManager {
                     );
                 } else {
                     this.applyQualitySettings(newQuality);
-                    console.log(`Decreasing quality to ${newQuality} (FPS: ${Math.round(currentFPS)})`);
+                    console.debug(`Decreasing quality to ${newQuality} (FPS: ${Math.round(currentFPS)})`);
                     
                     this.showQualityChangeNotification(
                         `Graphics quality lowered to ${newQuality} to maintain performance. ` +
@@ -732,7 +732,7 @@ export class PerformanceManager {
             } else {
                 // Normal decrease
                 this.applyQualitySettings(newQuality);
-                console.log(`Decreasing quality to ${newQuality} (FPS: ${Math.round(currentFPS)})`);
+                console.debug(`Decreasing quality to ${newQuality} (FPS: ${Math.round(currentFPS)})`);
                 
                 this.showQualityChangeNotification(
                     `Graphics quality lowered to ${newQuality} to maintain performance. ` +
@@ -793,7 +793,7 @@ export class PerformanceManager {
         
         // Log quality change
         if (previousQuality !== qualityLevel) {
-            console.log(`Quality changed from ${previousQuality} to ${qualityLevel}`);
+            console.debug(`Quality changed from ${previousQuality} to ${qualityLevel}`);
         }
         
         // Update renderer settings
@@ -829,7 +829,7 @@ export class PerformanceManager {
         // Note: Changing antialiasing requires recreating the renderer
         // This is expensive, so we only do it when necessary
         if (renderer.antialias !== settings.antialiasing) {
-            console.log("Antialiasing change requires renderer recreation - skipping");
+            console.debug("Antialiasing change requires renderer recreation - skipping");
             // In a real implementation, we would recreate the renderer here
         }
         
@@ -838,7 +838,7 @@ export class PerformanceManager {
             // Set low performance mode for low and minimal quality levels
             const lowPerformanceMode = (qualityLevel === 'low' || qualityLevel === 'minimal');
             this.game.particleManager.setPerformanceMode(lowPerformanceMode);
-            console.log(`Particle manager performance mode set to: ${lowPerformanceMode ? 'LOW' : 'HIGH'}`);
+            console.debug(`Particle manager performance mode set to: ${lowPerformanceMode ? 'LOW' : 'HIGH'}`);
         }
         
         // Update the quality indicator in the UI
@@ -848,7 +848,7 @@ export class PerformanceManager {
         renderer.clear();
         
         // Quality has been updated
-        console.log(`Quality settings applied: ${qualityLevel}`);
+        console.debug(`Quality settings applied: ${qualityLevel}`);
     }
     
     updateTextureQuality(qualityMultiplier) {
@@ -989,7 +989,7 @@ export class PerformanceManager {
         // 5. Optimize physics/collision detection
         // This would depend on the specific physics system used
         
-        console.log("Applied WebGL and Three.js optimizations");
+        console.debug("Applied WebGL and Three.js optimizations");
     }
     
     getParticleMultiplier() {

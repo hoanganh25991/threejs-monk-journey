@@ -24,7 +24,7 @@ export class SaveUtils {
         if (typeof console[level] === 'function') {
             console[level](message);
         } else {
-            console.log(message);
+            console.debug(message);
         }
     }
     
