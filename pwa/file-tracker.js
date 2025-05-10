@@ -359,8 +359,20 @@ class FileTracker {
             // List some files not in file-sizes.json for debugging
             const unknownFiles = Array.from(this.otherFileSizes.entries())
                 .filter(([url]) => {
-                    const fileName = url.split('/').pop().split('?')[0];
-                    return !this.filesData[fileName];
+                    // Make sure url is not null or undefined
+                    if (!url) return false;
+                    
+                    try {
+                        const urlParts = url.split('/');
+                        const lastPart = urlParts.pop() || '';
+                        const fileName = lastPart.split('?')[0] || '';
+                        
+                        // Check if this.filesData exists and if the fileName exists in it
+                        return !this.filesData || !fileName || !this.filesData[fileName];
+                    } catch (error) {
+                        console.error('Error processing URL in file tracker:', error, url);
+                        return false;
+                    }
                 })
                 .sort((a, b) => b[1] - a[1]) // Sort by size, largest first
                 .slice(0, 5); // Take top 5

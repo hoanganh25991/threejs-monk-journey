@@ -1,5 +1,5 @@
 {
-  "totalSizeBytes": 2905409,
+  "totalSizeBytes": 2905509,
   "totalSizeMB": "2.77",
   "totalFiles": 155,
   "fileSizes": {
@@ -600,7 +600,7 @@
       "category": "js"
     },
     "file-tracker.js": {
-      "size": 22180,
+      "size": 22280,
       "category": "js"
     },
     "orientation-lock.js": {
@@ -625,7 +625,7 @@
     },
     "js": {
       "count": 93,
-      "size": 984592,
+      "size": 984692,
       "sampleFile": "js/config/index.js"
     },
     "images": {
@@ -644,7 +644,7 @@
       "sampleFile": "assets/models/monk-v3.glb"
     }
   },
-  "generatedAt": "2025-05-10T01:57:41.609Z",
+  "generatedAt": "2025-05-10T01:59:16.409Z",
   "fileList": [
     "animations.css",
     "game.css",
