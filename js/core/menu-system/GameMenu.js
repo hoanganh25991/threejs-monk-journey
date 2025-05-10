@@ -180,6 +180,7 @@ export class GameMenu {
             if (this.newGameButton && this.saveGameButton) {
                 if (this.game.hasStarted) {
                     this.newGameButton.textContent = 'Resume Game';
+                    this.saveGameButton.style.display = 'block';
                 } else {
                     this.newGameButton.textContent = 'New Game';
                     this.saveGameButton.style.display = 'none';

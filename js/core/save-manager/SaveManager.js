@@ -28,7 +28,6 @@ export class SaveManager extends ISaveSystem {
         this.autoSaveInterval = 60_000; // Auto-save every minute (reduced frequency)
         this.autoSaveTimer = null;
         this.lastSaveLevel = 0; // Track player level at last save
-        this.saveThresholdLevels = [5, 10, 15, 20, 30, 40, 50]; // Save at these level milestones
         this.lastSaveTime = 0; // Track time of last save
         this.minTimeBetweenSaves = 60_000; // Minimum minute between saves
         
@@ -94,11 +93,10 @@ export class SaveManager extends ISaveSystem {
             const playerLevel = this.game.player.stats.level;
             
             // Check if we should save based on level milestones or forced save
-            const shouldSaveByLevel = this.saveThresholdLevels.includes(playerLevel) && playerLevel > this.lastSaveLevel;
             const timeSinceLastSave = currentTime - this.lastSaveTime;
             const enoughTimePassed = timeSinceLastSave > this.minTimeBetweenSaves;
             
-            if (!forceSave && !shouldSaveByLevel && !enoughTimePassed) {
+            if (!forceSave && !enoughTimePassed) {
                 SaveUtils.log('Skipping save - not at level milestone or not enough time passed');
                 return true; // Skip saving but return success
             }
@@ -147,7 +145,7 @@ export class SaveManager extends ISaveSystem {
             }
             
             // Save chunks separately if at level milestone or forced
-            if (shouldSaveByLevel || forceSave) {
+            if (forceSave) {
                 this.saveProgress.update('Saving world chunks...', 70);
                 await this.saveWorldChunksWithProgress(autoSave);
                 this.lastSaveLevel = playerLevel;
