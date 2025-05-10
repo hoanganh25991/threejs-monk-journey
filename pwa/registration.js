@@ -12,11 +12,11 @@
         return;
     }
     
-    // Check if running on localhost
-    if (window.location.hostname === 'localhost') {
-        console.warn('Running on localhost. Service worker is disabled for development purposes.');
-        return;
-    }
+    // // Check if running on localhost
+    // if (window.location.hostname === 'localhost') {
+    //     console.warn('Running on localhost. Service worker is disabled for development purposes.');
+    //     return;
+    // }
 
     // Check if service workers are supported
     if (!('serviceWorker' in navigator)) {
