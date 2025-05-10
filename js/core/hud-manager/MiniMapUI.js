@@ -23,7 +23,7 @@ export class MiniMapUI extends UIComponent {
         this.ctx = null;
         this.mapSize = 200; // Size of the mini map in pixels
         this.canvasSize = this.mapSize; // Canvas size matches map size
-        this.scale = 0.5; // Increased scale factor for better world coverage
+        this.scale = 0.72; // Increased scale factor for better world coverage
         this.lastRenderTime = 0;
         this.renderInterval = 100; // Render every 100ms for performance
         this.isVisible = true;
