@@ -206,12 +206,8 @@ export class SettingsMenu extends UIComponent {
             // Add change event
             this.qualitySelect.addEventListener('change', () => {
                 if (this.game.performanceManager) {
-                    // Just update the quality level without creating a reload button
-                    // The actual localStorage saving will happen when the Save button is clicked
-                    this.game.performanceManager.setQualityLevel(this.qualitySelect.value);
-                    
                     // Store the setting in localStorage
-                    localStorage.setItem('diablo_immortal_quality_level', this.qualitySelect.value);
+                    localStorage.setItem('monk_journey_quality_level', this.qualitySelect.value);
                 }
             });
         }
@@ -232,7 +228,7 @@ export class SettingsMenu extends UIComponent {
                     }
                     
                     // Store the setting in localStorage
-                    localStorage.setItem('diablo_immortal_adaptive_quality', this.adaptiveCheckbox.checked);
+                    localStorage.setItem('monk_journey_adaptive_quality', this.adaptiveCheckbox.checked);
                 }
             });
         }
@@ -250,7 +246,7 @@ export class SettingsMenu extends UIComponent {
                     this.fpsValue.textContent = `${this.fpsSlider.value} FPS`;
                     
                     // Store the setting in localStorage
-                    localStorage.setItem('diablo_immortal_target_fps', this.fpsSlider.value);
+                    localStorage.setItem('monk_journey_target_fps', this.fpsSlider.value);
                 }
             });
         }
@@ -284,7 +280,7 @@ export class SettingsMenu extends UIComponent {
                 this.game.difficultyManager.setDifficulty(parseInt(this.difficultySelect.value));
                 
                 // Store the setting in localStorage
-                localStorage.setItem('diablo_immortal_difficulty', this.difficultySelect.value);
+                localStorage.setItem('monk_journey_difficulty', this.difficultySelect.value);
             });
         }
     }
@@ -795,14 +791,14 @@ export class SettingsMenu extends UIComponent {
     saveAllSettings() {
         // Save performance settings
         if (this.game.performanceManager) {
-            localStorage.setItem('diablo_immortal_quality_level', this.game.performanceManager.currentQuality);
-            localStorage.setItem('diablo_immortal_adaptive_quality', this.game.performanceManager.adaptiveQualityEnabled);
-            localStorage.setItem('diablo_immortal_target_fps', this.game.performanceManager.targetFPS);
+            localStorage.setItem('monk_journey_quality_level', this.game.performanceManager.currentQuality);
+            localStorage.setItem('monk_journey_adaptive_quality', this.game.performanceManager.adaptiveQualityEnabled);
+            localStorage.setItem('monk_journey_target_fps', this.game.performanceManager.targetFPS);
         }
         
         // Save game settings
         if (this.game.difficultyManager) {
-            localStorage.setItem('diablo_immortal_difficulty', this.game.difficultyManager.getCurrentDifficultyIndex());
+            localStorage.setItem('monk_journey_difficulty', this.game.difficultyManager.getCurrentDifficultyIndex());
         }
         
         // Save audio settings
@@ -812,7 +808,7 @@ export class SettingsMenu extends UIComponent {
         
         // Save character model settings
         if (this.game.player && this.game.player.model) {
-            localStorage.setItem('diablo_immortal_character_model', this.game.player.model.getCurrentModelId());
+            localStorage.setItem('monk_journey_character_model', this.game.player.model.getCurrentModelId());
         }
         
         console.debug("All settings saved to localStorage");

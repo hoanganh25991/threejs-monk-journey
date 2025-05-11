@@ -748,7 +748,7 @@ export class AudioManager {
                 // autoPauseEnabled removed - now handled by Game.js
             };
             
-            localStorage.setItem('audioSettings', JSON.stringify(settings));
+            localStorage.setItem('monk_journey_audio_settings', JSON.stringify(settings));
             return true;
         } catch (error) {
             console.error('Error saving audio settings:', error);
@@ -759,7 +759,7 @@ export class AudioManager {
     // Load audio settings from localStorage
     loadSettings() {
         try {
-            const settingsJson = localStorage.getItem('audioSettings');
+            const settingsJson = localStorage.getItem('monk_journey_audio_settings');
             if (settingsJson) {
                 const settings = JSON.parse(settingsJson);
                 

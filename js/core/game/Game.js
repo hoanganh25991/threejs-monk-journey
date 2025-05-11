@@ -90,9 +90,9 @@ export class Game {
             // Update loading progress
             this.updateLoadingProgress(5, 'Initializing renderer...', 'Setting up WebGL');
             
-            // Initialize renderer with medium quality settings by default
-            // The PerformanceManager will adjust quality based on device capabilities
-            this.renderer = this.createRenderer('ultra');
+            // Initialize renderer with quality settings from localStorage or use 'ultra' as default
+            const qualityLevel = localStorage.getItem('monk_journey_quality_level') || 'ultra';
+            this.renderer = this.createRenderer(qualityLevel);
             
             this.updateLoadingProgress(10, 'Creating game world...', 'Setting up scene');
             
