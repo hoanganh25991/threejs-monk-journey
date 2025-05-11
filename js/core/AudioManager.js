@@ -576,77 +576,83 @@ export class AudioManager {
         return true;
     }
     
-    pauseMusic() {
+    /**
+     * Pause all audio (both music and sound effects)
+     * @returns {boolean} True if successful
+     */
+    pause() {
+        let musicPaused = false;
+        let soundEffectsPaused = false;
+        
+        // Pause current music if playing
         if (this.currentMusic && this.music[this.currentMusic]) {
             try {
                 this.music[this.currentMusic].pause();
-                return true;
+                musicPaused = true;
+                console.debug(`Music ${this.currentMusic} paused`);
             } catch (error) {
                 console.warn(`Could not pause music ${this.currentMusic}:`, error);
-                return false;
             }
         }
-        return false;
+        
+        // Pause all sound effects
+        if (this.audioEnabled) {
+            try {
+                // Iterate through all sound effects and pause them if they're playing
+                for (const soundName in this.sounds) {
+                    const sound = this.sounds[soundName];
+                    if (sound && sound.isPlaying) {
+                        sound.pause();
+                    }
+                }
+                soundEffectsPaused = true;
+                console.debug('All sound effects paused');
+            } catch (error) {
+                console.warn('Could not pause all sound effects:', error);
+            }
+        }
+        
+        return musicPaused || soundEffectsPaused;
     }
     
-    resumeMusic() {
+    /**
+     * Resume all audio (both music and sound effects)
+     * @returns {boolean} True if successful
+     */
+    resume() {
+        let musicResumed = false;
+        let soundEffectsResumed = false;
+        
+        // Resume current music if paused
         if (this.currentMusic && this.music[this.currentMusic]) {
             try {
                 this.music[this.currentMusic].play();
-                return true;
+                musicResumed = true;
+                console.debug(`Music ${this.currentMusic} resumed`);
             } catch (error) {
                 console.warn(`Could not resume music ${this.currentMusic}:`, error);
-                return false;
             }
         }
-        return false;
-    }
-    
-    /**
-     * Pause all currently playing sound effects
-     * @returns {boolean} True if successful
-     */
-    pauseAllSoundEffects() {
-        if (!this.audioEnabled) return false;
         
-        try {
-            // Iterate through all sound effects and pause them if they're playing
-            for (const soundName in this.sounds) {
-                const sound = this.sounds[soundName];
-                if (sound && sound.isPlaying) {
-                    sound.pause();
+        // Resume all sound effects
+        if (this.audioEnabled && !this.isMuted) {
+            try {
+                // Iterate through all sound effects and resume them if they were playing
+                for (const soundName in this.sounds) {
+                    const sound = this.sounds[soundName];
+                    // Only resume sounds that were playing and are now paused
+                    if (sound && sound.isPaused) {
+                        sound.play();
+                    }
                 }
+                soundEffectsResumed = true;
+                console.debug('All sound effects resumed');
+            } catch (error) {
+                console.warn('Could not resume all sound effects:', error);
             }
-            console.debug('All sound effects paused');
-            return true;
-        } catch (error) {
-            console.warn('Could not pause all sound effects:', error);
-            return false;
         }
-    }
-    
-    /**
-     * Resume all paused sound effects
-     * @returns {boolean} True if successful
-     */
-    resumeAllSoundEffects() {
-        if (!this.audioEnabled || this.isMuted) return false;
         
-        try {
-            // Iterate through all sound effects and resume them if they were playing
-            for (const soundName in this.sounds) {
-                const sound = this.sounds[soundName];
-                // Only resume sounds that were playing and are now paused
-                if (sound && sound.isPaused) {
-                    sound.play();
-                }
-            }
-            console.debug('All sound effects resumed');
-            return true;
-        } catch (error) {
-            console.warn('Could not resume all sound effects:', error);
-            return false;
-        }
+        return musicResumed || soundEffectsResumed;
     }
     
     toggleMute() {

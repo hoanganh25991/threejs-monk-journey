@@ -308,8 +308,7 @@ export class Game {
         
         // Pause audio
         if (this.audioManager) {
-            this.audioManager.pauseMusic();
-            this.audioManager.pauseAllSoundEffects();
+            this.audioManager.pause();
         }
         
         // Pause player animations
@@ -319,18 +318,12 @@ export class Game {
         
         // Pause all enemy animations
         if (this.enemyManager) {
-            this.enemyManager.pauseAllEnemies();
+            this.enemyManager.pause();
         }
         
         // Pause particle effects
         if (this.effectsManager) {
-            this.effectsManager.pauseAllEffects();
-        }
-        
-        // Show pause overlay if available
-        const pauseOverlay = document.getElementById('pause-overlay');
-        if (pauseOverlay) {
-            pauseOverlay.style.display = 'flex';
+            this.effectsManager.pause();
         }
         
         // Dispatch event that game has been paused
@@ -354,8 +347,7 @@ export class Game {
         
         // Resume audio
         if (this.audioManager) {
-            this.audioManager.resumeMusic();
-            this.audioManager.resumeAllSoundEffects();
+            this.audioManager.resume();
         }
         
         // Resume player animations
@@ -365,18 +357,12 @@ export class Game {
         
         // Resume all enemy animations
         if (this.enemyManager) {
-            this.enemyManager.resumeAllEnemies();
+            this.enemyManager.resume();
         }
         
         // Resume particle effects
         if (this.effectsManager) {
-            this.effectsManager.resumeAllEffects();
-        }
-        
-        // Hide pause overlay if available
-        const pauseOverlay = document.getElementById('pause-overlay');
-        if (pauseOverlay) {
-            pauseOverlay.style.display = 'none';
+            this.effectsManager.resume();
         }
         
         // Dispatch event that game has been resumed

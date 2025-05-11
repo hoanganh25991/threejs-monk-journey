@@ -88,7 +88,7 @@ export class EffectsManager {
      * Pause all active effects
      * Used when the game is paused
      */
-    pauseAllEffects() {
+    pause() {
         console.debug(`Pausing ${this.effects.length} effects`);
         
         for (const effect of this.effects) {
@@ -111,7 +111,7 @@ export class EffectsManager {
      * Resume all paused effects
      * Used when the game is resumed
      */
-    resumeAllEffects() {
+    resume() {
         console.debug(`Resuming ${this.effects.length} effects`);
         
         for (const effect of this.effects) {

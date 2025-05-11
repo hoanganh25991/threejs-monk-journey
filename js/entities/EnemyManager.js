@@ -245,7 +245,7 @@ export class EnemyManager {
      * Pause all enemies in the game
      * Stops animations and movement
      */
-    pauseAllEnemies() {
+    pause() {
         console.debug(`Pausing ${this.enemies.length} enemies`);
         
         for (const enemy of this.enemies) {
@@ -263,7 +263,7 @@ export class EnemyManager {
      * Resume all enemies in the game
      * Restarts animations and movement
      */
-    resumeAllEnemies() {
+    resume() {
         console.debug(`Resuming ${this.enemies.length} enemies`);
         
         for (const enemy of this.enemies) {
