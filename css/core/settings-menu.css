@@ -94,7 +94,8 @@
 }
 
 /* Override overflow for model-preview tab */
-#model-preview-tab.tab-content {
+#model-preview-tab.tab-content,
+#skills-preview-tab.tab-content {
     overflow: hidden;
 }
 
@@ -311,12 +312,91 @@
     overflow: hidden;
 }
 
+/* Skills Preview Layout */
+.skills-preview-layout {
+    display: flex;
+    height: calc(100% - 50px);
+}
+
+.skills-preview-section {
+    flex: 2;
+    padding-right: 20px;
+}
+
+#skills-preview-container {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    position: relative;
+}
+
+#skills-preview-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 400px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.skills-preview-controls-section {
+    flex: 1;
+    padding-left: 20px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-y: auto;
+}
+
+#skills-preview-selection-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#skills-preview-selection-container .settings-select {
+    flex: 1;
+}
+
+/* Skill Details Styling */
+.skill-details-info {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+.skill-detail {
+    display: flex;
+    margin-bottom: 10px;
+    align-items: flex-start;
+}
+
+.detail-label {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-right: 15px;
+    min-width: 100px;
+    text-align: right;
+    font-weight: bold;
+}
+
+.detail-value {
+    flex: 1;
+    color: white;
+    padding: 5px 0;
+}
+
 /* Navigation buttons for selects - Monk Style */
 #prev-model-button, #next-model-button,
 #prev-size-button, #next-size-button,
 #prev-anim-button, #next-anim-button,
 #prev-model-preview-button, #next-model-preview-button,
-#prev-anim-preview-button, #next-anim-preview-button {
+#prev-anim-preview-button, #next-anim-preview-button,
+#prev-skill-button, #next-skill-button {
     background-color: rgba(255, 204, 0, 0.7);
     color: #4a3000;
     border: 2px solid rgba(255, 230, 150, 0.8);
@@ -339,7 +419,8 @@
 #prev-size-button:hover, #next-size-button:hover,
 #prev-anim-button:hover, #next-anim-button:hover,
 #prev-model-preview-button:hover, #next-model-preview-button:hover,
-#prev-anim-preview-button:hover, #next-anim-preview-button:hover {
+#prev-anim-preview-button:hover, #next-anim-preview-button:hover,
+#prev-skill-button:hover, #next-skill-button:hover {
     background-color: rgba(255, 215, 0, 0.8);
     transform: translateY(-2px);
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
@@ -349,7 +430,8 @@
 #prev-size-button:active, #next-size-button:active,
 #prev-anim-button:active, #next-anim-button:active,
 #prev-model-preview-button:active, #next-model-preview-button:active,
-#prev-anim-preview-button:active, #next-anim-preview-button:active {
+#prev-anim-preview-button:active, #next-anim-preview-button:active,
+#prev-skill-button:active, #next-skill-button:active {
     transform: translateY(1px);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }

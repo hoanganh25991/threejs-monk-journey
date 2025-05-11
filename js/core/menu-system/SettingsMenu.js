@@ -4,8 +4,12 @@
  */
 
 import { ModelPreview } from './ModelPreview.js';
+import { SkillPreview } from './SkillPreview.js';
 import { CHARACTER_MODELS } from '../../config/player-models.js';
 import { UIComponent } from '../UIComponent.js';
+import { SKILLS } from '../../config/skills.js';
+import { SkillEffectFactory } from '../../entities/skills/SkillEffectFactory.js';
+import { Skill } from '../../entities/skills/Skill.js';
 
 export class SettingsMenu extends UIComponent {
     /**
@@ -65,6 +69,19 @@ export class SettingsMenu extends UIComponent {
         this.backButton = document.getElementById('settings-back-button');
         this.saveButton = document.getElementById('settings-save-button');
         
+        // Skills preview elements
+        this.skillsPreviewContainer = document.getElementById('skills-preview-container');
+        this.skillsPreviewSelect = document.getElementById('skills-preview-select');
+        this.prevSkillButton = document.getElementById('prev-skill-button');
+        this.nextSkillButton = document.getElementById('next-skill-button');
+        this.skillDetailsContainer = document.getElementById('skill-details');
+        this.playSkillEffectButton = document.getElementById('play-skill-effect-button');
+        this.resetSkillPreviewButton = document.getElementById('reset-skill-preview-button');
+        
+        this.skillPreview = null;
+        this.currentSkill = null;
+        this.currentSkillEffect = null;
+        
         this.modelPreview = null;
         this.modelPreviewFullscreen = null;
         this.fromInGame = false;
@@ -117,6 +134,14 @@ export class SettingsMenu extends UIComponent {
                             this.resizeModelPreviewFullscreen();
                         }, 50);
                     }
+                    
+                    // Handle skills preview resizing based on tab
+                    if (tabId === 'skills-preview' && this.skillPreview) {
+                        // Use setTimeout to ensure the tab is visible before resizing
+                        setTimeout(() => {
+                            this.resizeSkillsPreview();
+                        }, 50);
+                    }
                 }
             });
         });
@@ -143,6 +168,218 @@ export class SettingsMenu extends UIComponent {
     }
     
     /**
+     * Resize the skills preview to fit the container
+     * @private
+     */
+    resizeSkillsPreview() {
+        if (!this.skillPreview) return;
+        
+        const container = document.querySelector('.skills-preview-section');
+        if (!container) return;
+        
+        // Get the container dimensions
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        
+        // Update the skills preview size
+        this.skillPreview.setSize(width, height);
+    }
+    
+    /**
+     * Initialize skills preview
+     * @private
+     */
+    initializeSkillsPreview() {
+        // Initialize skills select dropdown
+        this.initializeSkillsOptions();
+        
+        // Set up navigation buttons for skills preview
+        this.setupSkillsNavigationButtons();
+        
+        // Initialize the skills preview container
+        this.initializeSkillsPreviewContainer();
+        
+        // Set up action buttons
+        this.setupSkillsActionButtons();
+    }
+    
+    /**
+     * Initialize skills options in the select element
+     * @private
+     */
+    initializeSkillsOptions() {
+        if (!this.skillsPreviewSelect) return;
+        
+        // Clear existing options
+        while (this.skillsPreviewSelect.options.length > 0) {
+            this.skillsPreviewSelect.remove(0);
+        }
+        
+        // Add skill options
+        SKILLS.forEach((skill, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = skill.name;
+            option.title = skill.description;
+            this.skillsPreviewSelect.appendChild(option);
+        });
+        
+        // Set first skill as selected by default
+        if (SKILLS.length > 0) {
+            this.skillsPreviewSelect.selectedIndex = 0;
+            this.updateSkillDetails(0);
+        }
+        
+        // Add change event
+        this.skillsPreviewSelect.addEventListener('change', () => {
+            const skillIndex = parseInt(this.skillsPreviewSelect.value);
+            this.updateSkillDetails(skillIndex);
+        });
+    }
+    
+    /**
+     * Set up navigation buttons for skills preview
+     * @private
+     */
+    setupSkillsNavigationButtons() {
+        // Add event listeners for prev/next skill buttons
+        if (this.prevSkillButton && this.skillsPreviewSelect) {
+            this.prevSkillButton.addEventListener('click', () => {
+                const currentIndex = this.skillsPreviewSelect.selectedIndex;
+                const newIndex = (currentIndex > 0) ? currentIndex - 1 : SKILLS.length - 1;
+                this.skillsPreviewSelect.selectedIndex = newIndex;
+                this.updateSkillDetails(newIndex);
+            });
+        }
+        
+        if (this.nextSkillButton && this.skillsPreviewSelect) {
+            this.nextSkillButton.addEventListener('click', () => {
+                const currentIndex = this.skillsPreviewSelect.selectedIndex;
+                const newIndex = (currentIndex < SKILLS.length - 1) ? currentIndex + 1 : 0;
+                this.skillsPreviewSelect.selectedIndex = newIndex;
+                this.updateSkillDetails(newIndex);
+            });
+        }
+    }
+    
+    /**
+     * Initialize the skills preview container
+     * @private
+     */
+    initializeSkillsPreviewContainer() {
+        // Get the skills preview container
+        const container = document.getElementById('skills-preview-container');
+        if (!container) return;
+        
+        // Create a new SkillPreview instance
+        this.skillPreview = new SkillPreview(container);
+        
+        // Set initial size
+        const previewSection = document.querySelector('.skills-preview-section');
+        if (previewSection) {
+            const width = previewSection.clientWidth;
+            const height = previewSection.clientHeight;
+            this.skillPreview.setSize(width, height);
+        }
+    }
+    
+    /**
+     * Set up action buttons for skills preview
+     * @private
+     */
+    setupSkillsActionButtons() {
+        // Play skill effect button
+        if (this.playSkillEffectButton) {
+            this.playSkillEffectButton.addEventListener('click', () => {
+                this.playCurrentSkillEffect();
+            });
+        }
+        
+        // Reset skill preview button
+        if (this.resetSkillPreviewButton) {
+            this.resetSkillPreviewButton.addEventListener('click', () => {
+                this.resetSkillPreview();
+            });
+        }
+    }
+    
+    /**
+     * Update skill details based on the selected skill
+     * @param {number} skillIndex - The index of the selected skill
+     * @private
+     */
+    updateSkillDetails(skillIndex) {
+        if (!this.skillDetailsContainer) return;
+        
+        // Get the selected skill
+        const skill = SKILLS[skillIndex];
+        if (!skill) return;
+        
+        // Store the current skill
+        this.currentSkill = skill;
+        
+        // Create a skill instance for preview
+        const skillInstance = {
+            name: skill.name,
+            type: skill.type,
+            damage: skill.damage,
+            manaCost: skill.manaCost,
+            cooldown: skill.cooldown,
+            range: skill.range,
+            radius: skill.radius,
+            duration: skill.duration,
+            color: skill.color
+        };
+        
+        // Clear existing content
+        this.skillDetailsContainer.innerHTML = '';
+        
+        // Create skill details HTML
+        const detailsHTML = `
+            <div class="skill-detail"><span class="detail-label">Name:</span> <span class="detail-value">${skill.name}</span></div>
+            <div class="skill-detail"><span class="detail-label">Type:</span> <span class="detail-value">${skill.type}</span></div>
+            <div class="skill-detail"><span class="detail-label">Damage:</span> <span class="detail-value">${skill.damage}</span></div>
+            <div class="skill-detail"><span class="detail-label">Mana Cost:</span> <span class="detail-value">${skill.manaCost}</span></div>
+            <div class="skill-detail"><span class="detail-label">Cooldown:</span> <span class="detail-value">${skill.cooldown}s</span></div>
+            <div class="skill-detail"><span class="detail-label">Range:</span> <span class="detail-value">${skill.range}</span></div>
+            <div class="skill-detail"><span class="detail-label">Radius:</span> <span class="detail-value">${skill.radius}</span></div>
+            <div class="skill-detail"><span class="detail-label">Duration:</span> <span class="detail-value">${skill.duration}s</span></div>
+            <div class="skill-detail"><span class="detail-label">Description:</span> <span class="detail-value">${skill.description}</span></div>
+        `;
+        
+        this.skillDetailsContainer.innerHTML = detailsHTML;
+    }
+    
+    /**
+     * Play the current skill effect
+     * @private
+     */
+    playCurrentSkillEffect() {
+        if (!this.currentSkill || !this.skillPreview) return;
+        
+        console.log(`Playing skill effect for: ${this.currentSkill.name}`);
+        
+        // Create the skill effect using the SkillPreview
+        this.skillPreview.createSkillEffect(this.currentSkill);
+    }
+    
+    /**
+     * Reset the skill preview
+     * @private
+     */
+    resetSkillPreview() {
+        console.log('Resetting skill preview');
+        
+        if (this.skillPreview) {
+            // Remove the current skill effect
+            this.skillPreview.removeSkillEffect();
+            
+            // Reset the camera
+            this.skillPreview.resetCamera();
+        }
+    }
+    
+    /**
      * Update the component
      * @param {number} delta - Time since last update in seconds
      */
@@ -163,6 +400,9 @@ export class SettingsMenu extends UIComponent {
         
         // Initialize character model settings
         this.initializeCharacterModelSettings();
+        
+        // Initialize skills preview
+        this.initializeSkillsPreview();
         
         // Initialize audio settings
         this.initializeAudioSettings();

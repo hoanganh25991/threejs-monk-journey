@@ -142,6 +142,7 @@
                     <button id="tab-audio" class="tab-icon" title="Audio">🔊</button>
                     <button id="tab-controls" class="tab-icon" title="Controls">🎛️</button>
                     <button id="tab-model-preview" class="tab-icon" title="Model Preview">👤</button>
+                    <button id="tab-skills-preview" class="tab-icon" title="Skills Preview">✨</button>
                     <button id="tab-release" class="tab-icon" title="Release">🚀</button>
                 </div>
             </div>
@@ -298,6 +299,38 @@
                                     <button id="reset-camera-button" class="settings-button">Reset Camera</button>
                                     <!-- Auto-rotate and rotation speed controls have been removed -->
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Skills Preview Tab -->
+                <div id="skills-preview-tab" class="tab-content">
+                    <h2 id="skills-preview-title">Skills Preview</h2>
+                    <div class="skills-preview-layout">
+                        <div class="skills-preview-section">
+                            <div id="skills-preview-container">
+                                <div id="skills-preview-wrapper" style="width: 100%; height: 100%;"></div>
+                            </div>
+                        </div>
+                        <div class="skills-preview-controls-section">
+                            <div id="skills-selection" class="setting-item">
+                                <label for="skills-preview-select" class="settings-label">Skill: </label>
+                                <div id="skills-preview-selection-container">
+                                    <button id="prev-skill-button" class="settings-button">◀</button>
+                                    <select id="skills-preview-select" class="settings-select"></select>
+                                    <button id="next-skill-button" class="settings-button">▶</button>
+                                </div>
+                            </div>
+                            <div id="skill-details-container" class="setting-item">
+                                <h3>Skill Details</h3>
+                                <div id="skill-details" class="skill-details-info">
+                                    <!-- Skill details will be populated dynamically -->
+                                </div>
+                            </div>
+                            <div id="skill-preview-actions" class="setting-item">
+                                <button id="play-skill-effect-button" class="settings-button">Play Effect</button>
+                                <button id="reset-skill-preview-button" class="settings-button">Reset Preview</button>
                             </div>
                         </div>
                     </div>
