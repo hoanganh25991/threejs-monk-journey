@@ -39,6 +39,9 @@
 /* Import camera info panel styles */
 @import 'core/skill-preview.css';
 
+/* Import skill tree styles */
+@import 'core/skill-tree.css';
+
 /* Import animation styles */
 @import 'animations.css';
 

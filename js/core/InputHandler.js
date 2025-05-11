@@ -83,6 +83,12 @@ export class InputHandler {
                     console.debug('Toggling inventory with KeyY');
                     break;
                     
+                case 'KeyT':
+                    // Toggle skill tree with T key
+                    this.game.uiManager.toggleSkillTree();
+                    console.debug('Toggling skill tree with KeyT');
+                    break;
+                    
                 case 'KeyF':
                     // Toggle HUD visibility with F key
                     const hudVisible = this.game.uiManager.toggleHUD();

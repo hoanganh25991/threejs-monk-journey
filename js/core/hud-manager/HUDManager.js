@@ -3,6 +3,7 @@ import { EnemyUI } from './EnemyUI.js';
 import { SkillsUI } from './SkillsUI.js';
 import { DialogUI } from './DialogUI.js';
 import { InventoryUI } from './InventoryUI.js';
+import { SkillTreeUI } from './SkillTreeUI.js';
 import { VirtualJoystickUI } from './VirtualJoystickUI.js';
 import { DeathScreenUI } from './DeathScreenUI.js';
 import { NotificationsUI } from './NotificationsUI.js';
@@ -107,6 +108,10 @@ export class HUDManager {
         this.components.inventoryUI = new InventoryUI(this.game);
         this.components.inventoryUI.init();
         
+        // Create skill tree UI
+        this.components.skillTreeUI = new SkillTreeUI(this.game);
+        this.components.skillTreeUI.init();
+        
         // Create virtual joystick UI
         this.components.joystickUI = new VirtualJoystickUI(this.game);
         this.components.joystickUI.init();
@@ -195,6 +200,13 @@ export class HUDManager {
      */
     toggleInventory() {
         this.components.inventoryUI.toggleInventory();
+    }
+    
+    /**
+     * Toggle skill tree visibility
+     */
+    toggleSkillTree() {
+        this.components.skillTreeUI.toggleSkillTree();
     }
     
     /**

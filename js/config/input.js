@@ -15,7 +15,7 @@ export const INPUT_CONFIG = {
             { keys: ['KeyH'], description: 'Basic Attack (Fist of Thunder)' },
             { keys: ['KeyE'], description: 'Interact with objects' },
             { keys: ['KeyY'], description: 'Toggle Inventory' },
-            { keys: ['Escape'], description: 'Pause Menu' },
+            { keys: ['KeyT'], description: 'Toggle Skill Tree' },
             { keys: ['KeyG'], description: 'Start New Game' }
         ]
     },
