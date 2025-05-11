@@ -14,6 +14,37 @@ import { BreathOfHeavenEffect } from './BreathOfHeavenEffect.js';
  * Factory class for creating skill effects
  */
 export class SkillEffectFactory {
+    // Flag to track initialization status
+    static initialized = false;
+    
+    /**
+     * Initialize the factory by preloading necessary assets
+     * This should be called during game initialization to avoid loading delays during gameplay
+     * @returns {Promise} - Promise that resolves when initialization is complete
+     */
+    static async initialize() {
+        if (this.initialized) {
+            console.debug('SkillEffectFactory already initialized');
+            return;
+        }
+        
+        console.debug('Initializing SkillEffectFactory...');
+        
+        // Preload models for effects that need them
+        try {
+            // Preload Buddha model for Shield of Zen effect
+            await ShieldOfZenEffect.preloadModel();
+            
+            // Add other model preloading here as needed
+            
+            this.initialized = true;
+            console.debug('SkillEffectFactory initialization complete');
+        } catch (error) {
+            console.error('Error initializing SkillEffectFactory:', error);
+            // Continue even if preloading fails - effects will use fallbacks
+        }
+    }
+    
     /**
      * Create a skill effect based on the skill name
      * @param {Skill} skill - The skill to create an effect for

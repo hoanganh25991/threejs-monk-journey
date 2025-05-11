@@ -117,7 +117,7 @@ export const SKILLS = [
         damage: 12,
         manaCost: 35,
         cooldown: 0.5, // Reduced cooldown
-        range: 5, // Increased range for summoning
+        range: 2, // Increased range for summoning
         radius: 10, // Increased radius for summoning circle
         duration: 10, // Increased duration to 30 seconds
         color: 0x00ffff,

@@ -153,8 +153,9 @@ export class Game {
             this.updateLoadingProgress(65, 'Creating user interface...', 'Building HUD elements');
             
             // Initialize Effects Manager
+            this.updateLoadingProgress(67, 'Loading effects...', 'Preloading skill effects and models');
             this.effectsManager = new EffectsManager(this);
-            this.effectsManager.init();
+            await this.effectsManager.init();
             
             // Initialize UI manager
             this.uiManager = new HUDManager(this);

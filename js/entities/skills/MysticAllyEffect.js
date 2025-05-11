@@ -34,6 +34,7 @@ export class MysticAllyEffect extends SkillEffect {
     create(position, direction) {
         position = position.clone();
         position.y -= 3.0;
+        // No longer subtracting from Y position to keep the ally above ground
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
@@ -246,13 +247,6 @@ export class MysticAllyEffect extends SkillEffect {
                 
                 // Scale the model
                 this.heroModel.scale.set(this.modelScale, this.modelScale, this.modelScale);
-                
-                // Position adjustments based on model config
-                const modelConfig = CHARACTER_MODELS.find(m => m.path === this.modelPath);
-                if (modelConfig && modelConfig.defaultAdjustments) {
-                    const adj = modelConfig.defaultAdjustments;
-                    this.heroModel.position.set(adj.position.x, adj.position.y, adj.position.z);
-                }
                 
                 // Set up animations if they exist
                 if (gltf.animations && gltf.animations.length > 0) {

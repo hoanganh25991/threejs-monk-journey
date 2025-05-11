@@ -7,6 +7,40 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
  * Creates a golden aura around the player and a transparent Buddha figure behind them
  */
 export class ShieldOfZenEffect extends SkillEffect {
+    // Static property to store the preloaded Buddha model
+    static buddhaModel = null;
+    
+    /**
+     * Preload the Buddha model to avoid loading it at runtime
+     * @returns {Promise} - Promise that resolves when the model is loaded
+     */
+    static preloadModel() {
+        return new Promise((resolve, reject) => {
+            if (ShieldOfZenEffect.buddhaModel) {
+                console.debug('Buddha model already preloaded');
+                resolve(ShieldOfZenEffect.buddhaModel);
+                return;
+            }
+            
+            console.debug('Preloading Buddha model...');
+            const loader = new GLTFLoader();
+            loader.load('/assets/effects/buddha.glb', 
+                (gltf) => {
+                    console.debug('Buddha model preloaded successfully');
+                    ShieldOfZenEffect.buddhaModel = gltf.scene.clone();
+                    resolve(ShieldOfZenEffect.buddhaModel);
+                },
+                (xhr) => {
+                    console.debug(`Buddha model ${(xhr.loaded / xhr.total * 100)}% preloaded`);
+                },
+                (error) => {
+                    console.error('Error preloading Buddha model:', error);
+                    reject(error);
+                }
+            );
+        });
+    }
+    
     constructor(skill) {
         super(skill);
         this.rotationSpeed = 0.5; // Rotation speed in radians per second
@@ -143,11 +177,10 @@ export class ShieldOfZenEffect extends SkillEffect {
             emissiveIntensity: 0.8
         });
         
-        // Load the Buddha model from GLB file
-        const loader = new GLTFLoader();
-        loader.load('/assets/effects/buddha.glb', (gltf) => {
-            // Process the loaded model
-            const buddhaModel = gltf.scene;
+        // Use the preloaded Buddha model if available
+        if (ShieldOfZenEffect.buddhaModel) {
+            // Clone the preloaded model to avoid modifying the original
+            const buddhaModel = ShieldOfZenEffect.buddhaModel.clone();
             
             // Apply the material to all meshes in the model
             buddhaModel.traverse((child) => {
@@ -168,20 +201,13 @@ export class ShieldOfZenEffect extends SkillEffect {
             
             // Initial rotation to match player's direction exactly
             // We don't set rotation here as it will be handled in the update method
-        }, 
-        // Progress callback
-        (xhr) => {
-            console.log(`Buddha model ${(xhr.loaded / xhr.total * 100)}% loaded`);
-        },
-        // Error callback
-        (error) => {
-            console.error('Error loading Buddha model:', error);
-            
-            // Fallback to a simple placeholder if loading fails
+        } else {
+            console.warn('Preloaded Buddha model not available, creating fallback');
+            // Fallback to a simple placeholder if preloaded model is not available
             const buddhaGeometry = new THREE.BoxGeometry(2, 3, 0.5);
             const buddhaBox = new THREE.Mesh(buddhaGeometry, buddhaMaterial);
             buddhaGroup.add(buddhaBox);
-        });
+        }
         
         // Position the Buddha at the same location as the player (hero inside Buddha)
         // Set position to origin (0,0,0) relative to effect group, which is already at player position
