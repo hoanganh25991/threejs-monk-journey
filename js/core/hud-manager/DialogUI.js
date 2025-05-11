@@ -51,9 +51,6 @@ export class DialogUI extends UIComponent {
         this.show();
         this.isDialogOpen = true;
         
-        // Add a visual indicator that clicking will close the dialog
-        this.dialogContinue.style.display = 'block';
-        
         // Pause game
         this.game.pause();
 
@@ -67,9 +64,6 @@ export class DialogUI extends UIComponent {
         // Hide dialog box
         this.hide();
         this.isDialogOpen = false;
-        
-        // Ensure the container is hidden
-        this.container.style.display = 'none';
         
         // Resume game
         this.game.resume();
