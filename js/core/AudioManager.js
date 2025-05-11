@@ -1,11 +1,12 @@
 import * as THREE from 'three';
+import { ALL_SOUNDS, ALL_MUSIC } from '../config/sounds.js';
 
 export class AudioManager {
     constructor(game) {
         this.game = game;
         this.audioEnabled = true;
         this.isMuted = false;
-        this.musicVolume = 0.1; // Lowered from 0.5 to 0.3 to match main_theme.mp3 volume
+        this.musicVolume = 0.1;
         this.sfxVolume = 0.8;
         
         // Audio listeners and sources
@@ -66,216 +67,65 @@ export class AudioManager {
     }
     
     createSoundEffects() {
-        // Player sounds
-        this.sounds.playerAttack = this.createSound('playerAttack', 'attack.mp3', 0.7);
-        this.sounds.playerHit = this.createSound('playerHit', 'player_hit.mp3', 0.8);
-        this.sounds.playerDeath = this.createSound('playerDeath', 'player_death.mp3', 1.0);
-        this.sounds.levelUp = this.createSound('levelUp', 'level_up.mp3', 1.0);
-        
-        // Skill cast sounds
-        this.sounds.skillWaveStrike = this.createSound('skillWaveStrike', 'wave_strike.mp3', 0.8);
-        this.sounds.skillCycloneStrike = this.createSound('skillCycloneStrike', 'cyclone_strike.mp3', 0.8);
-        this.sounds.skillSevenSidedStrike = this.createSound('skillSevenSidedStrike', 'seven_sided_strike.mp3', 0.8);
-        this.sounds.skillInnerSanctuary = this.createSound('skillInnerSanctuary', 'inner_sanctuary.mp3', 0.6);
-        this.sounds.skillFistOfThunder = this.createSound('skillFistOfThunder', 'fist_of_thunder.mp3', 0.8);
-        this.sounds.skillMysticAlly = this.createSound('skillMysticAlly', 'mystic_ally.mp3', 0.7);
-        this.sounds.skillWaveOfLight = this.createSound('skillWaveOfLight', 'wave_of_light.mp3', 0.9);
-        this.sounds.skillExplodingPalm = this.createSound('skillExplodingPalm', 'exploding_palm.mp3', 0.8);
-        
-        // Skill impact sounds
-        this.sounds.waterImpact = this.createSound('waterImpact', 'water_impact.mp3', 0.7);
-        this.sounds.windPull = this.createSound('windPull', 'wind_pull.mp3', 0.7);
-        this.sounds.rapidStrike = this.createSound('rapidStrike', 'rapid_strike.mp3', 0.8);
-        this.sounds.barrierForm = this.createSound('barrierForm', 'barrier_form.mp3', 0.6);
-        this.sounds.allySummonComplete = this.createSound('allySummonComplete', 'ally_summon.mp3', 0.7);
-        this.sounds.bellRing = this.createSound('bellRing', 'bell_ring.mp3', 0.9);
-        this.sounds.markApplied = this.createSound('markApplied', 'mark_applied.mp3', 0.7);
-        this.sounds.thunderStrike = this.createSound('thunderStrike', 'thunder_strike.mp3', 0.8);
-        
-        // Skill end sounds
-        this.sounds.waterDissipate = this.createSound('waterDissipate', 'water_dissipate.mp3', 0.6);
-        this.sounds.windDissipate = this.createSound('windDissipate', 'wind_dissipate.mp3', 0.6);
-        this.sounds.strikeComplete = this.createSound('strikeComplete', 'strike_complete.mp3', 0.7);
-        this.sounds.barrierDissipate = this.createSound('barrierDissipate', 'barrier_dissipate.mp3', 0.5);
-        this.sounds.allyDismiss = this.createSound('allyDismiss', 'ally_dismiss.mp3', 0.6);
-        this.sounds.bellFade = this.createSound('bellFade', 'bell_fade.mp3', 0.7);
-        this.sounds.massiveExplosion = this.createSound('massiveExplosion', 'massive_explosion.mp3', 0.9);
-        this.sounds.thunderEcho = this.createSound('thunderEcho', 'thunder_echo.mp3', 0.6);
-        
-        // Enemy sounds
-        this.sounds.enemyAttack = this.createSound('enemyAttack', 'enemy_attack.mp3', 0.6);
-        this.sounds.enemyHit = this.createSound('enemyHit', 'enemy_hit.mp3', 0.7);
-        this.sounds.enemyDeath = this.createSound('enemyDeath', 'enemy_death.mp3', 0.8);
-        this.sounds.bossDeath = this.createSound('bossDeath', 'boss_death.mp3', 1.0);
-        
-        // UI sounds
-        this.sounds.buttonClick = this.createSound('buttonClick', 'button_click.mp3', 0.5);
-        this.sounds.inventoryOpen = this.createSound('inventoryOpen', 'inventory_open.mp3', 0.5);
-        this.sounds.itemPickup = this.createSound('itemPickup', 'item_pickup.mp3', 0.6);
-        
-        // Environment sounds
-        this.sounds.chestOpen = this.createSound('chestOpen', 'chest_open.mp3', 0.7);
-        this.sounds.doorOpen = this.createSound('doorOpen', 'door_open.mp3', 0.7);
+        // Load all sound effects from the sound configuration
+        Object.values(ALL_SOUNDS).forEach(sound => {
+            this.sounds[sound.id] = this.createSound(sound.id, sound.file, sound.volume);
+        });
     }
     
     createMusic() {
-        // Background music
-        this.music.mainTheme = this.createSound('mainTheme', 'main_theme.mp3', this.musicVolume, true);
-        this.music.battleTheme = this.createSound('battleTheme', 'battle_theme.mp3', this.musicVolume, true);
-        this.music.bossTheme = this.createSound('bossTheme', 'boss_theme.mp3', this.musicVolume, true);
+        // Load all music tracks from the music configuration
+        Object.values(ALL_MUSIC).forEach(music => {
+            this.music[music.id] = this.createSound(music.id, music.file, music.volume, music.loop);
+        });
     }
     
     createSimulatedSoundEffects() {
-        // Player sounds
-        this.sounds.playerAttack = this.createSimulatedSound('playerAttack', 220, 0.7, 0.3, false, { type: 'sawtooth', decay: true });
-        this.sounds.playerHit = this.createSimulatedSound('playerHit', 330, 0.8, 0.2, false, { type: 'sine', decay: true });
-        this.sounds.playerDeath = this.createSimulatedSound('playerDeath', 110, 1.0, 0.5, false, { type: 'sine', decay: true, slide: -20 });
-        this.sounds.levelUp = this.createSimulatedSound('levelUp', [440, 550, 660], 1.0, 0.4, false, { type: 'sine', decay: false });
-        
-        // Skill cast sounds
-        this.sounds.skillWaveStrike = this.createSimulatedSound('skillWaveStrike', 
-            [280, 310, 260], 0.8, 0.3, false, 
-            { type: 'sine', decay: true, slide: 50, noise: 0.05, filter: 'lowpass' }
-        ); // Water-based - complex water frequencies
-        
-        this.sounds.skillCycloneStrike = this.createSimulatedSound('skillCycloneStrike', 
-            [350, 370, 330], 0.8, 0.4, false, 
-            { type: 'sawtooth', decay: true, vibrato: 15, tremolo: 8, noise: 0.1, filter: 'bandpass' }
-        ); // Wind-based - complex wind frequencies
-        
-        this.sounds.skillSevenSidedStrike = this.createSimulatedSound('skillSevenSidedStrike', 
-            [380, 400, 420, 440, 460, 480, 500], 0.8, 0.5, false, 
-            { type: 'square', decay: true, attack: 0.01, filter: 'highpass' }
-        ); // Physical attack - seven distinct tones
-        
-        this.sounds.skillInnerSanctuary = this.createSimulatedSound('skillInnerSanctuary', 
-            [180, 270, 360], 0.6, 0.6, false, 
-            { type: 'sine', decay: false, reverb: true }
-        ); // Protective - harmonic chord with reverb
-        
-        this.sounds.skillFistOfThunder = this.createSimulatedSound('skillFistOfThunder', 
-            [520, 780], 0.8, 0.3, false, 
-            { type: 'sine', decay: true, slide: 80, vibrato: 20, noise: 0.2, distortion: 0.3, filter: 'highpass' }
-        ); // Thunder - complex thunder crack
-        
-        this.sounds.skillMysticAlly = this.createSimulatedSound('skillMysticAlly', 
-            [260, 390, 520], 0.7, 0.5, false, 
-            { type: 'sine', decay: false }
-        ); // Spiritual - mystical chord progression
-        
-        this.sounds.skillWaveOfLight = this.createSimulatedSound('skillWaveOfLight', 
-            [420, 630, 840], 0.9, 0.6, false, 
-            { type: 'triangle', decay: true, slide: -30, reverb: true, filter: 'highpass' }
-        ); // Light-based - harmonic light frequencies
-        
-        this.sounds.skillExplodingPalm = this.createSimulatedSound('skillExplodingPalm', 
-            [340, 170, 510], 0.8, 0.4, false, 
-            { type: 'sawtooth', decay: true, slide: 40, attack: 0.01, noise: 0.15, distortion: 0.4 }
-        ); // Explosive - complex explosion frequencies
-        
-        // Skill impact sounds
-        this.sounds.waterImpact = this.createSimulatedSound('waterImpact', 
-            [350, 175, 525], 0.7, 0.2, false, 
-            { type: 'sine', decay: true, slide: -20, noise: 0.2, filter: 'lowpass' }
-        ); // Water - realistic splash
-        
-        this.sounds.windPull = this.createSimulatedSound('windPull', 
-            [330, 165, 495], 0.7, 0.3, false, 
-            { type: 'sawtooth', decay: true, vibrato: 20, tremolo: 10, noise: 0.15, filter: 'bandpass' }
-        ); // Wind - complex wind pull
-        
-        this.sounds.rapidStrike = this.createSimulatedSound('rapidStrike', 
-            [420, 440, 460, 480, 500, 520, 540], 0.8, 0.2, false, 
-            { type: 'square', decay: true, attack: 0.005, filter: 'highpass' }
-        ); // Physical - rapid succession of impacts
-        
-        this.sounds.barrierForm = this.createSimulatedSound('barrierForm', 
-            [200, 300, 400], 0.6, 0.4, false, 
-            { type: 'sine', decay: false, reverb: true }
-        ); // Protective - barrier formation chord
-        
-        this.sounds.allySummonComplete = this.createSimulatedSound('allySummonComplete', 
-            [280, 420, 560], 0.7, 0.3, false, 
-            { type: 'sine', decay: false, reverb: true }
-        ); // Spiritual - complex summoning
-        
-        this.sounds.bellRing = this.createSimulatedSound('bellRing', 
-            [600, 900, 1200, 1500], 0.9, 0.7, false, 
-            { type: 'sine', decay: true, reverb: true }
-        ); // Bell - complex bell harmonics
-        
-        this.sounds.markApplied = this.createSimulatedSound('markApplied', 
-            [320, 480], 0.7, 0.3, false, 
-            { type: 'sawtooth', decay: true, slide: 30, filter: 'bandpass', distortion: 0.2 }
-        ); // Mark - complex mark application
-        
-        this.sounds.thunderStrike = this.createSimulatedSound('thunderStrike', 
-            [550, 825, 275], 0.8, 0.2, false, 
-            { type: 'sawtooth', decay: true, slide: -40, noise: 0.25, distortion: 0.4, filter: 'highpass' }
-        ); // Thunder - complex lightning strike
-        
-        // Skill end sounds
-        this.sounds.waterDissipate = this.createSimulatedSound('waterDissipate', 
-            [240, 120, 360], 0.6, 0.4, false, 
-            { type: 'sine', decay: true, slide: -30, noise: 0.1, filter: 'lowpass' }
-        ); // Water - realistic dissipation
-        
-        this.sounds.windDissipate = this.createSimulatedSound('windDissipate', 
-            [300, 150, 450], 0.6, 0.4, false, 
-            { type: 'sine', decay: true, slide: -40, vibrato: 10, tremolo: 5, noise: 0.08, filter: 'bandpass' }
-        ); // Wind - complex wind fade
-        
-        this.sounds.strikeComplete = this.createSimulatedSound('strikeComplete', 
-            [400, 600], 0.7, 0.3, false, 
-            { type: 'square', decay: true, slide: -20, attack: 0.01, filter: 'highpass' }
-        ); // Physical - final strike impact
-        
-        this.sounds.barrierDissipate = this.createSimulatedSound('barrierDissipate', 
-            [160, 240, 320], 0.5, 0.5, false, 
-            { type: 'sine', decay: true, slide: -30, reverb: true }
-        ); // Protective - barrier fading chord
-        
-        this.sounds.allyDismiss = this.createSimulatedSound('allyDismiss', 
-            [220, 330, 440], 0.6, 0.4, false, 
-            { type: 'sine', decay: true, reverb: true }
-        ); // Spiritual - complex dismissal
-        
-        this.sounds.bellFade = this.createSimulatedSound('bellFade', 
-            [500, 750, 1000, 1250], 0.7, 0.5, false, 
-            { type: 'sine', decay: true, slide: -50, reverb: true }
-        ); // Bell - complex bell fade harmonics
-        
-        this.sounds.massiveExplosion = this.createSimulatedSound('massiveExplosion', 
-            [220, 110, 330, 440], 0.9, 0.6, false, 
-            { type: 'sawtooth', decay: true, slide: -30, noise: 0.3, distortion: 0.5, filter: 'lowpass', attack: 0.01 }
-        ); // Explosion - complex explosion with rumble
-        
-        this.sounds.thunderEcho = this.createSimulatedSound('thunderEcho', 
-            [450, 225, 675], 0.6, 0.4, false, 
-            { type: 'sine', decay: true, reverb: true, noise: 0.15, filter: 'bandpass' }
-        ); // Thunder - complex thunder echo
-        
-        // Enemy sounds
-        this.sounds.enemyAttack = this.createSimulatedSound('enemyAttack', 200, 0.6, 0.2);
-        this.sounds.enemyHit = this.createSimulatedSound('enemyHit', 250, 0.7, 0.1);
-        this.sounds.enemyDeath = this.createSimulatedSound('enemyDeath', 150, 0.8, 0.4);
-        this.sounds.bossDeath = this.createSimulatedSound('bossDeath', 100, 1.0, 0.7);
-        
-        // UI sounds
-        this.sounds.buttonClick = this.createSimulatedSound('buttonClick', 500, 0.5, 0.1);
-        this.sounds.inventoryOpen = this.createSimulatedSound('inventoryOpen', 350, 0.5, 0.2);
-        this.sounds.itemPickup = this.createSimulatedSound('itemPickup', 400, 0.6, 0.2);
-        
-        // Environment sounds
-        this.sounds.chestOpen = this.createSimulatedSound('chestOpen', 300, 0.7, 0.3);
-        this.sounds.doorOpen = this.createSimulatedSound('doorOpen', 200, 0.7, 0.4);
+        // Load all sound effects from the sound configuration
+        Object.values(ALL_SOUNDS).forEach(sound => {
+            const simParams = sound.simulated;
+            if (simParams) {
+                // Extract parameters for simulated sound
+                const frequency = simParams.frequency || 220;
+                const volume = sound.volume || 0.7;
+                const duration = simParams.duration || 0.3;
+                const loop = false;
+                
+                // Create the simulated sound
+                this.sounds[sound.id] = this.createSimulatedSound(
+                    sound.id, 
+                    frequency, 
+                    volume, 
+                    duration, 
+                    loop, 
+                    simParams
+                );
+            }
+        });
     }
     
     createSimulatedMusic() {
-        // Background music
-        this.music.mainTheme = this.createSimulatedSound('mainTheme', 220, this.musicVolume, 1.0, true);
-        this.music.battleTheme = this.createSimulatedSound('battleTheme', 280, this.musicVolume, 1.0, true);
-        this.music.bossTheme = this.createSimulatedSound('bossTheme', 180, this.musicVolume, 1.0, true);
+        // Load all music tracks from the music configuration
+        Object.values(ALL_MUSIC).forEach(music => {
+            const simParams = music.simulated;
+            if (simParams) {
+                // Extract parameters for simulated music
+                const frequency = simParams.frequency || 220;
+                const volume = music.volume || this.musicVolume;
+                const duration = simParams.duration || 5.0;
+                const loop = true;
+                
+                // Create the simulated music
+                this.music[music.id] = this.createSimulatedSound(
+                    music.id, 
+                    frequency, 
+                    volume, 
+                    duration, 
+                    loop, 
+                    simParams
+                );
+            }
+        });
     }
     
     createSound(name, filename, volume = 1.0, loop = false) {

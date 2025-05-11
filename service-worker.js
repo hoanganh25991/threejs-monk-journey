@@ -5,12 +5,12 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '28'; // Incremented version to force update
+const CACHE_VERSION = '29'; // Incremented version to force update
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 2903955;
-const TOTAL_CACHE_SIZE_MB = 2.77;
+const TOTAL_CACHE_SIZE_BYTES = 3130062;
+const TOTAL_CACHE_SIZE_MB = 2.99;
 
 // Communication channel
 let messagePort = null;
@@ -20,20 +20,27 @@ const ASSETS_TO_CACHE = [
   '',
   'manifest.json',
   'css/animations.css',
+  'css/core/dialog.css',
+  'css/core/game-menu.css',
   'css/core/game.css',
   'css/core/hud-manager.css',
-  'css/core/layout.css',
   'css/core/loading-screen.css',
-  'css/core/game-menu.css',
   'css/core/notifications.css',
   'css/core/performance-manager.css',
+  'css/core/settings-menu.css',
+  'css/core/skill-preview.css',
   'css/initial-loading.css',
   'css/main.css',
-  'css/mobile.css',
+  'css/orientation-message.css',
   'css/reset.css',
   'css/utilities.css',
+  'js/config/input.js',
   'js/config/player-models.js',
+  'js/config/quality-levels.js',
+  'js/config/render.js',
+  'js/config/skill-preview.js',
   'js/config/skills.js',
+  'js/config/sounds.js',
   'js/core/AudioManager.js',
   'js/core/CollisionManager.js',
   'js/core/DifficultyManager.js',
@@ -51,7 +58,7 @@ const ASSETS_TO_CACHE = [
   'js/core/hud-manager/DialogUI.js',
   'js/core/hud-manager/EnemyUI.js',
   'js/core/hud-manager/HUDManager.js',
-  'js/core/hud-manager/HomeButton.js',
+  'js/core/hud-manager/HomeUI.js',
   'js/core/hud-manager/InventoryUI.js',
   'js/core/hud-manager/MiniMapUI.js',
   'js/core/hud-manager/NotificationsUI.js',
@@ -60,9 +67,13 @@ const ASSETS_TO_CACHE = [
   'js/core/hud-manager/SkillsUI.js',
   'js/core/hud-manager/VirtualJoystickUI.js',
   'js/core/menu-system/GameMenu.js',
+  'js/core/menu-system/IMenu.js',
   'js/core/menu-system/MainBackground.js',
+  'js/core/menu-system/MenuManager.js',
   'js/core/menu-system/ModelPreview.js',
+  'js/core/menu-system/ReloadUI.js',
   'js/core/menu-system/SettingsMenu.js',
+  'js/core/menu-system/SkillPreview.js',
   'js/core/save-manager/ISaveSystem.js',
   'js/core/save-manager/IStorageAdapter.js',
   'js/core/save-manager/LocalStorageAdapter.js',
@@ -99,6 +110,7 @@ const ASSETS_TO_CACHE = [
   'js/entities/skills/WaveOfLightEffect.js',
   'js/entities/skills/WaveStrikeEffect.js',
   'js/main.js',
+  'js/types.js',
   'js/utils/AnimationUtils.js',
   'js/world/WorldManager.js',
   'js/world/environment/Bush.js',
@@ -121,6 +133,7 @@ const ASSETS_TO_CACHE = [
   'js/world/utils/RandomGenerator.js',
   'js/world/utils/TextureGenerator.js',
   'js/world/zones/ZoneManager.js',
+  'images/home.jpg',
   'images/logo-192.png',
   'images/logo-192.svg',
   'images/logo-512.png',
@@ -168,7 +181,6 @@ const ASSETS_TO_CACHE = [
   'assets/images/background.jpg',
   'assets/models/monk-v3.glb',
   'assets/models/monk.glb',
-  'pwa/SimulatedLoadingScreen.js',
   'pwa/orientation-lock.js',
   'pwa/registration.js'
 ];

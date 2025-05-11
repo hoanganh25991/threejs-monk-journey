@@ -54,7 +54,7 @@ export class InventoryUI extends UIComponent {
             this.isInventoryOpen = false;
             
             // Resume game
-            this.game.resume();
+            this.game.resume(false);
         } else {
             // Update inventory items
             this.updateInventoryItems();
@@ -64,7 +64,7 @@ export class InventoryUI extends UIComponent {
             this.isInventoryOpen = true;
             
             // Pause game
-            this.game.pause();
+            this.game.pause(false);
         }
     }
     

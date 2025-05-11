@@ -302,7 +302,7 @@ export class Game {
      * Pause the game
      * Properly pauses all game systems including physics, animations, and timers
      */
-    pause() {
+    pause(emitEvent = true) {
         console.debug("Pausing game...");
         
         // Set game state to paused
@@ -332,7 +332,7 @@ export class Game {
         }
         
         // Dispatch event that game has been paused
-        this.events.dispatch('gameStateChanged', 'paused');
+        emitEvent && this.events.dispatch('gameStateChanged', 'paused');
         
         console.debug("Game paused successfully");
     }
@@ -341,7 +341,7 @@ export class Game {
      * Resume the game
      * Properly resumes all game systems that were paused
      */
-    resume() {
+    resume(emitEvent = true) {
         console.debug("Resuming game...");
         
         // Set game state to running
@@ -371,7 +371,7 @@ export class Game {
         }
         
         // Dispatch event that game has been resumed
-        this.events.dispatch('gameStateChanged', 'running');
+        emitEvent && this.events.dispatch('gameStateChanged', 'running');
         
         console.debug("Game resumed successfully");
     }
