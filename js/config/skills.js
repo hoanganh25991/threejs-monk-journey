@@ -127,7 +127,7 @@ export const SKILLS = [
         type: 'teleport',
         damage: 1,
         manaCost: 0,
-        cooldown: 0, // Very short cooldown for basic attack
+        cooldown: 0.3, // Very short cooldown for basic attack
         range: 25, // Teleport range
         radius: 2, // Area of effect after teleport
         duration: 1.0, // Short duration

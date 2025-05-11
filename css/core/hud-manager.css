@@ -159,11 +159,11 @@
 /* Enemy Health */
 #enemy-health-container {
     position: absolute;
-    top: 10px;
+    top: 1.2rem;
     left: 50%;
     transform: translateX(-50%);
     width: 300px;
-    height: 20px;
+    height: 1rem;
     background-color: rgba(0, 0, 0, 0.5);
     border: 2px solid #333;
     border-radius: 5px;
