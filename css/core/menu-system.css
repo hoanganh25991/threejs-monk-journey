@@ -420,10 +420,12 @@
 
 /* Settings Menu Specific Buttons */
 #settings-back-button {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    z-index: 10;
+    margin-left: 10px;
+}
+
+.settings-footer {
+    display: flex;
+    justify-content: center;
 }
 
 #test-sound-button {

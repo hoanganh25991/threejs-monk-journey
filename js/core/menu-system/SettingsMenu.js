@@ -65,8 +65,9 @@ export class SettingsMenu extends UIComponent {
         this.updateToLatestButton = document.getElementById('update-to-latest-button');
         this.currentVersionSpan = document.getElementById('current-version');
         
-        // Back button
+        // Footer buttons
         this.backButton = document.getElementById('settings-back-button');
+        this.saveButton = document.getElementById('settings-save-button');
         
         this.modelPreview = null;
         this.modelPreviewFullscreen = null;
@@ -205,21 +206,12 @@ export class SettingsMenu extends UIComponent {
             // Add change event
             this.qualitySelect.addEventListener('change', () => {
                 if (this.game.performanceManager) {
+                    // Just update the quality level without creating a reload button
+                    // The actual localStorage saving will happen when the Save button is clicked
                     this.game.performanceManager.setQualityLevel(this.qualitySelect.value);
                     
-                    // Create a reload button component
-                    // First, check if we already have a reload button in this container
-                    const existingReloadContainer = document.querySelector('#performance-container .reload-button-container');
-                    if (existingReloadContainer) {
-                        existingReloadContainer.remove();
-                    }
-                    
-                    // Create a new reload button component
-                    new ReloadButton(
-                        this.game, 
-                        'performance-container',
-                        `Quality level changed to ${this.qualitySelect.value.toUpperCase()}. Please reload the game for changes to take full effect.`
-                    );
+                    // Store the setting in localStorage
+                    localStorage.setItem('diablo_immortal_quality_level', this.qualitySelect.value);
                 }
             });
         }
@@ -238,6 +230,9 @@ export class SettingsMenu extends UIComponent {
                     if (this.qualitySelect) {
                         this.qualitySelect.disabled = this.adaptiveCheckbox.checked;
                     }
+                    
+                    // Store the setting in localStorage
+                    localStorage.setItem('diablo_immortal_adaptive_quality', this.adaptiveCheckbox.checked);
                 }
             });
         }
@@ -253,6 +248,9 @@ export class SettingsMenu extends UIComponent {
                 if (this.game.performanceManager) {
                     this.game.performanceManager.setTargetFPS(parseInt(this.fpsSlider.value));
                     this.fpsValue.textContent = `${this.fpsSlider.value} FPS`;
+                    
+                    // Store the setting in localStorage
+                    localStorage.setItem('diablo_immortal_target_fps', this.fpsSlider.value);
                 }
             });
         }
@@ -284,6 +282,9 @@ export class SettingsMenu extends UIComponent {
             // Add change event
             this.difficultySelect.addEventListener('change', () => {
                 this.game.difficultyManager.setDifficulty(parseInt(this.difficultySelect.value));
+                
+                // Store the setting in localStorage
+                localStorage.setItem('diablo_immortal_difficulty', this.difficultySelect.value);
             });
         }
     }
@@ -772,6 +773,49 @@ export class SettingsMenu extends UIComponent {
                 console.debug("Settings back button clicked - returning to game menu");
             });
         }
+        
+        // Add click event to the Save button
+        if (this.saveButton) {
+            this.saveButton.addEventListener('click', () => {
+                // Save all settings to localStorage
+                this.saveAllSettings();
+                
+                // Reload the game
+                setTimeout(() => {
+                    window.location.reload(true);
+                }, 500);
+            });
+        }
+    }
+    
+    /**
+     * Save all settings to localStorage
+     * @private
+     */
+    saveAllSettings() {
+        // Save performance settings
+        if (this.game.performanceManager) {
+            localStorage.setItem('diablo_immortal_quality_level', this.game.performanceManager.currentQuality);
+            localStorage.setItem('diablo_immortal_adaptive_quality', this.game.performanceManager.adaptiveQualityEnabled);
+            localStorage.setItem('diablo_immortal_target_fps', this.game.performanceManager.targetFPS);
+        }
+        
+        // Save game settings
+        if (this.game.difficultyManager) {
+            localStorage.setItem('diablo_immortal_difficulty', this.game.difficultyManager.getCurrentDifficultyIndex());
+        }
+        
+        // Save audio settings
+        if (this.game.audioManager) {
+            this.game.audioManager.saveSettings();
+        }
+        
+        // Save character model settings
+        if (this.game.player && this.game.player.model) {
+            localStorage.setItem('diablo_immortal_character_model', this.game.player.model.getCurrentModelId());
+        }
+        
+        console.debug("All settings saved to localStorage");
     }
 
     /**
