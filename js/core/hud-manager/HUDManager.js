@@ -351,7 +351,6 @@ export class HUDManager {
      * @param {string} state - Current game state ('running' or 'paused')
      */
     handleGameStateChange(state) {
-        console.log({state});
         if (state === 'running') {
             this.showAllUI();
         } else {
