@@ -9,7 +9,7 @@ import { NotificationsUI } from './NotificationsUI.js';
 import { QuestLogUI } from './QuestLogUI.js';
 import { MiniMapUI } from './MiniMapUI.js';
 import { MainBackground } from '../menu-system/MainBackground.js';
-import { HomeButton } from './HomeButton.js';
+import { HomeButton } from './HomeUI.js';
 
 /**
  * HUD Manager
@@ -351,9 +351,10 @@ export class HUDManager {
      * @param {string} state - Current game state ('running' or 'paused')
      */
     handleGameStateChange(state) {
+        console.log({state});
         if (state === 'running') {
             this.showAllUI();
-        } else if (state === 'paused') {
+        } else {
             this.hideAllUI();
         }
     }

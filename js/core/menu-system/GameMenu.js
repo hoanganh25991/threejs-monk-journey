@@ -19,6 +19,7 @@ export class GameMenu {
         this.settingsMenuButton = document.getElementById('settings-menu-button');
         this.settingsMenu = null;
         this.setupEventListeners();
+        this.game.addEventListener('gameStateChanged', (state) => this.handleGameStateChange(state));
     }
 
     /**
@@ -164,6 +165,14 @@ export class GameMenu {
         }
         
         // Force Reload button has been moved to Settings > Release tab
+    }
+
+    handleGameStateChange(state) {
+        if (state == "paused") {
+            this.show();
+        } else {
+            this.hide();
+        }
     }
 
     /**

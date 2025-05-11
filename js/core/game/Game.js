@@ -409,13 +409,8 @@ export class Game {
         if (this.audioManager) {
             this.audioManager.handleVisibilityChange();
         }
-        
-        // Optionally pause/resume game loop
-        if (document.hidden || document.visibilityState === 'hidden') {
-            this.pause();
-        } else {
-            this.resume();
-        }
+
+        this.pause();
     }
     
     /**

@@ -35,7 +35,8 @@ export class PerformanceManager {
         };
         this.qualityLevels = qualityLevels;
         
-        this.currentQuality = 'ultra'; // Start with high quality by default
+        // Load quality level from local storage or use 'ultra' as default
+        this.currentQuality = localStorage.getItem('diablo_immortal_quality_level') || 'ultra';
         this.stats = null;
         this.memoryDisplay = null;
         this.disposalQueue = []; // Queue for objects to be disposed
@@ -1000,6 +1001,13 @@ export class PerformanceManager {
     setQualityLevel(level) {
         if (this.qualityLevels[level]) {
             this.applyQualitySettings(level);
+            
+            // Save quality level to local storage
+            localStorage.setItem('diablo_immortal_quality_level', level);
+            
+            // Show notification about reloading the game
+            this.showQualityChangeNotification(`Quality changed to ${level.toUpperCase()}. Please reload the game for changes to take full effect.`);
+            
             return true;
         }
         return false;

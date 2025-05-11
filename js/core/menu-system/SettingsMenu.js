@@ -7,6 +7,7 @@ import { ModelPreview } from './ModelPreview.js';
 import { CHARACTER_MODELS } from '../../config/player-models.js';
 import { UIComponent } from '../UIComponent.js';
 import { GameMenu } from './GameMenu.js';
+import { ReloadButton } from './ReloadUI.js';
 
 export class SettingsMenu extends UIComponent {
     /**
@@ -206,6 +207,20 @@ export class SettingsMenu extends UIComponent {
             this.qualitySelect.addEventListener('change', () => {
                 if (this.game.performanceManager) {
                     this.game.performanceManager.setQualityLevel(this.qualitySelect.value);
+                    
+                    // Create a reload button component
+                    // First, check if we already have a reload button in this container
+                    const existingReloadContainer = document.querySelector('#performance-container .reload-button-container');
+                    if (existingReloadContainer) {
+                        existingReloadContainer.remove();
+                    }
+                    
+                    // Create a new reload button component
+                    new ReloadButton(
+                        this.game, 
+                        'performance-container',
+                        `Quality level changed to ${this.qualitySelect.value.toUpperCase()}. Please reload the game for changes to take full effect.`
+                    );
                 }
             });
         }
