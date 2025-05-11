@@ -5,6 +5,16 @@ const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
 
+// Import sound configurations from the source of truth
+const { 
+    PLAYER_SOUNDS, 
+    SKILL_SOUNDS, 
+    ENEMY_SOUNDS, 
+    UI_SOUNDS, 
+    ENVIRONMENT_SOUNDS, 
+    MUSIC 
+} = require('../js/config/sounds.js');
+
 // Create audio directory if it doesn't exist
 const audioDir = path.join('assets', 'audio');
 if (!fs.existsSync(audioDir)) {
@@ -12,64 +22,35 @@ if (!fs.existsSync(audioDir)) {
     console.debug(`Created directory: ${audioDir}`);
 }
 
-// Sound definitions
-const sounds = {
-    // Player sounds
-    'attack.mp3': { frequency: 220, duration: 0.3, type: 'sawtooth', volume: 0.7, decay: true },
-    'player_hit.mp3': { frequency: 330, duration: 0.2, type: 'sine', volume: 0.8, decay: true },
-    'player_death.mp3': { frequency: 110, duration: 0.5, type: 'sine', volume: 1.0, decay: true, slide: -20 },
-    'level_up.mp3': { frequency: 440, duration: 0.4, type: 'sine', volume: 1.0, decay: false, arpeggio: [1, 1.25, 1.5] },
+// Convert the imported sound configurations to the format needed for audio generation
+function buildSoundDefinitions() {
+    const soundDefs = {};
     
-    // Skill cast sounds
-    'wave_strike.mp3': { frequency: 280, duration: 0.3, type: 'sine', volume: 0.8, decay: true, slide: 50 }, // Water-based - medium frequency
-    'cyclone_strike.mp3': { frequency: 350, duration: 0.4, type: 'sawtooth', volume: 0.8, decay: true, vibrato: 10 }, // Wind-based - increased frequency
-    'seven_sided_strike.mp3': { frequency: 380, duration: 0.5, type: 'square', volume: 0.8, decay: true, arpeggio: [1, 1.5, 2, 1.5, 1, 1.5, 2] }, // Physical attack - kept as is
-    'inner_sanctuary.mp3': { frequency: 180, duration: 0.6, type: 'sine', volume: 0.6, decay: false, reverb: true }, // Protective - low frequency
-    'fist_of_thunder.mp3': { frequency: 520, duration: 0.3, type: 'sine', volume: 0.8, decay: true, slide: 80, vibrato: 15 }, // Thunder - increased frequency
-    'mystic_ally.mp3': { frequency: 260, duration: 0.5, type: 'sine', volume: 0.7, decay: false, arpeggio: [1, 1.3, 1.6, 1.3] }, // Spiritual - kept as is
-    'wave_of_light.mp3': { frequency: 420, duration: 0.6, type: 'triangle', volume: 0.9, decay: true, slide: -30, reverb: true }, // Light-based - increased frequency
-    'exploding_palm.mp3': { frequency: 340, duration: 0.4, type: 'sawtooth', volume: 0.8, decay: true, arpeggio: [1, 1.2], slide: 40 }, // Explosive - increased frequency
+    // Process each sound category
+    const processCategory = (category) => {
+        Object.values(category).forEach(sound => {
+            if (sound.file && sound.simulated) {
+                soundDefs[sound.file] = {
+                    ...sound.simulated,
+                    volume: sound.volume
+                };
+            }
+        });
+    };
     
-    // Skill impact sounds
-    'water_impact.mp3': { frequency: 350, duration: 0.2, type: 'sine', volume: 0.7, decay: true, slide: -20 }, // Water - kept as is
-    'wind_pull.mp3': { frequency: 330, duration: 0.3, type: 'sawtooth', volume: 0.7, decay: true, vibrato: 15 }, // Wind - increased frequency
-    'rapid_strike.mp3': { frequency: 420, duration: 0.2, type: 'square', volume: 0.8, decay: true, arpeggio: [1, 1.2, 1.4, 1.6, 1.8, 2.0, 1.8] }, // Physical - kept as is
-    'barrier_form.mp3': { frequency: 200, duration: 0.4, type: 'sine', volume: 0.6, decay: false, reverb: true }, // Protective - kept as is
-    'ally_summon.mp3': { frequency: 280, duration: 0.3, type: 'sine', volume: 0.7, decay: false, arpeggio: [1, 1.5, 2] }, // Spiritual - kept as is
-    'bell_ring.mp3': { frequency: 600, duration: 0.7, type: 'sine', volume: 0.9, decay: true, reverb: true }, // Bell - kept as is
-    'mark_applied.mp3': { frequency: 320, duration: 0.3, type: 'sawtooth', volume: 0.7, decay: true, slide: 30 }, // Mark - kept as is
-    'thunder_strike.mp3': { frequency: 550, duration: 0.2, type: 'sawtooth', volume: 0.8, decay: true, slide: -40 }, // Thunder - increased frequency
+    // Process all sound categories
+    processCategory(PLAYER_SOUNDS);
+    processCategory(SKILL_SOUNDS);
+    processCategory(ENEMY_SOUNDS);
+    processCategory(UI_SOUNDS);
+    processCategory(ENVIRONMENT_SOUNDS);
+    processCategory(MUSIC);
     
-    // Skill end sounds
-    'water_dissipate.mp3': { frequency: 240, duration: 0.4, type: 'sine', volume: 0.6, decay: true, slide: -30 }, // Water - kept as is
-    'wind_dissipate.mp3': { frequency: 300, duration: 0.4, type: 'sine', volume: 0.6, decay: true, slide: -40 }, // Wind - increased frequency
-    'strike_complete.mp3': { frequency: 400, duration: 0.3, type: 'square', volume: 0.7, decay: true, slide: -20 }, // Physical - kept as is
-    'barrier_dissipate.mp3': { frequency: 160, duration: 0.5, type: 'sine', volume: 0.5, decay: true, slide: -30 }, // Protective - kept as is
-    'ally_dismiss.mp3': { frequency: 220, duration: 0.4, type: 'sine', volume: 0.6, decay: true, arpeggio: [2, 1.5, 1] }, // Spiritual - kept as is
-    'bell_fade.mp3': { frequency: 500, duration: 0.5, type: 'sine', volume: 0.7, decay: true, slide: -50, reverb: true }, // Bell - kept as is
-    'massive_explosion.mp3': { frequency: 220, duration: 0.6, type: 'sawtooth', volume: 0.9, decay: true, slide: -30 }, // Explosion - increased frequency
-    'thunder_echo.mp3': { frequency: 450, duration: 0.4, type: 'sine', volume: 0.6, decay: true, reverb: true }, // Thunder - increased frequency
-    
-    // Enemy sounds
-    'enemy_attack.mp3': { frequency: 200, duration: 0.2, type: 'sawtooth', volume: 0.6, decay: true },
-    'enemy_hit.mp3': { frequency: 250, duration: 0.1, type: 'square', volume: 0.7, decay: true },
-    'enemy_death.mp3': { frequency: 150, duration: 0.4, type: 'sine', volume: 0.8, decay: true, slide: -30 },
-    'boss_death.mp3': { frequency: 100, duration: 0.7, type: 'sawtooth', volume: 1.0, decay: true, slide: -50, vibrato: 5 },
-    
-    // UI sounds
-    'button_click.mp3': { frequency: 500, duration: 0.1, type: 'sine', volume: 0.5, decay: true },
-    'inventory_open.mp3': { frequency: 350, duration: 0.2, type: 'sine', volume: 0.5, decay: true, arpeggio: [1, 1.5] },
-    'item_pickup.mp3': { frequency: 400, duration: 0.2, type: 'sine', volume: 0.6, decay: true, arpeggio: [1, 1.2] },
-    
-    // Environment sounds
-    'chest_open.mp3': { frequency: 300, duration: 0.3, type: 'sine', volume: 0.7, decay: true, arpeggio: [1, 1.2, 1.5] },
-    'door_open.mp3': { frequency: 200, duration: 0.4, type: 'sine', volume: 0.7, decay: true, slide: -20 },
-    
-    // Music
-    // 'main_theme.mp3': { frequency: 220, duration: 5.0, type: 'sine', volume: 0.5, decay: false, melody: true }, // Ignore this file due to existing file
-    'battle_theme.mp3': { frequency: 280, duration: 5.0, type: 'square', volume: 0.5, decay: false, melody: true, tempo: 140 },
-    'boss_theme.mp3': { frequency: 180, duration: 5.0, type: 'sawtooth', volume: 0.5, decay: false, melody: true, tempo: 160 }
-};
+    return soundDefs;
+}
+
+// Generate sound definitions from the imported configurations
+const sounds = buildSoundDefinitions();
 
 // Generate audio files using SoX
 function generateAudioFiles() {
@@ -107,6 +88,11 @@ function generateAudioFiles() {
                 command += ' fade 0 ' + params.duration + ' ' + params.duration;
             }
             
+            if (params.attack && params.attack > 0) {
+                // Add attack parameter (fade in)
+                command += ` fade ${params.attack} ${params.duration} ${params.duration}`;
+            }
+            
             if (params.slide) {
                 const endFreq = params.frequency + params.slide;
                 command = command.replace(`${params.frequency}`, `${params.frequency}:${endFreq}`);
@@ -116,18 +102,74 @@ function generateAudioFiles() {
                 command += ' reverb';
             }
             
+            if (params.vibrato) {
+                // Add vibrato effect - depth and rate
+                command += ` tremolo ${params.vibrato / 100} ${params.vibrato}`;
+            }
+            
+            if (params.tremolo) {
+                // Add tremolo effect - depth and rate
+                command += ` tremolo ${params.tremolo / 100} ${params.tremolo / 2}`;
+            }
+            
+            if (params.noise && params.noise > 0) {
+                // Add noise by mixing with white noise
+                const noiseLevel = params.noise;
+                command += ` synth ${params.duration} whitenoise vol ${noiseLevel} : mix`;
+            }
+            
+            if (params.filter) {
+                // Add filter effect
+                switch (params.filter) {
+                    case 'lowpass':
+                        command += ' lowpass 1000';
+                        break;
+                    case 'highpass':
+                        command += ' highpass 1000';
+                        break;
+                    case 'bandpass':
+                        command += ' bandpass 1000 200';
+                        break;
+                }
+            }
+            
+            if (params.distortion && params.distortion > 0) {
+                // Add distortion effect (using overdrive)
+                command += ' overdrive ' + (params.distortion * 20);
+            }
+            
+            if (params.arpeggio && Array.isArray(params.arpeggio)) {
+                // For arpeggio, we need to create multiple sounds and combine them
+                // This is a simplified approach
+                const arpeggioCommands = params.arpeggio.map((multiplier, index) => {
+                    const arpeggioFreq = params.frequency * multiplier;
+                    const delay = index * (params.duration / params.arpeggio.length);
+                    return `synth ${params.duration / params.arpeggio.length} ${params.type} ${arpeggioFreq} vol ${params.volume} delay ${delay}`;
+                });
+                
+                // Replace the main command with a complex arpeggio command
+                if (arpeggioCommands.length > 0) {
+                    command = `sox -n "${outputPath}" ` + arpeggioCommands.join(' : ');
+                }
+            }
+            
             // Execute command
             exec(command, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error generating ${filename}:`, error);
+                    console.error(`Command was: ${command}`);
                     return;
                 }
                 console.debug(`Generated ${filename}`);
                 
-                // Special handling for music files to make them longer
-                if (filename.includes('theme')) {
-                    // For now, let's skip the extension since it's causing issues
-                    console.debug(`Generated ${filename} (skipping extension due to format issues)`);
+                // Special handling for music files
+                if (params.melody && filename.includes('theme')) {
+                    console.debug(`Generated ${filename} (music track)`);
+                    
+                    // For music files with tempo, we could add additional processing here
+                    if (params.tempo) {
+                        console.debug(`Music tempo: ${params.tempo} BPM`);
+                    }
                 }
             });
         });
