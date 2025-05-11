@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { SkillEffect } from './SkillEffect.js';
+import { BleedingEffect } from './BleedingEffect.js';
 
 /**
  * Effect for the Breath of Heaven skill
@@ -156,6 +157,7 @@ export class BreathOfHeavenEffect extends SkillEffect {
         }
         
         // Handle the lingering effect that follows the player
+        // IMPORTANT: This needs to run even if the main effect is no longer active
         if (this.hasLingeringEffect && this.lingeringEffect) {
             this.updateLingeringEffect(delta);
         }
@@ -229,13 +231,26 @@ export class BreathOfHeavenEffect extends SkillEffect {
         
         // Position at the player
         const player = this.skill.game.player;
-        lingeringGroup.position.copy(player.position);
+        if (player && player.getPosition) {
+            const playerPosition = player.getPosition();
+            if (playerPosition) {
+                lingeringGroup.position.copy(playerPosition);
+            }
+        }
         
-        // Add to scene
+        // Add to scene - IMPORTANT: Make sure the lingering effect is added to the scene
+        // Try multiple approaches to ensure it gets added
         if (this.effect && this.effect.parent) {
+            console.debug('Adding lingering effect to effect parent');
             this.effect.parent.add(lingeringGroup);
         } else if (this.skill.game.scene) {
+            console.debug('Adding lingering effect directly to game scene');
             this.skill.game.scene.add(lingeringGroup);
+        } else if (player.mesh && player.mesh.parent) {
+            console.debug('Adding lingering effect to player mesh parent');
+            player.mesh.parent.add(lingeringGroup);
+        } else {
+            console.warn('Could not find a suitable parent for the lingering effect');
         }
         
         // Store the lingering effect
@@ -270,7 +285,12 @@ export class BreathOfHeavenEffect extends SkillEffect {
         
         // Update position to follow player
         const player = this.skill.game.player;
-        this.lingeringEffect.position.copy(player.position);
+        if (player && player.getPosition) {
+            const playerPosition = player.getPosition();
+            if (playerPosition) {
+                this.lingeringEffect.position.copy(playerPosition);
+            }
+        }
         
         // Animate particles
         const particles = this.lingeringEffect.children[0];
@@ -303,6 +323,46 @@ export class BreathOfHeavenEffect extends SkillEffect {
         if (glow) {
             const pulseFactor = 1 + 0.1 * Math.sin(this.lingeringElapsedTime * 3);
             glow.scale.set(pulseFactor, pulseFactor, pulseFactor);
+            
+            // Apply a small healing effect during the lingering duration
+            // This continues the healing functionality while the speed boost is active
+            this.lastHealTime += delta;
+            if (this.lastHealTime >= this.healingRate * 2) { // Heal at half the rate of the main effect
+                if (player.stats) {
+                    const healAmount = Math.floor(this.skill.healing / 3); // Reduced healing during lingering effect
+                    player.stats.heal(healAmount);
+                    
+                    // Show healing effect using the EffectsManager
+                    if (this.skill.game.effectsManager && player.getPosition) {
+                        // Get player position using the getPosition method
+                        const playerPosition = player.getPosition();
+                        if (playerPosition) {
+                            // Create a position slightly above the player
+                            const healPosition = new THREE.Vector3(
+                                playerPosition.x,
+                                playerPosition.y + 2,
+                                playerPosition.z
+                            );
+                            
+                            // Use the bleeding effect with green color for healing
+                            const healEffect = new BleedingEffect({
+                                amount: healAmount,
+                                duration: 1.0, // Shorter duration for lingering effect
+                                isPlayerDamage: false,
+                                color: 0x00ff00 // Green for healing
+                            });
+                            
+                            // Create and add the effect to the scene
+                            const effectGroup = healEffect.create(healPosition, new THREE.Vector3(0, 1, 0));
+                            this.skill.game.scene.add(effectGroup);
+                            
+                            // Add to effects manager for updates
+                            this.skill.game.effectsManager.effects.push(healEffect);
+                        }
+                    }
+                }
+                this.lastHealTime = 0;
+            }
             
             // Fade out near the end of duration
             if (this.lingeringElapsedTime > this.lingeringDuration * 0.7) {
@@ -363,15 +423,38 @@ export class BreathOfHeavenEffect extends SkillEffect {
             const healAmount = this.skill.healing || 10; // Default to 10 if not specified
             player.stats.heal(healAmount);
             
-            // Show healing number
-            if (this.skill.game.uiManager) {
-                this.skill.game.uiManager.showDamageNumber(
-                    player.position.x,
-                    player.position.y + 2,
-                    player.position.z,
-                    healAmount,
-                    0x00ff00 // Green for healing
-                );
+            // Show healing effect using the EffectsManager
+            if (this.skill.game.effectsManager) {
+                // Get player position using the getPosition method
+                const playerPosition = player.getPosition();
+                if (playerPosition) {
+                    // Create a position slightly above the player
+                    const healPosition = new THREE.Vector3(
+                        playerPosition.x,
+                        playerPosition.y + 2,
+                        playerPosition.z
+                    );
+                    
+                    // Use the bleeding effect with green color for healing
+                    const healEffect = new BleedingEffect({
+                        amount: healAmount,
+                        duration: 1.5,
+                        isPlayerDamage: false,
+                        color: 0x00ff00 // Green for healing
+                    });
+                    
+                    // Create and add the effect to the scene
+                    const effectGroup = healEffect.create(healPosition, new THREE.Vector3(0, 1, 0));
+                    this.skill.game.scene.add(effectGroup);
+                    
+                    // Add to effects manager for updates
+                    this.skill.game.effectsManager.effects.push(healEffect);
+                }
+            }
+            
+            // Show a notification if available
+            if (this.skill.game.uiManager && this.skill.game.uiManager.showNotification) {
+                this.skill.game.uiManager.showNotification(`Healed for ${healAmount}`);
             }
         }
         
@@ -379,7 +462,7 @@ export class BreathOfHeavenEffect extends SkillEffect {
         
         // Damage enemies within range
         if (this.skill.game.enemyManager) {
-            const enemies = this.skill.game.enemyManager.getEnemiesInRange(
+            const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
                 this.effect.position,
                 this.skill.radius
             );
@@ -387,17 +470,7 @@ export class BreathOfHeavenEffect extends SkillEffect {
             enemies.forEach(enemy => {
                 const damageAmount = this.skill.damage;
                 enemy.takeDamage(damageAmount);
-                
-                // Show damage number
-                if (this.skill.game.uiManager) {
-                    this.skill.game.uiManager.showDamageNumber(
-                        enemy.position.x,
-                        enemy.position.y + 1,
-                        enemy.position.z,
-                        damageAmount,
-                        0xffff00 // Yellow for holy damage
-                    );
-                }
+
             });
         }
         
@@ -437,10 +510,14 @@ export class BreathOfHeavenEffect extends SkillEffect {
         // Clean up healing pulses
         this.healingPulses = [];
         
-        // Clean up lingering effect
-        this.disposeLingeringEffect();
+        // We don't want to dispose the lingering effect here
+        // as it should continue even after the main effect is gone
+        // Only dispose if the skill is being completely removed
+        if (!this.hasLingeringEffect) {
+            this.disposeLingeringEffect();
+        }
         
-        // Call parent dispose
+        // Call parent dispose for the main effect
         super.dispose();
     }
     
@@ -449,14 +526,17 @@ export class BreathOfHeavenEffect extends SkillEffect {
      * Override parent method to also reset lingering effect
      */
     reset() {
-        // Dispose of lingering effect
-        this.disposeLingeringEffect();
+        // Only dispose of lingering effect if it has completed its duration
+        // or if we're explicitly resetting the skill (e.g., when player casts it again)
+        if (!this.hasLingeringEffect || this.lingeringElapsedTime >= this.lingeringDuration) {
+            this.disposeLingeringEffect();
+            
+            // Reset lingering effect state
+            this.hasLingeringEffect = false;
+            this.lingeringElapsedTime = 0;
+        }
         
-        // Reset lingering effect state
-        this.hasLingeringEffect = false;
-        this.lingeringElapsedTime = 0;
-        
-        // Call parent reset
+        // Call parent reset for the main effect
         super.reset();
     }
 }

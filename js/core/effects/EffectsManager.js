@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { BleedingEffect } from '../../entities/skills/BleedingEffect.js';
+import { SkillEffectFactory } from '../../entities/skills/SkillEffectFactory.js';
 
 /**
  * EffectsManager
@@ -17,10 +18,22 @@ export class EffectsManager {
     
     /**
      * Initialize the EffectsManager
+     * @returns {Promise<boolean>} - Promise that resolves when initialization is complete
      */
-    init() {
-        // Nothing to initialize yet
-        return true;
+    async init() {
+        console.debug("Initializing EffectsManager...");
+        
+        try {
+            // Preload skill effect models and resources
+            await SkillEffectFactory.initialize();
+            console.debug("SkillEffectFactory initialized successfully");
+            
+            return true;
+        } catch (error) {
+            console.error("Error initializing EffectsManager:", error);
+            // Continue even if preloading fails - effects will use fallbacks
+            return true;
+        }
     }
     
     /**

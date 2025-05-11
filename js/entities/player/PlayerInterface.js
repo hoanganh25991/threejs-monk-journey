@@ -70,6 +70,7 @@ export class IPlayerStats {
     
     // Setters
     setHealth(value) {}
+    heal(amount) {}
     setMana(value) {}
     addExperience(amount) {}
     levelUp() {}

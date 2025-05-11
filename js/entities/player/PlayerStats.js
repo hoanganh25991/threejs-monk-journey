@@ -69,6 +69,17 @@ export class PlayerStats extends IPlayerStats {
         this.health = Math.max(0, Math.min(value, this.maxHealth));
     }
     
+    /**
+     * Heal the player by the specified amount
+     * @param {number} amount - Amount of health to restore
+     * @returns {number} - The actual amount healed
+     */
+    heal(amount) {
+        const oldHealth = this.health;
+        this.health = Math.min(this.health + amount, this.maxHealth);
+        return this.health - oldHealth;
+    }
+    
     setMana(value) {
         this.mana = Math.max(0, Math.min(value, this.maxMana));
     }
