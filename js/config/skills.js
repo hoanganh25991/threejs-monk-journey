@@ -1,6 +1,41 @@
 // Skills configuration
 export const SKILLS = [
     {
+        name: 'Shield of Zen',
+        description: 'Envelop yourself in a golden aura with a protective Buddha figure that absorbs 30% of damage and reflects 10% back to attackers',
+        type: 'buff',
+        damage: 0, // This is a defensive skill
+        manaCost: 30,
+        cooldown: 0.5, // Reduced cooldown
+        range: 0, // Self-cast
+        radius: 3, // Area of effect around player
+        duration: 10, // 10 seconds duration
+        color: 0xffdd00, // Golden color
+        sounds: {
+            cast: 'skillInnerSanctuary', // Reusing Inner Sanctuary sound for now
+            impact: 'barrierForm', // Sound of protective barrier forming
+            end: 'barrierDissipate' // Sound of barrier fading away
+        }
+    },
+    {
+        name: 'Breath of Heaven',
+        description: 'Summon a healing aura that heals allies and damages enemies',
+        type: 'heal',
+        damage: 10,
+        healing: 20, // Amount of health restored per pulse
+        manaCost: 30,
+        cooldown: 15, // Longer cooldown for healing ability
+        range: 0, // Centered on player
+        radius: 8, // Large radius to affect multiple allies/enemies
+        duration: 8, // Duration in seconds
+        color: 0xffdd99, // Golden yellow color for divine energy
+        sounds: {
+            cast: 'skillBreathOfHeaven', // Heavenly choir sound
+            impact: 'healingPulse', // Soft healing pulse sound
+            end: 'divineEcho' // Echoing divine sound as effect fades
+        }
+    },
+    {
         name: 'Wave Strike',
         description: 'Send a wave of energy towards enemies',
         type: 'ranged',

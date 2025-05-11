@@ -7,6 +7,8 @@ import { InnerSanctuaryEffect } from './InnerSanctuaryEffect.js';
 import { WaveOfLightEffect } from './WaveOfLightEffect.js';
 import { MysticAllyEffect } from './MysticAllyEffect.js';
 import { ExplodingPalmEffect } from './ExplodingPalmEffect.js';
+import { ShieldOfZenEffect } from './ShieldOfZenEffect.js';
+import { BreathOfHeavenEffect } from './BreathOfHeavenEffect.js';
 
 /**
  * Factory class for creating skill effects
@@ -53,6 +55,14 @@ export class SkillEffectFactory {
             case 'Exploding Palm':
                 console.debug(`Creating ExplodingPalmEffect for ${skill.name}`);
                 effect = new ExplodingPalmEffect(skill);
+                break;
+            case 'Breath of Heaven':
+                console.debug(`Creating BreathOfHeavenEffect for ${skill.name}`);
+                effect = new BreathOfHeavenEffect(skill);
+                break;
+            case 'Shield of Zen':
+                console.debug(`Creating ShieldOfZenEffect for ${skill.name}`);
+                effect = new ShieldOfZenEffect(skill);
                 break;
             default:
                 console.debug(`Creating default SkillEffect for ${skill.name}`);

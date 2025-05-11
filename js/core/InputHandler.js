@@ -19,7 +19,8 @@ export class InputHandler {
             Semicolon: 'Digit4',
             KeyU: 'Digit5',
             KeyI: 'Digit6',
-            KeyO: 'Digit7'
+            KeyO: 'Digit7',
+            KeyP: 'Digit8'  // P key as alternative to Digit8
         };
         
         // Track skill keys being held down
@@ -32,6 +33,7 @@ export class InputHandler {
             Digit5: false,
             Digit6: false,
             Digit7: false,
+            Digit8: false, // 8 key for Breath of Heaven
             // Alternative keys
             KeyJ: false, // Alternative to Digit1
             KeyK: false, // Alternative to Digit2
@@ -39,7 +41,8 @@ export class InputHandler {
             Semicolon: false, // Alternative to Digit4
             KeyU: false, // Alternative to Digit5
             KeyI: false, // Alternative to Digit6
-            KeyO: false  // Alternative to Digit7
+            KeyO: false, // Alternative to Digit7
+            KeyP: false  // Alternative to Digit8
         };
         
         // Cooldown tracking for continuous casting
@@ -52,6 +55,7 @@ export class InputHandler {
             Digit5: 0,
             Digit6: 0,
             Digit7: 0,
+            Digit8: 0, // 8 key for Breath of Heaven
             // Alternative keys
             KeyJ: 0, // Alternative to Digit1
             KeyK: 0, // Alternative to Digit2
@@ -59,7 +63,8 @@ export class InputHandler {
             Semicolon: 0, // Alternative to Digit4
             KeyU: 0, // Alternative to Digit5
             KeyI: 0, // Alternative to Digit6
-            KeyO: 0  // Alternative to Digit7
+            KeyO: 0, // Alternative to Digit7
+            KeyP: 0  // Alternative to Digit8
         };
         
         // Initialize input event listeners
@@ -126,6 +131,7 @@ export class InputHandler {
                 case 'Digit5':
                 case 'Digit6':
                 case 'Digit7':
+                case 'Digit8':
                     // Mark skill key as held down
                     this.skillKeysHeld[event.code] = true;
                     

@@ -28,7 +28,8 @@ export const INPUT_CONFIG = {
             { keys: ['Digit4', 'Semicolon'], description: 'Skill 4' },
             { keys: ['Digit5', 'KeyU'], description: 'Skill 5' },
             { keys: ['Digit6', 'KeyI'], description: 'Skill 6' },
-            { keys: ['Digit7', 'KeyO'], description: 'Skill 7' }
+            { keys: ['Digit7', 'KeyO'], description: 'Skill 7' },
+            { keys: ['Digit8', 'KeyP'], description: 'Breath of Heaven' }
         ]
     },
     ui: {
