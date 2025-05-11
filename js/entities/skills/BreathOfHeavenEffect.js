@@ -29,7 +29,7 @@ export class BreathOfHeavenEffect extends SkillEffect {
         const effectGroup = new THREE.Group();
         
         // Create the main aura
-        const auraGeometry = new THREE.SphereGeometry(this.skill.radius, 16, 16);
+        const auraGeometry = new THREE.SphereGeometry(this.skill.radius, 64, 64);
         const auraMaterial = new THREE.MeshBasicMaterial({
             color: this.skill.color,
             transparent: true,
