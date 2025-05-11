@@ -249,7 +249,7 @@ export class Game {
         // Handle window resize
         window.addEventListener('resize', () => this.onWindowResize());
         
-        // Handle visibility change events (for auto-pausing music)
+        // Handle visibility change events
         document.addEventListener('visibilitychange', () => this.onVisibilityChange());
         
         // Handle mobile-specific events
@@ -402,14 +402,19 @@ export class Game {
      * Handle visibility change event
      */
     onVisibilityChange() {
-        this.pause();
+        if (document.visibilityState === 'hidden') {
+            console.debug('The page is now hidden.');
+            this.pause();
+        } else if (document.visibilityState === 'visible') {
+            console.debug('The page is now visible.');
+            this.resume();
+        }
     }
     
     /**
      * Handle page hide event (for mobile browsers)
      */
     onPageHide() {        
-        // Pause game loop
         this.pause();
     }
     
@@ -417,7 +422,6 @@ export class Game {
      * Handle page show event (for mobile browsers)
      */
     onPageShow() {
-        // Resume game loop
         this.resume();
     }
     
@@ -425,22 +429,14 @@ export class Game {
      * Handle window blur event
      */
     onBlur() {
-        // Additional fallback for some browsers
-        if (this.audioManager) {
-            const wasPlaying = this.audioManager.isMusicPlaying();
-            if (wasPlaying) {
-                this.audioManager.pauseMusic();
-                console.debug('Music paused due to window blur event');
-            }
-        }
+        this.pause();
     }
     
     /**
      * Handle window focus event
      */
     onFocus() {
-        // Let visibility change handler handle audio resumption
-        this.onVisibilityChange();
+        this.resume();
     }
     
     /**
