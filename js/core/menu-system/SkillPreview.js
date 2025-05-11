@@ -108,9 +108,17 @@ export class SkillPreview {
             this.scene = new THREE.Scene();
             this.scene.background = new THREE.Color(0x111111);
             
-            // Create camera with 3x zoom out
+            // Create camera with 3x zoom out and 45-degree angle
             this.camera = new THREE.PerspectiveCamera(+100, this.width / this.height, 0.1, 2000);
-            this.camera.position.set(0, 6.0, 27.0); // 3x zoom out from original position
+            
+            // Position camera at 45-degree angle for better skill visibility
+            // Using trigonometry to calculate x and z positions for a 45-degree angle
+            const distance = 27.0;
+            const angle = -Math.PI / 4 * 1.2; // 45 degrees in radians
+            const x = distance * Math.sin(angle);
+            const z = distance * Math.cos(angle);
+            this.camera.position.set(x, 6.0, z); // Angled position with same distance
+            this.camera.lookAt(0, 0, 0); // Ensure camera is looking at the center where the character is
             
             // Create renderer
             this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -130,6 +138,7 @@ export class SkillPreview {
             this.controls.minDistance = 3;
             this.controls.maxDistance = 12;
             this.controls.enablePan = true;
+            this.controls.target.set(0, 0, 0); // Ensure controls orbit around the center
             
             // Add lights
             this.addLights();
