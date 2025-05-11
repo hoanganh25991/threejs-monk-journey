@@ -397,6 +397,7 @@
     font-size: 24px;
     cursor: pointer;
     position: relative;
+    pointer-events: auto; /* Enable click events */
 }
 
 /* Quest Log */
