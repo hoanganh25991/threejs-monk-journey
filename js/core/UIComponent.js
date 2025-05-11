@@ -82,6 +82,10 @@ export class UIComponent {
         this.container.style.display = isVisible ? 'none' : 'block';
         return !isVisible;
     }
+
+    get isMobile() {
+        return window.innerHeight <= 430;
+    }
     
     /**
      * Clean up the component
