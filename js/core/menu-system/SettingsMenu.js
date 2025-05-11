@@ -45,9 +45,7 @@ export class SettingsMenu extends UIComponent {
         this.prevAnimPreviewButton = document.getElementById('prev-anim-preview-button');
         this.nextAnimPreviewButton = document.getElementById('next-anim-preview-button');
         this.resetCameraButton = document.getElementById('reset-camera-button');
-        this.autoRotateCheckbox = document.getElementById('auto-rotate-checkbox');
-        this.rotationSpeedSlider = document.getElementById('rotation-speed-slider');
-        this.rotationSpeedValue = document.getElementById('rotation-speed-value');
+        // Auto-rotate checkbox and rotation speed slider references have been removed
         
         // Audio settings elements
         this.muteCheckbox = document.getElementById('mute-checkbox');
@@ -480,23 +478,7 @@ export class SettingsMenu extends UIComponent {
             });
         }
         
-        if (this.autoRotateCheckbox && this.modelPreviewFullscreen) {
-            this.autoRotateCheckbox.addEventListener('change', () => {
-                if (this.modelPreviewFullscreen) {
-                    this.modelPreviewFullscreen.toggleAutoRotation(this.autoRotateCheckbox.checked);
-                }
-            });
-        }
-        
-        if (this.rotationSpeedSlider && this.rotationSpeedValue && this.modelPreviewFullscreen) {
-            this.rotationSpeedSlider.addEventListener('input', () => {
-                const speed = parseFloat(this.rotationSpeedSlider.value);
-                if (this.modelPreviewFullscreen) {
-                    this.modelPreviewFullscreen.setRotationSpeed(speed);
-                }
-                this.rotationSpeedValue.textContent = speed.toFixed(1);
-            });
-        }
+        // Auto-rotate and rotation speed event listeners have been removed
     }
     
     /**
@@ -538,11 +520,7 @@ export class SettingsMenu extends UIComponent {
             console.debug('SettingsMenu: Creating new ModelPreview instance');
             this.modelPreviewFullscreen = new ModelPreview(this.modelPreviewFullscreenContainer, width, height);
             
-            // Enable auto-rotation by default for the fullscreen preview
-            this.modelPreviewFullscreen.toggleAutoRotation(true);
-            if (this.autoRotateCheckbox) {
-                this.autoRotateCheckbox.checked = true;
-            }
+            // Auto-rotation functionality has been removed
             
             // Load the current model
             const modelId = this.modelPreviewSelect ? this.modelPreviewSelect.value : 

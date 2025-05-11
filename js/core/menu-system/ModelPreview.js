@@ -316,25 +316,7 @@ export class ModelPreview {
         this.renderer.setSize(width, height);
     }
     
-    /**
-     * Toggle auto-rotation of the model
-     * @param {boolean} enabled - Whether auto-rotation should be enabled
-     */
-    toggleAutoRotation(enabled) {
-        if (this.controls) {
-            this.controls.autoRotate = enabled;
-        }
-    }
-    
-    /**
-     * Set the rotation speed of the model
-     * @param {number} speed - Rotation speed (default is 1.0)
-     */
-    setRotationSpeed(speed) {
-        if (this.controls) {
-            this.controls.autoRotateSpeed = speed;
-        }
-    }
+    // Auto-rotation and rotation speed methods have been removed
     
     /**
      * Reset camera to default position

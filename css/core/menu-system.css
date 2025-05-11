@@ -417,9 +417,6 @@
 }
 
 /* Settings Menu Specific Buttons */
-#settings-back-button {
-    margin-left: 10px;
-}
 
 .settings-footer {
     display: flex;
