@@ -325,7 +325,7 @@ export class SkillPreview {
             this.characterPlaceholder.getWorldPosition(characterPosition);
             
             // Add height offset to prevent skills from appearing under the ground
-            characterPosition.y += 2.05;
+            characterPosition.y += 1.50;
             
             // Create the skill effect
             const effect = skill.createEffect(
