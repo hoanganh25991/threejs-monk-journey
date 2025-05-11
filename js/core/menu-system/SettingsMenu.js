@@ -75,7 +75,6 @@ export class SettingsMenu extends UIComponent {
         this.prevSkillButton = document.getElementById('prev-skill-button');
         this.nextSkillButton = document.getElementById('next-skill-button');
         this.skillDetailsContainer = document.getElementById('skill-details');
-        this.playSkillEffectButton = document.getElementById('play-skill-effect-button');
         this.resetSkillPreviewButton = document.getElementById('reset-skill-preview-button');
         
         this.skillPreview = null;
@@ -288,13 +287,6 @@ export class SettingsMenu extends UIComponent {
      * @private
      */
     setupSkillsActionButtons() {
-        // Play skill effect button
-        if (this.playSkillEffectButton) {
-            this.playSkillEffectButton.addEventListener('click', () => {
-                this.playCurrentSkillEffect();
-            });
-        }
-        
         // Reset skill preview button
         if (this.resetSkillPreviewButton) {
             this.resetSkillPreviewButton.addEventListener('click', () => {
@@ -330,6 +322,11 @@ export class SettingsMenu extends UIComponent {
             duration: skill.duration,
             color: skill.color
         };
+        
+        // Automatically play the skill effect when a skill is selected
+        if (this.skillPreview) {
+            this.playCurrentSkillEffect();
+        }
         
         // Clear existing content
         this.skillDetailsContainer.innerHTML = '';

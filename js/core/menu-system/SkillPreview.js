@@ -6,7 +6,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Skill } from '../../entities/skills/Skill.js';
-import { SkillEffectFactory } from '../../entities/skills/SkillEffectFactory.js';
 
 export class SkillPreview {
     /**
@@ -26,9 +25,15 @@ export class SkillPreview {
         this.controls = null;
         this.skillEffect = null;
         this.currentSkill = null;
+        this.currentSkillData = null;
         this.clock = new THREE.Clock();
         this.animationId = null;
         this.isVisible = true;
+        
+        // Auto-play settings
+        this.autoPlayEnabled = true;
+        this.autoPlayInterval = 1; // seconds between skill effects
+        this.autoPlayTimer = 0;
         
         // Check if there's an existing wrapper
         const existingWrapper = this.container.querySelector('#skills-preview-wrapper');
@@ -263,6 +268,9 @@ export class SkillPreview {
         // Remove existing skill effect if any
         this.removeSkillEffect();
         
+        // Store the current skill data for auto-play
+        this.currentSkillData = skillData;
+        
         // Create a skill instance
         const skill = new Skill({
             name: skillData.name,
@@ -281,6 +289,9 @@ export class SkillPreview {
         
         // Store the current skill
         this.currentSkill = skill;
+        
+        // Reset auto-play timer when a new skill is created
+        this.autoPlayTimer = 0;
         
         // Set a mock game object to prevent errors
         skill.game = {
@@ -355,13 +366,24 @@ export class SkillPreview {
         if (this.isVisible) {
             this.animationId = requestAnimationFrame(() => this.animate());
             
+            // Get delta time
+            const delta = this.clock.getDelta();
+            
             // Update controls
             this.controls.update();
             
             // Update skill effect
             if (this.currentSkill && this.currentSkill.isActive) {
-                const delta = this.clock.getDelta();
                 this.currentSkill.update(delta);
+            } else if (this.autoPlayEnabled && this.currentSkillData) {
+                // Handle auto-play functionality
+                this.autoPlayTimer += delta;
+                
+                // If the timer exceeds the interval, replay the skill effect
+                if (this.autoPlayTimer >= this.autoPlayInterval) {
+                    this.autoPlayTimer = 0;
+                    this.createSkillEffect(this.currentSkillData);
+                }
             }
             
             // Render scene
@@ -397,7 +419,7 @@ export class SkillPreview {
      * Reset camera to default position
      */
     resetCamera() {
-        this.camera.position.set(0, 2.0, 9.0);
+        this.camera.position.set(0, 6.0, 27.0); // Match the 3x zoomed out position
         this.camera.lookAt(0, 0, 0);
         this.controls.reset();
     }
