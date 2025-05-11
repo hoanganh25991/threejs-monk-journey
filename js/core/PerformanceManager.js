@@ -68,9 +68,27 @@ export class PerformanceManager {
         // Initialize garbage collection helper
         this.initGarbageCollectionHelper();
         
+        // Check if performance info should be visible
+        this.applyPerformanceInfoVisibility();
+        
         console.debug("Performance Manager initialized with quality:", this.currentQuality);
         
         return this;
+    }
+    
+    /**
+     * Apply performance info visibility based on localStorage setting
+     */
+    applyPerformanceInfoVisibility() {
+        // Get the stored value or default to true (show performance info)
+        const showPerformanceInfo = localStorage.getItem('monk_journey_show_performance_info');
+        const showPerformanceInfoValue = showPerformanceInfo === null ? true : showPerformanceInfo === 'true';
+        
+        // Set visibility based on the setting
+        if (this.stats) this.stats.dom.style.display = showPerformanceInfoValue ? 'block' : 'none';
+        if (this.memoryDisplay) this.memoryDisplay.style.display = showPerformanceInfoValue ? 'block' : 'none';
+        if (this.gpuEnabledIndicator) this.gpuEnabledIndicator.style.display = showPerformanceInfoValue ? 'block' : 'none';
+        if (this.qualityIndicator) this.qualityIndicator.style.display = showPerformanceInfoValue ? 'block' : 'none';
     }
     
     // Apply standard styling to all indicators

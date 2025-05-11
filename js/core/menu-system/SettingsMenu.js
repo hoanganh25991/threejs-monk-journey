@@ -24,6 +24,7 @@ export class SettingsMenu extends UIComponent {
         this.adaptiveCheckbox = document.getElementById('adaptive-checkbox');
         this.fpsSlider = document.getElementById('fps-slider');
         this.fpsValue = document.getElementById('fps-value');
+        this.showPerformanceInfoCheckbox = document.getElementById('show-performance-info-checkbox');
         
         // Game settings elements
         this.difficultySelect = document.getElementById('difficulty-select');
@@ -459,6 +460,50 @@ export class SettingsMenu extends UIComponent {
                 }
             });
         }
+        
+        if (this.showPerformanceInfoCheckbox) {
+            // Get the stored value or default to true (show performance info)
+            const showPerformanceInfo = localStorage.getItem('monk_journey_show_performance_info');
+            const showPerformanceInfoValue = showPerformanceInfo === null ? true : showPerformanceInfo === 'true';
+            
+            // Set the checkbox state
+            this.showPerformanceInfoCheckbox.checked = showPerformanceInfoValue;
+            
+            // Apply the current setting
+            this.togglePerformanceInfoVisibility(showPerformanceInfoValue);
+            
+            // Add change event
+            this.showPerformanceInfoCheckbox.addEventListener('change', () => {
+                const isChecked = this.showPerformanceInfoCheckbox.checked;
+                
+                // Toggle visibility of performance info
+                this.togglePerformanceInfoVisibility(isChecked);
+                
+                // Store the setting in localStorage
+                localStorage.setItem('monk_journey_show_performance_info', isChecked);
+            });
+        }
+    }
+    
+    /**
+     * Toggle the visibility of performance information displays
+     * @param {boolean} show - Whether to show or hide the performance info
+     * @private
+     */
+    togglePerformanceInfoVisibility(show) {
+        if (!this.game.performanceManager) return;
+        
+        // Get references to the performance info elements
+        const statsElement = this.game.performanceManager.stats ? this.game.performanceManager.stats.dom : null;
+        const memoryDisplay = this.game.performanceManager.memoryDisplay;
+        const gpuIndicator = this.game.performanceManager.gpuEnabledIndicator;
+        const qualityIndicator = this.game.performanceManager.qualityIndicator;
+        
+        // Set visibility based on the show parameter
+        if (statsElement) statsElement.style.display = show ? 'block' : 'none';
+        if (memoryDisplay) memoryDisplay.style.display = show ? 'block' : 'none';
+        if (gpuIndicator) gpuIndicator.style.display = show ? 'block' : 'none';
+        if (qualityIndicator) qualityIndicator.style.display = show ? 'block' : 'none';
     }
 
     /**
@@ -996,6 +1041,11 @@ export class SettingsMenu extends UIComponent {
             localStorage.setItem('monk_journey_quality_level', this.game.performanceManager.currentQuality);
             localStorage.setItem('monk_journey_adaptive_quality', this.game.performanceManager.adaptiveQualityEnabled);
             localStorage.setItem('monk_journey_target_fps', this.game.performanceManager.targetFPS);
+            
+            // Save performance info visibility setting
+            if (this.showPerformanceInfoCheckbox) {
+                localStorage.setItem('monk_journey_show_performance_info', this.showPerformanceInfoCheckbox.checked);
+            }
         }
         
         // Save game settings
