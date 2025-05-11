@@ -183,6 +183,11 @@ export class SettingsMenu extends UIComponent {
      */
     initializePerformanceSettings() {
         if (this.qualitySelect) {
+            // Clear existing options
+            while (this.qualitySelect.options.length > 0) {
+                this.qualitySelect.remove(0);
+            }
+            
             // Add quality options
             const qualityLevels = ['minimal', 'low', 'medium', 'high', 'ultra'];
             qualityLevels.forEach(level => {
@@ -245,6 +250,11 @@ export class SettingsMenu extends UIComponent {
      */
     initializeGameSettings() {
         if (this.difficultySelect) {
+            // Clear existing options
+            while (this.difficultySelect.options.length > 0) {
+                this.difficultySelect.remove(0);
+            }
+            
             // Add difficulty options
             const difficultyLevels = this.game.difficultyManager.getDifficultyLevels();
             difficultyLevels.forEach((level, index) => {
