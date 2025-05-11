@@ -152,13 +152,13 @@
                     <h2 id="performance-title">Performance Settings</h2>
                     <div id="performance-container" class="settings-section">
                         <div id="quality-container" class="setting-item">
-                            <label for="quality-select">Quality Preset: </label>
-                            <select id="quality-select"></select>
+                            <label for="quality-select" class="settings-label">Quality Preset: </label>
+                            <select id="quality-select" class="settings-select"></select>
                         </div>
                         <div id="fps-container" class="setting-item">
-                            <label for="fps-slider">Target FPS: </label>
-                            <input type="range" id="fps-slider" min="30" max="120" step="5" value="60">
-                            <span id="fps-value">60 FPS</span>
+                            <label for="fps-slider" class="settings-label">Target FPS: </label>
+                            <input type="range" id="fps-slider" class="settings-slider" min="30" max="120" step="5" value="60">
+                            <span id="fps-value" class="settings-value">60 FPS</span>
                         </div>
                     </div>
                 </div>
@@ -168,8 +168,8 @@
                     <h2 id="game-title">Game Settings</h2>
                     <div class="settings-section">
                         <div id="difficulty-container" class="setting-item">
-                            <label for="difficulty-select">Difficulty: </label>
-                            <select id="difficulty-select"></select>
+                            <label for="difficulty-select" class="settings-label">Difficulty: </label>
+                            <select id="difficulty-select" class="settings-select"></select>
                         </div>
                     </div>
                 </div>
@@ -179,21 +179,21 @@
                     <h2 id="audio-title">Audio Settings</h2>
                     <div id="audio-controls-container" class="settings-section">
                         <div id="mute-container" class="setting-item">
-                            <label for="mute-checkbox">Mute Audio: </label>
-                            <input type="checkbox" id="mute-checkbox">
+                            <label for="mute-checkbox" class="settings-label">Mute Audio: </label>
+                            <input type="checkbox" id="mute-checkbox" class="settings-checkbox">
                         </div>
                         <div id="music-volume-container" class="setting-item">
-                            <label for="music-volume-slider">Music Volume: </label>
-                            <input type="range" id="music-volume-slider" min="0" max="100" value="80">
-                            <span id="music-volume-value">80%</span>
+                            <label for="music-volume-slider" class="settings-label">Music Volume: </label>
+                            <input type="range" id="music-volume-slider" class="settings-slider" min="0" max="100" value="80">
+                            <span id="music-volume-value" class="settings-value">80%</span>
                         </div>
                         <div id="sfx-volume-container" class="setting-item">
-                            <label for="sfx-volume-slider">SFX Volume: </label>
-                            <input type="range" id="sfx-volume-slider" min="0" max="100" value="80">
-                            <span id="sfx-volume-value">80%</span>
+                            <label for="sfx-volume-slider" class="settings-label">SFX Volume: </label>
+                            <input type="range" id="sfx-volume-slider" class="settings-slider" min="0" max="100" value="80">
+                            <span id="sfx-volume-value" class="settings-value">80%</span>
                         </div>
                         <div id="test-sound-container" class="setting-item">
-                            <button id="test-sound-button" class="menu-button">Test Sound</button>
+                            <button id="test-sound-button" class="settings-button">Test Sound</button>
                         </div>
 
                         <div id="audio-disabled-message" style="display: none;">
@@ -269,20 +269,20 @@
                         </div>
                         <div class="model-preview-controls-section">
                             <div id="model-preview-selection" class="setting-item">
-                                <label for="model-preview-select">Character Model: </label>
+                                <label for="model-preview-select" class="settings-label">Character Model: </label>
                                 <div id="model-preview-selection-container">
-                                    <button id="prev-model-preview-button">◀</button>
-                                    <select id="model-preview-select"></select>
-                                    <button id="next-model-preview-button">▶</button>
+                                    <button id="prev-model-preview-button" class="settings-button">◀</button>
+                                    <select id="model-preview-select" class="settings-select"></select>
+                                    <button id="next-model-preview-button" class="settings-button">▶</button>
                                 </div>
                             </div>
 
                             <div id="animation-preview-container" class="setting-item">
-                                <label for="animation-preview-select">Animation: </label>
+                                <label for="animation-preview-select" class="settings-label">Animation: </label>
                                 <div id="animation-preview-selection-container">
-                                    <button id="prev-anim-preview-button">◀</button>
-                                    <select id="animation-preview-select"></select>
-                                    <button id="next-anim-preview-button">▶</button>
+                                    <button id="prev-anim-preview-button" class="settings-button">◀</button>
+                                    <select id="animation-preview-select" class="settings-select"></select>
+                                    <button id="next-anim-preview-button" class="settings-button">▶</button>
                                 </div>
                             </div>
 

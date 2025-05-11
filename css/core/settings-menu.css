@@ -124,11 +124,65 @@
 }
 
 /* Settings Menu Specific Buttons */
+/* Compact button style for settings menu */
+.settings-button {
+    background-color: rgba(255, 204, 0, 0.7);
+    color: #4a3000;
+    border: 2px solid rgba(255, 230, 150, 0.8);
+    padding: 8px 15px;
+    margin: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    -webkit-appearance: none;
+    appearance: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+    position: relative;
+    overflow: hidden;
+    /* Smaller width for settings buttons */
+    width: auto;
+    min-width: 100px;
+    text-align: center;
+}
+
+.settings-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: all 0.5s ease;
+}
+
+.settings-button:hover {
+    background-color: rgba(255, 215, 0, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+}
+
+.settings-button:hover::before {
+    left: 100%;
+}
+
+.settings-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 -1px 2px rgba(139, 101, 0, 0.2);
+}
+
+.settings-button:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.5), 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Existing test sound button - now using settings-button class */
 #test-sound-button {
     width: auto;
     min-width: 120px;
-    padding: 10px 20px;
-    font-size: 16px;
 }
 
 /* Model Preview Layout */
@@ -153,6 +207,19 @@
     padding-left: 20px;
     border-left: 1px solid rgba(255, 255, 255, 0.1);
     overflow-y: auto;
+}
+
+/* Model Preview Selection Container */
+#model-preview-selection-container,
+#animation-preview-selection-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#model-preview-selection-container .settings-select,
+#animation-preview-selection-container .settings-select {
+    flex: 1;
 }
 
 /* Fullscreen Model Preview Layout */
@@ -249,7 +316,9 @@
 /* Navigation buttons for selects - Monk Style */
 #prev-model-button, #next-model-button,
 #prev-size-button, #next-size-button,
-#prev-anim-button, #next-anim-button {
+#prev-anim-button, #next-anim-button,
+#prev-model-preview-button, #next-model-preview-button,
+#prev-anim-preview-button, #next-anim-preview-button {
     background-color: rgba(255, 204, 0, 0.7);
     color: #4a3000;
     border: 2px solid rgba(255, 230, 150, 0.8);
@@ -264,11 +333,15 @@
     align-items: center;
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+    padding: 0; /* Override settings-button padding */
+    min-width: unset; /* Override settings-button min-width */
 }
 
 #prev-model-button:hover, #next-model-button:hover,
 #prev-size-button:hover, #next-size-button:hover,
-#prev-anim-button:hover, #next-anim-button:hover {
+#prev-anim-button:hover, #next-anim-button:hover,
+#prev-model-preview-button:hover, #next-model-preview-button:hover,
+#prev-anim-preview-button:hover, #next-anim-preview-button:hover {
     background-color: rgba(255, 215, 0, 0.8);
     transform: translateY(-2px);
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
@@ -276,7 +349,9 @@
 
 #prev-model-button:active, #next-model-button:active,
 #prev-size-button:active, #next-size-button:active,
-#prev-anim-button:active, #next-anim-button:active {
+#prev-anim-button:active, #next-anim-button:active,
+#prev-model-preview-button:active, #next-model-preview-button:active,
+#prev-anim-preview-button:active, #next-anim-preview-button:active {
     transform: translateY(1px);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
@@ -490,6 +565,152 @@
     transform: translateX(-50%);
 }
 
+/* Settings Form Elements - Consistent styling */
+/* Select boxes in settings */
+.settings-select {
+    background-color: rgba(255, 204, 0, 0.7);
+    color: #4a3000;
+    border: 2px solid rgba(255, 230, 150, 0.8);
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 15px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+    background-image: url("data:image/svg+xml;utf8,<svg fill='%234a3000' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 28px;
+    transition: all 0.3s ease;
+    max-width: 200px;
+}
+
+.settings-select:hover {
+    background-color: rgba(255, 215, 0, 0.8);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+}
+
+.settings-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.5), 0 3px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Checkbox styling */
+.settings-checkbox {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 230, 150, 0.8);
+    border-radius: 4px;
+    background-color: rgba(255, 204, 0, 0.7);
+    cursor: pointer;
+    position: relative;
+    vertical-align: middle;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.settings-checkbox:checked {
+    background-color: rgba(255, 215, 0, 0.9);
+}
+
+.settings-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    color: #4a3000;
+    font-weight: bold;
+    font-size: 14px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.settings-checkbox:hover {
+    background-color: rgba(255, 215, 0, 0.8);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+}
+
+.settings-checkbox:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Range slider styling */
+.settings-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    max-width: 250px;
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.settings-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255, 204, 0, 0.9);
+    border: 2px solid rgba(255, 230, 150, 0.8);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.settings-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255, 204, 0, 0.9);
+    border: 2px solid rgba(255, 230, 150, 0.8);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.settings-slider::-webkit-slider-thumb:hover,
+.settings-slider::-moz-range-thumb:hover {
+    background: rgba(255, 215, 0, 0.9);
+    transform: scale(1.1);
+}
+
+/* Label styling */
+.settings-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    margin-right: 10px;
+    display: inline-block;
+    min-width: 120px;
+}
+
+/* Value display styling */
+.settings-value {
+    font-size: 14px;
+    color: rgba(255, 230, 150, 0.9);
+    margin-left: 10px;
+    min-width: 50px;
+    display: inline-block;
+}
+
+/* Setting item layout */
+.setting-item {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 /* Responsive adjustments for landscape mode */
 @media (orientation: landscape) and (max-height: 600px) {
     .tab-content {
@@ -507,5 +728,20 @@
     .tab-content h2 {
         font-size: 1.2em;
         margin: 0 0 10px 0;
+    }
+    
+    .settings-button {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-width: 80px;
+    }
+    
+    .settings-label {
+        font-size: 12px;
+        min-width: 100px;
+    }
+    
+    .settings-value {
+        font-size: 12px;
     }
 }
