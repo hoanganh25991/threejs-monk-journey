@@ -155,10 +155,7 @@ export class SkillPreview {
             this.animate();
             
             // Automatically set up the first skill if available
-            if (SKILLS && SKILLS.length > 0) {
-                console.debug('SkillPreview: Setting up initial skill:', SKILLS[0].name);
-                this.createSkillEffect(SKILLS[0]);
-            }
+            this.setDefaultSkill();
         } catch (error) {
             console.error('SkillPreview: Error during initialization:', error);
         }
@@ -275,6 +272,26 @@ export class SkillPreview {
         // Add character to scene
         this.scene.add(characterGroup);
         this.characterPlaceholder = characterGroup;
+    }
+    
+    /**
+     * Set the default skill (first available skill)
+     * @private
+     */
+    setDefaultSkill() {
+        if (SKILLS && SKILLS.length > 0) {
+            console.debug('SkillPreview: Setting up default skill:', SKILLS[0].name);
+            this.createSkillEffect(SKILLS[0]);
+            
+            // Force the skill to play immediately
+            if (this.currentSkill) {
+                // Ensure the skill is active
+                this.currentSkill.isActive = true;
+                
+                // Reset the auto-play timer to ensure continuous playback
+                this.autoPlayTimer = 0;
+            }
+        }
     }
     
     /**
@@ -403,6 +420,9 @@ export class SkillPreview {
                 // If the timer exceeds the interval, replay the skill effect
                 if (this.autoPlayTimer >= this.autoPlayInterval) {
                     this.autoPlayTimer = 0;
+                    
+                    // Recreate the skill effect to restart the animation
+                    console.debug('Auto-playing skill effect:', this.currentSkillData.name);
                     this.createSkillEffect(this.currentSkillData);
                 }
             }
