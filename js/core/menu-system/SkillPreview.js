@@ -109,7 +109,7 @@ export class SkillPreview {
             this.scene.background = new THREE.Color(0x111111);
             
             // Create camera with 3x zoom out
-            this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.1, 1000);
+            this.camera = new THREE.PerspectiveCamera(+100, this.width / this.height, 0.1, 2000);
             this.camera.position.set(0, 6.0, 27.0); // 3x zoom out from original position
             
             // Create renderer
