@@ -219,55 +219,56 @@ export class SkillPreview {
      */
     addCharacterPlaceholder() {
         // Create a simple character placeholder
+        const scale = 1.5;
         const characterGroup = new THREE.Group();
         
-        // Body
-        const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1.5, 8);
+        // Body - doubled size
+        const bodyGeometry = new THREE.CylinderGeometry(0.3 * scale, 0.3 * scale, 1.5 * scale, 8);
         const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x4a6fa5 });
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-        body.position.y = 0.75;
+        body.position.y = 0.75 * scale; // Adjusted position
         body.castShadow = true;
         characterGroup.add(body);
         
-        // Head
-        const headGeometry = new THREE.SphereGeometry(0.25, 16, 16);
+        // Head - doubled size
+        const headGeometry = new THREE.SphereGeometry(0.25  * scale, 16, 16);
         const headMaterial = new THREE.MeshStandardMaterial({ color: 0xf5deb3 });
         const head = new THREE.Mesh(headGeometry, headMaterial);
-        head.position.y = 1.75;
+        head.position.y = 1.75  * scale; // Adjusted position
         head.castShadow = true;
         characterGroup.add(head);
         
-        // Arms
-        const armGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.8, 8);
+        // Arms - doubled size
+        const armGeometry = new THREE.CylinderGeometry(0.1  * scale, 0.1  * scale, 0.8  * scale, 8);
         const armMaterial = new THREE.MeshStandardMaterial({ color: 0x4a6fa5 });
         
         // Left arm
         const leftArm = new THREE.Mesh(armGeometry, armMaterial);
-        leftArm.position.set(-0.5, 0.9, 0);
+        leftArm.position.set(-0.5  * scale, 0.9  * scale, 0); // Adjusted position
         leftArm.rotation.z = Math.PI / 4;
         leftArm.castShadow = true;
         characterGroup.add(leftArm);
         
         // Right arm
         const rightArm = new THREE.Mesh(armGeometry, armMaterial);
-        rightArm.position.set(0.5, 0.9, 0);
+        rightArm.position.set(0.5  * scale, 0.9  * scale, 0); // Adjusted position
         rightArm.rotation.z = -Math.PI / 4;
         rightArm.castShadow = true;
         characterGroup.add(rightArm);
         
-        // Legs
-        const legGeometry = new THREE.CylinderGeometry(0.12, 0.12, 0.8, 8);
+        // Legs - doubled size
+        const legGeometry = new THREE.CylinderGeometry(0.12  * scale, 0.12  * scale, 0.8  * scale, 8);
         const legMaterial = new THREE.MeshStandardMaterial({ color: 0x4a6fa5 });
         
         // Left leg
         const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-        leftLeg.position.set(-0.2, 0.0, 0);
+        leftLeg.position.set(-0.2  * scale, 0.0, 0); // Adjusted position
         leftLeg.castShadow = true;
         characterGroup.add(leftLeg);
         
         // Right leg
         const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-        rightLeg.position.set(0.2, 0.0, 0);
+        rightLeg.position.set(0.2  * scale, 0.0, 0); // Adjusted position
         rightLeg.castShadow = true;
         characterGroup.add(rightLeg);
         
@@ -325,7 +326,8 @@ export class SkillPreview {
             this.characterPlaceholder.getWorldPosition(characterPosition);
             
             // Add height offset to prevent skills from appearing under the ground
-            characterPosition.y += 1.50;
+            // Increased to match the doubled character size
+            characterPosition.y += 1.0;
             
             // Create the skill effect
             const effect = skill.createEffect(
