@@ -7,73 +7,127 @@ import { Game } from './core/game/Game.js';
 import { DEFAULT_CHARACTER_MODEL } from './config/player-models.js';
 import { GameMenu } from './core/menu-system/GameMenu.js';
 
-// Store the selected model and size for use when starting a new game
-// Make these variables available globally for the Game class to access
-window.selectedModelId = DEFAULT_CHARACTER_MODEL;
-window.selectedSizeMultiplier = 1.0;
-
-// Initialize the game when the DOM is loaded
-document.addEventListener('DOMContentLoaded', startGame);
-
 /**
- * Initialize and start the game
+ * Main class responsible for initializing and managing the game startup process
  */
-function startGame(event) {
-    console.debug("Game Assets Loaded, initializing game...");
-    console.debug(event);
-    
-    // Initialize the game using the GameFacade
-    const game = new Game();
-    window.game = game;
-    console.debug("Game instance created:", game);
-    
-    // Initialize the game but keep it paused
-    // This loads all resources but doesn't start the game loop
-    game.init().then(() => {
-        console.debug("Game initialized successfully - game is in paused state");
+class Main {
+    /**
+     * Initialize the Main class
+     */
+    constructor() {
+        // Default configuration for character model
+        window.selectedModelId = DEFAULT_CHARACTER_MODEL;
+        window.selectedSizeMultiplier = 1.0;
         
-        // Disconnect the network observer as it's no longer needed
-        if (window.fileTracker && typeof window.fileTracker.disconnectNetworkObserver === 'function') {
-            console.debug("Disconnecting network observer to improve performance");
-            window.fileTracker.disconnectNetworkObserver();
+        // Bind methods to ensure correct 'this' context
+        this.initializeGame = this.initializeGame.bind(this);
+    }
+    
+    /**
+     * Initialize the game and create the game instance
+     */
+    async initializeGame() {
+        console.debug("Initializing game...");
+        
+        try {
+            // Create game instance and make it globally accessible
+            const game = new Game();
+            window.game = game;
+            
+            // Initialize the game (loads resources but keeps game paused)
+            await game.init();
+            console.debug("Game initialized successfully");
+            
+            // Ensure game is in paused state
+            game.pause();
+            
+            // Display the main menu
+            this.showMainMenu(game);
+        } catch (error) {
+            console.error("Error initializing game:", error);
+            this.showErrorMessage(error);
         }
-        
-        // Make sure the game is paused
-        console.debug("Pausing game...");
-        game.pause();
-        
-        // Show game menu - game will remain paused until user clicks "New Game" or "Load Game"
-        console.debug("Creating game menu...");
+    }
+    
+    /**
+     * Display the main game menu
+     * @param {Game} game - The game instance
+     */
+    showMainMenu(game) {
+        console.debug("Creating and displaying game menu...");
         const gameMenu = new GameMenu(game);
         
-        // Force a small delay to ensure DOM updates have completed
+        // Use a small delay to ensure DOM updates have completed
         setTimeout(() => {
-            console.debug("Showing game menu...");
-            const loadingScreen = document.getElementById('loading-screen');
-            if (loadingScreen) {
-                loadingScreen.style.display = 'none';
-            } else {
-                console.warn("Loading screen instance not found");
-            }
-
+            // Hide loading screen
+            this.hideLoadingScreen();
+            
+            // Show the game menu
             gameMenu.show();
             
-            // Verify the menu is visible
-            const menuElement = document.getElementById('game-menu');
-            console.debug("Game menu element display style:", menuElement ? menuElement.style.display : "Element not found");
+            // Ensure menu is visible
+            this.ensureMenuVisibility();
             
-            // Force the menu to be visible if it's not already
-            if (menuElement && menuElement.style.display !== 'flex') {
-                console.debug("Forcing game menu to be visible");
-                menuElement.style.display = 'flex';
-                
-                // Force a repaint
-                document.body.offsetHeight;
-            }
-            
-            console.debug("Game menu displayed - waiting for user input to start game");
+            console.debug("Game menu displayed - waiting for user input");
         }, 200);
-    }).catch(error => {
-        console.error("Error initializing game:", error);
-    });
+    }
+    
+    /**
+     * Hide the loading screen
+     */
+    hideLoadingScreen() {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+        } else {
+            console.warn("Loading screen element not found");
+        }
+    }
+    
+    /**
+     * Ensure the game menu is visible
+     */
+    ensureMenuVisibility() {
+        const menuElement = document.getElementById('game-menu');
+        
+        if (!menuElement) {
+            console.warn("Game menu element not found");
+            return;
+        }
+        
+        // Force the menu to be visible if it's not already
+        if (menuElement.style.display !== 'flex') {
+            console.debug("Ensuring game menu visibility");
+            menuElement.style.display = 'flex';
+            
+            // Force a repaint
+            document.body.offsetHeight;
+        }
+    }
+    
+    /**
+     * Display error message when game initialization fails
+     * @param {Error} error - The error that occurred
+     */
+    showErrorMessage(error) {
+        // Hide loading screen
+        this.hideLoadingScreen();
+        
+        // Create and display error message
+        const errorContainer = document.createElement('div');
+        errorContainer.className = 'error-container';
+        errorContainer.innerHTML = `
+            <h2>Error Loading Game</h2>
+            <p>${error.message}</p>
+            <button onclick="location.reload()">Retry</button>
+        `;
+        
+        document.body.appendChild(errorContainer);
+    }
 }
+
+// Create instance of Main class
+const gameMain = new Main();
+
+// Initialize the game when the DOM is loaded
+document.addEventListener('DOMContentLoaded', gameMain.initializeGame);

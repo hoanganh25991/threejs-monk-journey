@@ -62,7 +62,33 @@ export class TerrainManager {
         // Initialize the first chunks around the player
         this.updateForPlayer(new THREE.Vector3(0, 0, 0));
         
+        // Wait for initial terrain chunks to be fully generated
+        await this.waitForInitialTerrainGeneration();
+        
         return true;
+    }
+    
+    /**
+     * Wait for initial terrain generation to complete
+     * @returns {Promise<void>} - Promise that resolves when initial terrain is generated
+     */
+    waitForInitialTerrainGeneration() {
+        return new Promise((resolve) => {
+            const checkQueue = () => {
+                // If queue is empty and we're not processing anything, terrain generation is complete
+                if (this.terrainGenerationQueue.length === 0 && !this.isProcessingTerrainQueue) {
+                    console.debug("Initial terrain generation complete");
+                    resolve();
+                } else {
+                    // Check again after a short delay
+                    console.debug(`Waiting for terrain generation to complete. Queue length: ${this.terrainGenerationQueue.length}`);
+                    setTimeout(checkQueue, 100);
+                }
+            };
+            
+            // Start checking
+            checkQueue();
+        });
     }
     
     /**
@@ -545,6 +571,11 @@ export class TerrainManager {
     processTerrainGenerationQueue() {
         if (this.terrainGenerationQueue.length === 0) {
             this.isProcessingTerrainQueue = false;
+            console.debug("Terrain generation queue processing complete");
+            // Dispatch an event that terrain generation is complete
+            if (this.game && this.game.events) {
+                this.game.events.dispatch('terrainGenerationComplete');
+            }
             return;
         }
         
