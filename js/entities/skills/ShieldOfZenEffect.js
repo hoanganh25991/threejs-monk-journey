@@ -24,7 +24,7 @@ export class ShieldOfZenEffect extends SkillEffect {
             
             console.debug('Preloading Buddha model...');
             const loader = new GLTFLoader();
-            loader.load('/assets/effects/buddha.glb', 
+            loader.load('assets/effects/buddha.glb', 
                 (gltf) => {
                     console.debug('Buddha model preloaded successfully');
                     ShieldOfZenEffect.buddhaModel = gltf.scene.clone();
