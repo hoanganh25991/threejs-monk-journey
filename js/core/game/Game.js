@@ -389,11 +389,6 @@ export class Game {
      * Game animation loop
      */
     animate() {
-        if (this.animationLoopStarted) {
-            return;
-        }
-
-        this.animationLoopStarted = true;
         // Always continue the animation loop regardless of pause state
         requestAnimationFrame(() => this.animate());
         
