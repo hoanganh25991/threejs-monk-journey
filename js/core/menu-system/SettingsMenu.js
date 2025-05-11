@@ -90,8 +90,8 @@ export class SettingsMenu extends UIComponent {
      * @private
      */
     initializeTabs() {
-        // Get all tab buttons and content
-        const tabButtons = document.querySelectorAll('.tab-button');
+        // Get all tab buttons and content (including icon tabs)
+        const tabButtons = document.querySelectorAll('.tab-button, .tab-icon');
         const tabContents = document.querySelectorAll('.tab-content');
         
         // Add click event to each tab button
@@ -879,8 +879,8 @@ export class SettingsMenu extends UIComponent {
      * Hide the settings menu
      */
     hide() {
-        // Store the last active tab
-        const activeTab = document.querySelector('.tab-button.active');
+        // Store the last active tab (including icon tabs)
+        const activeTab = document.querySelector('.tab-button.active, .tab-icon.active');
         if (activeTab) {
             window.lastActiveSettingsTab = activeTab.id.replace('tab-', '');
         }

@@ -18,6 +18,9 @@
 /* Import Menu System styles */
 @import 'core/menu-system.css';
 
+/* Import Settings Menu styles */
+@import 'core/settings-menu.css';
+
 /* Import loading screen styles */
 @import 'core/loading-screen.css';
 

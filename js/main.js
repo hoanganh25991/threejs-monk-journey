@@ -52,20 +52,20 @@ class Main {
      */
     showMainMenu(game) {
         console.debug("Displaying game menu...");
-        
+
+        this.hideLoadingScreen();
+
         // Use the menu manager if available
         if (game.menuManager) {
             game.menuManager.showMenu('gameMenu');
         } else {
             // Fallback to direct creation if menu manager is not available
-            console.debug("MenuManager not available, creating GameMenu directly");
-            const gameMenu = new GameMenu(game);
+            console.error("MenuManager not available, creating GameMenu directly");
         }
-        
+
         // Use a small delay to ensure DOM updates have completed
         setTimeout(() => {
             // Hide loading screen
-            this.hideLoadingScreen();
             
             // Ensure menu is visible
             this.ensureMenuVisibility();

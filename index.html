@@ -122,20 +122,28 @@
     </div>
 
     <!-- Settings Menu -->
-    <div id="main-options-menu" class="game-menu" style="display: none;">
-        <div class="settings-header">
-            <h2>Settings</h2>
-        </div>
-
-        <div class="settings-container">
-            <div class="settings-tabs">
-                <button id="tab-performance" class="tab-button active">Performance</button>
-                <button id="tab-game" class="tab-button">Game</button>
-                <button id="tab-audio" class="tab-button">Audio</button>
-                <button id="tab-controls" class="tab-button">Controls</button>
-                <button id="tab-model-preview" class="tab-button">Model Preview</button>
-                <button id="tab-release" class="tab-button">Release</button>
-                <!-- More tabs can be added here -->
+    <div id="main-options-menu" class="game-menu top-tabs-layout" style="display: none;">
+        <!-- Settings Icon in Top-Right -->
+        <div class="settings-header-icon">⚙️</div>
+        
+        <!-- Top Tabs with Right Actions Layout -->
+        <div class="top-tabs-container">
+            <!-- Top Row with Tabs -->
+            <div class="top-tabs-row">
+                <div class="top-tabs">
+                    <button id="tab-performance" class="tab-icon active" title="Performance">⚡</button>
+                    <button id="tab-game" class="tab-icon" title="Game">🎮</button>
+                    <button id="tab-audio" class="tab-icon" title="Audio">🔊</button>
+                    <button id="tab-controls" class="tab-icon" title="Controls">🎛️</button>
+                    <button id="tab-model-preview" class="tab-icon" title="Model Preview">👤</button>
+                    <button id="tab-release" class="tab-icon" title="Release">🚀</button>
+                </div>
+            </div>
+            
+            <!-- Right Column with Action Buttons -->
+            <div class="right-actions-column">
+                <button id="settings-save-button" class="icon-button" title="Save Settings">💾</button>
+                <button id="settings-back-button" class="icon-button" title="Back to Home">⛩️</button>
             </div>
 
             <div class="settings-content">
@@ -315,11 +323,7 @@
             </div>
         </div>
 
-        <!-- Settings Footer Buttons -->
-        <div class="settings-footer">
-            <button id="settings-save-button" class="menu-button">Save & Reload</button>
-            <button id="settings-back-button" class="menu-button">Back</button>
-        </div>
+        <!-- Settings Footer Buttons removed - now in sidebar -->
     </div>
 
     <!-- Update Notification -->
