@@ -14,11 +14,8 @@ export class BreathOfHeavenEffect extends SkillEffect {
         this.healingRate = 0.5; // Heal every 0.5 seconds
         this.lastHealTime = 0;
         
-        // New properties for the lingering effect
-        this.lingeringEffect = null;
-        this.hasLingeringEffect = false;
-        this.lingeringDuration = 10; // Duration of lingering effect in seconds
-        this.lingeringElapsedTime = 0;
+        // We're removing the lingering effect and extending the main effect duration
+        // No lingering effect properties needed
     }
 
     /**
@@ -99,6 +96,18 @@ export class BreathOfHeavenEffect extends SkillEffect {
         if (this.isActive && this.effect) {
             super.update(delta);
             
+            // Update position to follow player
+            if (this.skill.game && this.skill.game.player) {
+                const player = this.skill.game.player;
+                if (player && player.getPosition) {
+                    const playerPosition = player.getPosition();
+                    if (playerPosition) {
+                        // Make the main effect follow the player
+                        this.effect.position.copy(playerPosition);
+                    }
+                }
+            }
+            
             // Animate particles
             if (this.particles) {
                 const positions = this.particles.geometry.attributes.position.array;
@@ -129,8 +138,9 @@ export class BreathOfHeavenEffect extends SkillEffect {
                 this.particles.geometry.attributes.position.needsUpdate = true;
             }
             
-            // Pulse the aura
-            const pulseFactor = 1 + 0.1 * Math.sin(this.elapsedTime * 5);
+            // Pulse the aura with more dynamic movement
+            const time = this.elapsedTime;
+            const pulseFactor = 1 + 0.15 * Math.sin(time * 5) * Math.cos(time * 3);
             this.effect.children[0].scale.set(pulseFactor, pulseFactor, pulseFactor);
             
             // Apply healing effect at intervals
@@ -140,9 +150,10 @@ export class BreathOfHeavenEffect extends SkillEffect {
                 this.lastHealTime = 0;
             }
             
-            // Fade out near the end of duration
-            if (this.elapsedTime > this.skill.duration * 0.8) {
-                const fadeRatio = 1 - (this.elapsedTime - this.skill.duration * 0.8) / (this.skill.duration * 0.2);
+            // Only fade out at the very end of the effect
+            // This makes the green healing effect last longer
+            if (this.elapsedTime > this.skill.duration * 0.9) {
+                const fadeRatio = 1 - (this.elapsedTime - this.skill.duration * 0.9) / (this.skill.duration * 0.1);
                 this.effect.children.forEach(child => {
                     if (child.material) {
                         child.material.opacity = Math.max(0, child.material.opacity * fadeRatio);
@@ -150,16 +161,7 @@ export class BreathOfHeavenEffect extends SkillEffect {
                 });
             }
             
-            // Check if the main effect has just ended and we need to create the lingering effect
-            if (this.elapsedTime >= this.skill.duration && !this.hasLingeringEffect) {
-                this.createLingeringEffect();
-            }
-        }
-        
-        // Handle the lingering effect that follows the player
-        // IMPORTANT: This needs to run even if the main effect is no longer active
-        if (this.hasLingeringEffect && this.lingeringEffect) {
-            this.updateLingeringEffect(delta);
+            // No lingering effect creation needed
         }
     }
 
@@ -270,7 +272,7 @@ export class BreathOfHeavenEffect extends SkillEffect {
         
         // Show a message to the player
         if (this.skill.game.uiManager) {
-            this.skill.game.uiManager.showMessage("Speed boost active!", 2);
+            this.skill.game.uiManager.showNotification("Speed boost active!");
         }
     }
     
@@ -462,15 +464,17 @@ export class BreathOfHeavenEffect extends SkillEffect {
         
         // Damage enemies within range
         if (this.skill.game.enemyManager) {
+            // Get player position for damage calculations
+            const damagePosition = this.effect.position.clone();
+            
             const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
-                this.effect.position,
+                damagePosition,
                 this.skill.radius
             );
             
             enemies.forEach(enemy => {
                 const damageAmount = this.skill.damage;
                 enemy.takeDamage(damageAmount);
-
             });
         }
         
