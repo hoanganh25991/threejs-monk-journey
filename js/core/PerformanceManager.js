@@ -1,15 +1,18 @@
 import * as THREE from 'three';
 import Stats from 'three/addons/libs/stats.module.js';
+import { qualityLevels } from '../config/quality-levels.js';
 
 export class PerformanceManager {
     constructor(game) {
         this.game = game;
-        this.targetFPS = 120;
+        this.targetFPS = 30;
         this.fpsHistory = [];
         this.historySize = 30; // Store last 30 frames for smoothing
-        this.adaptiveQualityEnabled = true;
+        this.adaptiveQualityEnabled = false; // Disabled by default
         this.lastOptimizationTime = 0;
         this.optimizationInterval = 1000; // Check every second
+        this.lastPerformanceAlertTime = 0;
+        this.performanceAlertInterval = 10000; // Show alert every 10 seconds at most
         
         // Quality adjustment tracking
         this.qualityCheckCounter = 0;
@@ -30,63 +33,7 @@ export class PerformanceManager {
             lastCheck: 0,
             checkInterval: 2000 // Check memory every 2 seconds
         };
-        this.qualityLevels = {
-            ultra: {
-                shadows: true,
-                shadowMapSize: 2048,
-                particleCount: 1.0,
-                drawDistance: 1.0,
-                antialiasing: true,
-                pixelRatio: window.devicePixelRatio,
-                textureQuality: 1.0,
-                objectDetail: 1.0,
-                maxVisibleObjects: Infinity
-            },
-            high: {
-                shadows: true,
-                shadowMapSize: 1024,
-                particleCount: 0.8,
-                drawDistance: 0.8,
-                antialiasing: true,
-                pixelRatio: Math.min(window.devicePixelRatio, 1.5),
-                textureQuality: 0.8,
-                objectDetail: 0.9,
-                maxVisibleObjects: 500
-            },
-            medium: {
-                shadows: true,
-                shadowMapSize: 512,
-                particleCount: 0.5,
-                drawDistance: 0.5,
-                antialiasing: false,
-                pixelRatio: Math.min(window.devicePixelRatio, 1.0),
-                textureQuality: 0.6,
-                objectDetail: 0.7,
-                maxVisibleObjects: 300
-            },
-            low: {
-                shadows: false,
-                shadowMapSize: 256,
-                particleCount: 0.3,
-                drawDistance: 0.4,
-                antialiasing: false,
-                pixelRatio: Math.min(window.devicePixelRatio, 0.75),
-                textureQuality: 0.4,
-                objectDetail: 0.5,
-                maxVisibleObjects: 200
-            },
-            minimal: {
-                shadows: false,
-                shadowMapSize: 0,
-                particleCount: 0.1,
-                drawDistance: 0.3,
-                antialiasing: false,
-                pixelRatio: 0.5,
-                textureQuality: 0.2,
-                objectDetail: 0.3,
-                maxVisibleObjects: 100
-            }
-        };
+        this.qualityLevels = qualityLevels;
         
         this.currentQuality = 'ultra'; // Start with high quality by default
         this.stats = null;
@@ -227,15 +174,20 @@ export class PerformanceManager {
         // Update the quality text
         this.updateQualityIndicator();
         
-        // Add click event to toggle adaptive quality
+        // Add click event to cycle through quality levels
         this.qualityIndicator.addEventListener('click', () => {
-            this.adaptiveQualityEnabled = !this.adaptiveQualityEnabled;
+            // Cycle through quality levels: minimal -> low -> medium -> high -> ultra -> minimal
+            const qualityLevels = ['minimal', 'low', 'medium', 'high', 'ultra'];
+            const currentIndex = qualityLevels.indexOf(this.currentQuality);
+            const nextIndex = (currentIndex + 1) % qualityLevels.length;
+            const nextQuality = qualityLevels[nextIndex];
+            
+            // Apply the new quality setting
+            this.applyQualitySettings(nextQuality);
             this.updateQualityIndicator();
             
-            const message = this.adaptiveQualityEnabled 
-                ? "Adaptive quality enabled - performance will be automatically optimized" 
-                : "Adaptive quality disabled - quality settings are now fixed";
-                
+            // Show notification about quality change
+            const message = `Quality changed to ${nextQuality.toUpperCase()}`;
             this.showQualityChangeNotification(message);
         });
         
@@ -273,7 +225,7 @@ export class PerformanceManager {
                 QUALITY: ${this.currentQuality.toUpperCase()}
             </div>
             <div style="font-size: 10px; color: #aaa; margin-top: 2px;">
-                Target FPS: ${this.targetFPS} | Adaptive: ${this.adaptiveQualityEnabled ? 'ON' : 'OFF'}
+                Target FPS: ${this.targetFPS} | Click to change
             </div>
         `;
     }
@@ -465,7 +417,21 @@ export class PerformanceManager {
             this.lastDisposalTime = now;
         }
         
-        // Check if we need to adjust quality
+        // Check if we need to alert about performance
+        if (now - this.lastOptimizationTime > this.optimizationInterval) {
+            // Check for low FPS but don't automatically adjust quality
+            if (avgFPS < this.targetFPS * 0.8 && now - this.lastPerformanceAlertTime > this.performanceAlertInterval) {
+                // Show notification suggesting manual quality change
+                const suggestedQuality = this.getSuggestedQualityLevel(avgFPS);
+                if (suggestedQuality && suggestedQuality !== this.currentQuality) {
+                    this.showPerformanceAlert(avgFPS, suggestedQuality);
+                    this.lastPerformanceAlertTime = now;
+                }
+            }
+            this.lastOptimizationTime = now;
+        }
+        
+        // If adaptive quality is enabled (legacy support), still use it
         if (this.adaptiveQualityEnabled) {
             if (now - this.lastOptimizationTime > this.optimizationInterval) {
                 this.adjustQuality(avgFPS);
@@ -777,8 +743,39 @@ export class PerformanceManager {
                 if (notification.parentNode) {
                     notification.parentNode.removeChild(notification);
                 }
-            }, 5000);
+            }, 1000);
         }
+    }
+    
+    // Get suggested quality level based on current FPS
+    getSuggestedQualityLevel(currentFPS) {
+        const qualityLevels = ['minimal', 'low', 'medium', 'high', 'ultra'];
+        const currentIndex = qualityLevels.indexOf(this.currentQuality);
+        
+        if (currentFPS < this.targetFPS * 0.5) {
+            // Very low FPS, suggest minimal
+            return 'minimal';
+        } else if (currentFPS < this.targetFPS * 0.7) {
+            // Low FPS, suggest low quality
+            return 'low';
+        } else if (currentFPS < this.targetFPS * 0.85) {
+            // Below target FPS, suggest one level down
+            return currentIndex > 0 ? qualityLevels[currentIndex - 1] : this.currentQuality;
+        }
+        
+        // FPS is acceptable, no change needed
+        return this.currentQuality;
+    }
+    
+    // Show performance alert with suggestion to change quality
+    showPerformanceAlert(currentFPS, suggestedQuality) {
+        const roundedFPS = Math.round(currentFPS);
+        const message = `Performance Alert: Current FPS is ${roundedFPS}, which is below target. Consider changing quality to ${suggestedQuality.toUpperCase()} for better performance.`;
+        
+        // Use the existing notification system
+        this.showQualityChangeNotification(message);
+        
+        console.debug(`Performance alert shown: FPS=${roundedFPS}, suggested quality=${suggestedQuality}`);
     }
     
     applyQualitySettings(qualityLevel) {
