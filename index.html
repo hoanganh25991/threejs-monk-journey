@@ -60,23 +60,35 @@
 
     <!-- HUD Container Elements -->
     <div id="ui-container" style="display: none;">
-        <!-- Player UI -->
-        <div id="player-stats-container"></div>
+        <!-- Left Side UI (Player Stats, Quest Log, Joystick) -->
+        <div id="left-side-ui">
+            <!-- Player UI -->
+            <div id="player-stats-container"></div>
+
+            <!-- Quest Log -->
+            <div id="quest-log"></div>
+
+            <!-- Virtual Joystick Container -->
+            <div id="virtual-joystick-container"></div>
+        </div>
+
+        <!-- Right Side UI (Skills) -->
+        <div id="right-side-ui">
+            <!-- Skills UI -->
+            <div id="skills-container"></div>
+        </div>
+
+        <!-- Top Right UI (Home Button and Mini Map) -->
+        <div id="top-right-container">
+            <div id="mini-map-container"></div>
+            <button id="home-button" class="home-button">⛩️</button>
+        </div>
 
         <!-- Enemy UI -->
         <div id="enemy-health-container"></div>
 
-        <!-- Skills UI -->
-        <div id="skills-container"></div>
-
-        <!-- Virtual Joystick Container -->
-        <div id="virtual-joystick-container"></div>
-
         <!-- Death Screen -->
         <div id="death-screen" class="game-menu"></div>
-
-        <!-- Quest Log -->
-        <div id="quest-log"></div>
 
         <!-- Notifications Container -->
         <div id="notifications-container"></div>
@@ -93,12 +105,6 @@
         <div id="effects-container"
             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 90;">
         </div>
-
-        <!-- Home Button -->
-        <button id="home-button" class="home-button">⛩️</button>
-
-        <!-- Mini Map -->
-        <div id="mini-map-container"></div>
     </div>
 
     <!-- Dialog Box -->
