@@ -28,9 +28,19 @@ export class EffectsManager {
      * @param {number} delta - Time since last update in seconds
      */
     update(delta) {
+        // Skip updates if game is paused
+        if (this.game && this.game.isPaused) {
+            return;
+        }
+        
         // Update and remove inactive effects
         for (let i = this.effects.length - 1; i >= 0; i--) {
             const effect = this.effects[i];
+            
+            // Skip paused effects
+            if (effect.isPaused) {
+                continue;
+            }
             
             // Update the effect
             effect.update(delta);
@@ -72,6 +82,52 @@ export class EffectsManager {
         }
         
         return null;
+    }
+    
+    /**
+     * Pause all active effects
+     * Used when the game is paused
+     */
+    pauseAllEffects() {
+        console.debug(`Pausing ${this.effects.length} effects`);
+        
+        for (const effect of this.effects) {
+            // Set a paused flag on the effect
+            effect.isPaused = true;
+            
+            // Pause any animations or particle systems
+            if (effect.particleSystem) {
+                effect.particleSystem.pause();
+            }
+            
+            // Pause any animation mixers
+            if (effect.mixer) {
+                effect.mixer.timeScale = 0;
+            }
+        }
+    }
+    
+    /**
+     * Resume all paused effects
+     * Used when the game is resumed
+     */
+    resumeAllEffects() {
+        console.debug(`Resuming ${this.effects.length} effects`);
+        
+        for (const effect of this.effects) {
+            // Clear the paused flag
+            effect.isPaused = false;
+            
+            // Resume any animations or particle systems
+            if (effect.particleSystem) {
+                effect.particleSystem.play();
+            }
+            
+            // Resume any animation mixers
+            if (effect.mixer) {
+                effect.mixer.timeScale = 1;
+            }
+        }
     }
     
     /**

@@ -1192,6 +1192,12 @@ export class Enemy {
                     const resetStartTime = Date.now();
                     
                     const resetRotation = () => {
+                        // Check if modelGroup still exists
+                        if (!this.modelGroup) {
+                            console.debug('Enemy modelGroup no longer exists, canceling rotation reset');
+                            return; // Exit early if modelGroup is null
+                        }
+                        
                         const elapsed = Date.now() - resetStartTime;
                         const progress = Math.min(elapsed / resetDuration, 1);
                         

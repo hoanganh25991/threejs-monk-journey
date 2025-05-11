@@ -602,6 +602,53 @@ export class AudioManager {
         return false;
     }
     
+    /**
+     * Pause all currently playing sound effects
+     * @returns {boolean} True if successful
+     */
+    pauseAllSoundEffects() {
+        if (!this.audioEnabled) return false;
+        
+        try {
+            // Iterate through all sound effects and pause them if they're playing
+            for (const soundName in this.sounds) {
+                const sound = this.sounds[soundName];
+                if (sound && sound.isPlaying) {
+                    sound.pause();
+                }
+            }
+            console.debug('All sound effects paused');
+            return true;
+        } catch (error) {
+            console.warn('Could not pause all sound effects:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Resume all paused sound effects
+     * @returns {boolean} True if successful
+     */
+    resumeAllSoundEffects() {
+        if (!this.audioEnabled || this.isMuted) return false;
+        
+        try {
+            // Iterate through all sound effects and resume them if they were playing
+            for (const soundName in this.sounds) {
+                const sound = this.sounds[soundName];
+                // Only resume sounds that were playing and are now paused
+                if (sound && sound.isPaused) {
+                    sound.play();
+                }
+            }
+            console.debug('All sound effects resumed');
+            return true;
+        } catch (error) {
+            console.warn('Could not resume all sound effects:', error);
+            return false;
+        }
+    }
+    
     toggleMute() {
         this.isMuted = !this.isMuted;
         

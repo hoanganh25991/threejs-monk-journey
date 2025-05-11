@@ -241,6 +241,42 @@ export class EnemyManager {
         this.game = game;
     }
     
+    /**
+     * Pause all enemies in the game
+     * Stops animations and movement
+     */
+    pauseAllEnemies() {
+        console.debug(`Pausing ${this.enemies.length} enemies`);
+        
+        for (const enemy of this.enemies) {
+            // Pause animation mixer if it exists
+            if (enemy.model && enemy.model.mixer) {
+                enemy.model.mixer.timeScale = 0;
+            }
+            
+            // Set a paused flag on the enemy
+            enemy.isPaused = true;
+        }
+    }
+    
+    /**
+     * Resume all enemies in the game
+     * Restarts animations and movement
+     */
+    resumeAllEnemies() {
+        console.debug(`Resuming ${this.enemies.length} enemies`);
+        
+        for (const enemy of this.enemies) {
+            // Resume animation mixer if it exists
+            if (enemy.model && enemy.model.mixer) {
+                enemy.model.mixer.timeScale = 1;
+            }
+            
+            // Clear the paused flag
+            enemy.isPaused = false;
+        }
+    }
+    
     async init() {
         // Spawn initial enemies
         for (let i = 0; i < this.maxEnemies / 2; i++) {

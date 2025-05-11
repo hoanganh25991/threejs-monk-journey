@@ -304,28 +304,94 @@ export class Game {
     
     /**
      * Pause the game
+     * Properly pauses all game systems including physics, animations, and timers
      */
     pause() {
+        console.debug("Pausing game...");
+        
+        // Set game state to paused
         this.state.setPaused();
-
+        
+        // Pause the clock to stop delta time accumulation
+        this.clock.stop();
+        
+        // Pause audio
         if (this.audioManager) {
             this.audioManager.pauseMusic();
+            this.audioManager.pauseAllSoundEffects();
         }
-
+        
+        // Pause player animations
+        if (this.player && this.player.model && this.player.model.mixer) {
+            this.player.model.mixer.timeScale = 0;
+        }
+        
+        // Pause all enemy animations
+        if (this.enemyManager) {
+            this.enemyManager.pauseAllEnemies();
+        }
+        
+        // Pause particle effects
+        if (this.effectsManager) {
+            this.effectsManager.pauseAllEffects();
+        }
+        
+        // Show pause overlay if available
+        const pauseOverlay = document.getElementById('pause-overlay');
+        if (pauseOverlay) {
+            pauseOverlay.style.display = 'flex';
+        }
+        
+        // Dispatch event that game has been paused
         this.events.dispatch('gameStateChanged', 'paused');
+        
+        console.debug("Game paused successfully");
     }
     
     /**
      * Resume the game
+     * Properly resumes all game systems that were paused
      */
     resume() {
+        console.debug("Resuming game...");
+        
+        // Set game state to running
         this.state.setRunning();
-
+        
+        // Resume the clock to continue delta time calculation
+        this.clock.start();
+        
+        // Resume audio
         if (this.audioManager) {
             this.audioManager.resumeMusic();
+            this.audioManager.resumeAllSoundEffects();
         }
-
+        
+        // Resume player animations
+        if (this.player && this.player.model && this.player.model.mixer) {
+            this.player.model.mixer.timeScale = 1;
+        }
+        
+        // Resume all enemy animations
+        if (this.enemyManager) {
+            this.enemyManager.resumeAllEnemies();
+        }
+        
+        // Resume particle effects
+        if (this.effectsManager) {
+            this.effectsManager.resumeAllEffects();
+        }
+        
+        // Hide pause overlay if available
+        const pauseOverlay = document.getElementById('pause-overlay');
+        if (pauseOverlay) {
+            pauseOverlay.style.display = 'none';
+        }
+        
+        // Dispatch event that game has been resumed
         this.events.dispatch('gameStateChanged', 'running');
+        
+        console.debug("Game resumed successfully");
     }
     
     /**
@@ -393,11 +459,12 @@ export class Game {
      * Handle window resize event
      */
     onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        // this.camera.aspect = window.innerWidth / window.innerHeight;
+        // this.camera.updateProjectionMatrix();
+        // this.renderer.setSize(window.innerWidth, window.innerHeight);
+        window.location.reload();
     }
-    
+
     /**
      * Handle visibility change event
      */
@@ -410,7 +477,7 @@ export class Game {
             this.resume();
         }
     }
-    
+
     /**
      * Handle page hide event (for mobile browsers)
      */
