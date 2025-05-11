@@ -316,19 +316,6 @@ export class SettingsMenu extends UIComponent {
         // Store the current skill
         this.currentSkill = skill;
         
-        // Create a skill instance for preview
-        const skillInstance = {
-            name: skill.name,
-            type: skill.type,
-            damage: skill.damage,
-            manaCost: skill.manaCost,
-            cooldown: skill.cooldown,
-            range: skill.range,
-            radius: skill.radius,
-            duration: skill.duration,
-            color: skill.color
-        };
-        
         // Automatically play the skill effect when a skill is selected
         if (this.skillPreview) {
             this.playCurrentSkillEffect();
