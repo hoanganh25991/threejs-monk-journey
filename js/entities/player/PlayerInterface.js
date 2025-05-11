@@ -76,6 +76,11 @@ export class IPlayerStats {
     
     // Utility
     regenerateResources(delta) {}
+    
+    // Temporary boosts
+    addTemporaryBoost(statName, amount, duration) {}
+    updateTemporaryBoosts(delta) {}
+    applyBoosts(statName) {}
 }
 
 /**

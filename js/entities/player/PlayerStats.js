@@ -22,6 +22,9 @@ export class PlayerStats extends IPlayerStats {
         this.intelligence = initialStats.intelligence || 10;
         this.movementSpeed = initialStats.movementSpeed || 15;
         this.attackPower = initialStats.attackPower || 10;
+        
+        // Track temporary stat boosts
+        this.temporaryBoosts = {};
     }
     
     // Getters
@@ -110,7 +113,101 @@ export class PlayerStats extends IPlayerStats {
         return this.level;
     }
     
+    /**
+     * Add a temporary boost to a stat
+     * @param {string} statName - The name of the stat to boost (e.g., 'moveSpeed', 'attackPower')
+     * @param {number} amount - The amount to boost by (e.g., 0.3 for 30% increase)
+     * @param {number} duration - Duration of the boost in seconds
+     */
+    addTemporaryBoost(statName, amount, duration) {
+        // Store the original value if this is a new boost
+        if (!this.temporaryBoosts[statName]) {
+            this.temporaryBoosts[statName] = {
+                originalValue: this[statName],
+                boosts: []
+            };
+        }
+        
+        // Add the new boost
+        const boost = {
+            amount: amount,
+            duration: duration,
+            remainingTime: duration
+        };
+        
+        this.temporaryBoosts[statName].boosts.push(boost);
+        
+        // Apply the boost immediately
+        this.applyBoosts(statName);
+        
+        console.debug(`Added temporary boost to ${statName}: +${amount} for ${duration} seconds`);
+    }
+    
+    /**
+     * Apply all active boosts for a specific stat
+     * @param {string} statName - The name of the stat to apply boosts for
+     */
+    applyBoosts(statName) {
+        if (!this.temporaryBoosts[statName]) return;
+        
+        // Reset to original value
+        this[statName] = this.temporaryBoosts[statName].originalValue;
+        
+        // Apply all active boosts
+        for (const boost of this.temporaryBoosts[statName].boosts) {
+            if (boost.remainingTime > 0) {
+                // For percentage boosts (e.g., moveSpeed)
+                this[statName] += this[statName] * boost.amount;
+            }
+        }
+    }
+    
+    /**
+     * Update all temporary boosts
+     * @param {number} delta - Time since last update in seconds
+     */
+    updateTemporaryBoosts(delta) {
+        let boostsChanged = false;
+        
+        // Update each stat's boosts
+        for (const statName in this.temporaryBoosts) {
+            const statBoosts = this.temporaryBoosts[statName];
+            let activeBoostsChanged = false;
+            
+            // Update remaining time for each boost
+            for (const boost of statBoosts.boosts) {
+                if (boost.remainingTime > 0) {
+                    boost.remainingTime -= delta;
+                    if (boost.remainingTime <= 0) {
+                        boost.remainingTime = 0;
+                        activeBoostsChanged = true;
+                    }
+                }
+            }
+            
+            // Clean up expired boosts
+            if (activeBoostsChanged) {
+                statBoosts.boosts = statBoosts.boosts.filter(boost => boost.remainingTime > 0);
+                boostsChanged = true;
+                
+                // If no more boosts for this stat, revert to original value
+                if (statBoosts.boosts.length === 0) {
+                    this[statName] = statBoosts.originalValue;
+                    delete this.temporaryBoosts[statName];
+                } else {
+                    // Otherwise, reapply the remaining boosts
+                    this.applyBoosts(statName);
+                }
+            }
+        }
+        
+        return boostsChanged;
+    }
+    
     regenerateResources(delta) {
+        // Update temporary boosts
+        this.updateTemporaryBoosts(delta);
+        
         // Regenerate health
         if (this.health < this.maxHealth) {
             this.health += delta * 2; // 2 health per second

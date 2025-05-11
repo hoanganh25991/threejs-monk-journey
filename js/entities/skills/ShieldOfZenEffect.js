@@ -11,11 +11,13 @@ export class ShieldOfZenEffect extends SkillEffect {
         super(skill);
         this.rotationSpeed = 0.5; // Rotation speed in radians per second
         this.playerPosition = null;
+        this.playerDirection = null;
         this.buddhaFigure = null;
         this.aura = null;
         this.particles = [];
         this.damageReduction = 0.3; // 30% damage reduction
         this.damageReflection = 0.1; // 10% damage reflection
+        this.followPlayer = true; // Flag to make the effect follow the player
     }
 
     /**
@@ -28,8 +30,9 @@ export class ShieldOfZenEffect extends SkillEffect {
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
-        // Store initial position
+        // Store initial position and direction
         this.playerPosition = position.clone();
+        this.playerDirection = direction.clone();
         
         // Create the Shield of Zen effect
         this._createShieldOfZenEffect(effectGroup, position, direction);
@@ -263,6 +266,39 @@ export class ShieldOfZenEffect extends SkillEffect {
             this.isActive = false;
             this.dispose(); // Properly dispose of the effect when it expires
             return;
+        }
+        
+        // If we should follow the player, update the effect's position
+        if (this.followPlayer && this.skill.game && this.skill.game.player) {
+            // Get the current player position
+            const player = this.skill.game.player;
+            const currentPlayerPosition = player.movement.getPosition().clone();
+            const currentPlayerRotation = player.movement.getRotation();
+            
+            // Calculate current player direction
+            const currentPlayerDirection = new THREE.Vector3(
+                Math.sin(currentPlayerRotation.y),
+                0,
+                Math.cos(currentPlayerRotation.y)
+            );
+            
+            // Update our stored player position and direction
+            this.playerPosition = currentPlayerPosition;
+            this.playerDirection = currentPlayerDirection;
+            
+            // Update the effect's position to match the player's position
+            this.effect.position.copy(currentPlayerPosition);
+            
+            // Update the Buddha figure's position relative to the player
+            if (this.buddhaFigure) {
+                // Calculate position behind the player based on current direction
+                const behindPosition = currentPlayerDirection.clone().multiplyScalar(-3); // 3 units behind
+                this.buddhaFigure.position.copy(behindPosition);
+                this.buddhaFigure.position.y += 1.5; // Raise the Buddha up
+                
+                // Make the Buddha face the player
+                this.buddhaFigure.lookAt(new THREE.Vector3(0, this.buddhaFigure.position.y, 0));
+            }
         }
         
         // IMPORTANT: Update the skill's position property to match the effect's position

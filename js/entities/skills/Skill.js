@@ -21,6 +21,7 @@ export class Skill {
         this.duration = config.duration || 0;
         this.color = config.color || 0xffffff;
         this.hits = config.hits || 1;
+        this.icon = config.icon || '🤛';
         
         // Sound configuration
         this.sounds = config.sounds || {

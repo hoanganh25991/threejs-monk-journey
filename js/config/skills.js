@@ -11,6 +11,7 @@ export const SKILLS = [
         radius: 3, // Area of effect around player
         duration: 10, // 10 seconds duration
         color: 0xffdd00, // Golden color
+        icon: '🧘', // Person in lotus position emoji
         sounds: {
             cast: 'skillInnerSanctuary', // Reusing Inner Sanctuary sound for now
             impact: 'barrierForm', // Sound of protective barrier forming
@@ -29,6 +30,7 @@ export const SKILLS = [
         radius: 8, // Large radius to affect multiple allies/enemies
         duration: 8, // Duration in seconds
         color: 0xffdd99, // Golden yellow color for divine energy
+        icon: '🌬️', // Wind blowing emoji
         sounds: {
             cast: 'skillBreathOfHeaven', // Heavenly choir sound
             impact: 'healingPulse', // Soft healing pulse sound
@@ -46,6 +48,7 @@ export const SKILLS = [
         radius: 2,
         duration: 3.5, // Further increased duration from 2.5 to 3.5
         color: 0x00ffff,
+        icon: '🌊', // Wave emoji
         sounds: {
             cast: 'skillWaveStrike', // Monk channels energy and releases a wave
             impact: 'waterImpact', // Watery impact sound when hitting enemies
@@ -63,6 +66,7 @@ export const SKILLS = [
         radius: 4,
         duration: 2.5, // Further increased duration from 1.5 to 2.5
         color: 0xffcc00,
+        icon: '🌀', // Cyclone emoji
         sounds: {
             cast: 'skillCycloneStrike', // Powerful wind gathering sound
             impact: 'windPull', // Sound of enemies being pulled by wind
@@ -80,6 +84,7 @@ export const SKILLS = [
         radius: 10,
         duration: 2.5,
         color: 0xff0000,
+        icon: '🔄', // Cycle emoji
         hits: 7,
         sounds: {
             cast: 'skillSevenSidedStrike', // Monk chanting and focusing energy
@@ -98,6 +103,7 @@ export const SKILLS = [
         radius: 5,
         duration: 10, // Further increased duration from 7 to 10
         color: 0xffffff,
+        icon: '🛡️', // Shield emoji
         sounds: {
             cast: 'skillInnerSanctuary', // Monk chanting a protection mantra
             impact: 'barrierForm', // Sound of protective barrier forming
@@ -115,6 +121,7 @@ export const SKILLS = [
         radius: 10, // Increased radius for summoning circle
         duration: 10, // Increased duration to 30 seconds
         color: 0x00ffff,
+        icon: '👤', // Person emoji
         allyCount: 2, // Number of allies to summon
         sounds: {
             cast: 'skillMysticAlly', // Mystical summoning incantation
@@ -133,6 +140,7 @@ export const SKILLS = [
         radius: 5,
         duration: 5.0, // Further increased duration from 3.5 to 5.0
         color: 0xffdd22, // Golden color for the bell's light
+        icon: '🔔', // Bell emoji
         sounds: {
             cast: 'skillWaveOfLight', // Monk summoning the bell with chanting
             impact: 'bellRing', // Deep, resonant bell sound
@@ -150,6 +158,7 @@ export const SKILLS = [
         radius: 5,
         duration: 5, // Further increased duration from 15 to 20 seconds
         color: 0xff3333,
+        icon: '💥', // Explosion emoji
         sounds: {
             cast: 'skillExplodingPalm', // Sound of monk focusing deadly energy
             impact: 'markApplied', // Sound of mark being applied to enemy
@@ -167,6 +176,7 @@ export const SKILLS = [
         radius: 2, // Area of effect after teleport
         duration: 1.0, // Short duration
         color: 0x4169e1, // Royal blue color for lightning
+        icon: '⚡', // Lightning emoji
         basicAttack: true,
         sounds: {
             cast: 'skillFistOfThunder', // Sound of lightning charging

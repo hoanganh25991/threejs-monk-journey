@@ -1,4 +1,5 @@
 import { UIComponent } from '../UIComponent.js';
+import { SKILL_COLORS } from '../../config/colors.js';
 /**
  * Skills UI component
  * Displays player skills and cooldowns
@@ -12,31 +13,8 @@ export class SkillsUI extends UIComponent {
         super('skills-container', game);
         this.skillButtons = [];
         
-        // Define skill icons and colors based on skill type
-        this.skillIcons = {
-            'Fist of Thunder': '⚡', // Lightning emoji
-            'Wave Strike': '🌊', // Wave emoji
-            'Cyclone Strike': '🌀', // Cyclone emoji
-            'Seven-Sided Strike': '🔄', // Cycle emoji
-            'Inner Sanctuary': '🛡️', // Shield emoji
-            'Mystic Ally': '👤', // Person emoji
-            'Wave of Light': '🔔', // Bell emoji
-            'Exploding Palm': '💥', // Explosion emoji
-            'Breath of Heaven': '🌬️', // Wind blowing emoji
-            'Shield of Zen': '🧘', // Person in lotus position emoji
-        };
-        
-        this.skillColors = {
-            'teleport': '#4169e1', // Royal blue for teleport
-            'ranged': '#00ffff',
-            'aoe': '#ffcc00',
-            'multi': '#ff0000',
-            'buff': '#ffffff',
-            'summon': '#00ffff',
-            'wave': '#ffdd22',
-            'mark': '#ff3333',
-            'heal': '#ffdd99' // Golden yellow for healing abilities
-        };
+        // Use skill colors from config
+        this.skillColors = SKILL_COLORS;
     }
     
     /**
@@ -55,7 +33,7 @@ export class SkillsUI extends UIComponent {
             const keyDisplay = skill.basicAttack ? "h" : `${index + 1}`;
             
             // Get skill icon and color
-            const icon = this.skillIcons[skill.name] || '✨'; // Default to sparkle if no icon
+            const icon = skill.icon || '✨'; // Default to sparkle if no icon
             const color = this.skillColors[skill.type] || '#ffffff';
             
             // Create skill button HTML
