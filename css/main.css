@@ -7,7 +7,7 @@
 @import 'reset.css';
 
 /* Import layout styles */
-@import 'core/layout.css';
+@import 'layout.css';
 
 /* Import Game styles */
 @import 'core/game.css';
@@ -38,6 +38,3 @@
 
 /* Import utility classes */
 @import 'utilities.css';
-
-/* Import mobile-specific styles (should be last to override previous styles) */
-@import 'mobile.css';
