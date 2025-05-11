@@ -75,7 +75,6 @@ export class SettingsMenu extends UIComponent {
         this.prevSkillButton = document.getElementById('prev-skill-button');
         this.nextSkillButton = document.getElementById('next-skill-button');
         this.skillDetailsContainer = document.getElementById('skill-details');
-        this.resetSkillPreviewButton = document.getElementById('reset-skill-preview-button');
         
         this.skillPreview = null;
         this.currentSkill = null;
@@ -203,9 +202,6 @@ export class SettingsMenu extends UIComponent {
         
         // Initialize the skills preview container
         this.initializeSkillsPreviewContainer();
-        
-        // Set up action buttons
-        this.setupSkillsActionButtons();
     }
     
     /**
@@ -285,19 +281,6 @@ export class SettingsMenu extends UIComponent {
             const width = previewSection.clientWidth;
             const height = previewSection.clientHeight;
             this.skillPreview.setSize(width, height);
-        }
-    }
-    
-    /**
-     * Set up action buttons for skills preview
-     * @private
-     */
-    setupSkillsActionButtons() {
-        // Reset skill preview button
-        if (this.resetSkillPreviewButton) {
-            this.resetSkillPreviewButton.addEventListener('click', () => {
-                this.resetSkillPreview();
-            });
         }
     }
     
