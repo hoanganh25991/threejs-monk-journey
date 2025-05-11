@@ -15,8 +15,8 @@
 /* Import HUD Manager styles */
 @import 'core/hud-manager.css';
 
-/* Import Menu System styles */
-@import 'core/menu-system.css';
+/* Import Game Menu styles */
+@import 'core/game-menu.css';
 
 /* Import Settings Menu styles */
 @import 'core/settings-menu.css';
