@@ -124,7 +124,7 @@ export class SkillPreview {
             const angle = -Math.PI / 4 * 1.2; // 45 degrees in radians
             const x = distance * Math.sin(angle);
             const z = distance * Math.cos(angle);
-            this.camera.position.set(x, 9.0, z); // Increased height (6.0 * 1.5 = 9.0) for better overview
+            this.camera.position.set(x, 26.0, z); // Increased height (6.0 * 1.5 = 9.0) for better overview
             this.camera.lookAt(0, 0, 0); // Ensure camera is looking at the center where the character is
             
             // Store initial camera position for reset functionality
@@ -145,7 +145,7 @@ export class SkillPreview {
             this.controls = new OrbitControls(this.camera, this.renderer.domElement);
             this.controls.enableDamping = true;
             this.controls.dampingFactor = 0.05;
-            this.controls.minDistance = 0;
+            this.controls.minDistance = 4.5;
             this.controls.maxDistance = 200;
             this.controls.enablePan = true;
             this.controls.target.set(0, 0, 0); // Ensure controls orbit around the center
@@ -631,7 +631,7 @@ export class SkillPreview {
             const angle = -Math.PI / 4 * 1.2;
             const x = distance * Math.sin(angle);
             const z = distance * Math.cos(angle);
-            this.camera.position.set(x, 9.0, z);
+            this.camera.position.set(x, 26.0, z);
         }
         
         // Reset target and look at center
