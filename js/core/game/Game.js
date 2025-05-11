@@ -144,9 +144,6 @@ export class Game {
                 this.player.model.setSizeMultiplier(window.selectedSizeMultiplier);
             }
             
-            // Ensure game reference is set after initialization
-            this.player.setGame(this);
-            
             this.updateLoadingProgress(60, 'Setting up controls...', 'Initializing input handler');
             
             // Initialize input handler
@@ -285,13 +282,9 @@ export class Game {
         this.clock.start();
         
         // Only start the animation loop if it hasn't been started yet
-        if (!this.animationLoopStarted) {
-            console.debug("Starting animation loop");
-            this.animationLoopStarted = true;
-            this.animate();
-        } else {
-            console.warn("Animation loop already started, skipping duplicate start");
-        }
+        console.debug("Starting animation loop");
+        this.animationLoopStarted = true;
+        this.animate();
         
         // Start background music
         this.audioManager.playMusic();
@@ -398,6 +391,11 @@ export class Game {
      * Game animation loop
      */
     animate() {
+        if (this.animationLoopStarted) {
+            return;
+        }
+
+        this.animationLoopStarted = true;
         // Always continue the animation loop regardless of pause state
         requestAnimationFrame(() => this.animate());
         
