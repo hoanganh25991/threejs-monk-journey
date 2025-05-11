@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import Stats from 'three/addons/libs/stats.module.js';
 import { qualityLevels } from '../config/quality-levels.js';
+import { RENDER_CONFIG } from '../config/render.js';
 
 export class PerformanceManager {
     constructor(game) {
@@ -532,45 +533,15 @@ export class PerformanceManager {
     
     // The decreaseQuality method has been removed
     // Quality is now managed through the settings menu and localStorage
-    showQualityChangeNotification(message) {
-        // Check if we have a UI manager to show notifications
-        if (this.game && this.game.uiManager && this.game.uiManager.showNotification) {
-            this.game.uiManager.showNotification(message, 5000); // Show for 5 seconds
-        } else {
-            // Fallback to creating our own notification
-            const notification = document.createElement('div');
-            notification.style.position = 'absolute';
-            notification.style.bottom = '80px';
-            notification.style.left = '50%';
-            notification.style.transform = 'translateX(-50%)';
-            notification.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-            notification.style.color = '#fff';
-            notification.style.padding = '10px 20px';
-            notification.style.borderRadius = '5px';
-            notification.style.fontFamily = 'Arial, sans-serif';
-            notification.style.fontSize = '14px';
-            notification.style.zIndex = '1002';
-            notification.style.textAlign = 'center';
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            // Remove after 5 seconds
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 1000);
-        }
-    }
-    
+
     applyQualitySettings(qualityLevel) {
-        if (!this.qualityLevels[qualityLevel]) {
+        if (!this.qualityLevels[qualityLevel] || !RENDER_CONFIG[qualityLevel]) {
             console.error(`Unknown quality level: ${qualityLevel}`);
             return;
         }
         
         const settings = this.qualityLevels[qualityLevel];
+        const renderSettings = RENDER_CONFIG[qualityLevel];
         const previousQuality = this.currentQuality;
         this.currentQuality = qualityLevel;
         
@@ -602,7 +573,7 @@ export class PerformanceManager {
         // Update antialiasing
         // Note: Changing antialiasing requires recreating the renderer
         // This is expensive, so we only do it when necessary
-        if (renderer.antialias !== settings.antialiasing) {
+        if (renderer.antialias !== renderSettings.init.antialias) {
             console.debug("Antialiasing change requires renderer recreation - skipping");
             // In a real implementation, we would recreate the renderer here
         }
