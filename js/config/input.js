@@ -40,9 +40,9 @@ export const INPUT_CONFIG = {
             { keys: ['BracketRight'], description: 'Zoom Out Mini Map' }
         ],
         joystick: {
-            sizeMultiplier: 1, // Default to 80% of original size
-            baseSize: 140, // Original base size in pixels
-            handleSize: 70  // Original handle size in pixels
+            sizeMultiplier: 1, // Size multiplier (1 = 100% of defined size)
+            baseSize: 150, // Base size in pixels
+            handleSize: 60  // Handle size in pixels
         }
     }
 };
