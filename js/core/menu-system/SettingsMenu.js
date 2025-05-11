@@ -6,9 +6,6 @@
 import { ModelPreview } from './ModelPreview.js';
 import { CHARACTER_MODELS } from '../../config/player-models.js';
 import { UIComponent } from '../UIComponent.js';
-import { GameMenu } from './GameMenu.js';
-import { ReloadButton } from './ReloadUI.js';
-import { IMenu } from './IMenu.js';
 
 export class SettingsMenu extends UIComponent {
     /**
