@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Skill } from '../../entities/skills/Skill.js';
+import { SKILLS } from '../../config/skills.js';
 
 export class SkillPreview {
     /**
@@ -152,6 +153,12 @@ export class SkillPreview {
             // Start animation loop
             console.debug('SkillPreview: Starting animation loop');
             this.animate();
+            
+            // Automatically set up the first skill if available
+            if (SKILLS && SKILLS.length > 0) {
+                console.debug('SkillPreview: Setting up initial skill:', SKILLS[0].name);
+                this.createSkillEffect(SKILLS[0]);
+            }
         } catch (error) {
             console.error('SkillPreview: Error during initialization:', error);
         }
@@ -316,6 +323,9 @@ export class SkillPreview {
             // Get character position and rotation
             const characterPosition = new THREE.Vector3();
             this.characterPlaceholder.getWorldPosition(characterPosition);
+            
+            // Add height offset to prevent skills from appearing under the ground
+            characterPosition.y += 2.05;
             
             // Create the skill effect
             const effect = skill.createEffect(
