@@ -11,7 +11,7 @@ export const CAMERA_CONFIG = {
     
     // Camera angle and position
     angle: -Math.PI / 5,  // Default camera angle (in radians)
-    yPosition: 20.0,       // Default camera height (y-position)
+    yPosition: 9.0,       // Default camera height (y-position)
     
     // Camera target
     target: { x: 0, y: 0, z: 0 }  // Default camera target/look-at point
