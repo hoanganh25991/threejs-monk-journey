@@ -22,7 +22,12 @@ export class MiniMapUI extends UIComponent {
         this.headerElement = null;
         this.canvas = null;
         this.ctx = null;
-        this.mapSize = 200; // Size of the mini map in pixels
+        
+        // Check if we're on mobile
+        const isMobile = window.innerHeight <= 430;
+        
+        // Adjust map size based on device
+        this.mapSize = isMobile ? 120 : 200; // Smaller size on mobile
         this.canvasSize = this.mapSize; // Canvas size matches map size
         this.scale = 1; // Increased scale factor for better world coverage
         this.lastRenderTime = 0;
@@ -67,6 +72,34 @@ export class MiniMapUI extends UIComponent {
         }
         
         // Set exact dimensions for both container and canvas
+        this.updateMapSize();
+        
+        // Add window resize listener to adjust map size on screen size changes
+        window.addEventListener('resize', () => {
+            // Check if we're on mobile
+            const isMobile = window.innerWidth <= 768;
+            
+            // Update map size based on device
+            this.mapSize = isMobile ? 100 : 200;
+            this.canvasSize = this.mapSize;
+            
+            // Update the map dimensions
+            this.updateMapSize();
+            
+            // Force a re-render of the map
+            this.renderMiniMap();
+        });
+        
+        return true;
+    }
+    
+    /**
+     * Update the map size based on current settings
+     */
+    updateMapSize() {
+        if (!this.mapElement || !this.canvas) return;
+        
+        // Set exact dimensions for both container and canvas
         this.mapElement.style.width = `${this.mapSize}px`;
         this.mapElement.style.height = `${this.mapSize}px`;
         
@@ -77,8 +110,6 @@ export class MiniMapUI extends UIComponent {
         // Apply CSS to ensure canvas fits perfectly in the container
         this.canvas.style.width = '100%';
         this.canvas.style.height = '100%';
-        
-        return true;
     }
     
     /**

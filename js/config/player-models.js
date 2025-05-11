@@ -9,7 +9,7 @@ export const CHARACTER_MODELS = [
         multiplier: 1.0,  // Default multiplier (1x size)
         // Default position and rotation adjustments
         defaultAdjustments: {
-            position: { x: 0, y: 0, z: 0 },
+            position: { x: 0, y: -2.05, z: 0 },
             rotation: { x: 0, y: 0, z: 0 },
             heightOffset: 2.05 // Default height offset for movement
         }
@@ -33,7 +33,7 @@ export const CHARACTER_MODELS = [
 ];
 
 // Default character model ID
-export const DEFAULT_CHARACTER_MODEL = 'monk-v3';
+export const DEFAULT_CHARACTER_MODEL = 'monk';
 
 // Available model size multipliers
 export const MODEL_SIZE_MULTIPLIERS = [

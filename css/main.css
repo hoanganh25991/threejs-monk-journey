@@ -7,13 +7,13 @@
 @import 'reset.css';
 
 /* Import layout styles */
-@import 'layout.css';
+@import 'orientation-message.css';
+
+/* Import loading screen styles */
+@import 'core/loading-screen.css';
 
 /* Import Game styles */
 @import 'core/game.css';
-
-/* Import HUD Manager styles */
-@import 'core/hud-manager.css';
 
 /* Import Game Menu styles */
 @import 'core/game-menu.css';
@@ -21,8 +21,11 @@
 /* Import Settings Menu styles */
 @import 'core/settings-menu.css';
 
-/* Import loading screen styles */
-@import 'core/loading-screen.css';
+/* Import HUD Manager styles */
+@import 'core/hud-manager.css';
+
+/* Import HUD > Dialog styles */
+@import 'core/dialog.css';
 
 /* Import performance manager styles */
 @import 'core/performance-manager.css';

@@ -1,0 +1,18 @@
+/* Dialog Box */
+#dialog-box {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 800px;
+    background-color: rgba(0, 0, 0, 0.8); /* Darker background for better visibility */
+    border: 2px solid #f0c14b; /* Gold border for emphasis */
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Add shadow for depth */
+    z-index: 1000; /* Ensure it's above other elements */
+    color: white;
+    display: none;
+    pointer-events: auto;
+}
