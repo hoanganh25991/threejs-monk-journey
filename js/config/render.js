@@ -46,8 +46,8 @@ export const RENDER_CONFIG = {
     // Medium quality - for average devices
     medium: {
         init: {
-            antialias: false,
-            powerPreference: 'high-performance', // Changed from 'default' to 'high-performance'
+            antialias: false, // Matches quality-levels.js (line 33)
+            powerPreference: 'high-performance',
             precision: 'mediump',
             stencil: false,
             logarithmicDepthBuffer: false,

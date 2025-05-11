@@ -5,7 +5,7 @@ import { qualityLevels } from '../config/quality-levels.js';
 export class PerformanceManager {
     constructor(game) {
         this.game = game;
-        this.targetFPS = 30;
+        this.targetFPS = 60; // Changed from 30 to 60 for better default performance
         this.fpsHistory = [];
         this.historySize = 30; // Store last 30 frames for smoothing
         this.adaptiveQualityEnabled = false; // Disabled by default
