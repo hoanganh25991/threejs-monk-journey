@@ -33,7 +33,7 @@ export class SkillPreview {
         
         // Auto-play settings
         this.autoPlayEnabled = true;
-        this.autoPlayInterval = 1; // seconds between skill effects
+        this.autoPlayInterval = 0.5; // seconds between skill effects
         this.autoPlayTimer = 0;
         
         // Check if there's an existing wrapper
@@ -436,6 +436,34 @@ export class SkillPreview {
         } else {
             // If not visible, don't request another frame
             this.animationId = null;
+        }
+    }
+    
+    /**
+     * Force restart the animation loop and set visibility to true
+     * This can be called when the tab is clicked or when the preview becomes visible
+     */
+    forceRestartAnimation() {
+        console.debug('SkillPreview: Force restarting animation');
+        
+        // Set visibility to true
+        this.isVisible = true;
+        
+        // Cancel any existing animation frame
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+        
+        // Restart the animation loop
+        this.animate();
+        
+        // If there's a current skill, reset the timer to trigger immediate playback
+        if (this.currentSkillData) {
+            this.autoPlayTimer = this.autoPlayInterval; // Set to trigger immediate replay
+            
+            // Force recreate the skill effect
+            this.createSkillEffect(this.currentSkillData);
         }
     }
     

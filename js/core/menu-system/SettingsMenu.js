@@ -139,6 +139,12 @@ export class SettingsMenu extends UIComponent {
                         // Use setTimeout to ensure the tab is visible before resizing
                         setTimeout(() => {
                             this.resizeSkillsPreview();
+                            
+                            // Force restart the animation when the skills preview tab is clicked
+                            this.skillPreview.forceRestartAnimation();
+                            
+                            // Also play the current skill effect
+                            this.playCurrentSkillEffect();
                         }, 50);
                     }
                 }
@@ -1086,6 +1092,18 @@ export class SettingsMenu extends UIComponent {
             // Use setTimeout to ensure the menu is fully visible
             setTimeout(() => {
                 this.resizeModelPreviewFullscreen();
+            }, 100);
+        }
+        
+        // Check if skills preview is initialized and restart animation if needed
+        if (this.skillPreview) {
+            // Use setTimeout to ensure the menu is fully visible
+            setTimeout(() => {
+                // Force restart the animation when the settings menu is opened
+                this.skillPreview.forceRestartAnimation();
+                
+                // Also resize the skills preview
+                this.resizeSkillsPreview();
             }, 100);
         }
     }
