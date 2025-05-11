@@ -31,9 +31,3 @@
 .ready-pulse {
     animation: ready-pulse 2s infinite ease-in-out;
 }
-
-/* GPU Indicator Hover */
-#gpu-indicator:hover {
-    background-color: rgba(0, 0, 0, 0.7);
-    opacity: 1 !important;
-}

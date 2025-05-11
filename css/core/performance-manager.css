@@ -23,6 +23,11 @@
     transition: background-color 0.2s, opacity 0.2s;
 }
 
+#gpu-indicator:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+    opacity: 1 !important;
+}
+
 #gpu-info-panel {
     position: absolute;
     top: 0px;

@@ -9,6 +9,9 @@
 /* Import layout styles */
 @import 'orientation-message.css';
 
+/* Import initial loading styles */
+@import 'initial-loading.css';
+
 /* Import loading screen styles */
 @import 'core/loading-screen.css';
 
@@ -33,8 +36,8 @@
 /* Import notifications styles */
 @import 'core/notifications.css';
 
-/* Import initial loading styles */
-@import 'initial-loading.css';
+/* Import camera info panel styles */
+@import 'core/skill-preview.css';
 
 /* Import animation styles */
 @import 'animations.css';

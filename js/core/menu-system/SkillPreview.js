@@ -145,8 +145,8 @@ export class SkillPreview {
             this.controls = new OrbitControls(this.camera, this.renderer.domElement);
             this.controls.enableDamping = true;
             this.controls.dampingFactor = 0.05;
-            this.controls.minDistance = 4.5; // Increased from 3 (3 * 1.5 = 4.5)
-            this.controls.maxDistance = 18; // Increased from 12 (12 * 1.5 = 18)
+            this.controls.minDistance = 0;
+            this.controls.maxDistance = 200;
             this.controls.enablePan = true;
             this.controls.target.set(0, 0, 0); // Ensure controls orbit around the center
             
@@ -412,68 +412,42 @@ export class SkillPreview {
      * @private
      */
     createCameraInfoPanel() {
-        // Create camera info panel
-        const panel = document.createElement('div');
-        panel.className = 'camera-info-panel';
-        panel.style.position = 'absolute';
-        panel.style.bottom = '10px';
-        panel.style.left = '10px';
-        panel.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        panel.style.color = 'white';
-        panel.style.padding = '10px';
-        panel.style.borderRadius = '5px';
-        panel.style.fontSize = '12px';
-        panel.style.fontFamily = 'monospace';
-        panel.style.zIndex = '1000';
-        panel.style.pointerEvents = 'none'; // Don't interfere with mouse events
-        panel.style.maxWidth = '280px';
-        panel.style.transition = 'opacity 0.3s';
+        // Get the template from the DOM
+        const template = document.getElementById('camera-info-template');
         
-        // Create info content
-        const infoContent = document.createElement('div');
-        infoContent.id = 'camera-info-content';
-        panel.appendChild(infoContent);
+        // If template doesn't exist, create a fallback panel
+        if (!template) {
+            console.error('Camera info template not found, creating fallback panel');
+            return;
+        }
         
-        // Create reset button
-        const resetButton = document.createElement('button');
-        resetButton.textContent = 'Reset Camera';
-        resetButton.style.marginTop = '10px';
-        resetButton.style.padding = '5px 10px';
-        resetButton.style.backgroundColor = '#4a6fa5';
-        resetButton.style.border = 'none';
-        resetButton.style.borderRadius = '3px';
-        resetButton.style.color = 'white';
-        resetButton.style.cursor = 'pointer';
-        resetButton.style.pointerEvents = 'auto'; // Enable mouse events for button
-        resetButton.onclick = () => this.resetCamera();
-        panel.appendChild(resetButton);
-        
-        // Add toggle button for info panel
-        const toggleButton = document.createElement('button');
-        toggleButton.textContent = 'Hide Info';
-        toggleButton.style.marginTop = '5px';
-        toggleButton.style.marginLeft = '5px';
-        toggleButton.style.padding = '5px 10px';
-        toggleButton.style.backgroundColor = '#333';
-        toggleButton.style.border = 'none';
-        toggleButton.style.borderRadius = '3px';
-        toggleButton.style.color = 'white';
-        toggleButton.style.cursor = 'pointer';
-        toggleButton.style.pointerEvents = 'auto'; // Enable mouse events for button
-        toggleButton.onclick = () => {
-            if (infoContent.style.display === 'none') {
-                infoContent.style.display = 'block';
-                toggleButton.textContent = 'Hide Info';
-            } else {
-                infoContent.style.display = 'none';
-                toggleButton.textContent = 'Show Info';
-            }
-        };
-        panel.appendChild(toggleButton);
+        // Clone the template content
+        const panelContent = template.content.cloneNode(true);
         
         // Add panel to wrapper
-        this.wrapper.appendChild(panel);
-        this.cameraInfoPanel = infoContent;
+        this.wrapper.appendChild(panelContent);
+        
+        // Store references to elements
+        this.cameraInfoPanel = this.wrapper.querySelector('#camera-info-content');
+        
+        // Set up event listeners
+        const resetButton = this.wrapper.querySelector('#reset-camera-button');
+        if (resetButton) {
+            resetButton.addEventListener('click', () => this.resetCamera());
+        }
+        
+        const toggleButton = this.wrapper.querySelector('#toggle-info-button');
+        if (toggleButton) {
+            toggleButton.addEventListener('click', () => {
+                if (this.cameraInfoPanel.style.display === 'none') {
+                    this.cameraInfoPanel.style.display = 'block';
+                    toggleButton.textContent = 'Hide Info';
+                } else {
+                    this.cameraInfoPanel.style.display = 'none';
+                    toggleButton.textContent = 'Show Info';
+                }
+            });
+        }
     }
     
     /**
@@ -489,23 +463,67 @@ export class SkillPreview {
         const target = this.controls.target;
         
         // Calculate zoom percentage based on min and max distance
+        // Allow zoom percentage to go below 0 for extreme zoom out
         const zoomRange = this.controls.maxDistance - this.controls.minDistance;
         const currentZoom = distance - this.controls.minDistance;
         const zoomPercentage = Math.round((1 - (currentZoom / zoomRange)) * 100);
         
-        this.cameraInfoPanel.innerHTML = `
-            <div><strong>Camera Position:</strong></div>
-            <div>X: ${pos.x.toFixed(2)}</div>
-            <div>Y: ${pos.y.toFixed(2)}</div>
-            <div>Z: ${pos.z.toFixed(2)}</div>
-            <div><strong>Distance:</strong> ${distance.toFixed(2)}</div>
-            <div><strong>Zoom:</strong> ${zoomPercentage}%</div>
-            <div><strong>Target:</strong></div>
-            <div>X: ${target.x.toFixed(2)}, Y: ${target.y.toFixed(2)}, Z: ${target.z.toFixed(2)}</div>
-            <div><strong>Controls:</strong></div>
-            <div>Min Distance: ${this.controls.minDistance}</div>
-            <div>Max Distance: ${this.controls.maxDistance}</div>
-        `;
+        // Try to update using the template elements first
+        const panel = this.wrapper.querySelector('.camera-info-panel');
+        if (panel) {
+            // Update position values
+            const posX = panel.querySelector('.camera-pos-x');
+            const posY = panel.querySelector('.camera-pos-y');
+            const posZ = panel.querySelector('.camera-pos-z');
+            if (posX) posX.textContent = pos.x.toFixed(2);
+            if (posY) posY.textContent = pos.y.toFixed(2);
+            if (posZ) posZ.textContent = pos.z.toFixed(2);
+            
+            // Update distance and zoom
+            const distanceEl = panel.querySelector('.camera-distance');
+            const zoomEl = panel.querySelector('.camera-zoom');
+            if (distanceEl) distanceEl.textContent = distance.toFixed(2);
+            if (zoomEl) zoomEl.textContent = `${zoomPercentage}%`;
+            
+            // Update target values
+            const targetX = panel.querySelector('.camera-target-x');
+            const targetY = panel.querySelector('.camera-target-y');
+            const targetZ = panel.querySelector('.camera-target-z');
+            if (targetX) targetX.textContent = target.x.toFixed(2);
+            if (targetY) targetY.textContent = target.y.toFixed(2);
+            if (targetZ) targetZ.textContent = target.z.toFixed(2);
+            
+            // Update control values
+            const minDistance = panel.querySelector('.camera-min-distance');
+            const maxDistance = panel.querySelector('.camera-max-distance');
+            if (minDistance) minDistance.textContent = this.controls.minDistance.toFixed(2);
+            if (maxDistance) maxDistance.textContent = this.controls.maxDistance.toFixed(2);
+        } else {
+            // Fallback to innerHTML if template elements are not found
+            this.cameraInfoPanel.innerHTML = `
+                <div class="camera-info-section">
+                    <div class="camera-info-row"><span class="camera-info-label">Camera Position:</span></div>
+                    <div class="camera-info-row">X: <span class="camera-info-value">${pos.x.toFixed(2)}</span></div>
+                    <div class="camera-info-row">Y: <span class="camera-info-value">${pos.y.toFixed(2)}</span></div>
+                    <div class="camera-info-row">Z: <span class="camera-info-value">${pos.z.toFixed(2)}</span></div>
+                </div>
+                <div class="camera-info-section">
+                    <div class="camera-info-row"><span class="camera-info-label">Distance:</span> <span class="camera-info-value">${distance.toFixed(2)}</span></div>
+                    <div class="camera-info-row"><span class="camera-info-label">Zoom:</span> <span class="camera-info-value">${zoomPercentage}%</span></div>
+                </div>
+                <div class="camera-info-section">
+                    <div class="camera-info-row"><span class="camera-info-label">Target:</span></div>
+                    <div class="camera-info-row">X: <span class="camera-info-value">${target.x.toFixed(2)}</span>, 
+                       Y: <span class="camera-info-value">${target.y.toFixed(2)}</span>, 
+                       Z: <span class="camera-info-value">${target.z.toFixed(2)}</span></div>
+                </div>
+                <div class="camera-info-section">
+                    <div class="camera-info-row"><span class="camera-info-label">Controls:</span></div>
+                    <div class="camera-info-row">Min Distance: <span class="camera-info-value">${this.controls.minDistance.toFixed(2)}</span></div>
+                    <div class="camera-info-row">Max Distance: <span class="camera-info-value">${this.controls.maxDistance.toFixed(2)}</span></div>
+                </div>
+            `;
+        }
     }
     
     /**
@@ -604,28 +622,6 @@ export class SkillPreview {
      * Reset camera to default position
      */
     resetCamera() {
-        // Store current values for comparison
-        const oldPosition = this.camera.position.clone();
-        const oldTarget = this.controls.target.clone();
-        
-        // Create notification element for reset info
-        const notification = document.createElement('div');
-        notification.className = 'camera-reset-notification';
-        notification.style.position = 'absolute';
-        notification.style.top = '50%';
-        notification.style.left = '50%';
-        notification.style.transform = 'translate(-50%, -50%)';
-        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        notification.style.color = 'white';
-        notification.style.padding = '15px';
-        notification.style.borderRadius = '5px';
-        notification.style.fontSize = '14px';
-        notification.style.fontFamily = 'monospace';
-        notification.style.zIndex = '1001';
-        notification.style.maxWidth = '80%';
-        notification.style.textAlign = 'left';
-        notification.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
-        
         // Reset camera to initial position if available, otherwise use default values
         if (this.initialCameraPosition) {
             this.camera.position.copy(this.initialCameraPosition);
@@ -643,47 +639,13 @@ export class SkillPreview {
         this.camera.lookAt(this.initialCameraTarget);
         this.controls.reset();
         
-        // Build notification content showing what changed
-        let content = '<strong>Camera Reset</strong><br><br>';
-        content += '<strong>Position:</strong><br>';
-        content += `X: ${oldPosition.x.toFixed(2)} → ${this.camera.position.x.toFixed(2)}<br>`;
-        content += `Y: ${oldPosition.y.toFixed(2)} → ${this.camera.position.y.toFixed(2)}<br>`;
-        content += `Z: ${oldPosition.z.toFixed(2)} → ${this.camera.position.z.toFixed(2)}<br><br>`;
-        
-        content += '<strong>Target:</strong><br>';
-        content += `X: ${oldTarget.x.toFixed(2)} → ${this.controls.target.x.toFixed(2)}<br>`;
-        content += `Y: ${oldTarget.y.toFixed(2)} → ${this.controls.target.y.toFixed(2)}<br>`;
-        content += `Z: ${oldTarget.z.toFixed(2)} → ${this.controls.target.z.toFixed(2)}<br><br>`;
-        
-        // Calculate distance before and after
-        const oldDistance = Math.sqrt(
-            oldPosition.x * oldPosition.x + 
-            oldPosition.y * oldPosition.y + 
-            oldPosition.z * oldPosition.z
-        );
-        
-        const newDistance = Math.sqrt(
-            this.camera.position.x * this.camera.position.x + 
-            this.camera.position.y * this.camera.position.y + 
-            this.camera.position.z * this.camera.position.z
-        );
-        
-        content += `<strong>Distance:</strong> ${oldDistance.toFixed(2)} → ${newDistance.toFixed(2)}`;
-        
-        notification.innerHTML = content;
-        
-        // Add notification to wrapper
-        this.wrapper.appendChild(notification);
-        
-        // Remove notification after 5 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 5000);
-        
         // Update camera info panel immediately
         this.updateCameraInfoPanel();
+        
+        console.debug('Camera reset to initial position:', 
+            this.camera.position.toArray().map(v => v.toFixed(2)).join(', '),
+            'Target:', this.controls.target.toArray().map(v => v.toFixed(2)).join(', ')
+        );
     }
     
     /**
@@ -704,16 +666,23 @@ export class SkillPreview {
             this.renderer.dispose();
         }
         
-        // Remove camera info panel and any notifications
+        // Remove camera info panel
         const cameraInfoPanel = this.wrapper.querySelector('.camera-info-panel');
         if (cameraInfoPanel) {
+            // Remove event listeners
+            const resetButton = cameraInfoPanel.querySelector('#reset-camera-button');
+            if (resetButton) {
+                resetButton.removeEventListener('click', this.resetCamera);
+            }
+            
+            const toggleButton = cameraInfoPanel.querySelector('#toggle-info-button');
+            if (toggleButton) {
+                toggleButton.removeEventListener('click', () => {});
+            }
+            
+            // Remove from DOM
             cameraInfoPanel.parentNode.removeChild(cameraInfoPanel);
         }
-        
-        const resetNotifications = this.wrapper.querySelectorAll('.camera-reset-notification');
-        resetNotifications.forEach(notification => {
-            notification.parentNode.removeChild(notification);
-        });
         
         // Remove DOM elements
         if (this.wrapper && this.wrapper.parentNode) {
