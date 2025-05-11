@@ -125,6 +125,13 @@ export class WorldManager {
             if (this.game && this.game.enemyManager) {
                 this.game.enemyManager.onPlayerMovedScreenDistance(playerPosition);
             }
+            
+            // Force cleanup of distant terrain chunks when player moves significant distance
+            // This ensures memory is properly released during long-distance travel
+            if (distanceMoved >= this.screenSpawnDistance * 3) {
+                console.debug(`Player moved significant distance (${distanceMoved.toFixed(1)}), forcing terrain cleanup`);
+                this.terrainManager.clearDistantChunks();
+            }
         }
         
         // Update fog density based on draw distance for atmospheric effect
@@ -167,6 +174,11 @@ export class WorldManager {
                 if (avgFPS < 30) {
                     console.debug(`Low FPS detected (${avgFPS.toFixed(1)}), performing aggressive cleanup`);
                     this.performAggressiveCleanup();
+                } else {
+                    // Even if FPS is good, periodically clean up distant terrain to prevent memory buildup
+                    // This addresses the issue of memory accumulation during long-distance travel
+                    console.debug("Performing routine terrain cleanup to prevent memory buildup");
+                    this.terrainManager.clearDistantChunks();
                 }
             }
         }
@@ -197,6 +209,11 @@ export class WorldManager {
                         if (this.game.uiManager.showNotification) {
                             this.game.uiManager.showNotification(message, 3000);
                         }
+                    }
+                    
+                    // If switching to low performance mode, force terrain cleanup
+                    if (this.lowPerformanceMode) {
+                        this.terrainManager.clearDistantChunks(this.terrainChunkViewDistance);
                     }
                 }
             }

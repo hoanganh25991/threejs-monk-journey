@@ -226,7 +226,7 @@ export class TerrainManager {
             this.processTerrainGenerationQueue();
         }
         
-        // Remove terrain chunks that are no longer visible but keep them in buffer
+        // Remove terrain chunks that are no longer visible
         for (const chunkKey in this.visibleTerrainChunks) {
             if (!newVisibleTerrainChunks[chunkKey]) {
                 // Instead of removing, move to buffer if within buffer distance
@@ -234,7 +234,11 @@ export class TerrainManager {
                 const distX = Math.abs(x - centerX);
                 const distZ = Math.abs(z - centerZ);
                 
-                if (distX <= this.terrainBufferDistance && distZ <= this.terrainBufferDistance) {
+                // Use a more aggressive buffer distance calculation
+                // Only keep chunks in buffer that are just outside view distance
+                const bufferDistance = Math.min(this.terrainBufferDistance, viewDistance + 2);
+                
+                if (distX <= bufferDistance && distZ <= bufferDistance) {
                     // Move to buffer instead of removing
                     this.terrainBuffer[chunkKey] = this.terrainChunks[chunkKey];
                     delete this.terrainChunks[chunkKey];
@@ -246,13 +250,77 @@ export class TerrainManager {
                     }
                 } else {
                     // If outside buffer distance, remove completely
-                    this.removeTerrainChunk(chunkKey);
+                    this.removeTerrainChunk(chunkKey, true); // Force cleanup of associated objects
                 }
             }
         }
         
+        // Periodically check buffer for chunks that are too far away
+        // This helps prevent buffer from growing too large during long-distance travel
+        if (Math.random() < 0.1) { // 10% chance each update to check buffer
+            this.cleanupBufferChunks(centerX, centerZ, viewDistance);
+        }
+        
         // Update the visible terrain chunks
         this.visibleTerrainChunks = newVisibleTerrainChunks;
+    }
+    
+    /**
+     * Clean up buffer chunks that are too far from player
+     * @param {number} centerX - Center X chunk coordinate
+     * @param {number} centerZ - Center Z chunk coordinate
+     * @param {number} viewDistance - Current view distance
+     */
+    cleanupBufferChunks(centerX, centerZ, viewDistance) {
+        // Use a more aggressive buffer distance calculation
+        const bufferDistance = Math.min(this.terrainBufferDistance, viewDistance + 2);
+        const chunksToRemove = [];
+        
+        for (const chunkKey in this.terrainBuffer) {
+            const [x, z] = chunkKey.split(',').map(Number);
+            const distX = Math.abs(x - centerX);
+            const distZ = Math.abs(z - centerZ);
+            
+            // If chunk is too far away, mark for removal
+            if (distX > bufferDistance || distZ > bufferDistance) {
+                chunksToRemove.push(chunkKey);
+            }
+        }
+        
+        // Remove marked chunks
+        if (chunksToRemove.length > 0) {
+            console.debug(`Cleaning up ${chunksToRemove.length} distant buffer chunks`);
+            
+            chunksToRemove.forEach(chunkKey => {
+                const chunk = this.terrainBuffer[chunkKey];
+                
+                // Remove from scene if needed
+                if (chunk && chunk.parent) {
+                    this.scene.remove(chunk);
+                }
+                
+                // Dispose of geometry and materials
+                if (chunk && chunk.geometry) {
+                    chunk.geometry.dispose();
+                }
+                
+                if (chunk && chunk.material) {
+                    const materials = Array.isArray(chunk.material) ? chunk.material : [chunk.material];
+                    materials.forEach(material => {
+                        if (material.map) material.map.dispose();
+                        material.dispose();
+                    });
+                }
+                
+                // Remove from buffer
+                delete this.terrainBuffer[chunkKey];
+            });
+            
+            // Hint for garbage collection after significant cleanup
+            if (chunksToRemove.length > 3 && this.worldManager) {
+                this.worldManager.hintGarbageCollection();
+            }
+        }
     }
     
     /**
@@ -740,10 +808,12 @@ export class TerrainManager {
         
         // Remove marked chunks
         chunksToRemove.forEach(chunkKey => {
-            this.removeTerrainChunk(chunkKey);
+            this.removeTerrainChunk(chunkKey, true); // Force cleanup of associated objects
         });
         
-        // Clear distant chunks from buffer
+        // Clear distant chunks from buffer - be more aggressive with buffer cleanup
+        // Buffer should only keep chunks that are just outside the view distance
+        const bufferClearDistance = Math.max(clearDistance - 1, this.terrainChunkViewDistance + 1);
         const bufferToRemove = [];
         for (const chunkKey in this.terrainBuffer) {
             const [x, z] = chunkKey.split(',').map(Number);
@@ -751,7 +821,8 @@ export class TerrainManager {
             const distZ = Math.abs(z - centerZ);
             
             // If chunk is too far away, mark for removal
-            if (distX > clearDistance || distZ > clearDistance) {
+            // Use a stricter distance check for buffer chunks
+            if (distX > bufferClearDistance || distZ > bufferClearDistance) {
                 bufferToRemove.push(chunkKey);
             }
         }
@@ -792,6 +863,13 @@ export class TerrainManager {
         // Count chunks after cleanup
         const chunkCountAfter = Object.keys(this.terrainChunks).length;
         const bufferCountAfter = Object.keys(this.terrainBuffer).length;
+        
+        // Force a garbage collection hint after significant cleanup
+        if ((chunkCountBefore - chunkCountAfter) + (bufferCountBefore - bufferCountAfter) > 5) {
+            if (this.worldManager) {
+                this.worldManager.hintGarbageCollection();
+            }
+        }
         
         console.debug(`Cleared distant chunks: ${chunkCountBefore - chunkCountAfter} active, ${bufferCountBefore - bufferCountAfter} buffered`);
     }
