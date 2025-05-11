@@ -20,7 +20,8 @@ export class InputHandler {
             KeyU: 'Digit5',
             KeyI: 'Digit6',
             KeyO: 'Digit7',
-            KeyP: 'Digit8'  // P key as alternative to Digit8
+            KeyP: 'Digit8',  // P key as alternative to Digit8
+            BracketRight: 'Digit9'  // ] key as alternative to Digit9
         };
         
         // Track skill keys being held down
@@ -34,6 +35,7 @@ export class InputHandler {
             Digit6: false,
             Digit7: false,
             Digit8: false, // 8 key for Breath of Heaven
+            Digit9: false, // 9 key for Shield of Zen
             // Alternative keys
             KeyJ: false, // Alternative to Digit1
             KeyK: false, // Alternative to Digit2
@@ -42,7 +44,8 @@ export class InputHandler {
             KeyU: false, // Alternative to Digit5
             KeyI: false, // Alternative to Digit6
             KeyO: false, // Alternative to Digit7
-            KeyP: false  // Alternative to Digit8
+            KeyP: false,  // Alternative to Digit8
+            BracketRight: false // Alternative to Digit9
         };
         
         // Cooldown tracking for continuous casting
@@ -56,6 +59,7 @@ export class InputHandler {
             Digit6: 0,
             Digit7: 0,
             Digit8: 0, // 8 key for Breath of Heaven
+            Digit9: 0, // 9 key for Shield of Zen
             // Alternative keys
             KeyJ: 0, // Alternative to Digit1
             KeyK: 0, // Alternative to Digit2
@@ -64,7 +68,8 @@ export class InputHandler {
             KeyU: 0, // Alternative to Digit5
             KeyI: 0, // Alternative to Digit6
             KeyO: 0, // Alternative to Digit7
-            KeyP: 0  // Alternative to Digit8
+            KeyP: 0,  // Alternative to Digit8
+            BracketRight: 0 // Alternative to Digit9
         };
         
         // Initialize input event listeners
@@ -132,6 +137,7 @@ export class InputHandler {
                 case 'Digit6':
                 case 'Digit7':
                 case 'Digit8':
+                case 'Digit9':
                     // Mark skill key as held down
                     this.skillKeysHeld[event.code] = true;
                     

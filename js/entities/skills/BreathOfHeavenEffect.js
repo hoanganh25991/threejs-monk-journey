@@ -4,6 +4,7 @@ import { SkillEffect } from './SkillEffect.js';
 /**
  * Effect for the Breath of Heaven skill
  * Creates a healing aura around the player that heals allies and damages enemies
+ * After duration, provides a lingering effect that follows the player
  */
 export class BreathOfHeavenEffect extends SkillEffect {
     constructor(skill) {
@@ -11,6 +12,12 @@ export class BreathOfHeavenEffect extends SkillEffect {
         this.healingPulses = [];
         this.healingRate = 0.5; // Heal every 0.5 seconds
         this.lastHealTime = 0;
+        
+        // New properties for the lingering effect
+        this.lingeringEffect = null;
+        this.hasLingeringEffect = false;
+        this.lingeringDuration = 10; // Duration of lingering effect in seconds
+        this.lingeringElapsedTime = 0;
     }
 
     /**
@@ -87,60 +94,261 @@ export class BreathOfHeavenEffect extends SkillEffect {
      * @param {number} delta - Time since last update in seconds
      */
     update(delta) {
-        if (!this.isActive || !this.effect) return;
+        // Handle the main effect
+        if (this.isActive && this.effect) {
+            super.update(delta);
+            
+            // Animate particles
+            if (this.particles) {
+                const positions = this.particles.geometry.attributes.position.array;
+                const count = positions.length / 3;
+                
+                for (let i = 0; i < count; i++) {
+                    // Move particles outward slowly
+                    const x = positions[i * 3];
+                    const y = positions[i * 3 + 1];
+                    const z = positions[i * 3 + 2];
+                    
+                    const length = Math.sqrt(x * x + y * y + z * z);
+                    const speed = 0.2 * delta;
+                    
+                    // If particle is near the edge, reset it to the center
+                    if (length > this.skill.radius * 0.9) {
+                        positions[i * 3] = (Math.random() - 0.5) * 0.5;
+                        positions[i * 3 + 1] = (Math.random() - 0.5) * 0.5;
+                        positions[i * 3 + 2] = (Math.random() - 0.5) * 0.5;
+                    } else {
+                        // Move outward
+                        positions[i * 3] += (x / length) * speed;
+                        positions[i * 3 + 1] += (y / length) * speed;
+                        positions[i * 3 + 2] += (z / length) * speed;
+                    }
+                }
+                
+                this.particles.geometry.attributes.position.needsUpdate = true;
+            }
+            
+            // Pulse the aura
+            const pulseFactor = 1 + 0.1 * Math.sin(this.elapsedTime * 5);
+            this.effect.children[0].scale.set(pulseFactor, pulseFactor, pulseFactor);
+            
+            // Apply healing effect at intervals
+            this.lastHealTime += delta;
+            if (this.lastHealTime >= this.healingRate) {
+                this.applyHealingEffect();
+                this.lastHealTime = 0;
+            }
+            
+            // Fade out near the end of duration
+            if (this.elapsedTime > this.skill.duration * 0.8) {
+                const fadeRatio = 1 - (this.elapsedTime - this.skill.duration * 0.8) / (this.skill.duration * 0.2);
+                this.effect.children.forEach(child => {
+                    if (child.material) {
+                        child.material.opacity = Math.max(0, child.material.opacity * fadeRatio);
+                    }
+                });
+            }
+            
+            // Check if the main effect has just ended and we need to create the lingering effect
+            if (this.elapsedTime >= this.skill.duration && !this.hasLingeringEffect) {
+                this.createLingeringEffect();
+            }
+        }
         
-        super.update(delta);
+        // Handle the lingering effect that follows the player
+        if (this.hasLingeringEffect && this.lingeringEffect) {
+            this.updateLingeringEffect(delta);
+        }
+    }
+
+    /**
+     * Create the lingering effect that follows the player after the main effect ends
+     */
+    createLingeringEffect() {
+        if (!this.skill.game || !this.skill.game.player) return;
+        
+        // Create a new group for the lingering effect
+        const lingeringGroup = new THREE.Group();
+        
+        // Create particles that will surround the hero
+        const particleCount = 30;
+        const particleGeometry = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        const particleSizes = new Float32Array(particleCount);
+        const particleColors = new Float32Array(particleCount * 3);
+        
+        // Create particles in a spiral pattern around the player
+        for (let i = 0; i < particleCount; i++) {
+            // Spiral pattern
+            const angle = (i / particleCount) * Math.PI * 10;
+            const radius = 0.8 + (i / particleCount) * 0.5;
+            const height = (i / particleCount) * 2 - 1;
+            
+            particlePositions[i * 3] = Math.cos(angle) * radius;
+            particlePositions[i * 3 + 1] = height;
+            particlePositions[i * 3 + 2] = Math.sin(angle) * radius;
+            
+            // Vary particle sizes
+            particleSizes[i] = 0.1 + Math.random() * 0.2;
+            
+            // Color gradient from gold to white
+            const t = i / particleCount;
+            particleColors[i * 3] = 1.0;  // R: Full red for gold
+            particleColors[i * 3 + 1] = 0.7 + t * 0.3;  // G: Partial green for gold, increasing to white
+            particleColors[i * 3 + 2] = 0.3 + t * 0.7;  // B: Low blue for gold, increasing to white
+        }
+        
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        particleGeometry.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1));
+        particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+        
+        // Create a custom shader material for better-looking particles
+        const particleMaterial = new THREE.PointsMaterial({
+            size: 0.2,
+            transparent: true,
+            opacity: 0.8,
+            vertexColors: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        
+        const particles = new THREE.Points(particleGeometry, particleMaterial);
+        lingeringGroup.add(particles);
+        
+        // Add a subtle glow effect
+        const glowGeometry = new THREE.SphereGeometry(1.2, 16, 16);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffcc66, // Golden glow
+            transparent: true,
+            opacity: 0.15,
+            side: THREE.DoubleSide
+        });
+        
+        const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+        lingeringGroup.add(glowMesh);
+        
+        // Position at the player
+        const player = this.skill.game.player;
+        lingeringGroup.position.copy(player.position);
+        
+        // Add to scene
+        if (this.effect && this.effect.parent) {
+            this.effect.parent.add(lingeringGroup);
+        } else if (this.skill.game.scene) {
+            this.skill.game.scene.add(lingeringGroup);
+        }
+        
+        // Store the lingering effect
+        this.lingeringEffect = lingeringGroup;
+        this.hasLingeringEffect = true;
+        this.lingeringElapsedTime = 0;
+        
+        // Apply speed boost to player
+        if (player.stats) {
+            player.stats.addTemporaryBoost('moveSpeed', 0.3, this.lingeringDuration); // 30% speed boost
+        }
+        
+        // Play a sound for the speed boost effect
+        if (this.skill.game.audioManager && this.skill.sounds && this.skill.sounds.speedBoost) {
+            this.skill.game.audioManager.playSound(this.skill.sounds.speedBoost);
+        }
+        
+        // Show a message to the player
+        if (this.skill.game.uiManager) {
+            this.skill.game.uiManager.showMessage("Speed boost active!", 2);
+        }
+    }
+    
+    /**
+     * Update the lingering effect that follows the player
+     * @param {number} delta - Time since last update in seconds
+     */
+    updateLingeringEffect(delta) {
+        if (!this.lingeringEffect || !this.skill.game || !this.skill.game.player) return;
+        
+        this.lingeringElapsedTime += delta;
+        
+        // Update position to follow player
+        const player = this.skill.game.player;
+        this.lingeringEffect.position.copy(player.position);
         
         // Animate particles
-        if (this.particles) {
-            const positions = this.particles.geometry.attributes.position.array;
+        const particles = this.lingeringEffect.children[0];
+        if (particles && particles.geometry) {
+            const positions = particles.geometry.attributes.position.array;
             const count = positions.length / 3;
             
             for (let i = 0; i < count; i++) {
-                // Move particles outward slowly
+                // Rotate particles around the player
                 const x = positions[i * 3];
-                const y = positions[i * 3 + 1];
                 const z = positions[i * 3 + 2];
                 
-                const length = Math.sqrt(x * x + y * y + z * z);
-                const speed = 0.2 * delta;
+                // Rotate around Y axis
+                const angle = delta * (1 + i % 3) * 0.5; // Vary rotation speed
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
                 
-                // If particle is near the edge, reset it to the center
-                if (length > this.skill.radius * 0.9) {
-                    positions[i * 3] = (Math.random() - 0.5) * 0.5;
-                    positions[i * 3 + 1] = (Math.random() - 0.5) * 0.5;
-                    positions[i * 3 + 2] = (Math.random() - 0.5) * 0.5;
-                } else {
-                    // Move outward
-                    positions[i * 3] += (x / length) * speed;
-                    positions[i * 3 + 1] += (y / length) * speed;
-                    positions[i * 3 + 2] += (z / length) * speed;
-                }
+                positions[i * 3] = x * cos - z * sin;
+                positions[i * 3 + 2] = x * sin + z * cos;
+                
+                // Oscillate height
+                positions[i * 3 + 1] += Math.sin(this.lingeringElapsedTime * 5 + i * 0.1) * 0.01;
             }
             
-            this.particles.geometry.attributes.position.needsUpdate = true;
+            particles.geometry.attributes.position.needsUpdate = true;
         }
         
-        // Pulse the aura
-        const pulseFactor = 1 + 0.1 * Math.sin(this.elapsedTime * 5);
-        this.effect.children[0].scale.set(pulseFactor, pulseFactor, pulseFactor);
-        
-        // Apply healing effect at intervals
-        this.lastHealTime += delta;
-        if (this.lastHealTime >= this.healingRate) {
-            this.applyHealingEffect();
-            this.lastHealTime = 0;
+        // Pulse the glow
+        const glow = this.lingeringEffect.children[1];
+        if (glow) {
+            const pulseFactor = 1 + 0.1 * Math.sin(this.lingeringElapsedTime * 3);
+            glow.scale.set(pulseFactor, pulseFactor, pulseFactor);
+            
+            // Fade out near the end of duration
+            if (this.lingeringElapsedTime > this.lingeringDuration * 0.7) {
+                const fadeRatio = 1 - (this.lingeringElapsedTime - this.lingeringDuration * 0.7) / (this.lingeringDuration * 0.3);
+                this.lingeringEffect.children.forEach(child => {
+                    if (child.material) {
+                        child.material.opacity = Math.max(0, child.material.opacity * fadeRatio);
+                    }
+                });
+            }
         }
         
-        // Fade out near the end of duration
-        if (this.elapsedTime > this.skill.duration * 0.8) {
-            const fadeRatio = 1 - (this.elapsedTime - this.skill.duration * 0.8) / (this.skill.duration * 0.2);
-            this.effect.children.forEach(child => {
-                if (child.material) {
-                    child.material.opacity = Math.max(0, child.material.opacity * fadeRatio);
+        // Check if lingering effect has expired
+        if (this.lingeringElapsedTime >= this.lingeringDuration) {
+            this.disposeLingeringEffect();
+        }
+    }
+    
+    /**
+     * Dispose of the lingering effect
+     */
+    disposeLingeringEffect() {
+        if (!this.lingeringEffect) return;
+        
+        // Recursively dispose of geometries and materials
+        this.lingeringEffect.traverse(child => {
+            if (child.geometry) {
+                child.geometry.dispose();
+            }
+            
+            if (child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(material => material.dispose());
+                } else {
+                    child.material.dispose();
                 }
-            });
+            }
+        });
+        
+        // Remove from parent
+        if (this.lingeringEffect.parent) {
+            this.lingeringEffect.parent.remove(this.lingeringEffect);
         }
+        
+        this.lingeringEffect = null;
+        this.hasLingeringEffect = false;
     }
 
     /**
@@ -229,7 +437,26 @@ export class BreathOfHeavenEffect extends SkillEffect {
         // Clean up healing pulses
         this.healingPulses = [];
         
+        // Clean up lingering effect
+        this.disposeLingeringEffect();
+        
         // Call parent dispose
         super.dispose();
+    }
+    
+    /**
+     * Reset the effect to its initial state
+     * Override parent method to also reset lingering effect
+     */
+    reset() {
+        // Dispose of lingering effect
+        this.disposeLingeringEffect();
+        
+        // Reset lingering effect state
+        this.hasLingeringEffect = false;
+        this.lingeringElapsedTime = 0;
+        
+        // Call parent reset
+        super.reset();
     }
 }

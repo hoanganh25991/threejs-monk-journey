@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { SkillEffect } from './SkillEffect.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /**
  * Specialized effect for Shield of Zen skill
@@ -130,9 +131,7 @@ export class ShieldOfZenEffect extends SkillEffect {
     _createBuddhaFigure(effectGroup, direction) {
         const buddhaGroup = new THREE.Group();
         
-        // For now, create a simple box as a placeholder for the Buddha model
-        // This will be replaced with a proper model later
-        const buddhaGeometry = new THREE.BoxGeometry(2, 3, 0.5);
+        // Create a material for the Buddha model
         const buddhaMaterial = new THREE.MeshStandardMaterial({
             color: this.skill.color,
             transparent: true,
@@ -141,22 +140,45 @@ export class ShieldOfZenEffect extends SkillEffect {
             emissiveIntensity: 0.8
         });
         
-        const buddhaBox = new THREE.Mesh(buddhaGeometry, buddhaMaterial);
-        buddhaGroup.add(buddhaBox);
-        
-        // Create a raised hand for the Buddha (protective gesture)
-        const handGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.2);
-        const handMaterial = new THREE.MeshStandardMaterial({
-            color: this.skill.color,
-            transparent: true,
-            opacity: 0.8,
-            emissive: this.skill.color,
-            emissiveIntensity: 1.0
+        // Load the Buddha model from GLB file
+        const loader = new GLTFLoader();
+        loader.load('/assets/effects/buddha.glb', (gltf) => {
+            // Process the loaded model
+            const buddhaModel = gltf.scene;
+            
+            // Apply the material to all meshes in the model
+            buddhaModel.traverse((child) => {
+                if (child.isMesh) {
+                    // Store the original material for reference if needed
+                    child.userData.originalMaterial = child.material;
+                    
+                    // Apply our custom material
+                    child.material = buddhaMaterial.clone();
+                }
+            });
+            
+            // Add the model to the group
+            buddhaGroup.add(buddhaModel);
+            
+            // Scale the model appropriately
+            buddhaModel.scale.set(1.5, 1.5, 1.5);
+            
+            // Initial rotation to face forward
+            buddhaModel.rotation.y = Math.PI; // Rotate 180 degrees to face forward
+        }, 
+        // Progress callback
+        (xhr) => {
+            console.log(`Buddha model ${(xhr.loaded / xhr.total * 100)}% loaded`);
+        },
+        // Error callback
+        (error) => {
+            console.error('Error loading Buddha model:', error);
+            
+            // Fallback to a simple placeholder if loading fails
+            const buddhaGeometry = new THREE.BoxGeometry(2, 3, 0.5);
+            const buddhaBox = new THREE.Mesh(buddhaGeometry, buddhaMaterial);
+            buddhaGroup.add(buddhaBox);
         });
-        
-        const hand = new THREE.Mesh(handGeometry, handMaterial);
-        hand.position.set(1, 1, 0.3); // Position the hand raised to the side
-        buddhaGroup.add(hand);
         
         // Position the Buddha behind the player
         // Calculate position behind the player based on direction

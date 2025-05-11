@@ -22,6 +22,8 @@ export class SkillsUI extends UIComponent {
             'Mystic Ally': '👤', // Person emoji
             'Wave of Light': '🔔', // Bell emoji
             'Exploding Palm': '💥', // Explosion emoji
+            'Breath of Heaven': '🌬️', // Wind blowing emoji
+            'Shield of Zen': '🧘', // Person in lotus position emoji
         };
         
         this.skillColors = {
@@ -32,7 +34,8 @@ export class SkillsUI extends UIComponent {
             'buff': '#ffffff',
             'summon': '#00ffff',
             'wave': '#ffdd22',
-            'mark': '#ff3333'
+            'mark': '#ff3333',
+            'heal': '#ffdd99' // Golden yellow for healing abilities
         };
     }
     
