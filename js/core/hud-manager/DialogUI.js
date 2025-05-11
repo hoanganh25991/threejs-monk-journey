@@ -1,4 +1,3 @@
-import { Game } from '../game/Game.js';
 import { UIComponent } from '../UIComponent.js';
 
 /**
@@ -8,7 +7,7 @@ import { UIComponent } from '../UIComponent.js';
 export class DialogUI extends UIComponent {
     /**
      * Create a new DialogUI component
-     * @param {Game} game - Reference to the game instance
+     * @param {import('../game/Game.js').Game} game - Reference to the game instance
      */
     constructor(game) {
         super('dialog-box', game);
