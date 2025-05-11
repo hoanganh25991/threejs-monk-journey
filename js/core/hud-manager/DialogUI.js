@@ -1,3 +1,4 @@
+import { Game } from '../game/Game.js';
 import { UIComponent } from '../UIComponent.js';
 
 /**
@@ -7,13 +8,14 @@ import { UIComponent } from '../UIComponent.js';
 export class DialogUI extends UIComponent {
     /**
      * Create a new DialogUI component
-     * @param {Object} game - Reference to the game instance
+     * @param {Game} game - Reference to the game instance
      */
     constructor(game) {
         super('dialog-box', game);
         this.dialogText = null;
         this.dialogContinue = null;
         this.isDialogOpen = false;
+        this.game = game;
     }
     
     /**
@@ -49,15 +51,12 @@ export class DialogUI extends UIComponent {
         this.show();
         this.isDialogOpen = true;
         
-        // Make sure the dialog is visible and properly positioned
-        this.container.style.display = 'block';
-        this.container.style.zIndex = '1000'; // Ensure it's above other elements
-        
         // Add a visual indicator that clicking will close the dialog
         this.dialogContinue.style.display = 'block';
         
         // Pause game
-        
+        this.game.pause();
+
         console.debug('Dialog opened:', title);
     }
     

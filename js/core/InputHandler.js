@@ -154,11 +154,6 @@ export class InputHandler {
                     this.game.uiManager.increaseMiniMapScale();
                     break;
                     
-                // Escape key functionality has been removed
-                case 'Escape':
-                    // Do nothing when Escape is pressed
-                    break;
-                    
                 case 'KeyH':
                     // Mark H key as held down for basic attack
                     this.skillKeysHeld[event.code] = true;

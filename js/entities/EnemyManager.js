@@ -287,6 +287,12 @@ export class EnemyManager {
                 this.enemies.splice(i, 1);
             }
         }
+        
+        // Periodically clean up distant enemies (approximately every 10 seconds)
+        // This ensures enemies are cleaned up even if the player moves slowly
+        if (Math.random() < 0.01) { // ~1% chance per frame, assuming 60fps = ~once per 10 seconds
+            this.cleanupDistantEnemies();
+        }
     }
     
     spawnEnemy(specificType = null, position = null) {
@@ -667,22 +673,36 @@ export class EnemyManager {
     cleanupDistantEnemies() {
         const playerPos = this.player.getPosition();
         const maxDistance = 50; // Maximum distance to keep enemies (in world units)
+        const bossMaxDistance = 80; // Maximum distance to keep bosses (larger than regular enemies)
+        
+        let removedCount = 0;
         
         // Remove enemies that are too far away
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
             const position = enemy.getPosition();
             
-            // Skip if this is a boss
-            if (enemy.isBoss) continue;
-            
             // Calculate distance to player
             const distance = position.distanceTo(playerPos);
             
+            // Different distance thresholds for bosses and regular enemies
+            const distanceThreshold = enemy.isBoss ? bossMaxDistance : maxDistance;
+            
             // If enemy is too far away, remove it
-            if (distance > maxDistance) {
+            if (distance > distanceThreshold) {
                 enemy.remove();
                 this.enemies.splice(i, 1);
+                removedCount++;
+            }
+        }
+        
+        // Log cleanup information if enemies were removed
+        if (removedCount > 0) {
+            console.debug(`Cleaned up ${removedCount} distant enemies. Remaining: ${this.enemies.length}`);
+            
+            // Force garbage collection hint if significant cleanup occurred
+            if (removedCount > 5 && this.game && this.game.world) {
+                this.game.world.hintGarbageCollection();
             }
         }
     }

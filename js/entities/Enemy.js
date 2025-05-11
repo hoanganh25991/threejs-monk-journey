@@ -1335,7 +1335,31 @@ export class Enemy {
     remove() {
         // Remove model from scene
         if (this.modelGroup) {
+            // First remove from scene
             this.scene.remove(this.modelGroup);
+            
+            // Dispose of geometries and materials to prevent memory leaks
+            this.modelGroup.traverse((child) => {
+                if (child.geometry) {
+                    child.geometry.dispose();
+                }
+                
+                if (child.material) {
+                    // Handle both single materials and material arrays
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(material => {
+                            if (material.map) material.map.dispose();
+                            material.dispose();
+                        });
+                    } else {
+                        if (child.material.map) child.material.map.dispose();
+                        child.material.dispose();
+                    }
+                }
+            });
+            
+            // Clear any references
+            this.modelGroup = null;
         }
     }
     

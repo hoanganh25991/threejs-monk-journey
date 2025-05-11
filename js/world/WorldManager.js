@@ -126,11 +126,21 @@ export class WorldManager {
                 this.game.enemyManager.onPlayerMovedScreenDistance(playerPosition);
             }
             
-            // Force cleanup of distant terrain chunks when player moves significant distance
+            // Force cleanup of distant terrain chunks and enemies when player moves significant distance
             // This ensures memory is properly released during long-distance travel
             if (distanceMoved >= this.screenSpawnDistance * 3) {
-                console.debug(`Player moved significant distance (${distanceMoved.toFixed(1)}), forcing terrain cleanup`);
+                console.debug(`Player moved significant distance (${distanceMoved.toFixed(1)}), forcing terrain and enemy cleanup`);
+                
+                // Clean up terrain
                 this.terrainManager.clearDistantChunks();
+                
+                // Clean up enemies
+                if (this.game && this.game.enemyManager) {
+                    this.game.enemyManager.cleanupDistantEnemies();
+                }
+                
+                // Force garbage collection hint
+                this.hintGarbageCollection();
             }
         }
         

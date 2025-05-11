@@ -133,19 +133,6 @@ export class HUDManager {
     }
     
     /**
-     * Clean up all effects
-     * Should be called when changing scenes or shutting down the game
-     * @deprecated Use game.effectsManager.cleanupEffects() instead
-     */
-    cleanupEffects() {
-        // This method is kept for backward compatibility
-        // Effects are now managed by the EffectsManager
-        if (this.game && this.game.effectsManager) {
-            this.game.effectsManager.cleanupEffects();
-        }
-    }
-    
-    /**
      * Update all UI components
      * @param {number} delta - Time since last update in seconds
      */
@@ -368,8 +355,6 @@ export class HUDManager {
             this.showAllUI();
         } else if (state === 'paused') {
             this.hideAllUI();
-            // Clean up effects when game is paused
-            this.cleanupEffects();
         }
     }
 }
