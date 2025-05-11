@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Skill } from '../../entities/skills/Skill.js';
 import { SKILLS } from '../../config/skills.js';
+import { CAMERA_CONFIG } from '../../config/camera-config.js';
 
 export class SkillPreview {
     /**
@@ -33,7 +34,11 @@ export class SkillPreview {
         
         // Camera initial settings (for reset functionality)
         this.initialCameraPosition = null;
-        this.initialCameraTarget = new THREE.Vector3(0, 0, 0);
+        this.initialCameraTarget = new THREE.Vector3(
+            CAMERA_CONFIG.target.x,
+            CAMERA_CONFIG.target.y,
+            CAMERA_CONFIG.target.z
+        );
         this.cameraInfoPanel = null;
         
         // Auto-play settings
@@ -119,12 +124,9 @@ export class SkillPreview {
             
             // Position camera at 45-degree angle for better skill visibility
             // Using trigonometry to calculate x and z positions for a 45-degree angle
-            // Set distance to 92% of maxDistance (200) which is 184
-            const distance = 12; // 92% of maxDistance (200)
-            const angle = -Math.PI / 4 * 1.2; // 45 degrees in radians
-            const x = distance * Math.sin(angle);
-            const z = distance * Math.cos(angle);
-            this.camera.position.set(x, 20.0, z); // Increased height for better overview
+            const x = CAMERA_CONFIG.distance * Math.sin(CAMERA_CONFIG.angle);
+            const z = CAMERA_CONFIG.distance * Math.cos(CAMERA_CONFIG.angle);
+            this.camera.position.set(x, CAMERA_CONFIG.yPosition, z); // Using centralized camera height
             this.camera.lookAt(0, 0, 0); // Ensure camera is looking at the center where the character is
             
             // Store initial camera position for reset functionality
@@ -145,10 +147,14 @@ export class SkillPreview {
             this.controls = new OrbitControls(this.camera, this.renderer.domElement);
             this.controls.enableDamping = true;
             this.controls.dampingFactor = 0.05;
-            this.controls.minDistance = 4.5;
-            this.controls.maxDistance = 200;
+            this.controls.minDistance = CAMERA_CONFIG.minDistance;
+            this.controls.maxDistance = CAMERA_CONFIG.maxDistance;
             this.controls.enablePan = true;
-            this.controls.target.set(0, 0, 0); // Ensure controls orbit around the center
+            this.controls.target.set(
+                CAMERA_CONFIG.target.x, 
+                CAMERA_CONFIG.target.y, 
+                CAMERA_CONFIG.target.z
+            ); // Using centralized target
             
             // Create camera info panel
             this.createCameraInfoPanel();
@@ -626,12 +632,10 @@ export class SkillPreview {
         if (this.initialCameraPosition) {
             this.camera.position.copy(this.initialCameraPosition);
         } else {
-            // Default position (calculated in init)
-            const distance = 12; // 92% of maxDistance (200)
-            const angle = -Math.PI / 4 * 1.2;
-            const x = distance * Math.sin(angle);
-            const z = distance * Math.cos(angle);
-            this.camera.position.set(x, 20.0, z);
+            // Default position from centralized config
+            const x = CAMERA_CONFIG.distance * Math.sin(CAMERA_CONFIG.angle);
+            const z = CAMERA_CONFIG.distance * Math.cos(CAMERA_CONFIG.angle);
+            this.camera.position.set(x, CAMERA_CONFIG.yPosition, z);
         }
         
         // Reset target and look at center
