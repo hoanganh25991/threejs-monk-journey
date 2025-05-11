@@ -762,11 +762,20 @@ export class SettingsMenu extends UIComponent {
             this.backButton.addEventListener('click', () => {
                 this.hide();
                 
-                // Show the GameMenu instead of resuming the game
-                const gameMenu = new GameMenu(this.game);
-                gameMenu.show();
+                // If the game is paused, show the existing game menu
+                if (this.game.isPaused) {
+                    // Dispatch the game state event to trigger the game menu to show
+                    // This will use the existing game menu instance
+                    this.game.events.dispatch('gameStateChanged', 'paused');
+                } else if (this.mainMenu) {
+                    // If we have a reference to the main menu that opened us, show it
+                    this.mainMenu.style.display = 'flex';
+                } else {
+                    // Otherwise, resume the game
+                    this.game.resume();
+                }
                 
-                console.debug("Settings back button clicked - returning to game menu");
+                console.debug("Settings back button clicked - returning to previous screen");
             });
         }
         
@@ -844,6 +853,14 @@ export class SettingsMenu extends UIComponent {
         // Override display style to flex instead of block
         if (this.container) {
             this.container.style.display = 'flex';
+        }
+        
+        // If the game is paused, make sure the game menu is hidden to prevent overlap
+        if (this.game.isPaused) {
+            const gameMenuElement = document.getElementById('game-menu');
+            if (gameMenuElement) {
+                gameMenuElement.style.display = 'none';
+            }
         }
         
         // Resize model preview fullscreen if needed

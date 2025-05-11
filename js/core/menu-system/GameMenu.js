@@ -90,7 +90,11 @@ export class GameMenu {
                     this.game.uiManager.mainBackground.show();
                 }
                 
-                this.settingsMenu.show(this.element);
+                // Pass the game menu element and indicate we're coming from the game menu
+                this.settingsMenu.show(this.element, this.game.isPaused);
+                
+                // Hide the game menu to prevent overlap
+                this.hide();
             });
         }
         
@@ -167,9 +171,18 @@ export class GameMenu {
         // Force Reload button has been moved to Settings > Release tab
     }
 
+    /**
+     * Handle game state changes
+     * @param {string} state - Current game state ('running' or 'paused')
+     */
     handleGameStateChange(state) {
         if (state == "paused") {
-            this.show();
+            // Check if settings menu is already open
+            const settingsMenu = document.getElementById('main-options-menu');
+            if (!settingsMenu || settingsMenu.style.display === 'none') {
+                // Only show game menu if settings menu is not visible
+                this.show();
+            }
         } else {
             this.hide();
         }

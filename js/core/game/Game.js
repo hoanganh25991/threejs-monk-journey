@@ -446,13 +446,14 @@ export class Game {
      * Handle visibility change event
      */
     onVisibilityChange() {
-        if (document.visibilityState === 'hidden') {
-            console.debug('The page is now hidden.');
-            this.pause();
-        } else if (document.visibilityState === 'visible') {
-            console.debug('The page is now visible.');
-            this.resume();
-        }
+        this.pause();
+        // if (document.visibilityState === 'hidden') {
+        //     console.debug('The page is now hidden.');
+        //     this.pause();
+        // } else if (document.visibilityState === 'visible') {
+        //     console.debug('The page is now visible.');
+        //     this.resume();
+        // }
     }
 
     /**
@@ -466,7 +467,8 @@ export class Game {
      * Handle page show event (for mobile browsers)
      */
     onPageShow() {
-        this.resume();
+        this.pause();
+        // this.resume();
     }
     
     /**
@@ -480,7 +482,8 @@ export class Game {
      * Handle window focus event
      */
     onFocus() {
-        this.resume();
+        this.pause();
+        // this.resume();
     }
     
     /**
