@@ -119,12 +119,12 @@ export class SkillPreview {
             
             // Position camera at 45-degree angle for better skill visibility
             // Using trigonometry to calculate x and z positions for a 45-degree angle
-            // Increase distance by 1.5x for better view of entire skill
-            const distance = 40.5; // 27.0 * 1.5 = 40.5
+            // Set distance to 92% of maxDistance (200) which is 184
+            const distance = 12; // 92% of maxDistance (200)
             const angle = -Math.PI / 4 * 1.2; // 45 degrees in radians
             const x = distance * Math.sin(angle);
             const z = distance * Math.cos(angle);
-            this.camera.position.set(x, 26.0, z); // Increased height (6.0 * 1.5 = 9.0) for better overview
+            this.camera.position.set(x, 20.0, z); // Increased height for better overview
             this.camera.lookAt(0, 0, 0); // Ensure camera is looking at the center where the character is
             
             // Store initial camera position for reset functionality
@@ -627,11 +627,11 @@ export class SkillPreview {
             this.camera.position.copy(this.initialCameraPosition);
         } else {
             // Default position (calculated in init)
-            const distance = 40.5;
+            const distance = 12; // 92% of maxDistance (200)
             const angle = -Math.PI / 4 * 1.2;
             const x = distance * Math.sin(angle);
             const z = distance * Math.cos(angle);
-            this.camera.position.set(x, 26.0, z);
+            this.camera.position.set(x, 20.0, z);
         }
         
         // Reset target and look at center
