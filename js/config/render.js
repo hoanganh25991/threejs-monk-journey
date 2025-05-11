@@ -47,7 +47,7 @@ export const RENDER_CONFIG = {
     medium: {
         init: {
             antialias: false,
-            powerPreference: 'default',
+            powerPreference: 'high-performance', // Changed from 'default' to 'high-performance'
             precision: 'mediump',
             stencil: false,
             logarithmicDepthBuffer: false,
@@ -66,7 +66,7 @@ export const RENDER_CONFIG = {
     low: {
         init: {
             antialias: false,
-            powerPreference: 'default',
+            powerPreference: 'high-performance', // Changed from 'default' to 'high-performance'
             precision: 'mediump',
             stencil: false,
             logarithmicDepthBuffer: false,
@@ -85,7 +85,7 @@ export const RENDER_CONFIG = {
     minimal: {
         init: {
             antialias: false,
-            powerPreference: 'default',
+            powerPreference: 'high-performance', // Changed from 'default' to 'high-performance'
             precision: 'lowp',
             stencil: false,
             logarithmicDepthBuffer: false,
