@@ -25,8 +25,8 @@ export class PlayerModel extends IPlayerModel {
         this.game = null; // Reference to the game
         // We'll use the game's clock instead of creating our own
         
-        // Get default model configuration
-        this.currentModelId = DEFAULT_CHARACTER_MODEL;
+        // Try to load model ID from localStorage, or use default
+        this.currentModelId = localStorage.getItem('monk_journey_character_model') || DEFAULT_CHARACTER_MODEL;
         this.currentModel = this.getModelConfig(this.currentModelId);
         
         // Configuration options
@@ -530,7 +530,14 @@ export class PlayerModel extends IPlayerModel {
         // Keep the current multiplier
         this.updateEffectiveScale();
         
-        console.debug(`Model set to: ${modelConfig.name} (${modelId})`);
+        // Save the model ID to localStorage for persistence
+        try {
+            localStorage.setItem('playerModelId', modelId);
+            console.debug(`Model set to: ${modelConfig.name} (${modelId}) and saved to localStorage`);
+        } catch (e) {
+            console.warn('Could not save model ID to localStorage:', e);
+            console.debug(`Model set to: ${modelConfig.name} (${modelId})`);
+        }
         
         // Remove the current model from the scene
         if (this.modelGroup) {
