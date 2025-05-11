@@ -175,9 +175,7 @@
 .setting-item {
     margin-bottom: 20px;
     width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    display: block;
 }
 
 .settings-footer {
