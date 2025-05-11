@@ -109,16 +109,17 @@ export class SkillPreview {
             this.scene = new THREE.Scene();
             this.scene.background = new THREE.Color(0x111111);
             
-            // Create camera with 3x zoom out and 45-degree angle
+            // Create camera with 4.5x zoom out (1.5x more than before) and 45-degree angle
             this.camera = new THREE.PerspectiveCamera(+100, this.width / this.height, 0.1, 2000);
             
             // Position camera at 45-degree angle for better skill visibility
             // Using trigonometry to calculate x and z positions for a 45-degree angle
-            const distance = 27.0;
+            // Increase distance by 1.5x for better view of entire skill
+            const distance = 40.5; // 27.0 * 1.5 = 40.5
             const angle = -Math.PI / 4 * 1.2; // 45 degrees in radians
             const x = distance * Math.sin(angle);
             const z = distance * Math.cos(angle);
-            this.camera.position.set(x, 6.0, z); // Angled position with same distance
+            this.camera.position.set(x, 9.0, z); // Increased height (6.0 * 1.5 = 9.0) for better overview
             this.camera.lookAt(0, 0, 0); // Ensure camera is looking at the center where the character is
             
             // Create renderer
@@ -136,8 +137,8 @@ export class SkillPreview {
             this.controls = new OrbitControls(this.camera, this.renderer.domElement);
             this.controls.enableDamping = true;
             this.controls.dampingFactor = 0.05;
-            this.controls.minDistance = 3;
-            this.controls.maxDistance = 12;
+            this.controls.minDistance = 4.5; // Increased from 3 (3 * 1.5 = 4.5)
+            this.controls.maxDistance = 18; // Increased from 12 (12 * 1.5 = 18)
             this.controls.enablePan = true;
             this.controls.target.set(0, 0, 0); // Ensure controls orbit around the center
             
@@ -179,11 +180,11 @@ export class SkillPreview {
         directionalLight.shadow.mapSize.width = 1024;
         directionalLight.shadow.mapSize.height = 1024;
         directionalLight.shadow.camera.near = 0.5;
-        directionalLight.shadow.camera.far = 50;
-        directionalLight.shadow.camera.left = -10;
-        directionalLight.shadow.camera.right = 10;
-        directionalLight.shadow.camera.top = 10;
-        directionalLight.shadow.camera.bottom = -10;
+        directionalLight.shadow.camera.far = 75; // Increased from 50 to accommodate larger view
+        directionalLight.shadow.camera.left = -15; // Increased from -10 (10 * 1.5 = 15)
+        directionalLight.shadow.camera.right = 15; // Increased from 10 (10 * 1.5 = 15)
+        directionalLight.shadow.camera.top = 15; // Increased from 10 (10 * 1.5 = 15)
+        directionalLight.shadow.camera.bottom = -15; // Increased from -10 (10 * 1.5 = 15)
         
         this.scene.add(directionalLight);
     }
@@ -193,8 +194,8 @@ export class SkillPreview {
      * @private
      */
     addGround() {
-        // Create a ground plane
-        const groundGeometry = new THREE.PlaneGeometry(20, 20);
+        // Create a ground plane (increased size for larger view)
+        const groundGeometry = new THREE.PlaneGeometry(30, 30); // Increased from 20x20 to 30x30
         const groundMaterial = new THREE.MeshStandardMaterial({ 
             color: 0x333333,
             roughness: 0.8,
@@ -488,7 +489,7 @@ export class SkillPreview {
      * Reset camera to default position
      */
     resetCamera() {
-        this.camera.position.set(0, 6.0, 27.0); // Match the 3x zoomed out position
+        this.camera.position.set(0, 9.0, 40.5); // Match the 4.5x zoomed out position (1.5x more than before)
         this.camera.lookAt(0, 0, 0);
         this.controls.reset();
     }
