@@ -11,7 +11,7 @@ export class BreathOfHeavenEffect extends SkillEffect {
     constructor(skill) {
         super(skill);
         this.healingPulses = [];
-        this.healingRate = 0.5; // Heal every 0.5 seconds
+        this.healingRate = 0.3; // Heal every 0.5 seconds
         this.lastHealTime = 0;
         
         // We're removing the lingering effect and extending the main effect duration
@@ -41,7 +41,7 @@ export class BreathOfHeavenEffect extends SkillEffect {
         effectGroup.add(auraMesh);
         
         // Create particles for the healing effect
-        const particleCount = 50;
+        const particleCount = 50 * 2;
         const particleGeometry = new THREE.BufferGeometry();
         const particlePositions = new Float32Array(particleCount * 3);
         
@@ -139,9 +139,9 @@ export class BreathOfHeavenEffect extends SkillEffect {
             }
             
             // Pulse the aura with more dynamic movement
-            const time = this.elapsedTime;
-            const pulseFactor = 1 + 0.15 * Math.sin(time * 5) * Math.cos(time * 3);
-            this.effect.children[0].scale.set(pulseFactor, pulseFactor, pulseFactor);
+            // const time = this.elapsedTime;
+            // const pulseFactor = 1 + 0.15 * Math.sin(time * 5) * Math.cos(time * 3);
+            // this.effect.children[0].scale.set(pulseFactor, pulseFactor, pulseFactor);
             
             // Apply healing effect at intervals
             this.lastHealTime += delta;
@@ -152,8 +152,8 @@ export class BreathOfHeavenEffect extends SkillEffect {
             
             // Only fade out at the very end of the effect
             // This makes the green healing effect last longer
-            if (this.elapsedTime > this.skill.duration * 0.9) {
-                const fadeRatio = 1 - (this.elapsedTime - this.skill.duration * 0.9) / (this.skill.duration * 0.1);
+            if (this.elapsedTime > this.skill.duration * 0.7) {
+                const fadeRatio = 1 - (this.elapsedTime - this.skill.duration * 0.7) / (this.skill.duration * 0.3);
                 this.effect.children.forEach(child => {
                     if (child.material) {
                         child.material.opacity = Math.max(0, child.material.opacity * fadeRatio);
