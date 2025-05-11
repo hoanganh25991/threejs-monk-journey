@@ -163,11 +163,11 @@ export class ShieldOfZenEffect extends SkillEffect {
             // Add the model to the group
             buddhaGroup.add(buddhaModel);
             
-            // Scale the model appropriately
-            buddhaModel.scale.set(1.5, 1.5, 1.5);
+            // Scale the model
+            buddhaModel.scale.set(9.0, 9.0, 9.0);
             
-            // Initial rotation to face forward
-            buddhaModel.rotation.y = Math.PI; // Rotate 180 degrees to face forward
+            // Initial rotation to match player's direction exactly
+            // We don't set rotation here as it will be handled in the update method
         }, 
         // Progress callback
         (xhr) => {
@@ -296,8 +296,9 @@ export class ShieldOfZenEffect extends SkillEffect {
                 this.buddhaFigure.position.copy(behindPosition);
                 this.buddhaFigure.position.y += 1.5; // Raise the Buddha up
                 
-                // Make the Buddha face the player
-                this.buddhaFigure.lookAt(new THREE.Vector3(0, this.buddhaFigure.position.y, 0));
+                // Make the Buddha have exactly the same direction look as the hero
+                // We set the rotation directly from the player's rotation
+                this.buddhaFigure.rotation.y = currentPlayerRotation.y;
             }
         }
         
@@ -329,13 +330,16 @@ export class ShieldOfZenEffect extends SkillEffect {
             }
         }
         
-        // Gently rotate the Buddha figure
+        // Update the Buddha figure (without rotating it)
         if (this.buddhaFigure) {
-            this.buddhaFigure.rotation.y += this.rotationSpeed * delta * 0.2;
-            
             // Make the Buddha figure pulse with a gentle glow
-            const pulseScale = 1.0 + 0.05 * Math.sin(this.elapsedTime * 2);
-            this.buddhaFigure.scale.set(pulseScale, pulseScale, pulseScale);
+            // Base scale is now 9.0 (6x bigger) with a small pulsing effect
+            const pulseScale = 9.0 + 0.45 * Math.sin(this.elapsedTime * 2);
+            this.buddhaFigure.children.forEach(child => {
+                if (child.scale) {
+                    child.scale.set(pulseScale / 3.0, pulseScale / 3.0, pulseScale / 3.0);
+                }
+            });
             
             // Adjust opacity based on elapsed time for a pulsing effect
             const opacity = 0.6 + 0.2 * Math.sin(this.elapsedTime * 1.5);
