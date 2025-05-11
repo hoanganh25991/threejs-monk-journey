@@ -20,8 +20,8 @@
 /* Left Side UI Container */
 #left-side-ui {
     position: absolute;
-    top: 20px;
-    left: 20px;
+    top: 10px;
+    left: 10px;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -159,7 +159,7 @@
 /* Enemy Health */
 #enemy-health-container {
     position: absolute;
-    top: 20px;
+    top: 10px;
     left: 50%;
     transform: translateX(-50%);
     width: 300px;
@@ -191,8 +191,8 @@
 /* Right Side UI Container */
 #right-side-ui {
     position: absolute;
-    bottom: 20px;
-    right: 20px;
+    bottom: 10px;
+    right: 10px;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -338,8 +338,8 @@
 #virtual-joystick-container {
     /* width and height are set dynamically via JavaScript */
     position: fixed; /* Change to fixed position */
-    bottom: 20px; /* Position at bottom */
-    left: 30px; /* Position at left */
+    bottom: 10px; /* Position at bottom */
+    left: 20px; /* Position at left */
     pointer-events: auto;
     touch-action: none;
     display: block;
@@ -378,8 +378,8 @@
 /* Top Right Container for Home Button and Mini Map */
 #top-right-container {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 10px;
+    right: 10px;
     display: flex;
     align-items: flex-start; /* Changed from center to flex-start to align items to the top */
     gap: 15px;
@@ -508,7 +508,7 @@
 #update-notification {
     display: none;
     position: fixed;
-    bottom: 20px;
+    bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
     background-color: rgba(0, 0, 0, 0.3);
