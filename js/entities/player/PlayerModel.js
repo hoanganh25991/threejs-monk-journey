@@ -23,7 +23,7 @@ export class PlayerModel extends IPlayerModel {
         this.fallbackModel = null;
         this.usingFallbackModel = false;
         this.game = null; // Reference to the game
-        this.clock = new THREE.Clock(); // Add a clock for animation timing
+        // We'll use the game's clock instead of creating our own
         
         // Get default model configuration
         this.currentModelId = DEFAULT_CHARACTER_MODEL;
@@ -190,13 +190,12 @@ export class PlayerModel extends IPlayerModel {
         
         // If we have a loaded GLB model with animations
         if (this.mixer && this.gltfModel) {
-            // Get delta time from the clock, just like in ModelPreview.js
-            // This ensures smooth animation timing
-            const clockDelta = this.clock.getDelta();
+            // Use the delta time passed from the game's update loop
+            // This ensures consistent timing across all game systems
             
             // Use a minimum delta time to ensure animations always progress
             // This prevents the animation from freezing when delta is too small
-            const effectiveDelta = Math.max(clockDelta, 0.008); // Minimum 8ms delta (roughly 120fps)
+            const effectiveDelta = Math.max(delta, 0.008); // Minimum 8ms delta (roughly 120fps)
             
             // First, always update the mixer with effective delta time
             // This is crucial for proper animation timing

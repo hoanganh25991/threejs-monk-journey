@@ -38,9 +38,6 @@ class Main {
             await game.init();
             console.debug("Game initialized successfully");
             
-            // Ensure game is in paused state
-            game.pause();
-            
             // Display the main menu
             this.showMainMenu(game);
         } catch (error) {

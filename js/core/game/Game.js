@@ -281,9 +281,7 @@ export class Game {
         this.state.setRunning();
         this.clock.start();
         
-        // Only start the animation loop if it hasn't been started yet
-        console.debug("Starting animation loop");
-        this.animationLoopStarted = true;
+        // Start the animation loop
         this.animate();
         
         // Start background music
