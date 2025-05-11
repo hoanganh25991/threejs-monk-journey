@@ -20,12 +20,6 @@ export class AudioManager {
         // Audio file availability tracking
         this.audioFilesAvailable = false;
         
-        // Track if music was playing before page was hidden
-        this.wasMusicPlayingBeforeHidden = false;
-        
-        // Track if auto-pause is enabled
-        this.autoPauseEnabled = true;
-        
         console.debug('Audio system initialized');
     }
     
@@ -685,38 +679,10 @@ export class AudioManager {
         return this.audioFilesAvailable;
     }
     
-    // Handle visibility change events
-    handleVisibilityChange() {
-        if (!this.autoPauseEnabled) return;
-        
-        if (document.hidden || document.visibilityState === 'hidden') {
-            // Page is now hidden
-            this.wasMusicPlayingBeforeHidden = this.isMusicPlaying();
-            if (this.wasMusicPlayingBeforeHidden) {
-                this.pauseMusic();
-                console.debug('Music auto-paused due to page visibility change');
-            }
-        } else {
-            // Page is now visible again
-            if (this.wasMusicPlayingBeforeHidden && !this.isMuted) {
-                this.resumeMusic();
-                console.debug('Music auto-resumed due to page visibility change');
-            }
-            this.wasMusicPlayingBeforeHidden = false;
-        }
-    }
-    
-    // Toggle auto-pause feature
-    toggleAutoPause() {
-        this.autoPauseEnabled = !this.autoPauseEnabled;
-        console.debug(`Auto-pause ${this.autoPauseEnabled ? 'enabled' : 'disabled'}`);
-        this.saveSettings();
-        return this.autoPauseEnabled;
-    }
-    
-    // Check if auto-pause is enabled
+    // Check if auto-pause is enabled - now always returns false as this is handled by Game.js
     isAutoPauseEnabled() {
-        return this.autoPauseEnabled;
+        // Auto-pause is now handled by Game.js
+        return false;
     }
     
     // Save audio settings to localStorage
@@ -725,8 +691,8 @@ export class AudioManager {
             const settings = {
                 isMuted: this.isMuted,
                 musicVolume: this.musicVolume,
-                sfxVolume: this.sfxVolume,
-                autoPauseEnabled: this.autoPauseEnabled
+                sfxVolume: this.sfxVolume
+                // autoPauseEnabled removed - now handled by Game.js
             };
             
             localStorage.setItem('audioSettings', JSON.stringify(settings));
@@ -749,10 +715,7 @@ export class AudioManager {
                 this.setMusicVolume(settings.musicVolume || 0.5);
                 this.setSFXVolume(settings.sfxVolume || 0.8);
                 
-                // Load auto-pause setting if available
-                if (settings.hasOwnProperty('autoPauseEnabled')) {
-                    this.autoPauseEnabled = settings.autoPauseEnabled;
-                }
+                // Auto-pause setting is now ignored as it's handled by Game.js
                 
                 return true;
             }

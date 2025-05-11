@@ -53,7 +53,6 @@ export class SettingsMenu extends UIComponent {
         
         // Audio settings elements
         this.muteCheckbox = document.getElementById('mute-checkbox');
-        this.autoPauseCheckbox = document.getElementById('auto-pause-checkbox');
         this.musicVolumeSlider = document.getElementById('music-volume-slider');
         this.musicVolumeValue = document.getElementById('music-volume-value');
         this.sfxVolumeSlider = document.getElementById('sfx-volume-slider');
@@ -700,15 +699,6 @@ export class SettingsMenu extends UIComponent {
                 this.muteCheckbox.addEventListener('change', () => {
                     this.game.audioManager.toggleMute();
                     this.game.audioManager.saveSettings();
-                });
-            }
-            
-            // Auto-pause toggle
-            if (this.autoPauseCheckbox) {
-                this.autoPauseCheckbox.checked = this.game.audioManager.isAutoPauseEnabled();
-                
-                this.autoPauseCheckbox.addEventListener('change', () => {
-                    this.game.audioManager.toggleAutoPause();
                 });
             }
             

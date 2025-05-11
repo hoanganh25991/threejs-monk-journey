@@ -307,6 +307,11 @@ export class Game {
      */
     pause() {
         this.state.setPaused();
+
+        if (this.audioManager) {
+            this.audioManager.pauseMusic();
+        }
+
         this.events.dispatch('gameStateChanged', 'paused');
     }
     
@@ -314,21 +319,13 @@ export class Game {
      * Resume the game
      */
     resume() {
-        if (this.state.isPaused()) {
-            this.state.setRunning();
-            this.events.dispatch('gameStateChanged', 'running');
+        this.state.setRunning();
+
+        if (this.audioManager) {
+            this.audioManager.resumeMusic();
         }
-    }
-    
-    /**
-     * Toggle the game's pause state
-     * @returns {boolean} The new pause state (true if paused)
-     */
-    togglePause() {
-        const isPaused = this.state.togglePause();
-        this.events.dispatch('gameStateChanged', isPaused ? 'paused' : 'running');
-        console.debug(`Game ${isPaused ? 'paused' : 'resumed'}`);
-        return isPaused;
+
+        this.events.dispatch('gameStateChanged', 'running');
     }
     
     /**
@@ -405,27 +402,13 @@ export class Game {
      * Handle visibility change event
      */
     onVisibilityChange() {
-        // Handle visibility change for audio
-        if (this.audioManager) {
-            this.audioManager.handleVisibilityChange();
-        }
-
         this.pause();
     }
     
     /**
      * Handle page hide event (for mobile browsers)
      */
-    onPageHide() {
-        // Additional handler for mobile browsers
-        if (this.audioManager && this.audioManager.isAutoPauseEnabled()) {
-            const wasPlaying = this.audioManager.isMusicPlaying();
-            if (wasPlaying) {
-                this.audioManager.pauseMusic();
-                console.debug('Music paused due to page hide event');
-            }
-        }
-        
+    onPageHide() {        
         // Pause game loop
         this.pause();
     }
@@ -436,9 +419,6 @@ export class Game {
     onPageShow() {
         // Resume game loop
         this.resume();
-        
-        // Let visibility change handler handle audio resumption
-        this.onVisibilityChange();
     }
     
     /**
@@ -446,7 +426,7 @@ export class Game {
      */
     onBlur() {
         // Additional fallback for some browsers
-        if (this.audioManager && this.audioManager.isAutoPauseEnabled()) {
+        if (this.audioManager) {
             const wasPlaying = this.audioManager.isMusicPlaying();
             if (wasPlaying) {
                 this.audioManager.pauseMusic();
