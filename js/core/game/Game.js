@@ -17,6 +17,7 @@ import { GameEvents } from './GameEvents.js';
 import { SceneOptimizer } from './SceneOptimizer.js';
 import { LoadingManager } from './LoadingManager.js';
 import { RENDER_CONFIG } from '../../config/render.js';
+import { MenuManager } from '../menu-system/MenuManager.js';
 
 /**
  * Main Game class that serves as a facade to the underlying game systems
@@ -193,6 +194,10 @@ export class Game {
             // Initialize difficulty manager
             this.difficultyManager = new DifficultyManager(this);
             this.difficultyManager.applyDifficultySettings();
+            
+            // Initialize menu manager
+            this.updateLoadingProgress(99, 'Initializing menu system...', 'Setting up game menus');
+            this.menuManager = new MenuManager(this);
             
             this.updateLoadingProgress(100, 'Game ready!', 'Initialization complete');
             

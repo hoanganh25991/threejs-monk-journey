@@ -4,13 +4,15 @@
  */
 
 import { SettingsMenu } from './SettingsMenu.js';
+import { IMenu } from './IMenu.js';
 
-export class GameMenu {
+export class GameMenu extends IMenu {
     /**
      * Create a game menu
      * @param {Game} game - The game instance
      */
     constructor(game) {
+        super();
         this.game = game;
         this.element = document.getElementById('game-menu');
         this.newGameButton = document.getElementById('new-game-button');
@@ -19,7 +21,6 @@ export class GameMenu {
         this.settingsMenuButton = document.getElementById('settings-menu-button');
         this.settingsMenu = null;
         this.setupEventListeners();
-        this.game.addEventListener('gameStateChanged', (state) => this.handleGameStateChange(state));
     }
 
     /**
@@ -81,20 +82,26 @@ export class GameMenu {
         // Settings button
         if (this.settingsMenuButton) {
             this.settingsMenuButton.addEventListener('click', () => {
-                if (!this.settingsMenu) {
-                    this.settingsMenu = new SettingsMenu(this.game);
+                // Use the menu manager to show the settings menu
+                if (this.game.menuManager) {
+                    this.game.menuManager.showMenu('settingsMenu');
+                } else {
+                    // Fallback to old behavior if menu manager is not available
+                    if (!this.settingsMenu) {
+                        this.settingsMenu = new SettingsMenu(this.game);
+                    }
+                    
+                    // Show the main background when opening settings
+                    if (this.game.uiManager && this.game.uiManager.mainBackground) {
+                        this.game.uiManager.mainBackground.show();
+                    }
+                    
+                    // Pass the game menu element and indicate we're coming from the game menu
+                    this.settingsMenu.show(this.element, this.game.isPaused);
+                    
+                    // Hide the game menu to prevent overlap
+                    this.hide();
                 }
-                
-                // Show the main background when opening settings
-                if (this.game.uiManager && this.game.uiManager.mainBackground) {
-                    this.game.uiManager.mainBackground.show();
-                }
-                
-                // Pass the game menu element and indicate we're coming from the game menu
-                this.settingsMenu.show(this.element, this.game.isPaused);
-                
-                // Hide the game menu to prevent overlap
-                this.hide();
             });
         }
         
@@ -172,20 +179,19 @@ export class GameMenu {
     }
 
     /**
-     * Handle game state changes
-     * @param {string} state - Current game state ('running' or 'paused')
+     * Check if the menu is visible
+     * @returns {boolean} True if the menu is visible
      */
-    handleGameStateChange(state) {
-        if (state == "paused") {
-            // Check if settings menu is already open
-            const settingsMenu = document.getElementById('main-options-menu');
-            if (!settingsMenu || settingsMenu.style.display === 'none') {
-                // Only show game menu if settings menu is not visible
-                this.show();
-            }
-        } else {
-            this.hide();
-        }
+    isVisible() {
+        return this.element && this.element.style.display !== 'none';
+    }
+    
+    /**
+     * Get the menu type/name
+     * @returns {string} The menu type/name
+     */
+    getType() {
+        return 'gameMenu';
     }
 
     /**

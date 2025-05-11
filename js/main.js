@@ -51,16 +51,21 @@ class Main {
      * @param {Game} game - The game instance
      */
     showMainMenu(game) {
-        console.debug("Creating and displaying game menu...");
-        const gameMenu = new GameMenu(game);
+        console.debug("Displaying game menu...");
+        
+        // Use the menu manager if available
+        if (game.menuManager) {
+            game.menuManager.showMenu('gameMenu');
+        } else {
+            // Fallback to direct creation if menu manager is not available
+            console.debug("MenuManager not available, creating GameMenu directly");
+            const gameMenu = new GameMenu(game);
+        }
         
         // Use a small delay to ensure DOM updates have completed
         setTimeout(() => {
             // Hide loading screen
             this.hideLoadingScreen();
-            
-            // Show the game menu
-            gameMenu.show();
             
             // Ensure menu is visible
             this.ensureMenuVisibility();

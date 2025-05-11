@@ -8,6 +8,7 @@ import { CHARACTER_MODELS } from '../../config/player-models.js';
 import { UIComponent } from '../UIComponent.js';
 import { GameMenu } from './GameMenu.js';
 import { ReloadButton } from './ReloadUI.js';
+import { IMenu } from './IMenu.js';
 
 export class SettingsMenu extends UIComponent {
     /**
@@ -762,11 +763,15 @@ export class SettingsMenu extends UIComponent {
             this.backButton.addEventListener('click', () => {
                 this.hide();
                 
-                // If the game is paused, show the existing game menu
+                // If the game is paused, show the game menu
                 if (this.game.isPaused) {
-                    // Dispatch the game state event to trigger the game menu to show
-                    // This will use the existing game menu instance
-                    this.game.events.dispatch('gameStateChanged', 'paused');
+                    // Use the menu manager if available
+                    if (this.game.menuManager) {
+                        this.game.menuManager.showMenu('gameMenu');
+                    } else {
+                        // Fallback to old behavior
+                        this.game.events.dispatch('gameStateChanged', 'paused');
+                    }
                 } else if (this.mainMenu) {
                     // If we have a reference to the main menu that opened us, show it
                     this.mainMenu.style.display = 'flex';
@@ -825,16 +830,17 @@ export class SettingsMenu extends UIComponent {
 
     /**
      * Show the settings menu
-     * @param {HTMLElement} mainMenu - The main menu element to hide (optional)
-     * @param {boolean} fromInGame - Whether the menu was opened from in-game
+     * @param {HTMLElement} [mainMenu=null] - The main menu element to hide (optional)
+     * @param {boolean} [fromInGame=false] - Whether the menu was opened from in-game
      */
     show(mainMenu = null, fromInGame = false) {
-        this.fromInGame = fromInGame;
-        this.mainMenu = mainMenu;
+        // Store parameters for later use
+        if (mainMenu !== undefined) this.mainMenu = mainMenu;
+        if (fromInGame !== undefined) this.fromInGame = fromInGame;
         
         // Hide main menu if coming from main menu
-        if (mainMenu) {
-            mainMenu.style.display = 'none';
+        if (this.mainMenu) {
+            this.mainMenu.style.display = 'none';
         }
         
         // Hide all UI elements (HUD, joystick, skills, etc.) using the HUDManager
@@ -980,5 +986,21 @@ export class SettingsMenu extends UIComponent {
             this.modelPreviewFullscreen.dispose();
             this.modelPreviewFullscreen = null;
         }
+    }
+    
+    /**
+     * Check if the menu is visible
+     * @returns {boolean} True if the menu is visible
+     */
+    isVisible() {
+        return this.container && this.container.style.display !== 'none';
+    }
+    
+    /**
+     * Get the menu type/name
+     * @returns {string} The menu type/name
+     */
+    getType() {
+        return 'settingsMenu';
     }
 }

@@ -60,11 +60,16 @@ export class HomeButton extends UIComponent {
                     this.game.uiManager.mainBackground.show();
                 }
                 
-                // Show game menu
-                if (!this.gameMenu) {
-                    this.gameMenu = new GameMenu(this.game);
+                // Show game menu using menu manager if available
+                if (this.game.menuManager) {
+                    this.game.menuManager.showMenu('gameMenu');
+                } else {
+                    // Fallback to direct creation if menu manager is not available
+                    if (!this.gameMenu) {
+                        this.gameMenu = new GameMenu(this.game);
+                    }
+                    this.gameMenu.show();
                 }
-                this.gameMenu.show();
                 
                 console.debug("Home button clicked - game paused and game menu opened");
             });
