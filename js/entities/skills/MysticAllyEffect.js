@@ -1,5 +1,7 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { SkillEffect } from './SkillEffect.js';
+import { CHARACTER_MODELS } from '../../config/player-models.js';
 
 /**
  * Specialized effect for Mystic Ally skill
@@ -12,6 +14,15 @@ export class MysticAllyEffect extends SkillEffect {
         this.portalSize = 1.5;
         this.summonHeight = 2.0;
         this.mysticAllyState = null;
+        this.heroModel = null;
+        this.modelPath = 'assets/models/monk.glb'; // Path to the hero model
+        this.modelScale = 1.0; // Scale for the hero model
+        
+        // Find the model configuration
+        const modelConfig = CHARACTER_MODELS.find(m => m.path === this.modelPath);
+        if (modelConfig) {
+            this.modelScale = modelConfig.baseScale * 0.8; // Slightly smaller than player
+        }
     }
 
     /**
@@ -191,64 +202,104 @@ export class MysticAllyEffect extends SkillEffect {
             particles.push(particle);
         }
         
-        // Create the ally
+        // Create the ally group
         const allyGroup = new THREE.Group();
         
-        // Create ally body
-        const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.4, 1.2, 8);
-        const bodyMaterial = new THREE.MeshStandardMaterial({
-            color: 0x8844aa, // Purple-ish color
+        // Create a placeholder mesh that will be replaced with the loaded model
+        const placeholderGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+        const placeholderMaterial = new THREE.MeshBasicMaterial({
+            color: this.skill.color,
             transparent: true,
-            opacity: 0.0, // Start invisible
-            emissive: this.skill.color,
-            emissiveIntensity: 0.5
+            opacity: 0.0
         });
+        const placeholderMesh = new THREE.Mesh(placeholderGeometry, placeholderMaterial);
+        allyGroup.add(placeholderMesh);
         
-        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-        body.position.y = 0.6; // Half height
-        allyGroup.add(body);
-        
-        // Create ally head
-        const headGeometry = new THREE.SphereGeometry(0.25, 16, 16);
-        const headMaterial = new THREE.MeshStandardMaterial({
-            color: 0x8844aa,
-            transparent: true,
-            opacity: 0.0, // Start invisible
-            emissive: this.skill.color,
-            emissiveIntensity: 0.5
-        });
-        
-        const head = new THREE.Mesh(headGeometry, headMaterial);
-        head.position.y = 1.3; // Above body
-        allyGroup.add(head);
-        
-        // Create ally arms
-        const armGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.6, 8);
-        const armMaterial = new THREE.MeshStandardMaterial({
-            color: 0x8844aa,
-            transparent: true,
-            opacity: 0.0, // Start invisible
-            emissive: this.skill.color,
-            emissiveIntensity: 0.5
-        });
-        
-        // Left arm
-        const leftArm = new THREE.Mesh(armGeometry, armMaterial);
-        leftArm.position.set(-0.4, 0.9, 0);
-        leftArm.rotation.z = Math.PI / 4; // Angle arm outward
-        allyGroup.add(leftArm);
-        
-        // Right arm
-        const rightArm = new THREE.Mesh(armGeometry, armMaterial);
-        rightArm.position.set(0.4, 0.9, 0);
-        rightArm.rotation.z = -Math.PI / 4; // Angle arm outward
-        allyGroup.add(rightArm);
+        // Load the hero model
+        const loader = new GLTFLoader();
+        loader.load(
+            this.modelPath,
+            (gltf) => {
+                // Store the loaded model
+                this.heroModel = gltf.scene;
+                
+                // Apply the spirit-like material to all meshes
+                this.heroModel.traverse((node) => {
+                    if (node.isMesh) {
+                        // Store the original material for reference
+                        node.userData.originalMaterial = node.material;
+                        
+                        // Create a new transparent, glowing material
+                        const spiritMaterial = new THREE.MeshStandardMaterial({
+                            color: 0x8844aa, // Purple-ish base color
+                            transparent: true,
+                            opacity: 0.0, // Start invisible, will be animated
+                            emissive: this.skill.color,
+                            emissiveIntensity: 0.7,
+                            side: THREE.DoubleSide
+                        });
+                        
+                        // Apply the new material
+                        node.material = spiritMaterial;
+                    }
+                });
+                
+                // Scale the model
+                this.heroModel.scale.set(this.modelScale, this.modelScale, this.modelScale);
+                
+                // Position adjustments based on model config
+                const modelConfig = CHARACTER_MODELS.find(m => m.path === this.modelPath);
+                if (modelConfig && modelConfig.defaultAdjustments) {
+                    const adj = modelConfig.defaultAdjustments;
+                    this.heroModel.position.set(adj.position.x, adj.position.y, adj.position.z);
+                }
+                
+                // Set up animations if they exist
+                if (gltf.animations && gltf.animations.length > 0) {
+                    this.mixer = new THREE.AnimationMixer(this.heroModel);
+                    
+                    // Find an idle animation if available
+                    let idleAnimation = gltf.animations.find(anim => 
+                        anim.name.toLowerCase().includes('idle') || 
+                        anim.name.toLowerCase().includes('stand')
+                    );
+                    
+                    // If no idle animation found, use the first one
+                    if (!idleAnimation && gltf.animations.length > 0) {
+                        idleAnimation = gltf.animations[0];
+                    }
+                    
+                    // Play the animation if found
+                    if (idleAnimation) {
+                        const action = this.mixer.clipAction(idleAnimation);
+                        action.play();
+                    }
+                }
+                
+                // Remove placeholder and add the model to the group
+                allyGroup.remove(placeholderMesh);
+                allyGroup.add(this.heroModel);
+                
+                // Update the reference in mysticAllyState
+                if (this.mysticAllyState) {
+                    this.mysticAllyState.allyMesh = this.heroModel;
+                }
+            },
+            // Progress callback
+            (xhr) => {
+                console.log(`Loading hero model: ${(xhr.loaded / xhr.total) * 100}% loaded`);
+            },
+            // Error callback
+            (error) => {
+                console.error('Error loading hero model:', error);
+            }
+        );
         
         // Create energy wisps around the ally
-        const wispCount = 5;
+        const wispCount = 8; // Increased for more visual effect
         for (let i = 0; i < wispCount; i++) {
             const angle = (i / wispCount) * Math.PI * 2;
-            const radius = 0.5;
+            const radius = 0.7; // Increased radius to surround the hero model
             
             const wispGeometry = new THREE.SphereGeometry(0.1, 8, 8);
             const wispMaterial = new THREE.MeshStandardMaterial({
@@ -281,7 +332,7 @@ export class MysticAllyEffect extends SkillEffect {
         for (let i = 0; i < swirlCount; i++) {
             const height = 0.4 + (i * 0.4);
             
-            const swirlGeometry = new THREE.TorusGeometry(0.3, 0.05, 8, 16);
+            const swirlGeometry = new THREE.TorusGeometry(0.5, 0.05, 8, 16); // Increased size
             const swirlMaterial = new THREE.MeshStandardMaterial({
                 color: 0xffffff,
                 transparent: true,
@@ -321,7 +372,7 @@ export class MysticAllyEffect extends SkillEffect {
             ally: allyGroup,
             summoningCircle: summoningGroup,
             initialAllyHeight: 5, // Starting height
-            allyMesh: body // Reference to main ally mesh for cleanup
+            allyMesh: null // Will be updated when model loads
         };
     }
 
@@ -357,6 +408,11 @@ export class MysticAllyEffect extends SkillEffect {
     _updateMysticAllyEffect(delta) {
         // Update ally state
         this.mysticAllyState.age += delta;
+        
+        // Update animation mixer if it exists
+        if (this.mixer) {
+            this.mixer.update(delta);
+        }
         
         // Determine current phase based on elapsed time
         const summoningDuration = 2.0; // First 2 seconds is summoning
@@ -518,6 +574,15 @@ export class MysticAllyEffect extends SkillEffect {
      */
     dispose() {
         if (!this.effect) return;
+        
+        // Stop any animations
+        if (this.mixer) {
+            this.mixer.stopAllAction();
+            this.mixer = null;
+        }
+        
+        // Clean up hero model reference
+        this.heroModel = null;
         
         // Clean up Mystic Ally specific resources
         if (this.mysticAllyState) {

@@ -183,14 +183,15 @@ export class ShieldOfZenEffect extends SkillEffect {
             buddhaGroup.add(buddhaBox);
         });
         
-        // Position the Buddha behind the player
-        // Calculate position behind the player based on direction
-        const behindPosition = direction.clone().multiplyScalar(-3); // 3 units behind
-        buddhaGroup.position.copy(behindPosition);
-        buddhaGroup.position.y += 1.5; // Raise the Buddha up
+        // Position the Buddha at the same location as the player (hero inside Buddha)
+        // Set position to origin (0,0,0) relative to effect group, which is already at player position
+        buddhaGroup.position.set(0, 0, 0);
         
-        // Make the Buddha face the player
-        buddhaGroup.lookAt(new THREE.Vector3(0, buddhaGroup.position.y, 0));
+        // Adjust y-position to place Buddha above the ground
+        // The y-offset depends on the model's dimensions - adjust if needed
+        buddhaGroup.position.y += 2.5; // Raise the Buddha to be fully visible above ground
+        
+        // No need to make Buddha face the player as rotation will be handled in update method
         
         // Add Buddha to effect group
         effectGroup.add(buddhaGroup);
@@ -291,10 +292,12 @@ export class ShieldOfZenEffect extends SkillEffect {
             
             // Update the Buddha figure's position relative to the player
             if (this.buddhaFigure) {
-                // Calculate position behind the player based on current direction
-                const behindPosition = currentPlayerDirection.clone().multiplyScalar(-3); // 3 units behind
-                this.buddhaFigure.position.copy(behindPosition);
-                this.buddhaFigure.position.y += 1.5; // Raise the Buddha up
+                // Position the Buddha at the same location as the player (hero inside Buddha)
+                // Set position to origin (0,0,0) relative to effect group, which is at player position
+                this.buddhaFigure.position.set(0, 0, 0);
+                
+                // Adjust y-position to place Buddha above the ground
+                this.buddhaFigure.position.y += 3.0; // Raise the Buddha to be fully visible above ground
                 
                 // Make the Buddha have exactly the same direction look as the hero
                 // We set the rotation directly from the player's rotation
