@@ -8,8 +8,6 @@ import { SkillPreview } from './SkillPreview.js';
 import { CHARACTER_MODELS } from '../../config/player-models.js';
 import { UIComponent } from '../UIComponent.js';
 import { SKILLS } from '../../config/skills.js';
-import { SkillEffectFactory } from '../../entities/skills/SkillEffectFactory.js';
-import { Skill } from '../../entities/skills/Skill.js';
 
 export class SettingsMenu extends UIComponent {
     /**
@@ -335,22 +333,6 @@ export class SettingsMenu extends UIComponent {
         
         // Create the skill effect using the SkillPreview
         this.skillPreview.createSkillEffect(this.currentSkill);
-    }
-    
-    /**
-     * Reset the skill preview
-     * @private
-     */
-    resetSkillPreview() {
-        console.log('Resetting skill preview');
-        
-        if (this.skillPreview) {
-            // Remove the current skill effect
-            this.skillPreview.removeSkillEffect();
-            
-            // Reset the camera
-            this.skillPreview.resetCamera();
-        }
     }
     
     /**
