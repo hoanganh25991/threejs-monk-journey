@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { EnemyModelFactory } from './models/EnemyModelFactory.js';
+import { enemyBehaviorSettings, enemyTypeBehavior } from '../config/enemy-behavior.js';
 
 export class Enemy {
     constructor(scene, player, config) {
@@ -30,8 +31,13 @@ export class Enemy {
             isDead: false,
             attackCooldown: 0,
             isKnockedBack: false,
-            knockbackEndTime: 0
+            knockbackEndTime: 0,
+            isAggressive: false,
+            aggressionEndTime: 0
         };
+        
+        // Apply behavior settings from config
+        this.applyBehaviorSettings();
         
         // Enemy position and orientation
         this.position = new THREE.Vector3();
@@ -52,6 +58,23 @@ export class Enemy {
     init() {
         // Create enemy model
         this.createModel();
+    }
+    
+    applyBehaviorSettings() {
+        // Get type-specific behavior settings or use default
+        const typeBehavior = enemyTypeBehavior[this.type] || enemyTypeBehavior['default'];
+        
+        // Apply detection range
+        this.detectionRange = typeBehavior.detectionRange || enemyBehaviorSettings.detectionRange;
+        
+        // Apply attack range multiplier
+        this.attackRange *= (typeBehavior.attackRangeMultiplier || enemyBehaviorSettings.attackRangeMultiplier);
+        
+        // Apply aggression settings
+        this.persistentAggression = typeBehavior.persistentAggression || 
+                                   enemyBehaviorSettings.aggressionSettings.persistentAggression;
+        this.aggressionTimeout = typeBehavior.aggressionTimeout || 
+                                enemyBehaviorSettings.aggressionSettings.aggressionTimeout;
     }
 
     createModel() {
@@ -206,32 +229,51 @@ export class Enemy {
                 this.attackPlayer();
                 this.state.attackCooldown = 1 / this.attackSpeed;
             }
-        } else if (distanceToPlayer <= 15) {
-            // Move towards player if within detection range
-            this.state.isMoving = true;
             
-            // Calculate direction to player
-            const directionX = playerPosition.x - this.position.x;
-            const directionZ = playerPosition.z - this.position.z;
+            // Set aggressive state when player is in attack range
+            this.state.isAggressive = true;
+            this.state.aggressionEndTime = Date.now() + (this.aggressionTimeout * 1000);
+        } else if (distanceToPlayer <= this.detectionRange || this.state.isAggressive) {
+            // Move towards player if within detection range or if enemy is in aggressive state
             
-            // Normalize direction
-            const length = Math.sqrt(directionX * directionX + directionZ * directionZ);
-            const normalizedDirectionX = directionX / length;
-            const normalizedDirectionZ = directionZ / length;
+            // Check if aggression should end
+            if (this.state.isAggressive && Date.now() > this.state.aggressionEndTime && !this.persistentAggression) {
+                this.state.isAggressive = false;
+            }
             
-            // Update rotation to face player
-            this.rotation.y = Math.atan2(normalizedDirectionX, normalizedDirectionZ);
-            
-            // Calculate new position
-            const moveSpeed = this.speed * delta;
-            const newPosition = {
-                x: this.position.x + normalizedDirectionX * moveSpeed,
-                y: this.position.y,
-                z: this.position.z + normalizedDirectionZ * moveSpeed
-            };
-            
-            // Update position
-            this.setPosition(newPosition.x, newPosition.y, newPosition.z);
+            // Only chase if within detection range or still aggressive
+            if (distanceToPlayer <= this.detectionRange || this.state.isAggressive) {
+                this.state.isMoving = true;
+                
+                // Calculate direction to player
+                const directionX = playerPosition.x - this.position.x;
+                const directionZ = playerPosition.z - this.position.z;
+                
+                // Normalize direction
+                const length = Math.sqrt(directionX * directionX + directionZ * directionZ);
+                const normalizedDirectionX = directionX / length;
+                const normalizedDirectionZ = directionZ / length;
+                
+                // Update rotation to face player
+                this.rotation.y = Math.atan2(normalizedDirectionX, normalizedDirectionZ);
+                
+                // Calculate new position
+                const moveSpeed = this.speed * delta;
+                const newPosition = {
+                    x: this.position.x + normalizedDirectionX * moveSpeed,
+                    y: this.position.y,
+                    z: this.position.z + normalizedDirectionZ * moveSpeed
+                };
+                
+                // Update position
+                this.setPosition(newPosition.x, newPosition.y, newPosition.z);
+                
+                // If player is within detection range, refresh aggression timer
+                if (distanceToPlayer <= this.detectionRange) {
+                    this.state.isAggressive = true;
+                    this.state.aggressionEndTime = Date.now() + (this.aggressionTimeout * 1000);
+                }
+            }
         }
         
         // Update animations

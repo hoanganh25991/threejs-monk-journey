@@ -249,6 +249,9 @@ export class Game {
      * Set up event listeners for window and document events
      */
     setupEventListeners() {
+        if (window.location.hostname == "localhost") {
+            return;
+        }
         // Handle window resize
         window.addEventListener('resize', () => this.onWindowResize());
         
