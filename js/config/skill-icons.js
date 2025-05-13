@@ -36,9 +36,9 @@ export const SKILL_ICONS = {
         cssClass: "icon-inner-sanctuary",
         color: "#ffffff"
     },
-    "Mystic Ally": {
+    "Mystic Allies": {
         emoji: "👤",
-        cssClass: "icon-mystic-ally",
+        cssClass: "icon-mystic-allies",
         color: "#00ffff"
     },
     "Seven-Sided Strike": {
@@ -211,6 +211,458 @@ export const SKILL_ICONS = {
         emoji: "💨",
         cssClass: "icon-gale-kick",
         color: "#ccffff"
+    },
+
+    // Additional Skills from skill-tree.js
+    "Aerial Agility": {
+        emoji: "🦅",
+        cssClass: "icon-aerial-agility",
+        color: "#87ceeb"
+    },
+    "Aerial Mastery": {
+        emoji: "🦢",
+        cssClass: "icon-aerial-mastery",
+        color: "#add8e6"
+    },
+    "Air Allies": {
+        emoji: "🌬️",
+        cssClass: "icon-air-allies",
+        color: "#e6e6fa"
+    },
+    "Amplified Power": {
+        emoji: "⚡",
+        cssClass: "icon-amplified-power",
+        color: "#9370db"
+    },
+    "Blazing Fists": {
+        emoji: "🔥",
+        cssClass: "icon-blazing-fists",
+        color: "#ff4500"
+    },
+    "Blinding Light": {
+        emoji: "✨",
+        cssClass: "icon-blinding-light",
+        color: "#fffacd"
+    },
+    "Boundless Breath": {
+        emoji: "🌀",
+        cssClass: "icon-boundless-breath",
+        color: "#87cefa"
+    },
+    "Celestial Impact": {
+        emoji: "☄️",
+        cssClass: "icon-celestial-impact",
+        color: "#9932cc"
+    },
+    "Circle of Wrath": {
+        emoji: "⭕",
+        cssClass: "icon-circle-of-wrath",
+        color: "#b22222"
+    },
+    "Crashing Wave": {
+        emoji: "🌊",
+        cssClass: "icon-crashing-wave",
+        color: "#1e90ff"
+    },
+    "Earth Allies": {
+        emoji: "🏔️",
+        cssClass: "icon-earth-allies",
+        color: "#8b4513"
+    },
+    "Echoing Waves": {
+        emoji: "〰️",
+        cssClass: "icon-echoing-waves",
+        color: "#4682b4"
+    },
+    "Empowered Allies": {
+        emoji: "💪",
+        cssClass: "icon-empowered-allies",
+        color: "#9370db"
+    },
+    "Empowered Blows": {
+        emoji: "👊",
+        cssClass: "icon-empowered-blows",
+        color: "#cd5c5c"
+    },
+    "Empowered Healing": {
+        emoji: "💖",
+        cssClass: "icon-empowered-healing",
+        color: "#ff69b4"
+    },
+    "Empowered Impact": {
+        emoji: "💥",
+        cssClass: "icon-empowered-impact",
+        color: "#ff6347"
+    },
+    "Empowered Kicks": {
+        emoji: "🦵",
+        cssClass: "icon-empowered-kicks",
+        color: "#ff8c00"
+    },
+    "Empowered Sanctuary": {
+        emoji: "🏯",
+        cssClass: "icon-empowered-sanctuary",
+        color: "#f0e68c"
+    },
+    "Empowered Shielding": {
+        emoji: "🛡️",
+        cssClass: "icon-empowered-shielding",
+        color: "#dcdcdc"
+    },
+    "Empowered Spirit": {
+        emoji: "👻",
+        cssClass: "icon-empowered-spirit",
+        color: "#e6e6fa"
+    },
+    "Empowered Strike": {
+        emoji: "⚡",
+        cssClass: "icon-empowered-strike",
+        color: "#ffd700"
+    },
+    "Energy Efficiency": {
+        emoji: "⚡",
+        cssClass: "icon-energy-efficiency",
+        color: "#00bfff"
+    },
+    "Enhanced Detonation": {
+        emoji: "💣",
+        cssClass: "icon-enhanced-detonation",
+        color: "#ff4500"
+    },
+    "Ethereal Embrace": {
+        emoji: "🌫️",
+        cssClass: "icon-ethereal-embrace",
+        color: "#e6e6fa"
+    },
+    "Explosive Wave": {
+        emoji: "💥",
+        cssClass: "icon-explosive-wave",
+        color: "#ff6347"
+    },
+    "Extended Duration": {
+        emoji: "⏳",
+        cssClass: "icon-extended-duration",
+        color: "#ffa07a"
+    },
+    "Extended Flight": {
+        emoji: "🕊️",
+        cssClass: "icon-extended-flight",
+        color: "#87ceeb"
+    },
+    "Extended Lock": {
+        emoji: "🔒",
+        cssClass: "icon-extended-lock",
+        color: "#a9a9a9"
+    },
+    "Extended Reach": {
+        emoji: "📏",
+        cssClass: "icon-extended-reach",
+        color: "#20b2aa"
+    },
+    "Extended Sanctuary": {
+        emoji: "🏮",
+        cssClass: "icon-extended-sanctuary",
+        color: "#fafad2"
+    },
+    "Eye of the Storm": {
+        emoji: "👁️",
+        cssClass: "icon-eye-of-the-storm",
+        color: "#4682b4"
+    },
+    "Fiery Chains": {
+        emoji: "⛓️",
+        cssClass: "icon-fiery-chains",
+        color: "#ff4500"
+    },
+    "Fire Allies": {
+        emoji: "🔥",
+        cssClass: "icon-fire-allies",
+        color: "#ff4500"
+    },
+    "Focused Energy": {
+        emoji: "🧠",
+        cssClass: "icon-focused-energy",
+        color: "#9370db"
+    },
+    "Forbidden Palace": {
+        emoji: "🏯",
+        cssClass: "icon-forbidden-palace",
+        color: "#800000"
+    },
+    "Fortified Wall": {
+        emoji: "🧱",
+        cssClass: "icon-fortified-wall",
+        color: "#a52a2a"
+    },
+    "Freezing Wave": {
+        emoji: "❄️",
+        cssClass: "icon-freezing-wave",
+        color: "#b0e0e6"
+    },
+    "Frozen Assault": {
+        emoji: "🧊",
+        cssClass: "icon-frozen-assault",
+        color: "#add8e6"
+    },
+    "Frozen Shackles": {
+        emoji: "❄️",
+        cssClass: "icon-frozen-shackles",
+        color: "#b0c4de"
+    },
+    "Gale Chains": {
+        emoji: "⛓️",
+        cssClass: "icon-gale-chains",
+        color: "#e0ffff"
+    },
+    "Harmonious Defense": {
+        emoji: "☯️",
+        cssClass: "icon-harmonious-defense",
+        color: "#f5f5f5"
+    },
+    "Healing Surge": {
+        emoji: "💗",
+        cssClass: "icon-healing-surge",
+        color: "#ff69b4"
+    },
+    "Healing Wave": {
+        emoji: "💓",
+        cssClass: "icon-healing-wave",
+        color: "#ff1493"
+    },
+    "Healing Winds": {
+        emoji: "🍃",
+        cssClass: "icon-healing-winds",
+        color: "#98fb98"
+    },
+    "Imprisoned Fists": {
+        emoji: "🔒",
+        cssClass: "icon-imprisoned-fists",
+        color: "#696969"
+    },
+    "Lingering Pain": {
+        emoji: "😖",
+        cssClass: "icon-lingering-pain",
+        color: "#8b0000"
+    },
+    "Lingering Presence": {
+        emoji: "👥",
+        cssClass: "icon-lingering-presence",
+        color: "#778899"
+    },
+    "Lingering Protection": {
+        emoji: "🛡️",
+        cssClass: "icon-lingering-protection",
+        color: "#b8860b"
+    },
+    "Lingering Shadows": {
+        emoji: "👤",
+        cssClass: "icon-lingering-shadows",
+        color: "#2f4f4f"
+    },
+    "Molten Wave": {
+        emoji: "🌋",
+        cssClass: "icon-molten-wave",
+        color: "#ff4500"
+    },
+    "Mystic Strike": {
+        emoji: "✨",
+        cssClass: "icon-mystic-strike",
+        color: "#9370db"
+    },
+    "Mystic Veil": {
+        emoji: "🌌",
+        cssClass: "icon-mystic-veil",
+        color: "#483d8b"
+    },
+    "Phantom Echo": {
+        emoji: "👻",
+        cssClass: "icon-phantom-echo",
+        color: "#dcdcdc"
+    },
+    "Phantom Strike": {
+        emoji: "👻",
+        cssClass: "icon-phantom-strike",
+        color: "#708090"
+    },
+    "Power Surge": {
+        emoji: "⚡",
+        cssClass: "icon-power-surge",
+        color: "#ffd700"
+    },
+    "Quick Recovery": {
+        emoji: "⏱️",
+        cssClass: "icon-quick-recovery",
+        color: "#00bfff"
+    },
+    "Quick Setup": {
+        emoji: "⚡",
+        cssClass: "icon-quick-setup",
+        color: "#32cd32"
+    },
+    "Quick Summon": {
+        emoji: "🧙",
+        cssClass: "icon-quick-summon",
+        color: "#9370db"
+    },
+    "Quickened Strikes": {
+        emoji: "⚡",
+        cssClass: "icon-quickened-strikes",
+        color: "#ff8c00"
+    },
+    "Radiant Barrier": {
+        emoji: "✨",
+        cssClass: "icon-radiant-barrier",
+        color: "#ffd700"
+    },
+    "Rapid Palm": {
+        emoji: "👋",
+        cssClass: "icon-rapid-palm",
+        color: "#ff6347"
+    },
+    "Rapid Strikes": {
+        emoji: "⚔️",
+        cssClass: "icon-rapid-strikes",
+        color: "#cd5c5c"
+    },
+    "Rapid Waves": {
+        emoji: "〰️",
+        cssClass: "icon-rapid-waves",
+        color: "#4169e1"
+    },
+    "Reflective Shield": {
+        emoji: "🔄",
+        cssClass: "icon-reflective-shield",
+        color: "#c0c0c0"
+    },
+    "Resilient Assault": {
+        emoji: "🛡️",
+        cssClass: "icon-resilient-assault",
+        color: "#8b0000"
+    },
+    "Resilient Barrier": {
+        emoji: "🧱",
+        cssClass: "icon-resilient-barrier",
+        color: "#a9a9a9"
+    },
+    "Resilient Dash": {
+        emoji: "🏃",
+        cssClass: "icon-resilient-dash",
+        color: "#6a5acd"
+    },
+    "Resilient Guard": {
+        emoji: "🛡️",
+        cssClass: "icon-resilient-guard",
+        color: "#708090"
+    },
+    "Resilient Spirit": {
+        emoji: "💫",
+        cssClass: "icon-resilient-spirit",
+        color: "#e6e6fa"
+    },
+    "Resilient Spirits": {
+        emoji: "👥",
+        cssClass: "icon-resilient-spirits",
+        color: "#9370db"
+    },
+    "Resonating Echo": {
+        emoji: "🔊",
+        cssClass: "icon-resonating-echo",
+        color: "#9932cc"
+    },
+    "Safe Haven": {
+        emoji: "🏠",
+        cssClass: "icon-safe-haven",
+        color: "#f5f5dc"
+    },
+    "Sanctified Ground": {
+        emoji: "🏮",
+        cssClass: "icon-sanctified-ground",
+        color: "#ffd700"
+    },
+    "Shadow Allies": {
+        emoji: "👥",
+        cssClass: "icon-shadow-allies",
+        color: "#2f4f4f"
+    },
+    "Shadow Bind": {
+        emoji: "🕸️",
+        cssClass: "icon-shadow-bind",
+        color: "#696969"
+    },
+    "Shadow Step": {
+        emoji: "👣",
+        cssClass: "icon-shadow-step",
+        color: "#4b0082"
+    },
+    "Shocking Wave": {
+        emoji: "⚡",
+        cssClass: "icon-shocking-wave",
+        color: "#ffd700"
+    },
+    "Soul Reaver": {
+        emoji: "👻",
+        cssClass: "icon-soul-reaver",
+        color: "#4b0082"
+    },
+    "Spirit's Reach": {
+        emoji: "👐",
+        cssClass: "icon-spirits-reach",
+        color: "#e6e6fa"
+    },
+    "Swift Descent": {
+        emoji: "🦅",
+        cssClass: "icon-swift-descent",
+        color: "#87ceeb"
+    },
+    "Swift Recovery": {
+        emoji: "⏱️",
+        cssClass: "icon-swift-recovery",
+        color: "#00bfff"
+    },
+    "Swift Wave": {
+        emoji: "🌊",
+        cssClass: "icon-swift-wave",
+        color: "#1e90ff"
+    },
+    "Temple of Protection": {
+        emoji: "🏯",
+        cssClass: "icon-temple-of-protection",
+        color: "#fafad2"
+    },
+    "Terminal Pace": {
+        emoji: "🏃",
+        cssClass: "icon-terminal-pace",
+        color: "#ff8c00"
+    },
+    "Thunderous Grip": {
+        emoji: "⚡",
+        cssClass: "icon-thunderous-grip",
+        color: "#ffd700"
+    },
+    "Thunderous Wave": {
+        emoji: "⚡",
+        cssClass: "icon-thunderous-wave",
+        color: "#4169e1"
+    },
+    "Tidal Force": {
+        emoji: "🌊",
+        cssClass: "icon-tidal-force",
+        color: "#00bfff"
+    },
+    "Water Allies": {
+        emoji: "💧",
+        cssClass: "icon-water-allies",
+        color: "#1e90ff"
+    },
+    "Widened Blast": {
+        emoji: "💥",
+        cssClass: "icon-widened-blast",
+        color: "#ff6347"
+    },
+    "Zen's Retribution": {
+        emoji: "☯️",
+        cssClass: "icon-zens-retribution",
+        color: "#000000"
     },
 
     // Generic buff icons
