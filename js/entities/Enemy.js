@@ -39,7 +39,7 @@ export class Enemy {
         
         // Enemy collision
         this.collisionRadius = 0.5 * this.scale;
-        this.heightOffset = 1.0 * this.scale;
+        this.heightOffset = 0.4 * this.scale; // Adjusted to place enemies on the ground
         
         // Enemy model
         this.modelGroup = null;
