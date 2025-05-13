@@ -1,4 +1,6 @@
 // Skills configuration
+import { SKILL_ICONS } from './skill-icons.js';
+
 export const SKILLS = [
     {
         name: 'Shield of Zen',
@@ -10,8 +12,8 @@ export const SKILLS = [
         range: 0, // Self-cast
         radius: 3, // Area of effect around player
         duration: 10, // 10 seconds duration
-        color: 0xffdd00, // Golden color
-        icon: '🧘', // Person in lotus position emoji
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
             cast: 'skillInnerSanctuary', // Reusing Inner Sanctuary sound for now
             impact: 'barrierForm', // Sound of protective barrier forming
@@ -20,7 +22,7 @@ export const SKILLS = [
     },
     {
         name: 'Breath of Heaven',
-        description: 'Summon a healing aura that heals allies and damages enemies',
+        description: 'A healing skill that restores health to the Monk and nearby allies.',
         type: 'heal',
         damage: 10,
         healing: 20, // Amount of health restored per pulse
@@ -29,8 +31,8 @@ export const SKILLS = [
         range: 0, // Centered on player
         radius: 8, // Large radius to affect multiple allies/enemies
         duration: 8, // Duration in seconds
-        color: 0xffdd99, // Golden yellow color for divine energy
-        icon: '🌬️', // Wind blowing emoji
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
             cast: 'skillBreathOfHeaven', // Heavenly choir sound
             impact: 'healingPulse', // Soft healing pulse sound
@@ -47,8 +49,8 @@ export const SKILLS = [
         range: 25,
         radius: 2,
         duration: 3.5, // Further increased duration from 2.5 to 3.5
-        color: 0x00ffff,
-        icon: '🌊', // Wave emoji
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
             cast: 'skillWaveStrike', // Monk channels energy and releases a wave
             impact: 'waterImpact', // Watery impact sound when hitting enemies
@@ -57,7 +59,7 @@ export const SKILLS = [
     },
     {
         name: 'Cyclone Strike',
-        description: 'Pull enemies towards you and deal area damage',
+        description: 'Generate a vortex of wind that pulls in enemies and deals damage.',
         type: 'aoe',
         damage: 15,
         manaCost: 25,
@@ -65,8 +67,8 @@ export const SKILLS = [
         range: 5,
         radius: 4,
         duration: 2.5, // Further increased duration from 1.5 to 2.5
-        color: 0xffcc00,
-        icon: '🌪️', // Cyclone emoji
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
             cast: 'skillCycloneStrike', // Powerful wind gathering sound
             impact: 'windPull', // Sound of enemies being pulled by wind
@@ -83,8 +85,8 @@ export const SKILLS = [
         range: 6,
         radius: 10,
         duration: 2.5,
-        color: 0xff0000,
-        icon: '🔄', // Cycle emoji
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
         hits: 7,
         sounds: {
             cast: 'skillSevenSidedStrike', // Monk chanting and focusing energy
@@ -102,8 +104,8 @@ export const SKILLS = [
         range: 0,
         radius: 5,
         duration: 10, // Further increased duration from 7 to 10
-        color: 0xffffff,
-        icon: '🛡️', // Shield emoji
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
             cast: 'skillInnerSanctuary', // Monk chanting a protection mantra
             impact: 'barrierForm', // Sound of protective barrier forming
@@ -111,7 +113,7 @@ export const SKILLS = [
         }
     },
     {
-        name: 'Mystic Ally',
+        name: 'Mystic Allies',
         description: 'Summon spirit allies to fight alongside you',
         type: 'summon',
         damage: 12,
@@ -120,8 +122,8 @@ export const SKILLS = [
         range: 2, // Increased range for summoning
         radius: 10, // Increased radius for summoning circle
         duration: 10, // Increased duration to 30 seconds
-        color: 0x00ffff,
-        icon: '👤', // Person emoji
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
         allyCount: 2, // Number of allies to summon
         sounds: {
             cast: 'skillMysticAlly', // Mystical summoning incantation
@@ -139,8 +141,8 @@ export const SKILLS = [
         range: 25,
         radius: 5,
         duration: 5.0, // Further increased duration from 3.5 to 5.0
-        color: 0xffdd22, // Golden color for the bell's light
-        icon: '🔔', // Bell emoji
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
             cast: 'skillWaveOfLight', // Monk summoning the bell with chanting
             impact: 'bellRing', // Deep, resonant bell sound
@@ -149,7 +151,7 @@ export const SKILLS = [
     },
     {
         name: 'Exploding Palm',
-        description: 'Giant Palm: Summon a massive ethereal palm that marks enemies, causing them to violently explode on death and unleash devastating damage to all nearby foes',
+        description: 'A skill that marks an enemy for death, causing them to explode upon death and deal damage to nearby enemies.',
         type: 'mark',
         damage: 15,
         manaCost: 25,
@@ -157,12 +159,48 @@ export const SKILLS = [
         range: 30,
         radius: 5,
         duration: 5, // Further increased duration from 15 to 20 seconds
-        color: 0xff3333,
-        icon: '💥', // Explosion emoji
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
             cast: 'skillExplodingPalm', // Sound of monk focusing deadly energy
             impact: 'markApplied', // Sound of mark being applied to enemy
             end: 'massiveExplosion' // Powerful explosion when mark detonates
+        }
+    },
+    {
+        name: 'Flying Dragon',
+        description: 'A powerful attack that launches the Monk into the air, striking enemies with a flurry of kicks.',
+        type: 'multi',
+        damage: 25,
+        manaCost: 35,
+        cooldown: 8,
+        range: 10,
+        radius: 5,
+        duration: 3,
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
+        sounds: {
+            cast: 'skillFlyingDragon', // Sound of monk leaping into the air
+            impact: 'dragonStrike', // Sound of powerful kicks landing
+            end: 'dragonLand' // Sound of monk landing after the attack
+        }
+    },
+    {
+        name: 'Flying Kick',
+        description: 'A swift kick that propels the Monk forward, dealing damage to enemies in its path.',
+        type: 'dash',
+        damage: 20,
+        manaCost: 20,
+        cooldown: 5,
+        range: 15,
+        radius: 2,
+        duration: 1,
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
+        sounds: {
+            cast: 'skillFlyingKick', // Sound of monk preparing to kick
+            impact: 'kickImpact', // Sound of kick connecting with enemies
+            end: 'kickLand' // Sound of monk landing after the kick
         }
     },
     {
@@ -175,8 +213,8 @@ export const SKILLS = [
         range: 25, // Teleport range
         radius: 2, // Area of effect after teleport
         duration: 1.0, // Short duration
-        color: 0x4169e1, // Royal blue color for lightning
-        icon: '⚡', // Lightning emoji
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
         basicAttack: true,
         sounds: {
             cast: 'skillFistOfThunder', // Sound of lightning charging
@@ -194,8 +232,8 @@ export const SKILLS = [
         range: 3, // Extended range
         radius: 0,
         duration: 0,
-        color: 0x4682b4, // Red color for forceful strikes
-        icon: "🌀", // Cyclone emoji
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
         piercing: true, // Can pierce through enemies
         knockback: true, // Final strike can knock back enemies
         sounds: {

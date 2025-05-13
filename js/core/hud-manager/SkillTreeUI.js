@@ -139,7 +139,7 @@ export class SkillTreeUI extends UIComponent {
       // Create the skill node
       const skillNode = `
 <div class="skill-node" data-skill="${skillName}">
-<div class="skill-icon" style="background-color: ${iconData.color}">
+<div class="skill-icon ${iconData.cssClass}" style="background-color: rgba(0, 0, 0, 0.7); border: 2px solid ${iconData.color}; box-shadow: 0 0 10px ${iconData.color}40;">
 ${iconData.emoji}
 </div>
 <div class="skill-name">${skillName}</div>
@@ -261,7 +261,7 @@ ${iconData.emoji}
         isActive ? "active" : ""
       }" data-variant="${variantName}">
 <div class="variant-header">
-<div class="variant-icon" style="background-color: ${iconData.color}">
+<div class="variant-icon ${iconData.cssClass}" style="background-color: rgba(0, 0, 0, 0.7); border: 2px solid ${iconData.color}; box-shadow: 0 0 10px ${iconData.color}40;">
 ${iconData.emoji}
 </div>
 <div class="variant-name">${variantName}</div>
@@ -389,7 +389,7 @@ ${isActive ? "Selected" : "Select Variant"}
       const buffHtml = `
 <div class="skill-buff ${isActive ? "active" : ""}" data-buff="${buffName}">
 <div class="buff-header">
-<div class="buff-icon" style="background-color: ${iconData.color}">
+<div class="buff-icon ${iconData.cssClass}" style="background-color: rgba(0, 0, 0, 0.7); border: 2px solid ${iconData.color}; box-shadow: 0 0 10px ${iconData.color}40;">
 ${iconData.emoji}
 </div>
 <div class="buff-name">${buffName}</div>

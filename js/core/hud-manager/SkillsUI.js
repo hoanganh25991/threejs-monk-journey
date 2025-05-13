@@ -1,5 +1,6 @@
 import { UIComponent } from '../UIComponent.js';
 import { SKILL_COLORS } from '../../config/colors.js';
+import { getSkillIcon } from '../../config/skill-icons.js';
 /**
  * Skills UI component
  * Displays player skills and cooldowns
@@ -32,15 +33,18 @@ export class SkillsUI extends UIComponent {
             // Determine key display
             const keyDisplay = skill.basicAttack ? "h" : `${index + 1}`;
             
-            // Get skill icon and color
-            const icon = skill.icon || '✨'; // Default to sparkle if no icon
-            const color = this.skillColors[skill.type] || '#ffffff';
+            // Get skill icon data
+            const iconData = getSkillIcon(skill.name);
+            const icon = skill.icon || iconData.emoji || '✨'; // Use icon from skill, then from iconData, or default
+            
+            // Get color for border styling
+            const color = iconData.color || this.skillColors[skill.type] || '#ffffff';
             
             // Create skill button HTML
             skillsHTML += `
-                <div class="skill-button" data-skill-type="${skill.type}" data-skill-index="${index}" style="border-color: ${color};">
+                <div class="skill-button" data-skill-type="${skill.type}" data-skill-index="${index}" data-skill="${skill.name}" style="border-color: ${color}; box-shadow: 0 0 10px ${color}40;">
                     <div class="skill-name">${skill.name}</div>
-                    <div class="skill-icon" style="color: ${color}; font-size: 30px; text-shadow: 0 0 10px ${color};">${icon}</div>
+                    <div class="skill-icon ${iconData.cssClass}">${icon}</div>
                     <div class="skill-key">${keyDisplay}</div>
                     <div class="skill-cooldown"></div>
                 </div>

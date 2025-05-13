@@ -754,3 +754,72 @@ export function getBuffIcon(effectType) {
         color: "#ffffff"
     };
 }
+
+/**
+ * Generate CSS for skill icons to be used in the game UI
+ * This creates styles that match the circular skill buttons with proper opacity and borders
+ * @returns {string} CSS style rules for skill icons
+ */
+export function generateSkillIconCSS() {
+    let css = `
+/* Skill Icon Styles */
+.skill-button {
+    width: 65px;
+    height: 65px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #6b4c2a;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.skill-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,150,0,0.2) 0%, rgba(0,0,0,0) 70%);
+    z-index: 1;
+}
+
+.skill-icon {
+    width: 80%;
+    height: 80%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    z-index: 3;
+    position: relative;
+}
+`;
+
+    // Generate CSS classes for each skill icon
+    Object.entries(SKILL_ICONS).forEach(([skillName, iconData]) => {
+        const className = iconData.cssClass;
+        const color = iconData.color;
+        
+        css += `
+.${className} {
+    color: ${color};
+    text-shadow: 0 0 10px ${color};
+}
+
+.skill-button[data-skill="${skillName}"] {
+    border-color: ${color};
+    box-shadow: 0 0 10px ${color}40;
+}
+
+.skill-button[data-skill="${skillName}"]:hover {
+    box-shadow: 0 0 15px ${color}80;
+}
+`;
+    });
+    
+    return css;
+}

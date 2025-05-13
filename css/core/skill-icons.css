@@ -1,0 +1,219 @@
+/**
+ * Skill Icons CSS
+ * Styling for skill icons throughout the game
+ */
+
+/* Base skill icon styling - pure circle with icon in middle */
+.variant-icon, .buff-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #6b4c2a;
+    box-shadow: 0 0 10px rgba(255, 150, 0, 0.3);
+    color: white;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+    overflow: hidden; /* Ensure content doesn't overflow the circle */
+}
+
+/* Skill icon inside skill button - no border or background */
+.skill-button .skill-icon {
+    width: 80%;
+    height: 80%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    position: relative;
+    color: white;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+    z-index: 3;
+}
+
+/* Skill icon when used outside of skill button */
+.skill-icon:not(.skill-button .skill-icon) {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #6b4c2a;
+    box-shadow: 0 0 10px rgba(255, 150, 0, 0.3);
+    color: white;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+    overflow: hidden;
+}
+
+/* Glow effect inside the icon */
+.skill-icon::before, .variant-icon::before, .buff-icon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0) 70%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Emoji positioning - centered in the circle */
+.skill-icon > *, .variant-icon > *, .buff-icon > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* Hover effects */
+.skill-node:hover .skill-icon,
+.skill-variant:hover .variant-icon,
+.skill-buff:hover .buff-icon {
+    transform: scale(1.05);
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Active state */
+.skill-node.selected .skill-icon,
+.skill-variant.active .variant-icon,
+.skill-buff.active .buff-icon {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+}
+
+/* Skill button specific styling for HUD */
+.skill-button {
+    position: relative;
+    border-radius: 50%;
+    overflow: hidden; /* Ensure cooldown overlay stays within the circle */
+}
+
+/* Ensure cooldown overlay works with our styling */
+.skill-cooldown {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%; /* Will be dynamically changed by JS */
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 2; /* Above the icon but below the key indicator */
+    pointer-events: none; /* Don't block clicks */
+}
+
+/* Skill button hover effect */
+.skill-button:hover {
+    box-shadow: 0 0 15px rgba(255, 150, 0, 0.5);
+}
+
+/* Skill tree specific styling */
+.skill-tree-skills .skill-icon {
+    margin: 0 auto;
+}
+
+/* Skill node styling - no box/rectangle */
+.skill-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.skill-node:hover {
+    transform: scale(1.05);
+}
+
+.skill-node.selected {
+    transform: scale(1.1);
+}
+
+.skill-node .skill-name {
+    margin-top: 5px;
+    font-size: 12px;
+    text-align: center;
+    color: #ffcc66;
+    text-shadow: 1px 1px 2px black;
+}
+
+/* Variant styling */
+.variant-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.variant-name {
+    margin-left: 10px;
+    font-weight: bold;
+    color: #ffcc66;
+}
+
+.variant-cost {
+    margin-left: auto;
+    color: #aaffaa;
+    font-size: 12px;
+}
+
+/* Buff styling */
+.buff-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.buff-name {
+    margin-left: 10px;
+    font-weight: bold;
+    color: #ffcc66;
+}
+
+.buff-cost {
+    margin-left: auto;
+    color: #aaffaa;
+    font-size: 12px;
+}
+
+/* Effect tags */
+.effect-tag {
+    display: inline-block;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid #6b4c2a;
+    border-radius: 3px;
+    padding: 2px 5px;
+    margin: 2px;
+    font-size: 10px;
+    color: #ffcc66;
+}
+
+/* Generate dynamic classes for each skill type */
+.icon-breath-heaven { color: #ffdd99; text-shadow: 0 0 10px #ffdd99; }
+.icon-cyclone-strike { color: #ffcc00; text-shadow: 0 0 10px #ffcc00; }
+.icon-exploding-palm { color: #ff3333; text-shadow: 0 0 10px #ff3333; }
+.icon-flying-dragon { color: #66ff66; text-shadow: 0 0 10px #66ff66; }
+.icon-flying-kick { color: #ff9933; text-shadow: 0 0 10px #ff9933; }
+.icon-inner-sanctuary { color: #ffffff; text-shadow: 0 0 10px #ffffff; }
+.icon-mystic-allies { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
+.icon-seven-sided-strike { color: #ff0000; text-shadow: 0 0 10px #ff0000; }
+.icon-wave-of-light { color: #ffdd22; text-shadow: 0 0 10px #ffdd22; }
+.icon-wave-strike { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
+.icon-fist-of-thunder { color: #4169e1; text-shadow: 0 0 10px #4169e1; }
+.icon-deadly-reach { color: #4682b4; text-shadow: 0 0 10px #4682b4; }
+.icon-shield-of-zen { color: #ffdd00; text-shadow: 0 0 10px #ffdd00; }
+
+/* Buff icons */
+.icon-buff-damage { color: #ff6666; text-shadow: 0 0 10px #ff6666; }
+.icon-buff-cooldown { color: #66ccff; text-shadow: 0 0 10px #66ccff; }
+.icon-buff-range { color: #aaffaa; text-shadow: 0 0 10px #aaffaa; }
+.icon-buff-duration { color: #ffcc66; text-shadow: 0 0 10px #ffcc66; }
+.icon-buff-healing { color: #ff6666; text-shadow: 0 0 10px #ff6666; }
+.icon-buff-defense { color: #aaaaaa; text-shadow: 0 0 10px #aaaaaa; }
+.icon-buff-speed { color: #aaffcc; text-shadow: 0 0 10px #aaffcc; }
+.icon-buff-area { color: #ffaaaa; text-shadow: 0 0 10px #ffaaaa; }
