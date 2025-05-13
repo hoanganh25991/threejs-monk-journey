@@ -1,6 +1,8 @@
 import { UIComponent } from '../UIComponent.js';
 import { SKILLS } from '../../config/skills.js';
 import { getSkillIcon, getBuffIcon } from '../../config/skill-icons.js';
+import { SKILL_TREES } from '../../config/skill-trees.js'
+import { applyBuffsToVariants } from '../../utils/skill-tree-utils.js'
 
 /**
  * Skill Tree UI component
@@ -17,7 +19,10 @@ export class SkillTreeUI extends UIComponent {
         this.isSkillTreeOpen = false;
         this.selectedSkill = null;
         this.skillPoints = 0; // Will be loaded from player data
-        this.skillTrees = null; // Will be loaded from skill-trees.json
+        
+        // Get the skill trees and apply buffs to variants
+        this.skillTrees = JSON.parse(JSON.stringify(SKILL_TREES)); // Create a deep copy
+        applyBuffsToVariants(this.skillTrees);
         this.playerSkills = {}; // Will track player's skill allocations
         this.activeTab = 'variants'; // Default active tab
         
@@ -45,9 +50,6 @@ export class SkillTreeUI extends UIComponent {
      * @returns {boolean} - True if initialization was successful
      */
     async init() {
-        // Load skill trees data
-        await this.loadSkillTreesData();
-        
         const template = `
             <div id="skill-tree-title">Monk Skill Tree</div>
             <div id="skill-tree-points">Available Points: <span id="skill-points-value">0</span></div>
@@ -249,21 +251,6 @@ export class SkillTreeUI extends UIComponent {
         this.updateMinimap();
         
         return true;
-    }
-    
-    /**
-     * Load skill trees data from JSON
-     */
-    async loadSkillTreesData() {
-        try {
-            const response = await fetch('/js/config/skill-trees.json');
-            this.skillTrees = await response.json();
-            console.debug('Skill trees data loaded successfully');
-        } catch (error) {
-            console.error('Failed to load skill trees data:', error);
-            // Fallback to empty object if loading fails
-            this.skillTrees = {};
-        }
     }
     
     /**
@@ -974,16 +961,29 @@ export class SkillTreeUI extends UIComponent {
         const svgContainer = document.querySelector('.tree-connections');
         if (!svgContainer) return;
         
-        // Get buffs
-        const buffs = skillData.buffs || {};
-        const buffNames = Object.keys(buffs);
+        // Get buffs - first check if the variant has buffs directly
+        const variantData = skillData.variants[variantName];
         
-        // Filter buffs for this variant
-        const variantBuffs = buffNames.filter(buffName => {
-            const buffData = buffs[buffName];
-            const requiredVariant = buffData.requiredVariant || "any";
-            return requiredVariant === "any" || requiredVariant === variantName;
-        });
+        // Use variant's buffs if available, otherwise fall back to skill's buffs
+        let buffs;
+        let variantBuffs;
+        
+        if (variantData && variantData.buffs) {
+            // Use the buffs directly from the variant
+            buffs = variantData.buffs;
+            variantBuffs = Object.keys(buffs);
+        } else {
+            // Fall back to the old method for backward compatibility
+            buffs = skillData.buffs || {};
+            const buffNames = Object.keys(buffs);
+            
+            // Filter buffs for this variant
+            variantBuffs = buffNames.filter(buffName => {
+                const buffData = buffs[buffName];
+                const requiredVariant = buffData.requiredVariant || "any";
+                return requiredVariant === "any" || requiredVariant === variantName;
+            });
+        }
         
         // Calculate the fan angle based on the number of buffs
         const fanAngle = Math.min(120, variantBuffs.length * 30); // Max 120 degrees
@@ -1824,21 +1824,39 @@ export class SkillTreeUI extends UIComponent {
         // Clear container
         buffsContainer.innerHTML = '';
         
-        // Check if we have buffs data for this skill
-        if (!this.skillTrees || !this.skillTrees[skillName] || !this.skillTrees[skillName].buffs) {
+        // Check if we have data for this skill
+        if (!this.skillTrees || !this.skillTrees[skillName]) {
             buffsContainer.innerHTML = '<div class="no-buffs">No buffs available for this skill.</div>';
             return;
         }
         
-        const buffs = this.skillTrees[skillName].buffs;
         const playerSkillData = this.playerSkills[skillName];
         
         // Check if player has unlocked a variant first
-        const hasVariant = playerSkillData && playerSkillData.activeVariant;
-        if (!hasVariant) {
+        const activeVariant = playerSkillData && playerSkillData.activeVariant;
+        if (!activeVariant) {
             buffsContainer.innerHTML = '<div class="no-buffs">Unlock a variant first to access buffs.</div>';
             return;
         }
+        
+        // Get the variant data
+        const variantData = this.skillTrees[skillName].variants[activeVariant];
+        
+        // Check if we have buffs - first try variant's buffs, then fall back to skill's buffs
+        let buffs;
+        
+        if (variantData && variantData.buffs) {
+            // Use the buffs directly from the variant
+            buffs = variantData.buffs;
+        } else if (this.skillTrees[skillName].buffs) {
+            // Fall back to the skill's buffs
+            buffs = this.skillTrees[skillName].buffs;
+        } else {
+            buffsContainer.innerHTML = '<div class="no-buffs">No buffs available for this skill.</div>';
+            return;
+        }
+        
+        // We already checked for active variant above, so no need to check again
         
         // Create HTML for buffs
         let buffsHtml = '';
@@ -2034,8 +2052,30 @@ export class SkillTreeUI extends UIComponent {
      * @param {string} buffName - Name of the buff
      */
     selectSkillBuff(skillName, buffName) {
-        // Get buff data
-        const buffData = this.skillTrees[skillName].buffs[buffName];
+        // Check if player has unlocked a variant first
+        const activeVariant = this.playerSkills[skillName] && this.playerSkills[skillName].activeVariant;
+        if (!activeVariant) {
+            this.game.hudManager.showNotification(`You need to unlock a variant for ${skillName} first.`);
+            return;
+        }
+        
+        // Get the variant data
+        const variantData = this.skillTrees[skillName].variants[activeVariant];
+        
+        // Get buff data - first try variant's buffs, then fall back to skill's buffs
+        let buffData;
+        
+        if (variantData && variantData.buffs && variantData.buffs[buffName]) {
+            // Use the buff directly from the variant
+            buffData = variantData.buffs[buffName];
+        } else if (this.skillTrees[skillName].buffs && this.skillTrees[skillName].buffs[buffName]) {
+            // Fall back to the skill's buffs
+            buffData = this.skillTrees[skillName].buffs[buffName];
+        } else {
+            this.game.hudManager.showNotification(`Buff ${buffName} not found for ${skillName}.`);
+            return;
+        }
+        
         const cost = buffData.cost || 5; // Default to 5 if not specified
         const maxLevel = buffData.maxLevel || 1;
         const requiredVariant = buffData.requiredVariant || "any";
@@ -2046,11 +2086,7 @@ export class SkillTreeUI extends UIComponent {
             return;
         }
         
-        // Check if player has unlocked a variant first
-        if (!this.playerSkills[skillName].activeVariant) {
-            this.game.hudManager.showNotification(`You need to unlock a variant for ${skillName} first.`);
-            return;
-        }
+        // We already checked for active variant above, so no need to check again
         
         // Check if this buff requires a specific variant
         if (requiredVariant !== "any" && this.playerSkills[skillName].activeVariant !== requiredVariant) {

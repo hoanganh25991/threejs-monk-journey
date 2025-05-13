@@ -41,6 +41,7 @@
 
 /* Import skill tree styles */
 @import 'core/skill-tree.css';
+@import 'core/skill-tree-all-options.css';
 
 /* Import animation styles */
 @import 'animations.css';
