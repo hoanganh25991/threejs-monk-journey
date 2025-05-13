@@ -1,260 +1,116 @@
-/* Skill Tree Styles - Inspired by Diablo Immortal and other modern ARPGs */
+/* Skill Tree UI Styles */
+
 #skill-tree {
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 95%;
-    max-width: 1400px;
-    height: 95%;
-    max-height: 900px;
+    width: 90%;
+    max-width: 1200px;
+    height: 85%;
     background-color: rgba(0, 0, 0, 0.9);
-    border: 3px solid #8a5a44;
-    border-radius: 12px;
-    padding: 20px;
-    color: white;
-    display: none;
-    pointer-events: auto;
-    z-index: 150;
-    box-shadow: 0 0 30px rgba(138, 90, 68, 0.7), inset 0 0 50px rgba(138, 90, 68, 0.3);
-    font-family: 'Cinzel', serif;
-    background-image: radial-gradient(circle at center, rgba(138, 90, 68, 0.2) 0%, rgba(0, 0, 0, 0.9) 70%);
+    border: 2px solid #8a6d3b;
+    border-radius: 8px;
+    color: #fff;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+}
+
+/* Header */
+#skill-tree-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: rgba(138, 109, 59, 0.3);
+    border-bottom: 1px solid #8a6d3b;
 }
 
 #skill-tree-title {
-    text-align: center;
-    margin-bottom: 15px;
-    font-size: 32px;
-    color: #ffcc00;
-    text-shadow: 0 0 10px #ffcc00, 0 0 20px rgba(255, 204, 0, 0.5);
+    font-size: 24px;
     font-weight: bold;
-    letter-spacing: 2px;
-    position: relative;
-}
-
-#skill-tree-title::after {
-    content: '';
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px;
-    height: 2px;
-    background: linear-gradient(to right, transparent, #ffcc00, transparent);
+    color: #ffcc00;
+    text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
 }
 
 #skill-tree-points {
-    text-align: center;
-    margin-bottom: 20px;
-    font-size: 20px;
-    color: #66ccff;
-    text-shadow: 0 0 5px rgba(102, 204, 255, 0.5);
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 20px;
-    padding: 8px 15px;
-    display: inline-block;
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 1px solid rgba(102, 204, 255, 0.3);
+    font-size: 18px;
+    color: #ffcc00;
 }
 
-#skill-points-value {
-    font-weight: bold;
-    color: #ffffff;
-    font-size: 22px;
-    margin-left: 5px;
+#skill-tree-close {
+    font-size: 28px;
+    cursor: pointer;
+    color: #ccc;
+    transition: color 0.2s;
 }
 
+#skill-tree-close:hover {
+    color: #fff;
+}
+
+/* Container */
 #skill-tree-container {
     display: flex;
-    height: calc(100% - 120px);
-    gap: 20px;
+    flex: 1;
+    overflow: hidden;
 }
 
-#skill-tree-diagram {
-    flex: 3;
-    position: relative;
-    background-color: rgba(0, 0, 0, 0.6);
-    border-radius: 10px;
-    overflow: auto;
-    border: 2px solid #8a5a44;
-    box-shadow: inset 0 0 30px rgba(138, 90, 68, 0.3);
-    background-image: radial-gradient(circle at center, rgba(138, 90, 68, 0.1) 0%, rgba(0, 0, 0, 0.6) 70%);
-    padding: 20px 0;
-    align-items: center;
+/* Skill Tree View */
+#skill-tree-view {
+    width: 40%;
+    padding: 20px;
+    overflow-y: auto;
+    border-right: 1px solid rgba(138, 109, 59, 0.5);
 }
 
-/* Zoom Controls */
-#skill-tree-zoom-controls {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    z-index: 100;
-    background-color: rgba(0, 0, 0, 0.7);
-    padding: 5px;
-    border-radius: 5px;
-    border: 1px solid #8a5a44;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+#skill-tree-skills {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    padding: 10px;
 }
 
-.zoom-button {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: linear-gradient(to bottom, #8a5a44, #6a3a24);
-    color: white;
-    border: none;
-    font-size: 18px;
+/* Skill Nodes */
+.skill-node {
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
     cursor: pointer;
+    transition: all 0.2s;
+}
+
+.skill-node:hover {
+    background-color: rgba(30, 30, 30, 0.7);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+.skill-node.selected {
+    border: 1px solid #ffcc00;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+}
+
+.skill-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin: 0 auto 10px;
     display: flex;
-    justify-content: center;
     align-items: center;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    justify-content: center;
+    font-size: 24px;
 }
 
-.zoom-button:hover {
-    background: linear-gradient(to bottom, #a06a54, #8a5a44);
-    transform: scale(1.1);
-}
-
-.zoom-button:active {
-    background: linear-gradient(to bottom, #7a4a34, #6a3a24);
-    transform: scale(0.95);
-}
-
-/* Zoom Indicator */
-#skill-tree-zoom-indicator {
-    position: absolute;
-    bottom: 15px;
-    right: 15px;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 5px 10px;
-    border-radius: 15px;
+.skill-name {
     font-size: 14px;
     font-weight: bold;
-    border: 1px solid #8a5a44;
-    z-index: 100;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-#skill-tree-zoom-indicator.zoom-high {
-    color: #ffcc00;
-    border-color: #ffcc00;
-    box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
-}
-
-#skill-tree-zoom-indicator.zoom-low {
-    color: #66ccff;
-    border-color: #66ccff;
-    box-shadow: 0 0 10px rgba(102, 204, 255, 0.3);
-}
-
-#skill-tree-zoom-indicator.zoom-normal {
-    color: #ffffff;
-}
-
-/* Minimap */
-#skill-tree-minimap {
-    position: absolute;
-    bottom: 15px;
-    left: 15px;
-    width: 120px;
-    height: 120px;
-    background-color: rgba(0, 0, 0, 0.7);
-    border: 1px solid #8a5a44;
-    border-radius: 5px;
-    z-index: 100;
-    overflow: hidden;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-#skill-tree-minimap:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 15px rgba(138, 90, 68, 0.7);
-    border-color: #ffcc00;
-}
-
-#skill-tree-minimap::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at center, rgba(138, 90, 68, 0.2) 0%, rgba(0, 0, 0, 0.7) 70%);
-    pointer-events: none;
-}
-
-#skill-tree-minimap::after {
-    content: '🧭';
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    font-size: 12px;
-    color: #ffcc00;
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
-    opacity: 0.7;
-    transition: opacity 0.3s ease;
-}
-
-#skill-tree-minimap:hover::after {
-    opacity: 1;
-}
-
-#skill-tree-minimap-viewport {
-    position: absolute;
-    border: 2px solid #ffcc00;
-    background-color: rgba(255, 204, 0, 0.1);
-    box-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
-    pointer-events: none;
-    transition: all 0.2s ease;
-}
-
-/* Add dots to minimap to represent skills */
-#skill-tree-minimap .minimap-node {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: #ffcc00;
-    box-shadow: 0 0 3px #ffcc00;
-    pointer-events: none;
-}
-
-#skill-tree-minimap .minimap-node.selected {
-    background-color: #66ccff;
-    box-shadow: 0 0 5px #66ccff;
-    width: 8px;
-    height: 8px;
-}
-
-/* Add transform-origin and transition for smooth zooming */
-.tree-structure {
-    transform-origin: center;
-    transition: transform 0.2s ease;
-    will-change: transform;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    perspective: 1000px;
-    -webkit-perspective: 1000px;
-}
-
-/* Panning cursor */
-#skill-tree-diagram.panning {
-    cursor: grabbing;
-}
-
-#skill-tree-diagram {
-    cursor: grab;
+    color: #fff;
 }
 
 #skill-tree-details {
@@ -980,6 +836,62 @@
     position: relative;
 }
 
+/* Node level indicators for hierarchy */
+.node-level-indicator {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #ffcc00;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 1px solid #8a5a44;
+    white-space: nowrap;
+    font-weight: bold;
+    z-index: 20;
+}
+
+/* Level-specific styling */
+.node-level-0 .node-level-indicator {
+    color: #ffcc00;
+    border-color: #ffcc00;
+}
+
+.node-level-1 .node-level-indicator {
+    color: #66ccff;
+    border-color: #66ccff;
+}
+
+.node-level-2 .node-level-indicator {
+    color: #ff9966;
+    border-color: #ff9966;
+}
+
+.node-level-3 .node-level-indicator {
+    color: #99cc66;
+    border-color: #99cc66;
+}
+
+/* Tree level labels */
+.tree-level-label {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    color: #ffffff;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 3px 10px;
+    border-radius: 15px;
+    border: 1px solid #8a5a44;
+    white-space: nowrap;
+    font-weight: bold;
+    z-index: 20;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
 .root-icon {
     font-size: 36px;
     color: #ffcc00;
@@ -1040,6 +952,39 @@
     z-index: 5;
 }
 
+/* Level-specific node styling */
+.node-level-0 {
+    width: 100px;
+    height: 100px;
+    border: 3px solid #ffcc00;
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
+    z-index: 10;
+}
+
+.node-level-1 {
+    width: 80px;
+    height: 80px;
+    border: 2px solid #66ccff;
+    box-shadow: 0 0 12px rgba(102, 204, 255, 0.3);
+    z-index: 9;
+}
+
+.node-level-2 {
+    width: 70px;
+    height: 70px;
+    border: 2px solid #ff9966;
+    box-shadow: 0 0 10px rgba(255, 153, 102, 0.3);
+    z-index: 8;
+}
+
+.node-level-3 {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #99cc66;
+    box-shadow: 0 0 8px rgba(153, 204, 102, 0.3);
+    z-index: 7;
+}
+
 /* Variants container */
 .variants-container {
     position: absolute;
@@ -1054,11 +999,26 @@
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
+    border-radius: 50%;
+    z-index: 8;
 }
 
 .variants-container.expanded {
     opacity: 1;
     pointer-events: auto;
+}
+
+.variants-container::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    height: 80%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px dashed rgba(102, 204, 255, 0.3);
+    z-index: -1;
 }
 
 /* Variant container */
@@ -1068,7 +1028,7 @@
     left: 50%;
     height: 180px;
     width: 3px;
-    background-color: rgba(138, 90, 68, 0.3);
+    background-color: rgba(255, 153, 102, 0.5);
     transform-origin: bottom center;
     display: flex;
     flex-direction: column;
@@ -1100,11 +1060,26 @@
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
+    border-radius: 50%;
+    z-index: 7;
 }
 
 .buffs-container.expanded {
     opacity: 1;
     pointer-events: auto;
+}
+
+.buffs-container::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    height: 80%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px dashed rgba(153, 204, 102, 0.3);
+    z-index: -1;
 }
 
 /* Buff container */
@@ -1114,7 +1089,7 @@
     left: 50%;
     height: 120px;
     width: 2px;
-    background-color: rgba(138, 90, 68, 0.2);
+    background-color: rgba(153, 204, 102, 0.5);
     transform-origin: bottom center;
     display: flex;
     flex-direction: column;

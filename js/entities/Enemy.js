@@ -346,16 +346,28 @@ export class Enemy {
         // Set dead state
         this.state.isDead = true;
         
+        // Award experience to player
+        this.player.addExperience(this.experienceValue);
+        
+        // Set a flag to track animation completion
+        this.deathAnimationInProgress = true;
+        
         // Trigger death animation or effects
         this.playDeathAnimation();
         
-        // Award experience to player
-        this.player.gainExperience(this.experienceValue);
-        
-        // Remove from scene after a delay
+        // Remove from scene after a delay that's longer than the animation duration
+        // Animation duration is 1000ms, so we use 1500ms to be safe
         setTimeout(() => {
-            this.removeFromScene();
-        }, 2000);
+            // Only remove if animation is complete or if there's no model
+            if (!this.deathAnimationInProgress || !this.modelGroup) {
+                this.removeFromScene();
+            } else {
+                // If animation is still in progress, wait a bit longer
+                setTimeout(() => {
+                    this.removeFromScene();
+                }, 1000);
+            }
+        }, 1500);
     }
     
     playDeathAnimation() {
@@ -382,6 +394,12 @@ export class Enemy {
             const duration = 1000; // 1 second animation
             
             const animateDeath = () => {
+                // Check if modelGroup still exists
+                if (!this.modelGroup) {
+                    console.warn('Enemy model group is null during death animation');
+                    return;
+                }
+                
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 
@@ -393,17 +411,29 @@ export class Enemy {
                 this.position.y = startPosition.y + (targetPosition.y - startPosition.y) * easeOut;
                 this.position.z = startPosition.z + (targetPosition.z - startPosition.z) * easeOut;
                 
-                this.modelGroup.rotation.x = startRotation.x + (targetRotation.x - startRotation.x) * easeOut;
+                // Safely update rotation
+                if (this.modelGroup && this.modelGroup.rotation) {
+                    this.modelGroup.rotation.x = startRotation.x + (targetRotation.x - startRotation.x) * easeOut;
+                }
                 
                 // Continue animation if not complete
-                if (progress < 1) {
+                if (progress < 1 && this.modelGroup) {
                     requestAnimationFrame(animateDeath);
-                } else {
+                } else if (this.modelGroup) {
                     // Final position and rotation
                     this.position.x = targetPosition.x;
                     this.position.y = targetPosition.y;
                     this.position.z = targetPosition.z;
-                    this.modelGroup.rotation.x = targetRotation.x;
+                    
+                    if (this.modelGroup.rotation) {
+                        this.modelGroup.rotation.x = targetRotation.x;
+                    }
+                    
+                    // Mark animation as complete
+                    this.deathAnimationInProgress = false;
+                } else {
+                    // If modelGroup is null, also mark animation as complete
+                    this.deathAnimationInProgress = false;
                 }
             };
             
@@ -469,11 +499,39 @@ export class Enemy {
         return this.position;
     }
     
+    getCollisionRadius() {
+        return this.collisionRadius;
+    }
+    
+    getHealth() {
+        return this.health;
+    }
+    
+    getExperienceValue() {
+        return this.experienceValue;
+    }
+    
     getType() {
         return this.type;
     }
     
+    getName() {
+        return this.name;
+    }
+    
+    getMaxHealth() {
+        return this.maxHealth;
+    }
+    
     isBossEnemy() {
         return this.isBoss;
+    }
+    
+    isDead() {
+        return this.state.isDead;
+    }
+    
+    remove() {
+        this.removeFromScene();
     }
 }

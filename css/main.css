@@ -40,8 +40,7 @@
 @import 'core/skill-preview.css';
 
 /* Import skill tree styles */
-@import 'core/skill-tree.css';
-@import 'core/skill-tree-all-options.css';
+@import 'core/skill-tree-simple.css';
 
 /* Import animation styles */
 @import 'animations.css';
