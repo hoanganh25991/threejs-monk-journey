@@ -34,11 +34,14 @@ class Main {
             const game = new Game();
             window.game = game;
             
+            this.completeGameAssetsLoad();
+            this.showLoadingScreen();
             // Initialize the game (loads resources but keeps game paused)
             await game.init();
             console.debug("Game initialized successfully");
             
             // Display the main menu
+            this.hideLoadingScreen();
             this.showMainMenu(game);
         } catch (error) {
             console.error("Error initializing game:", error);
@@ -77,12 +80,24 @@ class Main {
     /**
      * Hide the loading screen
      */
+    completeGameAssetsLoad() {
+        if (window.simulatedLoadingScreen) {
+            window.simulatedLoadingScreen.complete();
+            return;
+        }
+    }
+
+    showLoadingScreen() {
+        if (window.simulatedLoadingScreen) {
+            window.simulatedLoadingScreen.show();
+            return;
+        }
+    }
+
     hideLoadingScreen() {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-            loadingScreen.style.display = 'none';
-        } else {
-            console.warn("Loading screen element not found");
+        if (window.simulatedLoadingScreen) {
+            window.simulatedLoadingScreen.hide();
+            return;
         }
     }
     

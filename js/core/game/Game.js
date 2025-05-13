@@ -452,6 +452,12 @@ export class Game {
      * Handle visibility change event
      */
     onVisibilityChange() {
+        // Check if this is triggered by a fullscreen change
+        if (window.isFullscreenChange) {
+            console.debug('Ignoring visibility change due to fullscreen toggle');
+            return;
+        }
+        
         this.pause();
         // if (document.visibilityState === 'hidden') {
         //     console.debug('The page is now hidden.');
@@ -465,7 +471,12 @@ export class Game {
     /**
      * Handle page hide event (for mobile browsers)
      */
-    onPageHide() {        
+    onPageHide() {
+        // Check if this is triggered by a fullscreen change
+        if (window.isFullscreenChange) {
+            console.debug('Ignoring page hide event due to fullscreen toggle');
+            return;
+        }
         this.pause();
     }
     
@@ -473,6 +484,11 @@ export class Game {
      * Handle page show event (for mobile browsers)
      */
     onPageShow() {
+        // Check if this is triggered by a fullscreen change
+        if (window.isFullscreenChange) {
+            console.debug('Ignoring page show event due to fullscreen toggle');
+            return;
+        }
         this.pause();
         // this.resume();
     }
@@ -481,6 +497,11 @@ export class Game {
      * Handle window blur event
      */
     onBlur() {
+        // Check if this is triggered by a fullscreen change
+        if (window.isFullscreenChange) {
+            console.debug('Ignoring blur event due to fullscreen toggle');
+            return;
+        }
         this.pause();
     }
     
@@ -488,6 +509,11 @@ export class Game {
      * Handle window focus event
      */
     onFocus() {
+        // Check if this is triggered by a fullscreen change
+        if (window.isFullscreenChange) {
+            console.debug('Ignoring focus event due to fullscreen toggle');
+            return;
+        }
         this.pause();
         // this.resume();
     }

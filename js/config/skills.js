@@ -66,7 +66,7 @@ export const SKILLS = [
         radius: 4,
         duration: 2.5, // Further increased duration from 1.5 to 2.5
         color: 0xffcc00,
-        icon: '🌀', // Cyclone emoji
+        icon: '🌪️', // Cyclone emoji
         sounds: {
             cast: 'skillCycloneStrike', // Powerful wind gathering sound
             impact: 'windPull', // Sound of enemies being pulled by wind
@@ -183,5 +183,25 @@ export const SKILLS = [
             impact: 'thunderStrike', // Crackling lightning impact
             end: 'thunderEcho' // Echo of thunder after strike
         }
-    }
+    },
+    {
+        name: "Deadly Reach",
+        description: "Extend your reach to strike enemies from a distance.",
+        type: "melee",
+        damage: 10,
+        manaCost: 0,
+        cooldown: 0.3,
+        range: 3, // Extended range
+        radius: 0,
+        duration: 0,
+        color: 0x4682b4, // Red color for forceful strikes
+        icon: "🌀", // Cyclone emoji
+        piercing: true, // Can pierce through enemies
+        knockback: true, // Final strike can knock back enemies
+        sounds: {
+            "cast": "deadlyReachCast", // Sound of energy focusing
+            "impact": "deadlyReachImpact", // Sound of strike hitting
+            "end": "deadlyReachEnd" // Sound of energy dispersing
+        }
+    },
 ];

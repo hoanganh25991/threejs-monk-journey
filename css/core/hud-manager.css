@@ -343,7 +343,6 @@
     pointer-events: auto;
     touch-action: none;
     display: block;
-    z-index: 1001;
     -webkit-appearance: none;
     appearance: none;
     background-color: transparent; /* Make container transparent */
@@ -386,8 +385,8 @@
     z-index: 200;
 }
 
-/* Home/Settings Button */
-#home-button {
+/* Home/Settings Button and Fullscreen Button */
+#home-button, #fullscreen-button {
     width: 40px;
     height: 40px;
     border-radius: 50%;

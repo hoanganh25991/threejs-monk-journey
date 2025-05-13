@@ -11,6 +11,7 @@ import { QuestLogUI } from './QuestLogUI.js';
 import { MiniMapUI } from './MiniMapUI.js';
 import { MainBackground } from '../menu-system/MainBackground.js';
 import { HomeButton } from './HomeUI.js';
+import { FullscreenButton } from './FullscreenButton.js';
 
 /**
  * HUD Manager
@@ -134,6 +135,7 @@ export class HUDManager {
         
         // Create settings button
         this.components.homeButton = new HomeButton(this.game);
+        this.components.fullscreenButton = new FullscreenButton(this.game);
         // Note: SettingsButton initializes itself in its constructor
     }
     
@@ -320,8 +322,14 @@ export class HUDManager {
         // Don't hide the settings button when paused if the settings menu is open
         const settingsMenu = document.getElementById('main-options-menu');
         const homeButton = document.getElementById('home-button');
+        const fullscreenButton = document.getElementById('fullscreen-button');
+        
         if (homeButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
             homeButton.style.display = 'none';
+        }
+        
+        if (fullscreenButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
+            fullscreenButton.style.display = 'none';
         }
     }
     
@@ -333,10 +341,15 @@ export class HUDManager {
             this.uiContainer.style.display = 'block';
         }
         
-        // Explicitly show the settings button since it's outside the UI container
+        // Explicitly show the buttons since they're outside the UI container
         const homeButton = document.getElementById('home-button');
         if (homeButton) {
             homeButton.style.display = 'block';
+        }
+        
+        const fullscreenButton = document.getElementById('fullscreen-button');
+        if (fullscreenButton) {
+            fullscreenButton.style.display = 'block';
         }
     }
     

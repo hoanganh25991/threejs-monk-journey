@@ -120,7 +120,7 @@ class SimulatedLoadingScreen {
         
         // Hide the loading screen after a short delay
         setTimeout(() => {
-            this.hide();
+            // this.hide();
         }, 50);
     }
     
@@ -143,6 +143,12 @@ class SimulatedLoadingScreen {
             window.dispatchEvent(loadingCompleteEvent);
         }
     }
+
+    show() {
+        if (this.loadingScreenElement) {
+            this.loadingScreenElement.style.display = 'flex';
+        }
+    }
     
     /**
      * Clean up resources
@@ -160,5 +166,6 @@ class SimulatedLoadingScreen {
   if (window.game){
     return;
   }
-  new SimulatedLoadingScreen(100, 1).start();
+  window.simulatedLoadingScreen = new SimulatedLoadingScreen(100, 1);
+  window.simulatedLoadingScreen.start();
 })();
