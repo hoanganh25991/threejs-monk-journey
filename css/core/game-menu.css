@@ -64,7 +64,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 120; /* Dialogs and Menus - Game Menu */
 }
 
 /* Settings Menu - Moved to settings-menu.css */
@@ -83,7 +83,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 2000;
+    z-index: 130; /* Loading Screens and Overlays */
 }
 
 #loading-screen h2 {
