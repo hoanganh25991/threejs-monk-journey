@@ -27,7 +27,7 @@ export class IPlayer {
     die() {}
     revive() {}
     useSkill(skillIndex) {}
-    useBasicAttack() {}
+    usePrimaryAttack() {}
     
     // Stats and progression
     addExperience(amount) {}
@@ -122,7 +122,7 @@ export class IPlayerSkills {
     
     // Skill usage
     useSkill(skillIndex) {}
-    useBasicAttack() {}
+    usePrimaryAttack() {}
     
     // Getters
     getSkills() {}

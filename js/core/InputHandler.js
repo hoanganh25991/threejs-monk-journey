@@ -126,7 +126,7 @@ export class InputHandler {
                     this.skillKeysHeld[event.code] = true;
                     
                     // Use basic attack (teleport or punch)
-                    this.game.player.useBasicAttack();
+                    this.game.player.usePrimaryAttack();
                     break;
                     
                 case 'Digit1':
@@ -473,7 +473,7 @@ export class InputHandler {
                         if (keyCode === 'KeyH') {
                             // Special handling for H key (Fist of Thunder)
                             console.debug('Continuous casting: Basic attack (KeyH)');
-                            this.game.player.useBasicAttack();
+                            this.game.player.usePrimaryAttack();
                             this.skillCastCooldowns[keyCode] = castInterval;
                         } else if (keyCode.startsWith('Digit')) {
                             // For number keys

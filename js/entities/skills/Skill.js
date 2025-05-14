@@ -40,7 +40,7 @@ export class Skill {
         this.direction = new THREE.Vector3();
 
         // Primary Skill (Basic Attack)
-        this.basicAttack = config.basicAttack || false;
+        this.primaryAttack = config.primaryAttack || false;
         
         // Game reference
         this.game = null;

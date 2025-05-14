@@ -8,6 +8,7 @@ import { SkillPreview } from './SkillPreview.js';
 import { CHARACTER_MODELS } from '../../config/player-models.js';
 import { UIComponent } from '../UIComponent.js';
 import { SKILLS } from '../../config/skills.js';
+import { STORAGE_KEYS } from '../../config/storage-keys.js';
 
 export class SettingsMenu extends UIComponent {
     /**
@@ -224,16 +225,28 @@ export class SettingsMenu extends UIComponent {
             this.skillsPreviewSelect.appendChild(option);
         });
         
-        // Set first skill as selected by default
+        // Get the stored selected skill index or default to 0
+        let selectedSkillIndex = 0;
+        const storedSkillIndex = localStorage.getItem(STORAGE_KEYS.SELECTED_SKILL_PREVIEW);
+        
+        if (storedSkillIndex !== null && !isNaN(parseInt(storedSkillIndex)) && 
+            parseInt(storedSkillIndex) >= 0 && parseInt(storedSkillIndex) < SKILLS.length) {
+            selectedSkillIndex = parseInt(storedSkillIndex);
+        }
+        
+        // Set the selected skill
         if (SKILLS.length > 0) {
-            this.skillsPreviewSelect.selectedIndex = 0;
-            this.updateSkillDetails(0);
+            this.skillsPreviewSelect.selectedIndex = selectedSkillIndex;
+            this.updateSkillDetails(selectedSkillIndex);
         }
         
         // Add change event
         this.skillsPreviewSelect.addEventListener('change', () => {
             const skillIndex = parseInt(this.skillsPreviewSelect.value);
             this.updateSkillDetails(skillIndex);
+            
+            // Save the selected skill index to localStorage
+            localStorage.setItem(STORAGE_KEYS.SELECTED_SKILL_PREVIEW, skillIndex);
         });
     }
     
@@ -249,6 +262,9 @@ export class SettingsMenu extends UIComponent {
                 const newIndex = (currentIndex > 0) ? currentIndex - 1 : SKILLS.length - 1;
                 this.skillsPreviewSelect.selectedIndex = newIndex;
                 this.updateSkillDetails(newIndex);
+                
+                // Save the selected skill index to localStorage
+                localStorage.setItem(STORAGE_KEYS.SELECTED_SKILL_PREVIEW, newIndex);
             });
         }
         
@@ -258,6 +274,9 @@ export class SettingsMenu extends UIComponent {
                 const newIndex = (currentIndex < SKILLS.length - 1) ? currentIndex + 1 : 0;
                 this.skillsPreviewSelect.selectedIndex = newIndex;
                 this.updateSkillDetails(newIndex);
+                
+                // Save the selected skill index to localStorage
+                localStorage.setItem(STORAGE_KEYS.SELECTED_SKILL_PREVIEW, newIndex);
             });
         }
     }
@@ -399,7 +418,7 @@ export class SettingsMenu extends UIComponent {
             this.qualitySelect.addEventListener('change', () => {
                 if (this.game.performanceManager) {
                     // Store the setting in localStorage
-                    localStorage.setItem('monk_journey_quality_level', this.qualitySelect.value);
+                    localStorage.setItem(STORAGE_KEYS.QUALITY_LEVEL, this.qualitySelect.value);
                 }
             });
         }
@@ -420,7 +439,7 @@ export class SettingsMenu extends UIComponent {
                     }
                     
                     // Store the setting in localStorage
-                    localStorage.setItem('monk_journey_adaptive_quality', this.adaptiveCheckbox.checked);
+                    localStorage.setItem(STORAGE_KEYS.ADAPTIVE_QUALITY, this.adaptiveCheckbox.checked);
                 }
             });
         }
@@ -438,14 +457,14 @@ export class SettingsMenu extends UIComponent {
                     this.fpsValue.textContent = `${this.fpsSlider.value} FPS`;
                     
                     // Store the setting in localStorage
-                    localStorage.setItem('monk_journey_target_fps', this.fpsSlider.value);
+                    localStorage.setItem(STORAGE_KEYS.TARGET_FPS, this.fpsSlider.value);
                 }
             });
         }
         
         if (this.showPerformanceInfoCheckbox) {
             // Get the stored value or default to true (show performance info)
-            const showPerformanceInfo = localStorage.getItem('monk_journey_show_performance_info');
+            const showPerformanceInfo = localStorage.getItem(STORAGE_KEYS.SHOW_PERFORMANCE_INFO);
             const showPerformanceInfoValue = showPerformanceInfo === null ? true : showPerformanceInfo === 'true';
             
             // Set the checkbox state
@@ -462,7 +481,7 @@ export class SettingsMenu extends UIComponent {
                 this.togglePerformanceInfoVisibility(isChecked);
                 
                 // Store the setting in localStorage
-                localStorage.setItem('monk_journey_show_performance_info', isChecked);
+                localStorage.setItem(STORAGE_KEYS.SHOW_PERFORMANCE_INFO, isChecked);
             });
         }
     }
@@ -516,7 +535,7 @@ export class SettingsMenu extends UIComponent {
                 this.game.difficultyManager.setDifficulty(parseInt(this.difficultySelect.value));
                 
                 // Store the setting in localStorage
-                localStorage.setItem('monk_journey_difficulty', this.difficultySelect.value);
+                localStorage.setItem(STORAGE_KEYS.DIFFICULTY, this.difficultySelect.value);
             });
         }
     }
@@ -565,9 +584,30 @@ export class SettingsMenu extends UIComponent {
             selectElement.appendChild(option);
         });
         
-        // Set current model
-        if (this.game.player && this.game.player.model) {
-            selectElement.value = this.game.player.model.getCurrentModelId();
+        // Determine which select element we're dealing with
+        const isModelPreview = selectElement === this.modelPreviewSelect;
+        
+        // Try to get the stored model ID first
+        let modelId = null;
+        
+        if (isModelPreview) {
+            // For model preview, try to get from localStorage
+            modelId = localStorage.getItem(STORAGE_KEYS.MODEL_PREVIEW);
+        }
+        
+        // If no stored value or invalid, fall back to the current player model
+        if (!modelId || !CHARACTER_MODELS.some(model => model.id === modelId)) {
+            if (this.game.player && this.game.player.model) {
+                modelId = this.game.player.model.getCurrentModelId();
+            }
+        }
+        
+        // Set the value if we have a valid model ID
+        if (modelId && CHARACTER_MODELS.some(model => model.id === modelId)) {
+            selectElement.value = modelId;
+        } else if (CHARACTER_MODELS.length > 0) {
+            // Default to first model if no valid model ID
+            selectElement.value = CHARACTER_MODELS[0].id;
         }
     }
     
@@ -637,6 +677,9 @@ export class SettingsMenu extends UIComponent {
                 if (this.modelPreviewFullscreen && animationName) {
                     this.modelPreviewFullscreen.playAnimation(animationName);
                     
+                    // Save to localStorage
+                    localStorage.setItem(STORAGE_KEYS.ANIMATION_PREVIEW, animationName);
+                    
                     // Sync with regular model preview
                     if (this.modelPreview && this.animationSelect) {
                         this.modelPreview.playAnimation(animationName);
@@ -660,6 +703,9 @@ export class SettingsMenu extends UIComponent {
                 if (selectedModel && this.modelPreviewFullscreen) {
                     // Store the selected model ID for use when starting a new game
                     window.selectedModelId = modelId;
+                    
+                    // Save to localStorage
+                    localStorage.setItem(STORAGE_KEYS.MODEL_PREVIEW, modelId);
                     
                     // Reset animation dropdown
                     this.resetAnimationSelect(this.animationPreviewSelect);
@@ -842,10 +888,32 @@ export class SettingsMenu extends UIComponent {
                 selectElement.appendChild(option);
             });
             
-            // Set current animation as selected
-            const currentAnim = modelPreview.getCurrentAnimation();
-            if (currentAnim) {
-                selectElement.value = currentAnim;
+            // Determine if this is the animation preview select
+            const isAnimationPreview = selectElement === this.animationPreviewSelect;
+            
+            // Try to get the stored animation name first
+            let animationName = null;
+            
+            if (isAnimationPreview) {
+                // For animation preview, try to get from localStorage
+                animationName = localStorage.getItem(STORAGE_KEYS.ANIMATION_PREVIEW);
+            }
+            
+            // If no stored value or invalid, fall back to the current animation
+            if (!animationName || !animations.includes(animationName)) {
+                animationName = modelPreview.getCurrentAnimation();
+            }
+            
+            // Set the value if we have a valid animation name
+            if (animationName && animations.includes(animationName)) {
+                selectElement.value = animationName;
+                // Also play this animation
+                modelPreview.playAnimation(animationName);
+            } else if (animations.length > 0) {
+                // Default to first animation if no valid animation name
+                selectElement.value = animations[0];
+                // Also play this animation
+                modelPreview.playAnimation(animations[0]);
             }
         } else {
             // No animations available
@@ -1020,19 +1088,19 @@ export class SettingsMenu extends UIComponent {
     saveAllSettings() {
         // Save performance settings
         if (this.game.performanceManager) {
-            localStorage.setItem('monk_journey_quality_level', this.game.performanceManager.currentQuality);
-            localStorage.setItem('monk_journey_adaptive_quality', this.game.performanceManager.adaptiveQualityEnabled);
-            localStorage.setItem('monk_journey_target_fps', this.game.performanceManager.targetFPS);
+            localStorage.setItem(STORAGE_KEYS.QUALITY_LEVEL, this.game.performanceManager.currentQuality);
+            localStorage.setItem(STORAGE_KEYS.ADAPTIVE_QUALITY, this.game.performanceManager.adaptiveQualityEnabled);
+            localStorage.setItem(STORAGE_KEYS.TARGET_FPS, this.game.performanceManager.targetFPS);
             
             // Save performance info visibility setting
             if (this.showPerformanceInfoCheckbox) {
-                localStorage.setItem('monk_journey_show_performance_info', this.showPerformanceInfoCheckbox.checked);
+                localStorage.setItem(STORAGE_KEYS.SHOW_PERFORMANCE_INFO, this.showPerformanceInfoCheckbox.checked);
             }
         }
         
         // Save game settings
         if (this.game.difficultyManager) {
-            localStorage.setItem('monk_journey_difficulty', this.game.difficultyManager.getCurrentDifficultyIndex());
+            localStorage.setItem(STORAGE_KEYS.DIFFICULTY, this.game.difficultyManager.getCurrentDifficultyIndex());
         }
         
         // Save audio settings
@@ -1042,7 +1110,7 @@ export class SettingsMenu extends UIComponent {
         
         // Save character model settings
         if (this.game.player && this.game.player.model) {
-            localStorage.setItem('monk_journey_character_model', this.game.player.model.getCurrentModelId());
+            localStorage.setItem(STORAGE_KEYS.CHARACTER_MODEL, this.game.player.model.getCurrentModelId());
         }
         
         console.debug("All settings saved to localStorage");

@@ -163,8 +163,8 @@ export class Player extends IPlayer {
         return this.skills.useSkill(skillIndex);
     }
     
-    useBasicAttack() {
-        return this.skills.useBasicAttack();
+    usePrimaryAttack() {
+        return this.skills.usePrimaryAttack();
     }
     
     // Stats and progression

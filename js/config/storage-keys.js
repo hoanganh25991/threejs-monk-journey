@@ -1,0 +1,31 @@
+/**
+ * Centralized configuration for localStorage keys
+ * This ensures consistency when reading/writing to localStorage
+ */
+
+export const STORAGE_KEYS = {
+    // Audio settings
+    AUDIO_SETTINGS: 'monk_journey_audio_settings',
+    
+    // Performance and quality settings
+    QUALITY_LEVEL: 'monk_journey_quality_level',
+    ADAPTIVE_QUALITY: 'monk_journey_adaptive_quality',
+    TARGET_FPS: 'monk_journey_target_fps',
+    SHOW_PERFORMANCE_INFO: 'monk_journey_show_performance_info',
+    
+    // Character settings
+    CHARACTER_MODEL: 'monk_journey_character_model',
+    MODEL_PREVIEW: 'monk_journey_model_preview',
+    ANIMATION_PREVIEW: 'monk_journey_animation_preview',
+    MODEL_ADJUSTMENTS: 'modelAdjustments',
+    
+    // Game settings
+    DIFFICULTY: 'monk_journey_difficulty',
+    SELECTED_SKILLS: 'monk_journey_selected_skills',
+    SELECTED_SKILL_PREVIEW: 'monk_journey_selected_skill_preview',
+    
+    // Save system keys
+    SAVE_DATA: 'monk_journey_save',
+    CHUNK_PREFIX: 'monk_journey_chunk_',
+    CHUNK_INDEX: 'monk_journey_chunk_index',
+};

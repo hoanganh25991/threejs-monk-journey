@@ -3,6 +3,9 @@ import { Building } from './Building.js';
 import { Tower } from './Tower.js';
 import { Ruins } from './Ruins.js';
 import { DarkSanctum } from './DarkSanctum.js';
+import { Mountain } from './Mountain.js';
+import { Bridge } from './Bridge.js';
+import { Village } from './Village.js';
 import { RandomGenerator } from '../utils/RandomGenerator.js';
 
 /**
@@ -20,12 +23,19 @@ export class StructureManager {
         this.specialStructures = {}; // Track special structures like Dark Sanctum
         
         // Structure types and densities
-        this.structureTypes = ['house', 'tower', 'ruins', 'darkSanctum']; // Types of structures
+        this.structureTypes = [
+            'house', 'tower', 'ruins', 'darkSanctum', 
+            'mountain', 'bridge', 'village'
+        ]; // Types of structures
+        
         this.structureDensity = {
-            'house': 0.001,    // Doubled density
-            'tower': 0.0008,   // Increased density
-            'ruins': 0.0008,   // Doubled density
-            'darkSanctum': 0.0002 // Doubled but still rare
+            'house': 0.001,      // Individual houses
+            'tower': 0.0008,     // Watchtowers
+            'ruins': 0.0008,     // Ancient ruins
+            'darkSanctum': 0.0002, // Rare dark sanctums
+            'mountain': 0.0005,  // Mountains (less frequent but impactful)
+            'bridge': 0.0003,    // Bridges (rare, placed over water/valleys)
+            'village': 0.0002    // Villages (rare, contains multiple buildings)
         };
     }
     
@@ -209,6 +219,26 @@ export class StructureManager {
     }
     
     /**
+     * Get the zone type at a specific position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @returns {string} - The zone type (Forest, Desert, etc.)
+     */
+    getZoneTypeAt(x, z) {
+        // Use the world manager to get the zone at this position
+        if (this.worldManager && this.worldManager.getZoneAt) {
+            const position = new THREE.Vector3(x, 0, z);
+            const zone = this.worldManager.getZoneAt(position);
+            if (zone) {
+                return zone.name;
+            }
+        }
+        
+        // Default to Forest if no zone found
+        return 'Forest';
+    }
+    
+    /**
      * Create a building at the specified position
      * @param {number} x - X coordinate
      * @param {number} z - Z coordinate
@@ -218,7 +248,8 @@ export class StructureManager {
      * @returns {THREE.Group} - The building group
      */
     createBuilding(x, z, width, depth, height) {
-        const building = new Building(width, depth, height);
+        const zoneType = this.getZoneTypeAt(x, z);
+        const building = new Building(width, depth, height, zoneType);
         const buildingGroup = building.createMesh();
         
         // Position building on terrain
@@ -238,7 +269,8 @@ export class StructureManager {
      * @returns {THREE.Group} - The tower group
      */
     createTower(x, z) {
-        const tower = new Tower();
+        const zoneType = this.getZoneTypeAt(x, z);
+        const tower = new Tower(zoneType);
         const towerGroup = tower.createMesh();
         
         // Position tower on terrain

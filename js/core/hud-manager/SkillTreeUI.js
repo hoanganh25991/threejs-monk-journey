@@ -1,5 +1,5 @@
 import { UIComponent } from "../UIComponent.js";
-import { SKILLS } from "../../config/skills.js";
+import { BATTLE_SKILLS } from "../../config/skills.js";
 import { getSkillIcon, getBuffIcon } from "../../config/skill-icons.js";
 import { SKILL_TREES } from "../../config/skill-tree.js";
 import { applyBuffsToVariants } from "../../utils/SkillTreeUtils.js";
@@ -106,8 +106,8 @@ export class SkillTreeUI extends UIComponent {
       });
     }
 
-    // Also initialize for skills from SKILLS array that might not be in skillTrees
-    SKILLS.forEach((skill) => {
+    // Also initialize for skills from BATTLE_SKILLS array that might not be in skillTrees
+    BATTLE_SKILLS.forEach((skill) => {
       if (!this.playerSkills[skill.name]) {
         this.playerSkills[skill.name] = {
           activeVariant: null,

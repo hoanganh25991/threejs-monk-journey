@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { Skill } from '../skills/Skill.js';
 import { IPlayerSkills } from './PlayerInterface.js';
 import { SkillEffectFactory } from '../skills/SkillEffectFactory.js';
-import { SKILLS } from '../../config/skills.js';
+import { BATTLE_SKILLS } from '../../config/skills.js';
 
 export class PlayerSkills extends IPlayerSkills {
     constructor(scene, playerStats, playerPosition, playerRotation) {
@@ -31,8 +31,8 @@ export class PlayerSkills extends IPlayerSkills {
     }
     
     initializeSkills() {
-        // Initialize monk skills using the configuration from config/index.js
-        this.skills = SKILLS.map(skillConfig => new Skill(skillConfig));
+        // Initialize monk skills using the configuration from config/skills.js
+        this.skills = BATTLE_SKILLS.map(skillConfig => new Skill(skillConfig));
     }
     
     updateSkills(delta) {
@@ -163,8 +163,15 @@ export class PlayerSkills extends IPlayerSkills {
             }
         }
         
-        // Create a new instance of the skill using the template from SKILLS config
-        const skillConfig = SKILLS.find(config => config.name === skillTemplate.name);
+        // Create a new instance of the skill using the template from BATTLE_SKILLS config
+        const skillConfig = BATTLE_SKILLS.find(config => config.name === skillTemplate.name);
+        
+        // Check if skillConfig exists before creating a new Skill instance
+        if (!skillConfig) {
+            console.error(`Skill configuration not found for: ${skillTemplate.name}`);
+            return false;
+        }
+        
         const newSkillInstance = new Skill(skillConfig);
         
         // Create a new effect handler for the new skill instance
@@ -268,13 +275,13 @@ export class PlayerSkills extends IPlayerSkills {
         return true;
     }
     
-    useBasicAttack() {
+    usePrimaryAttack() {
         // Find the Fist of Thunder skill (should be the last skill in the array)
         // This is the basic attack skill with the "h" key
-        const basicAttackSkill = this.skills.find(skill => skill.basicAttack === true);
+        const primaryAttackSkill = this.skills.find(skill => skill.primaryAttack === true);
         
         // If no basic attack skill is found, use the first skill as fallback
-        const skillTemplate = basicAttackSkill || this.skills[0];
+        const skillTemplate = primaryAttackSkill || this.skills[0];
         
         console.debug('Using basic attack skill:', skillTemplate.name);
         
@@ -315,8 +322,8 @@ export class PlayerSkills extends IPlayerSkills {
                     // Start cooldown
                     skillTemplate.startCooldown();
                     
-                    // Create a new instance of the skill using the template from SKILLS config
-                    const skillConfig = SKILLS.find(config => config.name === skillTemplate.name);
+                    // Create a new instance of the skill using the template from BATTLE_SKILLS config
+                    const skillConfig = BATTLE_SKILLS.find(config => config.name === skillTemplate.name);
                     const newSkillInstance = new Skill(skillConfig);
                     
                     // Create a new effect handler for the new skill instance

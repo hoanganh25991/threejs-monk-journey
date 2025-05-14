@@ -29,9 +29,16 @@ export class SkillsUI extends UIComponent {
         // Create skill buttons HTML
         let skillsHTML = '';
         
+        // Add a "Change Skills" button at the top
+        skillsHTML += `
+            <div class="change-skills-button" id="change-skills-button">
+                <span>Change Skills</span>
+            </div>
+        `;
+        
         skills.forEach((skill, index) => {
             // Determine key display
-            const keyDisplay = skill.basicAttack ? "h" : `${index + 1}`;
+            const keyDisplay = skill.primaryAttack ? "h" : `${index + 1}`;
             
             // Get skill icon data
             const iconData = getSkillIcon(skill.name);
@@ -62,8 +69,8 @@ export class SkillsUI extends UIComponent {
                 const skill = skills[index];
                 
                 // Check if this is the basic attack skill
-                if (skill.basicAttack) {
-                    this.game.player.useBasicAttack();
+                if (skill.primaryAttack) {
+                    this.game.player.usePrimaryAttack();
                 } else {
                     this.game.player.useSkill(index);
                 }
@@ -79,6 +86,17 @@ export class SkillsUI extends UIComponent {
             const skill = skills[parseInt(button.getAttribute('data-skill-index'))];
             button.title = `${skill.name}: ${skill.description}`;
         });
+        
+        // Add event listener for the "Change Skills" button
+        const changeSkillsButton = this.container.querySelector('#change-skills-button');
+        if (changeSkillsButton) {
+            changeSkillsButton.addEventListener('click', () => {
+                // Open the skill selection UI
+                if (this.game && this.game.uiManager && this.game.uiManager.components.skillSelectionUI) {
+                    this.game.uiManager.components.skillSelectionUI.show();
+                }
+            });
+        }
         
         return true;
     }

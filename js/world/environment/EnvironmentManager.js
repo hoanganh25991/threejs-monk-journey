@@ -124,18 +124,21 @@ export class EnvironmentManager {
                 const x = savedObj.position.x;
                 const z = savedObj.position.z;
                 
+                // Get zone type for the position
+                const zoneType = this.getZoneTypeAt(x, z);
+                
                 switch (savedObj.type) {
                     case 'tree':
-                        object = this.createTree(x, z);
+                        object = this.createTree(x, z, zoneType);
                         break;
                     case 'rock':
-                        object = this.createRock(x, z);
+                        object = this.createRock(x, z, zoneType);
                         break;
                     case 'bush':
-                        object = this.createBush(x, z);
+                        object = this.createBush(x, z, zoneType);
                         break;
                     case 'flower':
-                        object = this.createFlower(x, z);
+                        object = this.createFlower(x, z, zoneType);
                         break;
                 }
                 
@@ -168,20 +171,23 @@ export class EnvironmentManager {
                     const x = worldX + random() * this.chunkSize;
                     const z = worldZ + random() * this.chunkSize;
                     
+                    // Get zone type for the position
+                    const zoneType = this.getZoneTypeAt(x, z);
+                    
                     // Create the object based on type
                     let object;
                     switch (objectType) {
                         case 'tree':
-                            object = this.createTree(x, z);
+                            object = this.createTree(x, z, zoneType);
                             break;
                         case 'rock':
-                            object = this.createRock(x, z);
+                            object = this.createRock(x, z, zoneType);
                             break;
                         case 'bush':
-                            object = this.createBush(x, z);
+                            object = this.createBush(x, z, zoneType);
                             break;
                         case 'flower':
-                            object = this.createFlower(x, z);
+                            object = this.createFlower(x, z, zoneType);
                             break;
                     }
                     
@@ -320,13 +326,34 @@ export class EnvironmentManager {
     }
     
     /**
+     * Get the zone type at a specific position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @returns {string} - The zone type (Forest, Desert, etc.)
+     */
+    getZoneTypeAt(x, z) {
+        // Use the world manager to get the zone at this position
+        if (this.worldManager && this.worldManager.getZoneAt) {
+            const position = new THREE.Vector3(x, 0, z);
+            const zone = this.worldManager.getZoneAt(position);
+            if (zone) {
+                return zone.name;
+            }
+        }
+        
+        // Default to Forest if no zone found
+        return 'Forest';
+    }
+    
+    /**
      * Create a tree at the specified position
      * @param {number} x - X coordinate
      * @param {number} z - Z coordinate
+     * @param {string} zoneType - The type of zone (Forest, Desert, etc.)
      * @returns {THREE.Group} - The tree group
      */
-    createTree(x, z) {
-        const tree = new Tree();
+    createTree(x, z, zoneType = 'Forest') {
+        const tree = new Tree(zoneType);
         const treeGroup = tree.createMesh();
         
         // Position tree on terrain
@@ -342,10 +369,11 @@ export class EnvironmentManager {
      * Create a rock at the specified position
      * @param {number} x - X coordinate
      * @param {number} z - Z coordinate
+     * @param {string} zoneType - The type of zone (Forest, Desert, etc.)
      * @returns {THREE.Group} - The rock group
      */
-    createRock(x, z) {
-        const rock = new Rock();
+    createRock(x, z, zoneType = 'Forest') {
+        const rock = new Rock(zoneType);
         const rockGroup = rock.createMesh();
         
         // Position rock on terrain

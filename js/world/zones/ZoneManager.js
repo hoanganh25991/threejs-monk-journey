@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { ZONE_COLORS } from '../../config/colors.js';
 
 /**
  * Manages world zones and their properties
@@ -33,14 +34,15 @@ export class ZoneManager {
      * Create zones throughout the world
      */
     createZones() {
-        // Define zone types
+        // Define zone types with colors from the Monk Journey theme
         const zoneTypes = [
-            { name: 'Forest', color: 0x2d572c, radius: 15 },
-            { name: 'Desert', color: 0xd2b48c, radius: 15 },
-            { name: 'Mountains', color: 0x555555, radius: 15 },
-            { name: 'Swamp', color: 0x4a7023, radius: 15 },
-            { name: 'Ruins', color: 0x999999, radius: 10 },
-            { name: 'Dark Sanctum', color: 0x330033, radius: 12 }
+            { name: 'Forest', color: ZONE_COLORS.Forest.foliage, radius: 15 },
+            { name: 'Desert', color: ZONE_COLORS.Desert.sand, radius: 15 },
+            { name: 'Mountains', color: ZONE_COLORS.Mountains.ice, radius: 15 },
+            { name: 'Swamp', color: ZONE_COLORS.Swamp.vegetation, radius: 15 },
+            { name: 'Ruins', color: ZONE_COLORS.Ruins.stone, radius: 10 },
+            { name: 'Dark Sanctum', color: ZONE_COLORS['Dark Sanctum'].structure, radius: 12 },
+            { name: 'Terrant', color: ZONE_COLORS.Terrant.soil, radius: 18 } // Larger radius for Terrant zones
         ];
         
         // Initialize empty zones array

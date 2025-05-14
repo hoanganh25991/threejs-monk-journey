@@ -79,7 +79,7 @@ export class SkillEffectFactory {
                 console.debug(`Creating WaveOfLightEffect for ${skill.name}`);
                 effect = new WaveOfLightEffect(skill);
                 break;
-            case 'Mystic Ally':
+            case 'Mystic Allies':
                 console.debug(`Creating MysticAllyEffect for ${skill.name}`);
                 effect = new MysticAllyEffect(skill);
                 break;

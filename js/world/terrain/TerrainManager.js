@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { TerrainChunk } from './TerrainChunk.js';
 import { TextureGenerator } from '../utils/TextureGenerator.js';
+import { ZONE_COLORS } from '../../config/colors.js';
 
 /**
  * Manages terrain generation and rendering
@@ -113,26 +114,75 @@ export class TerrainManager {
     }
     
     /**
-     * Apply uniform coloring to terrain with slight variations
+     * Apply terrain coloring based on zone type with natural variations
      * @param {THREE.Mesh} terrain - The terrain mesh to color
+     * @param {string} zoneType - The type of zone (Forest, Desert, etc.)
      */
-    colorTerrainUniform(terrain) {
+    colorTerrainUniform(terrain, zoneType = 'Terrant') {
         const colors = [];
         const positions = terrain.geometry.attributes.position.array;
         
+        // Get colors from the config based on zone type
+        // Default to Terrant colors if specified or fall back to Forest
+        const zoneColors = ZONE_COLORS[zoneType] || ZONE_COLORS['Terrant'] || ZONE_COLORS['Forest'];
+        
+        // For Terrant, use soil as the primary color
+        let baseColorHex = zoneType === 'Terrant' ? zoneColors.soil : 0x4a9e4a;
+        
+        // Create noise patterns for more natural terrain variation
+        const noiseScale = 0.05;
+        const noiseOffset = Math.random() * 1000; // Different offset for each chunk
+        
         for (let i = 0; i < positions.length; i += 3) {
-            // Use lighter grass color with slight variations
-            const baseColor = new THREE.Color(0x4a9e4a); // Lighter base grass color
+            // Get vertex position for noise calculation
+            const x = positions[i];
+            const z = positions[i + 2];
             
-            // Add some variation to make the grass look more natural
-            const variation = Math.random() * 0.1 - 0.05;
-            const color = new THREE.Color(
-                Math.max(0, Math.min(1, baseColor.r + variation)),
-                Math.max(0, Math.min(1, baseColor.g + variation)),
-                Math.max(0, Math.min(1, baseColor.b + variation))
-            );
+            // Base color from zone type
+            let baseColor = new THREE.Color(baseColorHex);
             
-            colors.push(color.r, color.g, color.b);
+            // For Terrant, add more variety with multiple soil tones
+            if (zoneType === 'Terrant') {
+                // Use simplex-like noise pattern for natural variation
+                const noiseValue = Math.sin(x * noiseScale + noiseOffset) * Math.cos(z * noiseScale + noiseOffset);
+                
+                // Randomly select between soil, rock, and vegetation colors based on noise
+                if (noiseValue > 0.6) {
+                    // Rocky areas
+                    baseColor = new THREE.Color(zoneColors.rock);
+                } else if (noiseValue < -0.6) {
+                    // Areas with vegetation influence
+                    baseColor = new THREE.Color(zoneColors.vegetation);
+                    // Blend with soil
+                    baseColor.lerp(new THREE.Color(zoneColors.soil), 0.7);
+                } else if (Math.random() > 0.95) {
+                    // Rare crystal-influenced areas
+                    baseColor = new THREE.Color(zoneColors.soil);
+                    baseColor.lerp(new THREE.Color(zoneColors.crystal), 0.3);
+                }
+                
+                // Add micro-variation to make terrain look more natural
+                const microVariation = Math.random() * 0.15 - 0.075;
+                
+                // Apply variation to each color channel
+                const color = new THREE.Color(
+                    Math.max(0, Math.min(1, baseColor.r + microVariation)),
+                    Math.max(0, Math.min(1, baseColor.g + microVariation)),
+                    Math.max(0, Math.min(1, baseColor.b + microVariation))
+                );
+                
+                colors.push(color.r, color.g, color.b);
+            } else {
+                // Standard variation for other zone types
+                const variation = Math.random() * 0.1 - 0.05;
+                const color = new THREE.Color(
+                    Math.max(0, Math.min(1, baseColor.r + variation)),
+                    Math.max(0, Math.min(1, baseColor.g + variation)),
+                    Math.max(0, Math.min(1, baseColor.b + variation))
+                );
+                
+                colors.push(color.r, color.g, color.b);
+            }
         }
         
         terrain.geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
@@ -381,12 +431,47 @@ export class TerrainManager {
         // Compute vertex normals for proper lighting
         geometry.computeVertexNormals();
         
-        // Create terrain material with lighter green color
-        const grassTexture = TextureGenerator.createProceduralTexture(0x4a9e4a, 0x3a7a3a, 512);
+        // Determine zone type for this terrain chunk
+        let zoneType = 'Terrant'; // Default to Terrant for new terrain
         
-        // Create terrain material with grass texture
+        // If we have a world manager with zone information, use it
+        if (this.worldManager && this.worldManager.getZoneAt) {
+            // Calculate world coordinates for this chunk
+            const worldX = x * this.terrainChunkSize + this.terrainChunkSize / 2;
+            const worldZ = z * this.terrainChunkSize + this.terrainChunkSize / 2;
+            
+            // Get zone at this position
+            const position = new THREE.Vector3(worldX, 0, worldZ);
+            const zone = this.worldManager.getZoneAt(position);
+            
+            if (zone) {
+                zoneType = zone.name;
+            }
+        }
+        
+        // Get colors from the config based on zone type
+        const zoneColors = ZONE_COLORS[zoneType] || ZONE_COLORS['Terrant'] || ZONE_COLORS['Forest'];
+        
+        // Create terrain material with appropriate base color
+        // For Terrant, use soil color; for others, use appropriate ground color
+        let baseColorHex = 0x4a9e4a; // Default grass color
+        
+        if (zoneType === 'Terrant') {
+            baseColorHex = zoneColors.soil;
+        } else if (zoneColors.ground) {
+            baseColorHex = zoneColors.ground;
+        }
+        
+        // Create procedural texture based on zone colors
+        const secondaryColorHex = zoneType === 'Terrant' ? 
+            zoneColors.rock : // Use rock as secondary color for Terrant
+            (baseColorHex === 0x4a9e4a ? 0x3a7a3a : baseColorHex * 0.8); // Darker version of base color
+            
+        const terrainTexture = TextureGenerator.createProceduralTexture(baseColorHex, secondaryColorHex, 512);
+        
+        // Create terrain material with texture
         const material = new THREE.MeshStandardMaterial({
-            map: grassTexture,
+            map: terrainTexture,
             roughness: 0.8,
             metalness: 0.2,
             vertexColors: true
@@ -400,8 +485,11 @@ export class TerrainManager {
         terrain.receiveShadow = true;
         terrain.castShadow = true;
         
-        // Apply uniform grass coloring with slight variations
-        this.colorTerrainUniform(terrain);
+        // Apply terrain coloring with variations based on zone type
+        this.colorTerrainUniform(terrain, zoneType);
+        
+        // Store zone type on the terrain for later reference
+        terrain.userData.zoneType = zoneType;
         
         // Position the terrain - ensure y=0 exactly to prevent vibration
         if (position) {

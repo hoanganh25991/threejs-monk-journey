@@ -6,6 +6,7 @@ import { WorldSerializer } from './serializers/WorldSerializer.js';
 import { SettingsSerializer } from './serializers/SettingsSerializer.js';
 import { SaveUtils } from './utils/SaveUtils.js';
 import { SaveOperationProgress } from './utils/SaveOperationProgress.js';
+import { STORAGE_KEYS } from '../../config/storage-keys.js';
 
 /**
  * SaveManager implementation using localStorage
@@ -23,8 +24,8 @@ export class SaveManager extends ISaveSystem {
         // Create progress indicators
         this.saveProgress = new SaveOperationProgress(game, 'save');
         this.loadProgress = new SaveOperationProgress(game, 'load');
-        this.saveKey = 'monk_journey_save';
-        this.chunkSaveKeyPrefix = 'monk_journey_chunk_';
+        this.saveKey = STORAGE_KEYS.SAVE_DATA;
+        this.chunkSaveKeyPrefix = STORAGE_KEYS.CHUNK_PREFIX;
         this.autoSaveInterval = 60_000; // Auto-save every minute (reduced frequency)
         this.autoSaveTimer = null;
         this.lastSaveLevel = 0; // Track player level at last save
@@ -565,7 +566,7 @@ export class SaveManager extends ISaveSystem {
         }
         
         // Save chunk index
-        this.storage.saveData(`${this.chunkSaveKeyPrefix}index`, chunkIndex);
+        this.storage.saveData(STORAGE_KEYS.CHUNK_INDEX, chunkIndex);
         
         SaveUtils.log(`Saved ${Object.keys(chunkIndex).length} chunks to local storage`);
         return chunkIndex;
@@ -636,7 +637,7 @@ export class SaveManager extends ISaveSystem {
         !auto && this.saveProgress.update('Finalizing chunk index...', 90);
         await this.delay(50);
         
-        this.storage.saveData(`${this.chunkSaveKeyPrefix}index`, chunkIndex);
+        this.storage.saveData(STORAGE_KEYS.CHUNK_INDEX, chunkIndex);
         
         SaveUtils.log(`Saved ${Object.keys(chunkIndex).length} chunks to local storage`);
         return chunkIndex;
@@ -648,7 +649,7 @@ export class SaveManager extends ISaveSystem {
      */
     loadChunkIndex() {
         try {
-            const chunkIndex = this.storage.loadData(`${this.chunkSaveKeyPrefix}index`);
+            const chunkIndex = this.storage.loadData(STORAGE_KEYS.CHUNK_INDEX);
             if (!chunkIndex) {
                 SaveUtils.log('No chunk index found in storage');
                 return null;
@@ -704,7 +705,7 @@ export class SaveManager extends ISaveSystem {
             }
             
             // Remove chunk index
-            this.storage.deleteData(`${this.chunkSaveKeyPrefix}index`);
+            this.storage.deleteData(STORAGE_KEYS.CHUNK_INDEX);
             
             SaveUtils.log('All save data deleted successfully');
             return true;

@@ -1,7 +1,52 @@
 // Skills configuration
 import { SKILL_ICONS } from './skill-icons.js';
 
-export const SKILLS = [
+// Primary attacks - basic attacks that don't consume mana
+export const PRIMARY_ATTACKS = [
+    {
+        name: 'Fist of Thunder',
+        description: 'Teleport to the nearest enemy and strike them with lightning',
+        type: 'teleport',
+        damage: 1,
+        manaCost: 0,
+        cooldown: 0, // Very short cooldown for basic attack
+        range: 25, // Teleport range
+        radius: 2, // Area of effect after teleport
+        duration: 1.0, // Short duration
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
+        primaryAttack: true,
+        sounds: {
+            cast: 'skillFistOfThunder', // Sound of lightning charging
+            impact: 'thunderStrike', // Crackling lightning impact
+            end: 'thunderEcho' // Echo of thunder after strike
+        }
+    },
+    {
+        name: "Deadly Reach",
+        description: "Extend your reach to strike enemies from a distance.",
+        type: "melee",
+        damage: 10,
+        manaCost: 0,
+        cooldown: 0,
+        range: 3, // Extended range
+        radius: 0,
+        duration: 0,
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
+        piercing: true, // Can pierce through enemies
+        knockback: true, // Final strike can knock back enemies
+        primaryAttack: true,
+        sounds: {
+            "cast": "deadlyReachCast", // Sound of energy focusing
+            "impact": "deadlyReachImpact", // Sound of strike hitting
+            "end": "deadlyReachEnd" // Sound of energy dispersing
+        }
+    }
+];
+
+// Normal skills that consume mana and have various effects
+export const NORMAL_SKILLS = [
     {
         name: 'Shield of Zen',
         description: 'Envelop yourself in a golden aura with a protective Buddha figure that absorbs 30% of damage and reflects 10% back to attackers',
@@ -202,44 +247,13 @@ export const SKILLS = [
             impact: 'kickImpact', // Sound of kick connecting with enemies
             end: 'kickLand' // Sound of monk landing after the kick
         }
-    },
-    {
-        name: 'Fist of Thunder',
-        description: 'Teleport to the nearest enemy and strike them with lightning',
-        type: 'teleport',
-        damage: 1,
-        manaCost: 0,
-        cooldown: 0.3, // Very short cooldown for basic attack
-        range: 25, // Teleport range
-        radius: 2, // Area of effect after teleport
-        duration: 1.0, // Short duration
-        get color() { return SKILL_ICONS[this.name].color; },
-        get icon() { return SKILL_ICONS[this.name].emoji; },
-        basicAttack: true,
-        sounds: {
-            cast: 'skillFistOfThunder', // Sound of lightning charging
-            impact: 'thunderStrike', // Crackling lightning impact
-            end: 'thunderEcho' // Echo of thunder after strike
-        }
-    },
-    {
-        name: "Deadly Reach",
-        description: "Extend your reach to strike enemies from a distance.",
-        type: "melee",
-        damage: 10,
-        manaCost: 0,
-        cooldown: 0.3,
-        range: 3, // Extended range
-        radius: 0,
-        duration: 0,
-        get color() { return SKILL_ICONS[this.name].color; },
-        get icon() { return SKILL_ICONS[this.name].emoji; },
-        piercing: true, // Can pierce through enemies
-        knockback: true, // Final strike can knock back enemies
-        sounds: {
-            "cast": "deadlyReachCast", // Sound of energy focusing
-            "impact": "deadlyReachImpact", // Sound of strike hitting
-            "end": "deadlyReachEnd" // Sound of energy dispersing
-        }
-    },
+    }
 ];
+
+// For backward compatibility, export a combined array of all skills
+export const SKILLS = [...PRIMARY_ATTACKS, ...NORMAL_SKILLS];
+
+export const BATTLE_SKILLS = [
+    ...NORMAL_SKILLS.slice(0, 7), // First 7 normal skills
+    PRIMARY_ATTACKS[0], // First primary skill
+]

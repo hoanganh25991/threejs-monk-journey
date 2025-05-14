@@ -4,6 +4,7 @@ import { SkillsUI } from './SkillsUI.js';
 import { DialogUI } from './DialogUI.js';
 import { InventoryUI } from './InventoryUI.js';
 import { SkillTreeUI } from './SkillTreeUI.js';
+import { SkillSelectionUI } from './SkillSelectionUI.js';
 import { VirtualJoystickUI } from './VirtualJoystickUI.js';
 import { DeathScreenUI } from './DeathScreenUI.js';
 import { NotificationsUI } from './NotificationsUI.js';
@@ -113,6 +114,10 @@ export class HUDManager {
         this.components.skillTreeUI = new SkillTreeUI(this.game);
         this.components.skillTreeUI.init();
         
+        // Create skill selection UI
+        this.components.skillSelectionUI = new SkillSelectionUI(this.game);
+        this.components.skillSelectionUI.init();
+        
         // Create virtual joystick UI
         this.components.joystickUI = new VirtualJoystickUI(this.game);
         this.components.joystickUI.init();
@@ -209,6 +214,19 @@ export class HUDManager {
      */
     toggleSkillTree() {
         this.components.skillTreeUI.toggleSkillTree();
+    }
+    
+    /**
+     * Toggle skill selection UI visibility
+     */
+    toggleSkillSelection() {
+        if (this.components.skillSelectionUI) {
+            if (this.components.skillSelectionUI.container.style.display === 'block') {
+                this.components.skillSelectionUI.hide();
+            } else {
+                this.components.skillSelectionUI.show();
+            }
+        }
     }
     
     /**
