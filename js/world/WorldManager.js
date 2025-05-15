@@ -104,6 +104,11 @@ export class WorldManager {
         const effectiveDrawDistance = this.lowPerformanceMode ? 
             Math.min(0.6, drawDistanceMultiplier) : drawDistanceMultiplier;
         
+        // Calculate which terrain chunk the player is in
+        const terrainChunkSize = this.terrainManager.terrainChunkSize;
+        const playerChunkX = Math.floor(playerPosition.x / terrainChunkSize);
+        const playerChunkZ = Math.floor(playerPosition.z / terrainChunkSize);
+        
         // Update terrain chunks with potentially reduced draw distance
         this.terrainManager.updateForPlayer(playerPosition, effectiveDrawDistance);
         
@@ -132,7 +137,13 @@ export class WorldManager {
                 console.debug(`Player moved significant distance (${distanceMoved.toFixed(1)}), forcing terrain and enemy cleanup`);
                 
                 // Clean up terrain
-                this.terrainManager.clearDistantChunks();
+                this.terrainManager.clearDistantChunks(playerChunkX, playerChunkZ);
+                
+                // Clean up structures that are far from the player
+                this.cleanupDistantStructures(playerChunkX, playerChunkZ);
+                
+                // Clean up environment objects
+                this.environmentManager.cleanupDistantObjects(playerPosition);
                 
                 // Clean up enemies
                 if (this.game && this.game.enemyManager) {
@@ -148,10 +159,70 @@ export class WorldManager {
         if (this.game && this.game.scene.fog) {
             // Adjust fog density inversely to draw distance
             this.game.scene.fog.density = 0.002 * (1 / effectiveDrawDistance);
+            
+            // Get the zone type at player position to adjust fog color
+            const zone = this.zoneManager.getZoneAt(playerPosition);
+            if (zone) {
+                // Adjust fog color based on zone
+                let fogColor = new THREE.Color(0xcccccc); // Default fog color
+                
+                if (zone.name === 'Forest') {
+                    fogColor = new THREE.Color(0x8ba58f); // Greenish fog for forest
+                } else if (zone.name === 'Desert') {
+                    fogColor = new THREE.Color(0xd6c6a5); // Tan fog for desert
+                } else if (zone.name === 'Mountains') {
+                    fogColor = new THREE.Color(0xb0c4de); // Light blue fog for mountains
+                } else if (zone.name === 'Swamp') {
+                    fogColor = new THREE.Color(0x6b8e23); // Dark green fog for swamp
+                } else if (zone.name === 'Dark Sanctum') {
+                    fogColor = new THREE.Color(0x301934); // Purple fog for dark sanctum
+                } else if (zone.name === 'Ruins') {
+                    fogColor = new THREE.Color(0x9c9c9c); // Gray fog for ruins
+                }
+                
+                // Apply fog color
+                if (this.game.scene.fog.color) {
+                    this.game.scene.fog.color.lerp(fogColor, 0.05); // Smooth transition
+                }
+            }
         }
         
         // Periodically check memory and performance
         this.manageMemoryAndPerformance();
+    }
+    
+    /**
+     * Clean up structures that are far from the player
+     * @param {number} playerChunkX - Player's chunk X coordinate
+     * @param {number} playerChunkZ - Player's chunk Z coordinate
+     */
+    cleanupDistantStructures(playerChunkX, playerChunkZ) {
+        try {
+            // Make sure structure manager is available and initialized
+            if (!this.structureManager || !this.structureManager.structuresPlaced) {
+                return;
+            }
+            
+            // Get the maximum view distance
+            const maxViewDistance = this.terrainManager.terrainChunkViewDistance + 2;
+            
+            // Check all structure chunks
+            for (const chunkKey in this.structureManager.structuresPlaced) {
+                // Parse chunk coordinates
+                const [chunkX, chunkZ] = chunkKey.split(',').map(Number);
+                
+                // Calculate distance from player chunk
+                const distX = Math.abs(chunkX - playerChunkX);
+                const distZ = Math.abs(chunkZ - playerChunkZ);
+                
+                // If chunk is too far away, remove its structures
+                if (distX > maxViewDistance || distZ > maxViewDistance) {
+                    this.structureManager.removeStructuresInChunk(chunkKey, true);
+                }
+            }
+        } catch (error) {
+            console.warn("Error cleaning up distant structures:", error);
+        }
     }
     
     /**

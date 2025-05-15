@@ -39,6 +39,12 @@ export class TerrainManager {
         
         // For save/load functionality
         this.savedTerrainChunks = null;
+        
+        // Cache for terrain templates by zone type
+        this.terrainTemplates = {};
+        
+        // Cache for generated textures by color
+        this.textureCache = {};
     }
     
     /**
@@ -126,12 +132,13 @@ export class TerrainManager {
         // Default to Terrant colors if specified or fall back to Forest
         const zoneColors = ZONE_COLORS[zoneType] || ZONE_COLORS['Terrant'] || ZONE_COLORS['Forest'];
         
-        // For Terrant, use soil as the primary color
+        // For Terrant, use soil as the primary color, no green mixing
         let baseColorHex = zoneType === 'Terrant' ? zoneColors.soil : 0x4a9e4a;
         
-        // Create noise patterns for more natural terrain variation
+        // Create deterministic noise patterns for natural variation
+        // Use a fixed seed based on chunk position to prevent flickering
         const noiseScale = 0.05;
-        const noiseOffset = Math.random() * 1000; // Different offset for each chunk
+        const noiseOffset = terrain.position.x * 0.01 + terrain.position.z * 0.01;
         
         for (let i = 0; i < positions.length; i += 3) {
             // Get vertex position for noise calculation
@@ -141,28 +148,24 @@ export class TerrainManager {
             // Base color from zone type
             let baseColor = new THREE.Color(baseColorHex);
             
-            // For Terrant, add more variety with multiple soil tones
+            // For Terrant, add more variety with multiple soil tones, but NO vegetation
             if (zoneType === 'Terrant') {
-                // Use simplex-like noise pattern for natural variation
+                // Use deterministic noise pattern for natural variation
                 const noiseValue = Math.sin(x * noiseScale + noiseOffset) * Math.cos(z * noiseScale + noiseOffset);
                 
-                // Randomly select between soil, rock, and vegetation colors based on noise
+                // Only use soil and rock colors for Terrant - NO vegetation mixing
                 if (noiseValue > 0.6) {
                     // Rocky areas
                     baseColor = new THREE.Color(zoneColors.rock);
-                } else if (noiseValue < -0.6) {
-                    // Areas with vegetation influence
-                    baseColor = new THREE.Color(zoneColors.vegetation);
-                    // Blend with soil
-                    baseColor.lerp(new THREE.Color(zoneColors.soil), 0.7);
                 } else if (Math.random() > 0.95) {
                     // Rare crystal-influenced areas
                     baseColor = new THREE.Color(zoneColors.soil);
-                    baseColor.lerp(new THREE.Color(zoneColors.crystal), 0.3);
+                    baseColor.lerp(new THREE.Color(zoneColors.crystal), 0.2);
                 }
                 
-                // Add micro-variation to make terrain look more natural
-                const microVariation = Math.random() * 0.15 - 0.075;
+                // Add subtle micro-variation to make terrain look more natural
+                // Use deterministic variation to prevent flickering
+                const microVariation = (Math.sin(x * 0.1 + z * 0.1) * 0.05);
                 
                 // Apply variation to each color channel
                 const color = new THREE.Color(
@@ -174,7 +177,7 @@ export class TerrainManager {
                 colors.push(color.r, color.g, color.b);
             } else {
                 // Standard variation for other zone types
-                const variation = Math.random() * 0.1 - 0.05;
+                const variation = (Math.sin(x * 0.1 + z * 0.1) * 0.05);
                 const color = new THREE.Color(
                     Math.max(0, Math.min(1, baseColor.r + variation)),
                     Math.max(0, Math.min(1, baseColor.g + variation)),
@@ -410,16 +413,44 @@ export class TerrainManager {
     }
     
     /**
-     * Create a unified terrain mesh for both base terrain and chunks
-     * @param {number} x - X coordinate (chunk or world)
-     * @param {number} z - Z coordinate (chunk or world)
-     * @param {number} size - Size of the terrain mesh
-     * @param {number} resolution - Resolution of the terrain mesh
-     * @param {boolean} isBaseTerrain - Whether this is the base terrain or a chunk
-     * @param {THREE.Vector3} position - Position to place the terrain
-     * @returns {THREE.Mesh} - The created terrain mesh
+     * Create or get a cached texture for terrain
+     * @param {number} baseColorHex - Base color for the texture
+     * @param {number} secondaryColorHex - Secondary color for the texture
+     * @returns {THREE.Texture} - The texture
      */
-    createTerrainMesh(x, z, size, resolution, isBaseTerrain = false, position = null) {
+    getOrCreateTexture(baseColorHex, secondaryColorHex) {
+        // Create a unique key for this texture combination
+        const textureKey = `${baseColorHex.toString(16)}_${secondaryColorHex.toString(16)}`;
+        
+        // Return cached texture if it exists
+        if (this.textureCache[textureKey]) {
+            return this.textureCache[textureKey];
+        }
+        
+        // Create new texture and cache it
+        const texture = TextureGenerator.createProceduralTexture(baseColorHex, secondaryColorHex, 512);
+        this.textureCache[textureKey] = texture;
+        
+        return texture;
+    }
+    
+    /**
+     * Create or get a cached terrain template for a zone type
+     * @param {string} zoneType - The zone type
+     * @param {number} size - Size of the terrain
+     * @param {number} resolution - Resolution of the terrain
+     * @returns {Object} - Template with geometry and material
+     */
+    getOrCreateTerrainTemplate(zoneType, size, resolution) {
+        // Create a unique key for this template
+        const templateKey = `${zoneType}_${size}_${resolution}`;
+        
+        // Return cached template if it exists
+        if (this.terrainTemplates[templateKey]) {
+            return this.terrainTemplates[templateKey];
+        }
+        
+        // Create new template
         // Create terrain geometry
         const geometry = new THREE.PlaneGeometry(
             size,
@@ -430,24 +461,6 @@ export class TerrainManager {
         
         // Compute vertex normals for proper lighting
         geometry.computeVertexNormals();
-        
-        // Determine zone type for this terrain chunk
-        let zoneType = 'Terrant'; // Default to Terrant for new terrain
-        
-        // If we have a world manager with zone information, use it
-        if (this.worldManager && this.worldManager.getZoneAt) {
-            // Calculate world coordinates for this chunk
-            const worldX = x * this.terrainChunkSize + this.terrainChunkSize / 2;
-            const worldZ = z * this.terrainChunkSize + this.terrainChunkSize / 2;
-            
-            // Get zone at this position
-            const position = new THREE.Vector3(worldX, 0, worldZ);
-            const zone = this.worldManager.getZoneAt(position);
-            
-            if (zone) {
-                zoneType = zone.name;
-            }
-        }
         
         // Get colors from the config based on zone type
         const zoneColors = ZONE_COLORS[zoneType] || ZONE_COLORS['Terrant'] || ZONE_COLORS['Forest'];
@@ -467,7 +480,8 @@ export class TerrainManager {
             zoneColors.rock : // Use rock as secondary color for Terrant
             (baseColorHex === 0x4a9e4a ? 0x3a7a3a : baseColorHex * 0.8); // Darker version of base color
             
-        const terrainTexture = TextureGenerator.createProceduralTexture(baseColorHex, secondaryColorHex, 512);
+        // Get or create texture
+        const terrainTexture = this.getOrCreateTexture(baseColorHex, secondaryColorHex);
         
         // Create terrain material with texture
         const material = new THREE.MeshStandardMaterial({
@@ -477,8 +491,50 @@ export class TerrainManager {
             vertexColors: true
         });
         
-        // Create terrain mesh
-        const terrain = new THREE.Mesh(geometry, material);
+        // Store template
+        this.terrainTemplates[templateKey] = {
+            geometry: geometry,
+            material: material,
+            zoneType: zoneType
+        };
+        
+        return this.terrainTemplates[templateKey];
+    }
+    
+    /**
+     * Create a unified terrain mesh for both base terrain and chunks
+     * @param {number} x - X coordinate (chunk or world)
+     * @param {number} z - Z coordinate (chunk or world)
+     * @param {number} size - Size of the terrain mesh
+     * @param {number} resolution - Resolution of the terrain mesh
+     * @param {boolean} isBaseTerrain - Whether this is the base terrain or a chunk
+     * @param {THREE.Vector3} position - Position to place the terrain
+     * @returns {THREE.Mesh} - The created terrain mesh
+     */
+    createTerrainMesh(x, z, size, resolution, isBaseTerrain = false, position = null) {
+        // Determine zone type for this terrain chunk
+        let zoneType = 'Terrant'; // Default to Terrant for new terrain
+        
+        // If we have a world manager with zone information, use it
+        if (this.worldManager && this.worldManager.getZoneAt) {
+            // Calculate world coordinates for this chunk
+            const worldX = x * this.terrainChunkSize + this.terrainChunkSize / 2;
+            const worldZ = z * this.terrainChunkSize + this.terrainChunkSize / 2;
+            
+            // Get zone at this position
+            const pos = new THREE.Vector3(worldX, 0, worldZ);
+            const zone = this.worldManager.getZoneAt(pos);
+            
+            if (zone) {
+                zoneType = zone.name;
+            }
+        }
+        
+        // Get or create terrain template for this zone type
+        const template = this.getOrCreateTerrainTemplate(zoneType, size, resolution);
+        
+        // Create terrain mesh using the template
+        const terrain = new THREE.Mesh(template.geometry.clone(), template.material.clone());
         terrain.rotation.x = -Math.PI / 2;
         
         // CRITICAL FIX: Ensure both receiveShadow and castShadow are set to true
@@ -589,18 +645,39 @@ export class TerrainManager {
             return; // Skip creating this chunk as it wasn't in the saved state
         }
         
-        // For buffered chunks, we'll just create a placeholder and defer actual creation
-        // This significantly reduces memory usage and improves performance
+        // Determine zone type for this terrain chunk
+        let zoneType = 'Terrant'; // Default to Terrant for new terrain
         
-        // Create a minimal placeholder object
+        // If we have a world manager with zone information, use it
+        if (this.worldManager && this.worldManager.getZoneAt) {
+            // Calculate world coordinates for this chunk
+            const worldX = chunkX * this.terrainChunkSize + this.terrainChunkSize / 2;
+            const worldZ = chunkZ * this.terrainChunkSize + this.terrainChunkSize / 2;
+            
+            // Get zone at this position
+            const position = new THREE.Vector3(worldX, 0, worldZ);
+            const zone = this.worldManager.getZoneAt(position);
+            
+            if (zone) {
+                zoneType = zone.name;
+            }
+        }
+        
+        // For buffered chunks, create a lightweight placeholder with zone info
+        // This significantly reduces memory usage and improves performance
         const placeholder = {
             isPlaceholder: true,
             chunkX: chunkX,
-            chunkZ: chunkZ
+            chunkZ: chunkZ,
+            zoneType: zoneType
         };
         
         // Store in buffer but don't create actual geometry yet
         this.terrainBuffer[chunkKey] = placeholder;
+        
+        // Pre-fetch the terrain template for this zone type to ensure it's cached
+        // This helps reduce stuttering when the chunk becomes visible
+        this.getOrCreateTerrainTemplate(zoneType, this.terrainChunkSize, 16);
         
         // Notify structure manager to pre-generate structures for this chunk
         if (this.worldManager && this.worldManager.structureManager) {
@@ -622,27 +699,44 @@ export class TerrainManager {
             return;
         }
         
-        // Extract coordinates
-        const { chunkX, chunkZ } = placeholder;
+        // Extract coordinates and zone type
+        const { chunkX, chunkZ, zoneType } = placeholder;
+        const zoneTypeName = zoneType || 'Terrant';
         
         // Try to load from storage first
         if (this.game && this.game.saveManager) {
             const loadedChunk = this.game.saveManager.loadChunk(chunkKey);
             if (loadedChunk) {
-                // Calculate world coordinates for position
+                // Get the terrain template for this zone type
+                const template = this.getOrCreateTerrainTemplate(
+                    zoneTypeName, 
+                    this.terrainChunkSize, 
+                    16
+                );
+                
+                // Create terrain mesh using the template
+                const terrain = new THREE.Mesh(template.geometry.clone(), template.material.clone());
+                terrain.rotation.x = -Math.PI / 2;
+                
+                // Set shadows
+                terrain.receiveShadow = true;
+                terrain.castShadow = true;
+                
+                // Apply terrain coloring with variations based on zone type
+                this.colorTerrainUniform(terrain, zoneTypeName);
+                
+                // Store zone type on the terrain for later reference
+                terrain.userData.zoneType = zoneTypeName;
+                
+                // Position the terrain
                 const worldX = chunkX * this.terrainChunkSize;
                 const worldZ = chunkZ * this.terrainChunkSize;
                 
-                // Create terrain using unified method but remove from scene (it's for buffer)
-                const terrain = this.createTerrainMesh(
-                    chunkX,
-                    chunkZ,
-                    this.terrainChunkSize,
-                    16 // Lower resolution for better performance
+                terrain.position.set(
+                    worldX + this.terrainChunkSize / 2,
+                    0,
+                    worldZ + this.terrainChunkSize / 2
                 );
-                
-                // Remove from scene since it's going into the buffer
-                this.scene.remove(terrain);
                 
                 // Replace placeholder with real terrain
                 this.terrainBuffer[chunkKey] = terrain;
@@ -658,17 +752,37 @@ export class TerrainManager {
             }
         }
         
-        // If no saved data, create a new chunk using unified method
-        // Create terrain using unified method but don't add to scene (it's for buffer)
-        const terrain = this.createTerrainMesh(
-            chunkX,
-            chunkZ,
-            this.terrainChunkSize,
-            16 // Lower resolution for better performance
+        // If no saved data, create a new chunk using the template system
+        // Get the terrain template for this zone type
+        const template = this.getOrCreateTerrainTemplate(
+            zoneTypeName, 
+            this.terrainChunkSize, 
+            16
         );
         
-        // Remove from scene since it's going into the buffer
-        this.scene.remove(terrain);
+        // Create terrain mesh using the template
+        const terrain = new THREE.Mesh(template.geometry.clone(), template.material.clone());
+        terrain.rotation.x = -Math.PI / 2;
+        
+        // Set shadows
+        terrain.receiveShadow = true;
+        terrain.castShadow = true;
+        
+        // Apply terrain coloring with variations based on zone type
+        this.colorTerrainUniform(terrain, zoneTypeName);
+        
+        // Store zone type on the terrain for later reference
+        terrain.userData.zoneType = zoneTypeName;
+        
+        // Position the terrain
+        const worldX = chunkX * this.terrainChunkSize;
+        const worldZ = chunkZ * this.terrainChunkSize;
+        
+        terrain.position.set(
+            worldX + this.terrainChunkSize / 2,
+            0,
+            worldZ + this.terrainChunkSize / 2
+        );
         
         // Replace placeholder with real terrain
         this.terrainBuffer[chunkKey] = terrain;
@@ -723,6 +837,7 @@ export class TerrainManager {
     
     /**
      * Process the terrain generation queue asynchronously
+     * Optimized to process multiple chunks per frame when possible
      */
     processTerrainGenerationQueue() {
         if (this.terrainGenerationQueue.length === 0) {
@@ -737,16 +852,35 @@ export class TerrainManager {
         
         this.isProcessingTerrainQueue = true;
         
-        // Get the highest priority chunk
-        const nextChunk = this.terrainGenerationQueue.shift();
+        // Process multiple chunks per frame when possible
+        // Start with a timestamp to measure how long we've been processing
+        const startTime = performance.now();
+        const maxProcessingTime = 5; // Max milliseconds to spend processing per frame
         
-        // Create the chunk in the buffer (not visible yet)
-        this.createBufferedTerrainChunk(nextChunk.x, nextChunk.z);
+        // Process chunks until we hit the time limit or empty the queue
+        while (this.terrainGenerationQueue.length > 0 && 
+               (performance.now() - startTime) < maxProcessingTime) {
+            
+            // Get the highest priority chunk
+            const nextChunk = this.terrainGenerationQueue.shift();
+            
+            // Create the chunk in the buffer (not visible yet)
+            this.createBufferedTerrainChunk(nextChunk.x, nextChunk.z);
+        }
         
-        // Process next chunk in the queue after a small delay to avoid blocking the main thread
-        setTimeout(() => {
-            this.processTerrainGenerationQueue();
-        }, 10); // Small delay to keep the game responsive
+        // If there are still chunks to process, continue in the next frame
+        if (this.terrainGenerationQueue.length > 0) {
+            requestAnimationFrame(() => {
+                this.processTerrainGenerationQueue();
+            });
+        } else {
+            this.isProcessingTerrainQueue = false;
+            console.debug("Terrain generation queue processing complete");
+            // Dispatch an event that terrain generation is complete
+            if (this.game && this.game.events) {
+                this.game.events.dispatch('terrainGenerationComplete');
+            }
+        }
     }
     
     /**
@@ -860,9 +994,11 @@ export class TerrainManager {
     
     /**
      * Clear distant terrain chunks to free memory
+     * @param {number} playerChunkX - Player's chunk X coordinate (optional)
+     * @param {number} playerChunkZ - Player's chunk Z coordinate (optional)
      * @param {number} maxDistance - Maximum distance from player to keep chunks (defaults to 2x view distance)
      */
-    clearDistantChunks(maxDistance) {
+    clearDistantChunks(playerChunkX, playerChunkZ, maxDistance) {
         // Default to 2x the view distance if not specified
         const clearDistance = maxDistance || (this.terrainChunkViewDistance * 2);
         
@@ -870,8 +1006,13 @@ export class TerrainManager {
         let centerX = 0;
         let centerZ = 0;
         
-        // If we have a player position, use that
-        if (this.worldManager && this.worldManager.game && this.worldManager.game.player) {
+        // If player chunk coordinates are provided, use them
+        if (typeof playerChunkX === 'number' && typeof playerChunkZ === 'number') {
+            centerX = playerChunkX;
+            centerZ = playerChunkZ;
+        }
+        // Otherwise, try to get player position from the game
+        else if (this.worldManager && this.worldManager.game && this.worldManager.game.player) {
             const playerPos = this.worldManager.game.player.getPosition();
             centerX = Math.floor(playerPos.x / this.terrainChunkSize);
             centerZ = Math.floor(playerPos.z / this.terrainChunkSize);

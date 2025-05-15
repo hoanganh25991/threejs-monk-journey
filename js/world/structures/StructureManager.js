@@ -82,16 +82,39 @@ export class StructureManager {
         this.structuresPlaced[chunkKey] = [];
         
         // Calculate world coordinates for this chunk
-        const worldX = chunkX * this.worldManager.terrainManager.terrainChunkSize;
-        const worldZ = chunkZ * this.worldManager.terrainManager.terrainChunkSize;
+        const terrainChunkSize = this.worldManager.terrainManager.terrainChunkSize;
+        const worldX = chunkX * terrainChunkSize;
+        const worldZ = chunkZ * terrainChunkSize;
         
         // Use seeded random for consistent generation
-        const random = RandomGenerator.seededRandom(chunkKey);
+        // Use a more stable seed that combines chunk coordinates
+        const seed = `${chunkX * 10000 + chunkZ}`;
+        const random = RandomGenerator.seededRandom(seed);
+        
+        // Get the zone type for this chunk to determine structure types and density
+        const chunkCenterX = worldX + terrainChunkSize / 2;
+        const chunkCenterZ = worldZ + terrainChunkSize / 2;
+        const zoneType = this.getZoneTypeAt(chunkCenterX, chunkCenterZ);
+        
+        // Adjust structure density based on zone type
+        let densityMultiplier = 1.0;
+        if (zoneType === 'Forest') densityMultiplier = 1.2;
+        if (zoneType === 'Desert') densityMultiplier = 0.7;
+        if (zoneType === 'Mountains') densityMultiplier = 0.5;
+        if (zoneType === 'Ruins') densityMultiplier = 1.5;
+        if (zoneType === 'Dark Sanctum') densityMultiplier = 0.8;
+        if (zoneType === 'Terrant') densityMultiplier = 1.0;
         
         // Determine if this chunk should have a Dark Sanctum (very rare)
-        if (random() < this.structureDensity.darkSanctum) {
-            const x = worldX + random() * this.worldManager.terrainManager.terrainChunkSize;
-            const z = worldZ + random() * this.worldManager.terrainManager.terrainChunkSize;
+        // Use a more deterministic approach based on chunk coordinates
+        const shouldHaveDarkSanctum = 
+            (Math.abs(chunkX) % 20 === 0 && Math.abs(chunkZ) % 20 === 0) && 
+            (Math.abs(chunkX) > 5 || Math.abs(chunkZ) > 5); // Keep away from center
+        
+        if (shouldHaveDarkSanctum) {
+            // Place Dark Sanctum near the center of the chunk
+            const x = worldX + terrainChunkSize / 2 + (random() * 20 - 10);
+            const z = worldZ + terrainChunkSize / 2 + (random() * 20 - 10);
             
             // Check if we're too close to an existing Dark Sanctum
             let tooClose = false;
@@ -109,21 +132,69 @@ export class StructureManager {
             
             if (!tooClose) {
                 // Store the structure data
-                this.structuresPlaced[chunkKey].push({ x, z, type: 'darkSanctum' });
+                const structureData = { x, z, type: 'darkSanctum', chunkKey };
+                this.structuresPlaced[chunkKey].push(structureData);
                 
                 // Only create the actual 3D object if not in data-only mode
                 if (!dataOnly) {
-                    this.createDarkSanctum(x, z);
-                    this.specialStructures[`darkSanctum_${chunkKey}_${this.structuresPlaced[chunkKey].length - 1}`] = { 
-                        x, z, type: 'darkSanctum' 
+                    const darkSanctum = this.createDarkSanctum(x, z);
+                    // Store chunk key in the mesh userData for easier cleanup
+                    if (darkSanctum) {
+                        darkSanctum.userData.chunkKey = chunkKey;
+                        darkSanctum.userData.structureType = 'darkSanctum';
+                    }
+                    
+                    this.specialStructures[`darkSanctum_${chunkKey}`] = { 
+                        x, z, type: 'darkSanctum', chunkKey 
                     };
                 }
             }
         }
         
+        // Generate mountains (if in Mountains zone)
+        if (zoneType === 'Mountains') {
+            const mountainCount = Math.floor(2 + random() * 3); // 2-4 mountains per chunk
+            for (let i = 0; i < mountainCount; i++) {
+                const x = worldX + random() * terrainChunkSize;
+                const z = worldZ + random() * terrainChunkSize;
+                
+                // Store the structure data
+                const structureData = { x, z, type: 'mountain', chunkKey };
+                this.structuresPlaced[chunkKey].push(structureData);
+                
+                // Only create the actual 3D object if not in data-only mode
+                if (!dataOnly) {
+                    const mountain = this.createMountain(x, z);
+                    if (mountain) {
+                        mountain.userData.chunkKey = chunkKey;
+                        mountain.userData.structureType = 'mountain';
+                    }
+                }
+            }
+        }
+        
+        // Generate villages (rare, but contain multiple buildings)
+        if (random() < this.structureDensity.village * densityMultiplier) {
+            const villageX = worldX + terrainChunkSize / 2 + (random() * 20 - 10);
+            const villageZ = worldZ + terrainChunkSize / 2 + (random() * 20 - 10);
+            
+            // Store the structure data
+            const structureData = { x: villageX, z: villageZ, type: 'village', chunkKey };
+            this.structuresPlaced[chunkKey].push(structureData);
+            
+            // Only create the actual 3D object if not in data-only mode
+            if (!dataOnly) {
+                const village = this.createVillage(villageX, villageZ);
+                if (village) {
+                    village.userData.chunkKey = chunkKey;
+                    village.userData.structureType = 'village';
+                }
+            }
+        }
+        
         // Generate houses
-        const terrainChunkSize = this.worldManager.terrainManager.terrainChunkSize;
-        for (let i = 0; i < Math.floor(terrainChunkSize * terrainChunkSize * this.structureDensity.house); i++) {
+        const houseCount = Math.floor(terrainChunkSize * terrainChunkSize * this.structureDensity.house * densityMultiplier);
+        for (let i = 0; i < houseCount; i++) {
             const x = worldX + random() * terrainChunkSize;
             const z = worldZ + random() * terrainChunkSize;
             
@@ -133,42 +204,79 @@ export class StructureManager {
             const height = 2 + random() * 5;
             
             // Store the structure data
-            this.structuresPlaced[chunkKey].push({ 
+            const structureData = { 
                 x, z, type: 'house', 
-                dimensions: { width, depth, height } 
-            });
+                dimensions: { width, depth, height },
+                chunkKey
+            };
+            this.structuresPlaced[chunkKey].push(structureData);
             
             // Only create the actual 3D object if not in data-only mode
             if (!dataOnly) {
-                this.createBuilding(x, z, width, depth, height);
+                const building = this.createBuilding(x, z, width, depth, height);
+                if (building) {
+                    building.userData.chunkKey = chunkKey;
+                    building.userData.structureType = 'house';
+                }
             }
         }
         
         // Generate towers
-        for (let i = 0; i < Math.floor(terrainChunkSize * terrainChunkSize * this.structureDensity.tower); i++) {
+        const towerCount = Math.floor(terrainChunkSize * terrainChunkSize * this.structureDensity.tower * densityMultiplier);
+        for (let i = 0; i < towerCount; i++) {
             const x = worldX + random() * terrainChunkSize;
             const z = worldZ + random() * terrainChunkSize;
             
             // Store the structure data
-            this.structuresPlaced[chunkKey].push({ x, z, type: 'tower' });
+            const structureData = { x, z, type: 'tower', chunkKey };
+            this.structuresPlaced[chunkKey].push(structureData);
             
             // Only create the actual 3D object if not in data-only mode
             if (!dataOnly) {
-                this.createTower(x, z);
+                const tower = this.createTower(x, z);
+                if (tower) {
+                    tower.userData.chunkKey = chunkKey;
+                    tower.userData.structureType = 'tower';
+                }
             }
         }
         
         // Generate ruins
-        for (let i = 0; i < Math.floor(terrainChunkSize * terrainChunkSize * this.structureDensity.ruins); i++) {
+        const ruinsCount = Math.floor(terrainChunkSize * terrainChunkSize * this.structureDensity.ruins * densityMultiplier);
+        for (let i = 0; i < ruinsCount; i++) {
             const x = worldX + random() * terrainChunkSize;
             const z = worldZ + random() * terrainChunkSize;
             
             // Store the structure data
-            this.structuresPlaced[chunkKey].push({ x, z, type: 'ruins' });
+            const structureData = { x, z, type: 'ruins', chunkKey };
+            this.structuresPlaced[chunkKey].push(structureData);
             
             // Only create the actual 3D object if not in data-only mode
             if (!dataOnly) {
-                this.createRuins(x, z);
+                const ruins = this.createRuins(x, z);
+                if (ruins) {
+                    ruins.userData.chunkKey = chunkKey;
+                    ruins.userData.structureType = 'ruins';
+                }
+            }
+        }
+        
+        // Generate bridges (if near water or valleys)
+        if (random() < this.structureDensity.bridge * densityMultiplier) {
+            const x = worldX + random() * terrainChunkSize;
+            const z = worldZ + random() * terrainChunkSize;
+            
+            // Store the structure data
+            const structureData = { x, z, type: 'bridge', chunkKey };
+            this.structuresPlaced[chunkKey].push(structureData);
+            
+            // Only create the actual 3D object if not in data-only mode
+            if (!dataOnly) {
+                const bridge = this.createBridge(x, z);
+                if (bridge) {
+                    bridge.userData.chunkKey = chunkKey;
+                    bridge.userData.structureType = 'bridge';
+                }
             }
         }
     }
@@ -225,17 +333,40 @@ export class StructureManager {
      * @returns {string} - The zone type (Forest, Desert, etc.)
      */
     getZoneTypeAt(x, z) {
-        // Use the world manager to get the zone at this position
-        if (this.worldManager && this.worldManager.getZoneAt) {
-            const position = new THREE.Vector3(x, 0, z);
-            const zone = this.worldManager.getZoneAt(position);
-            if (zone) {
-                return zone.name;
+        try {
+            // Use the world manager to get the zone at this position
+            if (this.worldManager && this.worldManager.zoneManager) {
+                // Calculate which chunk this position is in
+                const terrainChunkSize = this.worldManager.terrainManager.terrainChunkSize;
+                const chunkX = Math.floor(x / terrainChunkSize);
+                const chunkZ = Math.floor(z / terrainChunkSize);
+                
+                // Try to get zone type from the zone manager's chunk cache
+                const zoneType = this.worldManager.zoneManager.getZoneTypeForChunk(chunkX, chunkZ);
+                if (zoneType) {
+                    return zoneType;
+                }
+                
+                // Fallback to position-based lookup
+                const position = new THREE.Vector3(x, 0, z);
+                const zone = this.worldManager.zoneManager.getZoneAt(position);
+                if (zone) {
+                    return zone.name;
+                }
+            } else if (this.worldManager && this.worldManager.getZoneAt) {
+                // Legacy method
+                const position = new THREE.Vector3(x, 0, z);
+                const zone = this.worldManager.getZoneAt(position);
+                if (zone) {
+                    return zone.name;
+                }
             }
+        } catch (error) {
+            console.warn("Error getting zone type:", error);
         }
         
-        // Default to Forest if no zone found
-        return 'Forest';
+        // Default to Terrant if no zone found or error
+        return 'Terrant';
     }
     
     /**
@@ -326,6 +457,85 @@ export class StructureManager {
         }
         
         return sanctumGroup;
+    }
+    
+    /**
+     * Create a mountain at the specified position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @returns {THREE.Group} - The mountain group
+     */
+    createMountain(x, z) {
+        const zoneType = this.getZoneTypeAt(x, z);
+        const mountain = new Mountain(zoneType);
+        const mountainGroup = mountain.createMesh();
+        
+        // Position mountain on terrain
+        mountainGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(mountainGroup);
+        this.structures.push(mountainGroup);
+        
+        return mountainGroup;
+    }
+    
+    /**
+     * Create a village at the specified position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @returns {THREE.Group} - The village group
+     */
+    createVillage(x, z) {
+        const zoneType = this.getZoneTypeAt(x, z);
+        const village = new Village(zoneType);
+        const villageGroup = village.createMesh();
+        
+        // Position village on terrain
+        villageGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(villageGroup);
+        this.structures.push(villageGroup);
+        
+        // Add interactive objects like NPCs and treasure chests
+        if (this.worldManager && this.worldManager.interactiveManager) {
+            // Add a treasure chest
+            const chestX = x + (Math.random() * 10 - 5);
+            const chestZ = z + (Math.random() * 10 - 5);
+            this.worldManager.interactiveManager.createTreasureChest(chestX, chestZ);
+            
+            // Add quest marker
+            const questX = x + (Math.random() * 10 - 5);
+            const questZ = z + (Math.random() * 10 - 5);
+            this.worldManager.interactiveManager.createQuestMarker(questX, questZ, 'village_quest');
+        }
+        
+        return villageGroup;
+    }
+    
+    /**
+     * Create a bridge at the specified position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @returns {THREE.Group} - The bridge group
+     */
+    createBridge(x, z) {
+        const zoneType = this.getZoneTypeAt(x, z);
+        const bridge = new Bridge(zoneType);
+        const bridgeGroup = bridge.createMesh();
+        
+        // Position bridge on terrain
+        bridgeGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
+        
+        // Randomly rotate the bridge
+        bridgeGroup.rotation.y = Math.random() * Math.PI;
+        
+        // Add to scene
+        this.scene.add(bridgeGroup);
+        this.structures.push(bridgeGroup);
+        
+        return bridgeGroup;
     }
     
     /**
