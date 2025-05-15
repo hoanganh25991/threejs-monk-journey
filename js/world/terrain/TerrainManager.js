@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { TerrainChunk } from './TerrainChunk.js';
 import { TextureGenerator } from '../utils/TextureGenerator.js';
 import { ZONE_COLORS } from '../../config/colors.js';
 
@@ -411,11 +410,8 @@ export class TerrainManager {
         
         // Try to load this chunk from local storage first
         if (this.game && this.game.saveManager) {
-            const loadedChunk = this.game.saveManager.loadChunk(chunkKey);
-            if (loadedChunk) {
-                // Create the terrain chunk from saved data
-                return this.createTerrainChunkFromSavedData(chunkX, chunkZ, loadedChunk);
-            }
+            // Create the terrain chunk from saved data
+            return this.createTerrainChunkFromSavedData(chunkX, chunkZ, loadedChunk);
         }
         
         // If not loaded from storage, create a new chunk
@@ -714,53 +710,7 @@ export class TerrainManager {
         const zoneTypeName = zoneType || 'Terrant';
         
         // Try to load from storage first
-        if (this.game && this.game.saveManager) {
-            const loadedChunk = this.game.saveManager.loadChunk(chunkKey);
-            if (loadedChunk) {
-                // Get the terrain template for this zone type
-                const template = this.getOrCreateTerrainTemplate(
-                    zoneTypeName, 
-                    this.terrainChunkSize, 
-                    16
-                );
-                
-                // Create terrain mesh using the template
-                const terrain = new THREE.Mesh(template.geometry.clone(), template.material.clone());
-                terrain.rotation.x = -Math.PI / 2;
-                
-                // Set shadows
-                terrain.receiveShadow = true;
-                terrain.castShadow = true;
-                
-                // Apply terrain coloring with variations based on zone type
-                this.colorTerrainUniform(terrain, zoneTypeName);
-                
-                // Store zone type on the terrain for later reference
-                terrain.userData.zoneType = zoneTypeName;
-                
-                // Position the terrain
-                const worldX = chunkX * this.terrainChunkSize;
-                const worldZ = chunkZ * this.terrainChunkSize;
-                
-                terrain.position.set(
-                    worldX + this.terrainChunkSize / 2,
-                    0,
-                    worldZ + this.terrainChunkSize / 2
-                );
-                
-                // Replace placeholder with real terrain
-                this.terrainBuffer[chunkKey] = terrain;
-                
-                // Store environment objects data for later use
-                if (loadedChunk.environmentObjects && loadedChunk.environmentObjects.length > 0) {
-                    // We'll create a temporary storage for this data
-                    terrain.savedEnvironmentObjects = loadedChunk.environmentObjects;
-                }
-                
-                console.debug(`Placeholder converted to real buffered chunk: ${chunkKey}`);
-                return;
-            }
-        }
+            
         
         // If no saved data, create a new chunk using the template system
         // Get the terrain template for this zone type
