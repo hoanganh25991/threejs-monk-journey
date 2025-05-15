@@ -21,13 +21,14 @@ export class TerrainManager {
         this.terrainChunks = {}; // Store terrain chunks by chunk key
         this.terrainChunkSize = 100; // Size of each terrain chunk (INCREASED for better performance)
         this.visibleTerrainChunks = {}; // Store currently visible terrain chunks
-        this.terrainChunkViewDistance = 2; // How many terrain chunks to show in each direction (REDUCED to compensate for larger chunks)
+        this.terrainChunkViewDistance = 3; // INCREASED from 2 to 3 to improve visibility of distant structures
         
         // For terrain buffering (pre-rendering)
         this.terrainBuffer = {}; // Store pre-generated terrain chunks that aren't yet visible
-        this.terrainBufferDistance = 6; // How far ahead to buffer terrain (larger than view distance)
+        this.terrainBufferDistance = 3; // How far ahead to buffer terrain (reduced from 6 to 3 to prevent infinite loading)
         this.terrainGenerationQueue = []; // Queue for prioritized terrain generation
         this.isProcessingTerrainQueue = false; // Flag to prevent multiple queue processing
+        this.lastQueueProcessTime = 0; // Timestamp of last queue processing to prevent constant processing
         this.lastPlayerChunk = { x: 0, z: 0 }; // Last player chunk for movement prediction
         this.playerMovementDirection = new THREE.Vector3(0, 0, 0); // Track player movement direction for prediction
         
@@ -274,8 +275,17 @@ export class TerrainManager {
         // Queue terrain chunks for buffering (prioritize in the direction of movement)
         this.queueTerrainChunksForBuffering(centerX, centerZ);
         
-        // Process a chunk from the queue if we're not already processing
-        if (!this.isProcessingTerrainQueue) {
+        // Add a cooldown to prevent constant queue processing
+        const currentTime = Date.now();
+        if (!this.lastQueueProcessTime) {
+            this.lastQueueProcessTime = 0;
+        }
+        
+        // Only process the queue if we're not already processing and enough time has passed
+        const QUEUE_PROCESS_COOLDOWN = 1000; // 1000ms (1 second) cooldown between queue processing
+        if (!this.isProcessingTerrainQueue && 
+            currentTime - this.lastQueueProcessTime > QUEUE_PROCESS_COOLDOWN) {
+            this.lastQueueProcessTime = currentTime;
             this.processTerrainGenerationQueue();
         }
         
@@ -796,12 +806,27 @@ export class TerrainManager {
      * @param {number} centerZ - Center Z chunk coordinate
      */
     queueTerrainChunksForBuffering(centerX, centerZ) {
+        // Limit the queue size to prevent memory issues
+        const MAX_QUEUE_SIZE = 16; // Maximum number of chunks in the queue (reduced from 24 to 16)
+        if (this.terrainGenerationQueue.length >= MAX_QUEUE_SIZE) {
+            console.debug(`Terrain generation queue full (${this.terrainGenerationQueue.length}/${MAX_QUEUE_SIZE}), skipping new chunks`);
+            return;
+        }
+        
         // Clear existing queue to avoid duplicates
         this.terrainGenerationQueue = [];
+        
+        // Track how many chunks we've added to the queue
+        let chunksAdded = 0;
+        const MAX_CHUNKS_PER_UPDATE = 8; // Maximum chunks to add per update
         
         // Calculate buffer area (larger than view distance)
         for (let x = centerX - this.terrainBufferDistance; x <= centerX + this.terrainBufferDistance; x++) {
             for (let z = centerZ - this.terrainBufferDistance; z <= centerZ + this.terrainBufferDistance; z++) {
+                // Stop if we've reached the maximum chunks per update
+                if (chunksAdded >= MAX_CHUNKS_PER_UPDATE) {
+                    break;
+                }
                 const chunkKey = `${x},${z}`;
                 
                 // Skip if already in visible chunks or already in buffer
@@ -828,11 +853,24 @@ export class TerrainManager {
                     priority: priority,
                     chunkKey: chunkKey
                 });
+                
+                // Increment the counter
+                chunksAdded++;
+            }
+            
+            // Also break the outer loop if we've reached the maximum
+            if (chunksAdded >= MAX_CHUNKS_PER_UPDATE) {
+                break;
             }
         }
         
         // Sort queue by priority (higher priority first)
         this.terrainGenerationQueue.sort((a, b) => b.priority - a.priority);
+        
+        // Log the queue size for debugging
+        if (this.terrainGenerationQueue.length > 0) {
+            console.debug(`Terrain generation queue size: ${this.terrainGenerationQueue.length}, chunks added: ${chunksAdded}`);
+        }
     }
     
     /**
@@ -840,9 +878,15 @@ export class TerrainManager {
      * Optimized to process multiple chunks per frame when possible
      */
     processTerrainGenerationQueue() {
+        // Track when we process the queue to prevent too frequent processing
+        this.lastQueueProcessTime = Date.now();
+        
         if (this.terrainGenerationQueue.length === 0) {
             this.isProcessingTerrainQueue = false;
-            console.debug("Terrain generation queue processing complete");
+            // Only log occasionally to reduce console spam
+            if (Math.random() < 0.1) { // Only log 10% of the time
+                console.debug("Terrain generation queue processing complete (empty queue)");
+            }
             // Dispatch an event that terrain generation is complete
             if (this.game && this.game.events) {
                 this.game.events.dispatch('terrainGenerationComplete');
@@ -855,7 +899,7 @@ export class TerrainManager {
         // Process multiple chunks per frame when possible
         // Start with a timestamp to measure how long we've been processing
         const startTime = performance.now();
-        const maxProcessingTime = 5; // Max milliseconds to spend processing per frame
+        const maxProcessingTime = 3; // Max milliseconds to spend processing per frame (reduced from 5 to 3)
         
         // Process chunks until we hit the time limit or empty the queue
         while (this.terrainGenerationQueue.length > 0 && 
@@ -870,12 +914,31 @@ export class TerrainManager {
         
         // If there are still chunks to process, continue in the next frame
         if (this.terrainGenerationQueue.length > 0) {
-            requestAnimationFrame(() => {
-                this.processTerrainGenerationQueue();
-            });
+            // Add a maximum processing time to prevent infinite loops
+            const MAX_PROCESSING_TIME = 500; // 500ms maximum total processing time
+            const processingTime = performance.now() - startTime;
+            
+            if (processingTime > MAX_PROCESSING_TIME) {
+                console.warn(`Terrain generation taking too long (${processingTime.toFixed(2)}ms), clearing queue to prevent FPS drop`);
+                // Clear the queue to prevent infinite processing
+                this.terrainGenerationQueue = [];
+                this.isProcessingTerrainQueue = false;
+                return;
+            }
+            
+            // Schedule next batch with a longer delay to allow other operations
+            // Increased from 16ms to 50ms to reduce CPU usage
+            setTimeout(() => {
+                requestAnimationFrame(() => {
+                    this.processTerrainGenerationQueue();
+                });
+            }, 50); // Add a 50ms delay to reduce CPU load
         } else {
             this.isProcessingTerrainQueue = false;
-            console.debug("Terrain generation queue processing complete");
+            // Only log occasionally to reduce console spam
+            if (Math.random() < 0.1) { // Only log 10% of the time
+                console.debug("Terrain generation queue processing complete");
+            }
             // Dispatch an event that terrain generation is complete
             if (this.game && this.game.events) {
                 this.game.events.dispatch('terrainGenerationComplete');
@@ -1040,9 +1103,10 @@ export class TerrainManager {
             this.removeTerrainChunk(chunkKey, true); // Force cleanup of associated objects
         });
         
-        // Clear distant chunks from buffer - be more aggressive with buffer cleanup
+        // Clear distant chunks from buffer - be much more aggressive with buffer cleanup
         // Buffer should only keep chunks that are just outside the view distance
-        const bufferClearDistance = Math.max(clearDistance - 1, this.terrainChunkViewDistance + 1);
+        // Reduced from clearDistance-1 to terrainChunkViewDistance+1 to prevent buffer buildup
+        const bufferClearDistance = this.terrainChunkViewDistance + 1;
         const bufferToRemove = [];
         for (const chunkKey in this.terrainBuffer) {
             const [x, z] = chunkKey.split(',').map(Number);

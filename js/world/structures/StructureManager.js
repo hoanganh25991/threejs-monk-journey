@@ -28,14 +28,15 @@ export class StructureManager {
             'mountain', 'bridge', 'village'
         ]; // Types of structures
         
+        // OPTIMIZED: Adjusted structure densities for better performance and visibility
         this.structureDensity = {
-            'house': 0.001,      // Individual houses
-            'tower': 0.0008,     // Watchtowers
-            'ruins': 0.0008,     // Ancient ruins
-            'darkSanctum': 0.0002, // Rare dark sanctums
-            'mountain': 0.0005,  // Mountains (less frequent but impactful)
-            'bridge': 0.0003,    // Bridges (rare, placed over water/valleys)
-            'village': 0.0002    // Villages (rare, contains multiple buildings)
+            'house': 0.0008,     // Reduced from 0.001 (Individual houses)
+            'tower': 0.001,      // Increased from 0.0008 (Watchtowers - more visible from distance)
+            'ruins': 0.0008,     // Kept the same (Ancient ruins)
+            'darkSanctum': 0.0003, // Increased from 0.0002 (Rare dark sanctums - more visible)
+            'mountain': 0.0006,  // Increased from 0.0005 (Mountains - more visible from distance)
+            'bridge': 0.0003,    // Kept the same (Bridges)
+            'village': 0.0003    // Increased from 0.0002 (Villages - more visible from distance)
         };
     }
     
@@ -105,11 +106,11 @@ export class StructureManager {
         if (zoneType === 'Dark Sanctum') densityMultiplier = 0.8;
         if (zoneType === 'Terrant') densityMultiplier = 1.0;
         
-        // Determine if this chunk should have a Dark Sanctum (very rare)
-        // Use a more deterministic approach based on chunk coordinates
+        // IMPROVED: Better distribution of Dark Sanctums
+        // Modified to make them more common and better distributed
         const shouldHaveDarkSanctum = 
-            (Math.abs(chunkX) % 20 === 0 && Math.abs(chunkZ) % 20 === 0) && 
-            (Math.abs(chunkX) > 5 || Math.abs(chunkZ) > 5); // Keep away from center
+            (Math.abs(chunkX) % 15 === 0 && Math.abs(chunkZ) % 15 === 0) && // Changed from 20 to 15
+            (Math.abs(chunkX) > 3 || Math.abs(chunkZ) > 3); // Reduced from 5 to 3 to place them closer to center
         
         if (shouldHaveDarkSanctum) {
             // Place Dark Sanctum near the center of the chunk
