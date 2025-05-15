@@ -7,7 +7,8 @@ import * as THREE from 'three';
 import { Skill } from '../skills/Skill.js';
 import { IPlayerSkills } from './PlayerInterface.js';
 import { SkillEffectFactory } from '../skills/SkillEffectFactory.js';
-import { SKILLS } from '../../config/skills.js';
+import { BATTLE_SKILLS } from '../../config/skills.js';
+import { STORAGE_KEYS } from '../../config/storage-keys.js';
 
 export class PlayerSkills extends IPlayerSkills {
     constructor(scene, playerStats, playerPosition, playerRotation) {
@@ -32,7 +33,8 @@ export class PlayerSkills extends IPlayerSkills {
     
     initializeSkills() {
         // Initialize monk skills using the configuration from config/skills.js
-        this.skills = SKILLS.map(skillConfig => new Skill(skillConfig));
+        const battleSkills = JSON.parse(localStorage.getItem(STORAGE_KEYS.SELECTED_SKILLS)) || BATTLE_SKILLS;
+        this.skills = battleSkills.map(skillConfig => new Skill(skillConfig));
     }
     
     updateSkills(delta) {
