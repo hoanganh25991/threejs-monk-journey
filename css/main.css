@@ -13,40 +13,40 @@
 @import 'initial-loading.css';
 
 /* Import loading screen styles */
-@import 'core/loading-screen.css';
+@import 'loading-screen.css';
 
 /* Import Game styles */
-@import 'core/game.css';
+@import 'game.css';
 
 /* Import Game Menu styles */
-@import 'core/game-menu.css';
+@import 'game-menu.css';
 
 /* Import Settings Menu styles */
-@import 'core/settings-menu.css';
+@import 'settings-menu.css';
 
 /* Import HUD Manager styles */
-@import 'core/hud-manager.css';
+@import 'hud-manager.css';
 
 /* Import Skill Icons styles */
-@import 'core/skill-icons.css';
+@import 'skill-icons.css';
 
 /* Import HUD > Dialog styles */
-@import 'core/dialog.css';
+@import 'dialog.css';
 
 /* Import performance manager styles */
-@import 'core/performance-manager.css';
+@import 'performance-manager.css';
 
 /* Import notifications styles */
-@import 'core/notifications.css';
+@import 'notifications.css';
 
 /* Import camera info panel styles */
-@import 'core/skill-preview.css';
+@import 'skill-preview.css';
 
 /* Import skill tree styles */
-@import 'core/skill-tree.css';
+@import 'skill-tree.css';
 
 /* Import skill selection styles */
-@import 'core/skill-selection.css';
+@import 'skill-selection.css';
 
 /* Import animation styles */
 @import 'animations.css';
