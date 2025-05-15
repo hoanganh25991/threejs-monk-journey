@@ -48,48 +48,12 @@ export class FullscreenButton extends UIComponent {
      * @private
      */
     setupEventListeners() {
-        // TODO: enable when Game.restart implemented
-        return;
-        if (this.container) {
-            // Add click event to toggle fullscreen
-            this.container.addEventListener('click', () => {
-                this.toggleFullscreen();
-                console.debug("Fullscreen button clicked - toggling fullscreen mode");
-            });
-            
-            // Add event listener to show/hide fullscreen button based on game state
-            this.game.addEventListener('gameStateChanged', (state) => {
-                if (state === 'running') {
-                    // Show fullscreen button when game is running
-                    this.show();
-                } else if (state === 'paused') {
-                    // When paused, only hide if it's not because of the options menu
-                    if (!document.getElementById('main-options-menu') || 
-                        document.getElementById('main-options-menu').style.display === 'none') {
-                        this.hide();
-                    } else {
-                        // Keep button visible when options menu is open
-                        this.show();
-                    }
-                } else if (state === 'menu') {
-                    this.hide();
-                }
-            });
-            
-            // Listen for fullscreen change events
-            document.addEventListener('fullscreenchange', () => {
-                this.updateFullscreenButtonIcon();
-            });
-            document.addEventListener('webkitfullscreenchange', () => {
-                this.updateFullscreenButtonIcon();
-            });
-            document.addEventListener('mozfullscreenchange', () => {
-                this.updateFullscreenButtonIcon();
-            });
-            document.addEventListener('MSFullscreenChange', () => {
-                this.updateFullscreenButtonIcon();
-            });
-        }
+        this.container.addEventListener("click", () => {
+            if (this.game && this.game.uiManager) {
+                this.game.uiManager.toggleSkillSelection()
+            }
+        })
+
     }
     
     /**

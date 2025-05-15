@@ -95,7 +95,7 @@ export class SkillSelectionUI extends UIComponent {
      */
     init() {
         console.debug('Initializing SkillSelectionUI');
-        console.log('SkillSelectionUI: Container before init:', this.container);
+        console.debug('SkillSelectionUI: Container before init:', this.container);
         
         // Create the skill selection UI HTML
         let html = `
@@ -138,7 +138,7 @@ export class SkillSelectionUI extends UIComponent {
         // Render the template
         console.debug('Rendering template');
         this.render(html);
-        console.log('SkillSelectionUI: Container after render:', this.container);
+        console.debug('SkillSelectionUI: Container after render:', this.container);
         
         // Populate skill lists
         console.debug('Populating primary attacks');
@@ -647,7 +647,7 @@ export class SkillSelectionUI extends UIComponent {
      * Show the skill selection UI
      */
     show() {
-        console.log('SkillSelectionUI: show() called');
+        console.debug('SkillSelectionUI: show() called');
         
         // Try to load skills from localStorage first
         try {
@@ -699,7 +699,7 @@ export class SkillSelectionUI extends UIComponent {
         
         // Show the container
         this.container.style.display = 'block';
-        console.log('SkillSelectionUI: Container display set to block');
+        console.debug('SkillSelectionUI: Container display set to block');
     }
     
     /**
@@ -730,8 +730,8 @@ export class SkillSelectionUI extends UIComponent {
      * Hide the skill selection UI
      */
     hide() {
-        console.log('SkillSelectionUI: hide() called');
+        console.debug('SkillSelectionUI: hide() called');
         this.container.style.display = 'none';
-        console.log('SkillSelectionUI: Container display set to none');
+        console.debug('SkillSelectionUI: Container display set to none');
     }
 }
