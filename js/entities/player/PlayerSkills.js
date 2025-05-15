@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { Skill } from '../skills/Skill.js';
 import { IPlayerSkills } from './PlayerInterface.js';
 import { SkillEffectFactory } from '../skills/SkillEffectFactory.js';
-import { BATTLE_SKILLS } from '../../config/skills.js';
+import { SKILLS } from '../../config/skills.js';
 
 export class PlayerSkills extends IPlayerSkills {
     constructor(scene, playerStats, playerPosition, playerRotation) {
@@ -32,7 +32,7 @@ export class PlayerSkills extends IPlayerSkills {
     
     initializeSkills() {
         // Initialize monk skills using the configuration from config/skills.js
-        this.skills = BATTLE_SKILLS.map(skillConfig => new Skill(skillConfig));
+        this.skills = SKILLS.map(skillConfig => new Skill(skillConfig));
     }
     
     updateSkills(delta) {
@@ -164,7 +164,7 @@ export class PlayerSkills extends IPlayerSkills {
         }
         
         // Create a new instance of the skill using the template from BATTLE_SKILLS config
-        const skillConfig = BATTLE_SKILLS.find(config => config.name === skillTemplate.name);
+        const skillConfig = SKILLS.find(config => config.name === skillTemplate.name);
         
         // Check if skillConfig exists before creating a new Skill instance
         if (!skillConfig) {
@@ -323,7 +323,7 @@ export class PlayerSkills extends IPlayerSkills {
                     skillTemplate.startCooldown();
                     
                     // Create a new instance of the skill using the template from BATTLE_SKILLS config
-                    const skillConfig = BATTLE_SKILLS.find(config => config.name === skillTemplate.name);
+                    const skillConfig = SKILLS.find(config => config.name === skillTemplate.name);
                     const newSkillInstance = new Skill(skillConfig);
                     
                     // Create a new effect handler for the new skill instance

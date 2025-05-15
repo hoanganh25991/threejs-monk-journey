@@ -1,7 +1,7 @@
 import { UIComponent } from '../UIComponent.js';
 import { SKILL_COLORS } from '../../config/colors.js';
 import { getSkillIcon } from '../../config/skill-icons.js';
-import { PRIMARY_ATTACKS, NORMAL_SKILLS, BATTLE_SKILLS } from '../../config/skills.js';
+import { PRIMARY_ATTACKS, NORMAL_SKILLS, SKILLS } from '../../config/skills.js';
 import { STORAGE_KEYS } from '../../config/storage-keys.js';
 import { Skill } from '../../entities/skills/Skill.js';
 
@@ -74,7 +74,7 @@ export class SkillSelectionUI extends UIComponent {
      */
     loadDefaultSkills() {
         // Find the primary attack in BATTLE_SKILLS
-        const primaryAttack = BATTLE_SKILLS.find(skill => skill.primaryAttack);
+        const primaryAttack = SKILLS.find(skill => skill.primaryAttack);
         if (primaryAttack) {
             this.selectedPrimaryAttack = primaryAttack.name;
         } else if (PRIMARY_ATTACKS.length > 0) {
@@ -83,7 +83,7 @@ export class SkillSelectionUI extends UIComponent {
         }
         
         // Get normal skills from BATTLE_SKILLS
-        this.selectedNormalSkills = BATTLE_SKILLS
+        this.selectedNormalSkills = SKILLS
             .filter(skill => !skill.primaryAttack)
             .map(skill => skill.name)
             .slice(0, this.maxNormalSkills); // Ensure we don't exceed max
