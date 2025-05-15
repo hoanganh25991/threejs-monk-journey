@@ -115,6 +115,20 @@ export class WorldManager {
         // Update environment objects with potentially reduced draw distance
         this.environmentManager.updateForPlayer(playerPosition, effectiveDrawDistance);
         
+        // ADDED: Ensure structures are generated for nearby chunks
+        // This helps fix the issue where structures weren't showing up when moving away from center
+        if (this.structureManager) {
+            // Generate structures for the player's current chunk and adjacent chunks
+            for (let x = playerChunkX - 1; x <= playerChunkX + 1; x++) {
+                for (let z = playerChunkZ - 1; z <= playerChunkZ + 1; z++) {
+                    const chunkKey = `${x},${z}`;
+                    if (!this.structureManager.structuresPlaced[chunkKey]) {
+                        this.structureManager.generateStructuresForChunk(x, z);
+                    }
+                }
+            }
+        }
+        
         // Update lighting to follow player
         // Get delta time from game if available
         const deltaTime = this.game && this.game.clock ? this.game.clock.getDelta() : 0.016;
@@ -203,8 +217,9 @@ export class WorldManager {
                 return;
             }
             
-            // Get the maximum view distance
-            const maxViewDistance = this.terrainManager.terrainChunkViewDistance + 2;
+            // FIXED: Increased view distance for structures to ensure they're visible from farther away
+            // This fixes the issue where structures like towers and villages weren't showing up when moving away
+            const maxViewDistance = this.terrainManager.terrainChunkViewDistance + 4; // Increased from +2 to +4
             
             // Check all structure chunks
             for (const chunkKey in this.structureManager.structuresPlaced) {
