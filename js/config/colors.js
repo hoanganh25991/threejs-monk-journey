@@ -73,7 +73,7 @@ export const ZONE_COLORS = {
     },
     // Terrant (Ground) environment
     'Terrant': {
-        'soil': '#8B4513', // Rich Earth Brown
+        'soil': '#E5C09A', // Light Earth Brown (3x lighter)
         'rock': '#696969', // Dim Gray
         'vegetation': '#228B22', // Forest Green
         'crystal': '#7B68EE', // Medium Slate Blue
@@ -98,58 +98,58 @@ export const HOT_ZONE_COLORS = {
 export const ENEMY_COLORS = {
     // Regular enemy types
     'regular': {
-        'base': '#A52A2A', // Brown - standard enemy base color
-        'outline': '#8B0000', // Dark Red - outline for regular enemies
-        'highlight': '#CD5C5C', // Indian Red - highlight for regular enemies
-        'damaged': '#E9967A', // Dark Salmon - damaged state
-        'enraged': '#FF4500'  // Orange Red - enraged state
+        'base': '#8B4513', // Saddle Brown - more earthy standard enemy base color
+        'outline': '#800000', // Maroon - darker outline for regular enemies
+        'highlight': '#CD853F', // Peru - warmer highlight for regular enemies
+        'damaged': '#DEB887', // Burlywood - lighter damaged state
+        'enraged': '#FF6347'  // Tomato - brighter enraged state
     },
     // Elite enemy types (stronger than regular)
     'elite': {
-        'base': '#9370DB', // Medium Purple - elite enemy base color
-        'outline': '#483D8B', // Dark Slate Blue - outline for elite enemies
-        'highlight': '#B19CD9', // Light Purple - highlight for elite enemies
-        'damaged': '#D8BFD8', // Thistle - damaged state
-        'enraged': '#8A2BE2'  // Blue Violet - enraged state
+        'base': '#6A5ACD', // Slate Blue - richer elite enemy base color
+        'outline': '#191970', // Midnight Blue - darker outline for elite enemies
+        'highlight': '#9370DB', // Medium Purple - brighter highlight for elite enemies
+        'damaged': '#B0C4DE', // Light Steel Blue - lighter damaged state
+        'enraged': '#7B68EE'  // Medium Slate Blue - intense enraged state
     },
     // Champion enemy types (mini-bosses)
     'champion': {
-        'base': '#FFD700', // Gold - champion enemy base color
-        'outline': '#B8860B', // Dark Golden Rod - outline for champions
-        'highlight': '#FFFFE0', // Light Yellow - highlight for champions
-        'damaged': '#F0E68C', // Khaki - damaged state
-        'enraged': '#FFA500'  // Orange - enraged state
+        'base': '#DAA520', // Golden Rod - richer champion enemy base color
+        'outline': '#8B4513', // Saddle Brown - earthy outline for champions
+        'highlight': '#F0E68C', // Khaki - softer highlight for champions
+        'damaged': '#EEE8AA', // Pale Goldenrod - lighter damaged state
+        'enraged': '#FF8C00'  // Dark Orange - intense enraged state
     },
     // Boss enemy types
     'boss': {
-        'base': '#DC143C', // Crimson - boss enemy base color
-        'outline': '#800000', // Maroon - outline for bosses
-        'highlight': '#FF6347', // Tomato - highlight for bosses
-        'damaged': '#FA8072', // Salmon - damaged state
-        'enraged': '#FF0000'  // Red - enraged state
+        'base': '#B22222', // Fire Brick - deeper boss enemy base color
+        'outline': '#4B0082', // Indigo - mystical outline for bosses
+        'highlight': '#FF4500', // Orange Red - intense highlight for bosses
+        'damaged': '#CD5C5C', // Indian Red - rich damaged state
+        'enraged': '#8B0000'  // Dark Red - deep enraged state
     },
     // Special enemy types by element
     'elemental': {
         'fire': '#FF4500', // Orange Red - fire elemental enemies
-        'ice': '#87CEEB', // Sky Blue - ice elemental enemies
-        'lightning': '#FFFF00', // Yellow - lightning elemental enemies
-        'poison': '#32CD32', // Lime Green - poison elemental enemies
-        'arcane': '#9932CC', // Dark Orchid - arcane elemental enemies
+        'ice': '#1E90FF', // Dodger Blue - more vibrant ice elemental enemies
+        'lightning': '#FFD700', // Gold - richer lightning elemental enemies
+        'poison': '#228B22', // Forest Green - deeper poison elemental enemies
+        'arcane': '#8A2BE2', // Blue Violet - more vibrant arcane elemental enemies
         'shadow': '#2F4F4F', // Dark Slate Gray - shadow elemental enemies
         'holy': '#FFFACD'  // Lemon Chiffon - holy elemental enemies
     },
     // Undead enemy types
     'undead': {
-        'skeleton': '#F5F5F5', // White Smoke - skeleton enemies
+        'skeleton': '#E0FFFF', // Light Cyan - slightly blue-tinted skeleton enemies
         'zombie': '#556B2F', // Dark Olive Green - zombie enemies
         'ghost': '#E6E6FA', // Lavender - ghost enemies
         'vampire': '#8B0000', // Dark Red - vampire enemies
-        'lich': '#6A5ACD'  // Slate Blue - lich enemies
+        'lich': '#483D8B'  // Dark Slate Blue - deeper lich enemies
     },
     // Demonic enemy types
     'demonic': {
         'imp': '#FF7F50', // Coral - imp enemies
-        'demon': '#8B0000', // Dark Red - demon enemies
+        'demon': '#A52A2A', // Brown - richer demon enemies
         'hellspawn': '#B22222', // Fire Brick - hellspawn enemies
         'overlord': '#800000', // Maroon - overlord enemies
         'corruption': '#4B0082'  // Indigo - corruption enemies

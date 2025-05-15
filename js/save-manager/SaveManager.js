@@ -2,7 +2,6 @@ import { ISaveSystem } from './ISaveSystem.js';
 import { LocalStorageAdapter } from './LocalStorageAdapter.js';
 import { PlayerSerializer } from './serializers/PlayerSerializer.js';
 import { QuestSerializer } from './serializers/QuestSerializer.js';
-import { WorldSerializer } from './serializers/WorldSerializer.js';
 import { SettingsSerializer } from './serializers/SettingsSerializer.js';
 import { SaveUtils } from './utils/SaveUtils.js';
 import { SaveOperationProgress } from './utils/SaveOperationProgress.js';

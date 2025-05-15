@@ -4,12 +4,6 @@ export class InputHandler {
     constructor(game) {
         this.game = game;
         this.keys = {};
-        this.mouse = {
-            position: new THREE.Vector2(),
-            isDown: false,
-            target: new THREE.Vector3()
-        };
-        this.raycaster = new THREE.Raycaster();
         
         // Key mapping for alternative keys
         this.keyMapping = {
@@ -74,7 +68,11 @@ export class InputHandler {
         
         // Initialize input event listeners
         this.initKeyboardEvents();
-        this.initMouseEvents();
+        
+        // Prevent context menu on right click
+        window.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+        });
     }
     
     initKeyboardEvents() {
@@ -153,8 +151,8 @@ export class InputHandler {
                     break;
                     
                 case 'KeyE':
-                    // Interact with objects
-                    this.game.player.interact();
+                    // Interact with objects using the new keyboard-based interaction method
+                    this.handleInteractionWithNearestObject();
                     break;
                     
                 case 'KeyG':
@@ -240,164 +238,105 @@ export class InputHandler {
         });
     }
     
-    initMouseEvents() {
-        // Mouse move event
-        window.addEventListener('mousemove', (event) => {
-            // Calculate normalized device coordinates
-            this.mouse.position.x = (event.clientX / window.innerWidth) * 2 - 1;
-            this.mouse.position.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            
-            // Update mouse target position on terrain
-            this.updateMouseTarget();
-        });
+    // Method to handle interaction with objects in front of the player
+    // This replaces the mouse-based interaction with keyboard-based interaction
+    handleInteractionWithNearestObject() {
+        // Set player interaction state to true
+        this.game.player.setInteracting(true);
         
-        // Mouse down event
-        window.addEventListener('mousedown', (event) => {
-            this.mouse.isDown = true;
-            
-            // Handle mouse button clicks
-            switch (event.button) {
-                case 0: // Left click
-                    // Check for interactive objects
-                    this.checkInteraction();
-                    break;
-                case 2: // Right click
-                    // Use primary attack
-                    if (this.mouse.target) {
-                        this.game.player.attack(this.mouse.target);
-                    }
-                    break;
-            }
-        });
+        // Get player position and forward direction
+        const playerPosition = this.game.player.getPosition();
+        const playerForward = this.game.player.getForwardDirection();
         
-        // Mouse up event
-        window.addEventListener('mouseup', (event) => {
-            this.mouse.isDown = false;
-        });
+        // Define interaction range
+        const interactionRange = 3; // Units in world space
         
-        // Prevent context menu on right click
-        window.addEventListener('contextmenu', (event) => {
-            event.preventDefault();
-        });
-    }
-    
-    updateMouseTarget() {
-        // Cast ray from camera through mouse position
-        this.raycaster.setFromCamera(this.mouse.position, this.game.camera);
-        
-        // Create an array of all terrain meshes to check
-        const terrainMeshes = [];
-        
-        // Add base terrain if it exists
-        if (this.game.world.terrainManager && this.game.world.terrainManager.terrain) {
-            terrainMeshes.push(this.game.world.terrainManager.terrain);
-        }
-        
-        // Add all terrain chunks to the array if they exist
-        if (this.game.world.terrainManager && this.game.world.terrainManager.terrainChunks) {
-            for (const chunkKey in this.game.world.terrainManager.terrainChunks) {
-                const chunk = this.game.world.terrainManager.terrainChunks[chunkKey];
-                if (chunk) {
-                    terrainMeshes.push(chunk);
-                }
-            }
-        }
-        
-        // Check for intersections with all terrain meshes only if we have meshes to check
-        let terrainIntersects = [];
-        if (terrainMeshes.length > 0) {
-            terrainIntersects = this.raycaster.intersectObjects(terrainMeshes);
-        }
-        
-        if (terrainIntersects.length > 0) {
-            // Update mouse target position from terrain intersection
-            this.mouse.target.copy(terrainIntersects[0].point);
-        } else {
-            // If no terrain intersection, use a plane at y=0 to allow movement beyond terrain
-            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // Horizontal plane at y=0
-            const rayCaster = new THREE.Raycaster();
-            rayCaster.setFromCamera(this.mouse.position, this.game.camera);
-            
-            const intersection = new THREE.Vector3();
-            if (rayCaster.ray.intersectPlane(plane, intersection)) {
-                // Update mouse target position from plane intersection
-                this.mouse.target.copy(intersection);
-            }
-        }
-    }
-    
-    checkInteraction() {
-        // Cast ray from camera through mouse position
-        this.raycaster.setFromCamera(this.mouse.position, this.game.camera);
+        // Calculate interaction point in front of player
+        const interactionPoint = new THREE.Vector3()
+            .copy(playerPosition)
+            .add(
+                new THREE.Vector3()
+                    .copy(playerForward)
+                    .multiplyScalar(interactionRange)
+            );
         
         // Get all interactive objects if they exist
         let interactiveObjects = [];
         if (this.game.world.interactiveManager && this.game.world.interactiveManager.getInteractiveObjects) {
             const objects = this.game.world.interactiveManager.getInteractiveObjects();
             if (objects && objects.length > 0) {
-                interactiveObjects = objects.map(obj => obj.mesh).filter(mesh => mesh !== undefined);
+                interactiveObjects = objects;
             }
         } else if (this.game.world.interactiveObjects) {
             // Fallback to old structure if it exists
             console.warn('Using legacy interactiveObjects structure');
-            interactiveObjects = this.game.world.interactiveObjects.map(obj => obj.mesh).filter(mesh => mesh !== undefined);
+            interactiveObjects = this.game.world.interactiveObjects;
         } else {
             console.warn('No interactive objects manager found');
-        }
-        
-        // Check for intersections with interactive objects only if we have objects to check
-        if (interactiveObjects.length === 0) {
+            // Reset interaction state after a short delay
+            setTimeout(() => {
+                this.game.player.setInteracting(false);
+            }, 500);
             return;
         }
         
-        // Check for intersections with interactive objects
-        const intersects = this.raycaster.intersectObjects(interactiveObjects, true);
+        // Find the nearest interactive object within range
+        let nearestObject = null;
+        let minDistance = interactionRange;
         
-        if (intersects.length > 0) {
-            // Find the interactive object that was clicked
-            const clickedMesh = intersects[0].object;
-            let parentMesh = clickedMesh;
-            
-            // Find the top-level parent mesh
-            while (parentMesh.parent && parentMesh.parent !== this.game.scene) {
-                parentMesh = parentMesh.parent;
-            }
-            
-            // Find the interactive object data
-            let interactiveObject;
-            if (this.game.world.interactiveManager && this.game.world.interactiveManager.getInteractiveObjectByMesh) {
-                interactiveObject = this.game.world.interactiveManager.getInteractiveObjectByMesh(parentMesh);
-            } else if (this.game.world.interactiveObjects) {
-                console.warn('Using legacy interactiveObjects structure for finding object');
-                interactiveObject = this.game.world.interactiveObjects.find(obj => obj.mesh === parentMesh);
-            } else {
-                console.warn('No interactive objects manager found for finding object');
-            }
-            
-            if (interactiveObject) {
-                // Trigger interaction
-                const result = interactiveObject.onInteract();
+        for (const obj of interactiveObjects) {
+            if (obj.mesh) {
+                // Get object position
+                const objPosition = new THREE.Vector3();
+                obj.mesh.getWorldPosition(objPosition);
                 
-                // Handle interaction result
-                if (result) {
-                    switch (result.type) {
-                        case 'item':
-                            // Add item to inventory
-                            this.game.player.addToInventory(result.item);
-                            this.game.uiManager.showNotification(`Found ${result.item.name} x${result.item.amount}`);
-                            break;
-                        case 'quest':
-                            // Show quest dialog
-                            this.game.questManager.startQuest(result.quest);
-                            this.game.uiManager.showDialog(
-                                `New Quest: ${result.quest.name}`,
-                                result.quest.description
-                            );
-                            break;
-                    }
+                // Calculate distance to player
+                const distance = objPosition.distanceTo(playerPosition);
+                
+                // Check if this object is closer than the current nearest
+                if (distance < minDistance) {
+                    nearestObject = obj;
+                    minDistance = distance;
                 }
             }
         }
+        
+        // Interact with the nearest object if found
+        if (nearestObject) {
+            console.debug('Interacting with nearest object:', nearestObject);
+            const result = nearestObject.onInteract();
+            
+            // Handle interaction result
+            if (result) {
+                switch (result.type) {
+                    case 'item':
+                        // Add item to inventory
+                        this.game.player.addToInventory(result.item);
+                        this.game.uiManager.showNotification(`Found ${result.item.name} x${result.item.amount}`);
+                        break;
+                    case 'quest':
+                        // Show quest dialog
+                        this.game.questManager.startQuest(result.quest);
+                        this.game.uiManager.showDialog(
+                            `New Quest: ${result.quest.name}`,
+                            result.quest.description
+                        );
+                        break;
+                    case 'boss_spawn':
+                        // Show boss spawn message
+                        this.game.uiManager.showNotification(result.message);
+                        break;
+                }
+            }
+        } else {
+            console.debug('No interactive objects within range');
+            this.game.uiManager.showNotification('Nothing to interact with nearby');
+        }
+        
+        // Reset interaction state after a short delay
+        setTimeout(() => {
+            this.game.player.setInteracting(false);
+        }, 500);
     }
     
     isKeyPressed(keyCode) {
@@ -444,13 +383,7 @@ export class InputHandler {
         return direction;
     }
     
-    getMouseTarget() {
-        return this.mouse.target;
-    }
-    
-    isMouseDown() {
-        return this.mouse.isDown;
-    }
+    // Mouse target and state methods removed as per requirements
     
     update(delta) {
         // Skip input processing if game is paused

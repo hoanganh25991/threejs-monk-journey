@@ -48,6 +48,24 @@ export const PRIMARY_ATTACKS = [
 // Normal skills that consume mana and have various effects
 export const NORMAL_SKILLS = [
     {
+        name: 'Wave of Light',
+        description: 'Summon a massive bell that crashes down on enemies',
+        type: 'wave',
+        damage: 50,
+        manaCost: 40,
+        cooldown: 0.5, // Reduced cooldown
+        range: 25,
+        radius: 5,
+        duration: 5.0, // Further increased duration from 3.5 to 5.0
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
+        sounds: {
+            cast: 'skillWaveOfLight', // Monk summoning the bell with chanting
+            impact: 'bellRing', // Deep, resonant bell sound
+            end: 'bellFade' // Bell sound fading with reverberations
+        }
+    },
+    {
         name: 'Shield of Zen',
         description: 'Envelop yourself in a golden aura with a protective Buddha figure that absorbs 30% of damage and reflects 10% back to attackers',
         type: 'buff',
@@ -174,24 +192,6 @@ export const NORMAL_SKILLS = [
             cast: 'skillMysticAlly', // Mystical summoning incantation
             impact: 'allySummonComplete', // Sound of ally materializing
             end: 'allyDismiss' // Sound of ally returning to spirit realm
-        }
-    },
-    {
-        name: 'Wave of Light',
-        description: 'Summon a massive bell that crashes down on enemies',
-        type: 'wave',
-        damage: 50,
-        manaCost: 40,
-        cooldown: 0.5, // Reduced cooldown
-        range: 25,
-        radius: 5,
-        duration: 5.0, // Further increased duration from 3.5 to 5.0
-        get color() { return SKILL_ICONS[this.name].color; },
-        get icon() { return SKILL_ICONS[this.name].emoji; },
-        sounds: {
-            cast: 'skillWaveOfLight', // Monk summoning the bell with chanting
-            impact: 'bellRing', // Deep, resonant bell sound
-            end: 'bellFade' // Bell sound fading with reverberations
         }
     },
     {

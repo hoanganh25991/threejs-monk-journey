@@ -280,78 +280,7 @@ export class Player extends IPlayer {
         this.state.setInteracting(isInteracting);
     }
     
-    interact() {
-        this.state.setInteracting(true);
-        
-        // Get player position
-        const playerPosition = this.getPosition();
-        
-        // Check for nearby interactive objects
-        if (this.game && this.game.world && this.game.world.interactiveManager) {
-            // Define interaction radius
-            const interactionRadius = 5; // 5 units radius for interaction
-            
-            // Get nearby objects
-            const nearbyObjects = this.game.world.interactiveManager.getObjectsNear(playerPosition, interactionRadius);
-            
-            // If there are nearby objects, interact with the closest one
-            if (nearbyObjects.length > 0) {
-                // Sort by distance to player
-                nearbyObjects.sort((a, b) => {
-                    const distA = playerPosition.distanceTo(a.position);
-                    const distB = playerPosition.distanceTo(b.position);
-                    return distA - distB;
-                });
-                
-                // Interact with the closest object
-                const closestObject = nearbyObjects[0];
-                const result = closestObject.onInteract();
-                
-                // Handle interaction result
-                if (result) {
-                    switch (result.type) {
-                        case 'item':
-                            // Add item to inventory
-                            this.addToInventory(result.item);
-                            if (this.game.uiManager) {
-                                this.game.uiManager.showNotification(`Found ${result.item.name} x${result.item.amount}`);
-                            }
-                            break;
-                        case 'quest':
-                            // Show quest dialog
-                            if (this.game.questManager) {
-                                this.game.questManager.startQuest(result.quest);
-                                if (this.game.uiManager) {
-                                    this.game.uiManager.showDialog(
-                                        `New Quest: ${result.quest.name}`,
-                                        result.quest.description
-                                    );
-                                }
-                            }
-                            break;
-                        case 'boss_spawn':
-                            // Show boss spawn message
-                            if (this.game.uiManager) {
-                                this.game.uiManager.showNotification(result.message);
-                            }
-                            break;
-                    }
-                    
-                    return true;
-                }
-            } else if (this.game.uiManager) {
-                // No nearby objects
-                this.game.uiManager.showNotification('Nothing to interact with nearby');
-            }
-        }
-        
-        // Reset interaction state after a short delay
-        setTimeout(() => {
-            this.state.setInteracting(false);
-        }, 500);
-        
-        return false;
-    }
+    // interact() method removed - now handled by InputHandler.handleInteractionWithNearestObject()
     
     isInteracting() {
         return this.state.isInteracting();
