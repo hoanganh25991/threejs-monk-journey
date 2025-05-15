@@ -372,83 +372,30 @@ export class SaveManager extends ISaveSystem {
             world.clearWorldObjects();
         }
         
-        // Load chunk data from individual storage
-        this.loadProgress.update('Loading chunk index...', 82);
+        // Chunk loading has been removed
+        this.loadProgress.update('Skipping chunk loading (feature removed)...', 82);
         await this.delay(100);
         
-        const chunkIndex = this.loadChunkIndex();
+        // No chunk loading anymore
+        SaveUtils.log('Chunk loading has been removed from the game');
         
-        if (chunkIndex) {
-            SaveUtils.log(`Found ${Object.keys(chunkIndex).length} saved chunks in index`);
-            
-            // Get player position for proximity loading
-            let playerPos = this.game.player.getPosition ? 
-                this.game.player.getPosition() : 
-                this.game.player.position;
-            
-            if (!playerPos) {
-                playerPos = { x: 0, y: 0, z: 0 };
+        // Process legacy world data
+        this.loadProgress.update('Processing world data...', 85);
+        await this.delay(100);
+        
+        if (worldData.environmentObjects) {
+            if (world.environmentManager) {
+                world.environmentManager.savedObjects = worldData.environmentObjects;
+            } else {
+                world.savedEnvironmentObjects = worldData.environmentObjects;
             }
-            
-            // Calculate player chunk
-            const terrainChunkSize = world.terrainManager ? 
-                world.terrainManager.chunkSize : 
-                (world.terrainChunkSize || 100);
-            
-            const playerChunkX = Math.floor(playerPos.x / terrainChunkSize);
-            const playerChunkZ = Math.floor(playerPos.z / terrainChunkSize);
-            const loadDistance = 2; // Only load chunks within 2 chunks of player
-            
-            // Get chunks to load
-            const chunkKeys = Object.keys(chunkIndex);
-            const chunksToLoad = chunkKeys.filter(chunkKey => {
-                const [chunkX, chunkZ] = chunkKey.split(',').map(Number);
-                const distanceX = Math.abs(chunkX - playerChunkX);
-                const distanceZ = Math.abs(chunkZ - playerChunkZ);
-                return distanceX <= loadDistance && distanceZ <= loadDistance;
-            });
-            
-            // Load chunks with progress updates
-            const totalChunksToLoad = chunksToLoad.length;
-            SaveUtils.log(`Loading ${totalChunksToLoad} chunks near player position`);
-            
-            for (let i = 0; i < chunksToLoad.length; i++) {
-                const chunkKey = chunksToLoad[i];
-                
-                // Update progress (82-95% range for chunks)
-                const progressPercent = 82 + Math.floor((i / totalChunksToLoad) * 13);
-                this.loadProgress.update(`Loading chunk ${i+1}/${totalChunksToLoad}...`, progressPercent);
-                
-                // Small delay to prevent UI freezing
-                await this.delay(10);
-                
-                // Load chunk data
-                const chunkData = chunkLoader(chunkKey);
-                
-                if (chunkData) {
-                    // Process chunk data
-                    WorldSerializer.processChunkData(world, chunkData);
-                }
-            }
-        } else {
-            // Fall back to old format if no chunk index found
-            this.loadProgress.update('No chunk index found, using legacy format...', 85);
-            await this.delay(100);
-            
-            if (worldData.environmentObjects) {
-                if (world.environmentManager) {
-                    world.environmentManager.savedObjects = worldData.environmentObjects;
-                } else {
-                    world.savedEnvironmentObjects = worldData.environmentObjects;
-                }
-            }
-            
-            if (worldData.terrainChunks) {
-                if (world.terrainManager) {
-                    world.terrainManager.savedChunks = worldData.terrainChunks;
-                } else {
-                    world.savedTerrainChunks = worldData.terrainChunks;
-                }
+        }
+        
+        if (worldData.terrainChunks) {
+            if (world.terrainManager) {
+                world.terrainManager.savedChunks = worldData.terrainChunks;
+            } else {
+                world.savedTerrainChunks = worldData.terrainChunks;
             }
         }
         
@@ -486,165 +433,13 @@ export class SaveManager extends ISaveSystem {
         }
     }
     
-    /**
-     * Save world chunks individually to storage
-     * @returns {Object} Chunk index
-     */
-    saveWorldChunks() {
-        const world = this.game.world;
-        const chunkIndex = {};
-        
-        SaveUtils.log('Saving world chunks to local storage...');
-        
-        // Check if terrainManager exists and has terrainChunks
-        if (!world.terrainManager || !world.terrainManager.terrainChunks) {
-            SaveUtils.log('No terrain chunks found to save', 'warn');
-            return chunkIndex;
-        }
-        
-        // Save each chunk individually
-        for (const chunkKey in world.terrainManager.terrainChunks) {
-            // Serialize chunk data
-            const chunkData = WorldSerializer.serializeChunk(world, chunkKey);
-            
-            if (!chunkData) {
-                SaveUtils.log(`Failed to serialize chunk ${chunkKey}`, 'warn');
-                continue;
-            }
-            
-            // Save chunk data to storage with unique key
-            const chunkStorageKey = `${this.chunkSaveKeyPrefix}${chunkKey}`;
-            const success = this.storage.saveData(chunkStorageKey, chunkData);
-            
-            if (success) {
-                // Add to chunk index
-                chunkIndex[chunkKey] = {
-                    timestamp: Date.now(),
-                    storageKey: chunkStorageKey
-                };
-            } else {
-                SaveUtils.log(`Failed to save chunk ${chunkKey}`, 'warn');
-            }
-        }
-        
-        // Save chunk index
-        this.storage.saveData(STORAGE_KEYS.CHUNK_INDEX, chunkIndex);
-        
-        SaveUtils.log(`Saved ${Object.keys(chunkIndex).length} chunks to local storage`);
-        return chunkIndex;
-    }
+    // saveWorldChunks method has been removed
     
-    /**
-     * Save world chunks individually to storage with progress updates
-     * @returns {Promise<Object>} Promise resolving to chunk index
-     */
-    async saveWorldChunksWithProgress(auto = false) {
-        const world = this.game.world;
-        const chunkIndex = {};
-        
-        SaveUtils.log('Saving world chunks to local storage with progress...');
-        
-        // Check if terrainManager exists and has terrainChunks
-        if (!world.terrainManager || !world.terrainManager.terrainChunks) {
-            SaveUtils.log('No terrain chunks found to save', 'warn');
-            !auto && this.saveProgress.update('No terrain chunks found to save', 75);
-            return chunkIndex;
-        }
-        
-        // Get total number of chunks for progress calculation
-        const chunkKeys = Object.keys(world.terrainManager.terrainChunks);
-        const totalChunks = chunkKeys.length;
-        
-        if (totalChunks === 0) {
-            SaveUtils.log('No chunks to save', 'warn');
-            !auto && this.saveProgress.update('No chunks to save', 75);
-            return chunkIndex;
-        }
-        
-        // Save each chunk individually with progress updates
-        for (let i = 0; i < chunkKeys.length; i++) {
-            const chunkKey = chunkKeys[i];
-            
-            // Update progress (70-90% range for chunks)
-            const progressPercent = 70 + Math.floor((i / totalChunks) * 20);
-            !auto && this.saveProgress.update(`Saving chunk ${i+1}/${totalChunks}...`, progressPercent);
-            
-            // Small delay to prevent UI freezing
-            await this.delay(10);
-            
-            // Serialize chunk data
-            const chunkData = WorldSerializer.serializeChunk(world, chunkKey);
-            
-            if (!chunkData) {
-                SaveUtils.log(`Failed to serialize chunk ${chunkKey}`, 'warn');
-                continue;
-            }
-            
-            // Save chunk data to storage with unique key
-            const chunkStorageKey = `${this.chunkSaveKeyPrefix}${chunkKey}`;
-            const success = this.storage.saveData(chunkStorageKey, chunkData);
-            
-            if (success) {
-                // Add to chunk index
-                chunkIndex[chunkKey] = {
-                    timestamp: Date.now(),
-                    storageKey: chunkStorageKey
-                };
-            } else {
-                SaveUtils.log(`Failed to save chunk ${chunkKey}`, 'warn');
-            }
-        }
-        
-        // Save chunk index
-        !auto && this.saveProgress.update('Finalizing chunk index...', 90);
-        await this.delay(50);
-        
-        this.storage.saveData(STORAGE_KEYS.CHUNK_INDEX, chunkIndex);
-        
-        SaveUtils.log(`Saved ${Object.keys(chunkIndex).length} chunks to local storage`);
-        return chunkIndex;
-    }
+    // saveWorldChunksWithProgress method has been removed
     
-    /**
-     * Load chunk index from storage
-     * @returns {Object|null} Chunk index or null if not found
-     */
-    loadChunkIndex() {
-        try {
-            const chunkIndex = this.storage.loadData(STORAGE_KEYS.CHUNK_INDEX);
-            if (!chunkIndex) {
-                SaveUtils.log('No chunk index found in storage');
-                return null;
-            }
-            
-            return chunkIndex;
-        } catch (error) {
-            SaveUtils.log('Error loading chunk index: ' + error.message, 'error');
-            return null;
-        }
-    }
+    // loadChunkIndex method has been removed
     
-    /**
-     * Load a specific chunk from storage
-     * @param {string} chunkKey - The chunk key
-     * @returns {Object|null} Chunk data or null if not found
-     */
-    loadChunk(chunkKey) {
-        try {
-            const chunkStorageKey = `${this.chunkSaveKeyPrefix}${chunkKey}`;
-            const chunkData = this.storage.loadData(chunkStorageKey);
-            
-            if (!chunkData) {
-                SaveUtils.log(`Chunk ${chunkKey} not found in storage`);
-                return null;
-            }
-            
-            return chunkData;
-        } catch (error) {
-            SaveUtils.log(`Error loading chunk ${chunkKey}: ${error.message}`, 'error');
-            return null;
-        }
-    }
+    // loadChunk method has been removed
     
     /**
      * Delete all save data
