@@ -29,13 +29,6 @@ export class SkillsUI extends UIComponent {
         // Create skill buttons HTML
         let skillsHTML = '';
         
-        // Add a "Change Skills" button at the top
-        skillsHTML += `
-            <div class="change-skills-button" id="change-skills-button">
-                <span>Change Skills</span>
-            </div>
-        `;
-        
         skills.forEach((skill, index) => {
             // Determine key display
             const keyDisplay = skill.primaryAttack ? "h" : `${index + 1}`;
@@ -87,16 +80,7 @@ export class SkillsUI extends UIComponent {
             button.title = `${skill.name}: ${skill.description}`;
         });
         
-        // Add event listener for the "Change Skills" button
-        const changeSkillsButton = this.container.querySelector('#change-skills-button');
-        if (changeSkillsButton) {
-            changeSkillsButton.addEventListener('click', () => {
-                // Open the skill selection UI
-                if (this.game && this.game.uiManager && this.game.uiManager.components.skillSelectionUI) {
-                    this.game.uiManager.components.skillSelectionUI.show();
-                }
-            });
-        }
+        // No "Change Skills" button event listener needed
         
         return true;
     }
