@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import Stats from 'three/addons/libs/stats.module.js';
-import { qualityLevels } from '../config/quality-levels.js';
-import { RENDER_CONFIG } from '../config/render.js';
+import { qualityLevels } from './config/quality-levels.js';
+import { RENDER_CONFIG } from './config/render.js';
 
 export class PerformanceManager {
     constructor(game) {

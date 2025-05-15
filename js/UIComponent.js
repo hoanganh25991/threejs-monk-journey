@@ -6,7 +6,7 @@ export class UIComponent {
     /**
      * Create a new UI component
      * @param {string} containerId - ID of the container element
-     * @param {import('./game/Game.js').Game} game - Reference to the game instance
+     * @param {import('../game/Game.js').Game} game - Reference to the game instance
      */
     constructor(containerId, game) {
         this.containerId = containerId;

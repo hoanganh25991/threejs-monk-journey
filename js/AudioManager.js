@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ALL_SOUNDS, ALL_MUSIC } from '../config/sounds.js';
+import { ALL_SOUNDS, ALL_MUSIC } from './config/sounds.js';
 
 export class AudioManager {
     constructor(game) {

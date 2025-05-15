@@ -6,7 +6,7 @@ import { WorldSerializer } from './serializers/WorldSerializer.js';
 import { SettingsSerializer } from './serializers/SettingsSerializer.js';
 import { SaveUtils } from './utils/SaveUtils.js';
 import { SaveOperationProgress } from './utils/SaveOperationProgress.js';
-import { STORAGE_KEYS } from '../../config/storage-keys.js';
+import { STORAGE_KEYS } from '../config/storage-keys.js';
 
 /**
  * SaveManager implementation using localStorage

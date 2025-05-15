@@ -3,7 +3,7 @@
  */
 
 /**
- * @typedef {import('./core/game/Game.js').Game} Game
+ * @typedef {import('./game/Game.js').Game} Game
  * Game class that serves as a facade to the underlying game systems
  * @property {HTMLCanvasElement} canvas - The game canvas element
  * @property {THREE.Clock} clock - The game clock
@@ -54,7 +54,7 @@
  */
 
 /**
- * @typedef {import('./core/game/GameState.js').GameState} GameState
+ * @typedef {import('./game/GameState.js').GameState} GameState
  * Manages the game state (running, paused, etc.)
  * @property {boolean} _isPaused - Whether the game is paused
  * @property {boolean} _hasStarted - Whether the game has been started at least once
@@ -68,7 +68,7 @@
  */
 
 /**
- * @typedef {import('./core/game/GameEvents.js').GameEvents} GameEvents
+ * @typedef {import('./game/GameEvents.js').GameEvents} GameEvents
  * Handles game events and event listeners
  * @property {Object.<string, Function[]>} eventListeners - Map of event names to arrays of callback functions
  * 
@@ -78,7 +78,7 @@
  */
 
 /**
- * @typedef {import('./core/game/LoadingManager.js').LoadingManager} LoadingManager
+ * @typedef {import('./game/LoadingManager.js').LoadingManager} LoadingManager
  * Service for managing asset loading
  * @property {THREE.LoadingManager} loadingManager - The THREE.js loading manager instance
  * 
@@ -90,7 +90,7 @@
  */
 
 /**
- * @typedef {import('./core/hud-manager/HUDManager.js').HUDManager} HUDManager
+ * @typedef {import('.//hud-manager/HUDManager.js').HUDManager} HUDManager
  * Manages all UI components and provides a central interface for UI interactions
  * @property {Game} game - Reference to the game instance
  * @property {Object.<string, UIComponent>} components - Map of UI component names to instances
@@ -125,7 +125,7 @@
  */
 
 /**
- * @typedef {import('./core/effects/EffectsManager.js').EffectsManager} EffectsManager
+ * @typedef {import('./effects/EffectsManager.js').EffectsManager} EffectsManager
  * Manages all visual effects in the game
  * @property {Game} game - Reference to the game instance
  * @property {Array.<BleedingEffect>} effects - Array of active effects

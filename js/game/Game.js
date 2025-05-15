@@ -1,22 +1,22 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { WorldManager } from '../../world/WorldManager.js';
-import { Player } from '../../entities/player/Player.js';
+import { WorldManager } from '../world/WorldManager.js';
+import { Player } from '../entities/player/Player.js';
 import { InputHandler } from '../InputHandler.js';
-import { HUDManager } from '../hud-manager/HUDManager.js';
-import { EnemyManager } from '../../entities/EnemyManager.js';
+import { HUDManager } from '..//hud-manager/HUDManager.js';
+import { EnemyManager } from '../entities/EnemyManager.js';
 import { CollisionManager } from '../CollisionManager.js';
 import { QuestManager } from '../QuestManager.js';
 import { AudioManager } from '../AudioManager.js';
 import { SaveManager } from '../save-manager/SaveManager.js';
 import { DifficultyManager } from '../DifficultyManager.js';
 import { PerformanceManager } from '../PerformanceManager.js';
-import { EffectsManager } from '../effects/EffectsManager.js';
+import { EffectsManager } from '../EffectsManager.js';
 import { GameState } from './GameState.js';
 import { GameEvents } from './GameEvents.js';
 import { SceneOptimizer } from './SceneOptimizer.js';
 import { LoadingManager } from './LoadingManager.js';
-import { RENDER_CONFIG } from '../../config/render.js';
+import { RENDER_CONFIG } from '../config/render.js';
 import { MenuManager } from '../menu-system/MenuManager.js';
 
 /**

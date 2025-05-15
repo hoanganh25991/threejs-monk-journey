@@ -3,9 +3,8 @@
  * Entry point for the game application
  */
 
-import { Game } from './core/game/Game.js';
+import { Game } from './game/Game.js';
 import { DEFAULT_CHARACTER_MODEL } from './config/player-models.js';
-import { GameMenu } from './core/menu-system/GameMenu.js';
 
 /**
  * Main class responsible for initializing and managing the game startup process

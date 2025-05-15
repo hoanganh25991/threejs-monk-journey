@@ -5,10 +5,10 @@
 
 import { ModelPreview } from './ModelPreview.js';
 import { SkillPreview } from './SkillPreview.js';
-import { CHARACTER_MODELS } from '../../config/player-models.js';
+import { CHARACTER_MODELS } from '../config/player-models.js';
 import { UIComponent } from '../UIComponent.js';
-import { SKILLS } from '../../config/skills.js';
-import { STORAGE_KEYS } from '../../config/storage-keys.js';
+import { SKILLS } from '../config/skills.js';
+import { STORAGE_KEYS } from '../config/storage-keys.js';
 
 export class SettingsMenu extends UIComponent {
     /**

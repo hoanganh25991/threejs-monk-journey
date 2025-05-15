@@ -16,7 +16,7 @@ const {
   fileExtensions,
   alwaysInclude,
   excludeFiles
-} = require('./config/file-scan-config');
+} = require('../config/file-scan-config');
 
 // Configuration
 const serviceWorkerPath = './service-worker.js';
