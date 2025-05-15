@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { Skill } from '../skills/Skill.js';
 import { IPlayerSkills } from './PlayerInterface.js';
 import { SkillEffectFactory } from '../skills/SkillEffectFactory.js';
-import { BATTLE_SKILLS } from '../../config/skills.js';
+import { SKILLS, BATTLE_SKILLS } from '../../config/skills.js';
 import { STORAGE_KEYS } from '../../config/storage-keys.js';
 
 export class PlayerSkills extends IPlayerSkills {
