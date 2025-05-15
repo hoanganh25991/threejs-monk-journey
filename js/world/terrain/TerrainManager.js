@@ -408,12 +408,6 @@ export class TerrainManager {
             return null; // Skip creating this chunk as it wasn't in the saved state
         }
         
-        // Try to load this chunk from local storage first
-        if (this.game && this.game.saveManager) {
-            // Create the terrain chunk from saved data
-            return this.createTerrainChunkFromSavedData(chunkX, chunkZ, loadedChunk);
-        }
-        
         // If not loaded from storage, create a new chunk
         return this.createNewTerrainChunk(chunkX, chunkZ);
     }
