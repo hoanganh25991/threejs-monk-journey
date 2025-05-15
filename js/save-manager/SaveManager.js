@@ -47,9 +47,7 @@ export class SaveManager extends ISaveSystem {
         // Start auto-save timer
         this.startAutoSave();
         
-        // Just load the chunk index, but don't load the game data yet
-        // This will be done explicitly when the user clicks "Load Game"
-        this.loadChunkIndex();
+        // No need to load chunk index anymore since we're only saving hero data
         
         return true;
     }
@@ -85,6 +83,7 @@ export class SaveManager extends ISaveSystem {
     
     /**
      * Save the current game state with progress indicator
+     * Only saves hero information (player data, quests, settings)
      * @param {boolean} forceSave - Whether to force save regardless of conditions
      * @returns {Promise<boolean>} Promise resolving to success status
      */
@@ -93,86 +92,72 @@ export class SaveManager extends ISaveSystem {
             const currentTime = Date.now();
             const playerLevel = this.game.player.stats.level;
             
-            // Check if we should save based on level milestones or forced save
+            // Check if we should save based on time passed
             const timeSinceLastSave = currentTime - this.lastSaveTime;
             const enoughTimePassed = timeSinceLastSave > this.minTimeBetweenSaves;
             
             if (!forceSave && !enoughTimePassed) {
-                SaveUtils.log('Skipping save - not at level milestone or not enough time passed');
+                SaveUtils.log('Skipping save - not enough time passed since last save');
                 return true; // Skip saving but return success
             }
 
             // Initialize progress indicator
-            !autoSave && this.saveProgress.start('Preparing to save game...');
+            !autoSave && this.saveProgress.start('Preparing to save hero data...');
             
-            // Create save data object (without full world data)
-            !autoSave && this.saveProgress.update('Collecting player data...', 10);
+            // Create save data object (only hero-related data)
+            !autoSave && this.saveProgress.update('Collecting player data...', 20);
             await this.delay(50); // Small delay for UI update
             
             const playerData = PlayerSerializer.serialize(this.game.player);
             
-            !autoSave && this.saveProgress.update('Collecting quest data...', 20);
+            !autoSave && this.saveProgress.update('Collecting quest data...', 40);
             await this.delay(50); // Small delay for UI update
             
             const questData = QuestSerializer.serialize(this.game.questManager);
             
-            !autoSave && this.saveProgress.update('Collecting settings...', 30);
+            !autoSave && this.saveProgress.update('Collecting settings...', 60);
             await this.delay(50); // Small delay for UI update
             
             const settingsData = SettingsSerializer.serialize(this.game);
-            
-            !autoSave && this.saveProgress.update('Collecting world metadata...', 40);
-            await this.delay(50); // Small delay for UI update
-            
-            const worldMetaData = WorldSerializer.serializeMetadata(this.game.world);
             
             const saveData = {
                 player: playerData,
                 quests: questData,
                 settings: settingsData,
                 timestamp: currentTime,
-                version: this.currentVersion,
-                worldMeta: worldMetaData
+                version: this.currentVersion
             };
             
-            !autoSave &&  this.saveProgress.update('Writing save data to storage...', 60);
+            !autoSave && this.saveProgress.update('Writing hero data to storage...', 80);
             await this.delay(100); // Small delay for UI update
         
             // Save to storage
             const success = this.storage.saveData(this.saveKey, saveData);
             
             if (!success) {
-                throw new Error('Failed to save game data');
+                throw new Error('Failed to save hero data');
             }
             
-            // Save chunks separately if at level milestone or forced
-            if (forceSave) {
-                this.saveProgress.update('Saving world chunks...', 70);
-                await this.saveWorldChunksWithProgress(autoSave);
-                this.lastSaveLevel = playerLevel;
-            } else {
-                this.saveProgress.update('Skipping world chunks...', 80);
-            }
-
             this.lastSaveTime = currentTime;
+            this.lastSaveLevel = playerLevel;
             
             !autoSave && this.saveProgress.update('Save complete!', 100);
             await this.delay(500); // Show completion for a moment
             
-            SaveUtils.log('Game saved successfully');
-            SaveUtils.showNotification(this.game, 'Game saved successfully');
+            SaveUtils.log('Hero data saved successfully');
+            SaveUtils.showNotification(this.game, 'Hero data saved successfully');
             
             // Complete the progress indicator
             this.saveProgress.complete();
             
             return true;
         } catch (error) {
-            SaveUtils.log('Error saving game: ' + error.message, 'error');
+            SaveUtils.log('Error saving hero data: ' + error.message, 'error');
             
             // Show error in progress indicator
-            this.saveProgress.error('Failed to save game: ' + error.message);
+            this.saveProgress.error('Failed to save hero data: ' + error.message);
             
-            SaveUtils.showNotification(this.game, 'Failed to save game', 3000, 'error');
+            SaveUtils.showNotification(this.game, 'Failed to save hero data', 3000, 'error');
             
             return false;
         }
@@ -189,15 +174,16 @@ export class SaveManager extends ISaveSystem {
     
     /**
      * Load a saved game with progress indicator
+     * Only loads hero-related data (player, quests, settings)
      * @returns {Promise<boolean>} Promise resolving to success status
      */
     async loadGame() {
         try {
             // Initialize progress indicator
-            this.loadProgress.start('Preparing to load game...');
+            this.loadProgress.start('Preparing to load hero data...');
             
             // Get save data from storage
-            this.loadProgress.update('Reading save data...', 10);
+            this.loadProgress.update('Reading save data...', 20);
             await this.delay(100); // Small delay for UI update
             
             const saveData = this.storage.loadData(this.saveKey);
@@ -209,7 +195,7 @@ export class SaveManager extends ISaveSystem {
                 return false;
             }
             
-            this.loadProgress.update('Validating save data...', 20);
+            this.loadProgress.update('Validating save data...', 30);
             await this.delay(100); // Small delay for UI update
             
             SaveUtils.log('Save data parsed successfully: ' + Object.keys(saveData).join(', '));
@@ -217,22 +203,21 @@ export class SaveManager extends ISaveSystem {
             // Check version compatibility
             if (saveData.version !== this.currentVersion) {
                 SaveUtils.log('Save data version mismatch, some data may not load correctly', 'warn');
-                this.loadProgress.update('Warning: Save data version mismatch', 25);
+                this.loadProgress.update('Warning: Save data version mismatch', 35);
             }
             
-            // Clear existing game state
-            this.loadProgress.update('Clearing game state...', 30);
+            // Clear existing enemies
+            this.loadProgress.update('Clearing enemies...', 40);
             await this.delay(100); // Small delay for UI update
             
             if (this.game.enemyManager) {
                 this.game.enemyManager.removeAllEnemies();
             } else {
                 SaveUtils.log('Enemy manager not found, skipping enemy removal', 'warn');
-                this.loadProgress.update('Warning: Enemy manager not found', 35);
             }
             
             // Load player data
-            this.loadProgress.update('Loading player data...', 40);
+            this.loadProgress.update('Loading player data...', 50);
             await this.delay(150); // Small delay for UI update
             
             if (saveData.player) {
@@ -240,11 +225,11 @@ export class SaveManager extends ISaveSystem {
                 PlayerSerializer.deserialize(this.game.player, saveData.player);
             } else {
                 SaveUtils.log('No player data found in save', 'warn');
-                this.loadProgress.update('Warning: No player data found', 45);
+                this.loadProgress.update('Warning: No player data found', 55);
             }
             
             // Load quest data
-            this.loadProgress.update('Loading quest data...', 50);
+            this.loadProgress.update('Loading quest data...', 70);
             await this.delay(150); // Small delay for UI update
             
             if (saveData.quests) {
@@ -252,34 +237,11 @@ export class SaveManager extends ISaveSystem {
                 QuestSerializer.deserialize(this.game.questManager, saveData.quests);
             } else {
                 SaveUtils.log('No quest data found in save', 'warn');
-                this.loadProgress.update('Warning: No quest data found', 55);
-            }
-            
-            // Load world data - check for new or old format
-            this.loadProgress.update('Loading world data...', 60);
-            SaveUtils.log('Loading world data...');
-            
-            if (saveData.worldMeta) {
-                // New format - load world metadata
-                SaveUtils.log('Using new world metadata format');
-                await this.loadWorldDataWithProgress(
-                    saveData.worldMeta, 
-                    (chunkKey) => this.loadChunk(chunkKey)
-                );
-            } else if (saveData.world) {
-                // Old format - load full world data
-                SaveUtils.log('Using old world data format');
-                await this.loadWorldDataWithProgress(
-                    saveData.world, 
-                    (chunkKey) => this.loadChunk(chunkKey)
-                );
-            } else {
-                SaveUtils.log('No world data found in save', 'warn');
-                this.loadProgress.update('Warning: No world data found', 70);
+                this.loadProgress.update('Warning: No quest data found', 75);
             }
             
             // Load game settings - handle errors separately to prevent blocking game load
-            this.loadProgress.update('Loading game settings...', 90);
+            this.loadProgress.update('Loading game settings...', 85);
             await this.delay(100); // Small delay for UI update
             
             if (saveData.settings) {
@@ -288,13 +250,13 @@ export class SaveManager extends ISaveSystem {
                     SettingsSerializer.deserialize(this.game, saveData.settings);
                 } catch (settingsError) {
                     SaveUtils.log('Error loading game settings: ' + settingsError.message, 'error');
-                    this.loadProgress.update('Warning: Error loading settings', 95);
+                    this.loadProgress.update('Warning: Error loading settings', 90);
                     // Continue loading the game with default settings
                     SaveUtils.log('Continuing with default settings');
                 }
             } else {
                 SaveUtils.log('No settings data found in save', 'warn');
-                this.loadProgress.update('Warning: No settings data found', 95);
+                this.loadProgress.update('Warning: No settings data found', 90);
             }
             
             // Update last save level to prevent immediate re-saving
@@ -308,8 +270,8 @@ export class SaveManager extends ISaveSystem {
             this.loadProgress.update('Load complete!', 100);
             await this.delay(500); // Show completion for a moment
             
-            SaveUtils.log('Game loaded successfully');
-            SaveUtils.showNotification(this.game, 'Game loaded successfully');
+            SaveUtils.log('Hero data loaded successfully');
+            SaveUtils.showNotification(this.game, 'Hero data loaded successfully');
             
             // Update UI elements
             if (this.game.isRunning && this.game.uiManager) {
@@ -325,12 +287,12 @@ export class SaveManager extends ISaveSystem {
             
             return true;
         } catch (error) {
-            SaveUtils.log('Error loading game: ' + error.message, 'error');
+            SaveUtils.log('Error loading hero data: ' + error.message, 'error');
             
             // Show error in progress indicator
-            this.loadProgress.error('Failed to load game: ' + error.message);
+            this.loadProgress.error('Failed to load hero data: ' + error.message);
             
-            SaveUtils.showNotification(this.game, 'Failed to load game: ' + error.message, 3000, 'error');
+            SaveUtils.showNotification(this.game, 'Failed to load hero data: ' + error.message, 3000, 'error');
             
             return false;
         }
@@ -693,21 +655,7 @@ export class SaveManager extends ISaveSystem {
             // Remove main save data from storage
             this.storage.deleteData(this.saveKey);
             
-            // Get chunk index
-            const chunkIndex = this.loadChunkIndex();
-            
-            // Remove all chunk data
-            if (chunkIndex) {
-                for (const chunkKey in chunkIndex) {
-                    const chunkStorageKey = `${this.chunkSaveKeyPrefix}${chunkKey}`;
-                    this.storage.deleteData(chunkStorageKey);
-                }
-            }
-            
-            // Remove chunk index
-            this.storage.deleteData(STORAGE_KEYS.CHUNK_INDEX);
-            
-            SaveUtils.log('All save data deleted successfully');
+            SaveUtils.log('Hero save data deleted successfully');
             return true;
         } catch (error) {
             SaveUtils.log('Error deleting save data: ' + error.message, 'error');
