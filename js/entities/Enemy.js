@@ -302,7 +302,7 @@ export class Enemy {
         
         // Create ice storm effect
         // (This would be implemented with particle effects and area damage)
-        console.log(`${this.name} casts Ice Storm at position ${targetPosition.x}, ${targetPosition.z}`);
+        console.debug(`${this.name} casts Ice Storm at position ${targetPosition.x}, ${targetPosition.z}`);
         
         // Deal damage to player if in area
         const distanceToPlayer = Math.sqrt(
@@ -328,7 +328,7 @@ export class Enemy {
         
         // Create frost nova effect
         // (This would be implemented with particle effects and area damage)
-        console.log(`${this.name} casts Frost Nova`);
+        console.debug(`${this.name} casts Frost Nova`);
         
         // Deal damage to player if in area
         const distanceToPlayer = Math.sqrt(

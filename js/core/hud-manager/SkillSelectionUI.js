@@ -94,7 +94,7 @@ export class SkillSelectionUI extends UIComponent {
      * @returns {boolean} - True if initialization was successful
      */
     init() {
-        console.log('Initializing SkillSelectionUI');
+        console.debug('Initializing SkillSelectionUI');
         
         // Create the skill selection UI HTML
         let html = `
@@ -135,41 +135,41 @@ export class SkillSelectionUI extends UIComponent {
         `;
         
         // Render the template
-        console.log('Rendering template');
+        console.debug('Rendering template');
         this.render(html);
         
         // Populate skill lists
-        console.log('Populating primary attacks');
+        console.debug('Populating primary attacks');
         this.populatePrimaryAttacks();
         
-        console.log('Populating normal skills');
+        console.debug('Populating normal skills');
         this.populateNormalSkills();
         
         // Add event listeners
-        console.log('Adding event listeners');
+        console.debug('Adding event listeners');
         this.addEventListeners();
         
         // Update the skill counter
-        console.log('Updating skill counter');
+        console.debug('Updating skill counter');
         this.updateSkillCounter();
         
         // Update the preview
-        console.log('Updating preview');
+        console.debug('Updating preview');
         this.updatePreview();
         
         // Update save button state
-        console.log('Updating save button state');
+        console.debug('Updating save button state');
         this.updateSaveButtonState();
         
-        console.log('SkillSelectionUI initialization complete');
+        console.debug('SkillSelectionUI initialization complete');
         
         // Add a direct click handler to test if clicks are being detected
         const container = this.container;
         if (container) {
-            console.log('Adding test click handler to container');
+            console.debug('Adding test click handler to container');
             container.addEventListener('click', (event) => {
-                console.log('Container clicked at:', event.clientX, event.clientY);
-                console.log('Target:', event.target);
+                console.debug('Container clicked at:', event.clientX, event.clientY);
+                console.debug('Target:', event.target);
             });
         }
         
@@ -181,14 +181,14 @@ export class SkillSelectionUI extends UIComponent {
      */
     populatePrimaryAttacks() {
         const primaryAttackList = this.container.querySelector('#primary-attack-list');
-        console.log('Primary attack list element:', primaryAttackList);
+        console.debug('Primary attack list element:', primaryAttackList);
         
         // Clear existing content
         primaryAttackList.innerHTML = '';
         
         // Add each primary attack to the list
         PRIMARY_ATTACKS.forEach(skill => {
-            console.log('Creating primary attack item for:', skill.name);
+            console.debug('Creating primary attack item for:', skill.name);
             
             // Get skill icon data
             const iconData = getSkillIcon(skill.name);
@@ -205,17 +205,17 @@ export class SkillSelectionUI extends UIComponent {
             
             // Add a direct click handler to each skill item
             skillItem.onclick = (event) => {
-                console.log('Primary skill item clicked directly:', skill.name);
-                console.log('Event:', event);
+                console.debug('Primary skill item clicked directly:', skill.name);
+                console.debug('Event:', event);
                 
                 // Check if this skill is already selected
                 if (this.selectedPrimaryAttack === skill.name) {
-                    console.log('Deselecting primary attack (direct handler):', skill.name);
+                    console.debug('Deselecting primary attack (direct handler):', skill.name);
                     // Deselect this skill
                     skillItem.classList.remove('selected');
                     this.selectedPrimaryAttack = null;
                 } else {
-                    console.log('Selecting primary attack (direct handler):', skill.name);
+                    console.debug('Selecting primary attack (direct handler):', skill.name);
                     // Deselect all primary attacks
                     const allItems = this.container.querySelectorAll('#primary-attack-list .skill-selection-item');
                     allItems.forEach(i => i.classList.remove('selected'));
@@ -253,7 +253,7 @@ export class SkillSelectionUI extends UIComponent {
             `;
             
             primaryAttackList.appendChild(skillItem);
-            console.log('Added primary attack item to list:', skillItem);
+            console.debug('Added primary attack item to list:', skillItem);
         });
     }
     
@@ -262,14 +262,14 @@ export class SkillSelectionUI extends UIComponent {
      */
     populateNormalSkills() {
         const normalSkillsList = this.container.querySelector('#normal-skills-list');
-        console.log('Normal skills list element:', normalSkillsList);
+        console.debug('Normal skills list element:', normalSkillsList);
         
         // Clear existing content
         normalSkillsList.innerHTML = '';
         
         // Add each normal skill to the list
         NORMAL_SKILLS.forEach(skill => {
-            console.log('Creating normal skill item for:', skill.name);
+            console.debug('Creating normal skill item for:', skill.name);
             
             // Get skill icon data
             const iconData = getSkillIcon(skill.name);
@@ -286,12 +286,12 @@ export class SkillSelectionUI extends UIComponent {
             
             // Add a direct click handler to each skill item
             skillItem.onclick = (event) => {
-                console.log('Normal skill item clicked directly:', skill.name);
-                console.log('Event:', event);
+                console.debug('Normal skill item clicked directly:', skill.name);
+                console.debug('Event:', event);
                 
                 // Check if already selected
                 if (skillItem.classList.contains('selected')) {
-                    console.log('Deselecting normal skill (direct handler):', skill.name);
+                    console.debug('Deselecting normal skill (direct handler):', skill.name);
                     // Deselect
                     skillItem.classList.remove('selected');
                     
@@ -303,7 +303,7 @@ export class SkillSelectionUI extends UIComponent {
                 } else {
                     // Check if we've reached the maximum
                     if (this.selectedNormalSkills.length >= this.maxNormalSkills) {
-                        console.log('Maximum normal skills reached (direct handler)');
+                        console.debug('Maximum normal skills reached (direct handler)');
                         // Show notification
                         if (this.game && this.game.uiManager) {
                             this.game.uiManager.showNotification(`You can only select ${this.maxNormalSkills} normal skills`);
@@ -311,7 +311,7 @@ export class SkillSelectionUI extends UIComponent {
                         return;
                     }
                     
-                    console.log('Selecting normal skill (direct handler):', skill.name);
+                    console.debug('Selecting normal skill (direct handler):', skill.name);
                     // Select
                     skillItem.classList.add('selected');
                     
@@ -319,7 +319,7 @@ export class SkillSelectionUI extends UIComponent {
                     this.selectedNormalSkills.push(skill.name);
                 }
                 
-                console.log('After selection, normal skills are (direct handler):', [...this.selectedNormalSkills]);
+                console.debug('After selection, normal skills are (direct handler):', [...this.selectedNormalSkills]);
                 
                 // Update counter
                 this.updateSkillCounter();
@@ -350,7 +350,7 @@ export class SkillSelectionUI extends UIComponent {
             `;
             
             normalSkillsList.appendChild(skillItem);
-            console.log('Added normal skill item to list:', skillItem);
+            console.debug('Added normal skill item to list:', skillItem);
         });
     }
     
@@ -360,25 +360,25 @@ export class SkillSelectionUI extends UIComponent {
     addEventListeners() {
         // Primary attack selection
         const primaryAttackItems = this.container.querySelectorAll('#primary-attack-list .skill-selection-item');
-        console.log('Found primary attack items:', primaryAttackItems.length);
+        console.debug('Found primary attack items:', primaryAttackItems.length);
         
         primaryAttackItems.forEach(item => {
             item.addEventListener('click', (event) => {
-                console.log('Primary attack clicked:', item);
-                console.log('Event target:', event.target);
-                console.log('Current selected primary attack:', this.selectedPrimaryAttack);
+                console.debug('Primary attack clicked:', item);
+                console.debug('Event target:', event.target);
+                console.debug('Current selected primary attack:', this.selectedPrimaryAttack);
                 
                 const skillName = item.getAttribute('data-skill-name');
-                console.log('Skill name:', skillName);
+                console.debug('Skill name:', skillName);
                 
                 // Check if this skill is already selected
                 if (this.selectedPrimaryAttack === skillName) {
-                    console.log('Deselecting primary attack:', skillName);
+                    console.debug('Deselecting primary attack:', skillName);
                     // Deselect this skill
                     item.classList.remove('selected');
                     this.selectedPrimaryAttack = null;
                 } else {
-                    console.log('Selecting primary attack:', skillName);
+                    console.debug('Selecting primary attack:', skillName);
                     // Deselect all primary attacks
                     primaryAttackItems.forEach(i => i.classList.remove('selected'));
                     
@@ -389,7 +389,7 @@ export class SkillSelectionUI extends UIComponent {
                     this.selectedPrimaryAttack = skillName;
                 }
                 
-                console.log('After selection, primary attack is:', this.selectedPrimaryAttack);
+                console.debug('After selection, primary attack is:', this.selectedPrimaryAttack);
                 
                 // Update preview
                 this.updatePreview();
@@ -401,20 +401,20 @@ export class SkillSelectionUI extends UIComponent {
         
         // Normal skills selection
         const normalSkillItems = this.container.querySelectorAll('#normal-skills-list .skill-selection-item');
-        console.log('Found normal skill items:', normalSkillItems.length);
+        console.debug('Found normal skill items:', normalSkillItems.length);
         
         normalSkillItems.forEach(item => {
             item.addEventListener('click', (event) => {
-                console.log('Normal skill clicked:', item);
-                console.log('Event target:', event.target);
+                console.debug('Normal skill clicked:', item);
+                console.debug('Event target:', event.target);
                 
                 const skillName = item.getAttribute('data-skill-name');
-                console.log('Skill name:', skillName);
-                console.log('Current selected normal skills:', [...this.selectedNormalSkills]);
+                console.debug('Skill name:', skillName);
+                console.debug('Current selected normal skills:', [...this.selectedNormalSkills]);
                 
                 // Check if already selected
                 if (item.classList.contains('selected')) {
-                    console.log('Deselecting normal skill:', skillName);
+                    console.debug('Deselecting normal skill:', skillName);
                     // Deselect
                     item.classList.remove('selected');
                     
@@ -426,7 +426,7 @@ export class SkillSelectionUI extends UIComponent {
                 } else {
                     // Check if we've reached the maximum
                     if (this.selectedNormalSkills.length >= this.maxNormalSkills) {
-                        console.log('Maximum normal skills reached');
+                        console.debug('Maximum normal skills reached');
                         // Show notification
                         if (this.game && this.game.uiManager) {
                             this.game.uiManager.showNotification(`You can only select ${this.maxNormalSkills} normal skills`);
@@ -434,7 +434,7 @@ export class SkillSelectionUI extends UIComponent {
                         return;
                     }
                     
-                    console.log('Selecting normal skill:', skillName);
+                    console.debug('Selecting normal skill:', skillName);
                     // Select
                     item.classList.add('selected');
                     
@@ -442,7 +442,7 @@ export class SkillSelectionUI extends UIComponent {
                     this.selectedNormalSkills.push(skillName);
                 }
                 
-                console.log('After selection, normal skills are:', [...this.selectedNormalSkills]);
+                console.debug('After selection, normal skills are:', [...this.selectedNormalSkills]);
                 
                 // Update counter
                 this.updateSkillCounter();

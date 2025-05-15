@@ -281,7 +281,7 @@ export class MysticAllyEffect extends SkillEffect {
             },
             // Progress callback
             (xhr) => {
-                console.log(`Loading hero model: ${(xhr.loaded / xhr.total) * 100}% loaded`);
+                console.debug(`Loading hero model: ${(xhr.loaded / xhr.total) * 100}% loaded`);
             },
             // Error callback
             (error) => {

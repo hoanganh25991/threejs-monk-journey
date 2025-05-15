@@ -348,7 +348,7 @@ export class SettingsMenu extends UIComponent {
     playCurrentSkillEffect() {
         if (!this.currentSkill || !this.skillPreview) return;
         
-        console.log(`Playing skill effect for: ${this.currentSkill.name}`);
+        console.debug(`Playing skill effect for: ${this.currentSkill.name}`);
         
         // Create the skill effect using the SkillPreview
         this.skillPreview.createSkillEffect(this.currentSkill);

@@ -58,7 +58,7 @@ export class EnemyModelFactory {
     static async loadModelFromGLB(enemy, modelGroup, path) {
         // This is a placeholder for future implementation
         // Will be used to load models from GLB files
-        console.log(`Loading model from ${path} for ${enemy.type} - not yet implemented`);
+        console.debug(`Loading model from ${path} for ${enemy.type} - not yet implemented`);
         
         // For now, fall back to the default model creation
         const model = this.createModel(enemy, modelGroup);

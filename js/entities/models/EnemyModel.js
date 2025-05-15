@@ -36,7 +36,7 @@ export class EnemyModel {
     async loadFromGLB(path) {
         // This is a placeholder for future implementation
         // Will be used to load models from GLB files
-        console.log(`Loading model from ${path} - not yet implemented`);
+        console.debug(`Loading model from ${path} - not yet implemented`);
         return Promise.resolve();
     }
     
