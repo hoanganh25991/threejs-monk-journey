@@ -7,6 +7,7 @@ import { Mountain } from './Mountain.js';
 import { Bridge } from './Bridge.js';
 import { Village } from './Village.js';
 import { RandomGenerator } from '../utils/RandomGenerator.js';
+import { STRUCTURE_CONFIG } from '../../config/structure.js';
 
 /**
  * Manages structure generation and placement
@@ -28,16 +29,8 @@ export class StructureManager {
             'mountain', 'bridge', 'village'
         ]; // Types of structures
         
-        // OPTIMIZED: Adjusted structure densities for better performance and visibility
-        this.structureDensity = {
-            'house': 0.0008,     // Reduced from 0.001 (Individual houses)
-            'tower': 0.001,      // Increased from 0.0008 (Watchtowers - more visible from distance)
-            'ruins': 0.0008,     // Kept the same (Ancient ruins)
-            'darkSanctum': 0.0003, // Increased from 0.0002 (Rare dark sanctums - more visible)
-            'mountain': 0.0006,  // Increased from 0.0005 (Mountains - more visible from distance)
-            'bridge': 0.0003,    // Kept the same (Bridges)
-            'village': 0.0003    // Increased from 0.0002 (Villages - more visible from distance)
-        };
+        // Use structure densities from config
+        this.structureDensity = STRUCTURE_CONFIG.structureDensity;
     }
     
     /**

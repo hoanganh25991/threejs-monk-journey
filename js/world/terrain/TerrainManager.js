@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { TextureGenerator } from '../utils/TextureGenerator.js';
 import { ZONE_COLORS } from '../../config/colors.js';
+import { TERRAIN_CONFIG } from '../../config/terrain.js';
 
 /**
  * Manages terrain generation and rendering
@@ -11,23 +12,24 @@ export class TerrainManager {
         this.worldManager = worldManager;
         this.game = null;
         
-        // Terrain properties
-        this.terrainSize = 100; // Base terrain size (INCREASED for better performance)
-        this.terrainResolution = 16; // Base terrain resolution
-        this.terrainHeight = 10; // Maximum terrain height
+        // Terrain properties from config
+        this.terrainSize = TERRAIN_CONFIG.size;
+        this.terrainResolution = TERRAIN_CONFIG.resolution;
+        this.terrainHeight = TERRAIN_CONFIG.height;
         
-        // For terrain chunks
-        this.terrainChunks = {}; // Store terrain chunks by chunk key
-        this.terrainChunkSize = 100; // Size of each terrain chunk (INCREASED for better performance)
-        this.visibleTerrainChunks = {}; // Store currently visible terrain chunks
-        this.terrainChunkViewDistance = 3; // INCREASED from 2 to 3 to improve visibility of distant structures
+        // For terrain chunks from config
+        this.terrainChunkSize = TERRAIN_CONFIG.chunkSize;
+        this.terrainChunkViewDistance = TERRAIN_CONFIG.chunkViewDistance;
         
-        // For terrain buffering (pre-rendering)
+        // For terrain buffering (pre-rendering) from config
+        this.terrainBufferDistance = TERRAIN_CONFIG.bufferDistance;
+
         this.terrainBuffer = {}; // Store pre-generated terrain chunks that aren't yet visible
-        this.terrainBufferDistance = 3; // How far ahead to buffer terrain (reduced from 6 to 3 to prevent infinite loading)
         this.terrainGenerationQueue = []; // Queue for prioritized terrain generation
-        this.isProcessingTerrainQueue = false; // Flag to prevent multiple queue processing
+        this.terrainChunks = {}; // Store terrain chunks by chunk key
+        this.visibleTerrainChunks = {}; // Store currently visible terrain chunks
         this.lastQueueProcessTime = 0; // Timestamp of last queue processing to prevent constant processing
+        this.isProcessingTerrainQueue = false; // Flag to prevent multiple queue processing
         this.lastPlayerChunk = { x: 0, z: 0 }; // Last player chunk for movement prediction
         this.playerMovementDirection = new THREE.Vector3(0, 0, 0); // Track player movement direction for prediction
         
