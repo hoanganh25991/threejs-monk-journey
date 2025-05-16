@@ -14,6 +14,10 @@ export class InteractiveObjectManager {
         
         // Interactive object collections
         this.interactiveObjects = [];
+        
+        // Raycaster for click/touch detection
+        this.raycaster = new THREE.Raycaster();
+        this.clickableObjects = [];
     }
     
     /**
@@ -29,6 +33,143 @@ export class InteractiveObjectManager {
      */
     init() {
         this.createInteractiveObjects();
+        this.setupClickEvents();
+    }
+    
+    /**
+     * Set up click/touch event listeners for interactive objects
+     */
+    setupClickEvents() {
+        // Get the canvas element
+        const canvas = this.scene.renderer ? this.scene.renderer.domElement : document.querySelector('canvas');
+        
+        if (!canvas) {
+            console.warn('Canvas not found for click/touch events');
+            return;
+        }
+        
+        // Add click event listener
+        canvas.addEventListener('click', (event) => this.handleClick(event));
+        
+        // Add touch event listener for mobile
+        canvas.addEventListener('touchend', (event) => {
+            // Prevent default to avoid double events
+            event.preventDefault();
+            
+            // Use the first touch point
+            if (event.changedTouches && event.changedTouches.length > 0) {
+                this.handleClick(event.changedTouches[0]);
+            }
+        });
+    }
+    
+    /**
+     * Handle click/touch event
+     * @param {Event} event - The click or touch event
+     */
+    handleClick(event) {
+        // Skip if game is paused
+        if (this.game && this.game.isPaused) return;
+        
+        // Get canvas
+        const canvas = this.scene.renderer ? this.scene.renderer.domElement : document.querySelector('canvas');
+        if (!canvas) return;
+        
+        // Calculate normalized device coordinates
+        const rect = canvas.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        // Set raycaster
+        this.raycaster.setFromCamera(new THREE.Vector2(x, y), this.game.camera);
+        
+        // Get all meshes from interactive objects
+        const clickableObjects = this.interactiveObjects.map(obj => obj.mesh).filter(mesh => mesh);
+        
+        // Check for intersections
+        const intersects = this.raycaster.intersectObjects(clickableObjects, true);
+        
+        if (intersects.length > 0) {
+            // Find the interactive object that was clicked
+            const clickedMesh = intersects[0].object;
+            let clickedObject = null;
+            
+            // Find the parent interactive object
+            for (const obj of this.interactiveObjects) {
+                if (obj.mesh === clickedMesh || obj.mesh.children.includes(clickedMesh) || 
+                    (clickedMesh.parent && obj.mesh === clickedMesh.parent)) {
+                    clickedObject = obj;
+                    break;
+                }
+            }
+            
+            // If we found the object, interact with it
+            if (clickedObject) {
+                this.interactWithObject(clickedObject);
+            }
+        }
+    }
+    
+    /**
+     * Interact with an interactive object
+     * @param {Object} interactiveObject - The interactive object to interact with
+     */
+    interactWithObject(interactiveObject) {
+        // Call the object's interaction handler
+        const result = interactiveObject.onInteract();
+        
+        // Check if result is null or undefined before proceeding
+        if (!result) {
+            // No interaction result, possibly already interacted with
+            if (this.game && this.game.uiManager) {
+                this.game.uiManager.showNotification("Nothing happens.");
+            }
+            return;
+        }
+        
+        // Handle different interaction types
+        switch (result.type) {
+            case 'quest':
+                // Handle quest interaction
+                if (this.game && this.game.questManager) {
+                    this.game.questManager.startQuest(result.quest);
+                }
+                break;
+                
+            case 'treasure':
+                // Handle treasure interaction
+                if (this.game && this.game.uiManager) {
+                    this.game.player.addToInventory(result.item);
+                }
+                break;
+                
+            case 'boss_spawn':
+                // Handle boss spawn interaction
+                if (this.game && this.game.enemyManager) {
+                    // Show notification
+                    if (this.game.uiManager) {
+                        this.game.uiManager.showNotification(result.message, 5);
+                    }
+                    
+                    // Spawn the boss
+                    this.game.enemyManager.spawnBoss(
+                        result.bossType,
+                        interactiveObject.position
+                    );
+                }
+                break;
+                
+            case 'item':
+                // Handle item interaction
+                if (this.game && this.game.uiManager) {
+                    this.game.player.addToInventory(result.item);
+                }
+                break;
+                
+            default:
+                console.warn(`Unknown interaction type: ${result.type}`);
+                break;
+        }
     }
     
     /**

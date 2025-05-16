@@ -250,7 +250,7 @@ export class EnemyManager {
                 
                 // Show notification
                 if (this.game.uiManager) {
-                    this.game.uiManager.showNotification(`Found ${item.name}`);
+                    // this.game.uiManager.showNotification(`Found ${item.name}`);
                 }
             }
         }

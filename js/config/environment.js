@@ -9,7 +9,7 @@ export const environmentConfig = {
     objectDensity: {
         'tree':   0.005,
         'rock':   0.0008,
-        'bush':   0.001,
+        'bush':   0.0001,
         'flower': 0.002
     },
     

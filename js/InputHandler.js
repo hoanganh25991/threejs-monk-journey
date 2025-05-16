@@ -312,7 +312,7 @@ export class InputHandler {
                     case 'item':
                         // Add item to inventory
                         this.game.player.addToInventory(result.item);
-                        this.game.uiManager.showNotification(`Found ${result.item.name} x${result.item.amount}`);
+                        // this.game.uiManager.showNotification(`Found ${result.item.name} x${result.item.amount}`);
                         break;
                     case 'quest':
                         // Show quest dialog

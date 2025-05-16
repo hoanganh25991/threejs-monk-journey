@@ -155,7 +155,7 @@ export class CollisionManager {
             case 'treasure':
                 // Handle treasure interaction
                 if (this.player.game && this.player.game.uiManager) {
-                    this.player.game.uiManager.showNotification(`Found ${result.item.name}!`);
+                    // this.player.game.uiManager.showNotification(`Found ${result.item.name}!`);
                     this.player.addToInventory(result.item);
                 }
                 break;
@@ -179,7 +179,7 @@ export class CollisionManager {
             case 'item':
                 // Handle item interaction
                 if (this.player.game && this.player.game.uiManager) {
-                    this.player.game.uiManager.showNotification(`Found ${result.item.name}!`);
+                    // this.player.game.uiManager.showNotification(`Found ${result.item.name}!`);
                     this.player.addToInventory(result.item);
                 }
                 break;
