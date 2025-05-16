@@ -14,5 +14,5 @@ export const environmentConfig = {
     },
     
     // Default chunk size for environment generation
-    chunkSize: 50
+    chunkSize: 16
 };
