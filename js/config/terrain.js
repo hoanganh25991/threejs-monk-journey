@@ -12,5 +12,5 @@ export const TERRAIN_CONFIG = {
     chunkViewDistance: 3,
     
     // Terrain buffering properties
-    bufferDistance: 0,
+    bufferDistance: 5, // Distance beyond view distance to pre-generate terrain chunks
 };
