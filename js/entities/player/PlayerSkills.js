@@ -221,7 +221,7 @@ export class PlayerSkills extends IPlayerSkills {
             } else {
                 // No enemy found, show notification
                 if (this.game && this.game.uiManager) {
-                    // this.game.uiManager.showNotification('No enemy in range');
+                    this.game.uiManager.showNotification('No enemy in range');
                 }
                 
                 // Refund mana
@@ -404,7 +404,7 @@ export class PlayerSkills extends IPlayerSkills {
                 } else {
                     // No enemy found, show notification
                     if (this.game && this.game.uiManager) {
-                        // this.game.uiManager.showNotification('No enemy in range');
+                        this.game.uiManager.showNotification('No enemy in range');
                     }
                     
                     return false;
