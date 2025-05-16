@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Enemy } from './Enemy.js';
 import { zoneEnemies, enemyTypes, bossTypes } from '../config/enemies.js';
+import { DROP_CHANCES, REGULAR_DROP_TABLE, BOSS_DROP_TABLE } from '../config/drops.js';
 
 export class EnemyManager {
     constructor(scene, player, loadingManager) {
@@ -230,7 +231,7 @@ export class EnemyManager {
     
     handleEnemyDrop(enemy) {
         // Check if enemy should drop an item
-        const dropChance = enemy.isBoss ? 1.0 : 0.2; // 100% for bosses, 20% for regular enemies
+        const dropChance = enemy.isBoss ? DROP_CHANCES.bossDropChance : DROP_CHANCES.normalDropChance;
         
         if (Math.random() < dropChance) {
             // Determine item type
@@ -257,31 +258,13 @@ export class EnemyManager {
     }
     
     generateRegularDrop(enemy) {
-        // Simple drop table
-        const dropTable = [
-            { name: 'Health Potion', amount: 1, weight: 40 },
-            { name: 'Mana Potion', amount: 1, weight: 30 },
-            { name: 'Gold Coin', amount: Math.floor(5 + Math.random() * 20), weight: 20 },
-            { name: 'Common Weapon', type: 'weapon', damage: 5 + Math.floor(Math.random() * 5), damageReduction: 0, amount: 1, weight: 5 },
-            { name: 'Common Armor', type: 'armor', damage: 0, damageReduction: 0.05 + Math.random() * 0.05, amount: 1, weight: 5 }
-        ];
-        
-        return this.selectWeightedItem(dropTable);
+        // Use drop table from config
+        return this.selectWeightedItem(REGULAR_DROP_TABLE);
     }
     
     generateBossDrop(enemy) {
-        // Boss drop table
-        const dropTable = [
-            { name: 'Greater Health Potion', amount: 2, weight: 20 },
-            { name: 'Greater Mana Potion', amount: 2, weight: 15 },
-            { name: 'Gold Pile', amount: Math.floor(50 + Math.random() * 100), weight: 20 },
-            { name: 'Rare Weapon', type: 'weapon', damage: 15 + Math.floor(Math.random() * 10), damageReduction: 0, amount: 1, weight: 15 },
-            { name: 'Rare Armor', type: 'armor', damage: 0, damageReduction: 0.1 + Math.random() * 0.1, amount: 1, weight: 15 },
-            { name: 'Rare Helmet', type: 'helmet', damage: 2 + Math.floor(Math.random() * 3), damageReduction: 0.05 + Math.random() * 0.05, amount: 1, weight: 10 },
-            { name: 'Rare Boots', type: 'boots', damage: 0, damageReduction: 0.05 + Math.random() * 0.05, amount: 1, weight: 5 }
-        ];
-        
-        return this.selectWeightedItem(dropTable);
+        // Use boss drop table from config
+        return this.selectWeightedItem(BOSS_DROP_TABLE);
     }
     
     selectWeightedItem(items) {
