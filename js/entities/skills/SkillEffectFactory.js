@@ -9,6 +9,9 @@ import { MysticAllyEffect } from './MysticAllyEffect.js';
 import { ExplodingPalmEffect } from './ExplodingPalmEffect.js';
 import { ShieldOfZenEffect } from './ShieldOfZenEffect.js';
 import { BreathOfHeavenEffect } from './BreathOfHeavenEffect.js';
+import { FlyingDragonEffect } from './FlyingDragonEffect.js';
+import { FlyingKickEffect } from './FlyingKickEffect.js';
+import { DeadlyReachEffect } from './DeadlyReachEffect.js';
 
 /**
  * Factory class for creating skill effects
@@ -94,6 +97,18 @@ export class SkillEffectFactory {
             case 'Shield of Zen':
                 console.debug(`Creating ShieldOfZenEffect for ${skill.name}`);
                 effect = new ShieldOfZenEffect(skill);
+                break;
+            case 'Flying Dragon':
+                console.debug(`Creating FlyingDragonEffect for ${skill.name}`);
+                effect = new FlyingDragonEffect(skill);
+                break;
+            case 'Flying Kick':
+                console.debug(`Creating FlyingKickEffect for ${skill.name}`);
+                effect = new FlyingKickEffect(skill);
+                break;
+            case 'Deadly Reach':
+                console.debug(`Creating DeadlyReachEffect for ${skill.name}`);
+                effect = new DeadlyReachEffect(skill);
                 break;
             default:
                 console.debug(`Creating default SkillEffect for ${skill.name}`);

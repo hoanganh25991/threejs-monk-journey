@@ -25,18 +25,20 @@ export const PRIMARY_ATTACKS = [
     {
         name: "Deadly Reach",
         description: "Extend your reach to strike enemies from a distance.",
-        type: "melee",
+        type: "projectile",
         damage: 10,
         manaCost: 0,
         cooldown: 0,
-        range: 3, // Extended range
-        radius: 0,
-        duration: 0,
+        range: 15, // Increased range for a proper ranged attack
+        radius: 0.5, // Small area of effect at impact point
+        duration: 1.5, // Duration for the beam to extend and retract
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         piercing: true, // Can pierce through enemies
         knockback: true, // Final strike can knock back enemies
         primaryAttack: true,
+        projectileSpeed: 15, // Speed of the projectile
+        stationaryAttack: true, // Flag to indicate this skill should not move the hero
         sounds: {
             "cast": "deadlyReachCast", // Sound of energy focusing
             "impact": "deadlyReachImpact", // Sound of strike hitting

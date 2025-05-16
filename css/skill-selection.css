@@ -29,6 +29,13 @@
     width: 100%;
 }
 
+/* Layout container for content and preview */
+#skill-selection-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
 /* Header */
 #skill-selection-header {
     display: flex;
@@ -59,19 +66,20 @@
 /* Content */
 #skill-selection-content {
     display: flex;
-    flex: 1;
-    overflow: visible; /* Changed from hidden to visible */
+    flex-direction: column;
+    flex: 2; /* Takes up 2/3 of the layout space */
+    overflow-y: auto;
+    padding: 0 15px;
 }
 
 #primary-attack-section,
 #normal-skills-section {
-    flex: 1;
-    padding: 15px;
-    overflow-y: auto;
+    padding: 15px 0;
 }
 
 #primary-attack-section {
-    border-right: 1px solid rgba(138, 109, 59, 0.3);
+    border-bottom: 1px solid rgba(138, 109, 59, 0.3);
+    margin-bottom: 10px;
 }
 
 #primary-attack-section h3,
@@ -86,8 +94,12 @@
 /* Skill Lists */
 .skill-list {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 10px;
+}
+
+.skill-list.single-column {
+    flex-direction: column;
 }
 
 .skill-selection-item {
@@ -99,6 +111,7 @@
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
+    width: 100%;
 }
 
 .skill-selection-item:hover {
@@ -139,9 +152,12 @@
 
 /* Preview Section */
 #skill-selection-preview {
+    flex: 1; /* Takes up 1/3 of the layout space */
     padding: 15px;
     background-color: rgba(0, 0, 0, 0.5);
-    border-top: 1px solid rgba(138, 109, 59, 0.3);
+    border-left: 1px solid rgba(138, 109, 59, 0.3);
+    display: flex;
+    flex-direction: column;
 }
 
 #skill-selection-preview h3 {
@@ -151,20 +167,101 @@
     text-align: center;
 }
 
-.preview-skills {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
+.battle-layout {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+    width: 100%;
+    max-width: 280px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.preview-skill {
+.preview-description {
+    text-align: center;
+    color: #ccc;
+    font-style: italic;
+    margin-top: auto;
+    padding: 10px;
+    border-top: 1px dashed rgba(138, 109, 59, 0.3);
+}
+
+/* Style for skill buttons in preview (exactly like SkillsUI) */
+.skill-button {
     position: relative;
-    width: 70px;
-    height: 70px;
+    width: 55px;
+    height: 55px;
+    background-color: rgba(20, 20, 20, 0.3);
+    border: 2px solid #6b4c2a;
+    border-radius: 50%;
+    margin: 0;
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    overflow: hidden;
+    justify-self: center;
+}
+
+.skill-button:hover {
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+}
+
+.skill-button .skill-name {
+    position: absolute;
+    top: 2px;
+    font-size: 10px;
+    color: #ffcc00;
+    text-align: center;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 4px;
+}
+
+.skill-button .skill-icon {
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.skill-button .skill-key {
+    position: absolute;
+    bottom: 5px; /* Changed from -2px to 5px to move it higher and fully visible */
+    right: 5px; /* Changed from -2px to 5px for better positioning */
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 1px solid #6b4c2a;
+    border-radius: 3px;
+    padding: 2px 4px;
+    font-size: 10px;
+    color: white;
+    font-weight: bold;
+}
+
+.skill-button .skill-cooldown {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+.skill-button.empty-slot {
+    border: 2px dashed #6b4c2a;
+    background-color: rgba(20, 20, 20, 0.2);
+    opacity: 0.5;
+}
+
+.skill-button.more-skills {
+    border: 2px solid #888888;
+    background-color: rgba(40, 40, 40, 0.4);
+    font-weight: bold;
 }
 
 .preview-skill-icon {
@@ -239,13 +336,17 @@
         height: 90%;
     }
     
-    #skill-selection-content {
+    #skill-selection-layout {
         flex-direction: column;
     }
     
-    #primary-attack-section {
-        border-right: none;
-        border-bottom: 1px solid rgba(138, 109, 59, 0.3);
+    #skill-selection-content {
+        flex: 1;
+    }
+    
+    #skill-selection-preview {
+        border-left: none;
+        border-top: 1px solid rgba(138, 109, 59, 0.3);
     }
     
     .skill-selection-item {

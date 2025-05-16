@@ -237,6 +237,14 @@ export class PlayerSkills extends IPlayerSkills {
             if (targetEnemy) {
                 // Direction already set in the code above
                 console.debug("Using enemy direction for skill cast");
+                
+                // For skills with stationaryAttack flag, we don't move the player
+                // This is specifically for ranged skills like "Deadly Reach"
+                if (!skillTemplate.stationaryAttack) {
+                    console.debug(`Skill ${skillTemplate.name} does not have stationaryAttack flag, player may move`);
+                } else {
+                    console.debug(`Skill ${skillTemplate.name} has stationaryAttack flag, player will not move`);
+                }
             } 
             // Second priority: If player is moving, use movement direction
             else if (this.game && this.game.inputHandler) {
@@ -314,10 +322,10 @@ export class PlayerSkills extends IPlayerSkills {
                 
                 return true;
             } else {
-                // No enemy in melee range, try to teleport to a distant enemy
-                const teleportEnemy = this.game.enemyManager.findNearestEnemy(this.playerPosition, skillTemplate.range);
+                // No enemy in melee range, try to find a distant enemy
+                const distantEnemy = this.game.enemyManager.findNearestEnemy(this.playerPosition, skillTemplate.range);
                 
-                if (teleportEnemy) {
+                if (distantEnemy) {
                     // Use mana
                     this.playerStats.setMana(this.playerStats.getMana() - skillTemplate.manaCost);
                     
@@ -335,7 +343,7 @@ export class PlayerSkills extends IPlayerSkills {
                     newSkillInstance.game = this.game;
                     
                     // Get enemy position
-                    const enemyPosition = teleportEnemy.getPosition();
+                    const enemyPosition = distantEnemy.getPosition();
                     
                     // Calculate direction to enemy
                     const direction = new THREE.Vector3().subVectors(enemyPosition, this.playerPosition).normalize();
@@ -343,24 +351,38 @@ export class PlayerSkills extends IPlayerSkills {
                     // Update player rotation to face enemy
                     this.playerRotation.y = Math.atan2(direction.x, direction.z);
                     
-                    // Calculate teleport position (slightly before the enemy)
-                    const teleportDistance = Math.min(this.playerPosition.distanceTo(enemyPosition) - 1.5, skillTemplate.range);
-                    const teleportPosition = new THREE.Vector3(
-                        this.playerPosition.x + direction.x * teleportDistance,
-                        enemyPosition.y, // Match enemy height
-                        this.playerPosition.z + direction.z * teleportDistance
-                    );
+                    // Check if this is a stationary attack skill (like Deadly Reach)
+                    if (skillTemplate.stationaryAttack) {
+                        console.debug(`Primary attack ${skillTemplate.name} has stationaryAttack flag, player will not move`);
+                        
+                        // Create skill effect at the current position (no teleport)
+                        const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
+                        
+                        // Add skill effect to scene
+                        this.scene.add(skillEffect);
+                    } else {
+                        // For non-stationary attacks (like Fist of Thunder), teleport to the enemy
+                        console.debug(`Primary attack ${skillTemplate.name} does not have stationaryAttack flag, player will move`);
+                        
+                        // Calculate teleport position (slightly before the enemy)
+                        const teleportDistance = Math.min(this.playerPosition.distanceTo(enemyPosition) - 1.5, skillTemplate.range);
+                        const teleportPosition = new THREE.Vector3(
+                            this.playerPosition.x + direction.x * teleportDistance,
+                            enemyPosition.y, // Match enemy height
+                            this.playerPosition.z + direction.z * teleportDistance
+                        );
+                        
+                        // Teleport player
+                        this.playerPosition.copy(teleportPosition);
+                        
+                        // Create skill effect at the new position
+                        const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
+                        
+                        // Add skill effect to scene
+                        this.scene.add(skillEffect);
+                    }
                     
-                    // Teleport player
-                    this.playerPosition.copy(teleportPosition);
-                    
-                    // Create skill effect at the new position
-                    const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
-                    
-                    // Add skill effect to scene
-                    this.scene.add(skillEffect);
-                    
-                    // Play teleport sound
+                    // Play sound
                     if (this.game && this.game.audioManager) {
                         this.game.audioManager.playSound('playerAttack');
                     }

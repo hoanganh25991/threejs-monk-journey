@@ -105,25 +105,29 @@ export class SkillSelectionUI extends UIComponent {
                     <div id="skill-selection-counter">
                         <span id="normal-skills-counter">0/${this.maxNormalSkills}</span> Normal Skills Selected
                     </div>
-                    <button id="skill-selection-save" class="btn-primary" disabled>Save Selection</button>
-                    <button id="skill-selection-close" class="btn-secondary">Close</button>
+                    <button id="skill-selection-save" class="btn-primary" disabled>💾</button>
                 </div>
                 
-                <div id="skill-selection-content">
-                    <div id="primary-attack-section">
-                        <h3>Primary Attack (Select 1)</h3>
-                        <div id="primary-attack-list" class="skill-list"></div>
+                <div id="skill-selection-layout">
+                    <div id="skill-selection-content">
+                        <div id="primary-attack-section">
+                            <h3>Primary Attack (Select 1)</h3>
+                            <div id="primary-attack-list" class="skill-zlist single-column"></div>
+                        </div>
+                        
+                        <div id="normal-skills-section">
+                            <h3>Normal Skills (Select up to ${this.maxNormalSkills})</h3>
+                            <div id="normal-skills-list" class="skill-list"></div>
+                        </div>
                     </div>
                     
-                    <div id="normal-skills-section">
-                        <h3>Normal Skills (Select up to ${this.maxNormalSkills})</h3>
-                        <div id="normal-skills-list" class="skill-list"></div>
+                    <div id="skill-selection-preview">
+                        <h3>Battle Skills Layout</h3>
+                        <div id="selected-skills-preview" class="battle-layout"></div>
+                        <div class="preview-description">
+                            <p>This is how your skills will appear in battle</p>
+                        </div>
                     </div>
-                </div>
-                
-                <div id="skill-selection-preview">
-                    <h3>Battle Skills</h3>
-                    <div id="selected-skills-preview"></div>
                 </div>
                 
                 <div id="skill-selection-status">
@@ -462,12 +466,6 @@ export class SkillSelectionUI extends UIComponent {
         saveButton.addEventListener('click', () => {
             this.saveSkillSelection();
         });
-        
-        // Close button
-        const closeButton = this.container.querySelector('#skill-selection-close');
-        closeButton.addEventListener('click', () => {
-            this.hide();
-        });
     }
     
     /**
@@ -479,7 +477,7 @@ export class SkillSelectionUI extends UIComponent {
     }
     
     /**
-     * Update the preview of selected skills
+     * Update the preview of selected skills to match the SkillsUI layout
      */
     updatePreview() {
         const previewContainer = this.container.querySelector('#selected-skills-preview');
@@ -488,70 +486,88 @@ export class SkillSelectionUI extends UIComponent {
         previewContainer.innerHTML = '';
         
         // Create preview HTML
-        let previewHTML = '<div class="preview-skills">';
+        let previewHTML = '';
         
         // Show message if no skills are selected
         if (!this.selectedPrimaryAttack && this.selectedNormalSkills.length === 0) {
-            previewHTML += `
+            previewHTML = `
                 <div class="no-skills-selected">
                     <p>No skills selected yet</p>
                     <p class="hint">Select at least one primary attack</p>
                 </div>
             `;
+            previewContainer.innerHTML = previewHTML;
+            return;
         }
+        
+        // Create an array of all skills in the order they'll appear in battle
+        const battleSkills = [];
         
         // Add primary attack if selected
         if (this.selectedPrimaryAttack) {
             const primarySkill = PRIMARY_ATTACKS.find(skill => skill.name === this.selectedPrimaryAttack);
             if (primarySkill) {
-                const iconData = getSkillIcon(primarySkill.name);
-                const icon = primarySkill.icon || iconData.emoji || '✨';
-                const color = iconData.color || this.skillColors[primarySkill.type] || '#ffffff';
-                
-                previewHTML += `
-                    <div class="preview-skill" data-skill-name="${primarySkill.name}" data-skill-type="primary">
-                        <div class="preview-skill-icon">
-                            <div class="skill-icon ${iconData.cssClass}" style="border-color: ${color}; box-shadow: 0 0 10px ${color}40;">${icon}</div>
-                        </div>
-                        <div class="preview-skill-key">h</div>
-                    </div>
-                `;
+                battleSkills.push({
+                    ...primarySkill,
+                    keyDisplay: "h",
+                    isPrimary: true
+                });
             }
         }
         
-        // Add normal skills if selected
-        this.selectedNormalSkills.forEach((skillName, index) => {
+        // Add normal skills if selected (up to 7 skills)
+        for (let i = 0; i < Math.min(7, this.selectedNormalSkills.length); i++) {
+            const skillName = this.selectedNormalSkills[i];
             const normalSkill = NORMAL_SKILLS.find(skill => skill.name === skillName);
             if (normalSkill) {
-                const iconData = getSkillIcon(normalSkill.name);
-                const icon = normalSkill.icon || iconData.emoji || '✨';
-                const color = iconData.color || this.skillColors[normalSkill.type] || '#ffffff';
-                
-                previewHTML += `
-                    <div class="preview-skill" data-skill-name="${normalSkill.name}" data-skill-type="normal">
-                        <div class="preview-skill-icon">
-                            <div class="skill-icon ${iconData.cssClass}" style="border-color: ${color}; box-shadow: 0 0 10px ${color}40;">${icon}</div>
-                        </div>
-                        <div class="preview-skill-key">${index + 1}</div>
-                    </div>
-                `;
+                battleSkills.push({
+                    ...normalSkill,
+                    keyDisplay: `${i + 1}`,
+                    isPrimary: false
+                });
             }
-        });
-        
-        // Add empty slots for remaining skills
-        const remainingSlots = this.maxNormalSkills - this.selectedNormalSkills.length;
-        for (let i = 0; i < remainingSlots; i++) {
-            previewHTML += `
-                <div class="preview-skill empty">
-                    <div class="preview-skill-icon">
-                        <div class="skill-icon">+</div>
-                    </div>
-                    <div class="preview-skill-key">${this.selectedNormalSkills.length + i + 1}</div>
-                </div>
-            `;
         }
         
-        previewHTML += '</div>';
+        // Add empty slots for remaining skills (always show 8 total slots - 1 primary + 7 normal)
+        const remainingSlots = 7 - this.selectedNormalSkills.length;
+        if (remainingSlots > 0) {
+            for (let i = 0; i < remainingSlots; i++) {
+                battleSkills.push({
+                    name: "Empty Slot",
+                    type: "empty",
+                    keyDisplay: `${this.selectedNormalSkills.length + i + 1}`,
+                    isPrimary: false,
+                    isEmpty: true
+                });
+            }
+        }
+        
+        // Create skill buttons exactly like SkillsUI
+        battleSkills.forEach((skill) => {
+            // Get skill icon data
+            const iconData = skill.isEmpty ? {} : (skill.isMore ? {} : getSkillIcon(skill.name));
+            const icon = skill.isEmpty ? "+" : (skill.isMore ? "..." : (skill.icon || iconData.emoji || '✨'));
+            
+            // Get color for border styling
+            const color = skill.isEmpty ? '#555555' : 
+                         (skill.isMore ? '#888888' : 
+                         (iconData.color || this.skillColors[skill.type] || '#ffffff'));
+            
+            // Create skill button HTML exactly like SkillsUI
+            const skillHTML = `
+                <div class="skill-button ${skill.isEmpty ? 'empty-slot' : ''} ${skill.isMore ? 'more-skills' : ''}" 
+                     data-skill-type="${skill.type}" 
+                     data-skill="${skill.name}" 
+                     style="border-color: ${color}; ${!skill.isEmpty && !skill.isMore ? `box-shadow: 0 0 10px ${color}40;` : ''}">
+                    ${!skill.isEmpty && !skill.isMore ? `<div class="skill-name">${skill.name}</div>` : ''}
+                    <div class="skill-icon ${skill.isEmpty || skill.isMore ? '' : iconData.cssClass}">${icon}</div>
+                    <div class="skill-key">${skill.keyDisplay}</div>
+                    <div class="skill-cooldown"></div>
+                </div>
+            `;
+            
+            previewHTML += skillHTML;
+        });
         
         // Set the preview HTML
         previewContainer.innerHTML = previewHTML;
@@ -596,13 +612,16 @@ export class SkillSelectionUI extends UIComponent {
             }
         }
         
-        // Get the selected skills
+        // Get the selected skills in the exact order they appear in the preview
         const selectedPrimaryAttack = PRIMARY_ATTACKS.find(skill => skill.name === this.selectedPrimaryAttack);
+        
+        // Get normal skills in the exact order they were selected (this order is maintained in the array)
         const selectedNormalSkills = this.selectedNormalSkills.map(skillName => 
             NORMAL_SKILLS.find(skill => skill.name === skillName)
         ).filter(skill => skill); // Filter out any undefined skills
         
-        // Combine into a single array
+        // Combine into a single array - primary attack first, then normal skills in their selected order
+        // This ensures the battle layout matches exactly what was shown in the preview
         const selectedSkills = [selectedPrimaryAttack, ...selectedNormalSkills];
         
         // Save to localStorage

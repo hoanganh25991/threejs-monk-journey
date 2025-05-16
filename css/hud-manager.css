@@ -303,7 +303,7 @@
 
 .skill-key {
     position: absolute;
-    bottom: 5px;
+    bottom: 10px; /* Increased from 5px to 10px to move it higher */
     right: 5px;
     background-color: rgba(0, 0, 0, 0.7);
     border: 1px solid #6b4c2a;
