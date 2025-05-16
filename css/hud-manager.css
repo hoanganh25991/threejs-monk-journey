@@ -39,6 +39,28 @@
     flex-direction: column;
     gap: 5px;
     opacity: 0.6;
+    transition: opacity 0.3s ease;
+    pointer-events: auto; /* Enable touch/click events */
+    cursor: pointer;
+}
+
+/* CSS-only solution for opacity change on hover/active */
+#player-stats-container:hover,
+#player-stats-container:active {
+    opacity: 1;
+    animation: fadeOut 3s forwards;
+    animation-delay: 3s; /* Start fading out after 3 seconds */
+    animation-play-state: running;
+}
+
+#player-stats-container:hover,
+#player-stats-container:active {
+    animation-play-state: paused; /* Pause the animation while hovering/active */
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0.6; }
 }
 
 #player-header {
@@ -402,6 +424,23 @@
     padding: 10px;
     border-radius: 5px;
     opacity: 0.6;
+    transition: opacity 0.3s ease;
+    pointer-events: auto; /* Enable touch/click events */
+    cursor: pointer;
+}
+
+/* CSS-only solution for opacity change on hover/active */
+#quest-log:hover,
+#quest-log:active {
+    opacity: 1;
+    animation: fadeOut 3s forwards;
+    animation-delay: 3s; /* Start fading out after 3 seconds */
+    animation-play-state: running;
+}
+
+#quest-log:hover,
+#quest-log:active {
+    animation-play-state: paused; /* Pause the animation while hovering/active */
 }
 
 #quest-log .quest-title {

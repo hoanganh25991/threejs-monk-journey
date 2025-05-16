@@ -38,10 +38,10 @@ export class LightingManager {
         directionalLight.castShadow = true;
         
         // IMPROVED: Configure shadow properties for better coverage and quality
-        directionalLight.shadow.mapSize.width = 4096; // Increased from 2048 for better shadow quality
-        directionalLight.shadow.mapSize.height = 4096; // Increased from 2048 for better shadow quality
+        directionalLight.shadow.mapSize.width = 1024; // Increased from 2048 for better shadow quality
+        directionalLight.shadow.mapSize.height = 1024; // Increased from 2048 for better shadow quality
         directionalLight.shadow.camera.near = 0.5;
-        directionalLight.shadow.camera.far = 1000; // Increased from 500 for better shadow distance
+        directionalLight.shadow.camera.far = 500; // Increased from 500 for better shadow distance
         directionalLight.shadow.camera.left = -200; // Increased from -100 for wider shadow coverage
         directionalLight.shadow.camera.right = 200; // Increased from 100 for wider shadow coverage
         directionalLight.shadow.camera.top = 200; // Increased from 100 for wider shadow coverage
