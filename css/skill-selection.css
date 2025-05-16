@@ -137,11 +137,17 @@
     flex: 1;
 }
 
-.skill-name {
+.skill-info .skill-name {
     font-size: 16px;
     font-weight: bold;
     color: #ffcc00;
     margin-bottom: 5px;
+    /* Override any absolute positioning from hud-manager.css */
+    position: static;
+    top: auto;
+    left: auto;
+    transform: none;
+    opacity: 1;
 }
 
 .skill-description {
@@ -359,7 +365,7 @@
         margin-right: 10px;
     }
     
-    .skill-name {
+    .skill-info .skill-name {
         font-size: 14px;
     }
     
