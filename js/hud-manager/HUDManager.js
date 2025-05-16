@@ -12,7 +12,7 @@ import { QuestLogUI } from './QuestLogUI.js';
 import { MiniMapUI } from './MiniMapUI.js';
 import { MainBackground } from '../menu-system/MainBackground.js';
 import { HomeButton } from './HomeUI.js';
-import { FullscreenButton } from './FullscreenButton.js';
+import { FullscreenButton } from './SkillSelectionButton.js';
 
 /**
  * HUD Manager
@@ -340,7 +340,7 @@ export class HUDManager {
         // Don't hide the settings button when paused if the settings menu is open
         const settingsMenu = document.getElementById('main-options-menu');
         const homeButton = document.getElementById('home-button');
-        const fullscreenButton = document.getElementById('fullscreen-button');
+        const fullscreenButton = document.getElementById('skill-selection-button');
         
         if (homeButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
             homeButton.style.display = 'none';
@@ -365,7 +365,7 @@ export class HUDManager {
             homeButton.style.display = 'block';
         }
         
-        const fullscreenButton = document.getElementById('fullscreen-button');
+        const fullscreenButton = document.getElementById('skill-selection-button');
         if (fullscreenButton) {
             fullscreenButton.style.display = 'block';
         }

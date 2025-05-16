@@ -11,7 +11,7 @@ export class FullscreenButton extends UIComponent {
      * @param {Game} game - The game instance
      */
     constructor(game) {
-        super('fullscreen-button', game);
+        super('skill-selection-button', game);
         this.isFullscreen = false;
         
         this.init();
