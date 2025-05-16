@@ -99,8 +99,8 @@ export class Game {
             
             // Initialize scene
             this.scene = new THREE.Scene();
-            this.scene.background = new THREE.Color(0x87CEEB); // Light blue sky color
-            this.scene.fog = new THREE.FogExp2(0x87CEEB, 0.002); // Reduced fog density
+            this.scene.background = new THREE.Color(0x5a6d7e); // Darker blue-gray sky color
+            // Fog will be managed by FogManager
             
             // Initialize camera
             this.camera = new THREE.PerspectiveCamera(

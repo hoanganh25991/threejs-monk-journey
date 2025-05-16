@@ -2,6 +2,32 @@
  * Renderer configuration for different quality levels
  * These settings are used by the PerformanceManager to adjust rendering quality
  */
+export const FOG_CONFIG = {
+    // Base fog settings
+    enabled: true,
+    type: 'exp2', // 'exp2' for exponential squared fog (more realistic), 'exp' for exponential, 'linear' for linear
+    color: 0x5a6d7e, // Darker blue-gray color for more atmospheric feel
+    density: 0.008, // Increased base fog density for darker atmosphere
+    near: 8, // For linear fog only - reduced distance where fog begins
+    far: 40, // For linear fog only - reduced distance where fog is fully opaque
+    
+    // Fog transition settings
+    transitionSpeed: 0.05, // How quickly fog color transitions between zones
+    
+    // Distance-based fog settings
+    minDistance: 15, // Reduced minimum distance before fog starts to appear
+    maxDistance: 80, // Reduced maximum distance where fog is fully opaque
+    
+    // Quality level adjustments
+    qualityMultipliers: {
+        ultra: 1.2, // Slightly increased fog density even at ultra quality
+        high: 1.3, // Increased fog density for high quality
+        medium: 1.5, // Increased fog density for medium quality
+        low: 1.8, // Increased fog density for low quality
+        minimal: 2.5 // Significantly increased fog density for minimal quality
+    }
+};
+
 export const RENDER_CONFIG = {
     // Ultra quality - for high-end devices
     ultra: {

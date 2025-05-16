@@ -5,6 +5,7 @@ import { EnvironmentManager } from './environment/EnvironmentManager.js';
 import { InteractiveObjectManager } from './interactive/InteractiveObjectManager.js';
 import { ZoneManager } from './zones/ZoneManager.js';
 import { LightingManager } from './lighting/LightingManager.js';
+import { FogManager } from './environment/FogManager.js';
 
 /**
  * Main World Manager class that coordinates all world-related systems
@@ -19,6 +20,7 @@ export class WorldManager {
         
         // Initialize managers
         this.lightingManager = new LightingManager(scene);
+        this.fogManager = new FogManager(scene, this);
         this.terrainManager = new TerrainManager(scene, this);
         this.structureManager = new StructureManager(scene, this);
         this.environmentManager = new EnvironmentManager(scene, this);
@@ -61,6 +63,7 @@ export class WorldManager {
         this.game = game;
         
         // Pass game reference to all managers
+        this.fogManager.setGame(game);
         this.terrainManager.setGame(game);
         this.structureManager.setGame(game);
         this.environmentManager.setGame(game);
@@ -77,6 +80,9 @@ export class WorldManager {
         
         // Initialize lighting
         this.lightingManager.init();
+        
+        // Initialize fog system
+        this.fogManager.initFog();
         
         // Initialize terrain
         await this.terrainManager.init();
@@ -169,35 +175,18 @@ export class WorldManager {
             }
         }
         
-        // Update fog density based on draw distance for atmospheric effect
-        if (this.game && this.game.scene.fog) {
-            // Adjust fog density inversely to draw distance
-            this.game.scene.fog.density = 0.002 * (1 / effectiveDrawDistance);
+        // Update fog using the FogManager
+        if (this.fogManager) {
+            // Get delta time from game if available
+            const deltaTime = this.game && this.game.clock ? this.game.clock.getDelta() : 0.016;
             
-            // Get the zone type at player position to adjust fog color
-            const zone = this.zoneManager.getZoneAt(playerPosition);
-            if (zone) {
-                // Adjust fog color based on zone
-                let fogColor = new THREE.Color(0xcccccc); // Default fog color
-                
-                if (zone.name === 'Forest') {
-                    fogColor = new THREE.Color(0x8ba58f); // Greenish fog for forest
-                } else if (zone.name === 'Desert') {
-                    fogColor = new THREE.Color(0xd6c6a5); // Tan fog for desert
-                } else if (zone.name === 'Mountains') {
-                    fogColor = new THREE.Color(0xb0c4de); // Light blue fog for mountains
-                } else if (zone.name === 'Swamp') {
-                    fogColor = new THREE.Color(0x6b8e23); // Dark green fog for swamp
-                } else if (zone.name === 'Dark Sanctum') {
-                    fogColor = new THREE.Color(0x301934); // Purple fog for dark sanctum
-                } else if (zone.name === 'Ruins') {
-                    fogColor = new THREE.Color(0x9c9c9c); // Gray fog for ruins
-                }
-                
-                // Apply fog color
-                if (this.game.scene.fog.color) {
-                    this.game.scene.fog.color.lerp(fogColor, 0.05); // Smooth transition
-                }
+            // Update fog with player position and delta time
+            this.fogManager.update(deltaTime, playerPosition);
+            
+            // Pass draw distance multiplier to fog manager for density adjustments
+            if (this.game && this.game.performanceManager) {
+                const drawDistanceMultiplier = this.game.performanceManager.getDrawDistanceMultiplier();
+                // The fog manager will handle density adjustments internally
             }
         }
         
