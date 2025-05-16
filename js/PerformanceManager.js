@@ -771,4 +771,12 @@ export class PerformanceManager {
         this.adaptiveQualityEnabled = !this.adaptiveQualityEnabled;
         return this.adaptiveQualityEnabled;
     }
+    
+    /**
+     * Get the current quality level
+     * @returns {string} The current quality level (ultra, high, medium, low, minimal)
+     */
+    getCurrentQualityLevel() {
+        return this.currentQuality;
+    }
 }

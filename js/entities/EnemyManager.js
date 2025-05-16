@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Enemy } from './Enemy.js';
-import { zoneEnemies, enemyTypes, bossTypes } from '../config/enemies.js';
+import { zoneEnemies, enemyTypes, bossTypes, zoneDifficultyMultipliers } from '../config/enemies.js';
 import { DROP_CHANCES, REGULAR_DROP_TABLE, BOSS_DROP_TABLE } from '../config/drops.js';
 
 export class EnemyManager {
@@ -28,6 +28,9 @@ export class EnemyManager {
         
         // Difficulty scaling
         this.difficultyMultiplier = 1.0;
+        
+        // Import zone difficulty multipliers from config
+        this.zoneDifficultyMultipliers = zoneDifficultyMultipliers;
     }
     
     setGame(game) {
@@ -200,10 +203,40 @@ export class EnemyManager {
         // Create a copy of the enemy type to modify
         const scaledType = { ...enemyType };
         
-        // Apply difficulty multiplier to stats
-        scaledType.health = Math.round(scaledType.health * this.difficultyMultiplier);
-        scaledType.damage = Math.round(scaledType.damage * this.difficultyMultiplier);
-        scaledType.experienceValue = Math.round(scaledType.experienceValue * this.difficultyMultiplier);
+        // Get player level for scaling
+        let playerLevel = 1;
+        if (this.game && this.game.player) {
+            playerLevel = this.game.player.getLevel();
+        }
+        
+        // Get current zone for zone-based difficulty
+        let currentZone = 'forest'; // Default zone
+        let zoneDifficultyMultiplier = 1.0;
+        
+        if (this.game && this.game.world) {
+            const playerPosition = this.player.getPosition();
+            const zone = this.game.world.getZoneAt(playerPosition);
+            
+            if (zone) {
+                currentZone = zone.name.toLowerCase();
+                // Get zone difficulty multiplier
+                zoneDifficultyMultiplier = this.zoneDifficultyMultipliers[currentZone] || 1.0;
+            }
+        }
+        
+        // Calculate level scaling factor (increases by 10% per player level)
+        const levelScalingFactor = 1.0 + (playerLevel * 0.1);
+        
+        // Calculate combined scaling factor
+        const combinedScalingFactor = this.difficultyMultiplier * levelScalingFactor * zoneDifficultyMultiplier;
+        
+        // Apply scaling to enemy stats
+        scaledType.health = Math.round(scaledType.health * combinedScalingFactor);
+        scaledType.damage = Math.round(scaledType.damage * combinedScalingFactor);
+        scaledType.experienceValue = Math.round(scaledType.experienceValue * combinedScalingFactor);
+        
+        // Store the original health for reference
+        scaledType.baseHealth = enemyType.health;
         
         return scaledType;
     }
