@@ -95,7 +95,8 @@
 
 /* Override overflow for model-preview tab */
 #model-preview-tab.tab-content,
-#skills-preview-tab.tab-content {
+#skills-preview-tab.tab-content,
+#enemy-preview-tab.tab-content {
     overflow: hidden;
 }
 

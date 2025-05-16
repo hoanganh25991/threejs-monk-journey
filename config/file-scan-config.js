@@ -30,6 +30,11 @@ const alwaysInclude = [
 // Files to exclude
 const excludeFiles = [
   'index.html',
+  'initial-loading-progress.js',
+  'orientation-lock.js',
+  'registration.js',
+  'main.js',
+  'service-worker.js',
   'node_modules',
   '.git',
   '.vscode',

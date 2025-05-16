@@ -16,6 +16,11 @@ export class BreathOfHeavenEffect extends SkillEffect {
         
         // We're removing the lingering effect and extending the main effect duration
         // No lingering effect properties needed
+        
+        // Movement speed boost properties
+        this.speedBoostDuration = 5; // 5 seconds of speed boost
+        this.speedBoostMultiplier = 2; // Triple speed (original + 2x boost = 3x total)
+        this.hasAppliedSpeedBoost = false;
     }
 
     /**
@@ -83,6 +88,9 @@ export class BreathOfHeavenEffect extends SkillEffect {
         if (this.skill.game && this.skill.game.audioManager) {
             this.skill.game.audioManager.playSound(this.skill.sounds.cast);
         }
+        
+        // Apply movement speed boost when skill is cast
+        this.applyMovementSpeedBoost();
         
         return effectGroup;
     }
@@ -278,5 +286,79 @@ export class BreathOfHeavenEffect extends SkillEffect {
     reset() {
         // Call parent reset for the main effect
         super.reset();
+        
+        // Reset speed boost flag
+        this.hasAppliedSpeedBoost = false;
+    }
+    
+    /**
+     * Apply movement speed boost to the player
+     * Triples the player's movement speed for 5 seconds
+     * Speed is capped at 3x the original value
+     */
+    applyMovementSpeedBoost() {
+        if (!this.skill.game || !this.skill.game.player || this.hasAppliedSpeedBoost) return;
+        
+        const player = this.skill.game.player;
+        if (player && player.stats) {
+            // Apply the movement speed boost
+            player.stats.addTemporaryBoost('movementSpeed', this.speedBoostMultiplier, this.speedBoostDuration);
+            
+            // Mark that we've applied the speed boost
+            this.hasAppliedSpeedBoost = true;
+            
+            // Show a notification if available
+            if (this.skill.game.uiManager && this.skill.game.uiManager.showNotification) {
+                this.skill.game.uiManager.showNotification(`Movement speed tripled for ${this.speedBoostDuration} seconds!`);
+            }
+            
+            // Create a visual effect for the speed boost
+            this.createSpeedBoostEffect();
+        }
+    }
+    
+    /**
+     * Create a visual effect for the speed boost
+     */
+    createSpeedBoostEffect() {
+        if (!this.skill.game || !this.skill.game.player) return;
+        
+        const player = this.skill.game.player;
+        if (player && player.getPosition) {
+            const playerPosition = player.getPosition();
+            if (playerPosition && this.effect) {
+                // Create a burst effect
+                const burstGeometry = new THREE.RingGeometry(0.5, 1.5, 32);
+                const burstMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x00ffff, // Cyan color for speed boost
+                    transparent: true,
+                    opacity: 0.7,
+                    side: THREE.DoubleSide
+                });
+                
+                const burstMesh = new THREE.Mesh(burstGeometry, burstMaterial);
+                burstMesh.rotation.x = Math.PI / 2; // Lay flat
+                burstMesh.position.y = 0.1; // Slightly above ground
+                
+                this.effect.add(burstMesh);
+                
+                // Animate the burst
+                const animateBurst = () => {
+                    burstMesh.scale.x += 0.2;
+                    burstMesh.scale.y += 0.2;
+                    burstMesh.material.opacity -= 0.05;
+                    
+                    if (burstMesh.material.opacity > 0) {
+                        requestAnimationFrame(animateBurst);
+                    } else {
+                        this.effect.remove(burstMesh);
+                        burstMesh.geometry.dispose();
+                        burstMaterial.dispose();
+                    }
+                };
+                
+                animateBurst();
+            }
+        }
     }
 }
