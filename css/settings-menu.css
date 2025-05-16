@@ -304,6 +304,83 @@
     margin: 10px 0;
 }
 
+/* Camera Info Panel */
+.camera-info-panel {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 8px;
+    padding: 10px;
+    color: white;
+    font-size: 12px;
+    z-index: 10;
+    width: 250px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 204, 0, 0.3);
+}
+
+.camera-info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.camera-info-section {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
+}
+
+.camera-info-section:last-child {
+    border-bottom: none;
+}
+
+.camera-info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.camera-info-label {
+    font-weight: bold;
+    color: rgba(255, 204, 0, 0.8);
+}
+
+.camera-info-value {
+    font-family: monospace;
+}
+
+.camera-info-button {
+    background-color: rgba(255, 204, 0, 0.7);
+    color: #4a3000;
+    border: 1px solid rgba(255, 230, 150, 0.8);
+    padding: 5px 10px;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.camera-info-button:hover {
+    background-color: rgba(255, 215, 0, 0.8);
+}
+
+.camera-info-toggle {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 5px 10px;
+    margin-top: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
 /* Mini Model Preview */
 #model-preview-mini-container {
     margin-top: 20px;
@@ -349,6 +426,86 @@
     padding-left: 20px;
     border-left: 1px solid rgba(255, 255, 255, 0.1);
     overflow-y: auto;
+}
+
+/* Enemy Preview Layout */
+.enemy-preview-layout {
+    display: flex;
+    height: calc(100% - 50px);
+}
+
+.enemy-preview-section {
+    flex: 2;
+    padding-right: 20px;
+}
+
+#enemy-preview-container {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    position: relative;
+}
+
+#enemy-preview-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 400px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.enemy-preview-controls-section {
+    flex: 1;
+    padding-left: 20px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-y: auto;
+}
+
+#enemy-preview-selection-container,
+#enemy-animation-selection-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#enemy-preview-selection-container .settings-select,
+#enemy-animation-selection-container .settings-select {
+    flex: 1;
+}
+
+/* Enemy Details Styling */
+.enemy-details-info {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+.enemy-detail {
+    display: flex;
+    margin-bottom: 10px;
+    align-items: flex-start;
+}
+
+.enemy-detail-label {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-right: 15px;
+    min-width: 100px;
+    text-align: right;
+    font-weight: bold;
+}
+
+.enemy-detail-value {
+    flex: 1;
+    color: white;
+    padding: 5px 0;
 }
 
 #skills-preview-selection-container {
@@ -397,7 +554,9 @@
 #prev-anim-button, #next-anim-button,
 #prev-model-preview-button, #next-model-preview-button,
 #prev-anim-preview-button, #next-anim-preview-button,
-#prev-skill-button, #next-skill-button {
+#prev-skill-button, #next-skill-button,
+#prev-enemy-button, #next-enemy-button,
+#prev-enemy-anim-button, #next-enemy-anim-button {
     background-color: rgba(255, 204, 0, 0.7);
     color: #4a3000;
     border: 2px solid rgba(255, 230, 150, 0.8);
@@ -421,7 +580,9 @@
 #prev-anim-button:hover, #next-anim-button:hover,
 #prev-model-preview-button:hover, #next-model-preview-button:hover,
 #prev-anim-preview-button:hover, #next-anim-preview-button:hover,
-#prev-skill-button:hover, #next-skill-button:hover {
+#prev-skill-button:hover, #next-skill-button:hover,
+#prev-enemy-button:hover, #next-enemy-button:hover,
+#prev-enemy-anim-button:hover, #next-enemy-anim-button:hover {
     background-color: rgba(255, 215, 0, 0.8);
     transform: translateY(-2px);
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
@@ -432,7 +593,9 @@
 #prev-anim-button:active, #next-anim-button:active,
 #prev-model-preview-button:active, #next-model-preview-button:active,
 #prev-anim-preview-button:active, #next-anim-preview-button:active,
-#prev-skill-button:active, #next-skill-button:active {
+#prev-skill-button:active, #next-skill-button:active,
+#prev-enemy-button:active, #next-enemy-button:active,
+#prev-enemy-anim-button:active, #next-enemy-anim-button:active {
     transform: translateY(1px);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
