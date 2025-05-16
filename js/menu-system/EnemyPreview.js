@@ -176,74 +176,193 @@ export class EnemyPreview {
         
         this.animations = {};
         
-        // Determine model path based on enemy type
-        const modelPath = this.getModelPathForEnemy(enemy);
+        // Skip trying to load models and just create a simple placeholder
+        // This is a temporary solution until we have proper models
+        this.createSimplePlaceholder(enemy);
+        console.debug(`EnemyPreview: Using simple placeholder for ${enemy.name} instead of loading model`);
+    }
+    
+    /**
+     * Create a simple placeholder model for an enemy
+     * @param {Object} enemy - The enemy object
+     */
+    createSimplePlaceholder(enemy) {
+        console.debug(`EnemyPreview: Creating simple placeholder for ${enemy.name}`);
         
-        // Load the model
-        const loader = new GLTFLoader();
-        loader.load(
-            modelPath,
-            (gltf) => {
-                try {
-                    console.debug(`EnemyPreview: Loaded model for ${enemy.name}`);
-                    
-                    // Add the model to the scene
-                    this.currentModel = gltf.scene;
-                    this.currentModel.traverse((child) => {
-                        if (child.isMesh) {
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                        }
-                    });
-                    
-                    // Scale and position the model appropriately
-                    this.currentModel.scale.set(1, 1, 1);
-                    this.currentModel.position.set(0, 0, 0);
-                    this.scene.add(this.currentModel);
-                    
-                    // Set up animations
-                    if (gltf.animations && gltf.animations.length > 0) {
-                        this.animationMixer = new THREE.AnimationMixer(this.currentModel);
-                        
-                        // Store all animations
-                        gltf.animations.forEach((animation) => {
-                            // Ensure animation has a name
-                            if (!animation.name || animation.name === '') {
-                                animation.name = `animation_${gltf.animations.indexOf(animation)}`;
-                                console.debug(`EnemyPreview: Unnamed animation detected, assigned name: ${animation.name}`);
-                            }
-                            
-                            // Create and store the animation action
-                            const action = this.animationMixer.clipAction(animation);
-                            this.animations[animation.name] = action;
-                        });
-                        
-                        // Log all available animations
-                        const animationNames = Object.keys(this.animations);
-                        console.debug(`EnemyPreview: Loaded ${animationNames.length} animations:`, animationNames.join(', '));
-                        
-                        // Play the first animation by default
-                        if (animationNames.length > 0) {
-                            this.playAnimation(animationNames[0]);
-                        }
-                    } else {
-                        console.debug(`EnemyPreview: No animations found for ${enemy.name}`);
-                    }
-                    
-                    // Reset camera position
-                    this.resetCamera();
-                } catch (error) {
-                    console.error(`EnemyPreview: Error processing model for ${enemy.name}:`, error);
-                }
-            },
-            (xhr) => {
-                const percentComplete = (xhr.loaded / xhr.total) * 100;
-                console.debug(`EnemyPreview: Loading model ${enemy.name}: ${Math.round(percentComplete)}% complete`);
-            },
-            (error) => {
-                console.error(`EnemyPreview: Error loading model for ${enemy.name}:`, error);
-            }
+        // Create a group to hold all parts of the model
+        this.currentModel = new THREE.Group();
+        
+        // Get enemy color or use default
+        const enemyColor = enemy.color || 0xcccccc;
+        
+        // Create a body (cube)
+        const bodyGeometry = new THREE.BoxGeometry(1, 1.5, 0.8);
+        const bodyMaterial = new THREE.MeshStandardMaterial({ 
+            color: enemyColor,
+            roughness: 0.7,
+            metalness: 0.3
+        });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.position.y = 0.75;
+        body.castShadow = true;
+        body.receiveShadow = true;
+        this.currentModel.add(body);
+        
+        // Create a head (sphere)
+        const headGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+        const headMaterial = new THREE.MeshStandardMaterial({ 
+            color: enemyColor,
+            roughness: 0.7,
+            metalness: 0.3
+        });
+        const head = new THREE.Mesh(headGeometry, headMaterial);
+        head.position.y = 1.85;
+        head.castShadow = true;
+        head.receiveShadow = true;
+        this.currentModel.add(head);
+        
+        // Create arms
+        const armGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
+        const armMaterial = new THREE.MeshStandardMaterial({ 
+            color: enemyColor,
+            roughness: 0.7,
+            metalness: 0.3
+        });
+        
+        // Left arm
+        const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+        leftArm.position.set(-0.65, 0.75, 0);
+        leftArm.castShadow = true;
+        leftArm.receiveShadow = true;
+        this.currentModel.add(leftArm);
+        
+        // Right arm
+        const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+        rightArm.position.set(0.65, 0.75, 0);
+        rightArm.castShadow = true;
+        rightArm.receiveShadow = true;
+        this.currentModel.add(rightArm);
+        
+        // Create legs
+        const legGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
+        const legMaterial = new THREE.MeshStandardMaterial({ 
+            color: enemyColor,
+            roughness: 0.7,
+            metalness: 0.3
+        });
+        
+        // Left leg
+        const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+        leftLeg.position.set(-0.3, -0.4, 0);
+        leftLeg.castShadow = true;
+        leftLeg.receiveShadow = true;
+        this.currentModel.add(leftLeg);
+        
+        // Right leg
+        const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+        rightLeg.position.set(0.3, -0.4, 0);
+        rightLeg.castShadow = true;
+        rightLeg.receiveShadow = true;
+        this.currentModel.add(rightLeg);
+        
+        // Add eyes (for all enemies)
+        const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+        const eyeMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0xff0000,  // Red eyes for all enemies
+            emissive: 0xff0000,
+            emissiveIntensity: 0.5
+        });
+        
+        // Left eye
+        const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        leftEye.position.set(-0.15, 1.9, 0.3);
+        this.currentModel.add(leftEye);
+        
+        // Right eye
+        const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        rightEye.position.set(0.15, 1.9, 0.3);
+        this.currentModel.add(rightEye);
+        
+        // Add a nameplate above the model
+        this.addNameplate(enemy.name);
+        
+        // Add the model to the scene
+        this.scene.add(this.currentModel);
+        
+        // Reset camera position
+        this.resetCamera();
+        
+        // Create a simple animation for the placeholder
+        this.createPlaceholderAnimation();
+    }
+    
+    /**
+     * Add a nameplate above the model
+     * @param {string} name - The name to display
+     */
+    addNameplate(name) {
+        // Create a canvas for the nameplate
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 256;
+        canvas.height = 64;
+        
+        // Fill with transparent background
+        context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Add text
+        context.font = 'bold 24px Arial';
+        context.fillStyle = 'white';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText(name, canvas.width / 2, canvas.height / 2);
+        
+        // Create texture from canvas
+        const texture = new THREE.CanvasTexture(canvas);
+        
+        // Create a plane for the nameplate
+        const geometry = new THREE.PlaneGeometry(2, 0.5);
+        const material = new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: true,
+            side: THREE.DoubleSide
+        });
+        
+        const nameplate = new THREE.Mesh(geometry, material);
+        nameplate.position.set(0, 2.5, 0);
+        nameplate.rotation.x = -Math.PI / 8; // Tilt slightly for better visibility
+        
+        // Add to the model
+        this.currentModel.add(nameplate);
+    }
+    
+    /**
+     * Create a simple animation for the placeholder model
+     */
+    createPlaceholderAnimation() {
+        // Create a simple animation mixer
+        this.animationMixer = new THREE.AnimationMixer(this.currentModel);
+        
+        // Create a simple up and down animation
+        const positionKF = new THREE.VectorKeyframeTrack(
+            '.position[y]', 
+            [0, 1, 2],     // times
+            [0, 0.2, 0]    // values - slight up and down movement
         );
+        
+        // Create the animation clip
+        const clip = new THREE.AnimationClip('idle', 2, [positionKF]);
+        
+        // Create the animation action
+        const action = this.animationMixer.clipAction(clip);
+        action.setLoop(THREE.LoopRepeat);
+        
+        // Store the animation
+        this.animations['idle'] = action;
+        
+        // Play the animation
+        this.playAnimation('idle');
     }
     
     /**
