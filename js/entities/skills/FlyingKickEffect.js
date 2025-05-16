@@ -7,11 +7,11 @@ import { SkillEffect } from './SkillEffect.js';
 export class FlyingKickEffect extends SkillEffect {
     constructor(skill) {
         super(skill);
-        this.kickSpeed = 20; // Units per second
+        this.kickSpeed = skill.kickSpeed || 20; // Use skill config or default to 20 units per second
+        this.range = skill.maxDistance || 15; // Use skill config or default to 15 units
         this.initialPosition = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         this.distanceTraveled = 0;
-        this.maxDistance = 15; // Maximum distance to travel
     }
 
     /**
@@ -171,7 +171,7 @@ export class FlyingKickEffect extends SkillEffect {
         this.elapsedTime += delta;
         
         // Check if effect has expired or reached max distance
-        if (this.elapsedTime >= this.skill.duration || this.distanceTraveled >= this.maxDistance) {
+        if (this.elapsedTime >= this.skill.duration || this.distanceTraveled >= this.range) {
             this.isActive = false;
             this.dispose();
             return;
@@ -231,7 +231,7 @@ export class FlyingKickEffect extends SkillEffect {
         }
         
         // Adjust trail opacity based on distance traveled
-        const trailProgress = this.distanceTraveled / this.maxDistance;
+        const trailProgress = this.distanceTraveled / this.range;
         const trailOpacity = 1 - (trailProgress * 0.5); // Fade to 50% opacity at end
         
         // Apply opacity to all trail elements

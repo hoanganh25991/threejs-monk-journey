@@ -202,7 +202,12 @@ export class PlayerSkills extends IPlayerSkills {
                 const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
                 
                 // Add skill effect to scene
-                this.scene.add(skillEffect);
+                if (skillEffect) {
+                    console.debug(`Adding ${skillTemplate.name} teleport effect to scene`);
+                    this.scene.add(skillEffect);
+                } else {
+                    console.error(`Failed to create teleport effect for ${skillTemplate.name}`);
+                }
                 
                 // Play teleport sound
                 if (this.game && this.game.audioManager) {
@@ -267,7 +272,12 @@ export class PlayerSkills extends IPlayerSkills {
             const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
             
             // Add skill effect to scene
-            this.scene.add(skillEffect);
+            if (skillEffect) {
+                console.debug(`Adding ${skillTemplate.name} effect to scene`);
+                this.scene.add(skillEffect);
+            } else {
+                console.error(`Failed to create effect for ${skillTemplate.name}`);
+            }
             
             // Log enemy was auto-targeted (only if an enemy was found)
             if (targetEnemy) {

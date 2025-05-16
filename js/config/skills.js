@@ -242,10 +242,11 @@ export const NORMAL_SKILLS = [
         type: 'dash',
         damage: 20,
         manaCost: 20,
-        cooldown: 5,
-        range: 15,
+        cooldown: 0.5,
+        range: 30,
         radius: 2,
-        duration: 1,
+        duration: 2,
+        kickSpeed: 0.1, // Units per second
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
