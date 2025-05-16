@@ -232,8 +232,8 @@
 
 .skill-button .skill-key {
     position: absolute;
-    bottom: 5px; /* Changed from -2px to 5px to move it higher and fully visible */
-    right: 5px; /* Changed from -2px to 5px for better positioning */
+    bottom: 0px;
+    right: 2px;
     background-color: rgba(0, 0, 0, 0.7);
     border: 1px solid #6b4c2a;
     border-radius: 3px;
