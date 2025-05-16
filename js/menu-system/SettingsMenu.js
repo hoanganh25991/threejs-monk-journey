@@ -5,9 +5,11 @@
 
 import { ModelPreview } from './ModelPreview.js';
 import { SkillPreview } from './SkillPreview.js';
+import { EnemyPreview } from './EnemyPreview.js';
 import { CHARACTER_MODELS } from '../config/player-models.js';
 import { UIComponent } from '../UIComponent.js';
 import { SKILLS } from '../config/skills.js';
+import { enemyTypes, bossTypes } from '../config/enemies.js';
 import { STORAGE_KEYS } from '../config/storage-keys.js';
 
 export class SettingsMenu extends UIComponent {
@@ -76,9 +78,23 @@ export class SettingsMenu extends UIComponent {
         this.nextSkillButton = document.getElementById('next-skill-button');
         this.skillDetailsContainer = document.getElementById('skill-details');
         
+        // Enemy preview elements
+        this.enemyPreviewContainer = document.getElementById('enemy-preview-container');
+        this.enemyPreviewSelect = document.getElementById('enemy-preview-select');
+        this.prevEnemyButton = document.getElementById('prev-enemy-button');
+        this.nextEnemyButton = document.getElementById('next-enemy-button');
+        this.enemyAnimationSelect = document.getElementById('enemy-animation-select');
+        this.prevEnemyAnimButton = document.getElementById('prev-enemy-anim-button');
+        this.nextEnemyAnimButton = document.getElementById('next-enemy-anim-button');
+        this.enemyDetailsContainer = document.getElementById('enemy-details');
+        this.resetEnemyCameraButton = document.getElementById('reset-enemy-camera-button');
+        
         this.skillPreview = null;
         this.currentSkill = null;
         this.currentSkillEffect = null;
+        
+        this.enemyPreview = null;
+        this.currentEnemy = null;
         
         this.modelPreview = null;
         this.modelPreviewFullscreen = null;
@@ -95,6 +111,7 @@ export class SettingsMenu extends UIComponent {
     init() {
         this.initializeSettings();
         this.initializeTabs();
+        this.initializeEnemyPreview();
         return true;
     }
     
@@ -146,6 +163,17 @@ export class SettingsMenu extends UIComponent {
                             this.playCurrentSkillEffect();
                         }, 50);
                     }
+                    
+                    // Handle enemy preview resizing based on tab
+                    if (tabId === 'enemy-preview' && this.enemyPreview) {
+                        // Use setTimeout to ensure the tab is visible before resizing
+                        setTimeout(() => {
+                            this.resizeEnemyPreview();
+                            
+                            // Force restart the animation when the enemy preview tab is clicked
+                            this.enemyPreview.forceRestartAnimation();
+                        }, 50);
+                    }
                 }
             });
         });
@@ -190,6 +218,24 @@ export class SettingsMenu extends UIComponent {
     }
     
     /**
+     * Resize the enemy preview to fit the container
+     * @private
+     */
+    resizeEnemyPreview() {
+        if (!this.enemyPreview) return;
+        
+        const container = document.querySelector('.enemy-preview-section');
+        if (!container) return;
+        
+        // Get the container dimensions
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        
+        // Update the enemy preview size
+        this.enemyPreview.setSize(width, height);
+    }
+    
+    /**
      * Initialize skills preview
      * @private
      */
@@ -202,6 +248,24 @@ export class SettingsMenu extends UIComponent {
         
         // Initialize the skills preview container
         this.initializeSkillsPreviewContainer();
+    }
+    
+    /**
+     * Initialize enemy preview
+     * @private
+     */
+    initializeEnemyPreview() {
+        // Initialize enemy select dropdown
+        this.initializeEnemyOptions();
+        
+        // Set up navigation buttons for enemy preview
+        this.setupEnemyNavigationButtons();
+        
+        // Initialize the enemy preview container
+        this.initializeEnemyPreviewContainer();
+        
+        // Initialize enemy animation options
+        this.initializeEnemyAnimationOptions();
     }
     
     /**
@@ -299,6 +363,247 @@ export class SettingsMenu extends UIComponent {
             const width = previewSection.clientWidth;
             const height = previewSection.clientHeight;
             this.skillPreview.setSize(width, height);
+        }
+    }
+    
+    /**
+     * Initialize enemy options in the select element
+     * @private
+     */
+    initializeEnemyOptions() {
+        if (!this.enemyPreviewSelect) return;
+        
+        // Clear existing options
+        while (this.enemyPreviewSelect.options.length > 0) {
+            this.enemyPreviewSelect.remove(0);
+        }
+        
+        // Combine regular enemies and bosses
+        const allEnemies = [...enemyTypes, ...bossTypes];
+        
+        // Add enemy options
+        allEnemies.forEach((enemy, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = enemy.name;
+            option.title = `${enemy.name} - ${enemy.type}`;
+            this.enemyPreviewSelect.appendChild(option);
+        });
+        
+        // Get the stored selected enemy index or default to 0
+        let selectedEnemyIndex = 0;
+        const storedEnemyIndex = localStorage.getItem(STORAGE_KEYS.SELECTED_ENEMY_PREVIEW);
+        
+        if (storedEnemyIndex !== null && !isNaN(parseInt(storedEnemyIndex)) && 
+            parseInt(storedEnemyIndex) >= 0 && parseInt(storedEnemyIndex) < allEnemies.length) {
+            selectedEnemyIndex = parseInt(storedEnemyIndex);
+        }
+        
+        // Set the selected enemy
+        if (allEnemies.length > 0) {
+            this.enemyPreviewSelect.selectedIndex = selectedEnemyIndex;
+            this.updateEnemyDetails(selectedEnemyIndex);
+        }
+        
+        // Add change event
+        this.enemyPreviewSelect.addEventListener('change', () => {
+            const enemyIndex = parseInt(this.enemyPreviewSelect.value);
+            this.updateEnemyDetails(enemyIndex);
+            
+            // Save the selected enemy index to localStorage
+            localStorage.setItem(STORAGE_KEYS.SELECTED_ENEMY_PREVIEW, enemyIndex);
+            
+            // Load the enemy model
+            if (this.enemyPreview) {
+                const allEnemies = [...enemyTypes, ...bossTypes];
+                this.enemyPreview.loadEnemyModel(allEnemies[enemyIndex]);
+            }
+        });
+    }
+    
+    /**
+     * Set up navigation buttons for enemy preview
+     * @private
+     */
+    setupEnemyNavigationButtons() {
+        const allEnemies = [...enemyTypes, ...bossTypes];
+        
+        // Add event listeners for prev/next enemy buttons
+        if (this.prevEnemyButton && this.enemyPreviewSelect) {
+            this.prevEnemyButton.addEventListener('click', () => {
+                const currentIndex = this.enemyPreviewSelect.selectedIndex;
+                const newIndex = (currentIndex > 0) ? currentIndex - 1 : allEnemies.length - 1;
+                this.enemyPreviewSelect.selectedIndex = newIndex;
+                this.updateEnemyDetails(newIndex);
+                
+                // Save the selected enemy index to localStorage
+                localStorage.setItem(STORAGE_KEYS.SELECTED_ENEMY_PREVIEW, newIndex);
+                
+                // Load the enemy model
+                if (this.enemyPreview) {
+                    this.enemyPreview.loadEnemyModel(allEnemies[newIndex]);
+                }
+            });
+        }
+        
+        if (this.nextEnemyButton && this.enemyPreviewSelect) {
+            this.nextEnemyButton.addEventListener('click', () => {
+                const currentIndex = this.enemyPreviewSelect.selectedIndex;
+                const newIndex = (currentIndex < allEnemies.length - 1) ? currentIndex + 1 : 0;
+                this.enemyPreviewSelect.selectedIndex = newIndex;
+                this.updateEnemyDetails(newIndex);
+                
+                // Save the selected enemy index to localStorage
+                localStorage.setItem(STORAGE_KEYS.SELECTED_ENEMY_PREVIEW, newIndex);
+                
+                // Load the enemy model
+                if (this.enemyPreview) {
+                    this.enemyPreview.loadEnemyModel(allEnemies[newIndex]);
+                }
+            });
+        }
+    }
+    
+    /**
+     * Initialize the enemy preview container
+     * @private
+     */
+    initializeEnemyPreviewContainer() {
+        // Get the enemy preview container
+        const container = document.getElementById('enemy-preview-container');
+        if (!container) return;
+        
+        // Create a new EnemyPreview instance
+        this.enemyPreview = new EnemyPreview(container);
+        
+        // Initialize the preview
+        this.enemyPreview.init();
+        
+        // Set initial size
+        const previewSection = document.querySelector('.enemy-preview-section');
+        if (previewSection) {
+            const width = previewSection.clientWidth;
+            const height = previewSection.clientHeight;
+            this.enemyPreview.setSize(width, height);
+        }
+        
+        // Add reset camera button functionality
+        if (this.resetEnemyCameraButton) {
+            this.resetEnemyCameraButton.addEventListener('click', () => {
+                if (this.enemyPreview) {
+                    this.enemyPreview.resetCamera();
+                }
+            });
+        }
+        
+        // Load the initial enemy
+        const allEnemies = [...enemyTypes, ...bossTypes];
+        const selectedEnemyIndex = this.enemyPreviewSelect ? this.enemyPreviewSelect.selectedIndex : 0;
+        if (allEnemies.length > 0 && selectedEnemyIndex >= 0 && selectedEnemyIndex < allEnemies.length) {
+            this.enemyPreview.loadEnemyModel(allEnemies[selectedEnemyIndex]);
+        }
+    }
+    
+    /**
+     * Initialize enemy animation options
+     * @private
+     */
+    initializeEnemyAnimationOptions() {
+        if (!this.enemyAnimationSelect) return;
+        
+        // Clear existing options
+        while (this.enemyAnimationSelect.options.length > 0) {
+            this.enemyAnimationSelect.remove(0);
+        }
+        
+        // Add default animations
+        const defaultAnimations = ['idle', 'walk', 'attack', 'hit', 'death'];
+        defaultAnimations.forEach((animation, index) => {
+            const option = document.createElement('option');
+            option.value = animation;
+            option.textContent = animation.charAt(0).toUpperCase() + animation.slice(1);
+            this.enemyAnimationSelect.appendChild(option);
+        });
+        
+        // Add change event
+        this.enemyAnimationSelect.addEventListener('change', () => {
+            const animationName = this.enemyAnimationSelect.value;
+            if (this.enemyPreview) {
+                this.enemyPreview.playAnimation(animationName);
+            }
+        });
+        
+        // Add event listeners for prev/next animation buttons
+        if (this.prevEnemyAnimButton && this.enemyAnimationSelect) {
+            this.prevEnemyAnimButton.addEventListener('click', () => {
+                const currentIndex = this.enemyAnimationSelect.selectedIndex;
+                const newIndex = (currentIndex > 0) ? currentIndex - 1 : this.enemyAnimationSelect.options.length - 1;
+                this.enemyAnimationSelect.selectedIndex = newIndex;
+                
+                // Play the selected animation
+                const animationName = this.enemyAnimationSelect.value;
+                if (this.enemyPreview) {
+                    this.enemyPreview.playAnimation(animationName);
+                }
+            });
+        }
+        
+        if (this.nextEnemyAnimButton && this.enemyAnimationSelect) {
+            this.nextEnemyAnimButton.addEventListener('click', () => {
+                const currentIndex = this.enemyAnimationSelect.selectedIndex;
+                const newIndex = (currentIndex < this.enemyAnimationSelect.options.length - 1) ? currentIndex + 1 : 0;
+                this.enemyAnimationSelect.selectedIndex = newIndex;
+                
+                // Play the selected animation
+                const animationName = this.enemyAnimationSelect.value;
+                if (this.enemyPreview) {
+                    this.enemyPreview.playAnimation(animationName);
+                }
+            });
+        }
+    }
+    
+    /**
+     * Update enemy details based on the selected enemy
+     * @param {number} enemyIndex - The index of the selected enemy
+     * @private
+     */
+    updateEnemyDetails(enemyIndex) {
+        if (!this.enemyDetailsContainer) return;
+        
+        // Get the selected enemy
+        const allEnemies = [...enemyTypes, ...bossTypes];
+        const enemy = allEnemies[enemyIndex];
+        if (!enemy) return;
+        
+        // Store the current enemy
+        this.currentEnemy = enemy;
+        
+        // Clear existing content
+        this.enemyDetailsContainer.innerHTML = '';
+        
+        // Create enemy details HTML
+        const detailsHTML = `
+            <div class="enemy-detail"><span class="enemy-detail-label">Name:</span> <span class="enemy-detail-value">${enemy.name}</span></div>
+            <div class="enemy-detail"><span class="enemy-detail-label">Type:</span> <span class="enemy-detail-value">${enemy.type}</span></div>
+            <div class="enemy-detail"><span class="enemy-detail-label">Health:</span> <span class="enemy-detail-value">${enemy.health}</span></div>
+            <div class="enemy-detail"><span class="enemy-detail-label">Damage:</span> <span class="enemy-detail-value">${enemy.damage}</span></div>
+            <div class="enemy-detail"><span class="enemy-detail-label">Speed:</span> <span class="enemy-detail-value">${enemy.speed}</span></div>
+            <div class="enemy-detail"><span class="enemy-detail-label">Attack Range:</span> <span class="enemy-detail-value">${enemy.attackRange}</span></div>
+            <div class="enemy-detail"><span class="enemy-detail-label">Attack Speed:</span> <span class="enemy-detail-value">${enemy.attackSpeed}</span></div>
+            <div class="enemy-detail"><span class="enemy-detail-label">XP Value:</span> <span class="enemy-detail-value">${enemy.experienceValue}</span></div>
+            <div class="enemy-detail"><span class="enemy-detail-label">Behavior:</span> <span class="enemy-detail-value">${enemy.behavior}</span></div>
+            <div class="enemy-detail"><span class="enemy-detail-label">Zone:</span> <span class="enemy-detail-value">${enemy.zone}</span></div>
+        `;
+        
+        // Add abilities if available
+        if (enemy.abilities && enemy.abilities.length > 0) {
+            const abilitiesHTML = `
+                <div class="enemy-detail"><span class="enemy-detail-label">Abilities:</span> <span class="enemy-detail-value">${enemy.abilities.join(', ')}</span></div>
+            `;
+            this.enemyDetailsContainer.innerHTML = detailsHTML + abilitiesHTML;
+        } else {
+            this.enemyDetailsContainer.innerHTML = detailsHTML;
         }
     }
     

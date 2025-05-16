@@ -121,12 +121,13 @@ export class WorldManager {
         // Update environment objects with potentially reduced draw distance
         this.environmentManager.updateForPlayer(playerPosition, effectiveDrawDistance);
         
-        // ADDED: Ensure structures are generated for nearby chunks
+        // IMPROVED: Ensure structures are generated for a larger area around the player
         // This helps fix the issue where structures weren't showing up when moving away from center
         if (this.structureManager) {
-            // Generate structures for the player's current chunk and adjacent chunks
-            for (let x = playerChunkX - 1; x <= playerChunkX + 1; x++) {
-                for (let z = playerChunkZ - 1; z <= playerChunkZ + 1; z++) {
+            // Generate structures for a wider area around the player (increased from 1 to 3 chunks in each direction)
+            const structureGenDistance = 3; // Increased from 1 to 3
+            for (let x = playerChunkX - structureGenDistance; x <= playerChunkX + structureGenDistance; x++) {
+                for (let z = playerChunkZ - structureGenDistance; z <= playerChunkZ + structureGenDistance; z++) {
                     const chunkKey = `${x},${z}`;
                     if (!this.structureManager.structuresPlaced[chunkKey]) {
                         this.structureManager.generateStructuresForChunk(x, z);
@@ -206,9 +207,9 @@ export class WorldManager {
                 return;
             }
             
-            // FIXED: Increased view distance for structures to ensure they're visible from farther away
-            // This fixes the issue where structures like towers and villages weren't showing up when moving away
-            const maxViewDistance = this.terrainManager.terrainChunkViewDistance + 4; // Increased from +2 to +4
+            // FIXED: Significantly increased view distance for structures to ensure they're visible from much farther away
+            // This fixes the issue where structures completely disappear when moving far away
+            const maxViewDistance = this.terrainManager.terrainChunkViewDistance + 10; // Increased from +4 to +10
             
             // Check all structure chunks
             for (const chunkKey in this.structureManager.structuresPlaced) {

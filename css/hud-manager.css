@@ -519,12 +519,42 @@
     padding: 0; /* Remove padding */
 }
 
+/* Hide the checkbox but keep it accessible */
+.mini-map-opacity-toggle {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* Make the label cover the entire mini-map area */
+.mini-map-label {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
 #mini-map-canvas {
     border-radius: 50%;
     display: block;
     width: 100%;
     height: 100%;
     opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+/* When checkbox is checked, increase opacity of the canvas */
+.mini-map-opacity-toggle:checked ~ #mini-map #mini-map-canvas {
+    opacity: 1;
+    transition: opacity 0.2s ease-in;
+}
+
+/* Add a transition for when the checkbox becomes unchecked */
+.mini-map-opacity-toggle:not(:checked) ~ #mini-map #mini-map-canvas {
+    transition: opacity 0.5s ease-out;
 }
 
 /* Update Notification */

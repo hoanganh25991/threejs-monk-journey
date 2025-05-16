@@ -26,7 +26,18 @@ export function playAnimation(animations, currentAnimation, primaryName, fallbac
     // Get all available animation names
     const allAnimNames = Object.keys(animations);
     let animationToPlay = null;
-    
+
+    if (primaryName == "idle" || primaryName == "walking") {
+        animationToPlay = animations[primaryName];
+        if (!animationToPlay) {
+            return { 
+                success: false, 
+                animation: null, 
+                currentAnimation: currentAnimation 
+            };
+        }
+    }
+
     // Check if primaryName is a direct animation name
     if (primaryName && animations[primaryName]) {
         animationToPlay = animations[primaryName];

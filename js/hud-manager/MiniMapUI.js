@@ -43,8 +43,11 @@ export class MiniMapUI extends UIComponent {
                 <span id="mini-map-title">Mini Map</span>
                 <button id="mini-map-toggle-btn" class="mini-map-toggle-btn" type="button">Toggle</button>
             </div>
+            <input type="checkbox" id="mini-map-opacity-toggle" class="mini-map-opacity-toggle">
             <div id="mini-map">
-                <canvas id="mini-map-canvas" width="${this.canvasSize}" height="${this.canvasSize}"></canvas>
+                <label for="mini-map-opacity-toggle" class="mini-map-label">
+                    <canvas id="mini-map-canvas" width="${this.canvasSize}" height="${this.canvasSize}"></canvas>
+                </label>
             </div>
         `;
         
@@ -66,6 +69,41 @@ export class MiniMapUI extends UIComponent {
             });
         } else {
             console.error('Mini-map toggle button element not found');
+        }
+        
+        // Add event listener to the opacity toggle checkbox
+        const opacityToggle = document.getElementById('mini-map-opacity-toggle');
+        if (opacityToggle) {
+            // Store the timeout ID so we can clear it if needed
+            let opacityTimeoutId = null;
+            
+            opacityToggle.addEventListener('change', (e) => {
+                if (opacityToggle.checked) {
+                    // Clear any existing timeout
+                    if (opacityTimeoutId) {
+                        clearTimeout(opacityTimeoutId);
+                    }
+                    
+                    // Set a new timeout to uncheck after 3 seconds
+                    opacityTimeoutId = setTimeout(() => {
+                        opacityToggle.checked = false;
+                        opacityTimeoutId = null;
+                    }, 3000);
+                }
+            });
+            
+            // Also handle direct clicks on the canvas (for better mobile support)
+            this.canvas.addEventListener('click', (e) => {
+                // Toggle the checkbox state
+                opacityToggle.checked = true;
+                
+                // Manually trigger the change event
+                const changeEvent = new Event('change');
+                opacityToggle.dispatchEvent(changeEvent);
+                
+                // Prevent the event from bubbling up
+                e.stopPropagation();
+            });
         }
         
         // Set exact dimensions for both container and canvas

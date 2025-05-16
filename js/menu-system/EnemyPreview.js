@@ -3,9 +3,9 @@
  * Creates a preview of enemy models with animations for the settings menu
  */
 
-import * as THREE from '../lib/three.module.js';
-import { OrbitControls } from '../lib/OrbitControls.js';
-import { GLTFLoader } from '../lib/GLTFLoader.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { enemyTypes, bossTypes } from '../config/enemies.js';
 import { updateAnimation } from '../utils/AnimationUtils.js';
 
