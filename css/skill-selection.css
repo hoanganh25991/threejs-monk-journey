@@ -185,6 +185,28 @@
     margin-right: auto;
 }
 
+/* Empty slot styling */
+.empty-slot {
+    opacity: 0.6;
+    cursor: pointer;
+    background-color: rgba(50, 50, 50, 0.5) !important;
+}
+
+.empty-slot:hover {
+    opacity: 0.8;
+    border-color: #777 !important;
+}
+
+.empty-slot-pulse {
+    animation: emptySlotPulse 2s infinite;
+}
+
+@keyframes emptySlotPulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 0.8; }
+    100% { opacity: 0.6; }
+}
+
 .preview-description {
     text-align: center;
     color: #ccc;

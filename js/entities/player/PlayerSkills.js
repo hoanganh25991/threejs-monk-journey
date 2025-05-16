@@ -240,10 +240,10 @@ export class PlayerSkills extends IPlayerSkills {
                 
                 // For skills with stationaryAttack flag, we don't move the player
                 // This is specifically for ranged skills like "Deadly Reach"
-                if (!skillTemplate.stationaryAttack) {
+                if (!skillTemplate.stationaryAttack && skillTemplate.name !== "Deadly Reach") {
                     console.debug(`Skill ${skillTemplate.name} does not have stationaryAttack flag, player may move`);
                 } else {
-                    console.debug(`Skill ${skillTemplate.name} has stationaryAttack flag, player will not move`);
+                    console.debug(`Skill ${skillTemplate.name} has stationaryAttack flag or is Deadly Reach, player will not move`);
                 }
             } 
             // Second priority: If player is moving, use movement direction
@@ -352,8 +352,8 @@ export class PlayerSkills extends IPlayerSkills {
                     this.playerRotation.y = Math.atan2(direction.x, direction.z);
                     
                     // Check if this is a stationary attack skill (like Deadly Reach)
-                    if (skillTemplate.stationaryAttack) {
-                        console.debug(`Primary attack ${skillTemplate.name} has stationaryAttack flag, player will not move`);
+                    if (skillTemplate.stationaryAttack || skillTemplate.name === "Deadly Reach") {
+                        console.debug(`Primary attack ${skillTemplate.name} has stationaryAttack flag or is Deadly Reach, player will not move`);
                         
                         // Create skill effect at the current position (no teleport)
                         const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);

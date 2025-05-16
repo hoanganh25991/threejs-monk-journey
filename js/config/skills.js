@@ -217,15 +217,19 @@ export const NORMAL_SKILLS = [
     {
         name: 'Flying Dragon',
         description: 'A powerful attack that launches the Monk into the air, striking enemies with a flurry of kicks.',
-        type: 'multi',
+        type: 'dash',
         damage: 25,
         manaCost: 35,
         cooldown: 8,
-        range: 10,
-        radius: 5,
-        duration: 3,
+        range: 15, // Increased range for fast forward movement
+        radius: 3, // Adjusted radius for the area of effect
+        duration: 2, // Slightly reduced duration for a faster, more impactful attack
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
+        dashSpeed: 20, // Speed of the dash forward
+        verticalLeap: true, // Indicates the monk leaps into the air
+        multiHit: 5, // Number of kicks in the flurry
+        windEffect: true, // Visual wind effect when moving forward
         sounds: {
             cast: 'skillFlyingDragon', // Sound of monk leaping into the air
             impact: 'dragonStrike', // Sound of powerful kicks landing

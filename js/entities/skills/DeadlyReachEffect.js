@@ -4,6 +4,7 @@ import { SkillEffect } from './SkillEffect.js';
 /**
  * Specialized effect for Deadly Reach skill
  * Implements a projectile-based energy beam that extends rapidly toward enemies
+ * Now with auto-targeting to the nearest enemy
  */
 export class DeadlyReachEffect extends SkillEffect {
     constructor(skill) {
@@ -14,6 +15,7 @@ export class DeadlyReachEffect extends SkillEffect {
         this.distanceTraveled = 0;
         this.maxDistance = skill.range || 10; // Maximum distance to travel
         this.beamLength = 2; // Fixed beam length
+        this.targetEnemy = null; // Reference to the targeted enemy
     }
 
     /**
@@ -26,24 +28,67 @@ export class DeadlyReachEffect extends SkillEffect {
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
-        // Store initial position and direction for movement
+        // Store initial position for movement
         this.initialPosition.copy(position);
-        this.direction.copy(direction);
         this.distanceTraveled = 0;
+        
+        // Find the nearest enemy and target it
+        this.findAndTargetNearestEnemy(position, direction);
         
         // Create the Deadly Reach effect
         this.createDeadlyReachEffect(effectGroup);
         
         // Position effect
         effectGroup.position.copy(position);
-        effectGroup.position.y += 1.0; // Position at character's hand level
-        effectGroup.rotation.y = Math.atan2(direction.x, direction.z);
+        effectGroup.position.y -= 1.85; // Position at character's hand level (reduced by half)
+        effectGroup.rotation.y = Math.atan2(this.direction.x, this.direction.z);
         
         // Store effect
         this.effect = effectGroup;
         this.isActive = true;
         
         return effectGroup;
+    }
+    
+    /**
+     * Find the nearest enemy and set the direction toward it
+     * @param {THREE.Vector3} position - Starting position
+     * @param {THREE.Vector3} defaultDirection - Default direction if no enemy is found
+     * @private
+     */
+    findAndTargetNearestEnemy(position, defaultDirection) {
+        // Default to the provided direction
+        this.direction.copy(defaultDirection);
+        
+        // Try to get the game instance and enemy manager
+        if (!this.skill.game || !this.skill.game.enemyManager) {
+            console.debug("No game or enemy manager available for auto-targeting");
+            return;
+        }
+        
+        // Find the nearest enemy within range
+        const enemyManager = this.skill.game.enemyManager;
+        const nearestEnemy = enemyManager.findNearestEnemy(position, this.maxDistance);
+        
+        if (nearestEnemy) {
+            // Store reference to the targeted enemy
+            this.targetEnemy = nearestEnemy;
+            
+            // Get enemy position
+            const enemyPosition = nearestEnemy.getPosition();
+            
+            // Calculate direction to enemy
+            const directionToEnemy = new THREE.Vector3()
+                .subVectors(enemyPosition, position)
+                .normalize();
+            
+            // Update direction
+            this.direction.copy(directionToEnemy);
+            
+            console.debug(`Auto-targeted enemy: ${nearestEnemy.type} at distance: ${position.distanceTo(enemyPosition)}`);
+        } else {
+            console.debug("No enemy found within range for auto-targeting");
+        }
     }
 
     /**
@@ -188,10 +233,16 @@ export class DeadlyReachEffect extends SkillEffect {
             return;
         }
         
+        // Update direction if we have a targeted enemy
+        this.updateTargetTracking();
+        
         // Move projectile forward
         const moveDistance = this.projectileSpeed * delta;
         this.effect.position.x += this.direction.x * moveDistance;
         this.effect.position.z += this.direction.z * moveDistance;
+        
+        // Update rotation to match current direction
+        this.effect.rotation.y = Math.atan2(this.direction.x, this.direction.z);
         
         // IMPORTANT: Update the skill's position property to match the effect's position
         this.skill.position.copy(this.effect.position);
@@ -200,6 +251,34 @@ export class DeadlyReachEffect extends SkillEffect {
         this.distanceTraveled += moveDistance;
         
         this.updateDeadlyReachEffect(delta);
+    }
+    
+    /**
+     * Update the direction to track the targeted enemy if it exists and is alive
+     * @private
+     */
+    updateTargetTracking() {
+        // Skip if no target or no game reference
+        if (!this.targetEnemy || !this.skill.game) return;
+        
+        // Skip if enemy is dead
+        if (this.targetEnemy.isDead && this.targetEnemy.isDead()) {
+            this.targetEnemy = null;
+            return;
+        }
+        
+        // Get current positions
+        const currentPosition = this.effect.position.clone();
+        const enemyPosition = this.targetEnemy.getPosition();
+        
+        // Calculate new direction to enemy
+        const newDirection = new THREE.Vector3()
+            .subVectors(enemyPosition, currentPosition)
+            .normalize();
+        
+        // Update direction with some smoothing to avoid sharp turns
+        this.direction.lerp(newDirection, 0.2); // 20% blend toward new direction
+        this.direction.normalize(); // Ensure it's still a unit vector
     }
 
     /**
@@ -306,5 +385,6 @@ export class DeadlyReachEffect extends SkillEffect {
         this.distanceTraveled = 0;
         this.initialPosition.set(0, 0, 0);
         this.direction.set(0, 0, 0);
+        this.targetEnemy = null; // Clear the targeted enemy reference
     }
 }
