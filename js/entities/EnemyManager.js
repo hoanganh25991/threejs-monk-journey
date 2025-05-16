@@ -110,9 +110,12 @@ export class EnemyManager {
                 // Check for item drops
                 this.handleEnemyDrop(enemy);
                 
-                // Remove enemy
-                enemy.remove();
-                this.enemies.splice(i, 1);
+                // Check if death animation is still in progress
+                if (!enemy.deathAnimationInProgress) {
+                    // Remove enemy only after death animation is complete
+                    enemy.remove();
+                    this.enemies.splice(i, 1);
+                }
             }
         }
         

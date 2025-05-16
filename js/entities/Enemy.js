@@ -397,19 +397,9 @@ export class Enemy {
         // Trigger death animation or effects
         this.playDeathAnimation();
         
-        // Remove from scene after a delay that's longer than the animation duration
-        // Animation duration is 1000ms, so we use 1500ms to be safe
-        setTimeout(() => {
-            // Only remove if animation is complete or if there's no model
-            if (!this.deathAnimationInProgress || !this.modelGroup) {
-                this.removeFromScene();
-            } else {
-                // If animation is still in progress, wait a bit longer
-                setTimeout(() => {
-                    this.removeFromScene();
-                }, 1000);
-            }
-        }, 1500);
+        // We no longer need to remove the enemy here
+        // The EnemyManager will handle removal after the animation completes
+        // This prevents the modelGroup from being null during the animation
     }
     
     playDeathAnimation() {
