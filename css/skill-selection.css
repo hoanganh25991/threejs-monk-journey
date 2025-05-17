@@ -8,10 +8,10 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 60%;
-    max-width: 1200px;
-    height: 85%;
-    background-color: rgba(0, 0, 0, 0.9);
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0);
+    opacity: 1;
     border: 2px solid #8a6d3b;
     border-radius: 8px;
     color: #fff;
@@ -67,7 +67,7 @@
 #skill-selection-content {
     display: flex;
     flex-direction: column;
-    flex: 2; /* Takes up 2/3 of the layout space */
+    flex: 1; /* Takes up 2/3 of the layout space */
     overflow-y: auto;
     padding: 0 var(--padding-large);
 }
@@ -112,6 +112,11 @@
     cursor: pointer;
     transition: all 0.2s;
     width: 100%;
+}
+
+.skill-description {
+    line-clamp: 1;
+    -webkit-line-clamp: 1;
 }
 
 .skill-selection-item:hover {
@@ -159,7 +164,7 @@
 /* Preview Section */
 #skill-selection-preview {
     flex: 1; /* Takes up 1/3 of the layout space */
-    padding: var(--padding-medium);
+    padding: var(--padding-large);
     background-color: rgba(0, 0, 0, 0.5);
     border-left: 1px solid rgba(138, 109, 59, 0.3);
     display: flex;
