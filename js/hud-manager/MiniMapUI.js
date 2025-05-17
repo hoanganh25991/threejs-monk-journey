@@ -29,7 +29,7 @@ export class MiniMapUI extends UIComponent {
         this.scale = 1; // Increased scale factor for better world coverage
         this.lastRenderTime = 0;
         this.renderInterval = 250; // Increased to 250ms for better performance
-        this.isVisible = true;
+        this.isVisible = false; // Start with minimap hidden by default
         this.maxDrawDistance = this.mapSize / 2 - 2; // Maximum draw distance from center
     }
     
@@ -39,11 +39,6 @@ export class MiniMapUI extends UIComponent {
      */
     init() {
         const template = `
-            <div class="mini-map-header-container">
-                <span id="mini-map-title">Mini Map</span>
-                <button id="mini-map-toggle-btn" class="mini-map-toggle-btn" type="button">Toggle</button>
-            </div>
-            <input type="checkbox" id="mini-map-opacity-toggle" class="mini-map-opacity-toggle">
             <div id="mini-map">
                 <label for="mini-map-opacity-toggle" class="mini-map-label">
                     <canvas id="mini-map-canvas" width="${this.canvasSize}" height="${this.canvasSize}"></canvas>
@@ -58,18 +53,6 @@ export class MiniMapUI extends UIComponent {
         this.mapElement = document.getElementById('mini-map');
         this.canvas = document.getElementById('mini-map-canvas');
         this.ctx = this.canvas.getContext('2d');
-        
-        // Add event listener to the toggle button
-        const toggleButton = document.getElementById('mini-map-toggle-btn');
-        if (toggleButton) {
-            console.debug('Adding click event listener to mini-map toggle button');
-            toggleButton.addEventListener('click', (e) => {
-                console.debug('Mini-map toggle button clicked');
-                this.toggleMiniMap();
-            });
-        } else {
-            console.error('Mini-map toggle button element not found');
-        }
         
         // Add event listener to the opacity toggle checkbox
         const opacityToggle = document.getElementById('mini-map-opacity-toggle');
@@ -108,6 +91,11 @@ export class MiniMapUI extends UIComponent {
         
         // Set exact dimensions for both container and canvas
         this.updateMapSize();
+        
+        // Hide the map initially (since isVisible is false by default)
+        if (this.mapElement) {
+            this.mapElement.style.display = 'none';
+        }
         
         // Add window resize listener to adjust map size on screen size changes
         window.addEventListener('resize', () => {

@@ -14,6 +14,7 @@ import { MainBackground } from '../menu-system/MainBackground.js';
 import { HomeButton } from './HomeUI.js';
 import { FullscreenButton } from './SkillSelectionButton.js';
 import { SkillTreeButton } from './SkillTreeButton.js';
+import { MiniMapButton } from './MiniMapButton.js';
 
 /**
  * HUD Manager
@@ -143,6 +144,7 @@ export class HUDManager {
         this.components.homeButton = new HomeButton(this.game);
         this.components.fullscreenButton = new FullscreenButton(this.game);
         this.components.skillTreeButton = new SkillTreeButton(this.game);
+        this.components.miniMapButton = new MiniMapButton(this.game);
         // Note: These buttons initialize themselves in their constructors
     }
     
@@ -169,6 +171,7 @@ export class HUDManager {
         // Update UI buttons
         this.components.homeButton.update(delta);
         this.components.skillTreeButton.update(delta);
+        this.components.miniMapButton.update(delta);
     }
     
     /**
@@ -345,6 +348,7 @@ export class HUDManager {
         const homeButton = document.getElementById('home-button');
         const fullscreenButton = document.getElementById('skill-selection-button');
         const skillTreeButton = document.getElementById('skill-tree-button');
+        const miniMapButton = document.getElementById('mini-map-button');
         
         if (homeButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
             homeButton.style.display = 'none';
@@ -356,6 +360,10 @@ export class HUDManager {
         
         if (skillTreeButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
             skillTreeButton.style.display = 'none';
+        }
+        
+        if (miniMapButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
+            miniMapButton.style.display = 'none';
         }
     }
     
@@ -381,6 +389,11 @@ export class HUDManager {
         const skillTreeButton = document.getElementById('skill-tree-button');
         if (skillTreeButton) {
             skillTreeButton.style.display = 'block';
+        }
+        
+        const miniMapButton = document.getElementById('mini-map-button');
+        if (miniMapButton) {
+            miniMapButton.style.display = 'block';
         }
     }
     

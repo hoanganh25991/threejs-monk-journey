@@ -50,3 +50,6 @@
 
 /* Import utility classes */
 @import 'utilities.css';
+
+/* Import icons classes */
+@import 'icons.css';

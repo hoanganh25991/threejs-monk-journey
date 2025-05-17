@@ -7,6 +7,7 @@
     <meta http-equiv="ScreenOrientation" content="autoRotate:disabled">
     <title>Monk Journey</title>
     <link rel="stylesheet" href="css/main.css">
+    <!-- Font Awesome removed and replaced with custom icon.css -->
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#ffcc66">
     <meta name="description" content="A Diablo Immortal inspired game featuring a monk character">
@@ -90,11 +91,14 @@
 
         <!-- Top Right UI (Home Button, Full Screen Button and Mini Map) -->
         <div id="top-right-container">
-            <div id="mini-map-container"></div>
             <button id="skill-tree-button" title="Skill Tree">🌳</button>
             <button id="skill-selection-button" title="Skill Selection">✨</button>
+            <button id="mini-map-button" title="Mini Map"><i class="fa-map"></i></button>
             <button id="home-button" title="Game Menu">⛩️</button>
         </div>
+
+        <!-- Mini Map -->
+        <div id="mini-map-container"></div>
 
         <!-- Enemy UI -->
         <div id="enemy-health-container"></div>

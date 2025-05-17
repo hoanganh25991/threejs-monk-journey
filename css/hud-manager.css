@@ -391,7 +391,7 @@
 }
 
 /* Home/Settings Button and Fullscreen Button */
-#home-button, #skill-selection-button {
+#home-button, #skill-selection-button, #mini-map-button {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -474,49 +474,12 @@
 
 /* Mini Map */
 #mini-map-container {
+    position: absolute;
+    top: 60px; /* Position below the right panel buttons */
+    right: 10px;
     color: white;
     pointer-events: auto; /* Ensure clicks are registered */
-    order: 1; /* Place mini-map before home button */
-}
-
-.mini-map-header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-    background-color: rgba(0, 0, 0, 0.6);
-    padding: 5px 10px;
-    border-radius: 5px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-bottom: none;
-    color: white;
-    pointer-events: auto;
-    z-index: 60; /* UI Controls - Mini Map Header */
-}
-
-#mini-map-title {
-    font-size: 14px;
-    font-weight: bold;
-}
-
-.mini-map-toggle-btn {
-    background-color: rgba(60, 60, 100, 0.7);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 3px;
-    padding: 2px 6px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.mini-map-toggle-btn:hover {
-    background-color: rgba(80, 80, 120, 0.9);
-    border-color: rgba(255, 255, 255, 0.6);
-}
-
-.mini-map-toggle-btn:active {
-    transform: scale(0.95);
+    z-index: 40; /* Below UI Controls but above other elements */
 }
 
 #mini-map {

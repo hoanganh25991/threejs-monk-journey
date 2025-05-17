@@ -39,6 +39,7 @@ export class SkillTreeUI extends UIComponent {
 <div id="skill-tree-header">
 <div id="skill-tree-title">Monk Skill Tree</div>
 <div id="skill-tree-points">Available Points: <span id="skill-points-value">${this.skillPoints}</span></div>
+<button id="skill-tree-save-btn">Save</button>
 </div>
 <div id="skill-tree-container">
 <div id="skill-tree-view">
@@ -79,6 +80,14 @@ export class SkillTreeUI extends UIComponent {
 
     // Render the skill tree
     this.renderSkillTree();
+    
+    // Add event listener for save button
+    document.getElementById('skill-tree-save-btn').addEventListener('click', () => {
+      this.saveSkillTree();
+    });
+    
+    // Initialize available points display
+    this.updateAvailablePoints();
 
     return true;
   }
@@ -344,11 +353,19 @@ ${isActive ? "Selected" : "Select Variant"}
       
       // Clear the buffs display
       document.getElementById("skill-buffs").innerHTML = "";
+      
+      // Update available points display
+      this.updateAvailablePoints();
       return;
     }
 
     // Otherwise, select the new variant
     if (this.playerSkills[skillName]) {
+      // If there was a previous variant selected, clear its buffs
+      if (this.playerSkills[skillName].activeVariant && this.playerSkills[skillName].activeVariant !== variantName) {
+        this.playerSkills[skillName].buffs = {};
+      }
+      
       this.playerSkills[skillName].activeVariant = variantName;
     }
 
@@ -371,6 +388,9 @@ ${isActive ? "Selected" : "Select Variant"}
 
     // Show buffs for the selected variant
     this.showVariantBuffs(skillName, variantName);
+    
+    // Update available points display
+    this.updateAvailablePoints();
   }
 
   /**
@@ -465,6 +485,17 @@ ${isActive ? "Selected" : "Select Buff"}
         this.selectBuff(skillName, buffName);
       });
     });
+    
+    // Add click event to buff containers for toggling selection
+    document.querySelectorAll(".skill-buff").forEach((buff) => {
+      buff.addEventListener("click", (event) => {
+        // Don't trigger if clicking on the button (button has its own handler)
+        if (event.target.tagName !== 'BUTTON' && !event.target.closest('button')) {
+          const buffName = buff.dataset.buff;
+          this.selectBuff(skillName, buffName);
+        }
+      });
+    });
   }
 
   /**
@@ -478,24 +509,54 @@ ${isActive ? "Selected" : "Select Buff"}
       if (!this.playerSkills[skillName].buffs) {
         this.playerSkills[skillName].buffs = {};
       }
-      this.playerSkills[skillName].buffs[buffName] = true;
-    }
-
-    // Update UI
-    const selectedBuff = document.querySelector(
-      `.skill-buff[data-buff="${buffName}"]`
-    );
-    if (selectedBuff) {
-      selectedBuff.classList.add("active");
-    }
-
-    // Update button
-    const button = document.querySelector(
-      `.buff-select-btn[data-buff="${buffName}"]`
-    );
-    if (button) {
-      button.disabled = true;
-      button.textContent = "Selected";
+      
+      // Toggle buff selection
+      const isAlreadyActive = this.playerSkills[skillName].buffs[buffName];
+      
+      if (isAlreadyActive) {
+        // Unselect the buff
+        delete this.playerSkills[skillName].buffs[buffName];
+        
+        // Update UI
+        const selectedBuff = document.querySelector(
+          `.skill-buff[data-buff="${buffName}"]`
+        );
+        if (selectedBuff) {
+          selectedBuff.classList.remove("active");
+        }
+        
+        // Update button
+        const button = document.querySelector(
+          `.buff-select-btn[data-buff="${buffName}"]`
+        );
+        if (button) {
+          button.disabled = false;
+          button.textContent = "Select Buff";
+        }
+      } else {
+        // Select the buff
+        this.playerSkills[skillName].buffs[buffName] = true;
+        
+        // Update UI
+        const selectedBuff = document.querySelector(
+          `.skill-buff[data-buff="${buffName}"]`
+        );
+        if (selectedBuff) {
+          selectedBuff.classList.add("active");
+        }
+        
+        // Update button
+        const button = document.querySelector(
+          `.buff-select-btn[data-buff="${buffName}"]`
+        );
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Selected";
+        }
+      }
+      
+      // Update available points display
+      this.updateAvailablePoints();
     }
   }
 
@@ -530,5 +591,138 @@ ${isActive ? "Selected" : "Select Buff"}
     }
     
     return description.substring(0, maxLength) + "...";
+  }
+  
+  /**
+   * Save the skill tree configuration
+   * This method will save the player's skill selections and close the skill tree
+   */
+  saveSkillTree() {
+    // Calculate total points spent
+    let totalPointsSpent = 0;
+    
+    // Count points spent on variants and buffs
+    Object.values(this.playerSkills).forEach(skill => {
+      if (skill.activeVariant) {
+        // Get the variant cost
+        const variantCost = this.getVariantCost(skill.activeVariant);
+        totalPointsSpent += variantCost;
+        
+        // Add costs of selected buffs
+        if (skill.buffs) {
+          Object.keys(skill.buffs).forEach(buffName => {
+            if (skill.buffs[buffName]) {
+              const buffCost = this.getBuffCost(skill.activeVariant, buffName);
+              totalPointsSpent += buffCost;
+            }
+          });
+        }
+      }
+    });
+    
+    // Check if player has enough points
+    const remainingPoints = this.skillPoints - totalPointsSpent;
+    if (remainingPoints < 0) {
+      // Show error message - not enough points
+      alert("You don't have enough skill points! Please remove some skills or buffs.");
+      return;
+    }
+    
+    // Save the configuration to player data (would connect to game state in a real implementation)
+    console.log("Saving skill tree configuration:", this.playerSkills);
+    
+    // Update the game with the new skills (in a real implementation)
+    if (this.game && this.game.player) {
+      // this.game.player.updateSkills(this.playerSkills);
+      console.log("Player skills updated");
+    }
+    
+    // Show success message
+    alert("Skill tree saved successfully!");
+    
+    // Close the skill tree
+    this.toggleSkillTree();
+  }
+  
+  /**
+   * Get the cost of a variant
+   * @param {string} variantName - Name of the variant
+   * @returns {number} - Cost of the variant
+   */
+  getVariantCost(variantName) {
+    // Search for the variant in all skills
+    for (const skillName in this.skillTrees) {
+      const skill = this.skillTrees[skillName];
+      if (skill.variants && skill.variants[variantName]) {
+        return skill.variants[variantName].cost || 5; // Default cost is 5
+      }
+    }
+    return 5; // Default cost if not found
+  }
+  
+  /**
+   * Get the cost of a buff
+   * @param {string} variantName - Name of the variant
+   * @param {string} buffName - Name of the buff
+   * @returns {number} - Cost of the buff
+   */
+  getBuffCost(variantName, buffName) {
+    // Search for the buff in all skills
+    for (const skillName in this.skillTrees) {
+      const skill = this.skillTrees[skillName];
+      if (skill.variants && 
+          skill.variants[variantName] && 
+          skill.variants[variantName].buffs && 
+          skill.variants[variantName].buffs[buffName]) {
+        return skill.variants[variantName].buffs[buffName].cost || 3; // Default cost is 3
+      }
+    }
+    return 3; // Default cost if not found
+  }
+  
+  /**
+   * Update the available points display
+   * Calculates points spent and updates the UI
+   */
+  updateAvailablePoints() {
+    // Calculate total points spent
+    let totalPointsSpent = 0;
+    
+    // Count points spent on variants and buffs
+    Object.values(this.playerSkills).forEach(skill => {
+      if (skill.activeVariant) {
+        // Get the variant cost
+        const variantCost = this.getVariantCost(skill.activeVariant);
+        totalPointsSpent += variantCost;
+        
+        // Add costs of selected buffs
+        if (skill.buffs) {
+          Object.keys(skill.buffs).forEach(buffName => {
+            if (skill.buffs[buffName]) {
+              const buffCost = this.getBuffCost(skill.activeVariant, buffName);
+              totalPointsSpent += buffCost;
+            }
+          });
+        }
+      }
+    });
+    
+    // Calculate remaining points
+    const remainingPoints = this.skillPoints - totalPointsSpent;
+    
+    // Update the UI
+    const pointsElement = document.getElementById("skill-points-value");
+    if (pointsElement) {
+      pointsElement.textContent = remainingPoints;
+      
+      // Add visual indicator if points are low or negative
+      if (remainingPoints < 0) {
+        pointsElement.style.color = "#ff3333"; // Red for negative
+      } else if (remainingPoints < 5) {
+        pointsElement.style.color = "#ffaa33"; // Orange for low
+      } else {
+        pointsElement.style.color = "#ffcc00"; // Default yellow
+      }
+    }
   }
 }

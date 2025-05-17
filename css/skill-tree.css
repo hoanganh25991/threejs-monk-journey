@@ -34,11 +34,30 @@
     font-weight: bold;
     color: #ffcc00;
     text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+    flex: 1;
 }
 
 #skill-tree-points {
     font-size: 18px;
     color: #ffcc00;
+    text-align: center;
+    flex: 1;
+}
+
+#skill-tree-save-btn {
+    background-color: rgba(138, 109, 59, 0.7);
+    border: 1px solid #8a6d3b;
+    border-radius: 4px;
+    color: #fff;
+    padding: 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#skill-tree-save-btn:hover {
+    background-color: rgba(138, 109, 59, 0.9);
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
 }
 
 #skill-tree-close {
