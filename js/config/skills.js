@@ -92,7 +92,7 @@ export const NORMAL_SKILLS = [
         damage: 10,
         healing: 20, // Amount of health restored per pulse
         manaCost: 30,
-        cooldown: 15, // Longer cooldown for healing ability
+        cooldown: 8, // Longer cooldown for healing ability
         range: 0, // Centered on player
         radius: 8, // Large radius to affect multiple allies/enemies
         duration: 8, // Duration in seconds
