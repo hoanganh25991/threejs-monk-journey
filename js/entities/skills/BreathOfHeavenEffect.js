@@ -39,7 +39,9 @@ export class BreathOfHeavenEffect extends SkillEffect {
             color: this.skill.color,
             transparent: true,
             opacity: 0.3,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            depthWrite: false,  // Prevents the sphere from writing to the depth buffer
+            blending: THREE.AdditiveBlending  // Uses additive blending for a more ethereal look
         });
         
         const auraMesh = new THREE.Mesh(auraGeometry, auraMaterial);
@@ -253,7 +255,9 @@ export class BreathOfHeavenEffect extends SkillEffect {
             color: this.skill.color,
             transparent: true,
             opacity: 0.8,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            depthWrite: false,  // Prevents the pulse from writing to the depth buffer
+            blending: THREE.AdditiveBlending  // Uses additive blending for better visual integration
         });
         
         const pulseMesh = new THREE.Mesh(pulseGeometry, pulseMaterial);
@@ -333,7 +337,9 @@ export class BreathOfHeavenEffect extends SkillEffect {
                     color: 0x00ffff, // Cyan color for speed boost
                     transparent: true,
                     opacity: 0.7,
-                    side: THREE.DoubleSide
+                    side: THREE.DoubleSide,
+                    depthWrite: false,  // Prevents the burst from writing to the depth buffer
+                    blending: THREE.AdditiveBlending  // Uses additive blending for better visual integration
                 });
                 
                 const burstMesh = new THREE.Mesh(burstGeometry, burstMaterial);
