@@ -18,7 +18,7 @@ export class UIComponent {
             console.error(`Container element with ID "${containerId}" not found. Creating it dynamically.`);
             this.container = document.createElement('div');
             this.container.id = containerId;
-            
+
             // Add to UI container
             document.body.appendChild(this.container);
         }
