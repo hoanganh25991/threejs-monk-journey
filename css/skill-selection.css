@@ -232,6 +232,8 @@
     transition: all 0.2s;
     overflow: hidden;
     justify-self: center;
+    /* Ensure proper spacing for the key at bottom */
+    padding-bottom: 12px;
 }
 
 .skill-button:hover {
@@ -256,11 +258,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Adjust to account for the key at bottom */
+    margin-bottom: 6px;
 }
 
 .skill-button .skill-key {
     position: absolute;
-    bottom: 0px;
+    bottom: 3px;
     right: 2px;
     background-color: rgba(0, 0, 0, 0.7);
     border: 1px solid #6b4c2a;
@@ -269,6 +277,7 @@
     font-size: 10px;
     color: white;
     font-weight: bold;
+    z-index: 5; /* Ensure it appears above other elements */
 }
 
 .skill-button .skill-cooldown {
@@ -309,8 +318,8 @@
 
 .preview-skill-key {
     position: absolute;
-    bottom: 0;
-    right: 0;
+    bottom: 3px;
+    right: 2px;
     background-color: rgba(0, 0, 0, 0.7);
     border: 1px solid #6b4c2a;
     border-radius: 3px;
@@ -318,4 +327,5 @@
     font-size: 10px;
     color: white;
     font-weight: bold;
+    z-index: 5; /* Ensure it appears above other elements */
 }
