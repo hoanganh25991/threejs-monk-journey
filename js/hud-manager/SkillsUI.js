@@ -16,6 +16,10 @@ export class SkillsUI extends UIComponent {
         
         // Use skill colors from config
         this.skillColors = SKILL_COLORS;
+        
+        // For continuous primary attack
+        this.primaryAttackInterval = null;
+        this.primaryAttackDelay = 200; // ms between attacks
     }
     
     /**
@@ -57,12 +61,20 @@ export class SkillsUI extends UIComponent {
         // Add event listeners to skill buttons
         this.skillButtons = this.container.querySelectorAll('.skill-button');
         this.skillButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const index = parseInt(button.getAttribute('data-skill-index'));
-                const skill = skills[index];
+            // Prevent zoom on double tap
+            button.style.touchAction = 'manipulation';
+            
+            const index = parseInt(button.getAttribute('data-skill-index'));
+            const skill = skills[index];
+            const isPrimaryAttack = skill.primaryAttack;
+            
+            // Handle click events
+            button.addEventListener('click', (e) => {
+                // Prevent default behavior to avoid any zoom
+                e.preventDefault();
                 
                 // Check if this is the basic attack skill
-                if (skill.primaryAttack) {
+                if (isPrimaryAttack) {
                     this.game.player.usePrimaryAttack();
                 } else {
                     this.game.player.useSkill(index);
@@ -75,14 +87,59 @@ export class SkillsUI extends UIComponent {
                 }, 300);
             });
             
+            // For primary attack, add touch events for continuous attack
+            if (isPrimaryAttack) {
+                // Start continuous attack on touch start
+                button.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); // Prevent default behavior
+                    
+                    // Clear any existing interval
+                    this.stopContinuousAttack();
+                    
+                    // Trigger first attack immediately
+                    this.game.player.usePrimaryAttack();
+                    
+                    // Set up continuous attack
+                    this.primaryAttackInterval = setInterval(() => {
+                        this.game.player.usePrimaryAttack();
+                    }, this.primaryAttackDelay);
+                    
+                    // Add active state
+                    button.classList.add('skill-activated');
+                });
+                
+                // Stop continuous attack on touch end
+                button.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.stopContinuousAttack();
+                    button.classList.remove('skill-activated');
+                });
+                
+                // Also stop on touch cancel
+                button.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    this.stopContinuousAttack();
+                    button.classList.remove('skill-activated');
+                });
+            }
+            
             // Add tooltip with description on hover
-            const skill = skills[parseInt(button.getAttribute('data-skill-index'))];
             button.title = `${skill.name}: ${skill.description}`;
         });
         
         // No "Change Skills" button event listener needed
         
         return true;
+    }
+    
+    /**
+     * Stop continuous primary attack
+     */
+    stopContinuousAttack() {
+        if (this.primaryAttackInterval) {
+            clearInterval(this.primaryAttackInterval);
+            this.primaryAttackInterval = null;
+        }
     }
     
     /**
@@ -94,6 +151,8 @@ export class SkillsUI extends UIComponent {
         
         skills.forEach((skill, index) => {
             const skillButton = this.skillButtons[index];
+            if (!skillButton) return; // Skip if button doesn't exist
+            
             const cooldownOverlay = skillButton.querySelector('.skill-cooldown');
             const cooldownPercent = skill.getCooldownPercent() * 100;
             
@@ -145,5 +204,18 @@ export class SkillsUI extends UIComponent {
                 skillButton.classList.remove('not-enough-mana');
             }
         });
+    }
+    
+    /**
+     * Clean up resources when component is destroyed
+     */
+    destroy() {
+        // Stop any continuous attack
+        this.stopContinuousAttack();
+        
+        // Call parent destroy method if it exists
+        if (super.destroy) {
+            super.destroy();
+        }
     }
 }

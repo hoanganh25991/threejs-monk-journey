@@ -27,9 +27,6 @@
 /* Import HUD Manager styles */
 @import 'hud-manager.css';
 
-/* Import Skill Icons styles */
-@import 'skill-icons.css';
-
 /* Import HUD > Dialog styles */
 @import 'dialog.css';
 

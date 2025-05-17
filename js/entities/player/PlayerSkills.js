@@ -33,8 +33,53 @@ export class PlayerSkills extends IPlayerSkills {
     
     initializeSkills() {
         // Initialize monk skills using the configuration from config/skills.js
-        const battleSkills = JSON.parse(localStorage.getItem(STORAGE_KEYS.SELECTED_SKILLS)) || BATTLE_SKILLS;
-        this.skills = battleSkills.map(skillConfig => new Skill(skillConfig));
+        const savedSkillsJson = localStorage.getItem(STORAGE_KEYS.SELECTED_SKILLS);
+        
+        if (savedSkillsJson) {
+            const savedSkills = JSON.parse(savedSkillsJson);
+            
+            // Check if we're using the new format (array of skill IDs)
+            if (savedSkills.length > 0 && 'id' in savedSkills[0]) {
+                // New format - load skills from IDs
+                this.loadSkillsFromIds(savedSkills);
+            } else {
+                // Old format - array of full skill objects
+                this.skills = savedSkills.map(skillConfig => new Skill(skillConfig));
+            }
+        } else {
+            // No saved skills, use default battle skills
+            this.skills = BATTLE_SKILLS.map(skillConfig => new Skill(skillConfig));
+        }
+    }
+    
+    /**
+     * Load skills from an array of skill IDs
+     * @param {Array} skillIds - Array of { id, isPrimary } objects
+     */
+    loadSkillsFromIds(skillIds) {
+        // Reset skills array
+        this.skills = [];
+        
+        // Process each skill ID
+        skillIds.forEach(skillIdObj => {
+            const { id } = skillIdObj;
+            
+            // Find the full skill config based on the ID (name)
+            const skillConfig = SKILLS.find(skill => skill.name === id);
+
+            // If skill config is found, create a new skill instance
+            if (skillConfig) {
+                this.skills.push(new Skill(skillConfig));
+            } else {
+                console.error(`Skill configuration not found for ID: ${id}`);
+            }
+        });
+        
+        // If no skills were loaded, use default battle skills
+        if (this.skills.length === 0) {
+            console.warn('No valid skills found from IDs, using default battle skills');
+            this.skills = BATTLE_SKILLS.map(skillConfig => new Skill(skillConfig));
+        }
     }
     
     updateSkills(delta) {
@@ -165,12 +210,13 @@ export class PlayerSkills extends IPlayerSkills {
             }
         }
         
-        // Create a new instance of the skill using the template from BATTLE_SKILLS config
+        // Create a new instance of the skill using the template from SKILLS config
+        // Find the skill configuration by name (ID)
         const skillConfig = SKILLS.find(config => config.name === skillTemplate.name);
         
         // Check if skillConfig exists before creating a new Skill instance
         if (!skillConfig) {
-            console.error(`Skill configuration not found for: ${skillTemplate.name}`);
+            console.error(`Skill configuration not found for ID: ${skillTemplate.name}`);
             return false;
         }
         

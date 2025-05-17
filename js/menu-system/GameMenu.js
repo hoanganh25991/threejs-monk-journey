@@ -199,19 +199,19 @@ export class GameMenu extends IMenu {
      */
     show() {
         if (this.element) {
-            // Update load game button visibility based on save data
-            if (this.loadGameButton && this.game.saveManager) {
-                this.loadGameButton.style.display = this.game.saveManager.hasSaveData() ? 'block' : 'none';
-            }
-            
             // Update New Game button text based on game state
             if (this.newGameButton && this.saveGameButton) {
                 if (this.game.hasStarted) {
                     this.newGameButton.textContent = 'Resume Game';
                     this.saveGameButton.style.display = 'block';
+                    this.loadGameButton.style.display = 'none';
                 } else {
                     this.newGameButton.textContent = 'New Game';
                     this.saveGameButton.style.display = 'none';
+                    // Update load game button visibility based on save data
+                    if (this.loadGameButton && this.game.saveManager) {
+                        this.loadGameButton.style.display = this.game.saveManager.hasSaveData() ? 'block' : 'none';
+                    }
                 }
             }
             

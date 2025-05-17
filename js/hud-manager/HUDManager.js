@@ -13,6 +13,7 @@ import { MiniMapUI } from './MiniMapUI.js';
 import { MainBackground } from '../menu-system/MainBackground.js';
 import { HomeButton } from './HomeUI.js';
 import { FullscreenButton } from './SkillSelectionButton.js';
+import { SkillTreeButton } from './SkillTreeButton.js';
 
 /**
  * HUD Manager
@@ -138,10 +139,11 @@ export class HUDManager {
         this.components.questLogUI = new QuestLogUI(this.game);
         this.components.questLogUI.init();
         
-        // Create settings button
+        // Create UI buttons
         this.components.homeButton = new HomeButton(this.game);
         this.components.fullscreenButton = new FullscreenButton(this.game);
-        // Note: SettingsButton initializes itself in its constructor
+        this.components.skillTreeButton = new SkillTreeButton(this.game);
+        // Note: These buttons initialize themselves in their constructors
     }
     
     /**
@@ -164,8 +166,9 @@ export class HUDManager {
         // Update notifications UI
         this.components.notificationsUI.update(delta);
         
-        // Update settings button
+        // Update UI buttons
         this.components.homeButton.update(delta);
+        this.components.skillTreeButton.update(delta);
     }
     
     /**
@@ -337,10 +340,11 @@ export class HUDManager {
             this.uiContainer.style.display = 'none';
         }
         
-        // Don't hide the settings button when paused if the settings menu is open
+        // Don't hide the buttons when paused if the settings menu is open
         const settingsMenu = document.getElementById('main-options-menu');
         const homeButton = document.getElementById('home-button');
         const fullscreenButton = document.getElementById('skill-selection-button');
+        const skillTreeButton = document.getElementById('skill-tree-button');
         
         if (homeButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
             homeButton.style.display = 'none';
@@ -348,6 +352,10 @@ export class HUDManager {
         
         if (fullscreenButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
             fullscreenButton.style.display = 'none';
+        }
+        
+        if (skillTreeButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
+            skillTreeButton.style.display = 'none';
         }
     }
     
@@ -368,6 +376,11 @@ export class HUDManager {
         const fullscreenButton = document.getElementById('skill-selection-button');
         if (fullscreenButton) {
             fullscreenButton.style.display = 'block';
+        }
+        
+        const skillTreeButton = document.getElementById('skill-tree-button');
+        if (skillTreeButton) {
+            skillTreeButton.style.display = 'block';
         }
     }
     

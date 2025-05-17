@@ -404,6 +404,20 @@
     pointer-events: auto; /* Enable click events */
 }
 
+/* Skill Tree Button */
+#skill-tree-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(255, 204, 0, 0.7);
+    border: 2px solid rgba(255, 230, 150, 0.8);
+    color: #4a3000;
+    font-size: 24px;
+    cursor: pointer;
+    position: relative;
+    pointer-events: auto; /* Enable click events */
+}
+
 /* Quest Log */
 #quest-log {
     width: 170px;

@@ -39,7 +39,6 @@ export class SkillTreeUI extends UIComponent {
 <div id="skill-tree-header">
 <div id="skill-tree-title">Monk Skill Tree</div>
 <div id="skill-tree-points">Available Points: <span id="skill-points-value">${this.skillPoints}</span></div>
-<div id="skill-tree-close">×</div>
 </div>
 <div id="skill-tree-container">
 <div id="skill-tree-view">
@@ -66,12 +65,6 @@ export class SkillTreeUI extends UIComponent {
 
     // Render the template
     this.render(template);
-
-    // Add click event to close skill tree
-    const closeButton = document.getElementById("skill-tree-close");
-    closeButton.addEventListener("click", () => {
-      this.toggleSkillTree();
-    });
 
     // Hide initially
     this.hide();

@@ -48,16 +48,32 @@ export class SkillSelectionUI extends UIComponent {
                 // Parse the saved skills
                 const savedSkills = JSON.parse(savedSkillsJson);
                 
-                // Set the selected primary attack
-                const primaryAttack = savedSkills.find(skill => skill.primaryAttack);
-                if (primaryAttack) {
-                    this.selectedPrimaryAttack = primaryAttack.name;
+                // Check if we're using the new format (array of skill IDs)
+                if (savedSkills.length > 0 && 'id' in savedSkills[0]) {
+                    // New format - array of { id, isPrimary } objects
+                    // Set the selected primary attack
+                    const primarySkill = savedSkills.find(skill => skill.isPrimary);
+                    if (primarySkill) {
+                        this.selectedPrimaryAttack = primarySkill.id;
+                    }
+                    
+                    // Set the selected normal skills
+                    this.selectedNormalSkills = savedSkills
+                        .filter(skill => !skill.isPrimary)
+                        .map(skill => skill.id);
+                } else {
+                    // Old format - array of full skill objects
+                    // Set the selected primary attack
+                    const primaryAttack = savedSkills.find(skill => skill.primaryAttack);
+                    if (primaryAttack) {
+                        this.selectedPrimaryAttack = primaryAttack.name;
+                    }
+                    
+                    // Set the selected normal skills
+                    this.selectedNormalSkills = savedSkills
+                        .filter(skill => !skill.primaryAttack)
+                        .map(skill => skill.name);
                 }
-                
-                // Set the selected normal skills
-                this.selectedNormalSkills = savedSkills
-                    .filter(skill => !skill.primaryAttack)
-                    .map(skill => skill.name);
             } else {
                 // If no skills are saved, use BATTLE_SKILLS from config
                 this.loadDefaultSkills();
@@ -612,24 +628,19 @@ export class SkillSelectionUI extends UIComponent {
             }
         }
         
-        // Get the selected skills in the exact order they appear in the preview
-        const selectedPrimaryAttack = PRIMARY_ATTACKS.find(skill => skill.name === this.selectedPrimaryAttack);
+        // Create an array of skill IDs (names) instead of full skill objects
+        // Primary attack first, then normal skills in their selected order
+        const selectedSkillIds = [
+            { id: this.selectedPrimaryAttack, isPrimary: true },
+            ...this.selectedNormalSkills.map(skillName => ({ id: skillName, isPrimary: false }))
+        ];
         
-        // Get normal skills in the exact order they were selected (this order is maintained in the array)
-        const selectedNormalSkills = this.selectedNormalSkills.map(skillName => 
-            NORMAL_SKILLS.find(skill => skill.name === skillName)
-        ).filter(skill => skill); // Filter out any undefined skills
-        
-        // Combine into a single array - primary attack first, then normal skills in their selected order
-        // This ensures the battle layout matches exactly what was shown in the preview
-        const selectedSkills = [selectedPrimaryAttack, ...selectedNormalSkills];
-        
-        // Save to localStorage
+        // Save to localStorage - only saving the IDs now
         try {
-            localStorage.setItem(STORAGE_KEYS.SELECTED_SKILLS, JSON.stringify(selectedSkills));
-            console.debug('Skills saved to localStorage successfully');
+            localStorage.setItem(STORAGE_KEYS.SELECTED_SKILLS, JSON.stringify(selectedSkillIds));
+            console.debug('Skill IDs saved to localStorage successfully');
         } catch (error) {
-            console.error('Error saving skills to localStorage:', error);
+            console.error('Error saving skill IDs to localStorage:', error);
             // Show error notification
             if (this.game && this.game.uiManager) {
                 this.game.uiManager.showNotification('Failed to save skills. Please try again.');
@@ -641,11 +652,8 @@ export class SkillSelectionUI extends UIComponent {
             // Reset player skills
             this.game.player.skills.skills = [];
             
-            // Initialize with selected skills
-            this.game.player.skills.skills = selectedSkills.map(skillConfig => {
-                // Create a new skill instance from the config using the imported Skill class
-                return new Skill(skillConfig);
-            });
+            // Initialize with selected skills - load full skill config based on IDs
+            this.game.player.skills.loadSkillsFromIds(selectedSkillIds);
             
             // Refresh the skills UI
             if (this.game.uiManager && this.game.uiManager.components.skillsUI) {
@@ -680,16 +688,32 @@ export class SkillSelectionUI extends UIComponent {
                 this.selectedPrimaryAttack = null;
                 this.selectedNormalSkills = [];
                 
-                // Set the selected primary attack
-                const primaryAttack = savedSkills.find(skill => skill.primaryAttack);
-                if (primaryAttack) {
-                    this.selectedPrimaryAttack = primaryAttack.name;
+                // Check if we're using the new format (array of skill IDs)
+                if (savedSkills.length > 0 && 'id' in savedSkills[0]) {
+                    // New format - array of { id, isPrimary } objects
+                    // Set the selected primary attack
+                    const primarySkill = savedSkills.find(skill => skill.isPrimary);
+                    if (primarySkill) {
+                        this.selectedPrimaryAttack = primarySkill.id;
+                    }
+                    
+                    // Set the selected normal skills
+                    this.selectedNormalSkills = savedSkills
+                        .filter(skill => !skill.isPrimary)
+                        .map(skill => skill.id);
+                } else {
+                    // Old format - array of full skill objects
+                    // Set the selected primary attack
+                    const primaryAttack = savedSkills.find(skill => skill.primaryAttack);
+                    if (primaryAttack) {
+                        this.selectedPrimaryAttack = primaryAttack.name;
+                    }
+                    
+                    // Set the selected normal skills
+                    this.selectedNormalSkills = savedSkills
+                        .filter(skill => !skill.primaryAttack)
+                        .map(skill => skill.name);
                 }
-                
-                // Set the selected normal skills
-                this.selectedNormalSkills = savedSkills
-                    .filter(skill => !skill.primaryAttack)
-                    .map(skill => skill.name);
             } else if (this.game && this.game.player) {
                 // If no saved skills, load from player's current skills
                 this.loadSkillsFromPlayer();
