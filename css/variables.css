@@ -8,11 +8,13 @@
     --padding-small: 5px;
     --padding-medium: 15px;
     --padding-large: 30px;
+    --padding-x-large: 45px;
     
     /* Other spacing variables */
     --margin-small: 5px;
     --margin-medium: 15px;
     --margin-large: 30px;
+    --margin-x-large: 45px;
     
     /* Breakpoints */
     --breakpoint-mobile: 1024px;
@@ -24,9 +26,11 @@
         --padding-small: 3px;
         --padding-medium: 5px;
         --padding-large: 10px;
+        --padding-x-large: 20px;
         
         --margin-small: 3px;
         --margin-medium: 5px;
         --margin-large: 10px;
+        --margin-x-large: 20px;
     }
 }

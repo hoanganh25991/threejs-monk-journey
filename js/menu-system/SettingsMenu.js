@@ -1155,7 +1155,7 @@ export class SettingsMenu extends UIComponent {
         // Add loading placeholder
         const loadingOption = document.createElement('option');
         loadingOption.value = '';
-        loadingOption.textContent = 'Loading animations...';
+        loadingOption.textContent = 'Loading...';
         selectElement.appendChild(loadingOption);
         selectElement.disabled = true;
     }
