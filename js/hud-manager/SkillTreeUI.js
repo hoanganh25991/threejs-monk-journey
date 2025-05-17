@@ -135,7 +135,10 @@ export class SkillTreeUI extends UIComponent {
 <div class="skill-icon ${iconData.cssClass}" style="background-color: rgba(0, 0, 0, 0.7); border: 2px solid ${iconData.color}; box-shadow: 0 0 10px ${iconData.color}40;">
 ${iconData.emoji}
 </div>
-<div class="skill-name">${skillName}</div>
+<div class="skill-info">
+  <div class="skill-name">${skillName}</div>
+  <div class="skill-description">${skill.baseDescription || "No description available."}</div>
+</div>
 </div>
 `;
 
