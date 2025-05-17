@@ -652,23 +652,6 @@ ${iconData.emoji}
   }
 
   /**
-   * Toggle the skill tree visibility
-   */
-  toggleSkillTree() {
-    this.isSkillTreeOpen = !this.isSkillTreeOpen;
-
-    if (this.isSkillTreeOpen) {
-      this.show();
-      // Enable pointer events when showing the skill tree
-      this.container.style.pointerEvents = 'auto';
-    } else {
-      this.hide();
-      // Reset pointer events when hiding
-      this.container.style.pointerEvents = 'none';
-    }
-  }
-
-  /**
    * Truncate a description to a maximum length and add ellipsis
    * @param {string} description - The description to truncate
    * @param {number} maxLength - Maximum length before truncation (default: 60)
@@ -732,7 +715,7 @@ ${iconData.emoji}
     this.game && this.game.hudManager.showNotification("Skill tree saved successfully!");
     
     // Close the skill tree
-    this.toggleSkillTree();
+    this.game.hudManager.toggleSkillTree();
   }
   
   /**

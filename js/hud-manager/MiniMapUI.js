@@ -29,7 +29,6 @@ export class MiniMapUI extends UIComponent {
         this.scale = 1; // Increased scale factor for better world coverage
         this.lastRenderTime = 0;
         this.renderInterval = 250; // Increased to 250ms for better performance
-        this.isVisible = false; // Start with minimap hidden by default
         this.maxDrawDistance = this.mapSize / 2 - 2; // Maximum draw distance from center
     }
     

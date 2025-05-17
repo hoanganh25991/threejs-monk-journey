@@ -52,8 +52,7 @@
 
 /* Skill Tree View */
 #skill-tree-view {
-    width: 30%;
-    min-width: 300px;
+    width: 300px;
     padding: var(--padding-large);
     overflow-y: auto;
     border-right: 1px solid rgba(138, 109, 59, 0.5);
@@ -431,52 +430,4 @@
     font-style: italic;
     text-align: center;
     padding: var(--padding-large);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    #skill-tree {
-        width: 95%;
-        height: 90%;
-    }
-    
-    #skill-tree-container {
-        flex-direction: column;
-    }
-    
-    #skill-tree-view {
-        width: 100%;
-        max-height: 40%;
-        border-right: none;
-        border-bottom: 1px solid rgba(138, 109, 59, 0.5);
-    }
-    
-    .skill-node {
-        width: 95%;
-        box-sizing: border-box;
-    }
-    
-    .skill-icon {
-        width: 35px;
-        height: 35px;
-        font-size: 18px;
-        margin-right: 10px;
-        flex-shrink: 0;
-    }
-    
-    .skill-name {
-        font-size: 14px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    #skill-customization-container {
-        flex-direction: column;
-    }
-    
-    #skill-variants,
-    #skill-buffs {
-        grid-template-columns: 1fr;
-    }
 }

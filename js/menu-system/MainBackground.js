@@ -16,9 +16,6 @@ export class MainBackground extends UIComponent {
         // Set background image path
         this.backgroundImagePath = 'assets/images/background.jpg';
         
-        // Track visibility state
-        this.isVisible = true;
-        
         this.init();
     }
     
@@ -54,50 +51,11 @@ export class MainBackground extends UIComponent {
     }
     
     /**
-     * Update the component
-     * @param {number} delta - Time since last update in seconds
-     */
-    update(delta) {
-        // No update logic needed for this component
-    }
-    
-    /**
      * Set a new background image
      * @param {string} imagePath - Path to the new background image
      */
     setBackgroundImage(imagePath) {
         this.backgroundImagePath = imagePath;
         this.applyBackgroundImage();
-    }
-    
-    /**
-     * Show the background
-     * Override the parent show method to set z-index
-     */
-    show() {
-        if (this.container) {
-            this.container.style.display = 'block';
-            this.container.style.zIndex = '100'; // Ensure it's above the game canvas but below UI
-            this.isVisible = true;
-        }
-    }
-    
-    /**
-     * Hide the background
-     * Override the parent hide method
-     */
-    hide() {
-        if (this.container) {
-            this.container.style.display = 'none';
-            this.isVisible = false;
-        }
-    }
-    
-    /**
-     * Check if the background is currently visible
-     * @returns {boolean} - True if the background is visible
-     */
-    getIsVisible() {
-        return this.isVisible;
     }
 }

@@ -73,9 +73,11 @@ export class UIComponent {
      * @returns {boolean} - New visibility state (true = visible)
      */
     toggle() {
-        const isVisible = this.container.style.display !== 'none';
-        this.container.style.display = isVisible ? 'none' : 'block';
-        return !isVisible;
+        this.container.style.display = this.isVisible ? 'none' : 'block';
+    }
+
+    get isVisible() {
+        return this.container.style.display == 'block';
     }
 
     get isMobile() {

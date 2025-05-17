@@ -227,19 +227,25 @@ export class HUDManager {
      * Toggle skill tree visibility
      */
     toggleSkillTree() {
-        this.components.skillTreeUI.toggleSkillTree();
+        if (this.components.skillTreeUI.isVisible) {
+            this.components.skillTreeUI.hide();
+            this.game.resume(true);
+        } else {
+            this.game.pause(false);
+            this.components.skillTreeUI.show();
+        }
     }
     
     /**
      * Toggle skill selection UI visibility
      */
     toggleSkillSelection() {
-        if (this.components.skillSelectionUI) {
-            if (this.components.skillSelectionUI.container.style.display === 'block') {
-                this.components.skillSelectionUI.hide();
-            } else {
-                this.components.skillSelectionUI.show();
-            }
+        if (this.components.skillSelectionUI.isVisible) {
+            this.components.skillSelectionUI.hide();
+            this.game.resume(true);
+        } else {
+            this.game.pause(false);
+            this.components.skillSelectionUI.show();
         }
     }
     
