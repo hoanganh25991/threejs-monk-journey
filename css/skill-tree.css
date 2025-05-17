@@ -165,13 +165,19 @@
 #skill-detail-content {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 20px;
+}
+
+#skill-customization-container {
+    display: flex;
+    gap: 20px;
 }
 
 /* Variants */
 #skill-variants-container,
 #skill-buffs-container {
-    margin-top: 20px;
+    margin-top: 10px;
+    flex: 1;
 }
 
 #skill-variants-container h3,
@@ -390,6 +396,10 @@
     
     .skill-name {
         font-size: 14px;
+    }
+    
+    #skill-customization-container {
+        flex-direction: column;
     }
     
     #skill-variants,

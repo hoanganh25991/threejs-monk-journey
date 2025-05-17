@@ -50,13 +50,15 @@ export class SkillTreeUI extends UIComponent {
 <div id="skill-detail-description">Click on a skill to view its details and customize it.</div>
 </div>
 <div id="skill-detail-content">
-<div id="skill-variants-container">
-<h3>Variants</h3>
-<div id="skill-variants"></div>
-</div>
-<div id="skill-buffs-container">
-<h3>Buffs</h3>
-<div id="skill-buffs"></div>
+<div id="skill-customization-container">
+  <div id="skill-variants-container">
+    <h3>Variants</h3>
+    <div id="skill-variants"></div>
+  </div>
+  <div id="skill-buffs-container">
+    <h3>Buffs</h3>
+    <div id="skill-buffs"></div>
+  </div>
 </div>
 </div>
 </div>
@@ -296,24 +298,61 @@ ${isActive ? "Selected" : "Select Variant"}
         this.selectVariant(skillName, variantName);
       });
     });
+    
+    // Add click event to variant containers for toggling selection
+    document.querySelectorAll(".skill-variant").forEach((variant) => {
+      variant.addEventListener("click", (event) => {
+        // Don't trigger if clicking on the button (button has its own handler)
+        if (event.target.tagName !== 'BUTTON' && !event.target.closest('button')) {
+          const variantName = variant.dataset.variant;
+          this.selectVariant(skillName, variantName);
+        }
+      });
+    });
   }
 
   /**
-   * Select a variant for a skill
+   * Select or unselect a variant for a skill
    * @param {string} skillName - Name of the skill
    * @param {string} variantName - Name of the variant
    */
   selectVariant(skillName, variantName) {
-    // Update player skills data
-    if (this.playerSkills[skillName]) {
-      this.playerSkills[skillName].activeVariant = variantName;
-    }
+    // Check if this variant is already active (for toggling)
+    const isAlreadyActive = 
+      this.playerSkills[skillName] && 
+      this.playerSkills[skillName].activeVariant === variantName;
 
-    // Update UI
+    // Clear all active variants first
     document.querySelectorAll(".skill-variant").forEach((variant) => {
       variant.classList.remove("active");
     });
 
+    // Reset all variant buttons
+    document.querySelectorAll(".variant-select-btn").forEach((button) => {
+      button.disabled = false;
+      button.textContent = "Select Variant";
+    });
+
+    // Clear buffs container if unselecting
+    if (isAlreadyActive) {
+      // Unselect the variant
+      if (this.playerSkills[skillName]) {
+        this.playerSkills[skillName].activeVariant = null;
+        // Clear any selected buffs for this skill
+        this.playerSkills[skillName].buffs = {};
+      }
+      
+      // Clear the buffs display
+      document.getElementById("skill-buffs").innerHTML = "";
+      return;
+    }
+
+    // Otherwise, select the new variant
+    if (this.playerSkills[skillName]) {
+      this.playerSkills[skillName].activeVariant = variantName;
+    }
+
+    // Update UI for the selected variant
     const selectedVariant = document.querySelector(
       `.skill-variant[data-variant="${variantName}"]`
     );
@@ -321,12 +360,14 @@ ${isActive ? "Selected" : "Select Variant"}
       selectedVariant.classList.add("active");
     }
 
-    // Update buttons
-    document.querySelectorAll(".variant-select-btn").forEach((button) => {
-      const isSelected = button.dataset.variant === variantName;
-      button.disabled = isSelected;
-      button.textContent = isSelected ? "Selected" : "Select Variant";
-    });
+    // Update button for the selected variant
+    const button = document.querySelector(
+      `.variant-select-btn[data-variant="${variantName}"]`
+    );
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Selected";
+    }
 
     // Show buffs for the selected variant
     this.showVariantBuffs(skillName, variantName);
