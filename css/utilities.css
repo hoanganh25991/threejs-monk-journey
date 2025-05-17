@@ -3,6 +3,9 @@
  * Part of the Diablo Immortal CSS optimization
  */
 
+/* Import CSS variables */
+@import url('variables.css');
+
 /* Flexbox utilities */
 .flex {
     display: flex;
@@ -26,6 +29,7 @@
 }
 
 /* Spacing utilities */
+/* Margin utilities */
 .mt-1 { margin-top: 0.25rem; }
 .mt-2 { margin-top: 0.5rem; }
 .mt-3 { margin-top: 1rem; }
@@ -49,6 +53,53 @@
 .mr-3 { margin-right: 1rem; }
 .mr-4 { margin-right: 1.5rem; }
 .mr-5 { margin-right: 2rem; }
+
+/* Padding utilities - using CSS variables for responsive design */
+.p-small { padding: var(--padding-small); }
+.p-medium { padding: var(--padding-medium); }
+.p-large { padding: var(--padding-large); }
+
+.pt-small { padding-top: var(--padding-small); }
+.pt-medium { padding-top: var(--padding-medium); }
+.pt-large { padding-top: var(--padding-large); }
+
+.pb-small { padding-bottom: var(--padding-small); }
+.pb-medium { padding-bottom: var(--padding-medium); }
+.pb-large { padding-bottom: var(--padding-large); }
+
+.pl-small { padding-left: var(--padding-small); }
+.pl-medium { padding-left: var(--padding-medium); }
+.pl-large { padding-left: var(--padding-large); }
+
+.pr-small { padding-right: var(--padding-small); }
+.pr-medium { padding-right: var(--padding-medium); }
+.pr-large { padding-right: var(--padding-large); }
+
+.px-small { 
+    padding-left: var(--padding-small); 
+    padding-right: var(--padding-small); 
+}
+.px-medium { 
+    padding-left: var(--padding-medium); 
+    padding-right: var(--padding-medium); 
+}
+.px-large { 
+    padding-left: var(--padding-large); 
+    padding-right: var(--padding-large); 
+}
+
+.py-small { 
+    padding-top: var(--padding-small); 
+    padding-bottom: var(--padding-small); 
+}
+.py-medium { 
+    padding-top: var(--padding-medium); 
+    padding-bottom: var(--padding-medium); 
+}
+.py-large { 
+    padding-top: var(--padding-large); 
+    padding-bottom: var(--padding-large); 
+}
 
 /* Text utilities */
 .text-center { text-align: center; }

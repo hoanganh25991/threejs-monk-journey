@@ -3,6 +3,9 @@
  * Part of the Diablo Immortal CSS optimization
  */
 
+/* Import CSS variables first */
+@import 'variables.css';
+
 /* Import reset styles */
 @import 'reset.css';
 
