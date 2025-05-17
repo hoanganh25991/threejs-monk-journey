@@ -87,7 +87,36 @@
         </div>
         
         <!-- Skill Tree UI Container -->
-        <div id="skill-tree"></div>
+        <div id="skill-tree">
+            <div id="skill-tree-header">
+                <div id="skill-tree-title">Monk Skill Tree</div>
+                <div id="skill-tree-points">Available Points: <span id="skill-points-value">0</span></div>
+                <button id="skill-tree-save-btn" class="circle-btn" title="Save Skill Tree">💾</button>
+            </div>
+            <div id="skill-tree-container">
+                <div id="skill-tree-view">
+                    <div id="skill-tree-skills"></div>
+                </div>
+                <div id="skill-tree-details">
+                    <div id="skill-detail-header">
+                        <div id="skill-detail-name">Select a skill</div>
+                        <div id="skill-detail-description">Click on a skill to view its details and customize it.</div>
+                    </div>
+                    <div id="skill-detail-content">
+                        <div id="skill-customization-container">
+                            <div id="skill-variants-container">
+                                <h3>Variants</h3>
+                                <div id="skill-variants"></div>
+                            </div>
+                            <div id="skill-buffs-container">
+                                <h3>Buffs</h3>
+                                <div id="skill-buffs"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Top Right UI (Home Button, Full Screen Button and Mini Map) -->
         <div id="top-right-container">

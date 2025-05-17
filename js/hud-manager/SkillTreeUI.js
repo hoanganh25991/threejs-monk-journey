@@ -8,6 +8,7 @@ import { applyBuffsToVariants } from "../../utils/SkillTreeUtils.js";
  * Skill Tree UI component
  * Displays the monk skill tree and allows skill customization with variants and buffs
  * Based on the SKILL_TREES data structure
+ * Uses DOM elements defined in index.html
  */
 export class SkillTreeUI extends UIComponent {
   /**
@@ -28,6 +29,17 @@ export class SkillTreeUI extends UIComponent {
 
     // Initialize player skills data structure
     this.playerSkills = {};
+    
+    // DOM elements
+    this.elements = {
+      skillPointsValue: null,
+      skillTreeSkills: null,
+      skillDetailName: null,
+      skillDetailDescription: null,
+      skillVariants: null,
+      skillBuffs: null,
+      saveButton: null
+    };
   }
 
   /**
@@ -35,39 +47,18 @@ export class SkillTreeUI extends UIComponent {
    * @returns {boolean} - True if initialization was successful
    */
   async init() {
-    const template = `
-<div id="skill-tree-header">
-<div id="skill-tree-title">Monk Skill Tree</div>
-<div id="skill-tree-points">Available Points: <span id="skill-points-value">${this.skillPoints}</span></div>
-<button id="skill-tree-save-btn" class="circle-btn" title="Save Skill Tree">💾</button>
-</div>
-<div id="skill-tree-container">
-<div id="skill-tree-view">
-<div id="skill-tree-skills"></div>
-</div>
-<div id="skill-tree-details">
-<div id="skill-detail-header">
-<div id="skill-detail-name">Select a skill</div>
-<div id="skill-detail-description">Click on a skill to view its details and customize it.</div>
-</div>
-<div id="skill-detail-content">
-<div id="skill-customization-container">
-  <div id="skill-variants-container">
-    <h3>Variants</h3>
-    <div id="skill-variants"></div>
-  </div>
-  <div id="skill-buffs-container">
-    <h3>Buffs</h3>
-    <div id="skill-buffs"></div>
-  </div>
-</div>
-</div>
-</div>
-</div>
-`;
+    // Check if the container exists in the DOM
+    if (!this.container) {
+      console.error(`Container element with ID "skill-tree" not found. Creating it dynamically.`);
+      this.container = document.createElement('div');
+      this.container.id = 'skill-tree';
+      
+      // Add to UI container
+      document.body.appendChild(this.container);
+    }
 
-    // Render the template
-    this.render(template);
+    // Initialize DOM element references
+    this.initDOMElements();
 
     // Hide initially
     this.hide();
@@ -82,14 +73,47 @@ export class SkillTreeUI extends UIComponent {
     this.renderSkillTree();
     
     // Add event listener for save button
-    document.getElementById('skill-tree-save-btn').addEventListener('click', () => {
-      this.saveSkillTree();
-    });
+    if (this.elements.saveButton) {
+      this.elements.saveButton.addEventListener('click', () => {
+        this.saveSkillTree();
+      });
+    } else {
+      console.error("Save button element not found in the DOM");
+    }
     
     // Initialize available points display
     this.updateAvailablePoints();
 
     return true;
+  }
+  
+  /**
+   * Initialize DOM element references
+   * Stores references to DOM elements defined in index.html
+   */
+  initDOMElements() {
+    // Get references to DOM elements
+    this.elements.skillPointsValue = document.getElementById('skill-points-value');
+    this.elements.skillTreeSkills = document.getElementById('skill-tree-skills');
+    this.elements.skillDetailName = document.getElementById('skill-detail-name');
+    this.elements.skillDetailDescription = document.getElementById('skill-detail-description');
+    this.elements.skillVariants = document.getElementById('skill-variants');
+    this.elements.skillBuffs = document.getElementById('skill-buffs');
+    this.elements.saveButton = document.getElementById('skill-tree-save-btn');
+    
+    // Update skill points display
+    if (this.elements.skillPointsValue) {
+      this.elements.skillPointsValue.textContent = this.skillPoints;
+    } else {
+      console.error("Skill points value element not found in the DOM");
+    }
+    
+    // Log any missing elements
+    Object.entries(this.elements).forEach(([key, element]) => {
+      if (!element) {
+        console.error(`DOM element "${key}" not found in the skill tree UI`);
+      }
+    });
   }
 
   /**
@@ -126,11 +150,14 @@ export class SkillTreeUI extends UIComponent {
    * Render the skill tree
    */
   renderSkillTree() {
-    const skillTreeContainer = document.getElementById("skill-tree-skills");
-    if (!skillTreeContainer) return;
+    // Check if the skill tree container exists
+    if (!this.elements.skillTreeSkills) {
+      console.error("Skill tree skills container not found in the DOM");
+      return;
+    }
 
     // Clear the container
-    skillTreeContainer.innerHTML = "";
+    this.elements.skillTreeSkills.innerHTML = "";
 
     // Create the skill tree structure
     const skillsHtml = [];
@@ -157,7 +184,7 @@ ${iconData.emoji}
     });
 
     // Add the skills to the container
-    skillTreeContainer.innerHTML = skillsHtml.join("");
+    this.elements.skillTreeSkills.innerHTML = skillsHtml.join("");
 
     // Add click event to skill nodes
     document.querySelectorAll(".skill-node").forEach((node) => {
@@ -188,7 +215,11 @@ ${iconData.emoji}
     this.showSkillVariants(skillName);
 
     // Clear buffs container initially
-    document.getElementById("skill-buffs").innerHTML = "";
+    if (this.elements.skillBuffs) {
+      this.elements.skillBuffs.innerHTML = "";
+    } else {
+      console.error("Skill buffs container not found in the DOM");
+    }
   }
 
   /**
@@ -196,17 +227,16 @@ ${iconData.emoji}
    * @param {string} skillName - Name of the skill
    */
   updateSkillDetails(skillName) {
-    const nameElement = document.getElementById("skill-detail-name");
-    const descriptionElement = document.getElementById(
-      "skill-detail-description"
-    );
-
-    if (!nameElement || !descriptionElement) return;
+    // Check if the DOM elements exist
+    if (!this.elements.skillDetailName || !this.elements.skillDetailDescription) {
+      console.error("Skill detail elements not found in the DOM");
+      return;
+    }
 
     // Check if we have data for this skill
     if (!this.skillTrees || !this.skillTrees[skillName]) {
-      nameElement.textContent = "Unknown Skill";
-      descriptionElement.textContent =
+      this.elements.skillDetailName.textContent = "Unknown Skill";
+      this.elements.skillDetailDescription.textContent =
         "No information available for this skill.";
       return;
     }
@@ -214,10 +244,10 @@ ${iconData.emoji}
     const skillData = this.skillTrees[skillName];
 
     // Update skill name
-    nameElement.textContent = skillName;
+    this.elements.skillDetailName.textContent = skillName;
 
     // Update skill description
-    descriptionElement.textContent =
+    this.elements.skillDetailDescription.textContent =
       skillData.baseDescription || "No description available.";
   }
 
@@ -226,10 +256,14 @@ ${iconData.emoji}
    * @param {string} skillName - Name of the skill
    */
   showSkillVariants(skillName) {
-    const variantsContainer = document.getElementById("skill-variants");
+    // Check if the variants container exists
+    if (!this.elements.skillVariants) {
+      console.error("Skill variants container not found in the DOM");
+      return;
+    }
 
     // Clear container
-    variantsContainer.innerHTML = "";
+    this.elements.skillVariants.innerHTML = "";
 
     // Check if we have data for this skill
     if (
@@ -237,7 +271,7 @@ ${iconData.emoji}
       !this.skillTrees[skillName] ||
       !this.skillTrees[skillName].variants
     ) {
-      variantsContainer.innerHTML =
+      this.elements.skillVariants.innerHTML =
         '<div class="no-variants">No variants available for this skill.</div>';
       return;
     }
@@ -267,41 +301,35 @@ ${iconData.emoji}
 
       // Create the variant element
       const variantHtml = `
-<div class="skill-variant ${
-        isActive ? "active" : ""
-      }" data-variant="${variantName}">
-<div class="variant-header">
-<div class="variant-icon ${iconData.cssClass}" style="background-color: rgba(0, 0, 0, 0.7); border: 2px solid ${iconData.color}; box-shadow: 0 0 10px ${iconData.color}40;">
-${iconData.emoji}
-</div>
-<div class="variant-name">${variantName}</div>
-<div class="variant-cost">${cost} points</div>
-</div>
-<div class="variant-description">${
-        variantData.description || "No description available."
-      }</div>
-<div class="variant-effects">
-${
-  variantData.effects
-    ? variantData.effects
-        .map((effect) => `<span class="effect-tag">${effect}</span>`)
-        .join("")
-    : ""
-}
-</div>
-<button class="variant-select-btn" data-variant="${variantName}" ${
-        isActive ? "disabled" : ""
-      }>
-${isActive ? "Selected" : "Select Variant"}
-</button>
-</div>
-`;
+        <div class="skill-variant ${isActive ? "active" : ""}" data-variant="${variantName}">
+          <div class="variant-header">
+            <div class="variant-icon ${iconData.cssClass}" style="background-color: rgba(0, 0, 0, 0.7); border: 2px solid ${iconData.color}; box-shadow: 0 0 10px ${iconData.color}40;">
+              ${iconData.emoji}
+            </div>
+            <div class="variant-name">${variantName}</div>
+            <div class="variant-cost">${cost} points</div>
+          </div>
+          <div class="variant-description">${variantData.description || "No description available."}</div>
+          <div class="variant-effects">
+            ${
+              variantData.effects
+                ? variantData.effects
+                    .map((effect) => `<span class="effect-tag">${effect}</span>`)
+                    .join("")
+                : ""
+            }
+          </div>
+          <button class="variant-select-btn" data-variant="${variantName}" ${isActive ? "disabled" : ""}>
+            ${isActive ? "Selected" : "Select Variant"}
+          </button>
+        </div>
+      `;
 
       variantsHtml.push(variantHtml);
     });
 
     // Add the variants to the container
-    variantsContainer.innerHTML = variantsHtml.join("");
+    this.elements.skillVariants.innerHTML = variantsHtml.join("");
 
     // Add click event to variant select buttons
     document.querySelectorAll(".variant-select-btn").forEach((button) => {
@@ -361,7 +389,11 @@ ${isActive ? "Selected" : "Select Variant"}
     }
     
     // Clear the buffs display
-    document.getElementById("skill-buffs").innerHTML = "";
+    if (this.elements.skillBuffs) {
+      this.elements.skillBuffs.innerHTML = "";
+    } else {
+      console.error("Skill buffs container not found in the DOM");
+    }
     
     // Update available points display
     this.updateAvailablePoints();
@@ -452,10 +484,14 @@ ${isActive ? "Selected" : "Select Variant"}
    * @param {string} variantName - Name of the variant
    */
   showVariantBuffs(skillName, variantName) {
-    const buffsContainer = document.getElementById("skill-buffs");
+    // Check if the buffs container exists
+    if (!this.elements.skillBuffs) {
+      console.error("Skill buffs container not found in the DOM");
+      return;
+    }
 
     // Clear container
-    buffsContainer.innerHTML = "";
+    this.elements.skillBuffs.innerHTML = "";
 
     // Check if we have data for this skill and variant
     if (
@@ -465,7 +501,7 @@ ${isActive ? "Selected" : "Select Variant"}
       !this.skillTrees[skillName].variants[variantName] ||
       !this.skillTrees[skillName].variants[variantName].buffs
     ) {
-      buffsContainer.innerHTML =
+      this.elements.skillBuffs.innerHTML =
         '<div class="no-buffs">No buffs available for this variant.</div>';
       return;
     }
@@ -497,39 +533,41 @@ ${isActive ? "Selected" : "Select Variant"}
 
       // Create the buff element
       const buffHtml = `
-<div class="skill-buff ${isActive ? "active" : ""}" data-buff="${buffName}">
-<div class="buff-header">
-<div class="buff-icon ${iconData.cssClass}" style="background-color: rgba(0, 0, 0, 0.7); border: 2px solid ${iconData.color}; box-shadow: 0 0 10px ${iconData.color}40;">
-${iconData.emoji}
-</div>
-<div class="buff-name">${buffName}</div>
-<div class="buff-cost">${cost} points</div>
-</div>
-<div class="buff-description">${
-        buffData.description || "No description available."
-      }</div>
-<div class="buff-effects">
-${
-  buffData.effects
-    ? buffData.effects
-        .map((effect) => `<span class="effect-tag">${effect}</span>`)
-        .join("")
-    : ""
-}
-</div>
-<button class="buff-select-btn" data-buff="${buffName}" ${
-        isActive ? "disabled" : ""
-      }>
-${isActive ? "Selected" : "Select Buff"}
-</button>
-</div>
-`;
+        <div class="skill-buff ${isActive ? "active" : ""}" data-buff="${buffName}">
+          <div class="buff-header">
+            <div class="buff-icon ${iconData.cssClass}" 
+                style="background-color: rgba(0, 0, 0, 0.7); 
+                        border: 2px solid ${iconData.color}; 
+                        box-shadow: 0 0 10px ${iconData.color}40;">
+              ${iconData.emoji}
+            </div>
+            <div class="buff-name">${buffName}</div>
+            <div class="buff-cost">${cost} points</div>
+          </div>
+          <div class="buff-description">
+            ${buffData.description || "No description available."}
+          </div>
+          <div class="buff-effects">
+            ${buffData.effects
+              ? buffData.effects
+                  .map((effect) => `<span class="effect-tag">${effect}</span>`)
+                  .join("")
+              : ""
+            }
+          </div>
+          <button class="buff-select-btn" 
+                  data-buff="${buffName}" 
+                  ${isActive ? "disabled" : ""}>
+            ${isActive ? "Selected" : "Select Buff"}
+          </button>
+        </div>
+      `;
 
       buffsHtml.push(buffHtml);
     });
 
     // Add the buffs to the container
-    buffsContainer.innerHTML = buffsHtml.join("");
+    this.elements.skillBuffs.innerHTML = buffsHtml.join("");
 
     // Add click event to buff select buttons
     document.querySelectorAll(".buff-select-btn").forEach((button) => {
@@ -738,6 +776,12 @@ ${isActive ? "Selected" : "Select Buff"}
    * Calculates points spent and updates the UI
    */
   updateAvailablePoints() {
+    // Check if the points element exists
+    if (!this.elements.skillPointsValue) {
+      console.error("Skill points value element not found in the DOM");
+      return;
+    }
+    
     // Calculate total points spent
     let totalPointsSpent = 0;
     
@@ -764,18 +808,15 @@ ${isActive ? "Selected" : "Select Buff"}
     const remainingPoints = this.skillPoints - totalPointsSpent;
     
     // Update the UI
-    const pointsElement = document.getElementById("skill-points-value");
-    if (pointsElement) {
-      pointsElement.textContent = remainingPoints;
-      
-      // Add visual indicator if points are low or negative
-      if (remainingPoints < 0) {
-        pointsElement.style.color = "#ff3333"; // Red for negative
-      } else if (remainingPoints < 5) {
-        pointsElement.style.color = "#ffaa33"; // Orange for low
-      } else {
-        pointsElement.style.color = "#ffcc00"; // Default yellow
-      }
+    this.elements.skillPointsValue.textContent = remainingPoints;
+    
+    // Add visual indicator if points are low or negative
+    if (remainingPoints < 0) {
+      this.elements.skillPointsValue.style.color = "#ff3333"; // Red for negative
+    } else if (remainingPoints < 5) {
+      this.elements.skillPointsValue.style.color = "#ffaa33"; // Orange for low
+    } else {
+      this.elements.skillPointsValue.style.color = "#ffcc00"; // Default yellow
     }
   }
 }
