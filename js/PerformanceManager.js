@@ -53,15 +53,23 @@ export class PerformanceManager {
         // Modify Stats.js to show 1.5x FPS
         this.modifyStatsDisplay();
         
-        document.body.appendChild(this.stats.dom);
+        // Append Stats.js to the performance indicators container
+        const performanceIndicators = document.getElementById('performance-indicators');
+        if (performanceIndicators) {
+            // Insert Stats.js as the first child
+            performanceIndicators.insertBefore(this.stats.dom, performanceIndicators.firstChild);
+        } else {
+            // Fallback to body if container doesn't exist
+            document.body.appendChild(this.stats.dom);
+        }
         
-        // Create memory usage display
+        // Initialize memory usage display
         this.createMemoryDisplay();
         
-        // Add GPU indicator next to Stats.js
+        // Initialize GPU indicator
         this.createGPUIndicator();
         
-        // Create quality level indicator
+        // Initialize quality level indicator
         this.createQualityIndicator();
         
         // Apply initial quality settings
@@ -186,15 +194,16 @@ export class PerformanceManager {
     }
     
     createQualityIndicator() {
-        // Create quality indicator container
-        this.qualityIndicator = document.createElement('div');
-        this.qualityIndicator.id = 'quality-indicator';
-        this.applyStandardIndicatorStyle(this.qualityIndicator, 48 + 5 + 14 + 5 + 14 + 5); // Position below memory display
+        // Get the existing quality indicator element
+        this.qualityIndicator = document.getElementById('quality-indicator');
+        
+        if (!this.qualityIndicator) {
+            console.error('Quality indicator element not found in the DOM');
+            return;
+        }
         
         // Update the quality text
         this.updateQualityIndicator();
-
-        document.body.appendChild(this.qualityIndicator);
     }
     
     updateQualityIndicator() {
@@ -222,25 +231,34 @@ export class PerformanceManager {
                 qualityColor = '#ffffff'; // White for unknown
         }
         
-        // Update the indicator text
-        this.qualityIndicator.innerHTML = `
-            <div style="color: ${qualityColor}; font-weight: bold;">
-                QUALITY: ${this.currentQuality.toUpperCase()}
-            </div>
-            <div style="font-size: 10px; color: #aaa; margin-top: 2px;">
-                Target FPS: ${this.targetFPS}
-            </div>
-        `;
+        // Find the quality value and target FPS elements
+        const qualityValueElement = this.qualityIndicator.querySelector('.quality-value');
+        const targetFpsElement = this.qualityIndicator.querySelector('.target-fps');
+        
+        if (qualityValueElement && targetFpsElement) {
+            // Update the text content
+            qualityValueElement.textContent = `QUALITY: ${this.currentQuality.toUpperCase()}`;
+            qualityValueElement.style.color = qualityColor;
+            targetFpsElement.textContent = `Target FPS: ${this.targetFPS}`;
+        } else {
+            // Fallback if the elements don't exist
+            this.qualityIndicator.innerHTML = `
+                <div class="quality-value" style="color: ${qualityColor}; font-weight: bold;">
+                    QUALITY: ${this.currentQuality.toUpperCase()}
+                </div>
+                <div class="target-fps" style="font-size: 10px; color: #aaa; margin-top: 2px;">
+                    Target FPS: ${this.targetFPS}
+                </div>
+            `;
+        }
     }
     
     createMemoryDisplay() {
-        // Create memory display container
-        this.memoryDisplay = document.createElement('div');
-        this.memoryDisplay.id = 'memory-display';
-        this.applyStandardIndicatorStyle(this.memoryDisplay, 48 + 5); // Position below stats.js
-        this.memoryDisplay.textContent = 'MEM: 0 MB';
-        
-        document.body.appendChild(this.memoryDisplay);
+        // Get the existing memory display element
+        this.memoryDisplay = document.getElementById('memory-display');
+        if (!this.memoryDisplay) {
+            console.error('Memory display element not found in the DOM');
+        }
     }
     
     initGarbageCollectionHelper() {
@@ -259,33 +277,20 @@ export class PerformanceManager {
     }
     
     createGPUIndicator() {
-        // Create GPU Enabled indicator below memory stats
-        this.gpuEnabledIndicator = document.createElement('div');
-        this.gpuEnabledIndicator.id = 'gpu-enabled-indicator';
-        this.applyStandardIndicatorStyle(this.gpuEnabledIndicator, 48 + 5 + 14 + 5); // Position below quality indicator
-        this.gpuEnabledIndicator.textContent = 'GPU Enabled';
+        // Get the existing GPU indicator and info panel elements
+        this.gpuEnabledIndicator = document.getElementById('gpu-enabled-indicator');
+        this.gpuInfoPanel = document.getElementById('gpu-info-panel');
         
-        // Create GPU info panel (hidden by default)
-        this.gpuInfoPanel = document.createElement('div');
-        this.gpuInfoPanel.id = 'gpu-info-panel';
-        this.gpuInfoPanel.style.position = 'absolute';
-        this.gpuInfoPanel.style.top = '0px';
-        this.gpuInfoPanel.style.right = '0px';
-        this.gpuInfoPanel.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
-        this.gpuInfoPanel.style.color = '#0ff';
-        this.gpuInfoPanel.style.padding = '10px';
-        this.gpuInfoPanel.style.fontSize = '12px';
-        this.gpuInfoPanel.style.fontFamily = 'monospace';
-        this.gpuInfoPanel.style.borderRadius = '3px 0 0 3px';
-        this.gpuInfoPanel.style.zIndex = '1002';
-        this.gpuInfoPanel.style.display = 'none';
-        this.gpuInfoPanel.style.width = '250px'; // Wider panel for GPU info
+        if (!this.gpuEnabledIndicator || !this.gpuInfoPanel) {
+            console.error('GPU indicator elements not found in the DOM');
+            return;
+        }
         
         // Get GPU information
         const gpuInfo = this.getGPUInfo();
         this.gpuInfoPanel.innerHTML = gpuInfo;
         
-        // Add click event to show/hide GPU info panel for the new indicator
+        // Add click event to show/hide GPU info panel
         this.gpuEnabledIndicator.addEventListener('click', () => {
             if (this.gpuInfoPanel.style.display === 'block') {
                 this.gpuInfoPanel.style.display = 'none';
@@ -301,10 +306,6 @@ export class PerformanceManager {
                 this.gpuInfoPanel.style.display = 'block';
             }
         });
-        
-        // Add to document
-        document.body.appendChild(this.gpuEnabledIndicator);
-        document.body.appendChild(this.gpuInfoPanel);
     }
     
     getGPUInfo() {
