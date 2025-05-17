@@ -26,7 +26,7 @@ export const PRIMARY_ATTACKS = [
         name: "Deadly Reach",
         description: "Extend your reach to strike enemies from a distance.",
         type: "projectile",
-        damage: 10,
+        damage: 1,
         manaCost: 0,
         cooldown: 0,
         range: 15, // Increased range for a proper ranged attack
