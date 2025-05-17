@@ -61,16 +61,16 @@
 
 /* Skill Tree View */
 #skill-tree-view {
-    width: 40%;
+    width: 30%;
     padding: 20px;
     overflow-y: auto;
     border-right: 1px solid rgba(138, 109, 59, 0.5);
 }
 
 #skill-tree-skills {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     padding: 10px;
 }
 
@@ -80,9 +80,12 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     padding: 10px;
-    text-align: center;
+    text-align: left;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    width: 90%;
 }
 
 .skill-node:hover {
@@ -97,20 +100,21 @@
 }
 
 .skill-icon {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    margin: 0 auto 10px;
+    margin-right: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 20px;
 }
 
 .skill-name {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: bold;
     color: #fff;
+    flex: 1;
 }
 
 /* Skill Details */
@@ -119,9 +123,6 @@
     padding: 20px;
     overflow-y: auto; /* Enable scrolling at this level */
     background-color: rgba(0, 0, 0, 0.6);
-    border-radius: 10px;
-    border: 2px solid #8a5a44;
-    box-shadow: inset 0 0 20px rgba(138, 90, 68, 0.3);
 }
 
 #skill-detail-header {
@@ -359,14 +360,19 @@
         border-bottom: 1px solid rgba(138, 109, 59, 0.5);
     }
     
-    #skill-tree-skills {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    .skill-node {
+        width: 95%;
     }
     
     .skill-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 20px;
+        width: 35px;
+        height: 35px;
+        font-size: 18px;
+        margin-right: 10px;
+    }
+    
+    .skill-name {
+        font-size: 14px;
     }
     
     #skill-variants,
