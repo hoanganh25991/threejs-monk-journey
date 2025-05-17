@@ -481,45 +481,13 @@
 }
 
 /* Mini Map */
-#mini-map-container {
+#mini-map {
     position: absolute;
     top: 60px; /* Position below the right panel buttons */
     right: 10px;
     color: white;
     pointer-events: auto; /* Ensure clicks are registered */
     z-index: 40; /* Below UI Controls but above other elements */
-}
-
-#mini-map {
-    /* Size will be set dynamically in JavaScript */
-    background-color: rgba(0, 0, 0, 0.4);
-    border-radius: 50%;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    transition: opacity 0.3s;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0; /* Remove padding */
-}
-
-/* Hide the checkbox but keep it accessible */
-.mini-map-opacity-toggle {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-    pointer-events: none;
-}
-
-/* Make the label cover the entire mini-map area */
-.mini-map-label {
-    display: block;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-    border-radius: 50%;
 }
 
 #mini-map-canvas {

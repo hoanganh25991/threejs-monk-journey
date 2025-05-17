@@ -17,7 +17,7 @@ export class MiniMapUI extends UIComponent {
      * @param {Object} game - Reference to the game instance
      */
     constructor(game) {
-        super('mini-map-container', game);
+        super('mini-map', game);
         this.mapElement = null;
         this.headerElement = null;
         this.canvas = null;
@@ -38,11 +38,7 @@ export class MiniMapUI extends UIComponent {
      */
     init() {
         const template = `
-            <div id="mini-map">
-                <label for="mini-map-opacity-toggle" class="mini-map-label">
-                    <canvas id="mini-map-canvas" width="${this.canvasSize}" height="${this.canvasSize}"></canvas>
-                </label>
-            </div>
+            <canvas id="mini-map-canvas" width="${this.canvasSize}" height="${this.canvasSize}"></canvas>
         `;
         
         // Render the template
@@ -789,12 +785,10 @@ export class MiniMapUI extends UIComponent {
         // Toggle only the map element, not the header
         if (this.mapElement) {
             // Get current visibility state
-            this.isVisible = this.mapElement.style.display !== 'none';
             
             // Toggle visibility
             const newVisibility = !this.isVisible;
             this.mapElement.style.display = newVisibility ? 'block' : 'none';
-            this.isVisible = newVisibility;
             
             // If becoming visible, force a render
             if (newVisibility) {
