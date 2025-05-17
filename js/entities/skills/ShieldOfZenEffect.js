@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /**
  * Specialized effect for Shield of Zen skill
- * Creates a golden aura around the player and a transparent Buddha figure behind them
+ * Creates energy rings around the player and a transparent Buddha figure behind them
  */
 export class ShieldOfZenEffect extends SkillEffect {
     // Static property to store the preloaded Buddha model
@@ -89,74 +89,8 @@ export class ShieldOfZenEffect extends SkillEffect {
      * @private
      */
     _createShieldOfZenEffect(effectGroup, position, direction) {
-        // Create the golden aura around the player
-        this._createGoldenAura(effectGroup);
-        
         // Create the Buddha figure behind the player
         this._createBuddhaFigure(effectGroup, direction);
-        
-        // Create particles for the effect
-        this._createParticles(effectGroup);
-    }
-
-    /**
-     * Create the golden aura around the player
-     * @param {THREE.Group} effectGroup - Group to add the aura to
-     * @private
-     */
-    _createGoldenAura(effectGroup) {
-        const auraGroup = new THREE.Group();
-        
-        // Create the main aura sphere
-        const auraGeometry = new THREE.SphereGeometry(1.5, 32, 32);
-        const auraMaterial = new THREE.MeshStandardMaterial({
-            color: this.skill.color,
-            transparent: true,
-            opacity: 0.4,
-            emissive: this.skill.color,
-            emissiveIntensity: 0.5,
-            side: THREE.DoubleSide
-        });
-        
-        const auraSphere = new THREE.Mesh(auraGeometry, auraMaterial);
-        auraGroup.add(auraSphere);
-        
-        // Create energy rings around the aura
-        const ringCount = 3;
-        for (let i = 0; i < ringCount; i++) {
-            const ringGeometry = new THREE.TorusGeometry(1.5 + (i * 0.1), 0.05, 16, 64);
-            const ringMaterial = new THREE.MeshStandardMaterial({
-                color: this.skill.color,
-                transparent: true,
-                opacity: 0.7 - (i * 0.2),
-                emissive: this.skill.color,
-                emissiveIntensity: 1.0 - (i * 0.2)
-            });
-            
-            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-            
-            // Set random rotation for each ring
-            ring.rotation.x = Math.random() * Math.PI;
-            ring.rotation.y = Math.random() * Math.PI;
-            
-            // Store animation data
-            ring.userData = {
-                rotationAxis: new THREE.Vector3(
-                    Math.random() - 0.5,
-                    Math.random() - 0.5,
-                    Math.random() - 0.5
-                ).normalize(),
-                rotationSpeed: 0.2 + (Math.random() * 0.3)
-            };
-            
-            auraGroup.add(ring);
-        }
-        
-        // Add aura to effect group
-        effectGroup.add(auraGroup);
-        
-        // Store reference to aura
-        this.aura = auraGroup;
     }
 
     /**
@@ -197,7 +131,8 @@ export class ShieldOfZenEffect extends SkillEffect {
             buddhaGroup.add(buddhaModel);
             
             // Scale the model
-            buddhaModel.scale.set(9.0, 9.0, 9.0);
+            const scale = 9.0;
+            buddhaModel.scale.set(scale, scale, scale);
             
             // Initial rotation to match player's direction exactly
             // We don't set rotation here as it will be handled in the update method
@@ -213,70 +148,11 @@ export class ShieldOfZenEffect extends SkillEffect {
         // Set position to origin (0,0,0) relative to effect group, which is already at player position
         buddhaGroup.position.set(0, 0, 0);
         
-        // Adjust y-position to place Buddha above the ground
-        // The y-offset depends on the model's dimensions - adjust if needed
-        buddhaGroup.position.y += 2.5; // Raise the Buddha to be fully visible above ground
-        
-        // No need to make Buddha face the player as rotation will be handled in update method
-        
         // Add Buddha to effect group
         effectGroup.add(buddhaGroup);
         
         // Store reference to Buddha
         this.buddhaFigure = buddhaGroup;
-    }
-
-    /**
-     * Create particles for the effect
-     * @param {THREE.Group} effectGroup - Group to add the particles to
-     * @private
-     */
-    _createParticles(effectGroup) {
-        const particleCount = 30;
-        const particles = [];
-        
-        for (let i = 0; i < particleCount; i++) {
-            // Random position within the aura
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.random() * Math.PI;
-            const radius = 1.2 + (Math.random() * 0.5);
-            
-            const x = radius * Math.sin(phi) * Math.cos(theta);
-            const y = radius * Math.sin(phi) * Math.sin(theta);
-            const z = radius * Math.cos(phi);
-            
-            // Create particle
-            const particleSize = 0.05 + (Math.random() * 0.1);
-            const particleGeometry = new THREE.SphereGeometry(particleSize, 8, 8);
-            const particleMaterial = new THREE.MeshStandardMaterial({
-                color: this.skill.color,
-                transparent: true,
-                opacity: 0.6 + (Math.random() * 0.4),
-                emissive: this.skill.color,
-                emissiveIntensity: 0.8
-            });
-            
-            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-            particle.position.set(x, y, z);
-            
-            // Store animation data
-            particle.userData = {
-                initialPosition: new THREE.Vector3(x, y, z),
-                orbitSpeed: 0.1 + (Math.random() * 0.3),
-                orbitRadius: radius,
-                orbitAxis: new THREE.Vector3(
-                    Math.random() - 0.5,
-                    Math.random() - 0.5,
-                    Math.random() - 0.5
-                ).normalize()
-            };
-            
-            effectGroup.add(particle);
-            particles.push(particle);
-        }
-        
-        // Store particles
-        this.particles = particles;
     }
 
     /**
@@ -323,7 +199,7 @@ export class ShieldOfZenEffect extends SkillEffect {
                 this.buddhaFigure.position.set(0, 0, 0);
                 
                 // Adjust y-position to place Buddha above the ground
-                this.buddhaFigure.position.y += 3.0; // Raise the Buddha to be fully visible above ground
+                this.buddhaFigure.position.y += 1.2; // Raise the Buddha to be fully visible above ground
                 
                 // Make the Buddha have exactly the same direction look as the hero
                 // We set the rotation directly from the player's rotation
@@ -347,7 +223,7 @@ export class ShieldOfZenEffect extends SkillEffect {
     _updateShieldOfZenEffect(delta) {
         // Update aura rings
         if (this.aura) {
-            for (let i = 1; i < this.aura.children.length; i++) { // Skip the first child (main sphere)
+            for (let i = 0; i < this.aura.children.length; i++) { // No need to skip first child as sphere was removed
                 const ring = this.aura.children[i];
                 if (ring.userData && ring.userData.rotationAxis && ring.userData.rotationSpeed) {
                     // Rotate ring around its custom axis
@@ -362,8 +238,8 @@ export class ShieldOfZenEffect extends SkillEffect {
         // Update the Buddha figure (without rotating it)
         if (this.buddhaFigure) {
             // Make the Buddha figure pulse with a gentle glow
-            // Base scale is now 9.0 (6x bigger) with a small pulsing effect
-            const pulseScale = 9.0 + 0.45 * Math.sin(this.elapsedTime * 2);
+            // Base scale is now 9.0 (6x bigger) with a small pulsing effect that only goes upward
+            const pulseScale = 9.0 + 5 * (1 + Math.sin(this.elapsedTime * 2)) / 2;
             this.buddhaFigure.children.forEach(child => {
                 if (child.scale) {
                     child.scale.set(pulseScale / 3.0, pulseScale / 3.0, pulseScale / 3.0);
