@@ -80,9 +80,9 @@ export class PerformanceManager {
      * Apply performance info visibility based on localStorage setting
      */
     applyPerformanceInfoVisibility() {
-        // Get the stored value or default to true (show performance info)
+        // Get the stored value or default to false (hide performance info by default)
         const showPerformanceInfo = localStorage.getItem('monk_journey_show_performance_info');
-        const showPerformanceInfoValue = showPerformanceInfo === null ? true : showPerformanceInfo === 'true';
+        const showPerformanceInfoValue = showPerformanceInfo === null ? false : showPerformanceInfo === 'true';
         
         // Set visibility based on the setting
         if (this.stats) this.stats.dom.style.display = showPerformanceInfoValue ? 'block' : 'none';
