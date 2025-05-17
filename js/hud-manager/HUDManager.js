@@ -209,6 +209,14 @@ export class HUDManager {
     }
     
     /**
+     * Check if dialog is currently visible
+     * @returns {boolean} - True if dialog is visible
+     */
+    isDialogVisible() {
+        return this.components.dialogUI && this.components.dialogUI.isDialogOpen;
+    }
+    
+    /**
      * Toggle inventory visibility
      */
     toggleInventory() {

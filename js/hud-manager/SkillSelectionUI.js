@@ -31,8 +31,68 @@ export class SkillSelectionUI extends UIComponent {
         // Maximum number of normal skills that can be selected
         this.maxNormalSkills = 7;
         
+        // Create HTML templates
+        this.createTemplates();
+        
         // Load saved skills from localStorage or use defaults
         this.loadSavedSkills();
+    }
+    
+    /**
+     * Create HTML templates for dynamic content
+     */
+    createTemplates() {
+        // Template for skill selection item
+        this.skillItemTemplate = `
+            <div class="skill-selection-item" data-skill-name="{{skillName}}" data-skill-type="{{skillType}}">
+                <div class="skill-icon-container">
+                    <div class="skill-icon {{cssClass}}" style="border-color: {{color}}; box-shadow: 0 0 10px {{color}}40;">
+                        {{icon}}
+                    </div>
+                </div>
+                <div class="skill-info">
+                    <div class="skill-name">{{skillName}}</div>
+                    <div class="skill-description">{{description}}</div>
+                </div>
+            </div>
+        `;
+        
+        // Template for preview skill button
+        this.previewSkillTemplate = `
+            <div class="skill-button {{extraClass}}" data-skill-type="{{skillType}}" data-skill="{{skillName}}" 
+                 style="border-color: {{color}}; {{boxShadow}}">
+                {{skillNameDiv}}
+                <div class="skill-icon {{cssClass}}">{{icon}}</div>
+                <div class="skill-key">{{keyDisplay}}</div>
+                <div class="skill-cooldown"></div>
+            </div>
+        `;
+        
+        // Template for no skills selected message
+        this.noSkillsTemplate = `
+            <div class="no-skills-selected">
+                <p>No skills selected yet</p>
+                <p class="hint">Select at least one primary attack</p>
+            </div>
+        `;
+    }
+    
+    /**
+     * Apply template with data
+     * @param {string} template - The template string with placeholders
+     * @param {Object} data - The data to replace placeholders
+     * @returns {string} - The processed template
+     */
+    applyTemplate(template, data) {
+        let result = template;
+        
+        // Replace all placeholders with actual data
+        for (const [key, value] of Object.entries(data)) {
+            const placeholder = new RegExp(`{{${key}}}`, 'g');
+            result = result.replace(placeholder, value || '');
+        }
+        
+        return result;
     }
     
     /**
@@ -113,45 +173,17 @@ export class SkillSelectionUI extends UIComponent {
         console.debug('Initializing SkillSelectionUI');
         console.debug('SkillSelectionUI: Container before init:', this.container);
         
-        // Create the skill selection UI HTML
-        let html = `
-            <div id="skill-selection-container">
-                <div id="skill-selection-header">
-                    <h2>Select Your Skills</h2>
-                    <div id="skill-selection-counter">
-                        <span id="normal-skills-counter">0/${this.maxNormalSkills}</span> Normal Skills Selected
-                    </div>
-                    <button id="skill-selection-save" class="circle-btn" disabled>💾</button>
-                </div>
-                
-                <div id="skill-selection-layout">
-                    <div id="skill-selection-content">
-                        <div id="primary-attack-section">
-                            <h3>Primary Attack (Select 1)</h3>
-                            <div id="primary-attack-list" class="skill-zlist single-column"></div>
-                        </div>
-                        
-                        <div id="normal-skills-section">
-                            <h3>Normal Skills (Select up to ${this.maxNormalSkills})</h3>
-                            <div id="normal-skills-list" class="skill-list"></div>
-                        </div>
-                    </div>
-                    
-                    <div id="skill-selection-preview">
-                        <h3>Battle Skills Layout</h3>
-                        <div id="selected-skills-preview" class="battle-layout"></div>
-                        <div class="preview-description">
-                            <p>This is how your skills will appear in battle</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        // Update the normal skills counter with the max value
+        const normalSkillsCounter = this.container.querySelector('#normal-skills-counter');
+        if (normalSkillsCounter) {
+            normalSkillsCounter.textContent = `0/${this.maxNormalSkills}`;
+        }
         
-        // Render the template
-        console.debug('Rendering template');
-        this.render(html);
-        console.debug('SkillSelectionUI: Container after render:', this.container);
+        // Update the normal skills section header
+        const normalSkillsHeader = this.container.querySelector('#normal-skills-section h3');
+        if (normalSkillsHeader) {
+            normalSkillsHeader.textContent = `Normal Skills (Select up to ${this.maxNormalSkills})`;
+        }
         
         // Populate skill lists
         console.debug('Populating primary attacks');
@@ -178,16 +210,6 @@ export class SkillSelectionUI extends UIComponent {
         
         console.debug('SkillSelectionUI initialization complete');
         
-        // Add a direct click handler to test if clicks are being detected
-        const container = this.container;
-        if (container) {
-            console.debug('Adding test click handler to container');
-            container.addEventListener('click', (event) => {
-                console.debug('Container clicked at:', event.clientX, event.clientY);
-                console.debug('Target:', event.target);
-            });
-        }
-        
         return true;
     }
     
@@ -201,8 +223,8 @@ export class SkillSelectionUI extends UIComponent {
         // Clear existing content
         primaryAttackList.innerHTML = '';
         
-        // Add each primary attack to the list
-        PRIMARY_ATTACKS.forEach(skill => {
+        // Generate HTML for all primary attacks
+        const primaryAttacksHTML = PRIMARY_ATTACKS.map(skill => {
             console.debug('Creating primary attack item for:', skill.name);
             
             // Get skill icon data
@@ -212,64 +234,29 @@ export class SkillSelectionUI extends UIComponent {
             // Get color for border styling
             const color = iconData.color || this.skillColors[skill.type] || '#ffffff';
             
-            // Create skill item HTML
-            const skillItem = document.createElement('div');
-            skillItem.className = 'skill-selection-item';
-            skillItem.setAttribute('data-skill-name', skill.name);
-            skillItem.setAttribute('data-skill-type', 'primary');
+            // Apply template with data
+            const skillItemHTML = this.applyTemplate(this.skillItemTemplate, {
+                skillName: skill.name,
+                skillType: 'primary',
+                cssClass: iconData.cssClass || '',
+                color: color,
+                icon: icon,
+                description: skill.description
+            });
             
-            // Add a direct click handler to each skill item
-            skillItem.onclick = (event) => {
-                console.debug('Primary skill item clicked directly:', skill.name);
-                console.debug('Event:', event);
-                
-                // Check if this skill is already selected
-                if (this.selectedPrimaryAttack === skill.name) {
-                    console.debug('Deselecting primary attack (direct handler):', skill.name);
-                    // Deselect this skill
-                    skillItem.classList.remove('selected');
-                    this.selectedPrimaryAttack = null;
-                } else {
-                    console.debug('Selecting primary attack (direct handler):', skill.name);
-                    // Deselect all primary attacks
-                    const allItems = this.container.querySelectorAll('#primary-attack-list .skill-selection-item');
-                    allItems.forEach(i => i.classList.remove('selected'));
-                    
-                    // Select this one
-                    skillItem.classList.add('selected');
-                    
-                    // Update selected primary attack
-                    this.selectedPrimaryAttack = skill.name;
-                }
-                
-                // Update preview
-                this.updatePreview();
-                
-                // Update save button state
-                this.updateSaveButtonState();
-                
-                // Prevent event bubbling
-                event.stopPropagation();
-            };
-            
-            // Check if this skill is already selected
-            if (this.selectedPrimaryAttack === skill.name) {
-                skillItem.classList.add('selected');
+            return skillItemHTML;
+        }).join('');
+        
+        // Add all items to the DOM at once
+        primaryAttackList.innerHTML = primaryAttacksHTML;
+        
+        // Add selected class to the currently selected primary attack
+        if (this.selectedPrimaryAttack) {
+            const selectedItem = primaryAttackList.querySelector(`[data-skill-name="${this.selectedPrimaryAttack}"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('selected');
             }
-            
-            skillItem.innerHTML = `
-                <div class="skill-icon-container">
-                    <div class="skill-icon ${iconData.cssClass}" style="border-color: ${color}; box-shadow: 0 0 10px ${color}40;">${icon}</div>
-                </div>
-                <div class="skill-info">
-                    <div class="skill-name">${skill.name}</div>
-                    <div class="skill-description">${skill.description}</div>
-                </div>
-            `;
-            
-            primaryAttackList.appendChild(skillItem);
-            console.debug('Added primary attack item to list:', skillItem);
-        });
+        }
     }
     
     /**
@@ -282,8 +269,8 @@ export class SkillSelectionUI extends UIComponent {
         // Clear existing content
         normalSkillsList.innerHTML = '';
         
-        // Add each normal skill to the list
-        NORMAL_SKILLS.forEach(skill => {
+        // Generate HTML for all normal skills
+        const normalSkillsHTML = NORMAL_SKILLS.map(skill => {
             console.debug('Creating normal skill item for:', skill.name);
             
             // Get skill icon data
@@ -293,79 +280,28 @@ export class SkillSelectionUI extends UIComponent {
             // Get color for border styling
             const color = iconData.color || this.skillColors[skill.type] || '#ffffff';
             
-            // Create skill item HTML
-            const skillItem = document.createElement('div');
-            skillItem.className = 'skill-selection-item';
-            skillItem.setAttribute('data-skill-name', skill.name);
-            skillItem.setAttribute('data-skill-type', 'normal');
+            // Apply template with data
+            const skillItemHTML = this.applyTemplate(this.skillItemTemplate, {
+                skillName: skill.name,
+                skillType: 'normal',
+                cssClass: iconData.cssClass || '',
+                color: color,
+                icon: icon,
+                description: skill.description
+            });
             
-            // Add a direct click handler to each skill item
-            skillItem.onclick = (event) => {
-                console.debug('Normal skill item clicked directly:', skill.name);
-                console.debug('Event:', event);
-                
-                // Check if already selected
-                if (skillItem.classList.contains('selected')) {
-                    console.debug('Deselecting normal skill (direct handler):', skill.name);
-                    // Deselect
-                    skillItem.classList.remove('selected');
-                    
-                    // Remove from selected skills
-                    const index = this.selectedNormalSkills.indexOf(skill.name);
-                    if (index !== -1) {
-                        this.selectedNormalSkills.splice(index, 1);
-                    }
-                } else {
-                    // Check if we've reached the maximum
-                    if (this.selectedNormalSkills.length >= this.maxNormalSkills) {
-                        console.debug('Maximum normal skills reached (direct handler)');
-                        // Show notification
-                        if (this.game && this.game.hudManager) {
-                            this.game.hudManager.showNotification(`You can only select ${this.maxNormalSkills} normal skills`);
-                        }
-                        return;
-                    }
-                    
-                    console.debug('Selecting normal skill (direct handler):', skill.name);
-                    // Select
-                    skillItem.classList.add('selected');
-                    
-                    // Add to selected skills
-                    this.selectedNormalSkills.push(skill.name);
-                }
-                
-                console.debug('After selection, normal skills are (direct handler):', [...this.selectedNormalSkills]);
-                
-                // Update counter
-                this.updateSkillCounter();
-                
-                // Update preview
-                this.updatePreview();
-                
-                // Update save button state
-                this.updateSaveButtonState();
-                
-                // Prevent event bubbling
-                event.stopPropagation();
-            };
-            
-            // Check if this skill is already selected
-            if (this.selectedNormalSkills.includes(skill.name)) {
-                skillItem.classList.add('selected');
+            return skillItemHTML;
+        }).join('');
+        
+        // Add all items to the DOM at once
+        normalSkillsList.innerHTML = normalSkillsHTML;
+        
+        // Add selected class to currently selected normal skills
+        this.selectedNormalSkills.forEach(skillName => {
+            const selectedItem = normalSkillsList.querySelector(`[data-skill-name="${skillName}"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('selected');
             }
-            
-            skillItem.innerHTML = `
-                <div class="skill-icon-container">
-                    <div class="skill-icon ${iconData.cssClass}" style="border-color: ${color}; box-shadow: 0 0 10px ${color}40;">${icon}</div>
-                </div>
-                <div class="skill-info">
-                    <div class="skill-name">${skill.name}</div>
-                    <div class="skill-description">${skill.description}</div>
-                </div>
-            `;
-            
-            normalSkillsList.appendChild(skillItem);
-            console.debug('Added normal skill item to list:', skillItem);
         });
     }
     
@@ -373,101 +309,95 @@ export class SkillSelectionUI extends UIComponent {
      * Add event listeners to UI elements
      */
     addEventListeners() {
-        // Primary attack selection
-        const primaryAttackItems = this.container.querySelectorAll('#primary-attack-list .skill-selection-item');
-        console.debug('Found primary attack items:', primaryAttackItems.length);
-        
-        primaryAttackItems.forEach(item => {
-            item.addEventListener('click', (event) => {
-                console.debug('Primary attack clicked:', item);
-                console.debug('Event target:', event.target);
-                console.debug('Current selected primary attack:', this.selectedPrimaryAttack);
+        // Primary attack selection - delegate events to the container
+        const primaryAttackList = this.container.querySelector('#primary-attack-list');
+        primaryAttackList.addEventListener('click', (event) => {
+            // Find the closest skill-selection-item parent
+            const skillItem = event.target.closest('.skill-selection-item');
+            if (!skillItem) return;
+            
+            const skillName = skillItem.getAttribute('data-skill-name');
+            console.debug('Primary attack clicked:', skillName);
+            
+            // Check if this skill is already selected
+            if (this.selectedPrimaryAttack === skillName) {
+                console.debug('Deselecting primary attack:', skillName);
+                // Deselect this skill
+                skillItem.classList.remove('selected');
+                this.selectedPrimaryAttack = null;
+            } else {
+                console.debug('Selecting primary attack:', skillName);
+                // Deselect all primary attacks
+                const allItems = primaryAttackList.querySelectorAll('.skill-selection-item');
+                allItems.forEach(i => i.classList.remove('selected'));
                 
-                const skillName = item.getAttribute('data-skill-name');
-                console.debug('Skill name:', skillName);
+                // Select this one
+                skillItem.classList.add('selected');
                 
-                // Check if this skill is already selected
-                if (this.selectedPrimaryAttack === skillName) {
-                    console.debug('Deselecting primary attack:', skillName);
-                    // Deselect this skill
-                    item.classList.remove('selected');
-                    this.selectedPrimaryAttack = null;
-                } else {
-                    console.debug('Selecting primary attack:', skillName);
-                    // Deselect all primary attacks
-                    primaryAttackItems.forEach(i => i.classList.remove('selected'));
-                    
-                    // Select this one
-                    item.classList.add('selected');
-                    
-                    // Update selected primary attack
-                    this.selectedPrimaryAttack = skillName;
-                }
-                
-                console.debug('After selection, primary attack is:', this.selectedPrimaryAttack);
-                
-                // Update preview
-                this.updatePreview();
-                
-                // Update save button state
-                this.updateSaveButtonState();
-            });
+                // Update selected primary attack
+                this.selectedPrimaryAttack = skillName;
+            }
+            
+            console.debug('After selection, primary attack is:', this.selectedPrimaryAttack);
+            
+            // Update preview
+            this.updatePreview();
+            
+            // Update save button state
+            this.updateSaveButtonState();
         });
         
-        // Normal skills selection
-        const normalSkillItems = this.container.querySelectorAll('#normal-skills-list .skill-selection-item');
-        console.debug('Found normal skill items:', normalSkillItems.length);
-        
-        normalSkillItems.forEach(item => {
-            item.addEventListener('click', (event) => {
-                console.debug('Normal skill clicked:', item);
-                console.debug('Event target:', event.target);
+        // Normal skills selection - delegate events to the container
+        const normalSkillsList = this.container.querySelector('#normal-skills-list');
+        normalSkillsList.addEventListener('click', (event) => {
+            // Find the closest skill-selection-item parent
+            const skillItem = event.target.closest('.skill-selection-item');
+            if (!skillItem) return;
+            
+            const skillName = skillItem.getAttribute('data-skill-name');
+            console.debug('Normal skill clicked:', skillName);
+            console.debug('Current selected normal skills:', [...this.selectedNormalSkills]);
+            
+            // Check if already selected
+            if (skillItem.classList.contains('selected')) {
+                console.debug('Deselecting normal skill:', skillName);
+                // Deselect
+                skillItem.classList.remove('selected');
                 
-                const skillName = item.getAttribute('data-skill-name');
-                console.debug('Skill name:', skillName);
-                console.debug('Current selected normal skills:', [...this.selectedNormalSkills]);
-                
-                // Check if already selected
-                if (item.classList.contains('selected')) {
-                    console.debug('Deselecting normal skill:', skillName);
-                    // Deselect
-                    item.classList.remove('selected');
-                    
-                    // Remove from selected skills
-                    const index = this.selectedNormalSkills.indexOf(skillName);
-                    if (index !== -1) {
-                        this.selectedNormalSkills.splice(index, 1);
+                // Remove from selected skills
+                const index = this.selectedNormalSkills.indexOf(skillName);
+                if (index !== -1) {
+                    this.selectedNormalSkills.splice(index, 1);
+                }
+            } else {
+                // Check if we've reached the maximum
+                if (this.selectedNormalSkills.length >= this.maxNormalSkills) {
+                    console.debug('Maximum normal skills reached');
+                    // Show notification
+                    if (this.game && this.game.hudManager) {
+                        this.game.hudManager.showNotification(`You can only select ${this.maxNormalSkills} normal skills`);
                     }
-                } else {
-                    // Check if we've reached the maximum
-                    if (this.selectedNormalSkills.length >= this.maxNormalSkills) {
-                        console.debug('Maximum normal skills reached');
-                        // Show notification
-                        if (this.game && this.game.hudManager) {
-                            this.game.hudManager.showNotification(`You can only select ${this.maxNormalSkills} normal skills`);
-                        }
-                        return;
-                    }
-                    
-                    console.debug('Selecting normal skill:', skillName);
-                    // Select
-                    item.classList.add('selected');
-                    
-                    // Add to selected skills
-                    this.selectedNormalSkills.push(skillName);
+                    return;
                 }
                 
-                console.debug('After selection, normal skills are:', [...this.selectedNormalSkills]);
+                console.debug('Selecting normal skill:', skillName);
+                // Select
+                skillItem.classList.add('selected');
                 
-                // Update counter
-                this.updateSkillCounter();
-                
-                // Update preview
-                this.updatePreview();
-                
-                // Update save button state
-                this.updateSaveButtonState();
-            });
+                // Add to selected skills
+                this.selectedNormalSkills.push(skillName);
+            }
+            
+            console.debug('After selection, normal skills are:', [...this.selectedNormalSkills]);
+            
+            // Update counter
+            this.updateSkillCounter();
+            
+            // Update preview
+            this.updatePreview();
+            
+            // Update save button state
+            this.updateSaveButtonState();
         });
         
         // Save button
@@ -494,18 +424,9 @@ export class SkillSelectionUI extends UIComponent {
         // Clear existing content
         previewContainer.innerHTML = '';
         
-        // Create preview HTML
-        let previewHTML = '';
-        
         // Show message if no skills are selected
         if (!this.selectedPrimaryAttack && this.selectedNormalSkills.length === 0) {
-            previewHTML = `
-                <div class="no-skills-selected">
-                    <p>No skills selected yet</p>
-                    <p class="hint">Select at least one primary attack</p>
-                </div>
-            `;
-            previewContainer.innerHTML = previewHTML;
+            previewContainer.innerHTML = this.noSkillsTemplate;
             return;
         }
         
@@ -551,8 +472,8 @@ export class SkillSelectionUI extends UIComponent {
             }
         }
         
-        // Create skill buttons exactly like SkillsUI
-        battleSkills.forEach((skill) => {
+        // Generate HTML for all battle skills
+        const battleSkillsHTML = battleSkills.map(skill => {
             // Get skill icon data
             const iconData = skill.isEmpty ? {} : (skill.isMore ? {} : getSkillIcon(skill.name));
             const icon = skill.isEmpty ? "+" : (skill.isMore ? "..." : (skill.icon || iconData.emoji || '✨'));
@@ -562,24 +483,35 @@ export class SkillSelectionUI extends UIComponent {
                          (skill.isMore ? '#888888' : 
                          (iconData.color || this.skillColors[skill.type] || '#ffffff'));
             
-            // Create skill button HTML exactly like SkillsUI
-            const skillHTML = `
-                <div class="skill-button ${skill.isEmpty ? 'empty-slot' : ''} ${skill.isMore ? 'more-skills' : ''}" 
-                     data-skill-type="${skill.type}" 
-                     data-skill="${skill.name}" 
-                     style="border-color: ${color}; ${!skill.isEmpty && !skill.isMore ? `box-shadow: 0 0 10px ${color}40;` : ''}">
-                    ${!skill.isEmpty && !skill.isMore ? `<div class="skill-name">${skill.name}</div>` : ''}
-                    <div class="skill-icon ${skill.isEmpty || skill.isMore ? '' : iconData.cssClass}">${icon}</div>
-                    <div class="skill-key">${skill.keyDisplay}</div>
-                    <div class="skill-cooldown"></div>
-                </div>
-            `;
+            // Determine extra classes
+            let extraClass = '';
+            if (skill.isEmpty) extraClass += 'empty-slot ';
+            if (skill.isMore) extraClass += 'more-skills ';
             
-            previewHTML += skillHTML;
-        });
+            // Create skill name div if not empty or more
+            const skillNameDiv = (!skill.isEmpty && !skill.isMore) ? 
+                `<div class="skill-name">${skill.name}</div>` : '';
+            
+            // Box shadow style
+            const boxShadow = (!skill.isEmpty && !skill.isMore) ? 
+                `box-shadow: 0 0 10px ${color}40;` : '';
+            
+            // Apply template with data
+            return this.applyTemplate(this.previewSkillTemplate, {
+                extraClass: extraClass.trim(),
+                skillType: skill.type,
+                skillName: skill.name,
+                color: color,
+                boxShadow: boxShadow,
+                skillNameDiv: skillNameDiv,
+                cssClass: (!skill.isEmpty && !skill.isMore && iconData.cssClass) ? iconData.cssClass : '',
+                icon: icon,
+                keyDisplay: skill.keyDisplay
+            });
+        }).join('');
         
-        // Set the preview HTML
-        previewContainer.innerHTML = previewHTML;
+        // Add all items to the DOM at once
+        previewContainer.innerHTML = battleSkillsHTML;
     }
     
     /**

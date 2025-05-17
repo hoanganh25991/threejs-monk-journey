@@ -244,9 +244,16 @@ export class InputHandler {
         // Set player interaction state to true
         this.game.player.setInteracting(true);
         
-        // Get player position and forward direction
+        // Get player position and rotation
         const playerPosition = this.game.player.getPosition();
-        const playerForward = this.game.player.getForwardDirection();
+        const playerRotation = this.game.player.getRotation();
+        
+        // Calculate forward direction from player rotation
+        const playerForward = new THREE.Vector3(
+            Math.sin(playerRotation.y),
+            0,
+            Math.cos(playerRotation.y)
+        );
         
         // Define interaction range
         const interactionRange = 3; // Units in world space
@@ -316,11 +323,21 @@ export class InputHandler {
                         break;
                     case 'quest':
                         // Show quest dialog
-                        this.game.questManager.startQuest(result.quest);
-                        this.game.hudManager.showDialog(
-                            `New Quest: ${result.quest.name}`,
-                            result.quest.description
-                        );
+                        if (this.game.questManager) {
+                            this.game.questManager.startQuest(result.quest);
+                        }
+                        
+                        // Toggle quest dialog if HUD manager exists
+                        if (this.game.hudManager) {
+                            if (this.game.hudManager.isDialogVisible()) {
+                                this.game.hudManager.hideDialog();
+                            } else {
+                                this.game.hudManager.showDialog(
+                                    `New Quest: ${result.quest.name}`,
+                                    result.quest.description
+                                );
+                            }
+                        }
                         break;
                     case 'boss_spawn':
                         // Show boss spawn message
