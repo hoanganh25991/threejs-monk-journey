@@ -220,7 +220,7 @@ export class BreathOfHeavenEffect extends SkillEffect {
             
             // Show a notification if available
             if (this.skill.game.hudManager && this.skill.game.hudManager.showNotification) {
-                this.skill.game.hudManager.showNotification(`Healed for ${healAmount}`);
+                // this.skill.game.hudManager.showNotification(`Healed for ${healAmount}`);
             }
         }
         
