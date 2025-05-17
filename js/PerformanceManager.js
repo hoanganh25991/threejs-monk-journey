@@ -239,7 +239,7 @@ export class PerformanceManager {
             // Update the text content
             qualityValueElement.textContent = `QUALITY: ${this.currentQuality.toUpperCase()}`;
             qualityValueElement.style.color = qualityColor;
-            targetFpsElement.textContent = `Target FPS: ${this.targetFPS}`;
+            targetFpsElement.textContent = `Target FPS ${this.targetFPS}`;
         } else {
             // Fallback if the elements don't exist
             this.qualityIndicator.innerHTML = `
