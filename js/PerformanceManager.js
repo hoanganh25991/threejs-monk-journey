@@ -2,11 +2,16 @@ import * as THREE from 'three';
 import Stats from 'three/addons/libs/stats.module.js';
 import { qualityLevels } from './config/quality-levels.js';
 import { RENDER_CONFIG } from './config/render.js';
+import { STORAGE_KEYS } from './config/storage-keys.js';
 
 export class PerformanceManager {
     constructor(game) {
         this.game = game;
-        this.targetFPS = 60; // Changed from 30 to 60 for better default performance
+        
+        // Load target FPS from localStorage or use 60 as default
+        const storedFPS = localStorage.getItem(STORAGE_KEYS.TARGET_FPS);
+        this.targetFPS = storedFPS ? parseInt(storedFPS) : 60;
+        
         this.fpsHistory = [];
         this.historySize = 30; // Store last 30 frames for smoothing
         this.adaptiveQualityEnabled = false; // Disabled by default
@@ -223,7 +228,7 @@ export class PerformanceManager {
                 QUALITY: ${this.currentQuality.toUpperCase()}
             </div>
             <div style="font-size: 10px; color: #aaa; margin-top: 2px;">
-                Target FPS: ${this.targetFPS} | Click to change
+                Target FPS: ${this.targetFPS}
             </div>
         `;
     }
@@ -765,6 +770,10 @@ export class PerformanceManager {
     
     setTargetFPS(fps) {
         this.targetFPS = fps;
+        // Save to localStorage
+        localStorage.setItem(STORAGE_KEYS.TARGET_FPS, fps);
+        // Update the quality indicator to show the new target FPS
+        this.updateQualityIndicator();
     }
     
     toggleAdaptiveQuality() {
