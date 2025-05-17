@@ -49,8 +49,8 @@ export class FullscreenButton extends UIComponent {
      */
     setupEventListeners() {
         this.container.addEventListener("click", () => {
-            if (this.game && this.game.uiManager) {
-                this.game.uiManager.toggleSkillSelection()
+            if (this.game && this.game.hudManager) {
+                this.game.hudManager.toggleSkillSelection()
             }
         })
 

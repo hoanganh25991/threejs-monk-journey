@@ -22,7 +22,7 @@
  * @property {Player} player - The player instance
  * @property {InputHandler} inputHandler - The input handler
  * @property {EffectsManager} effectsManager - The effects manager
- * @property {HUDManager} uiManager - The UI manager
+ * @property {HUDManager} hudManager - The UI manager
  * @property {EnemyManager} enemyManager - The enemy manager
  * @property {CollisionManager} collisionManager - The collision manager
  * @property {QuestManager} questManager - The quest manager

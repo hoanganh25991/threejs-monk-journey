@@ -37,8 +37,8 @@ export class GameMenu extends IMenu {
                     this.hide();
                     
                     // Hide the main background when resuming the game
-                    if (this.game.uiManager && this.game.uiManager.mainBackground) {
-                        this.game.uiManager.mainBackground.hide();
+                    if (this.game.hudManager && this.game.hudManager.mainBackground) {
+                        this.game.hudManager.mainBackground.hide();
                     }
 
                     // Resume the game
@@ -56,8 +56,8 @@ export class GameMenu extends IMenu {
                     this.hide();
                     
                     // Hide the main background when starting the game
-                    if (this.game.uiManager && this.game.uiManager.mainBackground) {
-                        this.game.uiManager.mainBackground.hide();
+                    if (this.game.hudManager && this.game.hudManager.mainBackground) {
+                        this.game.hudManager.mainBackground.hide();
                     }
                     
                     // Start the game - this will set isPaused to false and start the game loop
@@ -92,8 +92,8 @@ export class GameMenu extends IMenu {
                     }
                     
                     // Show the main background when opening settings
-                    if (this.game.uiManager && this.game.uiManager.mainBackground) {
-                        this.game.uiManager.mainBackground.show();
+                    if (this.game.hudManager && this.game.hudManager.mainBackground) {
+                        this.game.hudManager.mainBackground.show();
                     }
                     
                     // Pass the game menu element and indicate we're coming from the game menu
@@ -117,8 +117,8 @@ export class GameMenu extends IMenu {
                         this.hide();
                         
                         // Hide the main background when loading a game
-                        if (this.game.uiManager && this.game.uiManager.mainBackground) {
-                            this.game.uiManager.mainBackground.hide();
+                        if (this.game.hudManager && this.game.hudManager.mainBackground) {
+                            this.game.hudManager.mainBackground.hide();
                         }
                         
                         // Start the game with loaded data - this will set isPaused to false and start the game loop
@@ -157,15 +157,15 @@ export class GameMenu extends IMenu {
                         console.debug("Game data saved successfully");
                         
                         // Show notification
-                        if (this.game.uiManager) {
-                            this.game.uiManager.showNotification('Game saved successfully', 2000, 'success');
+                        if (this.game.hudManager) {
+                            this.game.hudManager.showNotification('Game saved successfully', 2000, 'success');
                         }
                     } else {
                         console.error("Failed to save game data");
                         
                         // Show error notification
-                        if (this.game.uiManager) {
-                            this.game.uiManager.showNotification('Failed to save game', 3000, 'error');
+                        if (this.game.hudManager) {
+                            this.game.hudManager.showNotification('Failed to save game', 3000, 'error');
                         }
                     }
                 } else {
@@ -221,8 +221,8 @@ export class GameMenu extends IMenu {
             }
             
             // Show the main background when showing the game menu
-            if (this.game.uiManager && this.game.uiManager.mainBackground) {
-                this.game.uiManager.mainBackground.show();
+            if (this.game.hudManager && this.game.hudManager.mainBackground) {
+                this.game.hudManager.mainBackground.show();
             }
             
             // Make sure the menu is visible

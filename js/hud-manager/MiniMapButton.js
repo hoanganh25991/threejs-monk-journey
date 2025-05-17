@@ -50,8 +50,8 @@ export class MiniMapButton extends UIComponent {
         if (this.container) {
             // Add click event to toggle mini map
             this.container.addEventListener('click', () => {
-                if (this.game && this.game.uiManager) {
-                    this.game.uiManager.toggleMiniMap();
+                if (this.game && this.game.hudManager) {
+                    this.game.hudManager.toggleMiniMap();
                 }
                 console.debug("Mini map button clicked - toggling mini map visibility");
             });

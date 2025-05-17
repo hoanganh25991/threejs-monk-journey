@@ -20,7 +20,7 @@ export class UIComponent {
             this.container.id = containerId;
             
             // Add to UI container
-            const uiContainer = document.getElementById('ui-container');
+            const uiContainer = document.getElementById('hud-container');
             if (uiContainer) {
                 uiContainer.appendChild(this.container);
             } else {

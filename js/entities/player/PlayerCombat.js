@@ -294,7 +294,7 @@ export class PlayerCombat extends IPlayerCombat {
                 enemy.takeDamage(damage);
                 
                 // Show damage number
-                this.game.uiManager.createBleedingEffect(damage, enemyPosition);
+                this.game.hudManager.createBleedingEffect(damage, enemyPosition);
                 
                 // Check if enemy is defeated
                 if (enemy.getHealth() <= 0) {
@@ -350,7 +350,7 @@ export class PlayerCombat extends IPlayerCombat {
         
         // Show damage taken
         const playerPosition = this.playerModel.getModelGroup().position;
-        this.game.uiManager.createBleedingEffect(reducedDamage, playerPosition, true);
+        this.game.hudManager.createBleedingEffect(reducedDamage, playerPosition, true);
         
         return reducedDamage;
     }
@@ -371,7 +371,7 @@ export class PlayerCombat extends IPlayerCombat {
         }
         
         // Show death screen
-        this.game.uiManager.showDeathScreen();
+        this.game.hudManager.showDeathScreen();
     }
     
     revive() {
@@ -390,6 +390,6 @@ export class PlayerCombat extends IPlayerCombat {
         this.playerModel.getModelGroup().rotation.x = 0;
         
         // Hide death screen
-        this.game.uiManager.hideDeathScreen();
+        this.game.hudManager.hideDeathScreen();
     }
 }

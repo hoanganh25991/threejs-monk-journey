@@ -172,8 +172,8 @@ export class Player extends IPlayer {
         const newLevel = this.stats.addExperience(amount);
         
         // Show level up notification if level changed
-        if (newLevel > 0 && this.game && this.game.uiManager) {
-            this.game.uiManager.showLevelUp(newLevel);
+        if (newLevel > 0 && this.game && this.game.hudManager) {
+            this.game.hudManager.showLevelUp(newLevel);
         }
     }
     

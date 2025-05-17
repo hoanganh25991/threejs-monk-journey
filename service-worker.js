@@ -4,12 +4,12 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '6';
+const CACHE_VERSION = '7';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 5470875;
-const TOTAL_CACHE_SIZE_MB = 5.22;
+const TOTAL_CACHE_SIZE_BYTES = 5486275;
+const TOTAL_CACHE_SIZE_MB = 5.23;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
@@ -20,6 +20,7 @@ const ASSETS_TO_CACHE = [
   'css/game-menu.css',
   'css/game.css',
   'css/hud-manager.css',
+  'css/icons.css',
   'css/initial-loading.css',
   'css/loading-screen.css',
   'css/main.css',
@@ -28,7 +29,6 @@ const ASSETS_TO_CACHE = [
   'css/performance-manager.css',
   'css/reset.css',
   'css/settings-menu.css',
-  'css/skill-icons.css',
   'css/skill-preview.css',
   'css/skill-selection.css',
   'css/skill-tree.css',
@@ -112,12 +112,14 @@ const ASSETS_TO_CACHE = [
   'js/hud-manager/HUDManager.js',
   'js/hud-manager/HomeUI.js',
   'js/hud-manager/InventoryUI.js',
+  'js/hud-manager/MiniMapButton.js',
   'js/hud-manager/MiniMapUI.js',
   'js/hud-manager/NotificationsUI.js',
   'js/hud-manager/PlayerUI.js',
   'js/hud-manager/QuestLogUI.js',
   'js/hud-manager/SkillSelectionButton.js',
   'js/hud-manager/SkillSelectionUI.js',
+  'js/hud-manager/SkillTreeButton.js',
   'js/hud-manager/SkillTreeUI.js',
   'js/hud-manager/SkillsUI.js',
   'js/hud-manager/VirtualJoystickUI.js',

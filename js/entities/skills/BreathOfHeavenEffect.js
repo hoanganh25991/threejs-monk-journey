@@ -217,8 +217,8 @@ export class BreathOfHeavenEffect extends SkillEffect {
             }
             
             // Show a notification if available
-            if (this.skill.game.uiManager && this.skill.game.uiManager.showNotification) {
-                this.skill.game.uiManager.showNotification(`Healed for ${healAmount}`);
+            if (this.skill.game.hudManager && this.skill.game.hudManager.showNotification) {
+                this.skill.game.hudManager.showNotification(`Healed for ${healAmount}`);
             }
         }
         
@@ -308,8 +308,8 @@ export class BreathOfHeavenEffect extends SkillEffect {
             this.hasAppliedSpeedBoost = true;
             
             // Show a notification if available
-            if (this.skill.game.uiManager && this.skill.game.uiManager.showNotification) {
-                this.skill.game.uiManager.showNotification(`Movement speed tripled for ${this.speedBoostDuration} seconds!`);
+            if (this.skill.game.hudManager && this.skill.game.hudManager.showNotification) {
+                this.skill.game.hudManager.showNotification(`Movement speed tripled for ${this.speedBoostDuration} seconds!`);
             }
             
             // Create a visual effect for the speed boost

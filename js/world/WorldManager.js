@@ -287,13 +287,13 @@ export class WorldManager {
                     console.debug(`Performance mode changed to: ${this.lowPerformanceMode ? 'LOW' : 'NORMAL'}`);
                     
                     // Notify user if performance mode changed
-                    if (this.game && this.game.uiManager) {
+                    if (this.game && this.game.hudManager) {
                         const message = this.lowPerformanceMode ? 
                             "Performance mode: LOW - Reducing visual quality to improve performance" :
                             "Performance mode: NORMAL - Visual quality restored";
                         
-                        if (this.game.uiManager.showNotification) {
-                            this.game.uiManager.showNotification(message, 3000);
+                        if (this.game.hudManager.showNotification) {
+                            this.game.hudManager.showNotification(message, 3000);
                         }
                     }
                     

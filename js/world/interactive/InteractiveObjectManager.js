@@ -121,8 +121,8 @@ export class InteractiveObjectManager {
         // Check if result is null or undefined before proceeding
         if (!result) {
             // No interaction result, possibly already interacted with
-            if (this.game && this.game.uiManager) {
-                this.game.uiManager.showNotification("Nothing happens.");
+            if (this.game && this.game.hudManager) {
+                this.game.hudManager.showNotification("Nothing happens.");
             }
             return;
         }
@@ -138,7 +138,7 @@ export class InteractiveObjectManager {
                 
             case 'treasure':
                 // Handle treasure interaction
-                if (this.game && this.game.uiManager) {
+                if (this.game && this.game.hudManager) {
                     this.game.player.addToInventory(result.item);
                 }
                 break;
@@ -147,8 +147,8 @@ export class InteractiveObjectManager {
                 // Handle boss spawn interaction
                 if (this.game && this.game.enemyManager) {
                     // Show notification
-                    if (this.game.uiManager) {
-                        this.game.uiManager.showNotification(result.message, 5);
+                    if (this.game.hudManager) {
+                        this.game.hudManager.showNotification(result.message, 5);
                     }
                     
                     // Spawn the boss
@@ -161,7 +161,7 @@ export class InteractiveObjectManager {
                 
             case 'item':
                 // Handle item interaction
-                if (this.game && this.game.uiManager) {
+                if (this.game && this.game.hudManager) {
                     this.game.player.addToInventory(result.item);
                 }
                 break;

@@ -10,8 +10,8 @@ export class SaveUtils {
      * @param {string} type - Notification type (optional)
      */
     static showNotification(game, message, duration = 2000, type = 'info') {
-        if (game && game.isRunning && game.uiManager) {
-            game.uiManager.showNotification(message, duration, type);
+        if (game && game.isRunning && game.hudManager) {
+            game.hudManager.showNotification(message, duration, type);
         }
     }
     

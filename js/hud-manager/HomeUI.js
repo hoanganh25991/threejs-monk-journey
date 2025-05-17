@@ -56,8 +56,8 @@ export class HomeButton extends UIComponent {
                 this.game.pause();
                 
                 // Show the main background when opening game menu
-                if (this.game.uiManager && this.game.uiManager.mainBackground) {
-                    this.game.uiManager.mainBackground.show();
+                if (this.game.hudManager && this.game.hudManager.mainBackground) {
+                    this.game.hudManager.mainBackground.show();
                 }
                 
                 // Show game menu using menu manager if available
@@ -82,8 +82,8 @@ export class HomeButton extends UIComponent {
                     this.show();
                     
                     // Hide the main background when game is running
-                    if (this.game.uiManager && this.game.uiManager.mainBackground) {
-                        this.game.uiManager.mainBackground.hide();
+                    if (this.game.hudManager && this.game.hudManager.mainBackground) {
+                        this.game.hudManager.mainBackground.hide();
                     }
                 } else if (state === 'paused') {
                     // When paused, only hide if it's not because of the options menu

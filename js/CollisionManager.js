@@ -135,8 +135,8 @@ export class CollisionManager {
         // Check if result is null or undefined before proceeding
         if (!result) {
             // No interaction result, possibly already interacted with
-            if (this.player.game && this.player.game.uiManager) {
-                this.player.game.uiManager.showNotification("Nothing happens.");
+            if (this.player.game && this.player.game.hudManager) {
+                this.player.game.hudManager.showNotification("Nothing happens.");
             }
             // Reset interaction state
             this.player.setInteracting(false);
@@ -154,8 +154,8 @@ export class CollisionManager {
                 
             case 'treasure':
                 // Handle treasure interaction
-                if (this.player.game && this.player.game.uiManager) {
-                    // this.player.game.uiManager.showNotification(`Found ${result.item.name}!`);
+                if (this.player.game && this.player.game.hudManager) {
+                    // this.player.game.hudManager.showNotification(`Found ${result.item.name}!`);
                     this.player.addToInventory(result.item);
                 }
                 break;
@@ -164,8 +164,8 @@ export class CollisionManager {
                 // Handle boss spawn interaction
                 if (this.player.game && this.player.game.enemyManager) {
                     // Show notification
-                    if (this.player.game.uiManager) {
-                        this.player.game.uiManager.showNotification(result.message, 5);
+                    if (this.player.game.hudManager) {
+                        this.player.game.hudManager.showNotification(result.message, 5);
                     }
                     
                     // Spawn the boss
@@ -178,8 +178,8 @@ export class CollisionManager {
                 
             case 'item':
                 // Handle item interaction
-                if (this.player.game && this.player.game.uiManager) {
-                    // this.player.game.uiManager.showNotification(`Found ${result.item.name}!`);
+                if (this.player.game && this.player.game.hudManager) {
+                    // this.player.game.hudManager.showNotification(`Found ${result.item.name}!`);
                     this.player.addToInventory(result.item);
                 }
                 break;
@@ -273,7 +273,7 @@ export class CollisionManager {
         enemy.takeDamage(damage);
         
         // Show damage number
-        this.player.game.uiManager.createBleedingEffect(damage, enemy.getPosition());
+        this.player.game.hudManager.createBleedingEffect(damage, enemy.getPosition());
         
         // Check if enemy is defeated
         if (enemy.getHealth() <= 0) {

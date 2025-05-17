@@ -283,8 +283,8 @@ export class EnemyManager {
                 this.game.player.addToInventory(item);
                 
                 // Show notification
-                if (this.game.uiManager) {
-                    // this.game.uiManager.showNotification(`Found ${item.name}`);
+                if (this.game.hudManager) {
+                    // this.game.hudManager.showNotification(`Found ${item.name}`);
                 }
             }
         }
@@ -377,8 +377,8 @@ export class EnemyManager {
         }
         
         // Show notification
-        if (this.game && this.game.uiManager) {
-            this.game.uiManager.showNotification(`${bossConfig.name} has appeared!`, 5);
+        if (this.game && this.game.hudManager) {
+            this.game.hudManager.showNotification(`${bossConfig.name} has appeared!`, 5);
         }
         
         return boss;
@@ -446,8 +446,8 @@ export class EnemyManager {
         this.enemies.push(boss);
         
         // Announce boss spawn
-        if (this.game && this.game.uiManager) {
-            this.game.uiManager.showNotification(`${bossType.name} has appeared!`, 5000);
+        if (this.game && this.game.hudManager) {
+            this.game.hudManager.showNotification(`${bossType.name} has appeared!`, 5000);
             
             // Play boss music if available
             if (this.game.audioManager) {

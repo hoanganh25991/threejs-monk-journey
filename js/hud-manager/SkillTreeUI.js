@@ -677,7 +677,7 @@ ${isActive ? "Selected" : "Select Buff"}
     const remainingPoints = this.skillPoints - totalPointsSpent;
     if (remainingPoints < 0) {
       // Show error message - not enough points
-      this.game && this.game.uiManager.showNotification("You don't have enough skill points! Please remove some skills or buffs.");
+      this.game && this.game.hudManager.showNotification("You don't have enough skill points! Please remove some skills or buffs.");
       return;
     }
     
@@ -691,7 +691,7 @@ ${isActive ? "Selected" : "Select Buff"}
     }
     
     // Show success message
-    this.game && this.game.uiManager.showNotification("Skill tree saved successfully!");
+    this.game && this.game.hudManager.showNotification("Skill tree saved successfully!");
     
     // Close the skill tree
     this.toggleSkillTree();

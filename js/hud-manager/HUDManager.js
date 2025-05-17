@@ -62,14 +62,14 @@ export class HUDManager {
      * If not, create it
      */
     validateUIContainer() {
-        this.uiContainer = document.getElementById('ui-container');
+        this.uiContainer = document.getElementById('hud-container');
         
         if (!this.uiContainer) {
             console.debug('UI container not found in DOM. Creating it dynamically.');
             
             // Create UI container
             this.uiContainer = document.createElement('div');
-            this.uiContainer.id = 'ui-container';
+            this.uiContainer.id = 'hud-container';
             this.uiContainer.style.zIndex = 1000;
             document.body.appendChild(this.uiContainer);
         }

@@ -113,9 +113,9 @@ export class PlayerModel extends IPlayerModel {
 
             // Try to load saved adjustments for this model
             let adjustmentsLoaded = false;
-            if (this.game && this.game.uiManager && this.game.uiManager.loadModelAdjustments) {
+            if (this.game && this.game.hudManager && this.game.hudManager.loadModelAdjustments) {
                 // This will be called again in setModel, but we need it here for initial model creation
-                adjustmentsLoaded = this.game.uiManager.loadModelAdjustments(this.currentModelId);
+                adjustmentsLoaded = this.game.hudManager.loadModelAdjustments(this.currentModelId);
             }
             
             // If no saved adjustments, apply model-specific default positions from config
@@ -562,8 +562,8 @@ export class PlayerModel extends IPlayerModel {
         
         // Try to load saved adjustments for this model
         let adjustmentsLoaded = false;
-        if (this.game && this.game.uiManager && this.game.uiManager.loadModelAdjustments) {
-            adjustmentsLoaded = this.game.uiManager.loadModelAdjustments(modelId);
+        if (this.game && this.game.hudManager && this.game.hudManager.loadModelAdjustments) {
+            adjustmentsLoaded = this.game.hudManager.loadModelAdjustments(modelId);
         }
         
         // If no saved adjustments were found, apply default model-specific adjustments

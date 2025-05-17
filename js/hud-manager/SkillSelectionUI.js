@@ -320,8 +320,8 @@ export class SkillSelectionUI extends UIComponent {
                     if (this.selectedNormalSkills.length >= this.maxNormalSkills) {
                         console.debug('Maximum normal skills reached (direct handler)');
                         // Show notification
-                        if (this.game && this.game.uiManager) {
-                            this.game.uiManager.showNotification(`You can only select ${this.maxNormalSkills} normal skills`);
+                        if (this.game && this.game.hudManager) {
+                            this.game.hudManager.showNotification(`You can only select ${this.maxNormalSkills} normal skills`);
                         }
                         return;
                     }
@@ -443,8 +443,8 @@ export class SkillSelectionUI extends UIComponent {
                     if (this.selectedNormalSkills.length >= this.maxNormalSkills) {
                         console.debug('Maximum normal skills reached');
                         // Show notification
-                        if (this.game && this.game.uiManager) {
-                            this.game.uiManager.showNotification(`You can only select ${this.maxNormalSkills} normal skills`);
+                        if (this.game && this.game.hudManager) {
+                            this.game.hudManager.showNotification(`You can only select ${this.maxNormalSkills} normal skills`);
                         }
                         return;
                     }
@@ -608,16 +608,16 @@ export class SkillSelectionUI extends UIComponent {
     saveSkillSelection() {
         // Validate selection
         if (!this.selectedPrimaryAttack) {
-            if (this.game && this.game.uiManager) {
-                this.game.uiManager.showNotification('You must select a primary attack');
+            if (this.game && this.game.hudManager) {
+                this.game.hudManager.showNotification('You must select a primary attack');
             }
             return;
         }
         
         // Warn if no normal skills are selected, but allow it
         if (this.selectedNormalSkills.length === 0) {
-            if (this.game && this.game.uiManager) {
-                this.game.uiManager.showNotification('Warning: No normal skills selected', 'warning');
+            if (this.game && this.game.hudManager) {
+                this.game.hudManager.showNotification('Warning: No normal skills selected', 'warning');
             }
         }
         
@@ -635,8 +635,8 @@ export class SkillSelectionUI extends UIComponent {
         } catch (error) {
             console.error('Error saving skill IDs to localStorage:', error);
             // Show error notification
-            if (this.game && this.game.uiManager) {
-                this.game.uiManager.showNotification('Failed to save skills. Please try again.');
+            if (this.game && this.game.hudManager) {
+                this.game.hudManager.showNotification('Failed to save skills. Please try again.');
             }
         }
         
@@ -649,13 +649,13 @@ export class SkillSelectionUI extends UIComponent {
             this.game.player.skills.loadSkillsFromIds(selectedSkillIds);
             
             // Refresh the skills UI
-            if (this.game.uiManager && this.game.uiManager.components.skillsUI) {
-                this.game.uiManager.components.skillsUI.init();
+            if (this.game.hudManager && this.game.hudManager.components.skillsUI) {
+                this.game.hudManager.components.skillsUI.init();
             }
             
             // Show success notification
-            if (this.game.uiManager) {
-                this.game.uiManager.showNotification('Skills updated and saved successfully');
+            if (this.game.hudManager) {
+                this.game.hudManager.showNotification('Skills updated and saved successfully');
             }
             
             // Hide the skill selection UI

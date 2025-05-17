@@ -30,12 +30,8 @@
     transform: scale(0.95);
 }
 
-.circle-btn:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(255, 150, 0, 0.7), 0 4px 8px rgba(0, 0, 0, 0.3);
-}
 /* UI Elements Container */
-#ui-container {
+#hud-container {
     position: absolute;
     top: 0;
     left: 0;
@@ -375,7 +371,7 @@
     /* width and height are set dynamically via JavaScript */
     position: fixed; /* Change to fixed position */
     bottom: 10px; /* Position at bottom */
-    left: 20px; /* Position at left */
+    left: 10px; /* Position at left */
     pointer-events: auto;
     touch-action: none;
     display: block;

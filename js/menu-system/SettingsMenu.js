@@ -1442,8 +1442,8 @@ export class SettingsMenu extends UIComponent {
         }
         
         // Show the main background when opening settings
-        if (this.game.uiManager && this.game.uiManager.mainBackground) {
-            this.game.uiManager.mainBackground.show();
+        if (this.game.hudManager && this.game.hudManager.mainBackground) {
+            this.game.hudManager.mainBackground.show();
         }
         
         // Show settings menu using parent class method
@@ -1505,8 +1505,8 @@ export class SettingsMenu extends UIComponent {
             }
             
             // Hide the background
-            if (this.game.uiManager && this.game.uiManager.mainBackground) {
-                this.game.uiManager.mainBackground.hide();
+            if (this.game.hudManager && this.game.hudManager.mainBackground) {
+                this.game.hudManager.mainBackground.hide();
             }
         }
     }
@@ -1528,8 +1528,8 @@ export class SettingsMenu extends UIComponent {
                 console.debug("Update to latest button clicked - performing hard reload...");
                 
                 // Show notification before reload
-                if (this.game.uiManager) {
-                    this.game.uiManager.showNotification('Updating to latest version...', 1500, 'info');
+                if (this.game.hudManager) {
+                    this.game.hudManager.showNotification('Updating to latest version...', 1500, 'info');
                 }
                 
                 // Unregister service worker to ensure clean reload

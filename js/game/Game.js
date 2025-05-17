@@ -158,8 +158,8 @@ export class Game {
             await this.effectsManager.init();
             
             // Initialize UI manager
-            this.uiManager = new HUDManager(this);
-            await this.uiManager.init();
+            this.hudManager = new HUDManager(this);
+            await this.hudManager.init();
             
             this.updateLoadingProgress(75, 'Spawning enemies...', 'Initializing enemy AI and models');
             
@@ -432,7 +432,7 @@ export class Game {
         this.collisionManager.update();
         
         // Update UI
-        this.uiManager.update(delta);
+        this.hudManager.update(delta);
         
         // Update effects
         this.effectsManager.update(delta);

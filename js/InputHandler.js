@@ -87,36 +87,36 @@ export class InputHandler {
             switch (event.code) {
                 case 'KeyY':
                     // Toggle inventory with Y key
-                    this.game.uiManager.toggleInventory();
+                    this.game.hudManager.toggleInventory();
                     console.debug('Toggling inventory with KeyY');
                     break;
                     
                 case 'KeyT':
                     // Toggle skill tree with T key
-                    this.game.uiManager.toggleSkillTree();
+                    this.game.hudManager.toggleSkillTree();
                     console.debug('Toggling skill tree with KeyT');
                     break;
                     
                 case 'KeyF':
                     // Toggle HUD visibility with F key
-                    const hudVisible = this.game.uiManager.toggleHUD();
+                    const hudVisible = this.game.hudManager.toggleHUD();
                     console.debug(`HUD visibility toggled: ${hudVisible ? 'visible' : 'hidden'}`);
                     break;
                     
                 case 'KeyM':
                     // Toggle minimap visibility with M key
-                    const minimapVisible = this.game.uiManager.toggleMiniMap();
+                    const minimapVisible = this.game.hudManager.toggleMiniMap();
                     console.debug(`Mini map visibility toggled: ${minimapVisible ? 'visible' : 'hidden'}`);
                     break;
                     
                 case 'BracketLeft':
                     // Zoom in minimap with [ key
-                    this.game.uiManager.decreaseMiniMapScale();
+                    this.game.hudManager.decreaseMiniMapScale();
                     break;
                     
                 case 'BracketRight':
                     // Zoom out minimap with ] key
-                    this.game.uiManager.increaseMiniMapScale();
+                    this.game.hudManager.increaseMiniMapScale();
                     break;
                     
                 case 'KeyH':
@@ -312,25 +312,25 @@ export class InputHandler {
                     case 'item':
                         // Add item to inventory
                         this.game.player.addToInventory(result.item);
-                        // this.game.uiManager.showNotification(`Found ${result.item.name} x${result.item.amount}`);
+                        // this.game.hudManager.showNotification(`Found ${result.item.name} x${result.item.amount}`);
                         break;
                     case 'quest':
                         // Show quest dialog
                         this.game.questManager.startQuest(result.quest);
-                        this.game.uiManager.showDialog(
+                        this.game.hudManager.showDialog(
                             `New Quest: ${result.quest.name}`,
                             result.quest.description
                         );
                         break;
                     case 'boss_spawn':
                         // Show boss spawn message
-                        this.game.uiManager.showNotification(result.message);
+                        this.game.hudManager.showNotification(result.message);
                         break;
                 }
             }
         } else {
             console.debug('No interactive objects within range');
-            this.game.uiManager.showNotification('Nothing to interact with nearby');
+            this.game.hudManager.showNotification('Nothing to interact with nearby');
         }
         
         // Reset interaction state after a short delay
@@ -364,8 +364,8 @@ export class InputHandler {
         }
         
         // Check for joystick input (if available)
-        if (this.game && this.game.uiManager && this.game.uiManager.getJoystickDirection) {
-            const joystickDir = this.game.uiManager.getJoystickDirection();
+        if (this.game && this.game.hudManager && this.game.hudManager.getJoystickDirection) {
+            const joystickDir = this.game.hudManager.getJoystickDirection();
             
             // Only use joystick if it's active (has non-zero values)
             if (joystickDir && (joystickDir.x !== 0 || joystickDir.y !== 0)) {

@@ -300,7 +300,7 @@ export class QuestManager {
                 this.quests = this.quests.filter(q => q.id !== questToStart.id);
                 
                 // Notify UI
-                this.game.uiManager.updateQuestLog(this.activeQuests);
+                this.game.hudManager.updateQuestLog(this.activeQuests);
                 
                 return true;
             }
@@ -322,8 +322,8 @@ export class QuestManager {
                         this.completeQuest(quest);
                     } else {
                         // Update UI
-                        this.game.uiManager.updateQuestLog(this.activeQuests);
-                        this.game.uiManager.showNotification(`Quest progress: ${quest.objective.progress}/${quest.objective.count} enemies defeated`);
+                        this.game.hudManager.updateQuestLog(this.activeQuests);
+                        this.game.hudManager.showNotification(`Quest progress: ${quest.objective.progress}/${quest.objective.count} enemies defeated`);
                     }
                 }
             }
@@ -341,8 +341,8 @@ export class QuestManager {
                     this.completeQuest(quest);
                 } else {
                     // Update UI
-                    this.game.uiManager.updateQuestLog(this.activeQuests);
-                    this.game.uiManager.showNotification(`Quest progress: ${quest.objective.progress}/${quest.objective.count} ${objectType}s found`);
+                    this.game.hudManager.updateQuestLog(this.activeQuests);
+                    this.game.hudManager.showNotification(`Quest progress: ${quest.objective.progress}/${quest.objective.count} ${objectType}s found`);
                 }
             }
         });
@@ -362,8 +362,8 @@ export class QuestManager {
                         this.completeQuest(quest);
                     } else {
                         // Update UI
-                        this.game.uiManager.updateQuestLog(this.activeQuests);
-                        this.game.uiManager.showNotification(`Zone discovered: ${zoneName}`);
+                        this.game.hudManager.updateQuestLog(this.activeQuests);
+                        this.game.hudManager.showNotification(`Zone discovered: ${zoneName}`);
                     }
                 }
             }
@@ -386,8 +386,8 @@ export class QuestManager {
         }
         
         // Update UI
-        this.game.uiManager.updateQuestLog(this.activeQuests);
-        this.game.uiManager.showDialog(
+        this.game.hudManager.updateQuestLog(this.activeQuests);
+        this.game.hudManager.showDialog(
             `Quest Completed: ${quest.name}`,
             `You have completed the quest and received your rewards!`
         );
@@ -407,7 +407,7 @@ export class QuestManager {
                 if (this.game.player.getLevel() >= nextQuest.requiredLevel) {
                     // Automatically start the next main quest
                     setTimeout(() => {
-                        this.game.uiManager.showDialog(
+                        this.game.hudManager.showDialog(
                             `New Quest Available: ${nextQuest.name}`,
                             `${nextQuest.description}\n\nWould you like to accept this quest?`,
                             () => this.startQuest(nextQuest)
@@ -416,7 +416,7 @@ export class QuestManager {
                 } else {
                     // Inform player about level requirement
                     setTimeout(() => {
-                        this.game.uiManager.showNotification(
+                        this.game.hudManager.showNotification(
                             `New quest "${nextQuest.name}" will be available at level ${nextQuest.requiredLevel}.`
                         );
                     }, 2000);
@@ -429,20 +429,20 @@ export class QuestManager {
         // Award experience
         if (quest.reward.experience) {
             this.game.player.addExperience(quest.reward.experience);
-            this.game.uiManager.showNotification(`Gained ${quest.reward.experience} experience`);
+            this.game.hudManager.showNotification(`Gained ${quest.reward.experience} experience`);
         }
         
         // Award gold
         if (quest.reward.gold) {
             this.game.player.addGold(quest.reward.gold);
-            this.game.uiManager.showNotification(`Gained ${quest.reward.gold} gold`);
+            this.game.hudManager.showNotification(`Gained ${quest.reward.gold} gold`);
         }
         
         // Award items
         if (quest.reward.items) {
             quest.reward.items.forEach(item => {
                 this.game.player.addToInventory(item);
-                this.game.uiManager.showNotification(`Received ${item.name} x${item.amount}`);
+                this.game.hudManager.showNotification(`Received ${item.name} x${item.amount}`);
             });
         }
     }
@@ -481,7 +481,7 @@ export class QuestManager {
         if (mainQuests.length > 0) {
             // Offer the first available main quest
             const mainQuest = mainQuests[0];
-            this.game.uiManager.showDialog(
+            this.game.hudManager.showDialog(
                 `New Main Quest Available: ${mainQuest.name}`,
                 `${mainQuest.description}\n\nWould you like to accept this quest?`,
                 () => this.startQuest(mainQuest)
@@ -495,7 +495,7 @@ export class QuestManager {
             // Offer a random side quest
             const randomIndex = Math.floor(Math.random() * sideQuests.length);
             const sideQuest = sideQuests[randomIndex];
-            this.game.uiManager.showDialog(
+            this.game.hudManager.showDialog(
                 `New Side Quest Available: ${sideQuest.name}`,
                 `${sideQuest.description}\n\nWould you like to accept this quest?`,
                 () => this.startQuest(sideQuest)

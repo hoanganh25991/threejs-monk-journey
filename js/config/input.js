@@ -43,7 +43,7 @@ export const INPUT_CONFIG = {
         ],
         joystick: {
             sizeMultiplier: 1, // Size multiplier (1 = 100% of defined size)
-            baseSize: 150, // Base size in pixels
+            baseSize: 130, // Base size in pixels
             handleSize: 60  // Handle size in pixels
         }
     }
