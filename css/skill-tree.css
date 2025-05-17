@@ -72,6 +72,7 @@
     flex-direction: column;
     gap: 10px;
     padding: 10px;
+    width: 100%;
 }
 
 /* Skill Nodes */
@@ -84,8 +85,24 @@
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
-    align-items: center;
-    width: 90%;
+    align-items: flex-start;
+    width: 100%;
+}
+
+/* Skill Info Container */
+.skill-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Skill Description */
+.skill-description {
+    font-size: 12px;
+    color: #ccc;
+    margin-top: 4px;
+    line-height: 1.3;
 }
 
 .skill-node:hover {

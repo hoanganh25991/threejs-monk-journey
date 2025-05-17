@@ -137,7 +137,7 @@ ${iconData.emoji}
 </div>
 <div class="skill-info">
   <div class="skill-name">${skillName}</div>
-  <div class="skill-description">${skill.baseDescription || "No description available."}</div>
+  <div class="skill-description">${this.truncateDescription(skill.baseDescription) || "No description available."}</div>
 </div>
 </div>
 `;
@@ -473,5 +473,21 @@ ${isActive ? "Selected" : "Select Buff"}
       // Reset pointer events when hiding
       this.container.style.pointerEvents = 'none';
     }
+  }
+
+  /**
+   * Truncate a description to a maximum length and add ellipsis
+   * @param {string} description - The description to truncate
+   * @param {number} maxLength - Maximum length before truncation (default: 60)
+   * @returns {string} - Truncated description with ellipsis if needed
+   */
+  truncateDescription(description, maxLength = 60) {
+    if (!description) return "";
+    
+    if (description.length <= maxLength) {
+      return description;
+    }
+    
+    return description.substring(0, maxLength) + "...";
   }
 }
