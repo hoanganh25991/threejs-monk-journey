@@ -376,6 +376,39 @@ export class PlayerSkills extends IPlayerSkills {
                 // Start cooldown
                 skillTemplate.startCooldown();
                 
+                // Create a new instance of the skill using the template from BATTLE_SKILLS config
+                const skillConfig = SKILLS.find(config => config.name === skillTemplate.name);
+                const newSkillInstance = new Skill(skillConfig);
+                
+                // Create a new effect handler for the new skill instance
+                newSkillInstance.effectHandler = SkillEffectFactory.createEffect(newSkillInstance);
+                
+                // Pass game reference to the new skill instance
+                newSkillInstance.game = this.game;
+                
+                // Get enemy position
+                const enemyPosition = meleeEnemy.getPosition();
+                
+                // Calculate direction to enemy
+                const direction = new THREE.Vector3().subVectors(enemyPosition, this.playerPosition).normalize();
+                
+                // Update player rotation to face enemy
+                this.playerRotation.y = Math.atan2(direction.x, direction.z);
+                
+                // Create skill effect at the current position (no teleport needed since enemy is in melee range)
+                const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
+                
+                // Add skill effect to scene
+                this.scene.add(skillEffect);
+                
+                // Play sound
+                if (this.game && this.game.audioManager) {
+                    this.game.audioManager.playSound('playerAttack');
+                }
+                
+                // Add to active skills
+                this.activeSkills.push(newSkillInstance);
+                
                 return true;
             } else {
                 // No enemy in melee range, try to find a distant enemy

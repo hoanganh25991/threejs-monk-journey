@@ -240,13 +240,13 @@ export const NORMAL_SKILLS = [
         name: 'Flying Kick',
         description: 'A swift kick that propels the Monk forward, dealing damage to enemies in its path.',
         type: 'dash',
-        damage: 20,
+        damage: 25,
         manaCost: 20,
         cooldown: 0.5,
-        range: 30,
+        range: 100,
         radius: 2,
         duration: 2,
-        kickSpeed: 0.1, // Units per second
+        kickSpeed: 1, // Units per second
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
