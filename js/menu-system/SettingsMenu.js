@@ -768,9 +768,9 @@ export class SettingsMenu extends UIComponent {
         }
         
         if (this.showPerformanceInfoCheckbox) {
-            // Get the stored value or default to true (show performance info)
+            // Get the stored value or default to false (hide performance info by default)
             const showPerformanceInfo = localStorage.getItem(STORAGE_KEYS.SHOW_PERFORMANCE_INFO);
-            const showPerformanceInfoValue = showPerformanceInfo === null ? true : showPerformanceInfo === 'true';
+            const showPerformanceInfoValue = showPerformanceInfo === null ? false : showPerformanceInfo === 'true';
             
             // Set the checkbox state
             this.showPerformanceInfoCheckbox.checked = showPerformanceInfoValue;

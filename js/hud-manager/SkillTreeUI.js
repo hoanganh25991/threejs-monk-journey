@@ -39,7 +39,7 @@ export class SkillTreeUI extends UIComponent {
 <div id="skill-tree-header">
 <div id="skill-tree-title">Monk Skill Tree</div>
 <div id="skill-tree-points">Available Points: <span id="skill-points-value">${this.skillPoints}</span></div>
-<button id="skill-tree-save-btn">Save</button>
+<button id="skill-tree-save-btn" class="circle-btn" title="Save Skill Tree">💾</button>
 </div>
 <div id="skill-tree-container">
 <div id="skill-tree-view">
@@ -245,7 +245,10 @@ ${iconData.emoji}
     const skillData = this.skillTrees[skillName];
     const playerSkillData = this.playerSkills[skillName];
     const variants = skillData.variants;
-
+    
+    // Add base skill info at the top
+    const hasActiveVariant = playerSkillData && playerSkillData.activeVariant !== null;
+    
     // Create HTML for variants
     const variantsHtml = [];
 
@@ -308,6 +311,14 @@ ${isActive ? "Selected" : "Select Variant"}
       });
     });
     
+    // Add "Use Base Skill" button event listener
+    const useBaseSkillBtn = document.getElementById("use-base-skill-btn");
+    if (useBaseSkillBtn) {
+      useBaseSkillBtn.addEventListener("click", () => {
+        this.unselectAllVariants(skillName);
+      });
+    }
+    
     // Add click event to variant containers for toggling selection
     document.querySelectorAll(".skill-variant").forEach((variant) => {
       variant.addEventListener("click", (event) => {
@@ -318,6 +329,42 @@ ${isActive ? "Selected" : "Select Variant"}
         }
       });
     });
+  }
+
+  /**
+   * Unselect all variants for a skill and revert to base skill
+   * @param {string} skillName - Name of the skill
+   */
+  unselectAllVariants(skillName) {
+    // Clear all active variants in UI
+    document.querySelectorAll(".skill-variant").forEach((variant) => {
+      variant.classList.remove("active");
+    });
+
+    // Reset all variant buttons
+    document.querySelectorAll(".variant-select-btn").forEach((button) => {
+      button.disabled = false;
+      button.textContent = "Select Variant";
+    });
+
+    // Update the base skill status text
+    const baseSkillStatus = document.querySelector(".base-skill-status");
+    if (baseSkillStatus) {
+      baseSkillStatus.textContent = "Currently Using Base Skill";
+    }
+
+    // Unselect the variant in data
+    if (this.playerSkills[skillName]) {
+      this.playerSkills[skillName].activeVariant = null;
+      // Clear any selected buffs for this skill
+      this.playerSkills[skillName].buffs = {};
+    }
+    
+    // Clear the buffs display
+    document.getElementById("skill-buffs").innerHTML = "";
+    
+    // Update available points display
+    this.updateAvailablePoints();
   }
 
   /**
@@ -384,6 +431,12 @@ ${isActive ? "Selected" : "Select Variant"}
     if (button) {
       button.disabled = true;
       button.textContent = "Selected";
+    }
+    
+    // Update the base skill status text
+    const baseSkillStatus = document.querySelector(".base-skill-status");
+    if (baseSkillStatus) {
+      baseSkillStatus.textContent = "Select a variant below or click on selected variant to unselect it";
     }
 
     // Show buffs for the selected variant
@@ -624,7 +677,7 @@ ${isActive ? "Selected" : "Select Buff"}
     const remainingPoints = this.skillPoints - totalPointsSpent;
     if (remainingPoints < 0) {
       // Show error message - not enough points
-      alert("You don't have enough skill points! Please remove some skills or buffs.");
+      this.game && this.game.uiManager.showNotification("You don't have enough skill points! Please remove some skills or buffs.");
       return;
     }
     
@@ -638,7 +691,7 @@ ${isActive ? "Selected" : "Select Buff"}
     }
     
     // Show success message
-    alert("Skill tree saved successfully!");
+    this.game && this.game.uiManager.showNotification("Skill tree saved successfully!");
     
     // Close the skill tree
     this.toggleSkillTree();

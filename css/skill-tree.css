@@ -34,7 +34,6 @@
     font-weight: bold;
     color: #ffcc00;
     text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
-    flex: 1;
 }
 
 #skill-tree-points {
@@ -45,19 +44,7 @@
 }
 
 #skill-tree-save-btn {
-    background-color: rgba(138, 109, 59, 0.7);
-    border: 1px solid #8a6d3b;
-    border-radius: 4px;
-    color: #fff;
-    padding: 8px 16px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-#skill-tree-save-btn:hover {
-    background-color: rgba(138, 109, 59, 0.9);
-    box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+    /* Uses the common circle-btn class for styling */
 }
 
 #skill-tree-close {
@@ -373,6 +360,69 @@
     flex-wrap: wrap;
     gap: 5px;
     margin-bottom: 15px;
+}
+
+/* Base Skill Option */
+.base-skill-option {
+    background-color: rgba(20, 20, 20, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.base-skill-info {
+    margin-bottom: 15px;
+}
+
+.base-skill-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffcc00;
+    margin-bottom: 8px;
+}
+
+.base-skill-description {
+    font-size: 14px;
+    color: #ccc;
+    line-height: 1.4;
+}
+
+.base-skill-status {
+    font-size: 14px;
+    color: #ccc;
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
+
+.base-skill-btn {
+    background-color: rgba(138, 109, 59, 0.5);
+    border: 1px solid #8a6d3b;
+    border-radius: 4px;
+    color: #fff;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    align-self: flex-end;
+}
+
+.base-skill-btn:hover {
+    background-color: rgba(138, 109, 59, 0.7);
+}
+
+.base-skill-btn:disabled {
+    background-color: rgba(0, 100, 0, 0.5);
+    border-color: rgba(0, 100, 0, 0.7);
+    cursor: default;
+}
+
+.variants-separator {
+    height: 1px;
+    background-color: rgba(138, 109, 59, 0.3);
+    margin: 10px 0 20px 0;
 }
 
 /* No items messages */

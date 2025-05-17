@@ -320,43 +320,6 @@
     font-weight: bold;
 }
 
-/* Buttons */
-.btn-primary, .btn-secondary {
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-primary {
-    background-color: #8a6d3b;
-    border: 1px solid #ffcc00;
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: #a58547;
-}
-
-.btn-primary:disabled {
-    background-color: #5a4a2b;
-    border-color: #8a6d3b;
-    color: #aaa;
-    cursor: not-allowed;
-}
-
-.btn-secondary {
-    background-color: transparent;
-    border: 1px solid #8a6d3b;
-    color: #ccc;
-}
-
-.btn-secondary:hover {
-    background-color: rgba(138, 109, 59, 0.2);
-    color: white;
-}
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
     #skill-selection {

@@ -121,7 +121,7 @@ export class SkillSelectionUI extends UIComponent {
                     <div id="skill-selection-counter">
                         <span id="normal-skills-counter">0/${this.maxNormalSkills}</span> Normal Skills Selected
                     </div>
-                    <button id="skill-selection-save" class="btn-primary" disabled>💾</button>
+                    <button id="skill-selection-save" class="circle-btn" disabled>💾</button>
                 </div>
                 
                 <div id="skill-selection-layout">
@@ -143,13 +143,6 @@ export class SkillSelectionUI extends UIComponent {
                         <div class="preview-description">
                             <p>This is how your skills will appear in battle</p>
                         </div>
-                    </div>
-                </div>
-                
-                <div id="skill-selection-status">
-                    <div class="status-indicator">
-                        <span id="save-status-icon" class="status-icon">💾</span>
-                        <span id="save-status-text">Skills will be saved to your browser</span>
                     </div>
                 </div>
             </div>
