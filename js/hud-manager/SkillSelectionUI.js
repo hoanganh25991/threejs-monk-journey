@@ -589,10 +589,9 @@ export class SkillSelectionUI extends UIComponent {
             if (this.game.hudManager) {
                 this.game.hudManager.showNotification('Skills updated and saved successfully');
             }
-            
-            // Hide the skill selection UI
-            this.hide();
         }
+
+        this.game.hudManager.toggleSkillSelection();
     }
     
     /**
@@ -665,9 +664,7 @@ export class SkillSelectionUI extends UIComponent {
         this.updatePreview();
         this.updateSaveButtonState();
         
-        // Show the container
-        this.container.style.display = 'block';
-        console.debug('SkillSelectionUI: Container display set to block');
+        super.show();
     }
     
     /**
@@ -692,14 +689,5 @@ export class SkillSelectionUI extends UIComponent {
                 this.selectedNormalSkills.push(skill.name);
             }
         });
-    }
-    
-    /**
-     * Hide the skill selection UI
-     */
-    hide() {
-        console.debug('SkillSelectionUI: hide() called');
-        this.container.style.display = 'none';
-        console.debug('SkillSelectionUI: Container display set to none');
     }
 }

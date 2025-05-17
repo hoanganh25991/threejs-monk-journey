@@ -229,7 +229,7 @@ export class HUDManager {
     toggleSkillTree() {
         if (this.components.skillTreeUI.isVisible) {
             this.components.skillTreeUI.hide();
-            this.game.resume(true);
+            this.game.resume(false);
         } else {
             this.game.pause(false);
             this.components.skillTreeUI.show();
@@ -242,7 +242,7 @@ export class HUDManager {
     toggleSkillSelection() {
         if (this.components.skillSelectionUI.isVisible) {
             this.components.skillSelectionUI.hide();
-            this.game.resume(true);
+            this.game.resume(false);
         } else {
             this.game.pause(false);
             this.components.skillSelectionUI.show();
