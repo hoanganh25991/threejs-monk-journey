@@ -23,7 +23,7 @@
     opacity: 0.5;
     transition: opacity 0.2s;
     box-sizing: border-box;
-    padding: 5px;
+    padding: var(--padding-small);
     margin-bottom: 5px;
     cursor: pointer;
 }
@@ -65,7 +65,7 @@
     width: 250px;
     background-color: rgba(0, 0, 0, 0.9);
     color: #0ff;
-    padding: 10px;
+    padding: var(--padding-medium);
     font-size: 12px;
     font-family: monospace;
     border-radius: 3px 0 0 3px;

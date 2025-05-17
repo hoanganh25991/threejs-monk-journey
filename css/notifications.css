@@ -22,7 +22,7 @@
     transform: translateX(-50%);
     background-color: rgba(0, 0, 0, 0.7);
     color: white;
-    padding: 6px 12px;
+    padding: var(--padding-small) var(--padding-medium);
     border-radius: 5px;
     z-index: 100;
     transition: opacity 0.3s, top 0.2s;

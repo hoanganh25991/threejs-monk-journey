@@ -41,7 +41,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
+    padding: var(--padding-medium) var(--padding-large);
     background-color: rgba(138, 109, 59, 0.3);
     border-bottom: 1px solid #8a6d3b;
 }
@@ -69,12 +69,12 @@
     flex-direction: column;
     flex: 2; /* Takes up 2/3 of the layout space */
     overflow-y: auto;
-    padding: 0 30px;
+    padding: 0 var(--padding-large);
 }
 
 #primary-attack-section,
 #normal-skills-section {
-    padding: 15px 0;
+    padding: var(--padding-medium) 0;
 }
 
 #primary-attack-section {
@@ -105,7 +105,7 @@
 .skill-selection-item {
     display: flex;
     align-items: center;
-    padding: 10px;
+    padding: var(--padding-medium);
     background-color: rgba(20, 20, 20, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
@@ -159,7 +159,7 @@
 /* Preview Section */
 #skill-selection-preview {
     flex: 1; /* Takes up 1/3 of the layout space */
-    padding: 15px;
+    padding: var(--padding-medium);
     background-color: rgba(0, 0, 0, 0.5);
     border-left: 1px solid rgba(138, 109, 59, 0.3);
     display: flex;
@@ -212,7 +212,7 @@
     color: #ccc;
     font-style: italic;
     margin-top: auto;
-    padding: 10px;
+    padding: var(--padding-medium);
     border-top: 1px dashed rgba(138, 109, 59, 0.3);
 }
 
@@ -248,7 +248,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0 4px;
+    padding: 0 calc(var(--padding-small) - 1px);
 }
 
 .skill-button .skill-icon {
@@ -265,7 +265,7 @@
     background-color: rgba(0, 0, 0, 0.7);
     border: 1px solid #6b4c2a;
     border-radius: 3px;
-    padding: 2px 4px;
+    padding: calc(var(--padding-small) - 3px) calc(var(--padding-small) - 1px);
     font-size: 10px;
     color: white;
     font-weight: bold;
@@ -314,7 +314,7 @@
     background-color: rgba(0, 0, 0, 0.7);
     border: 1px solid #6b4c2a;
     border-radius: 3px;
-    padding: 2px 4px;
+    padding: calc(var(--padding-small) - 3px) calc(var(--padding-small) - 1px);
     font-size: 10px;
     color: white;
     font-weight: bold;

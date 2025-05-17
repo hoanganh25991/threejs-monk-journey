@@ -13,5 +13,5 @@
     flex-direction: column;
     color: white;
     text-align: center;
-    padding: 20px;
+    padding: var(--padding-large);
 }
