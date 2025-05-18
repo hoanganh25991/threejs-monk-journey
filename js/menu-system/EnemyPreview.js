@@ -183,8 +183,11 @@ export class EnemyPreview {
         // Use EnemyModelFactory to create the appropriate model for this enemy type
         try {
             // Create a model using the factory
-            EnemyModelFactory.createModel(enemy, this.currentModel);
+            const model = EnemyModelFactory.createModel(enemy, this.currentModel);
             
+            // Call createModel() to build the actual geometry
+            model.createModel();
+
             // Add the model to the scene
             this.scene.add(this.currentModel);
             

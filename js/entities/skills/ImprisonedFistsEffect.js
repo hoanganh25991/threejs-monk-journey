@@ -15,7 +15,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
         // Specific properties for Imprisoned Fists
         this.lockDuration = 3.0; // Duration in seconds that enemies are locked in place
         this.damageMultiplier = 1.5; // Damage multiplier for locked enemies
-        this.maxTargets = 3; // Maximum number of enemies that can be targeted
+        this.maxTargets = 1; // Only target 1 enemy at a time
         this.targetedEnemies = []; // Array to store targeted enemies
         this.particleSystem = null; // Particle system for visual effect
         this.lockEffects = []; // Visual effects for locked enemies
@@ -24,6 +24,12 @@ export class ImprisonedFistsEffect extends SkillEffect {
         this.autoAimRange = skill.range || 15; // Range for auto-aiming
         this.hasAutoAimed = false; // Flag to track if auto-aim has been used
         this.particleDirection = null; // Store the direction for particle movement
+        
+        // Movement properties
+        this.moveSpeed = skill.moveSpeed || 15; // Speed at which the effect moves
+        this.targetEnemy = null; // The enemy being targeted
+        this.targetPosition = null; // Position to move towards
+        this.groundIndicator = null; // Visual indicator on the ground
     }
     
     /**
@@ -33,7 +39,6 @@ export class ImprisonedFistsEffect extends SkillEffect {
      * @returns {THREE.Group} - The created effect
      */
     create(position, direction) {
-        position.y -= 2.05;
         // Create a group to hold all effect elements
         const effectGroup = new THREE.Group();
         
@@ -95,14 +100,118 @@ export class ImprisonedFistsEffect extends SkillEffect {
         this.particleSystem = new THREE.Points(particleGeometry, particleMaterial);
         effectGroup.add(this.particleSystem);
         
+        // Create ground indicator (rectangle)
+        const indicatorGeometry = new THREE.PlaneGeometry(1, 5); // Width, length
+        const indicatorMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.3,
+            side: THREE.DoubleSide
+        });
+        
+        this.groundIndicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
+        this.groundIndicator.rotation.x = Math.PI / 2; // Lay flat on the ground
+        
+        // Add ground indicator to scene
+        if (this.skill.game && this.skill.game.scene) {
+            this.skill.game.scene.add(this.groundIndicator);
+        }
+        
         // Position and orient the effect
         effectGroup.position.copy(position);
+        
+        // Find nearest enemy to target
+        this.findTargetEnemy(position, direction);
+        
+        // If we have a target, orient towards it
+        if (this.targetPosition) {
+            const target = new THREE.Vector3().copy(this.targetPosition);
+            effectGroup.lookAt(target);
+            
+            // Update ground indicator position and rotation
+            this.updateGroundIndicator(position, this.targetPosition);
+        } else {
+            // No target found, just use the provided direction
+            if (direction && direction.lengthSq() > 0) {
+                const target = new THREE.Vector3().copy(position).add(direction);
+                effectGroup.lookAt(target);
+                
+                // Set a target position in the direction
+                this.targetPosition = new THREE.Vector3().copy(direction).normalize().multiplyScalar(this.skill.range).add(position);
+                
+                // Update ground indicator
+                this.updateGroundIndicator(position, this.targetPosition);
+            }
+        }
         
         // Store the effect
         this.effect = effectGroup;
         this.isActive = true;
         
         return effectGroup;
+    }
+    
+    /**
+     * Find the nearest enemy to target
+     * @param {THREE.Vector3} position - Starting position
+     * @param {THREE.Vector3} direction - Default direction if no enemy found
+     */
+    findTargetEnemy(position, direction) {
+        // Only find a target if we haven't already
+        if (this.hasAutoAimed) return;
+        
+        // Find nearest enemy if game and enemy manager are available
+        if (this.skill.game && this.skill.game.enemyManager) {
+            const nearestEnemy = this.skill.game.enemyManager.findNearestEnemy(position, this.autoAimRange);
+            
+            if (nearestEnemy) {
+                // Store the target enemy
+                this.targetEnemy = nearestEnemy;
+                this.targetPosition = nearestEnemy.getPosition();
+                
+                // Mark as auto-aimed
+                this.hasAutoAimed = true;
+                
+                console.log("Found target enemy:", nearestEnemy);
+                return;
+            }
+        }
+        
+        // No enemy found, use the provided direction
+        this.hasAutoAimed = true;
+    }
+    
+    /**
+     * Update the ground indicator to show the path
+     * @param {THREE.Vector3} start - Start position
+     * @param {THREE.Vector3} end - End position
+     */
+    updateGroundIndicator(start, end) {
+        if (!this.groundIndicator) return;
+        
+        // Calculate midpoint
+        const midpoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+        
+        // Get terrain height at midpoint if available
+        let y = 0.1; // Default slight offset from ground
+        if (this.skill.game && this.skill.game.world) {
+            y = this.skill.game.world.getTerrainHeight(midpoint.x, midpoint.z) + 0.1;
+        }
+        
+        // Position at midpoint
+        midpoint.y = y;
+        this.groundIndicator.position.copy(midpoint);
+        
+        // Calculate direction and distance
+        const direction = new THREE.Vector3().subVectors(end, start).normalize();
+        const distance = start.distanceTo(end);
+        
+        // Scale the indicator to match the distance
+        this.groundIndicator.scale.set(1, distance, 1);
+        
+        // Rotate to face the direction
+        const angle = Math.atan2(direction.x, direction.z);
+        this.groundIndicator.rotation.y = angle;
     }
     
     /**
@@ -143,6 +252,51 @@ export class ImprisonedFistsEffect extends SkillEffect {
         super.update(delta);
 
         if (!this.isActive || !this.effect) return;
+
+        // Move the effect towards the target
+        if (this.targetPosition && this.effect) {
+            const currentPosition = this.effect.position.clone();
+            const direction = new THREE.Vector3().subVectors(this.targetPosition, currentPosition).normalize();
+            
+            // Calculate movement distance for this frame
+            const moveDistance = this.moveSpeed * delta;
+            
+            // Calculate new position
+            const newPosition = new THREE.Vector3().copy(currentPosition).add(
+                direction.multiplyScalar(moveDistance)
+            );
+            
+            // Update effect position
+            this.effect.position.copy(newPosition);
+            
+            // Check if we've reached the target
+            const distanceToTarget = newPosition.distanceTo(this.targetPosition);
+            if (distanceToTarget < 1) {
+                // We've reached the target, apply effect to enemy
+                if (this.targetEnemy && !this.targetEnemy.isDead() && this.targetedEnemies.length === 0) {
+                    // Lock the enemy
+                    this.targetedEnemies.push({
+                        enemy: this.targetEnemy,
+                        lockTime: this.lockDuration,
+                        originalPosition: this.targetEnemy.getPosition().clone()
+                    });
+                    
+                    // Create visual lock effect
+                    this.createLockEffect(this.targetEnemy);
+                    
+                    // Apply initial damage
+                    this.targetEnemy.takeDamage(this.skill.damage * this.damageMultiplier);
+                    
+                    // Play impact sound
+                    if (this.skill.game && this.skill.game.audioManager && this.skill.sounds) {
+                        this.skill.game.audioManager.playSound(this.skill.sounds.impact);
+                    }
+                }
+                
+                // Deactivate the effect after reaching target
+                this.isActive = false;
+            }
+        }
 
         // Update particle system
         if (this.particleSystem) {
@@ -232,6 +386,12 @@ export class ImprisonedFistsEffect extends SkillEffect {
                 }
             }
         });
+        
+        // Update ground indicator position
+        if (this.groundIndicator && this.effect) {
+            const startPos = this.effect.position.clone();
+            this.updateGroundIndicator(startPos, this.targetPosition);
+        }
     }
     
     /**
@@ -253,6 +413,23 @@ export class ImprisonedFistsEffect extends SkillEffect {
             }
         });
         
+        // Clean up ground indicator
+        if (this.groundIndicator) {
+            if (this.groundIndicator.parent) {
+                this.groundIndicator.parent.remove(this.groundIndicator);
+            }
+            
+            if (this.groundIndicator.geometry) {
+                this.groundIndicator.geometry.dispose();
+            }
+            
+            if (this.groundIndicator.material) {
+                this.groundIndicator.material.dispose();
+            }
+            
+            this.groundIndicator = null;
+        }
+        
         this.lockEffects = [];
         this.targetedEnemies = [];
         
@@ -273,6 +450,8 @@ export class ImprisonedFistsEffect extends SkillEffect {
         this.lockEffects = [];
         this.particleSystem = null;
         this.particleDirection = null;
+        this.targetEnemy = null;
+        this.targetPosition = null;
         
         // Call parent reset method
         super.reset();
