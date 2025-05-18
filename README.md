@@ -7,6 +7,9 @@ Monk Journey is an action RPG game where you play as a monk with powerful martia
 ![monk-journey](screenshots/monk-journey-061105-20250511.jpg)
 ![monk-journey](screenshots/monk-journey-061135-20250511.jpg)
 ![monk-journey](screenshots/monk-journey-061156-20250511.jpg)
+![monk-journey](screenshots/monk-journey-breath-of-heave-20250518.png)
+![monk-journey](screenshots/monk-journey-skill-selection-20250518.png)
+![monk-journey](screenshots/monk-journey-variant-selection-20250518.png)
 
 ## Features
 
@@ -19,10 +22,7 @@ Monk Journey is an action RPG game where you play as a monk with powerful martia
 ## Controls
 
 - **WASD**: Move character
-- **1-4**: Use primary skills
-- **5-7**: Use secondary skills
-- **J,K,L,;**: Alternative keys for primary skills (1-4)
-- **U,I,O**: Alternative keys for secondary skills (5-7)
+- **1-7**: Use skills
 
 ## Installation
 

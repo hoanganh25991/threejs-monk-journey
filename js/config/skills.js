@@ -263,7 +263,7 @@ export const NORMAL_SKILLS = [
         damage: 20,
         manaCost: 25,
         cooldown: 2,
-        range: 2,
+        range: 10,
         radius: 5,
         duration: 2,
         get color() { return SKILL_ICONS[this.name].color; },
