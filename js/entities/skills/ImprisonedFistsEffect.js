@@ -38,6 +38,9 @@ export class ImprisonedFistsEffect extends SkillEffect {
         
         // Ground rectangle properties for collision detection
         this.lockEnemiesDuringTravel = skill.lockEnemiesDuringTravel || true; // Apply lock effect to enemies hit during travel
+        
+        // Ground indicator properties
+        this.groundIndicatorOffset = 0.1; // Slight offset from ground
     }
     
     /**
@@ -108,15 +111,14 @@ export class ImprisonedFistsEffect extends SkillEffect {
         this.particleSystem = new THREE.Points(particleGeometry, particleMaterial);
         effectGroup.add(this.particleSystem);
         
-        // Create ground indicator (rectangle)
+        // Create a single ground indicator instance that will grow in length as the skill travels
         // For a rectangle lying flat on the ground (X-Z plane):
         // - Width = skill radius (perpendicular to travel direction)
         // - Length = will increase dynamically as the skill moves from the hero (along travel direction)
-        // - Initial length is small (0.1) and will grow as the skill moves
         const width = this.skill.radius || 5; // Width equals the skill's radius
         const initialLength = 0.1; // Initial length is small, will grow dynamically
         
-        const indicatorGeometry = new THREE.PlaneGeometry(width, initialLength); 
+        // Create material for the ground indicator
         const indicatorMaterial = new THREE.MeshBasicMaterial({
             color: 0x00ffff,
             transparent: true,
@@ -124,33 +126,67 @@ export class ImprisonedFistsEffect extends SkillEffect {
             side: THREE.DoubleSide
         });
         
+        // Create initial geometry
+        const indicatorGeometry = new THREE.PlaneGeometry(width, initialLength);
+        
+        // Create the mesh
         this.groundIndicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
-        this.groundIndicator.rotation.x = Math.PI / 2; // Lay flat on the ground (X-Z plane)
-        this.startPosition = position.clone(); // Store starting position for ground indicator
+        
+        // Store the starting position for calculating the length
+        this.startPosition = position.clone();
+        
+        // Position the indicator at the starting position
+        this.groundIndicator.position.copy(position);
+        
+        // We'll set the proper rotation in updateGroundIndicator
+        // Just initialize with identity rotation here
+        this.groundIndicator.rotation.set(0, 0, 0);
         
         // Add ground indicator to scene
         if (this.skill.game && this.skill.game.scene) {
             this.skill.game.scene.add(this.groundIndicator);
+            
+            // Initialize the ground indicator with the correct orientation
+            // This ensures it's properly oriented from the start
+            this.updateGroundIndicator(position);
         }
         
-        // Position and orient the effect
+        // Position the effect
         effectGroup.position.copy(position);
         
         // Find nearest enemy to target
         this.findTargetEnemy(position, direction);
         
+        // Store the original direction for reference
+        this.originalDirection = direction.clone();
+        
         // If we have a target, orient towards it
         if (this.targetPosition) {
-            const target = new THREE.Vector3().copy(this.targetPosition);
+            // Calculate direction to target
+            const dirToTarget = new THREE.Vector3().subVectors(this.targetPosition, position).normalize();
+            
+            // Create a target point to look at
+            const target = new THREE.Vector3().copy(position).add(dirToTarget);
+            
+            // Orient the effect group to face the target
             effectGroup.lookAt(target);
+            
+            // Log the direction for debugging
+            console.debug(`Orienting towards target: (${dirToTarget.x.toFixed(2)}, ${dirToTarget.y.toFixed(2)}, ${dirToTarget.z.toFixed(2)})`)
             
             // Update ground indicator position and rotation to match the skill direction
             this.updateGroundIndicator(position);
         } else {
             // No target found, just use the provided direction
             if (direction && direction.lengthSq() > 0) {
+                // Create a target point in the direction
                 const target = new THREE.Vector3().copy(position).add(direction);
+                
+                // Orient the effect group to face the direction
                 effectGroup.lookAt(target);
+                
+                // Log the direction for debugging
+                console.debug(`Orienting in direction: (${direction.x.toFixed(2)}, ${direction.y.toFixed(2)}, ${direction.z.toFixed(2)})`)
                 
                 // Set a target position in the direction
                 this.targetPosition = new THREE.Vector3().copy(direction).normalize().multiplyScalar(this.skill.range).add(position);
@@ -159,6 +195,9 @@ export class ImprisonedFistsEffect extends SkillEffect {
                 this.updateGroundIndicator(position);
             }
         }
+        
+        // Store the effect's initial quaternion for reference
+        this.initialQuaternion = effectGroup.quaternion.clone();
         
         // Store the effect
         this.effect = effectGroup;
@@ -188,7 +227,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
                 // Mark as auto-aimed
                 this.hasAutoAimed = true;
                 
-                console.log("Found target enemy:", nearestEnemy);
+                console.debug("Found target enemy:", nearestEnemy)
                 return;
             }
         }
@@ -198,17 +237,21 @@ export class ImprisonedFistsEffect extends SkillEffect {
     }
     
     /**
-     * Update the ground indicator to show the path and check for enemy collisions
+     * Update the ground indicator to show the path of the skill effect
      * @param {THREE.Vector3} currentPosition - Current position of the skill effect
      */
     updateGroundIndicator(currentPosition) {
-        if (!this.groundIndicator || !this.startPosition) return;
+        if (!this.groundIndicator || !this.startPosition || !this.effect) return;
         
-        // Calculate direction and distance
-        const direction = new THREE.Vector3().subVectors(currentPosition, this.startPosition).normalize();
+        // Get the direction from the effect's orientation
+        const effectDirection = new THREE.Vector3(0, 0, -1); // Forward direction in local space
+        effectDirection.applyQuaternion(this.effect.quaternion); // Transform to world space
+        effectDirection.normalize();
+        
+        // Calculate the distance from start to current position
         const distance = this.startPosition.distanceTo(currentPosition);
         
-        // Calculate midpoint between hero and current position
+        // Calculate the midpoint between start and current position
         const midpoint = new THREE.Vector3().addVectors(this.startPosition, currentPosition).multiplyScalar(0.5);
         
         // Get terrain height at midpoint if available
@@ -217,50 +260,50 @@ export class ImprisonedFistsEffect extends SkillEffect {
             terrainHeight = this.skill.game.world.getTerrainHeight(midpoint.x, midpoint.z) + 0.1;
         }
         
-        // Position at midpoint with correct height above terrain
-        // The Y position is just a small offset from the terrain height
-        midpoint.y = terrainHeight;
+        // Update the ground indicator's position to be at the midpoint
+        midpoint.y = terrainHeight; // Set the correct height above terrain
         this.groundIndicator.position.copy(midpoint);
         
-        // Create a new geometry with the updated length
+        // Get terrain height at the current position for better ground alignment
+        if (this.skill.game && this.skill.game.world) {
+            // Update the terrain height at the current position
+            const currentTerrainHeight = this.skill.game.world.getTerrainHeight(currentPosition.x, currentPosition.z) + 0.1;
+            
+            // This ensures the indicator follows the terrain height at the current position
+            if (Math.abs(terrainHeight - currentTerrainHeight) > 0.5) {
+                console.debug(`Terrain height change: ${terrainHeight.toFixed(2)} to ${currentTerrainHeight.toFixed(2)}`);
+            }
+        }
+        
+        // Update the geometry to match the new length
+        // Dispose of the old geometry to prevent memory leaks
         if (this.groundIndicator.geometry) {
             this.groundIndicator.geometry.dispose();
         }
         
-        // For a rectangle lying flat on the ground (X-Z plane):
-        // - Width (first parameter) = skill radius (perpendicular to travel direction)
-        // - Length (second parameter) = distance from hero to current position (along travel direction)
-        // This creates a rectangle that grows in length as the skill moves from the hero
+        // Create a new geometry with the updated length
         const width = this.skill.radius || 5; // Width equals the skill's radius
-        const length = distance; // Length increases as the skill moves
+        const length = Math.max(0.1, distance); // Length increases as the skill moves, minimum 0.1
         
         const newGeometry = new THREE.PlaneGeometry(width, length);
         this.groundIndicator.geometry = newGeometry;
         
-        // Create a new object to handle rotation properly
-        // This ensures the ground indicator is always flat on the ground
-        const quaternion = new THREE.Quaternion();
+        // Apply rotation to ensure the indicator is flat on the ground and aligned with direction
         
-        // First, make it flat on the ground (rotated 90 degrees around X axis)
-        quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+        // 1. Calculate the angle in the XZ plane based on the effect's direction
+        const angle = Math.atan2(effectDirection.x, effectDirection.z);
         
-        // Then rotate it to face the direction of travel
-        // We need to use a temporary quaternion for the Y rotation
-        const tempQuaternion = new THREE.Quaternion();
-        const angle = Math.atan2(direction.x, direction.z);
-        tempQuaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+        // 2. Reset rotation and apply in the correct sequence
+        this.groundIndicator.quaternion.identity(); // Reset to identity quaternion
         
-        // Combine the rotations
-        quaternion.multiply(tempQuaternion);
+        // 3. Create and apply the combined rotation in one step
+        // First flat on ground (X rotation), then aligned with direction (Y rotation)
+        const flatRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+        const directionRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+        this.groundIndicator.quaternion.multiplyQuaternions(directionRotation, flatRotation);
         
-        // Apply the combined rotation
-        this.groundIndicator.quaternion.copy(quaternion);
-        
-        // Log the direction and angle for debugging
-        console.log(`Direction: (${direction.x.toFixed(2)}, ${direction.z.toFixed(2)}), Angle: ${(angle * 180 / Math.PI).toFixed(2)}°`);
-        
-        // The ground rectangle will help to check if any enemies should be locked
-        // This is handled in the update method where we check for enemies hit during travel
+        // Log minimal debug info
+        console.debug(`Ground Indicator - Angle: ${(angle * 180 / Math.PI).toFixed(2)}°`)
     }
     
     /**
@@ -335,7 +378,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
             if (distanceToTarget < 1 || distanceFromStart >= this.skill.range) {
                 // We've reached the target or maximum range, deactivate the effect
                 this.isActive = false;
-                console.log(`Skill deactivated: Distance to target: ${distanceToTarget.toFixed(2)}, Distance from start: ${distanceFromStart.toFixed(2)}, Max range: ${this.skill.range}`);
+                console.debug(`Skill deactivated: Distance to target: ${distanceToTarget.toFixed(2)}, Distance from start: ${distanceFromStart.toFixed(2)}, Max range: ${this.skill.range}`)
             }
         }
 
@@ -428,8 +471,9 @@ export class ImprisonedFistsEffect extends SkillEffect {
             }
         });
         
-        // Update ground indicator position
-        if (this.groundIndicator && this.effect) {
+        // Update ground indicator to show the path of the skill effect
+        if (this.groundIndicator && this.effect && this.isActive) {
+            // Update the ground indicator to match the effect's current position
             this.updateGroundIndicator(this.effect.position);
         }
         
@@ -469,7 +513,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
                     this.skill.game.audioManager.playSound(this.skill.sounds.impact);
                 }
                 
-                console.log(`Locked enemy during travel: ${enemy.id || 'unknown'}`);
+                console.debug(`Locked enemy during travel: ${enemy.id || 'unknown'}`)
                 
                 // Note: We no longer break the loop or stop the skill when hitting max targets
                 // The skill will continue to travel until it reaches its maximum range

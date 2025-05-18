@@ -265,7 +265,7 @@ export const NORMAL_SKILLS = [
         cooldown: 0,
         range: 25,
         radius: 5,
-        get duration() { return this.range / this.moveSpeed },
+        get duration() { return 1 + (this.range / this.moveSpeed) },
         moveSpeed: 25, // Speed at which the effect moves forward
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
