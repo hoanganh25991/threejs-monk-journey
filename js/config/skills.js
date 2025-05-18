@@ -260,12 +260,13 @@ export const NORMAL_SKILLS = [
         name: 'Imprisoned Fists',
         description: 'A powerful strike that locks enemies in place, preventing them from moving.',
         type: 'control',
-        damage: 20,
+        damage: 1,
         manaCost: 25,
-        cooldown: 2,
-        range: 10,
+        cooldown: 0,
+        range: 30,
         radius: 5,
         duration: 2,
+        moveSpeed: 15, // Speed at which the effect moves forward
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         immobilize: true, // Prevents enemies from moving
