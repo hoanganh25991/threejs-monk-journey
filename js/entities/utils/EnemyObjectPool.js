@@ -1,6 +1,6 @@
 import { ObjectPool } from '../../world/utils/ObjectPool.js';
 import { Enemy } from '../Enemy.js';
-import { EnemyModelFactory } from '../models/EnemyModelFactory.js';
+import { EnemyModelFactory } from '../enemies/models/EnemyModelFactory.js';
 import * as THREE from 'three';
 
 /**

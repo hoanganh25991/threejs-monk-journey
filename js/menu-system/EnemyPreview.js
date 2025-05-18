@@ -8,7 +8,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ENEMY_TYPES, BOSS_TYPES } from '../config/enemies.js';
 import { updateAnimation } from '../utils/AnimationUtils.js';
-import { EnemyModelFactory } from '../entities/models/EnemyModelFactory.js';
+import { EnemyModelFactory } from '../entities/enemies/models/EnemyModelFactory.js';
 
 export class EnemyPreview {
     /**

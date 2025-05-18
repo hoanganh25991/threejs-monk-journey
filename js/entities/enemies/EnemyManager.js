@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Enemy } from './Enemy.js';
-import { ZONE_ENEMIES, ENEMY_TYPES, BOSS_TYPES, ZONE_DIFFICULTY_MULTIPLIERS } from '../config/enemies.js';
-import { DROP_CHANCES, REGULAR_DROP_TABLE, BOSS_DROP_TABLE } from '../config/drops.js';
+import { ZONE_ENEMIES, ENEMY_TYPES, BOSS_TYPES, ZONE_DIFFICULTY_MULTIPLIERS } from '../../config/enemies.js';
+import { DROP_CHANCES, REGULAR_DROP_TABLE, BOSS_DROP_TABLE } from '../../config/drops.js';
 
 export class EnemyManager {
     constructor(scene, player, loadingManager) {
