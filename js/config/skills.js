@@ -244,6 +244,7 @@ export const NORMAL_SKILLS = [
         manaCost: 20,
         cooldown: 1,
         radius: 2,
+        // Configuration parameters for the kick effect:
         range: 30,       // Maximum distance the kick can travel (in units)
         duration: 5,      // Maximum time the effect can last (in seconds)
         kickSpeed: 40,    // Speed of the kick (units per second)
@@ -261,10 +262,10 @@ export const NORMAL_SKILLS = [
         type: 'control',
         damage: 20,
         manaCost: 25,
-        cooldown: 6,
-        range: 10,
-        radius: 3,
-        duration: 4,
+        cooldown: 2,
+        range: 2,
+        radius: 5,
+        duration: 2,
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         immobilize: true, // Prevents enemies from moving
