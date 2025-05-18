@@ -272,7 +272,6 @@ export const NORMAL_SKILLS = [
         immobilize: true, // Prevents enemies from moving
         // Ground rectangle properties for collision detection
         groundRectangle: {
-            // Width is perpendicular to travel direction (X-Z plane)
             // Width equals the skill's radius
             useSkillRadiusForWidth: true,
             // Length increases along travel direction
