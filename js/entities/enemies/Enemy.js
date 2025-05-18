@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { EnemyModelFactory } from './models/EnemyModelFactory.js';
-import { ENEMY_BEHAVIOR_SETTINGS, ENEMY_TYPE_BEHAVIOR } from '../config/enemy-behavior.js';
+import { ENEMY_BEHAVIOR_SETTINGS, ENEMY_TYPE_BEHAVIOR } from '../../config/enemy-behavior.js';
 
 export class Enemy {
     constructor(scene, player, config) {

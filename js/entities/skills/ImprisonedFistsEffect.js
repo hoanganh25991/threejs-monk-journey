@@ -59,7 +59,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
         effectGroup.add(beam);
         
         // Create particle system for the effect
-        const particleCount = 100;
+        const particleCount = 25;
         const particleGeometry = new THREE.BufferGeometry();
         
         // Create particle positions
@@ -73,7 +73,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
             // Random position along the beam with rotation around the cylinder
             const distance = Math.random() * 5; // Length of the beam
             const angle = Math.random() * Math.PI * 2; // Random angle around the cylinder
-            const radius = 0.4; // Cylinder radius
+            const radius = this.radius / 12.5; // Cylinder radius
             
             // Position particles in a spiral pattern around the cylinder
             positions[i * 3] = Math.cos(angle) * radius;     // X position (rotated around cylinder)
