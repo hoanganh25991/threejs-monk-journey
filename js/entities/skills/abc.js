@@ -1,9 +1,8 @@
 /**
  * ImprisonedFistsEffect.js
  * Implements the Imprisoned Fists skill effect from Diablo Immortal
- * A powerful strike that locks enemies in place, preventing them from moving
- * Now with auto-aiming functionality to target the nearest enemy
- * The skill applies lock effect to enemies hit during travel
+ * A simplified version that moves a single cylinder in the hero's direction
+ * Includes particle effects and ground indicator
  */
 
 import * as THREE from 'three';
@@ -29,7 +28,6 @@ export class ImprisonedFistsEffect extends SkillEffect {
         this.particleDirection = null; // Store the direction for particle movement
         this.groundIndicator = null; // Visual indicator on the ground
         this.startPosition = null; // Starting position for ground indicator
-        this.lockEffects = [];
     }
     
     /**
@@ -172,7 +170,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
         
         return effectGroup;
     }
-
+    
     /**
      * Update the ground indicator to show the path of the skill effect
      * @param {THREE.Vector3} currentPosition - Current position of the skill effect
@@ -201,17 +199,6 @@ export class ImprisonedFistsEffect extends SkillEffect {
         midpoint.y = terrainHeight; // Set the correct height above terrain
         this.groundIndicator.position.copy(midpoint);
         
-        // Get terrain height at the current position for better ground alignment
-        if (this.skill.game && this.skill.game.world) {
-            // Update the terrain height at the current position
-            const currentTerrainHeight = this.skill.game.world.getTerrainHeight(currentPosition.x, currentPosition.z) + 0.1;
-            
-            // This ensures the indicator follows the terrain height at the current position
-            if (Math.abs(terrainHeight - currentTerrainHeight) > 0.5) {
-                console.debug(`Terrain height change: ${terrainHeight.toFixed(2)} to ${currentTerrainHeight.toFixed(2)}`);
-            }
-        }
-        
         // Update the geometry to match the new length
         // Dispose of the old geometry to prevent memory leaks
         if (this.groundIndicator.geometry) {
@@ -232,47 +219,8 @@ export class ImprisonedFistsEffect extends SkillEffect {
         // 1. Calculate the angle in the XZ plane based on the effect's direction
         const angle = Math.atan2(effectDirection.x, effectDirection.z);
         
-        // 2. Reset rotation and apply in the correct sequence
-        this.groundIndicator.quaternion.identity(); // Reset to identity quaternion
-        
-        // 3. Create and apply the combined rotation in one step
-        // First flat on ground (X rotation), then aligned with direction (Y rotation)
-        const flatRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-        const directionRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
-        this.groundIndicator.quaternion.multiplyQuaternions(directionRotation, flatRotation);
-        
-        // Log minimal debug info
-        console.debug(`Ground Indicator - Angle: ${(angle * 180 / Math.PI).toFixed(2)}°`)
-    }
-
-    /**
-     * Create a visual lock effect for an enemy
-     * @param {Enemy} enemy - The enemy to create a lock effect for
-     */
-    createLockEffect(enemy) {
-        const enemyPosition = enemy.getPosition();
-        
-        // Create a ring effect around the enemy
-        const ringGeometry = new THREE.RingGeometry(1, 1.2, 32);
-        const ringMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.9 // Increased opacity for better visibility
-        });
-        
-        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-        ring.position.copy(enemyPosition);
-        ring.position.y += 0.1; // Slightly above ground
-        ring.rotation.x = Math.PI / 2; // Lay flat
-        
-        // Add to scene
-        if (this.skill.game && this.skill.game.scene) {
-            this.skill.game.scene.add(ring);
-            
-            // Store for cleanup
-            this.lockEffects.push(ring);
-        }
+        // 2. Set the rotation to make it flat on the ground (rotated around X) and aligned with direction (rotated around Y)
+        this.groundIndicator.rotation.set(Math.PI / 2, 0, angle);
     }
     
     /**
@@ -364,138 +312,12 @@ export class ImprisonedFistsEffect extends SkillEffect {
             // Update the ground indicator to match the effect's current position
             this.updateGroundIndicator(this.effect.position);
         }
-        
-        // Update locked enemies
-        for (let i = this.targetedEnemies.length - 1; i >= 0; i--) {
-            const targetData = this.targetedEnemies[i];
-            
-            // Skip if enemy is dead or no longer exists
-            if (!targetData.enemy || targetData.enemy.isDead()) {
-                this.targetedEnemies.splice(i, 1);
-                continue;
-            }
-            
-            // Update lock time
-            targetData.lockTime -= delta;
-            
-            // Keep enemy in place while locked
-            if (targetData.lockTime > 0) {
-                // Get current position to preserve other properties
-                const currentPos = targetData.enemy.getPosition();
-                
-                // Only prevent movement by keeping X and Z coordinates fixed
-                // This preserves Y position and other properties
-                targetData.enemy.setPosition(
-                    targetData.originalPosition.x,
-                    currentPos.y, // Keep current Y position to avoid sinking into ground
-                    targetData.originalPosition.z
-                );
-                
-                // Apply damage over time (25% of initial damage per second)
-                const dotDamage = (this.skill.damage * 0.25) * delta;
-                targetData.enemy.takeDamage(dotDamage);
-            } else {
-                // Lock expired, remove from array
-                this.targetedEnemies.splice(i, 1);
-            }
-        }
-        
-        // // Update lock effects opacity based on remaining time
-        // this.lockEffects.forEach((effect, index) => {
-        //     if (index < this.targetedEnemies.length) {
-        //         const remainingTime = this.targetedEnemies[index].lockTime;
-        //         const normalizedTime = remainingTime / this.lockDuration;
-                
-        //         // Update opacity
-        //         if (effect.material) {
-        //             effect.material.opacity = 0.7 * normalizedTime;
-        //         }
-                
-        //         // Pulse effect
-        //         const scale = 1 + 0.2 * Math.sin(this.elapsedTime * 5);
-        //         effect.scale.set(scale, scale, scale);
-        //     } else {
-        //         // No corresponding enemy, fade out
-        //         if (effect.material) {
-        //             effect.material.opacity -= delta;
-                    
-        //             // Remove when fully transparent
-        //             if (effect.material.opacity <= 0) {
-        //                 if (effect.parent) {
-        //                     effect.parent.remove(effect);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // });
-        
-        // Check for enemies hit during travel
-        const currentPosition = this.effect.position.clone();
-        const hitRadius = this.skill.radius || 5; // Use skill radius for hit detection
-
-        // Get enemies within the ground rectangle area
-        // This uses the same radius as the width of the ground rectangle
-        const nearbyEnemies = this.skill.game.enemyManager.getEnemiesNearPosition(currentPosition, hitRadius);
-        
-        // Check each enemy
-        for (const enemy of nearbyEnemies) {
-            // Skip dead enemies or already targeted enemies
-            if (enemy.isDead()) continue;
-            
-            // Check if this enemy is already locked
-            const alreadyLocked = this.targetedEnemies.some(target => target.enemy === enemy);
-            if (alreadyLocked) continue;
-            const originalPosition = enemy.getPosition().clone();
-            this.createLockEffect(enemy);
-            // Lock the enemy immediately
-            this.targetedEnemies.push({
-                enemy: enemy,
-                lockTime: this.lockDuration,
-                originalPosition: originalPosition,
-            });
-            
-            // Apply damage immediately
-            enemy.takeDamage(this.skill.damage * this.damageMultiplier);
-            
-            // Immediately freeze the enemy in place
-            enemy.setPosition(
-                originalPosition.x,
-                originalPosition.y,
-                originalPosition.z
-            );
-
-            // Apply a stun effect if the enemy has that capability
-            if (typeof enemy.stun === 'function') {
-                enemy.stun(this.lockDuration);
-            }
-
-            // Play impact sound
-            if (this.skill.game && this.skill.game.audioManager && this.skill.sounds) {
-                this.skill.game.audioManager.playSound(this.skill.sounds.impact);
-            }
-            console.debug(`Locked enemy during travel: ${enemy.id || 'unknown'}`);
-        }
     }
     
     /**
      * Dispose of the effect and clean up resources
      */
     dispose() {
-        // Clean up lock effects
-        this.lockEffects.forEach(effect => {
-            if (effect.parent) {
-                effect.parent.remove(effect);
-            }
-            
-            if (effect.geometry) {
-                effect.geometry.dispose();
-            }
-            
-            if (effect.material) {
-                effect.material.dispose();
-            }
-        });
-        
         // Clean up ground indicator
         if (this.groundIndicator) {
             if (this.groundIndicator.parent) {
@@ -513,8 +335,16 @@ export class ImprisonedFistsEffect extends SkillEffect {
             this.groundIndicator = null;
         }
         
-        this.lockEffects = [];
-        this.targetedEnemies = [];
+        // Clean up particle system
+        if (this.particleSystem) {
+            if (this.particleSystem.geometry) {
+                this.particleSystem.geometry.dispose();
+            }
+            
+            if (this.particleSystem.material) {
+                this.particleSystem.material.dispose();
+            }
+        }
         
         // Call parent dispose method
         super.dispose();
@@ -524,18 +354,13 @@ export class ImprisonedFistsEffect extends SkillEffect {
      * Reset the effect to its initial state
      */
     reset() {
-        // Clean up any existing effects
-        this.dispose();
-        
         // Reset state variables
-        this.hasAutoAimed = false;
-        this.targetedEnemies = [];
-        this.lockEffects = [];
+        this.hasReachedTarget = false;
+        this.targetPosition = null;
         this.particleSystem = null;
         this.particleDirection = null;
-        this.targetEnemy = null;
-        this.targetPosition = null;
-        this.movementComplete = false;
+        this.groundIndicator = null;
+        this.startPosition = null;
         
         // Reset duration
         this.remainingDuration = this.effectDuration;

@@ -267,11 +267,12 @@ export const NORMAL_SKILLS = [
         type: 'control',
         damage: 1,
         manaCost: 25,
+        range: 10,
+        radius: 7,
+        moveSpeed: 40, // Speed at which the effect moves forward
         cooldown: 0,
-        range: 25,
-        radius: 5,
-        get duration() { return 1 + (this.range / this.moveSpeed) },
-        moveSpeed: 10, // Speed at which the effect moves forward
+        get cooldown() { return this.duration },
+        get duration() { return 5 + (this.range / this.moveSpeed) },
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         immobilize: true, // Prevents enemies from moving
@@ -287,7 +288,7 @@ export const NORMAL_SKILLS = [
         // Apply lock effect to enemies hit during travel
         lockEnemiesDuringTravel: true,
         // Lock effect duration (in seconds)
-        lockDuration: 1.5,
+        lockDuration: 2,
         sounds: {
             cast: 'skillImprisonedFists', // Sound of monk focusing energy
             impact: 'chainImpact', // Sound of chains binding enemies
