@@ -16,6 +16,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
         // Movement properties
         this.moveSpeed = skill.moveSpeed || 50; // Speed at which the effect moves (default 50)
         this.lockDuration = skill.lockDuration || 2;
+        this.radius = skill.radius || 5;
         this.targetPosition = null; // Position to move towards
         
         // Effect lifetime
@@ -44,7 +45,8 @@ export class ImprisonedFistsEffect extends SkillEffect {
         const effectGroup = new THREE.Group();
         
         // Create the main effect mesh - cylinder
-        const geometry = new THREE.CylinderGeometry(0.4, 0.4, 5, 12);
+        const size = this.radius / 10;
+        const geometry = new THREE.CylinderGeometry(size, size, 5, 12);
         geometry.rotateX(Math.PI / 2); // Rotate to align with direction
         
         const material = new THREE.MeshBasicMaterial({
@@ -253,18 +255,22 @@ export class ImprisonedFistsEffect extends SkillEffect {
     createLockEffect(enemy) {
         const enemyPosition = enemy.getPosition();
         
+        // Get enemy size to scale the ring appropriately
+        // const enemySize = enemy.size || 1.5; // Default size if not available
+        
         // Create a ring effect around the enemy
-        const ringGeometry = new THREE.RingGeometry(1, 1.2, 32);
+        const ringGeometry = new THREE.RingGeometry(1, 1.2 + 0.3, 32);
         const ringMaterial = new THREE.MeshBasicMaterial({
             color: 0x00ffff,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.9 // Increased opacity for better visibility
+            opacity: 0.9, // Increased opacity for better visibility
+            depthWrite: false // Ensures the ring renders on top of terrain
         });
         
         const ring = new THREE.Mesh(ringGeometry, ringMaterial);
         ring.position.copy(enemyPosition);
-        ring.position.y += 0.1; // Slightly above ground
+        ring.position.y = 0.2; // Slightly higher above ground for better visibility
         ring.rotation.x = Math.PI / 2; // Lay flat
         
         // Add to scene
@@ -362,12 +368,8 @@ export class ImprisonedFistsEffect extends SkillEffect {
             }
         }
         
-        // Check for enemies hit during travel
-        const hitRadius = this.skill.radius || 5; // Use skill radius for hit detection
-
         // Get enemies within the ground rectangle area
-        // This uses the same radius as the width of the ground rectangle
-        const nearbyEnemies = this.skill.game.enemyManager.getEnemiesNearPosition(currentPosition, hitRadius);
+        const nearbyEnemies = this.skill.game.enemyManager.getEnemiesNearPosition(currentPosition, this.radius);
         
         // Check each enemy
         for (const enemy of nearbyEnemies) {
