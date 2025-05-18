@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import Stats from 'three/addons/libs/stats.module.js';
-import { qualityLevels } from './config/quality-levels.js';
+import { QUALITY_LEVELS } from './config/quality-levels.js';
 import { RENDER_CONFIG } from './config/render.js';
 import { STORAGE_KEYS } from './config/storage-keys.js';
 
@@ -34,7 +34,7 @@ export class PerformanceManager {
             lastCheck: 0,
             checkInterval: 2000 // Check memory every 2 seconds
         };
-        this.qualityLevels = qualityLevels;
+        this.qualityLevels = QUALITY_LEVELS;
         
         // Load quality level from local storage or use 'ultra' as default
         this.currentQuality = localStorage.getItem('monk_journey_quality_level') || 'ultra';

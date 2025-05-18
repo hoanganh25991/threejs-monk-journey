@@ -1,5 +1,4 @@
 import { UIComponent } from '../UIComponent.js';
-import { SKILL_COLORS } from '../../config/colors.js';
 import { getSkillIcon } from '../../config/skill-icons.js';
 /**
  * Skills UI component
@@ -13,9 +12,6 @@ export class SkillsUI extends UIComponent {
     constructor(game) {
         super('skills-container', game);
         this.skillButtons = [];
-        
-        // Use skill colors from config
-        this.skillColors = SKILL_COLORS;
         
         // For continuous primary attack
         this.primaryAttackInterval = null;
@@ -41,8 +37,8 @@ export class SkillsUI extends UIComponent {
             const iconData = getSkillIcon(skill.name);
             const icon = skill.icon || iconData.emoji || '✨'; // Use icon from skill, then from iconData, or default
             
-            // Get color for border styling
-            const color = iconData.color || this.skillColors[skill.type] || '#ffffff';
+            // Get color for border styling from skill-icons.js
+            const color = iconData.color || '#ffffff';
             
             // Create skill button HTML
             skillsHTML += `

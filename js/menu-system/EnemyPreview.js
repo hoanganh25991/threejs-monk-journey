@@ -6,8 +6,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { enemyTypes, bossTypes } from '../config/enemies.js';
+import { ENEMY_TYPES, BOSS_TYPES } from '../config/enemies.js';
 import { updateAnimation } from '../utils/AnimationUtils.js';
+import { EnemyModelFactory } from '../entities/models/EnemyModelFactory.js';
 
 export class EnemyPreview {
     /**
@@ -37,7 +38,7 @@ export class EnemyPreview {
         this.clock = new THREE.Clock();
         this.animationId = null;
         this.currentEnemy = null;
-        this.currentModel = null;
+        this.currentModel = new THREE.Group();
         this.animations = {};
         this.currentAnimation = null;
         this.isVisible = true;
@@ -148,7 +149,7 @@ export class EnemyPreview {
      * Set the default enemy
      */
     setDefaultEnemy() {
-        const allEnemies = [...enemyTypes, ...bossTypes];
+        const allEnemies = [...ENEMY_TYPES, ...BOSS_TYPES];
         if (allEnemies && allEnemies.length > 0) {
             console.debug('EnemyPreview: Setting up default enemy:', allEnemies[0].name);
             this.loadEnemyModel(allEnemies[0]);
@@ -176,124 +177,30 @@ export class EnemyPreview {
         
         this.animations = {};
         
-        // Skip trying to load models and just create a simple placeholder
-        // This is a temporary solution until we have proper models
-        this.createSimplePlaceholder(enemy);
-        console.debug(`EnemyPreview: Using simple placeholder for ${enemy.name} instead of loading model`);
-    }
-    
-    /**
-     * Create a simple placeholder model for an enemy
-     * @param {Object} enemy - The enemy object
-     */
-    createSimplePlaceholder(enemy) {
-        console.debug(`EnemyPreview: Creating simple placeholder for ${enemy.name}`);
-        
-        // Create a group to hold all parts of the model
+        // Create a group to hold the model
         this.currentModel = new THREE.Group();
         
-        // Get enemy color or use default
-        const enemyColor = enemy.color || 0xcccccc;
-        
-        // Create a body (cube)
-        const bodyGeometry = new THREE.BoxGeometry(1, 1.5, 0.8);
-        const bodyMaterial = new THREE.MeshStandardMaterial({ 
-            color: enemyColor,
-            roughness: 0.7,
-            metalness: 0.3
-        });
-        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-        body.position.y = 0.75;
-        body.castShadow = true;
-        body.receiveShadow = true;
-        this.currentModel.add(body);
-        
-        // Create a head (sphere)
-        const headGeometry = new THREE.SphereGeometry(0.4, 16, 16);
-        const headMaterial = new THREE.MeshStandardMaterial({ 
-            color: enemyColor,
-            roughness: 0.7,
-            metalness: 0.3
-        });
-        const head = new THREE.Mesh(headGeometry, headMaterial);
-        head.position.y = 1.85;
-        head.castShadow = true;
-        head.receiveShadow = true;
-        this.currentModel.add(head);
-        
-        // Create arms
-        const armGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
-        const armMaterial = new THREE.MeshStandardMaterial({ 
-            color: enemyColor,
-            roughness: 0.7,
-            metalness: 0.3
-        });
-        
-        // Left arm
-        const leftArm = new THREE.Mesh(armGeometry, armMaterial);
-        leftArm.position.set(-0.65, 0.75, 0);
-        leftArm.castShadow = true;
-        leftArm.receiveShadow = true;
-        this.currentModel.add(leftArm);
-        
-        // Right arm
-        const rightArm = new THREE.Mesh(armGeometry, armMaterial);
-        rightArm.position.set(0.65, 0.75, 0);
-        rightArm.castShadow = true;
-        rightArm.receiveShadow = true;
-        this.currentModel.add(rightArm);
-        
-        // Create legs
-        const legGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
-        const legMaterial = new THREE.MeshStandardMaterial({ 
-            color: enemyColor,
-            roughness: 0.7,
-            metalness: 0.3
-        });
-        
-        // Left leg
-        const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-        leftLeg.position.set(-0.3, -0.4, 0);
-        leftLeg.castShadow = true;
-        leftLeg.receiveShadow = true;
-        this.currentModel.add(leftLeg);
-        
-        // Right leg
-        const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-        rightLeg.position.set(0.3, -0.4, 0);
-        rightLeg.castShadow = true;
-        rightLeg.receiveShadow = true;
-        this.currentModel.add(rightLeg);
-        
-        // Add eyes (for all enemies)
-        const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
-        const eyeMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0xff0000,  // Red eyes for all enemies
-            emissive: 0xff0000,
-            emissiveIntensity: 0.5
-        });
-        
-        // Left eye
-        const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-        leftEye.position.set(-0.15, 1.9, 0.3);
-        this.currentModel.add(leftEye);
-        
-        // Right eye
-        const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-        rightEye.position.set(0.15, 1.9, 0.3);
-        this.currentModel.add(rightEye);
-        
-        // Add a nameplate above the model
-        this.addNameplate(enemy.name);
-        
-        // Add the model to the scene
-        this.scene.add(this.currentModel);
-        
-        // Reset camera position
-        this.resetCamera();
-        
-        // Create a simple animation for the placeholder
-        this.createPlaceholderAnimation();
+        // Use EnemyModelFactory to create the appropriate model for this enemy type
+        try {
+            // Create a model using the factory
+            EnemyModelFactory.createModel(enemy, this.currentModel);
+            
+            // Add the model to the scene
+            this.scene.add(this.currentModel);
+            
+            // Add a nameplate above the model
+            this.addNameplate(enemy.name);
+            
+            // Reset camera position
+            this.resetCamera();
+            
+            console.debug(`EnemyPreview: Created model for ${enemy.name} using EnemyModelFactory`);
+        } catch (error) {
+            console.error(`EnemyPreview: Error creating model for ${enemy.name}:`, error);
+            
+            // Fallback to simple placeholder if the factory fails
+            console.debug(`EnemyPreview: Falling back to simple placeholder for ${enemy.name}`);
+        }
     }
     
     /**
@@ -335,73 +242,6 @@ export class EnemyPreview {
         
         // Add to the model
         this.currentModel.add(nameplate);
-    }
-    
-    /**
-     * Create a simple animation for the placeholder model
-     */
-    createPlaceholderAnimation() {
-        // Create a simple animation mixer
-        this.animationMixer = new THREE.AnimationMixer(this.currentModel);
-        
-        // Create a simple up and down animation
-        const positionKF = new THREE.VectorKeyframeTrack(
-            '.position[y]', 
-            [0, 1, 2],     // times
-            [0, 0.2, 0]    // values - slight up and down movement
-        );
-        
-        // Create the animation clip
-        const clip = new THREE.AnimationClip('idle', 2, [positionKF]);
-        
-        // Create the animation action
-        const action = this.animationMixer.clipAction(clip);
-        action.setLoop(THREE.LoopRepeat);
-        
-        // Store the animation
-        this.animations['idle'] = action;
-        
-        // Play the animation
-        this.playAnimation('idle');
-    }
-    
-    /**
-     * Get the model path for an enemy
-     * @param {Object} enemy - The enemy object
-     * @returns {string} - The model path
-     */
-    getModelPathForEnemy(enemy) {
-        // This is a simplified version - in a real implementation, you would map enemy types to actual model paths
-        // For now, we'll use placeholder models based on enemy type
-        const isBoss = bossTypes.some(boss => boss.type === enemy.type);
-        
-        if (isBoss) {
-            return `./assets/models/enemies/bosses/${enemy.type}.glb`;
-        } else {
-            return `./assets/models/enemies/${enemy.type}.glb`;
-        }
-    }
-    
-    /**
-     * Play an animation
-     * @param {string} animationName - The name of the animation to play
-     */
-    playAnimation(animationName) {
-        if (!this.animations || !this.animations[animationName]) {
-            console.debug(`EnemyPreview: Animation ${animationName} not found`);
-            return;
-        }
-        
-        // Stop current animation if any
-        if (this.currentAnimation && this.animations[this.currentAnimation]) {
-            this.animations[this.currentAnimation].stop();
-        }
-        
-        // Play the new animation
-        this.currentAnimation = animationName;
-        this.animations[animationName].reset();
-        this.animations[animationName].play();
-        console.debug(`EnemyPreview: Playing animation ${animationName}`);
     }
     
     /**

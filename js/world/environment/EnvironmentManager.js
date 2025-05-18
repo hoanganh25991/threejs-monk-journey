@@ -4,7 +4,7 @@ import { Rock } from './Rock.js';
 import { Bush } from './Bush.js';
 import { Flower } from './Flower.js';
 import { RandomGenerator } from '../utils/RandomGenerator.js';
-import { environmentConfig } from '../../config/environment.js';
+import { ENVIRONMENT_CONFIG } from '../../config/environment.js';
 
 /**
  * Manages environment objects like trees, rocks, bushes, etc.
@@ -20,11 +20,11 @@ export class EnvironmentManager {
         this.visibleChunks = {}; // Store currently visible chunks
         
         // Environment object types and densities from config
-        this.environmentObjectTypes = environmentConfig.objectTypes;
-        this.environmentObjectDensity = environmentConfig.objectDensity;
+        this.environmentObjectTypes = ENVIRONMENT_CONFIG.objectTypes;
+        this.environmentObjectDensity = ENVIRONMENT_CONFIG.objectDensity;
         
         // Chunk properties from config
-        this.chunkSize = environmentConfig.chunkSize; // Size of each environment chunk
+        this.chunkSize = ENVIRONMENT_CONFIG.chunkSize; // Size of each environment chunk
         
         // For save/load functionality
         this.savedEnvironmentObjects = null;

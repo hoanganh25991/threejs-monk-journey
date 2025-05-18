@@ -5,6 +5,7 @@ import { FrostTitanModel } from './FrostTitanModel.js';
 import { NecromancerModel } from './NecromancerModel.js';
 import { ShadowBeastModel } from './ShadowBeastModel.js';
 import { InfernalGolemModel } from './InfernalGolemModel.js';
+import { SimpleEnemyModel } from './SimpleEnemyModel.js';
 import { DefaultModel } from './DefaultModel.js';
 
 /**
@@ -42,6 +43,14 @@ export class EnemyModelFactory {
                 
             case 'infernal_golem':
                 return new InfernalGolemModel(enemy, modelGroup);
+                
+            // Use SimpleEnemyModel for these enemy types
+            case 'forest_spider':
+            case 'feral_wolf':
+            case 'hellhound':
+            case 'winter_wolf':
+            case 'poison_toad':
+                return new SimpleEnemyModel(enemy, modelGroup);
                 
             default:
                 return new DefaultModel(enemy, modelGroup);

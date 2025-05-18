@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { EnemyModelFactory } from './models/EnemyModelFactory.js';
-import { enemyBehaviorSettings, enemyTypeBehavior } from '../config/enemy-behavior.js';
+import { ENEMY_BEHAVIOR_SETTINGS, ENEMY_TYPE_BEHAVIOR } from '../config/enemy-behavior.js';
 
 export class Enemy {
     constructor(scene, player, config) {
@@ -62,19 +62,19 @@ export class Enemy {
     
     applyBehaviorSettings() {
         // Get type-specific behavior settings or use default
-        const typeBehavior = enemyTypeBehavior[this.type] || enemyTypeBehavior['default'];
+        const typeBehavior = ENEMY_TYPE_BEHAVIOR[this.type] || ENEMY_TYPE_BEHAVIOR['default'];
         
         // Apply detection range
-        this.detectionRange = typeBehavior.detectionRange || enemyBehaviorSettings.detectionRange;
+        this.detectionRange = typeBehavior.detectionRange || ENEMY_BEHAVIOR_SETTINGS.detectionRange;
         
         // Apply attack range multiplier
-        this.attackRange *= (typeBehavior.attackRangeMultiplier || enemyBehaviorSettings.attackRangeMultiplier);
+        this.attackRange *= (typeBehavior.attackRangeMultiplier || ENEMY_BEHAVIOR_SETTINGS.attackRangeMultiplier);
         
         // Apply aggression settings
         this.persistentAggression = typeBehavior.persistentAggression || 
-                                   enemyBehaviorSettings.aggressionSettings.persistentAggression;
+                                   ENEMY_BEHAVIOR_SETTINGS.aggressionSettings.persistentAggression;
         this.aggressionTimeout = typeBehavior.aggressionTimeout || 
-                                enemyBehaviorSettings.aggressionSettings.aggressionTimeout;
+                                ENEMY_BEHAVIOR_SETTINGS.aggressionSettings.aggressionTimeout;
     }
 
     createModel() {

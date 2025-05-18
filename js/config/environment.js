@@ -1,7 +1,7 @@
 /**
  * Configuration for environment objects and settings
  */
-export const environmentConfig = {
+export const ENVIRONMENT_CONFIG = {
     // Environment object types
     objectTypes: ['tree', 'rock', 'bush', 'flower'],
     

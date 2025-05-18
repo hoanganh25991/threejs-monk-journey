@@ -4,19 +4,6 @@
  * Updated for Monk Journey theme
  */
 
-// Skill type colors in CSS hex format
-export const SKILL_COLORS = {
-    'teleport': '#4682B4', // Oasis Blue for teleport
-    'ranged': '#B0E0E6', // Ice Blue for ranged attacks
-    'aoe': '#FF4500', // Sunset Orange for area effects
-    'multi': '#B22222', // Inferno Red for multi-target
-    'buff': '#D8BFD8', // Soft Pink for buffs
-    'summon': '#8FBC8F', // Arctic Moss for summons
-    'wave': '#FFD700', // Solar Yellow for wave attacks
-    'mark': '#8B0000', // Blood Red for marking
-    'heal': '#2E8B57' // Pine Green for healing abilities
-};
-
 // Environment colors by zone type
 export const ZONE_COLORS = {
     // Forest environment

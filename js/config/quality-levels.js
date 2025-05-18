@@ -5,7 +5,7 @@
  * Note: Renderer-specific settings like antialiasing, pixelRatio, and shadows
  * have been moved to render.js to avoid duplication.
  */
-export const qualityLevels = {
+export const QUALITY_LEVELS = {
     ultra: {
         shadowMapSize: 2048,
         particleCount: 1.0,
@@ -48,4 +48,4 @@ export const qualityLevels = {
     }
 };
 
-export default qualityLevels;
+export default QUALITY_LEVELS;

@@ -32,6 +32,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
      * @returns {THREE.Group} - The created effect
      */
     create(position, direction) {
+        position.y -= 2.05;
         // Create a group to hold all effect elements
         const effectGroup = new THREE.Group();
         

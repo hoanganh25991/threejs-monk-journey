@@ -239,7 +239,7 @@ export class SaveManager extends ISaveSystem {
                 this.loadProgress.update('Warning: No quest data found', 75);
             }
             
-            // Load game settings - handle errors separately to prevent blocking game load
+            // Continue Game settings - handle errors separately to prevent blocking game load
             this.loadProgress.update('Loading game settings...', 85);
             await this.delay(100); // Small delay for UI update
             

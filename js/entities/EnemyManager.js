@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Enemy } from './Enemy.js';
-import { zoneEnemies, enemyTypes, bossTypes, zoneDifficultyMultipliers } from '../config/enemies.js';
+import { ZONE_ENEMIES, ENEMY_TYPES, BOSS_TYPES, ZONE_DIFFICULTY_MULTIPLIERS } from '../config/enemies.js';
 import { DROP_CHANCES, REGULAR_DROP_TABLE, BOSS_DROP_TABLE } from '../config/drops.js';
 
 export class EnemyManager {
@@ -22,15 +22,15 @@ export class EnemyManager {
         this.enemyGroupSize = { min: 2, max: 5 }; // Enemies spawn in groups
         
         // Import enemy configuration from config/enemies.js
-        this.zoneEnemies = zoneEnemies;
-        this.enemyTypes = enemyTypes;
-        this.bossTypes = bossTypes;
+        this.zoneEnemies = ZONE_ENEMIES;
+        this.enemyTypes = ENEMY_TYPES;
+        this.bossTypes = BOSS_TYPES;
         
         // Difficulty scaling
         this.difficultyMultiplier = 1.0;
         
         // Import zone difficulty multipliers from config
-        this.zoneDifficultyMultipliers = zoneDifficultyMultipliers;
+        this.zoneDifficultyMultipliers = ZONE_DIFFICULTY_MULTIPLIERS;
     }
     
     setGame(game) {

@@ -105,13 +105,13 @@ export class GameMenu extends IMenu {
             });
         }
         
-        // Load Game button - show only if save data exists
+        // Continue Game button - show only if save data exists
         if (this.loadGameButton) {
             if (this.game.saveManager && this.game.saveManager.hasSaveData()) {
                 this.loadGameButton.style.display = 'block';
                 
                 this.loadGameButton.addEventListener('click', () => {
-                    console.debug("Load Game button clicked - attempting to load saved game...");
+                    console.debug("Continue Game button clicked - attempting to load saved game...");
                     if (this.game.saveManager.loadGame()) {
                         console.debug("Game data loaded successfully");
                         this.hide();
@@ -137,8 +137,8 @@ export class GameMenu extends IMenu {
                         
                         console.debug("Game started with loaded data - enemies and player are now active");
                     } else {
-                        console.error("Failed to load game data");
-                        alert('Failed to load game data.');
+                        console.error("Failed to Continue Game data");
+                        alert('Failed to Continue Game data.');
                     }
                 });
             } else {
@@ -208,7 +208,7 @@ export class GameMenu extends IMenu {
                 } else {
                     this.newGameButton.textContent = 'New Game';
                     this.saveGameButton.style.display = 'none';
-                    // Update load game button visibility based on save data
+                    // Update Continue Game button visibility based on save data
                     if (this.loadGameButton && this.game.saveManager) {
                         this.loadGameButton.style.display = this.game.saveManager.hasSaveData() ? 'block' : 'none';
                     }

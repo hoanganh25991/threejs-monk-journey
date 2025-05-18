@@ -1,9 +1,7 @@
 import { UIComponent } from '../UIComponent.js';
-import { SKILL_COLORS } from '../../config/colors.js';
-import { getSkillIcon } from '../../config/skill-icons.js';
+import { getSkillIcon } from '../config/skill-icons.js';
 import { PRIMARY_ATTACKS, NORMAL_SKILLS, SKILLS } from '../../config/skills.js';
 import { STORAGE_KEYS } from '../../config/storage-keys.js';
-import { Skill } from '../../entities/skills/Skill.js';
 
 /**
  * SkillSelectionUI component
@@ -20,9 +18,6 @@ export class SkillSelectionUI extends UIComponent {
      */
     constructor(game) {
         super('skill-selection', game);
-        
-        // Use skill colors from config
-        this.skillColors = SKILL_COLORS;
         
         // Track selected skills
         this.selectedPrimaryAttack = null;
@@ -232,7 +227,7 @@ export class SkillSelectionUI extends UIComponent {
             const icon = skill.icon || iconData.emoji || '✨';
             
             // Get color for border styling
-            const color = iconData.color || this.skillColors[skill.type] || '#ffffff';
+            const color = iconData.color || '#ffffff';
             
             // Apply template with data
             const skillItemHTML = this.applyTemplate(this.skillItemTemplate, {
@@ -278,7 +273,7 @@ export class SkillSelectionUI extends UIComponent {
             const icon = skill.icon || iconData.emoji || '✨';
             
             // Get color for border styling
-            const color = iconData.color || this.skillColors[skill.type] || '#ffffff';
+            const color = iconData.color || '#ffffff';
             
             // Apply template with data
             const skillItemHTML = this.applyTemplate(this.skillItemTemplate, {
@@ -481,7 +476,7 @@ export class SkillSelectionUI extends UIComponent {
             // Get color for border styling
             const color = skill.isEmpty ? '#555555' : 
                          (skill.isMore ? '#888888' : 
-                         (iconData.color || this.skillColors[skill.type] || '#ffffff'));
+                         (iconData.color || '#ffffff'));
             
             // Determine extra classes
             let extraClass = '';

@@ -9,7 +9,7 @@ import { EnemyPreview } from './EnemyPreview.js';
 import { CHARACTER_MODELS } from '../config/player-models.js';
 import { UIComponent } from '../UIComponent.js';
 import { SKILLS } from '../config/skills.js';
-import { enemyTypes, bossTypes } from '../config/enemies.js';
+import { ENEMY_TYPES, BOSS_TYPES } from '../config/enemies.js';
 import { STORAGE_KEYS } from '../config/storage-keys.js';
 
 export class SettingsMenu extends UIComponent {
@@ -379,7 +379,7 @@ export class SettingsMenu extends UIComponent {
         }
         
         // Combine regular enemies and bosses
-        const allEnemies = [...enemyTypes, ...bossTypes];
+        const allEnemies = [...ENEMY_TYPES, ...BOSS_TYPES];
         
         // Add enemy options
         allEnemies.forEach((enemy, index) => {
@@ -415,7 +415,7 @@ export class SettingsMenu extends UIComponent {
             
             // Load the enemy model
             if (this.enemyPreview) {
-                const allEnemies = [...enemyTypes, ...bossTypes];
+                const allEnemies = [...ENEMY_TYPES, ...BOSS_TYPES];
                 this.enemyPreview.loadEnemyModel(allEnemies[enemyIndex]);
             }
         });
@@ -426,7 +426,7 @@ export class SettingsMenu extends UIComponent {
      * @private
      */
     setupEnemyNavigationButtons() {
-        const allEnemies = [...enemyTypes, ...bossTypes];
+        const allEnemies = [...ENEMY_TYPES, ...BOSS_TYPES];
         
         // Add event listeners for prev/next enemy buttons
         if (this.prevEnemyButton && this.enemyPreviewSelect) {
@@ -497,7 +497,7 @@ export class SettingsMenu extends UIComponent {
         }
         
         // Load the initial enemy
-        const allEnemies = [...enemyTypes, ...bossTypes];
+        const allEnemies = [...ENEMY_TYPES, ...BOSS_TYPES];
         const selectedEnemyIndex = this.enemyPreviewSelect ? this.enemyPreviewSelect.selectedIndex : 0;
         if (allEnemies.length > 0 && selectedEnemyIndex >= 0 && selectedEnemyIndex < allEnemies.length) {
             this.enemyPreview.loadEnemyModel(allEnemies[selectedEnemyIndex]);
@@ -572,7 +572,7 @@ export class SettingsMenu extends UIComponent {
         if (!this.enemyDetailsContainer) return;
         
         // Get the selected enemy
-        const allEnemies = [...enemyTypes, ...bossTypes];
+        const allEnemies = [...ENEMY_TYPES, ...BOSS_TYPES];
         const enemy = allEnemies[enemyIndex];
         if (!enemy) return;
         

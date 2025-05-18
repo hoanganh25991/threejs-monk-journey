@@ -4,7 +4,7 @@
  */
 
 // Global enemy behavior settings
-export const enemyBehaviorSettings = {
+export const ENEMY_BEHAVIOR_SETTINGS = {
     // Detection range - how far enemies can detect and start chasing the player (in units)
     detectionRange: 30,
     
@@ -22,7 +22,7 @@ export const enemyBehaviorSettings = {
 };
 
 // Behavior settings by enemy type
-export const enemyTypeBehavior = {
+export const ENEMY_TYPE_BEHAVIOR = {
     // Default behavior applied to all enemies unless overridden
     'default': {
         detectionRange: 30,

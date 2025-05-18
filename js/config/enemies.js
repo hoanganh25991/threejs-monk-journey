@@ -4,7 +4,7 @@
  */
 
 // Zone difficulty multipliers
-export const zoneDifficultyMultipliers = {
+export const ZONE_DIFFICULTY_MULTIPLIERS = {
     'forest': 1.0,
     'ruins': 1.2,
     'swamp': 1.4,
@@ -15,7 +15,7 @@ export const zoneDifficultyMultipliers = {
 };
 
 // Zone-based enemy spawning
-export const zoneEnemies = {
+export const ZONE_ENEMIES = {
     'forest': ['skeleton', 'zombie', 'shadow_beast', 'forest_spider', 'corrupted_treant', 'feral_wolf'],
     'ruins': ['skeleton', 'skeleton_archer', 'necromancer', 'ancient_guardian', 'cursed_spirit', 'ruin_crawler'],
     'swamp': ['zombie', 'zombie_brute', 'shadow_beast', 'poison_toad', 'bog_lurker', 'swamp_witch'],
@@ -26,7 +26,7 @@ export const zoneEnemies = {
 };
 
 // Enemy types
-export const enemyTypes = [
+export const ENEMY_TYPES = [
     // Original enemies
     {
         type: 'skeleton',
@@ -498,7 +498,7 @@ export const enemyTypes = [
 ];
 
 // Boss types
-export const bossTypes = [
+export const BOSS_TYPES = [
     // Original bosses
     {
         type: 'skeleton_king',
