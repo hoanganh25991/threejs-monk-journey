@@ -437,7 +437,7 @@ export const SKILL_ICONS = {
     "Imprisoned Fists": {
         emoji: "🔒",
         cssClass: "icon-imprisoned-fists",
-        color: "#696969"
+        color: "#00ffff"
     },
     "Lingering Pain": {
         emoji: "😖",

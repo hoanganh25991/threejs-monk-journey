@@ -240,11 +240,10 @@ export const NORMAL_SKILLS = [
         name: 'Flying Kick',
         description: 'A swift kick that propels the Monk forward, dealing damage to enemies in its path.',
         type: 'dash',
-        damage: 25,
+        damage: 30,
         manaCost: 20,
-        cooldown: 0.5,
+        cooldown: 1,
         radius: 2,
-        // Configuration parameters for the kick effect:
         range: 30,       // Maximum distance the kick can travel (in units)
         duration: 5,      // Maximum time the effect can last (in seconds)
         kickSpeed: 40,    // Speed of the kick (units per second)

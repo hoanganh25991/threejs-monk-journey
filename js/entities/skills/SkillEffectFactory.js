@@ -12,6 +12,7 @@ import { BreathOfHeavenEffect } from './BreathOfHeavenEffect.js';
 import { FlyingDragonEffect } from './FlyingDragonEffect.js';
 import { FlyingKickEffect } from './FlyingKickEffect.js';
 import { DeadlyReachEffect } from './DeadlyReachEffect.js';
+import { ImprisonedFistsEffect } from './ImprisonedFistsEffect.js';
 
 /**
  * Factory class for creating skill effects
@@ -109,6 +110,10 @@ export class SkillEffectFactory {
             case 'Deadly Reach':
                 console.debug(`Creating DeadlyReachEffect for ${skill.name}`);
                 effect = new DeadlyReachEffect(skill);
+                break;
+            case 'Imprisoned Fists':
+                console.debug(`Creating ImprisonedFistsEffect for ${skill.name}`);
+                effect = new ImprisonedFistsEffect(skill);
                 break;
             default:
                 console.debug(`Creating default SkillEffect for ${skill.name}`);
