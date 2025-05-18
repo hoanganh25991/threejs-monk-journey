@@ -287,7 +287,7 @@ export const NORMAL_SKILLS = [
         // Apply lock effect to enemies hit during travel
         lockEnemiesDuringTravel: true,
         // Lock effect duration (in seconds)
-        lockDuration: 2,
+        lockDuration: 5,
         sounds: {
             cast: 'skillImprisonedFists', // Sound of monk focusing energy
             impact: 'chainImpact', // Sound of chains binding enemies

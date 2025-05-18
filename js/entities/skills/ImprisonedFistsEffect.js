@@ -45,8 +45,8 @@ export class ImprisonedFistsEffect extends SkillEffect {
         const effectGroup = new THREE.Group();
         
         // Create the main effect mesh - cylinder
-        const size = this.radius / 10;
-        const geometry = new THREE.CylinderGeometry(size, size, 5, 12);
+        const size = this.radius / 12.5;
+        const geometry = new THREE.CylinderGeometry(size, size, this.radius, 12);
         geometry.rotateX(Math.PI / 2); // Rotate to align with direction
         
         const material = new THREE.MeshBasicMaterial({
