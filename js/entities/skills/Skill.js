@@ -22,7 +22,13 @@ export class Skill {
         this.color = config.color || 0xffffff;
         this.hits = config.hits || 1;
         this.icon = config.icon || '🤛';
-        
+
+        for (const key in config) {
+            if (Object.prototype.hasOwnProperty.call(config, key)) {
+                this[key] = config[key];
+            }
+        }
+
         // Sound configuration
         this.sounds = config.sounds || {
             cast: null,
@@ -39,9 +45,6 @@ export class Skill {
         this.position = new THREE.Vector3();
         this.direction = new THREE.Vector3();
 
-        // Primary Skill (Basic Attack)
-        this.primaryAttack = config.primaryAttack || false;
-        
         // Game reference
         this.game = null;
         

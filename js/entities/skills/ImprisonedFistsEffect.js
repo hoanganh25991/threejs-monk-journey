@@ -11,6 +11,7 @@ import { SkillEffect } from './SkillEffect.js';
 
 export class ImprisonedFistsEffect extends SkillEffect {
     constructor(skill) {
+        console.log({skill})
         super(skill);
         
         // Specific properties for Imprisoned Fists
@@ -50,6 +51,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
      * @returns {THREE.Group} - The created effect
      */
     create(position, direction) {
+        position.y -= 1.05;
         // Create a group to hold all effect elements
         const effectGroup = new THREE.Group();
         
@@ -78,12 +80,15 @@ export class ImprisonedFistsEffect extends SkillEffect {
         const color = new THREE.Color(0x00ffff);
         
         for (let i = 0; i < particleCount; i++) {
-            // Random position along the beam
+            // Random position along the beam with rotation around the cylinder
             const distance = Math.random() * 5; // Length of the beam
+            const angle = Math.random() * Math.PI * 2; // Random angle around the cylinder
+            const radius = 0.2; // Cylinder radius
             
-            positions[i * 3] = 0;
-            positions[i * 3 + 1] = 0;
-            positions[i * 3 + 2] = distance;
+            // Position particles in a spiral pattern around the cylinder
+            positions[i * 3] = Math.cos(angle) * radius;     // X position (rotated around cylinder)
+            positions[i * 3 + 1] = Math.sin(angle) * radius; // Y position (rotated around cylinder)
+            positions[i * 3 + 2] = distance;                 // Z position (along the beam)
             
             // Color (cyan with slight variations)
             colors[i * 3] = color.r * (0.8 + Math.random() * 0.2);
@@ -168,8 +173,18 @@ export class ImprisonedFistsEffect extends SkillEffect {
             // Create a target point to look at
             const target = new THREE.Vector3().copy(position).add(dirToTarget);
             
-            // Orient the effect group to face the target
-            effectGroup.lookAt(target);
+            // Calculate the direction in the XZ plane only (maintaining Y rotation)
+            const xzDirection = new THREE.Vector3(dirToTarget.x, 0, dirToTarget.z).normalize();
+            
+            // Create a target point that's level with the effect (same Y)
+            const levelTarget = new THREE.Vector3(
+                position.x + xzDirection.x,
+                position.y,
+                position.z + xzDirection.z
+            );
+            
+            // Orient the effect group to face the target but only in the XZ plane
+            effectGroup.lookAt(levelTarget);
             
             // Log the direction for debugging
             console.debug(`Orienting towards target: (${dirToTarget.x.toFixed(2)}, ${dirToTarget.y.toFixed(2)}, ${dirToTarget.z.toFixed(2)})`)
@@ -179,11 +194,18 @@ export class ImprisonedFistsEffect extends SkillEffect {
         } else {
             // No target found, just use the provided direction
             if (direction && direction.lengthSq() > 0) {
-                // Create a target point in the direction
-                const target = new THREE.Vector3().copy(position).add(direction);
+                // Create a direction vector in the XZ plane only (maintaining Y rotation)
+                const xzDirection = new THREE.Vector3(direction.x, 0, direction.z).normalize();
                 
-                // Orient the effect group to face the direction
-                effectGroup.lookAt(target);
+                // Create a target point that's level with the effect (same Y)
+                const levelTarget = new THREE.Vector3(
+                    position.x + xzDirection.x,
+                    position.y,
+                    position.z + xzDirection.z
+                );
+                
+                // Orient the effect group to face the direction but only in the XZ plane
+                effectGroup.lookAt(levelTarget);
                 
                 // Log the direction for debugging
                 console.debug(`Orienting in direction: (${direction.x.toFixed(2)}, ${direction.y.toFixed(2)}, ${direction.z.toFixed(2)})`)
@@ -283,7 +305,9 @@ export class ImprisonedFistsEffect extends SkillEffect {
         
         // Create a new geometry with the updated length
         const width = this.skill.radius || 5; // Width equals the skill's radius
-        const length = Math.max(0.1, distance); // Length increases as the skill moves, minimum 0.1
+        const cylinderLength = 5; // Length of the cylinder beam
+        // Length increases as the skill moves, plus half the cylinder length to cover the beam
+        const length = Math.max(0.1, distance + (cylinderLength / 2));
         
         const newGeometry = new THREE.PlaneGeometry(width, length);
         this.groundIndicator.geometry = newGeometry;
@@ -402,9 +426,13 @@ export class ImprisonedFistsEffect extends SkillEffect {
                 if (positions[i + 2] > 5) {
                     positions[i + 2] = 0;
                     
-                    // Add some randomness to x and y for a more natural look
-                    positions[i] = (Math.random() - 0.5) * 0.3;
-                    positions[i + 1] = (Math.random() - 0.5) * 0.3;
+                    // Create a new position around the cylinder
+                    const angle = Math.random() * Math.PI * 2; // Random angle around the cylinder
+                    const radius = 0.2; // Cylinder radius
+                    
+                    // Position particles in a spiral pattern around the cylinder
+                    positions[i] = Math.cos(angle) * radius;     // X position (rotated around cylinder)
+                    positions[i + 1] = Math.sin(angle) * radius; // Y position (rotated around cylinder)
                 }
             }
             
@@ -426,10 +454,14 @@ export class ImprisonedFistsEffect extends SkillEffect {
             
             // Keep enemy in place while locked
             if (targetData.lockTime > 0) {
-                // Force enemy position to original position
+                // Get current position to preserve other properties
+                const currentPos = targetData.enemy.getPosition();
+                
+                // Only prevent movement by keeping X and Z coordinates fixed
+                // This preserves Y position and other properties
                 targetData.enemy.setPosition(
                     targetData.originalPosition.x,
-                    targetData.originalPosition.y,
+                    currentPos.y, // Keep current Y position to avoid sinking into ground
                     targetData.originalPosition.z
                 );
                 

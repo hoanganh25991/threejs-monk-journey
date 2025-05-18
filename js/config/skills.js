@@ -1,7 +1,11 @@
 // Skills configuration
 import { SKILL_ICONS } from './skill-icons.js';
+// Type definitions are available in skill-types.d.ts
+// @ts-check
+/** @typedef {import('./skill-types').SkillConfig} SkillConfig */
 
 // Primary attacks - basic attacks that don't consume mana
+/** @type {SkillConfig[]} */
 export const PRIMARY_ATTACKS = [
     {
         name: 'Fist of Thunder',
@@ -48,6 +52,7 @@ export const PRIMARY_ATTACKS = [
 ];
 
 // Normal skills that consume mana and have various effects
+/** @type {SkillConfig[]} */
 export const NORMAL_SKILLS = [
     {
         name: 'Wave of Light',
@@ -266,7 +271,7 @@ export const NORMAL_SKILLS = [
         range: 25,
         radius: 5,
         get duration() { return 1 + (this.range / this.moveSpeed) },
-        moveSpeed: 25, // Speed at which the effect moves forward
+        moveSpeed: 10, // Speed at which the effect moves forward
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         immobilize: true, // Prevents enemies from moving
@@ -293,8 +298,10 @@ export const NORMAL_SKILLS = [
 ];
 
 // For backward compatibility, export a combined array of all skills
+/** @type {SkillConfig[]} */
 export const SKILLS = [...PRIMARY_ATTACKS, ...NORMAL_SKILLS];
 
+/** @type {SkillConfig[]} */
 export const BATTLE_SKILLS = [
     ...NORMAL_SKILLS.slice(0, 7), // First 7 normal skills
     PRIMARY_ATTACKS[0], // First primary skill
