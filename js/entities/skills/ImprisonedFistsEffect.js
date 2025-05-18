@@ -15,7 +15,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
         // Specific properties for Imprisoned Fists
         this.lockDuration = 3.0; // Duration in seconds that enemies are locked in place
         this.damageMultiplier = 1.5; // Damage multiplier for locked enemies
-        this.maxTargets = 1; // Only target 1 enemy at a time
+        this.maxTargets = 5; // Maximum number of enemies that can be locked
         this.targetedEnemies = []; // Array to store targeted enemies
         this.particleSystem = null; // Particle system for visual effect
         this.lockEffects = []; // Visual effects for locked enemies
@@ -101,7 +101,8 @@ export class ImprisonedFistsEffect extends SkillEffect {
         effectGroup.add(this.particleSystem);
         
         // Create ground indicator (rectangle)
-        const indicatorGeometry = new THREE.PlaneGeometry(1, 5); // Width, length
+        // Width = skill radius, initial length = 0 (will grow as skill moves)
+        const indicatorGeometry = new THREE.PlaneGeometry(this.skill.radius || 5, 0.1); 
         const indicatorMaterial = new THREE.MeshBasicMaterial({
             color: 0x00ffff,
             transparent: true,
@@ -111,6 +112,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
         
         this.groundIndicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
         this.groundIndicator.rotation.x = Math.PI / 2; // Lay flat on the ground
+        this.startPosition = position.clone(); // Store starting position for ground indicator
         
         // Add ground indicator to scene
         if (this.skill.game && this.skill.game.scene) {
@@ -129,7 +131,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
             effectGroup.lookAt(target);
             
             // Update ground indicator position and rotation
-            this.updateGroundIndicator(position, this.targetPosition);
+            this.updateGroundIndicator(position);
         } else {
             // No target found, just use the provided direction
             if (direction && direction.lengthSq() > 0) {
@@ -140,7 +142,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
                 this.targetPosition = new THREE.Vector3().copy(direction).normalize().multiplyScalar(this.skill.range).add(position);
                 
                 // Update ground indicator
-                this.updateGroundIndicator(position, this.targetPosition);
+                this.updateGroundIndicator(position);
             }
         }
         
@@ -183,14 +185,13 @@ export class ImprisonedFistsEffect extends SkillEffect {
     
     /**
      * Update the ground indicator to show the path
-     * @param {THREE.Vector3} start - Start position
-     * @param {THREE.Vector3} end - End position
+     * @param {THREE.Vector3} currentPosition - Current position of the skill effect
      */
-    updateGroundIndicator(start, end) {
-        if (!this.groundIndicator) return;
+    updateGroundIndicator(currentPosition) {
+        if (!this.groundIndicator || !this.startPosition) return;
         
-        // Calculate midpoint
-        const midpoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+        // Calculate midpoint between hero and current position
+        const midpoint = new THREE.Vector3().addVectors(this.startPosition, currentPosition).multiplyScalar(0.5);
         
         // Get terrain height at midpoint if available
         let y = 0.1; // Default slight offset from ground
@@ -203,11 +204,17 @@ export class ImprisonedFistsEffect extends SkillEffect {
         this.groundIndicator.position.copy(midpoint);
         
         // Calculate direction and distance
-        const direction = new THREE.Vector3().subVectors(end, start).normalize();
-        const distance = start.distanceTo(end);
+        const direction = new THREE.Vector3().subVectors(currentPosition, this.startPosition).normalize();
+        const distance = this.startPosition.distanceTo(currentPosition);
         
-        // Scale the indicator to match the distance
-        this.groundIndicator.scale.set(1, distance, 1);
+        // Create a new geometry with the updated length
+        if (this.groundIndicator.geometry) {
+            this.groundIndicator.geometry.dispose();
+        }
+        
+        // Width = skill radius, length = current distance from hero to skill
+        const newGeometry = new THREE.PlaneGeometry(this.skill.radius || 5, distance);
+        this.groundIndicator.geometry = newGeometry;
         
         // Rotate to face the direction
         const angle = Math.atan2(direction.x, direction.z);
@@ -272,28 +279,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
             // Check if we've reached the target
             const distanceToTarget = newPosition.distanceTo(this.targetPosition);
             if (distanceToTarget < 1) {
-                // We've reached the target, apply effect to enemy
-                if (this.targetEnemy && !this.targetEnemy.isDead() && this.targetedEnemies.length === 0) {
-                    // Lock the enemy
-                    this.targetedEnemies.push({
-                        enemy: this.targetEnemy,
-                        lockTime: this.lockDuration,
-                        originalPosition: this.targetEnemy.getPosition().clone()
-                    });
-                    
-                    // Create visual lock effect
-                    this.createLockEffect(this.targetEnemy);
-                    
-                    // Apply initial damage
-                    this.targetEnemy.takeDamage(this.skill.damage * this.damageMultiplier);
-                    
-                    // Play impact sound
-                    if (this.skill.game && this.skill.game.audioManager && this.skill.sounds) {
-                        this.skill.game.audioManager.playSound(this.skill.sounds.impact);
-                    }
-                }
-                
-                // Deactivate the effect after reaching target
+                // We've reached the target, deactivate the effect
                 this.isActive = false;
             }
         }
@@ -389,8 +375,49 @@ export class ImprisonedFistsEffect extends SkillEffect {
         
         // Update ground indicator position
         if (this.groundIndicator && this.effect) {
-            const startPos = this.effect.position.clone();
-            this.updateGroundIndicator(startPos, this.targetPosition);
+            this.updateGroundIndicator(this.effect.position);
+        }
+        
+        // Check for enemies hit during travel
+        if (this.isActive && this.effect && this.skill.game && this.skill.game.enemyManager) {
+            const currentPosition = this.effect.position.clone();
+            const hitRadius = this.skill.radius || 2;
+            
+            // Get enemies within hit radius
+            const nearbyEnemies = this.skill.game.enemyManager.getEnemiesNearPosition(currentPosition, hitRadius);
+            
+            // Check each enemy
+            for (const enemy of nearbyEnemies) {
+                // Skip dead enemies or already targeted enemies
+                if (enemy.isDead()) continue;
+                
+                // Check if this enemy is already locked
+                const alreadyLocked = this.targetedEnemies.some(target => target.enemy === enemy);
+                if (alreadyLocked) continue;
+                
+                // Lock the enemy
+                this.targetedEnemies.push({
+                    enemy: enemy,
+                    lockTime: this.lockDuration,
+                    originalPosition: enemy.getPosition().clone()
+                });
+                
+                // Create visual lock effect
+                this.createLockEffect(enemy);
+                
+                // Apply damage
+                enemy.takeDamage(this.skill.damage * this.damageMultiplier);
+                
+                // Play impact sound
+                if (this.skill.game && this.skill.game.audioManager && this.skill.sounds) {
+                    this.skill.game.audioManager.playSound(this.skill.sounds.impact);
+                }
+                
+                // If we've reached max targets, stop checking
+                if (this.targetedEnemies.length >= this.maxTargets) {
+                    break;
+                }
+            }
         }
     }
     
