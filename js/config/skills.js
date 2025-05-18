@@ -243,18 +243,39 @@ export const NORMAL_SKILLS = [
         damage: 25,
         manaCost: 20,
         cooldown: 0.5,
-        range: 100,
         radius: 2,
-        duration: 2,
-        kickSpeed: 1, // Units per second
+        // Configuration parameters for the kick effect:
+        range: 30,       // Maximum distance the kick can travel (in units)
+        duration: 5,      // Maximum time the effect can last (in seconds)
+        kickSpeed: 40,    // Speed of the kick (units per second)
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
             cast: 'skillFlyingKick', // Sound of monk preparing to kick
-            impact: 'kickImpact', // Sound of kick connecting with enemies
-            end: 'kickLand' // Sound of monk landing after the kick
+            impact: 'kickImpact',    // Sound of kick connecting with enemies
+            end: 'kickLand'          // Sound of monk landing after the kick
         }
-    }
+    },
+    {
+        name: 'Imprisoned Fists',
+        description: 'A powerful strike that locks enemies in place, preventing them from moving.',
+        type: 'control',
+        damage: 20,
+        manaCost: 25,
+        cooldown: 6,
+        range: 10,
+        radius: 3,
+        duration: 4,
+        get color() { return SKILL_ICONS[this.name].color; },
+        get icon() { return SKILL_ICONS[this.name].emoji; },
+        immobilize: true, // Prevents enemies from moving
+        sounds: {
+            cast: 'skillImprisonedFists', // Sound of monk focusing energy
+            impact: 'chainImpact', // Sound of chains binding enemies
+            end: 'chainsBreak' // Sound of chains breaking as effect ends
+        }
+    },
+    // TODO: Add more skills here
 ];
 
 // For backward compatibility, export a combined array of all skills

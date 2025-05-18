@@ -7,8 +7,14 @@ import { SkillEffect } from './SkillEffect.js';
 export class FlyingKickEffect extends SkillEffect {
     constructor(skill) {
         super(skill);
-        this.kickSpeed = skill.kickSpeed || 20; // Use skill config or default to 20 units per second
-        this.range = skill.maxDistance || 15; // Use skill config or default to 15 units
+        // Simple configuration parameters:
+        // 1. kickSpeed: Units traveled per second
+        this.kickSpeed = skill.kickSpeed || 20; 
+        // 2. range: Maximum distance the kick can travel
+        this.range = skill.range || 200;
+        // 3. duration: Maximum time the effect can last (in seconds)
+        this.maxDuration = skill.duration || 5;
+        
         this.initialPosition = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         this.distanceTraveled = 0;
@@ -171,8 +177,11 @@ export class FlyingKickEffect extends SkillEffect {
         
         this.elapsedTime += delta;
         
-        // Check if effect has expired or reached max distance
-        if (this.elapsedTime >= this.skill.duration || this.distanceTraveled >= this.range) {
+        // Simple termination conditions:
+        // 1. Effect has reached maximum distance (range)
+        // 2. Effect has lasted for maximum duration
+        // Whichever happens first will end the effect
+        if (this.distanceTraveled >= this.range || this.elapsedTime >= this.maxDuration) {
             this.isActive = false;
             this.dispose();
             return;
@@ -231,9 +240,17 @@ export class FlyingKickEffect extends SkillEffect {
             }
         }
         
-        // Adjust trail opacity based on distance traveled
-        const trailProgress = this.distanceTraveled / this.range;
-        const trailOpacity = 1 - (trailProgress * 0.5); // Fade to 50% opacity at end
+        // Simple opacity calculation:
+        // - Calculate progress as percentage of either distance or time (whichever is greater)
+        // - Fade out during the last 30% of the effect
+        const distanceProgress = this.distanceTraveled / this.range;
+        const timeProgress = this.elapsedTime / this.maxDuration;
+        
+        // Use the greater of the two progress values
+        const progress = Math.max(distanceProgress, timeProgress);
+        
+        // Full opacity until 70% complete, then fade out
+        const trailOpacity = progress < 0.7 ? 1.0 : 1.0 - ((progress - 0.7) / 0.3);
         
         // Apply opacity to all trail elements
         this.effect.traverse(child => {
