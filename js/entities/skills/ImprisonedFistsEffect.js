@@ -18,7 +18,6 @@ export class ImprisonedFistsEffect extends SkillEffect {
         this.targetPosition = null; // Position to move towards
         
         // Effect lifetime
-        this.effectDuration = skill.duration || 3; // Total duration of the effect in seconds
         this.remainingDuration = this.effectDuration; // Remaining time for the effect
         
         // Movement tracking
@@ -30,6 +29,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
         this.groundIndicator = null; // Visual indicator on the ground
         this.startPosition = null; // Starting position for ground indicator
         this.lockEffects = [];
+        this.targetedEnemies = [];
     }
     
     /**
@@ -280,52 +280,19 @@ export class ImprisonedFistsEffect extends SkillEffect {
      * @param {number} delta - Time since last update in seconds
      */
     update(delta) {
-        // Update elapsed time (from parent class)
-        this.elapsedTime += delta;
-        
-        // Update the skill's position property to match the effect's position (from parent class)
-        if (this.isActive && this.effect) {
-            this.skill.position.copy(this.effect.position);
-        }
-        
-        // Decrement remaining duration
-        this.remainingDuration -= delta;
-        
-        // Check if effect has expired based on our own duration
-        if (this.remainingDuration <= 0) {
-            this.isActive = false;
-            return;
-        }
-        
+        super.update(delta);
         if (!this.isActive || !this.effect) return;
-        
+
         // Move the effect towards the target if movement is not complete
-        if (this.targetPosition && this.effect && !this.hasReachedTarget) {
-            const currentPosition = this.effect.position.clone();
-            const distanceToTarget = currentPosition.distanceTo(this.targetPosition);
-            
-            // Check if we've reached the target or are very close
-            if (distanceToTarget < 0.5) {
-                // We've reached the target, stop movement
-                this.hasReachedTarget = true;
-                console.debug(`Reached target position, remaining duration: ${this.remainingDuration.toFixed(2)}s`);
-            } else {
-                // Continue moving towards target
-                const direction = new THREE.Vector3().subVectors(this.targetPosition, currentPosition).normalize();
-                
-                // Calculate movement distance for this frame
-                const moveDistance = Math.min(this.moveSpeed * delta, distanceToTarget);
-                
-                // Calculate new position
-                const newPosition = new THREE.Vector3().copy(currentPosition).add(
-                    direction.multiplyScalar(moveDistance)
-                );
-                
-                // Update effect position
-                this.effect.position.copy(newPosition);
-            }
-        }
-        
+        const currentPosition = this.effect.position.clone();
+        const distanceToTarget = currentPosition.distanceTo(this.targetPosition);
+        const direction = new THREE.Vector3().subVectors(this.targetPosition, currentPosition).normalize();
+        const moveDistance = Math.min(this.moveSpeed * delta, distanceToTarget);
+        const newPosition = new THREE.Vector3().copy(currentPosition).add(
+            direction.multiplyScalar(moveDistance)
+        );
+        this.effect.position.copy(newPosition);
+
         // Update particle system
         if (this.particleSystem) {
             const positions = this.particleSystem.geometry.attributes.position.array;
@@ -380,17 +347,11 @@ export class ImprisonedFistsEffect extends SkillEffect {
             
             // Keep enemy in place while locked
             if (targetData.lockTime > 0) {
-                // Get current position to preserve other properties
-                const currentPos = targetData.enemy.getPosition();
-                
-                // Only prevent movement by keeping X and Z coordinates fixed
-                // This preserves Y position and other properties
                 targetData.enemy.setPosition(
                     targetData.originalPosition.x,
-                    currentPos.y, // Keep current Y position to avoid sinking into ground
+                    targetData.originalPosition.y,
                     targetData.originalPosition.z
                 );
-                
                 // Apply damage over time (25% of initial damage per second)
                 const dotDamage = (this.skill.damage * 0.25) * delta;
                 targetData.enemy.takeDamage(dotDamage);
@@ -400,37 +361,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
             }
         }
         
-        // // Update lock effects opacity based on remaining time
-        // this.lockEffects.forEach((effect, index) => {
-        //     if (index < this.targetedEnemies.length) {
-        //         const remainingTime = this.targetedEnemies[index].lockTime;
-        //         const normalizedTime = remainingTime / this.lockDuration;
-                
-        //         // Update opacity
-        //         if (effect.material) {
-        //             effect.material.opacity = 0.7 * normalizedTime;
-        //         }
-                
-        //         // Pulse effect
-        //         const scale = 1 + 0.2 * Math.sin(this.elapsedTime * 5);
-        //         effect.scale.set(scale, scale, scale);
-        //     } else {
-        //         // No corresponding enemy, fade out
-        //         if (effect.material) {
-        //             effect.material.opacity -= delta;
-                    
-        //             // Remove when fully transparent
-        //             if (effect.material.opacity <= 0) {
-        //                 if (effect.parent) {
-        //                     effect.parent.remove(effect);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // });
-        
         // Check for enemies hit during travel
-        const currentPosition = this.effect.position.clone();
         const hitRadius = this.skill.radius || 5; // Use skill radius for hit detection
 
         // Get enemies within the ground rectangle area
@@ -445,8 +376,10 @@ export class ImprisonedFistsEffect extends SkillEffect {
             // Check if this enemy is already locked
             const alreadyLocked = this.targetedEnemies.some(target => target.enemy === enemy);
             if (alreadyLocked) continue;
+
             const originalPosition = enemy.getPosition().clone();
             this.createLockEffect(enemy);
+
             // Lock the enemy immediately
             this.targetedEnemies.push({
                 enemy: enemy,
@@ -455,7 +388,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
             });
             
             // Apply damage immediately
-            enemy.takeDamage(this.skill.damage * this.damageMultiplier);
+            enemy.takeDamage(this.skill.damage);
             
             // Immediately freeze the enemy in place
             enemy.setPosition(

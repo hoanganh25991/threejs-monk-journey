@@ -33,7 +33,9 @@ export class Enemy {
             isKnockedBack: false,
             knockbackEndTime: 0,
             isAggressive: false,
-            aggressionEndTime: 0
+            aggressionEndTime: 0,
+            isStunned: false,
+            stunEndTime: 0
         };
         
         // Apply behavior settings from config
@@ -167,6 +169,20 @@ export class Enemy {
             } else {
                 // End knockback
                 this.state.isKnockedBack = false;
+            }
+        }
+        
+        // Handle stun state
+        if (this.state.isStunned) {
+            if (Date.now() < this.state.stunEndTime) {
+                // Enemy is stunned, only update terrain height and animations
+                this.updateTerrainHeight();
+                this.updateAnimations(delta);
+                return;
+            } else {
+                // Stun has ended
+                this.state.isStunned = false;
+                console.debug(`${this.name} is no longer stunned`);
             }
         }
         
@@ -533,6 +549,16 @@ export class Enemy {
     
     getCollisionRadius() {
         return this.collisionRadius;
+    }
+    
+    /**
+     * Stun the enemy for a specified duration
+     * @param {number} duration - Duration of stun in seconds
+     */
+    stun(duration) {
+        this.state.isStunned = true;
+        this.state.stunEndTime = Date.now() + (duration * 1000);
+        console.debug(`${this.name} stunned for ${duration} seconds`);
     }
     
     getHealth() {
