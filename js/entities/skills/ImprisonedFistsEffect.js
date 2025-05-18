@@ -23,6 +23,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
         // Auto-aim properties
         this.autoAimRange = skill.range || 15; // Range for auto-aiming
         this.hasAutoAimed = false; // Flag to track if auto-aim has been used
+        this.particleDirection = null; // Store the direction for particle movement
     }
     
     /**
@@ -73,20 +74,22 @@ export class ImprisonedFistsEffect extends SkillEffect {
             colors[i * 3 + 1] = color.g * (0.8 + Math.random() * 0.2);
             colors[i * 3 + 2] = color.b * (0.8 + Math.random() * 0.2);
             
-            // Size
-            sizes[i] = 0.1 + Math.random() * 0.2;
+            // Size - increased for better visibility without texture
+            sizes[i] = 0.2 + Math.random() * 0.3;
         }
         
         particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         particleGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
         
+        // Create particle material without texture
         const particleMaterial = new THREE.PointsMaterial({
-            size: 0.2,
+            size: 0.3, // Slightly larger size to make particles more visible without texture
             vertexColors: true,
             transparent: true,
             opacity: 0.8,
-            blending: THREE.AdditiveBlending
+            blending: THREE.AdditiveBlending,
+            sizeAttenuation: true
         });
         
         this.particleSystem = new THREE.Points(particleGeometry, particleMaterial);
@@ -215,14 +218,27 @@ export class ImprisonedFistsEffect extends SkillEffect {
         // Update particle system
         if (this.particleSystem) {
             const positions = this.particleSystem.geometry.attributes.position.array;
+            const direction = new THREE.Vector3(0, 0, 1); // Forward direction in local space
+            
+            // Store the particle system's world direction for consistent movement
+            if (!this.particleDirection) {
+                // Get the forward direction in world space
+                this.particleDirection = new THREE.Vector3();
+                this.effect.getWorldDirection(this.particleDirection);
+                this.particleDirection.multiplyScalar(-1); // Invert if needed based on your coordinate system
+            }
             
             for (let i = 0; i < positions.length; i += 3) {
-                // Move particles along the beam
-                positions[i + 2] += delta * 2;
+                // Move particles along the beam in local space
+                positions[i + 2] += delta * 5; // Increased speed for better visibility
                 
                 // Reset particles that reach the end
                 if (positions[i + 2] > 5) {
                     positions[i + 2] = 0;
+                    
+                    // Add some randomness to x and y for a more natural look
+                    positions[i] = (Math.random() - 0.5) * 0.3;
+                    positions[i + 1] = (Math.random() - 0.5) * 0.3;
                 }
             }
             
@@ -328,6 +344,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
         this.targetedEnemies = [];
         this.lockEffects = [];
         this.particleSystem = null;
+        this.particleDirection = null;
         
         // Call parent reset method
         super.reset();
