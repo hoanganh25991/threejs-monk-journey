@@ -268,6 +268,183 @@ export class Game {
     }
     
     /**
+     * Request fullscreen mode for the game canvas
+     * @returns {Promise} A promise that resolves when fullscreen is entered or rejects if there's an error
+     */
+    requestFullscreen() {
+        console.debug("Requesting fullscreen mode...");
+        
+        // Set a flag to prevent pause on visibility change
+        window.isFullscreenChange = true;
+        
+        // Different browsers have different fullscreen APIs
+        const element = document.documentElement; // Use the entire document for fullscreen
+        
+        // Create a promise to handle fullscreen request
+        const fullscreenPromise = new Promise((resolve, reject) => {
+            try {
+                // Add event listener for fullscreen change
+                const fullscreenChangeHandler = () => {
+                    // Remove the event listener after it's triggered
+                    document.removeEventListener('fullscreenchange', fullscreenChangeHandler);
+                    document.removeEventListener('webkitfullscreenchange', fullscreenChangeHandler);
+                    document.removeEventListener('mozfullscreenchange', fullscreenChangeHandler);
+                    document.removeEventListener('MSFullscreenChange', fullscreenChangeHandler);
+                    
+                    // Reset the flag after a short delay
+                    setTimeout(() => {
+                        window.isFullscreenChange = false;
+                    }, 100);
+                    
+                    // Adjust renderer size to match new dimensions
+                    if (this.isFullscreen()) {
+                        this.adjustRendererSize();
+                        resolve();
+                    } else {
+                        reject(new Error("Failed to enter fullscreen mode"));
+                    }
+                };
+                
+                // Add event listeners for fullscreen change
+                document.addEventListener('fullscreenchange', fullscreenChangeHandler);
+                document.addEventListener('webkitfullscreenchange', fullscreenChangeHandler);
+                document.addEventListener('mozfullscreenchange', fullscreenChangeHandler);
+                document.addEventListener('MSFullscreenChange', fullscreenChangeHandler);
+                
+                // Request fullscreen
+                if (element.requestFullscreen) {
+                    element.requestFullscreen();
+                } else if (element.webkitRequestFullscreen) {
+                    element.webkitRequestFullscreen();
+                } else if (element.mozRequestFullScreen) {
+                    element.mozRequestFullScreen();
+                } else if (element.msRequestFullscreen) {
+                    element.msRequestFullscreen();
+                } else {
+                    console.warn("Fullscreen API not supported in this browser");
+                    window.isFullscreenChange = false;
+                    resolve(); // Resolve anyway if not supported
+                }
+            } catch (error) {
+                console.error("Error requesting fullscreen:", error);
+                window.isFullscreenChange = false;
+                reject(error);
+            }
+        });
+        
+        return fullscreenPromise;
+    }
+    
+    /**
+     * Adjust renderer size to match current window dimensions
+     */
+    adjustRendererSize() {
+        if (this.renderer && this.camera) {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            console.debug(`Adjusting renderer size to ${width}x${height}`);
+            
+            // Update camera aspect ratio
+            this.camera.aspect = width / height;
+            this.camera.updateProjectionMatrix();
+            
+            // Update renderer size
+            this.renderer.setSize(width, height, true);
+            
+            // Update pixel ratio for high-DPI displays
+            const pixelRatio = window.devicePixelRatio || 1;
+            this.renderer.setPixelRatio(pixelRatio);
+        }
+    }
+    
+    /**
+     * Exit fullscreen mode
+     * @returns {Promise} A promise that resolves when fullscreen is exited or rejects if there's an error
+     */
+    exitFullscreen() {
+        console.debug("Exiting fullscreen mode...");
+        
+        // Set a flag to prevent pause on visibility change
+        window.isFullscreenChange = true;
+        
+        // Create a promise to handle fullscreen exit
+        const exitFullscreenPromise = new Promise((resolve, reject) => {
+            try {
+                // Add event listener for fullscreen change
+                const fullscreenChangeHandler = () => {
+                    // Remove the event listener after it's triggered
+                    document.removeEventListener('fullscreenchange', fullscreenChangeHandler);
+                    document.removeEventListener('webkitfullscreenchange', fullscreenChangeHandler);
+                    document.removeEventListener('mozfullscreenchange', fullscreenChangeHandler);
+                    document.removeEventListener('MSFullscreenChange', fullscreenChangeHandler);
+                    
+                    // Reset the flag after a short delay
+                    setTimeout(() => {
+                        window.isFullscreenChange = false;
+                    }, 100);
+                    
+                    // Adjust renderer size to match new dimensions
+                    this.adjustRendererSize();
+                    resolve();
+                };
+                
+                // Add event listeners for fullscreen change
+                document.addEventListener('fullscreenchange', fullscreenChangeHandler);
+                document.addEventListener('webkitfullscreenchange', fullscreenChangeHandler);
+                document.addEventListener('mozfullscreenchange', fullscreenChangeHandler);
+                document.addEventListener('MSFullscreenChange', fullscreenChangeHandler);
+                
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                } else {
+                    console.warn("Fullscreen API not supported in this browser");
+                    window.isFullscreenChange = false;
+                    resolve(); // Resolve anyway if not supported
+                }
+            } catch (error) {
+                console.error("Error exiting fullscreen:", error);
+                window.isFullscreenChange = false;
+                reject(error);
+            }
+        });
+        
+        return exitFullscreenPromise;
+    }
+    
+    /**
+     * Check if the game is currently in fullscreen mode
+     * @returns {boolean} True if the game is in fullscreen mode
+     */
+    isFullscreen() {
+        return !!(
+            document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement
+        );
+    }
+    
+    /**
+     * Toggle fullscreen mode
+     * @returns {Promise} A promise that resolves when the fullscreen state has been toggled
+     */
+    toggleFullscreen() {
+        if (this.isFullscreen()) {
+            return this.exitFullscreen();
+        } else {
+            return this.requestFullscreen();
+        }
+    }
+    
+    /**
      * Start the game
      */
     start() {
@@ -275,6 +452,9 @@ export class Game {
         
         // Make sure the canvas is visible
         this.canvas.style.display = 'block';
+        
+        // Adjust renderer size before entering fullscreen
+        this.adjustRendererSize();
         
         // Reset camera position if needed
         this.camera.position.set(0, 10, 20);
@@ -295,6 +475,13 @@ export class Game {
         
         // Start background music
         this.audioManager.playMusic();
+        
+        // Request fullscreen mode after game is started
+        this.requestFullscreen().catch(error => {
+            console.warn("Could not enter fullscreen mode:", error);
+            // Even if fullscreen fails, make sure the renderer is properly sized
+            this.adjustRendererSize();
+        });
         
         // Dispatch event that game has started
         this.events.dispatch('gameStateChanged', 'running');
@@ -445,10 +632,14 @@ export class Game {
      * Handle window resize event
      */
     onWindowResize() {
-        // this.camera.aspect = window.innerWidth / window.innerHeight;
-        // this.camera.updateProjectionMatrix();
-        // this.renderer.setSize(window.innerWidth, window.innerHeight);
-        window.location.reload();
+        // Check if this is triggered by a fullscreen change
+        if (window.isFullscreenChange) {
+            console.debug('Handling resize as part of fullscreen change');
+            return; // The fullscreen handlers will take care of resizing
+        }
+        
+        // For normal window resizing, adjust the renderer size
+        this.adjustRendererSize();
     }
 
     /**

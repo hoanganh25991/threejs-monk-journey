@@ -4,12 +4,12 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '9';
+const CACHE_VERSION = '11';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 5482210;
-const TOTAL_CACHE_SIZE_MB = 5.23;
+const TOTAL_CACHE_SIZE_BYTES = 5510991;
+const TOTAL_CACHE_SIZE_MB = 5.26;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
@@ -60,18 +60,19 @@ const ASSETS_TO_CACHE = [
   'js/config/structure.js',
   'js/config/terrain.js',
   'js/effects/EffectObjectPool.js',
-  'js/entities/Enemy.js',
-  'js/entities/EnemyManager.js',
-  'js/entities/models/DefaultModel.js',
-  'js/entities/models/DemonModel.js',
-  'js/entities/models/EnemyModel.js',
-  'js/entities/models/EnemyModelFactory.js',
-  'js/entities/models/FrostTitanModel.js',
-  'js/entities/models/InfernalGolemModel.js',
-  'js/entities/models/NecromancerModel.js',
-  'js/entities/models/ShadowBeastModel.js',
-  'js/entities/models/SkeletonModel.js',
-  'js/entities/models/ZombieModel.js',
+  'js/entities/enemies/Enemy.js',
+  'js/entities/enemies/EnemyManager.js',
+  'js/entities/enemies/models/DefaultModel.js',
+  'js/entities/enemies/models/DemonModel.js',
+  'js/entities/enemies/models/EnemyModel.js',
+  'js/entities/enemies/models/EnemyModelFactory.js',
+  'js/entities/enemies/models/FrostTitanModel.js',
+  'js/entities/enemies/models/InfernalGolemModel.js',
+  'js/entities/enemies/models/NecromancerModel.js',
+  'js/entities/enemies/models/ShadowBeastModel.js',
+  'js/entities/enemies/models/SimpleEnemyModel.js',
+  'js/entities/enemies/models/SkeletonModel.js',
+  'js/entities/enemies/models/ZombieModel.js',
   'js/entities/player/FallbackPlayerModel.js',
   'js/entities/player/Player.js',
   'js/entities/player/PlayerCombat.js',
@@ -90,6 +91,7 @@ const ASSETS_TO_CACHE = [
   'js/entities/skills/FistOfThunderEffect.js',
   'js/entities/skills/FlyingDragonEffect.js',
   'js/entities/skills/FlyingKickEffect.js',
+  'js/entities/skills/ImprisonedFistsEffect.js',
   'js/entities/skills/InnerSanctuaryEffect.js',
   'js/entities/skills/MysticAllyEffect.js',
   'js/entities/skills/SevenSidedStrikeEffect.js',
