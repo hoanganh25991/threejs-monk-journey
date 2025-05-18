@@ -268,10 +268,9 @@ export const NORMAL_SKILLS = [
         damage: 1,
         manaCost: 25,
         range: 10,
-        radius: 7,
-        moveSpeed: 40, // Speed at which the effect moves forward
+        radius: 5,
+        moveSpeed: 30, // Speed at which the effect moves forward
         cooldown: 0,
-        get cooldown() { return this.duration },
         get duration() { return this.lockDuration + (this.range / this.moveSpeed) },
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
