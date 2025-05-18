@@ -272,7 +272,7 @@ export const NORMAL_SKILLS = [
         moveSpeed: 40, // Speed at which the effect moves forward
         cooldown: 0,
         get cooldown() { return this.duration },
-        get duration() { return 5 + (this.range / this.moveSpeed) },
+        get duration() { return this.lockDuration + (this.range / this.moveSpeed) },
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         immobilize: true, // Prevents enemies from moving

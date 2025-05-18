@@ -15,6 +15,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
         
         // Movement properties
         this.moveSpeed = skill.moveSpeed || 50; // Speed at which the effect moves (default 50)
+        this.lockDuration = skill.lockDuration || 2;
         this.targetPosition = null; // Position to move towards
         
         // Effect lifetime
@@ -386,7 +387,7 @@ export class ImprisonedFistsEffect extends SkillEffect {
                 lockTime: this.lockDuration,
                 originalPosition: originalPosition,
             });
-            
+
             // Apply damage immediately
             enemy.takeDamage(this.skill.damage);
             
