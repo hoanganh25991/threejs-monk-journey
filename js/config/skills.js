@@ -270,6 +270,20 @@ export const NORMAL_SKILLS = [
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         immobilize: true, // Prevents enemies from moving
+        // Ground rectangle properties for collision detection
+        groundRectangle: {
+            // Width is perpendicular to travel direction (X-Z plane)
+            // Width equals the skill's radius
+            useSkillRadiusForWidth: true,
+            // Length increases along travel direction
+            dynamicLength: true,
+            // Small Y offset from terrain height
+            yOffset: 0.1
+        },
+        // Apply lock effect to enemies hit during travel
+        lockEnemiesDuringTravel: true,
+        // Lock effect duration (in seconds)
+        lockDuration: 1.5,
         sounds: {
             cast: 'skillImprisonedFists', // Sound of monk focusing energy
             impact: 'chainImpact', // Sound of chains binding enemies
