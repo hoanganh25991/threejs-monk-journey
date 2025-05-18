@@ -98,82 +98,11 @@ export class ImprisonedFistsEffect extends SkillEffect {
         // Position and orient the effect
         effectGroup.position.copy(position);
         
-        // Look at the direction
-        if (direction.lengthSq() > 0) {
-            const target = new THREE.Vector3().copy(position).add(direction);
-            effectGroup.lookAt(target);
-        }
-        
         // Store the effect
         this.effect = effectGroup;
         this.isActive = true;
         
-        // Find and target the nearest enemies
-        this.findAndTargetEnemies(position, direction);
-        
         return effectGroup;
-    }
-    
-    /**
-     * Find and target the nearest enemies
-     * @param {THREE.Vector3} position - Position to search from
-     * @param {THREE.Vector3} direction - Direction to search in
-     */
-    findAndTargetEnemies(position, direction) {
-        // Check if we have access to the game and enemy manager
-        if (!this.skill.game || !this.skill.game.enemyManager) {
-            console.warn('No access to enemy manager for auto-aiming');
-            return;
-        }
-        
-        // Get all enemies within range
-        const enemiesInRange = this.skill.game.enemyManager.getEnemiesNearPosition(position, this.autoAimRange);
-        
-        if (enemiesInRange.length === 0) {
-            console.debug('No enemies in range for Imprisoned Fists');
-            return;
-        }
-        
-        // Sort enemies by distance
-        enemiesInRange.sort((a, b) => {
-            const distA = position.distanceTo(a.getPosition());
-            const distB = position.distanceTo(b.getPosition());
-            return distA - distB;
-        });
-        
-        // Target up to maxTargets enemies
-        const targetsToLock = Math.min(enemiesInRange.length, this.maxTargets);
-        
-        for (let i = 0; i < targetsToLock; i++) {
-            const enemy = enemiesInRange[i];
-            
-            // Skip dead enemies
-            if (enemy.isDead()) continue;
-            
-            // Add to targeted enemies
-            this.targetedEnemies.push({
-                enemy: enemy,
-                originalPosition: enemy.getPosition().clone(),
-                lockTime: this.lockDuration
-            });
-            
-            // Create lock effect for this enemy
-            this.createLockEffect(enemy);
-            
-            // Apply initial damage
-            const damage = this.skill.damage * this.damageMultiplier;
-            enemy.takeDamage(damage);
-            
-            console.debug(`Imprisoned Fists locked enemy at distance ${position.distanceTo(enemy.getPosition()).toFixed(2)}`);
-        }
-        
-        // Set auto-aim flag
-        this.hasAutoAimed = this.targetedEnemies.length > 0;
-        
-        // Play sound effect if enemies were targeted
-        if (this.hasAutoAimed && this.skill.game && this.skill.game.audioManager) {
-            this.skill.game.audioManager.playSound('playerAttack');
-        }
     }
     
     /**
@@ -211,14 +140,13 @@ export class ImprisonedFistsEffect extends SkillEffect {
      * @param {number} delta - Time since last update in seconds
      */
     update(delta) {
-        if (!this.isActive || !this.effect) return;
-        
         super.update(delta);
-        
+
+        if (!this.isActive || !this.effect) return;
+
         // Update particle system
         if (this.particleSystem) {
             const positions = this.particleSystem.geometry.attributes.position.array;
-            const direction = new THREE.Vector3(0, 0, 1); // Forward direction in local space
             
             // Store the particle system's world direction for consistent movement
             if (!this.particleDirection) {
