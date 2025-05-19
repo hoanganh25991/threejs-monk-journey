@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { TreasureChest } from './TreasureChest.js';
 import { QuestMarker } from './QuestMarker.js';
 import { BossSpawnPoint } from './BossSpawnPoint.js';
+import { InteractionResultHandler } from '../../services/InteractionResultHandler.js';
 
 /**
  * Manages interactive objects in the world
@@ -11,6 +12,7 @@ export class InteractiveObjectManager {
         this.scene = scene;
         this.worldManager = worldManager;
         this.game = null;
+        this.interactionHandler = null;
         
         // Interactive object collections
         this.interactiveObjects = [];
@@ -26,6 +28,7 @@ export class InteractiveObjectManager {
      */
     setGame(game) {
         this.game = game;
+        this.interactionHandler = new InteractionResultHandler(game);
     }
     
     /**
@@ -48,8 +51,24 @@ export class InteractiveObjectManager {
             return;
         }
         
+        // Track touch start position to prevent accidental interactions during scrolling
+        let touchStartX = 0;
+        let touchStartY = 0;
+        const touchThreshold = 10; // Pixels of movement allowed before canceling the touch
+        
         // Add click event listener
-        canvas.addEventListener('click', (event) => this.handleClick(event));
+        canvas.addEventListener('click', (event) => {
+            console.debug('Click event detected');
+            this.handleClick(event);
+        });
+        
+        // Touch start - record position
+        canvas.addEventListener('touchstart', (event) => {
+            if (event.touches && event.touches.length > 0) {
+                touchStartX = event.touches[0].clientX;
+                touchStartY = event.touches[0].clientY;
+            }
+        });
         
         // Add touch event listener for mobile
         canvas.addEventListener('touchend', (event) => {
@@ -58,8 +77,24 @@ export class InteractiveObjectManager {
             
             // Use the first touch point
             if (event.changedTouches && event.changedTouches.length > 0) {
-                this.handleClick(event.changedTouches[0]);
+                const touch = event.changedTouches[0];
+                
+                // Check if the touch moved significantly (to avoid triggering on scrolls)
+                const touchMoveX = Math.abs(touch.clientX - touchStartX);
+                const touchMoveY = Math.abs(touch.clientY - touchStartY);
+                
+                if (touchMoveX <= touchThreshold && touchMoveY <= touchThreshold) {
+                    console.debug('Touch end event detected (within threshold)');
+                    this.handleClick(touch);
+                } else {
+                    console.debug('Touch moved too much, ignoring as interaction');
+                }
             }
+        });
+        
+        // Also add touchcancel handler
+        canvas.addEventListener('touchcancel', () => {
+            console.debug('Touch cancelled');
         });
     }
     
@@ -94,18 +129,40 @@ export class InteractiveObjectManager {
             const clickedMesh = intersects[0].object;
             let clickedObject = null;
             
-            // Find the parent interactive object
+            // Find the parent interactive object by traversing up the hierarchy
             for (const obj of this.interactiveObjects) {
-                if (obj.mesh === clickedMesh || obj.mesh.children.includes(clickedMesh) || 
-                    (clickedMesh.parent && obj.mesh === clickedMesh.parent)) {
+                // Check if the clicked mesh is the interactive object's mesh
+                if (obj.mesh === clickedMesh) {
                     clickedObject = obj;
                     break;
                 }
+                
+                // Check if the clicked mesh is a direct child of the interactive object's mesh
+                if (obj.mesh.children.includes(clickedMesh)) {
+                    clickedObject = obj;
+                    break;
+                }
+                
+                // Check if the clicked mesh is a descendant of the interactive object's mesh
+                // by traversing up the parent hierarchy
+                let parent = clickedMesh.parent;
+                while (parent) {
+                    if (parent === obj.mesh) {
+                        clickedObject = obj;
+                        break;
+                    }
+                    parent = parent.parent;
+                }
+                
+                if (clickedObject) break;
             }
             
             // If we found the object, interact with it
             if (clickedObject) {
+                console.debug('Interacting with clicked object:', clickedObject.type);
                 this.interactWithObject(clickedObject);
+            } else {
+                console.debug('Could not find interactive object for clicked mesh:', clickedMesh);
             }
         }
     }
@@ -118,57 +175,11 @@ export class InteractiveObjectManager {
         // Call the object's interaction handler
         const result = interactiveObject.onInteract();
         
-        // Check if result is null or undefined before proceeding
-        if (!result) {
-            // No interaction result, possibly already interacted with
-            if (this.game && this.game.hudManager) {
-                this.game.hudManager.showNotification("Nothing happens.");
-            }
-            return;
-        }
-        
-        // Handle different interaction types
-        switch (result.type) {
-            case 'quest':
-                // Handle quest interaction
-                if (this.game && this.game.questManager) {
-                    this.game.questManager.startQuest(result.quest);
-                }
-                break;
-                
-            case 'treasure':
-                // Handle treasure interaction
-                if (this.game && this.game.hudManager) {
-                    this.game.player.addToInventory(result.item);
-                }
-                break;
-                
-            case 'boss_spawn':
-                // Handle boss spawn interaction
-                if (this.game && this.game.enemyManager) {
-                    // Show notification
-                    if (this.game.hudManager) {
-                        this.game.hudManager.showNotification(result.message, 5);
-                    }
-                    
-                    // Spawn the boss
-                    this.game.enemyManager.spawnBoss(
-                        result.bossType,
-                        interactiveObject.position
-                    );
-                }
-                break;
-                
-            case 'item':
-                // Handle item interaction
-                if (this.game && this.game.hudManager) {
-                    this.game.player.addToInventory(result.item);
-                }
-                break;
-                
-            default:
-                console.warn(`Unknown interaction type: ${result.type}`);
-                break;
+        // Use the shared interaction handler
+        if (this.interactionHandler) {
+            this.interactionHandler.handleInteractionResult(result, interactiveObject);
+        } else {
+            console.warn('Interaction handler not initialized');
         }
     }
     

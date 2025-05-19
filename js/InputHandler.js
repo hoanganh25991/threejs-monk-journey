@@ -10,6 +10,7 @@ import {
     CAST_INTERVAL,
     INTERACTION_RANGE
 } from '../config/input.js';
+import { InteractionResultHandler } from '../services/InteractionResultHandler.js';
 
 export class InputHandler {
     constructor(game) {
@@ -21,6 +22,9 @@ export class InputHandler {
         
         // Cooldown tracking for continuous casting
         this.skillCastCooldowns = {};
+        
+        // Create interaction handler
+        this.interactionHandler = new InteractionResultHandler(game);
         
         // Initialize skill key tracking
         const skillKeys = getAllSkillKeys();
@@ -240,38 +244,8 @@ export class InputHandler {
             console.debug('Interacting with nearest object:', nearestObject);
             const result = nearestObject.onInteract();
             
-            // Handle interaction result
-            if (result) {
-                switch (result.type) {
-                    case 'item':
-                        // Add item to inventory
-                        this.game.player.addToInventory(result.item);
-                        // this.game.hudManager.showNotification(`Found ${result.item.name} x${result.item.amount}`);
-                        break;
-                    case 'quest':
-                        // Show quest dialog
-                        if (this.game.questManager) {
-                            this.game.questManager.startQuest(result.quest);
-                        }
-                        
-                        // Toggle quest dialog if HUD manager exists
-                        if (this.game.hudManager) {
-                            if (this.game.hudManager.isDialogVisible()) {
-                                this.game.hudManager.hideDialog();
-                            } else {
-                                this.game.hudManager.showDialog(
-                                    `New Quest: ${result.quest.name}`,
-                                    result.quest.description
-                                );
-                            }
-                        }
-                        break;
-                    case 'boss_spawn':
-                        // Show boss spawn message
-                        this.game.hudManager.showNotification(result.message);
-                        break;
-                }
-            }
+            // Use the shared interaction handler
+            this.interactionHandler.handleInteractionResult(result, nearestObject);
         } else {
             console.debug('No interactive objects within range');
             this.game.hudManager.showNotification('Nothing to interact with nearby');
