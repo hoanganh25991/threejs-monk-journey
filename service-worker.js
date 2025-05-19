@@ -4,12 +4,12 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '11';
+const CACHE_VERSION = '12';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 5510991;
-const TOTAL_CACHE_SIZE_MB = 5.26;
+const TOTAL_CACHE_SIZE_BYTES = 5628033;
+const TOTAL_CACHE_SIZE_MB = 5.37;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
@@ -22,6 +22,7 @@ const ASSETS_TO_CACHE = [
   'css/hud-manager.css',
   'css/icons.css',
   'css/initial-loading.css',
+  'css/inventory.css',
   'css/loading-screen.css',
   'css/main.css',
   'css/notifications.css',
@@ -62,16 +63,24 @@ const ASSETS_TO_CACHE = [
   'js/effects/EffectObjectPool.js',
   'js/entities/enemies/Enemy.js',
   'js/entities/enemies/EnemyManager.js',
+  'js/entities/enemies/models/CorruptedTreantModel.js',
   'js/entities/enemies/models/DefaultModel.js',
   'js/entities/enemies/models/DemonModel.js',
   'js/entities/enemies/models/EnemyModel.js',
   'js/entities/enemies/models/EnemyModelFactory.js',
+  'js/entities/enemies/models/FireElementalModel.js',
+  'js/entities/enemies/models/FrostElementalModel.js',
   'js/entities/enemies/models/FrostTitanModel.js',
   'js/entities/enemies/models/InfernalGolemModel.js',
+  'js/entities/enemies/models/MountainTrollModel.js',
   'js/entities/enemies/models/NecromancerModel.js',
   'js/entities/enemies/models/ShadowBeastModel.js',
   'js/entities/enemies/models/SimpleEnemyModel.js',
+  'js/entities/enemies/models/SkeletonArcherModel.js',
   'js/entities/enemies/models/SkeletonModel.js',
+  'js/entities/enemies/models/SwampWitchModel.js',
+  'js/entities/enemies/models/VoidWraithModel.js',
+  'js/entities/enemies/models/ZombieBruteModel.js',
   'js/entities/enemies/models/ZombieModel.js',
   'js/entities/player/FallbackPlayerModel.js',
   'js/entities/player/Player.js',
@@ -114,6 +123,7 @@ const ASSETS_TO_CACHE = [
   'js/hud-manager/EnemyUI.js',
   'js/hud-manager/HUDManager.js',
   'js/hud-manager/HomeUI.js',
+  'js/hud-manager/InventoryButton.js',
   'js/hud-manager/InventoryUI.js',
   'js/hud-manager/MiniMapButton.js',
   'js/hud-manager/MiniMapUI.js',
@@ -126,6 +136,7 @@ const ASSETS_TO_CACHE = [
   'js/hud-manager/SkillTreeUI.js',
   'js/hud-manager/SkillsUI.js',
   'js/hud-manager/VirtualJoystickUI.js',
+  'js/menu-system/ControlsDisplay.js',
   'js/menu-system/EnemyPreview.js',
   'js/menu-system/GameMenu.js',
   'js/menu-system/IMenu.js',
@@ -143,6 +154,7 @@ const ASSETS_TO_CACHE = [
   'js/save-manager/serializers/SettingsSerializer.js',
   'js/save-manager/utils/SaveOperationProgress.js',
   'js/save-manager/utils/SaveUtils.js',
+  'js/services/InteractionResultHandler.js',
   'js/types.js',
   'js/utils/AnimationUtils.js',
   'js/utils/SkillTreeUtils.js',
