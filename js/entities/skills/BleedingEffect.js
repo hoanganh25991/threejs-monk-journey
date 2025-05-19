@@ -94,7 +94,7 @@ export class BleedingEffect extends SkillEffect {
         }
         
         // Create a flash effect for high damage
-        if (this.amount > 40) {
+        if (this.amount > 100) {
             const flash = this.createFlashEffect();
             effectGroup.add(flash);
         }
