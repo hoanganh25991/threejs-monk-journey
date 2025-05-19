@@ -308,6 +308,9 @@
                         console.debug('Service Worker registered with scope:', registration.scope);
                         
                         // Check for updates
+                        // Store a reference to this for use in the callback
+                        const instance = this;
+                        
                         registration.addEventListener('updatefound', () => {
                             try {
                                 const newWorker = registration.installing;
@@ -317,14 +320,14 @@
                                 }
 
                                 // Show update notification
-                                self.showUpdateNotification();
+                                instance.showUpdateNotification();
 
                                 // Create a new message channel for the new worker
-                                self.createMessageChannel(registration);
+                                instance.createMessageChannel(registration);
 
                                 // Listen for state changes
                                 newWorker.addEventListener('statechange', () => {
-                                    self.handleStateChange(newWorker);
+                                    instance.handleStateChange(newWorker);
                                 });
                             } catch (error) {
                                 console.error('Error handling update found event:', error);
@@ -334,9 +337,9 @@
                     .catch(error => {
                         console.error('Service Worker registration failed:', error);
                         // Show error in the UI
-                        self.updateLoadingProgress(0, 'Service Worker registration failed', error.message);
-                        self.showUpdateNotification();
-                        setTimeout(() => self.hideUpdateNotification(), 5000);
+                        instance.updateLoadingProgress(0, 'Service Worker registration failed', error.message);
+                        instance.showUpdateNotification();
+                        setTimeout(() => instance.hideUpdateNotification(), 5000);
                     });
             } catch (error) {
                 console.error('Error setting up service worker:', error);
