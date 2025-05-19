@@ -58,10 +58,11 @@
 /* Character Equipment Section (Left Side) */
 #character-equipment {
     width: 350px;
-    padding: var(--padding-large);
+    padding: var(--padding-medium);
     border-right: 1px solid rgba(138, 109, 59, 0.5);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 #character-preview {
@@ -70,24 +71,29 @@
     background-color: rgba(20, 20, 20, 0.5);
     border: 1px solid rgba(138, 109, 59, 0.5);
     border-radius: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 48px; /* Placeholder for character model */
+    overflow: hidden;
 }
 
 #character-model-container {
     position: absolute;
-    width: 150px;
-    height: 150px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
     z-index: 1;
+    overflow: hidden;
+    border-radius: 8px;
+    background-color: rgba(20, 20, 20, 0.5);
+}
+
+#character-model-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
 }
 
 #equipment-slots {
@@ -104,22 +110,23 @@
         ".       feet    .";
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
+    padding: 10px;
 }
 
 .equipment-slot {
     background-color: rgba(20, 20, 20, 0.7);
     border: 1px solid rgba(138, 109, 59, 0.5);
     border-radius: 8px;
-    padding: var(--padding-medium);
+    padding: var(--padding-small);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
-    width: 70px;
-    height: 70px;
-    margin: 5px;
+    width: 60px;
+    height: 60px;
+    margin: 2px;
 }
 
 .equipment-slot[data-slot="head"] {
@@ -189,7 +196,7 @@
 /* Inventory Items Section (Right Side) */
 #inventory-items {
     flex: 1;
-    padding: var(--padding-large);
+    padding: var(--padding-medium);
     overflow-y: auto;
     background-color: rgba(0, 0, 0, 0.6);
 }
@@ -197,7 +204,7 @@
 #inventory-items h3 {
     font-size: 18px;
     color: #ffcc00;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     border-bottom: 1px dashed rgba(255, 204, 0, 0.3);
     padding-bottom: var(--padding-small);
 }
@@ -206,8 +213,8 @@
 #inventory-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    padding: var(--padding-medium);
+    gap: 2px;
+    padding: var(--padding-small);
 }
 
 /* Inventory Items */
@@ -215,7 +222,7 @@
     background-color: rgba(20, 20, 20, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
-    padding: var(--padding-medium);
+    padding: var(--padding-small);
     aspect-ratio: 1/1;
     display: flex;
     flex-direction: column;
@@ -224,6 +231,7 @@
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
+    min-height: 80px;
 }
 
 .inventory-item:hover {

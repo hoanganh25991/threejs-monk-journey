@@ -1,4 +1,5 @@
 import { UIComponent } from '../UIComponent.js';
+import * as THREE from 'three';
 
 /**
  * Inventory UI component
@@ -13,6 +14,17 @@ export class InventoryUI extends UIComponent {
         super('inventory', game);
         this.inventoryGrid = null;
         this.isInventoryOpen = false;
+        
+        // 3D model preview properties
+        this.modelContainer = null;
+        this.modelRenderer = null;
+        this.modelScene = null;
+        this.modelCamera = null;
+        this.modelLight = null;
+        this.characterModel = null;
+        this.animationMixer = null;
+        this.clock = new THREE.Clock();
+        this.isModelInitialized = false;
     }
     
     /**
@@ -22,6 +34,7 @@ export class InventoryUI extends UIComponent {
     init() {
         // Store references to elements we need to update
         this.inventoryGrid = document.getElementById('inventory-grid');
+        this.modelContainer = document.getElementById('character-model-container');
         
         // Add click event to save inventory
         const saveButton = document.getElementById('inventory-save');
@@ -34,6 +47,60 @@ export class InventoryUI extends UIComponent {
         this.hide();
         
         return true;
+    }
+    
+    /**
+     * Initialize the 3D model preview
+     * This is called when the inventory is first opened
+     */
+    initModelPreview() {
+        if (this.isModelInitialized) return;
+        
+        // Clear the model container
+        this.modelContainer.innerHTML = '';
+        
+        // Create a new renderer
+        this.modelRenderer = new THREE.WebGLRenderer({ 
+            antialias: true,
+            alpha: true
+        });
+        this.modelRenderer.setSize(this.modelContainer.clientWidth, this.modelContainer.clientHeight);
+        this.modelRenderer.setClearColor(0x000000, 0);
+        this.modelRenderer.shadowMap.enabled = true;
+        this.modelContainer.appendChild(this.modelRenderer.domElement);
+        
+        // Create a new scene
+        this.modelScene = new THREE.Scene();
+        
+        // Create a camera
+        this.modelCamera = new THREE.PerspectiveCamera(
+            45, 
+            this.modelContainer.clientWidth / this.modelContainer.clientHeight, 
+            0.1, 
+            1000
+        );
+        this.modelCamera.position.set(0, 0, 5);
+        this.modelCamera.lookAt(0, 0, 0);
+        
+        // Add lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        this.modelScene.add(ambientLight);
+        
+        this.modelLight = new THREE.DirectionalLight(0xffffff, 1);
+        this.modelLight.position.set(5, 5, 5);
+        this.modelLight.castShadow = true;
+        this.modelScene.add(this.modelLight);
+        
+        // Clone the player model
+        this.createCharacterModel();
+        
+        // Start animation loop
+        this.animateModel();
+        
+        this.isModelInitialized = true;
+        
+        // Handle window resize
+        window.addEventListener('resize', () => this.onModelContainerResize());
     }
     
     /**
@@ -51,6 +118,11 @@ export class InventoryUI extends UIComponent {
             // Update inventory items
             this.updateInventoryItems();
             
+            // Initialize model preview if not already done
+            if (!this.isModelInitialized) {
+                this.initModelPreview();
+            }
+            
             // Show inventory
             this.show();
             this.isInventoryOpen = true;
@@ -58,6 +130,125 @@ export class InventoryUI extends UIComponent {
             // Pause game
             this.game.pause(false);
         }
+    }
+    
+    /**
+     * Create the character model by cloning the player model
+     */
+    createCharacterModel() {
+        try {
+            console.debug('Creating character model for inventory preview...');
+            
+            // Get the player model
+            const playerModel = this.game.player.model;
+            console.debug('Player model:', playerModel);
+            
+            // If player model exists and has a model group
+            if (playerModel && playerModel.getModelGroup()) {
+                // Get the model group
+                const modelGroup = playerModel.getModelGroup();
+                console.debug('Model group found:', modelGroup);
+                
+                // Clone the entire model group
+                this.characterModel = modelGroup.clone(true);
+                
+                // Apply proper scaling and positioning for the preview
+                this.characterModel.scale.set(0.8, 0.8, 0.8);
+                this.characterModel.position.set(0, -1.0, 0);
+                this.characterModel.rotation.set(0, Math.PI, 0); // Face the camera
+                
+                // Add to scene
+                this.modelScene.add(this.characterModel);
+                
+                // Set up animation mixer if the player has animations
+                if (playerModel.mixer && playerModel.animations) {
+                    this.animationMixer = new THREE.AnimationMixer(this.characterModel);
+                    
+                    // Try to find an idle animation
+                    const idleAnimation = Object.keys(playerModel.animations).find(name => 
+                        name.toLowerCase().includes('idle') || 
+                        name.toLowerCase().includes('stand')
+                    );
+                    
+                    if (idleAnimation && playerModel.animations[idleAnimation]) {
+                        try {
+                            // Clone the animation clip
+                            const originalClip = playerModel.animations[idleAnimation].getClip();
+                            const action = this.animationMixer.clipAction(originalClip);
+                            action.play();
+                            console.debug('Playing idle animation:', idleAnimation);
+                        } catch (animError) {
+                            console.error('Error playing animation:', animError);
+                        }
+                    }
+                }
+                
+                console.debug('Character model created for inventory preview');
+            } else {
+                console.debug('No suitable player model found, creating placeholder');
+                // If no model or using fallback, create a simple placeholder
+                const geometry = new THREE.BoxGeometry(1, 2, 1);
+                const material = new THREE.MeshStandardMaterial({ color: 0x8866ff });
+                this.characterModel = new THREE.Mesh(geometry, material);
+                this.characterModel.position.set(0, 0, 0);
+                this.modelScene.add(this.characterModel);
+                
+                console.debug('Using placeholder model for inventory preview');
+            }
+        } catch (error) {
+            console.error('Error creating character model for inventory:', error);
+            
+            // Create a fallback model if there's an error
+            const geometry = new THREE.BoxGeometry(1, 2, 1);
+            const material = new THREE.MeshStandardMaterial({ color: 0x8866ff });
+            this.characterModel = new THREE.Mesh(geometry, material);
+            this.characterModel.position.set(0, 0, 0);
+            this.modelScene.add(this.characterModel);
+        }
+    }
+    
+    /**
+     * Animate the character model
+     */
+    animateModel() {
+        // Always request the next frame first to ensure continuous animation
+        requestAnimationFrame(() => this.animateModel());
+        
+        // Only process animation if initialized and inventory is open
+        if (!this.isModelInitialized || !this.isInventoryOpen) return;
+        
+        // Rotate the model slowly
+        if (this.characterModel) {
+            this.characterModel.rotation.y += 0.01;
+        }
+        
+        // Update animation mixer
+        if (this.animationMixer) {
+            const delta = this.clock.getDelta();
+            this.animationMixer.update(delta);
+        }
+        
+        // Render the scene
+        if (this.modelRenderer && this.modelScene && this.modelCamera) {
+            this.modelRenderer.render(this.modelScene, this.modelCamera);
+        }
+    }
+    
+    /**
+     * Handle resize of the model container
+     */
+    onModelContainerResize() {
+        if (!this.isModelInitialized) return;
+        
+        const width = this.modelContainer.clientWidth;
+        const height = this.modelContainer.clientHeight;
+        
+        // Update camera aspect ratio
+        this.modelCamera.aspect = width / height;
+        this.modelCamera.updateProjectionMatrix();
+        
+        // Update renderer size
+        this.modelRenderer.setSize(width, height);
     }
     
     /**
@@ -176,5 +367,71 @@ export class InventoryUI extends UIComponent {
         
         // Here you would typically call the game's save system
         // this.game.saveManager.savePlayerInventory(inventory);
+    }
+    
+    /**
+     * Show the inventory UI
+     * Override the parent method to handle 3D model animation
+     */
+    show() {
+        super.show();
+        
+        // Start the animation loop if the model is initialized
+        if (this.isModelInitialized) {
+            this.clock.start();
+            this.animateModel();
+        }
+    }
+    
+    /**
+     * Hide the inventory UI
+     * Override the parent method to handle 3D model animation
+     */
+    hide() {
+        super.hide();
+        
+        // Stop the animation clock
+        if (this.isModelInitialized) {
+            this.clock.stop();
+        }
+    }
+    
+    /**
+     * Clean up resources when component is destroyed
+     * This should be called when the game is shutting down
+     */
+    dispose() {
+        // Stop animation loop
+        this.isModelInitialized = false;
+        
+        // Dispose of Three.js resources
+        if (this.characterModel) {
+            this.modelScene.remove(this.characterModel);
+            this.characterModel.traverse((child) => {
+                if (child.isMesh) {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(material => material.dispose());
+                        } else {
+                            child.material.dispose();
+                        }
+                    }
+                }
+            });
+            this.characterModel = null;
+        }
+        
+        if (this.animationMixer) {
+            this.animationMixer = null;
+        }
+        
+        if (this.modelRenderer) {
+            this.modelRenderer.dispose();
+            this.modelRenderer = null;
+        }
+        
+        // Remove event listener
+        window.removeEventListener('resize', this.onModelContainerResize);
     }
 }
