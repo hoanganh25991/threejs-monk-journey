@@ -121,7 +121,7 @@ export class InventoryUI extends UIComponent {
                 // Apply slowdown factor for better animation viewing
                 const slowdownFactor = 0.5; // Reduce animation speed by half
                 const effectiveDelta = Math.max(delta * slowdownFactor, 0.004);
-                console.debug({ effectiveDelta })
+                // console.debug({ effectiveDelta })
                 
                 // Update animations with slowed-down delta
                 if (this.modelPreview.mixer) {
