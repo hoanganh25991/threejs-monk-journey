@@ -1,10 +1,18 @@
 import { SkeletonModel } from './SkeletonModel.js';
+import { SkeletonArcherModel } from './SkeletonArcherModel.js';
 import { ZombieModel } from './ZombieModel.js';
+import { ZombieBruteModel } from './ZombieBruteModel.js';
 import { DemonModel } from './DemonModel.js';
 import { FrostTitanModel } from './FrostTitanModel.js';
 import { NecromancerModel } from './NecromancerModel.js';
 import { ShadowBeastModel } from './ShadowBeastModel.js';
 import { InfernalGolemModel } from './InfernalGolemModel.js';
+import { FireElementalModel } from './FireElementalModel.js';
+import { FrostElementalModel } from './FrostElementalModel.js';
+import { CorruptedTreantModel } from './CorruptedTreantModel.js';
+import { SwampWitchModel } from './SwampWitchModel.js';
+import { MountainTrollModel } from './MountainTrollModel.js';
+import { VoidWraithModel } from './VoidWraithModel.js';
 import { SimpleEnemyModel } from './SimpleEnemyModel.js';
 import { DefaultModel } from './DefaultModel.js';
 
@@ -20,39 +28,78 @@ export class EnemyModelFactory {
      */
     static createModel(enemy, modelGroup) {
         switch (enemy.type) {
+            // Skeleton types
             case 'skeleton':
             case 'skeleton_king':
                 return new SkeletonModel(enemy, modelGroup);
                 
+            case 'skeleton_archer':
+                return new SkeletonArcherModel(enemy, modelGroup);
+                
+            // Zombie types
             case 'zombie':
                 return new ZombieModel(enemy, modelGroup);
                 
+            case 'zombie_brute':
+                return new ZombieBruteModel(enemy, modelGroup);
+                
+            // Demon types
             case 'demon':
             case 'demon_lord':
                 return new DemonModel(enemy, modelGroup);
                 
+            // Boss types
             case 'frost_titan':
                 return new FrostTitanModel(enemy, modelGroup);
                 
+            // Caster types
             case 'necromancer':
             case 'necromancer_lord':
                 return new NecromancerModel(enemy, modelGroup);
                 
+            case 'swamp_witch':
+                return new SwampWitchModel(enemy, modelGroup);
+                
+            // Beast types
             case 'shadow_beast':
                 return new ShadowBeastModel(enemy, modelGroup);
                 
+            // Elemental types
+            case 'fire_elemental':
+                return new FireElementalModel(enemy, modelGroup);
+                
+            case 'frost_elemental':
+                return new FrostElementalModel(enemy, modelGroup);
+                
+            // Golem types
             case 'infernal_golem':
                 return new InfernalGolemModel(enemy, modelGroup);
                 
-            // Use SimpleEnemyModel for these enemy types
+            // Plant types
+            case 'corrupted_treant':
+                return new CorruptedTreantModel(enemy, modelGroup);
+                
+            // Mountain creatures
+            case 'mountain_troll':
+                return new MountainTrollModel(enemy, modelGroup);
+                
+            // Dark Sanctum creatures
+            case 'void_wraith':
+                return new VoidWraithModel(enemy, modelGroup);
+                
+            // Use SimpleEnemyModel for these animal-like enemy types
             case 'forest_spider':
             case 'feral_wolf':
             case 'hellhound':
             case 'winter_wolf':
             case 'poison_toad':
+            case 'bog_lurker':
+            case 'ruin_crawler':
                 return new SimpleEnemyModel(enemy, modelGroup);
                 
+            // Default fallback
             default:
+                console.warn(`No specific model implementation for enemy type: ${enemy.type}, using default model`);
                 return new DefaultModel(enemy, modelGroup);
         }
     }
