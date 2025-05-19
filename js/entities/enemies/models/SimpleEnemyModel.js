@@ -122,8 +122,14 @@ export class SimpleEnemyModel extends EnemyModel {
             
             // Only apply bobbing if not moving (to avoid conflicting animations)
             if (!this.enemy.state.isMoving) {
-                // Make the model bob up and down slightly
-                this.modelGroup.position.y = Math.sin(time * 1.5) * 0.1;
+                // Make the model bob up and down slightly, but ensure it doesn't go below ground
+                // Use a positive offset to keep it above ground level
+                const baseHeight = 0.1; // Base height to keep model above ground
+                const bobbingHeight = Math.sin(time * 1.5) * 0.1;
+                this.modelGroup.position.y = baseHeight + Math.max(0, bobbingHeight);
+            } else {
+                // When moving, ensure the model stays above ground
+                this.modelGroup.position.y = 0.1;
             }
             
             // Always apply slight rotation for more natural movement

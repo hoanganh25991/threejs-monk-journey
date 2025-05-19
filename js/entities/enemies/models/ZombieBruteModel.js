@@ -157,6 +157,9 @@ export class ZombieBruteModel extends ZombieModel {
     }
     
     updateAnimations(delta) {
+        // Call the parent class animations first
+        super.updateAnimations(delta);
+        
         // Implement zombie brute specific animations
         const time = Date.now() * 0.001; // Convert to seconds
         
@@ -165,8 +168,11 @@ export class ZombieBruteModel extends ZombieModel {
             // Slow, heavy swaying motion
             this.modelGroup.rotation.y = Math.sin(time * 0.3) * 0.15;
             
-            // Breathing-like motion
-            this.modelGroup.position.y = Math.sin(time * 0.7) * 0.05;
+            // Breathing-like motion with minimum height to stay above ground
+            // Calculate breathing motion
+            const breathingMotion = Math.sin(time * 0.7) * 0.05;
+            // Apply breathing motion but ensure minimum height of 0.1 (slightly higher than regular zombies)
+            this.modelGroup.position.y = Math.max(0.1, breathingMotion + 0.1);
             
             // Arms swinging
             if (this.modelGroup.children.length > 3) {

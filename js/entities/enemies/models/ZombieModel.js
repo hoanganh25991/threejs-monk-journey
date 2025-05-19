@@ -79,6 +79,29 @@ export class ZombieModel extends EnemyModel {
     }
     
     updateAnimations(delta) {
-        // Implement zombie-specific animations here if needed
+        // Call the base class animations
+        super.updateAnimations(delta);
+        
+        // Zombie-specific animations
+        if (this.modelGroup) {
+            const time = Date.now() * 0.001; // Convert to seconds
+            
+            // Ensure the zombie model stays above ground
+            // Set a minimum height to prevent it from going below ground
+            this.modelGroup.position.y = Math.max(0.05, this.modelGroup.position.y);
+            
+            // Add a shambling effect when moving
+            if (this.enemy.state.isMoving) {
+                // Slight side-to-side movement for shambling effect
+                this.modelGroup.rotation.z = Math.sin(time * 2.0) * 0.05;
+                
+                // Slight forward lean when moving
+                this.modelGroup.rotation.x = 0.1;
+            } else {
+                // Reset rotation when not moving
+                this.modelGroup.rotation.z = 0;
+                this.modelGroup.rotation.x = 0;
+            }
+        }
     }
 }
