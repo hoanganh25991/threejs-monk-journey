@@ -61,6 +61,7 @@ export class DefaultModel extends EnemyModel {
     }
     
     updateAnimations(delta) {
-        // Default animations if needed
+        // Use the base class animations
+        super.updateAnimations(delta);
     }
 }

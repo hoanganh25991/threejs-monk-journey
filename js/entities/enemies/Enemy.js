@@ -99,57 +99,9 @@ export class Enemy {
     }
     
     updateAnimations(delta) {
-        // Use the model's updateAnimations method if available
+        // Use the model's updateAnimations method
         if (this.model && typeof this.model.updateAnimations === 'function') {
             this.model.updateAnimations(delta);
-            return;
-        }
-
-        // Fallback to simple animations for the enemy model
-        if (this.state.isMoving && this.modelGroup) {
-            // Walking animation
-            const walkSpeed = 5;
-            const walkAmplitude = 0.1;
-            
-            // Animate legs
-            if (this.modelGroup.children.length >= 6) {
-                const leftLeg = this.modelGroup.children[4];
-                const rightLeg = this.modelGroup.children[5];
-                
-                if (leftLeg && leftLeg.position) {
-                    leftLeg.position.z = Math.sin(Date.now() * 0.01 * walkSpeed) * walkAmplitude;
-                }
-                
-                if (rightLeg && rightLeg.position) {
-                    rightLeg.position.z = -Math.sin(Date.now() * 0.01 * walkSpeed) * walkAmplitude;
-                }
-            }
-            
-            // Animate arms
-            if (this.modelGroup.children.length >= 4) {
-                const leftArm = this.modelGroup.children[2];
-                const rightArm = this.modelGroup.children[3];
-                
-                if (leftArm && leftArm.rotation) {
-                    leftArm.rotation.x = Math.sin(Date.now() * 0.01 * walkSpeed) * 0.2;
-                }
-                
-                if (rightArm && rightArm.rotation) {
-                    rightArm.rotation.x = -Math.sin(Date.now() * 0.01 * walkSpeed) * 0.2;
-                }
-            }
-        }
-        
-        // Attack animation
-        if (this.state.isAttacking && this.modelGroup) {
-            // Simple attack animation
-            if (this.modelGroup.children.length >= 4) {
-                const rightArm = this.modelGroup.children[3];
-                
-                if (rightArm && rightArm.rotation) {
-                    rightArm.rotation.x = Math.sin(Date.now() * 0.02) * 0.5;
-                }
-            }
         }
     }
 

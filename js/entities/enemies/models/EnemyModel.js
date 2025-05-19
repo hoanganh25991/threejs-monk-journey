@@ -45,7 +45,75 @@ export class EnemyModel {
      * @param {number} delta - Time since last update in seconds
      */
     updateAnimations(delta) {
-        // Default implementation does nothing
-        // Override in subclasses if needed
+        // Default implementation for basic animations
+        // This will be called if a subclass doesn't override it
+        
+        if (!this.modelGroup || !this.enemy) return;
+        
+        // Only animate if the enemy is moving or attacking
+        if (this.enemy.state.isMoving) {
+            this.animateMovement(delta);
+        }
+        
+        if (this.enemy.state.isAttacking) {
+            this.animateAttack(delta);
+        }
+    }
+    
+    /**
+     * Animate enemy movement
+     * @param {number} delta - Time since last update in seconds
+     */
+    animateMovement(delta) {
+        if (!this.modelGroup) return;
+        
+        // Walking animation
+        const walkSpeed = 5;
+        const walkAmplitude = 0.1;
+        
+        // Animate legs
+        if (this.modelGroup.children.length >= 6) {
+            const leftLeg = this.modelGroup.children[4];
+            const rightLeg = this.modelGroup.children[5];
+            
+            if (leftLeg && leftLeg.position) {
+                leftLeg.position.z = Math.sin(Date.now() * 0.01 * walkSpeed) * walkAmplitude;
+            }
+            
+            if (rightLeg && rightLeg.position) {
+                rightLeg.position.z = -Math.sin(Date.now() * 0.01 * walkSpeed) * walkAmplitude;
+            }
+        }
+        
+        // Animate arms
+        if (this.modelGroup.children.length >= 4) {
+            const leftArm = this.modelGroup.children[2];
+            const rightArm = this.modelGroup.children[3];
+            
+            if (leftArm && leftArm.rotation) {
+                leftArm.rotation.x = Math.sin(Date.now() * 0.01 * walkSpeed) * 0.2;
+            }
+            
+            if (rightArm && rightArm.rotation) {
+                rightArm.rotation.x = -Math.sin(Date.now() * 0.01 * walkSpeed) * 0.2;
+            }
+        }
+    }
+    
+    /**
+     * Animate enemy attack
+     * @param {number} delta - Time since last update in seconds
+     */
+    animateAttack(delta) {
+        if (!this.modelGroup) return;
+        
+        // Simple attack animation
+        if (this.modelGroup.children.length >= 4) {
+            const rightArm = this.modelGroup.children[3];
+            
+            if (rightArm && rightArm.rotation) {
+                rightArm.rotation.x = Math.sin(Date.now() * 0.02) * 0.5;
+            }
+        }
     }
 }

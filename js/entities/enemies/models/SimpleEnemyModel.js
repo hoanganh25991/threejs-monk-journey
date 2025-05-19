@@ -113,14 +113,24 @@ export class SimpleEnemyModel extends EnemyModel {
      * @param {number} delta - Time since last update in seconds
      */
     updateAnimations(delta) {
-        // Simple bobbing animation
+        // Use the base class animations for movement and attack
+        super.updateAnimations(delta);
+        
+        // Add simple bobbing animation for all states
         if (this.modelGroup) {
-            // Make the model bob up and down slightly
             const time = Date.now() * 0.001; // Convert to seconds
-            this.modelGroup.position.y = Math.sin(time * 1.5) * 0.1;
             
-            // Slightly rotate the model
-            this.modelGroup.rotation.y = Math.sin(time * 0.5) * 0.1;
+            // Only apply bobbing if not moving (to avoid conflicting animations)
+            if (!this.enemy.state.isMoving) {
+                // Make the model bob up and down slightly
+                this.modelGroup.position.y = Math.sin(time * 1.5) * 0.1;
+            }
+            
+            // Always apply slight rotation for more natural movement
+            if (!this.enemy.state.isAttacking) {
+                // Slightly rotate the model
+                this.modelGroup.rotation.y = Math.sin(time * 0.5) * 0.1;
+            }
         }
     }
 }

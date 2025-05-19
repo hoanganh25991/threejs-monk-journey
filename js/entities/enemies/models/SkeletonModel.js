@@ -87,6 +87,17 @@ export class SkeletonModel extends EnemyModel {
     }
     
     updateAnimations(delta) {
-        // Implement skeleton-specific animations here if needed
+        // Use the base class animations with some skeleton-specific adjustments
+        super.updateAnimations(delta);
+        
+        // Add some additional skeleton-specific animations if needed
+        if (this.modelGroup && !this.enemy.state.isMoving && !this.enemy.state.isAttacking) {
+            // Idle animation - slight swaying
+            const idleSpeed = 1.5;
+            const idleAmplitude = 0.03;
+            
+            // Make the skeleton sway slightly when idle
+            this.modelGroup.rotation.y += Math.sin(Date.now() * 0.001 * idleSpeed) * idleAmplitude * 0.01;
+        }
     }
 }
