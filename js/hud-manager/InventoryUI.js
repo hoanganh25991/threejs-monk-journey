@@ -75,7 +75,29 @@ export class InventoryUI extends UIComponent {
             // Create item element
             const itemElement = document.createElement('div');
             itemElement.className = 'inventory-item';
-            itemElement.textContent = `${item.name} x${item.amount}`;
+            
+            // Create item icon
+            const itemIcon = document.createElement('div');
+            itemIcon.className = 'item-icon';
+            
+            // Use emoji based on item type or default to package icon
+            let iconContent = '📦';
+            if (item.name.includes('Potion')) {
+                iconContent = '🧪';
+            } else if (item.name.includes('Weapon')) {
+                iconContent = '⚔️';
+            } else if (item.name.includes('Armor')) {
+                iconContent = '🛡️';
+            }
+            
+            itemIcon.textContent = iconContent;
+            itemElement.appendChild(itemIcon);
+            
+            // Create item count
+            const itemCount = document.createElement('div');
+            itemCount.className = 'item-count';
+            itemCount.textContent = item.amount > 1 ? `x${item.amount}` : '';
+            itemElement.appendChild(itemCount);
             
             // Add click event for item use
             itemElement.addEventListener('click', () => {
@@ -83,16 +105,19 @@ export class InventoryUI extends UIComponent {
                 this.useItem(item);
             });
             
+            // Add tooltip with item name
+            itemElement.title = item.name;
+            
             this.inventoryGrid.appendChild(itemElement);
         });
         
         // Add empty slots
-        const totalSlots = 20;
+        const totalSlots = 25; // 5x5 grid
         const emptySlots = totalSlots - inventory.length;
         
         for (let i = 0; i < emptySlots; i++) {
             const emptySlot = document.createElement('div');
-            emptySlot.className = 'inventory-item';
+            emptySlot.className = 'inventory-item empty';
             this.inventoryGrid.appendChild(emptySlot);
         }
     }

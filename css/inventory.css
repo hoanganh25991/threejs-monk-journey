@@ -57,7 +57,7 @@
 
 /* Character Equipment Section (Left Side) */
 #character-equipment {
-    width: 300px;
+    width: 350px;
     padding: var(--padding-large);
     border-right: 1px solid rgba(138, 109, 59, 0.5);
     display: flex;
@@ -65,7 +65,8 @@
 }
 
 #character-preview {
-    height: 250px;
+    position: relative;
+    height: 350px;
     background-color: rgba(20, 20, 20, 0.5);
     border: 1px solid rgba(138, 109, 59, 0.5);
     border-radius: 8px;
@@ -76,10 +77,33 @@
     font-size: 48px; /* Placeholder for character model */
 }
 
+#character-model-container {
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+}
+
 #equipment-slots {
+    position: absolute;
+    width: 100%;
+    height: 100%;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    grid-template-areas:
+        ".       head    ."
+        "shoulders .     accessory"
+        "hands    .      weapon"
+        ".       chest   ."
+        ".       legs    ."
+        ".       feet    .";
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
 }
 
 .equipment-slot {
@@ -90,8 +114,60 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
+    width: 70px;
+    height: 70px;
+    margin: 5px;
+}
+
+.equipment-slot[data-slot="head"] {
+    grid-area: head;
+    justify-self: center;
+    align-self: center;
+}
+
+.equipment-slot[data-slot="shoulders"] {
+    grid-area: shoulders;
+    justify-self: center;
+    align-self: center;
+}
+
+.equipment-slot[data-slot="chest"] {
+    grid-area: chest;
+    justify-self: center;
+    align-self: center;
+}
+
+.equipment-slot[data-slot="hands"] {
+    grid-area: hands;
+    justify-self: center;
+    align-self: center;
+}
+
+.equipment-slot[data-slot="weapon"] {
+    grid-area: weapon;
+    justify-self: center;
+    align-self: center;
+}
+
+.equipment-slot[data-slot="legs"] {
+    grid-area: legs;
+    justify-self: center;
+    align-self: center;
+}
+
+.equipment-slot[data-slot="feet"] {
+    grid-area: feet;
+    justify-self: center;
+    align-self: center;
+}
+
+.equipment-slot[data-slot="accessory"] {
+    grid-area: accessory;
+    justify-self: center;
+    align-self: center;
 }
 
 .equipment-slot:hover {
@@ -129,8 +205,8 @@
 /* Inventory Grid */
 #inventory-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
     padding: var(--padding-medium);
 }
 
@@ -140,12 +216,14 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     padding: var(--padding-medium);
-    height: 100px;
+    aspect-ratio: 1/1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
     transition: all 0.2s;
+    position: relative;
 }
 
 .inventory-item:hover {
@@ -166,13 +244,21 @@
 }
 
 .item-icon {
-    width: 30px;
-    height: 30px;
-    margin-right: 10px;
+    font-size: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+}
+
+.item-count {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 12px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    padding: 2px 5px;
+    color: #ffcc00;
 }
 
 .item-name {
@@ -208,13 +294,23 @@
 }
 
 /* Empty inventory slots */
-.inventory-item:empty {
+.inventory-item.empty {
     background-color: rgba(20, 20, 20, 0.3);
     border: 1px dashed rgba(138, 109, 59, 0.3);
     cursor: default;
+    position: relative;
 }
 
-.inventory-item:empty:hover {
+.inventory-item.empty::after {
+    content: "";
+    position: absolute;
+    width: 60%;
+    height: 60%;
+    border: 1px dashed rgba(138, 109, 59, 0.5);
+    border-radius: 4px;
+}
+
+.inventory-item.empty:hover {
     transform: none;
     box-shadow: none;
     border-color: rgba(138, 109, 59, 0.3);
