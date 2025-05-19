@@ -57,8 +57,8 @@
 
 /* Character Equipment Section (Left Side) */
 #character-equipment {
-    width: 350px;
-    padding: var(--padding-medium);
+    width: 300px;
+    padding: 5px;
     border-right: 1px solid rgba(138, 109, 59, 0.5);
     display: flex;
     flex-direction: column;
@@ -70,7 +70,7 @@
 
 #character-model-container {
     position: absolute;
-    width: 40%; /* Narrower width */
+    width: 120px; /* Narrower width */
     height: 70%; /* Taller height for vertical character model */
     top: 50%;
     left: 50%;
@@ -202,9 +202,7 @@
 /* Inventory Grid */
 #inventory-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 2px;
-    padding: var(--padding-small);
+    grid-template-columns: repeat(6, 1fr);
 }
 
 /* Inventory Items */
@@ -221,7 +219,6 @@
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
-    min-height: 80px;
 }
 
 .inventory-item:hover {
@@ -364,92 +361,4 @@
 
 .item-legendary {
     color: #ff8000;
-}
-
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-    #inventory-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-@media (max-width: 992px) {
-    #character-equipment {
-        width: 300px;
-    }
-    
-    #character-preview {
-        min-height: 450px;
-    }
-    
-    #character-model-container {
-        width: 45%;
-        height: 65%;
-    }
-    
-    #inventory-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    #inventory-container {
-        flex-direction: column;
-    }
-    
-    #character-equipment {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid rgba(138, 109, 59, 0.5);
-        padding-bottom: 10px;
-        height: auto;
-        min-height: 50vh; /* Ensure it takes at least half the viewport height */
-    }
-    
-    #character-preview {
-        min-height: 350px;
-    }
-    
-    #character-model-container {
-        width: 30%;
-        height: 80%;
-    }
-    
-    #equipment-slots {
-        grid-template-areas:
-            "head shoulders chest hands"
-            "accessory weapon legs feet";
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: 1fr 1fr;
-    }
-    
-    /* Reset margins for mobile layout */
-    .equipment-slot[data-slot="head"],
-    .equipment-slot[data-slot="shoulders"],
-    .equipment-slot[data-slot="chest"],
-    .equipment-slot[data-slot="hands"],
-    .equipment-slot[data-slot="weapon"],
-    .equipment-slot[data-slot="legs"],
-    .equipment-slot[data-slot="feet"],
-    .equipment-slot[data-slot="accessory"] {
-        justify-self: center;
-        align-self: center;
-        margin-left: 0;
-        margin-right: 0;
-    }
-    
-    #inventory-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-@media (max-width: 576px) {
-    #inventory-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .equipment-slot {
-        width: 50px;
-        height: 50px;
-    }
 }
