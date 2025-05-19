@@ -31,6 +31,10 @@
     text-align: center;
     border-bottom: 1px solid rgba(138, 109, 59, 0.5);
     padding-bottom: var(--padding-medium);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
 }
 
 /* Inventory Grid */
@@ -83,27 +87,32 @@
     border-color: rgba(138, 109, 59, 0.3);
 }
 
-/* Close Button */
-#inventory-close {
+/* Save Button */
+#inventory-save {
     position: absolute;
-    top: 15px;
     right: 15px;
-    width: 30px;
-    height: 30px;
-    background-color: rgba(138, 109, 59, 0.5);
-    border: 1px solid #8a6d3b;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255, 204, 0, 0.7);
+    border: 2px solid rgba(255, 230, 150, 0.8);
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     font-weight: bold;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-#inventory-close:hover {
-    background-color: rgba(138, 109, 59, 0.7);
+#inventory-save:hover {
+    background-color: rgba(255, 204, 0, 0.8);
     transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+#inventory-save:active {
+    transform: scale(0.95);
 }
 
 /* Inventory Button (in the top right UI) */

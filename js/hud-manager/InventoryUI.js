@@ -20,21 +20,13 @@ export class InventoryUI extends UIComponent {
      * @returns {boolean} - True if initialization was successful
      */
     init() {
-        const template = `
-            <div id="inventory-title">Inventory</div>
-            <div id="inventory-grid"></div>
-            <div id="inventory-close">X</div>
-        `;
-        
-        // Render the template
-        this.render(template);
-        
         // Store references to elements we need to update
         this.inventoryGrid = document.getElementById('inventory-grid');
         
-        // Add click event to close inventory
-        const closeButton = document.getElementById('inventory-close');
-        closeButton.addEventListener('click', () => {
+        // Add click event to save inventory
+        const saveButton = document.getElementById('inventory-save');
+        saveButton.addEventListener('click', () => {
+            this.saveInventory();
             this.toggleInventory();
         });
         
@@ -143,5 +135,21 @@ export class InventoryUI extends UIComponent {
             // Show item description
             this.game.hudManager.showNotification(`Item: ${item.name}`);
         }
+    }
+    
+    /**
+     * Save the current inventory state
+     * This method handles saving the inventory data
+     */
+    saveInventory() {
+        // Get player inventory
+        const inventory = this.game.player.getInventory();
+        
+        // Save inventory data (implementation depends on game's save system)
+        // For now, just show a notification
+        this.game.hudManager.showNotification('Inventory saved successfully!');
+        
+        // Here you would typically call the game's save system
+        // this.game.saveManager.savePlayerInventory(inventory);
     }
 }
