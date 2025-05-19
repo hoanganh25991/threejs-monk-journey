@@ -1,70 +1,33 @@
 import * as THREE from 'three';
+import { 
+    MOVEMENT_KEYS, 
+    ACTION_KEYS, 
+    UI_KEYS, 
+    SKILL_KEYS, 
+    getAllSkillKeys,
+    getSkillIndexFromKeyCode,
+    isSkillKey,
+    CAST_INTERVAL,
+    INTERACTION_RANGE
+} from '../config/input.js';
 
 export class InputHandler {
     constructor(game) {
         this.game = game;
         this.keys = {};
         
-        // Key mapping for alternative keys
-        this.keyMapping = {
-            KeyJ: 'Digit1',
-            KeyK: 'Digit2',
-            KeyL: 'Digit3',
-            Semicolon: 'Digit4',
-            KeyU: 'Digit5',
-            KeyI: 'Digit6',
-            KeyO: 'Digit7',
-            KeyP: 'Digit8',  // P key as alternative to Digit8
-            BracketRight: 'Digit9'  // ] key as alternative to Digit9
-        };
-        
         // Track skill keys being held down
-        this.skillKeysHeld = {
-            KeyH: false, // H key for Fist of Thunder
-            Digit1: false,
-            Digit2: false,
-            Digit3: false,
-            Digit4: false,
-            Digit5: false,
-            Digit6: false,
-            Digit7: false,
-            Digit8: false, // 8 key for Breath of Heaven
-            Digit9: false, // 9 key for Shield of Zen
-            // Alternative keys
-            KeyJ: false, // Alternative to Digit1
-            KeyK: false, // Alternative to Digit2
-            KeyL: false, // Alternative to Digit3
-            Semicolon: false, // Alternative to Digit4
-            KeyU: false, // Alternative to Digit5
-            KeyI: false, // Alternative to Digit6
-            KeyO: false, // Alternative to Digit7
-            KeyP: false,  // Alternative to Digit8
-            BracketRight: false // Alternative to Digit9
-        };
+        this.skillKeysHeld = {};
         
         // Cooldown tracking for continuous casting
-        this.skillCastCooldowns = {
-            KeyH: 0, // H key for Fist of Thunder
-            Digit1: 0,
-            Digit2: 0,
-            Digit3: 0,
-            Digit4: 0,
-            Digit5: 0,
-            Digit6: 0,
-            Digit7: 0,
-            Digit8: 0, // 8 key for Breath of Heaven
-            Digit9: 0, // 9 key for Shield of Zen
-            // Alternative keys
-            KeyJ: 0, // Alternative to Digit1
-            KeyK: 0, // Alternative to Digit2
-            KeyL: 0, // Alternative to Digit3
-            Semicolon: 0, // Alternative to Digit4
-            KeyU: 0, // Alternative to Digit5
-            KeyI: 0, // Alternative to Digit6
-            KeyO: 0, // Alternative to Digit7
-            KeyP: 0,  // Alternative to Digit8
-            BracketRight: 0 // Alternative to Digit9
-        };
+        this.skillCastCooldowns = {};
+        
+        // Initialize skill key tracking
+        const skillKeys = getAllSkillKeys();
+        skillKeys.forEach(key => {
+            this.skillKeysHeld[key] = false;
+            this.skillCastCooldowns[key] = 0;
+        });
         
         // Initialize input event listeners
         this.initKeyboardEvents();
@@ -85,92 +48,54 @@ export class InputHandler {
             
             // Handle special key presses
             switch (event.code) {
-                case 'KeyY':
-                    // Toggle inventory with Y key
+                // UI toggle keys
+                case UI_KEYS.TOGGLE_INVENTORY:
                     this.game.hudManager.toggleInventory();
-                    console.debug('Toggling inventory with KeyY');
+                    console.debug('Toggling inventory');
                     break;
                     
-                case 'KeyT':
-                    // Toggle skill tree with T key
+                case UI_KEYS.TOGGLE_SKILL_TREE:
                     this.game.hudManager.toggleSkillTree();
-                    console.debug('Toggling skill tree with KeyT');
+                    console.debug('Toggling skill tree');
                     break;
                     
-                case 'KeyF':
-                    // Toggle HUD visibility with F key
+                case UI_KEYS.TOGGLE_HUD:
                     const hudVisible = this.game.hudManager.toggleHUD();
                     console.debug(`HUD visibility toggled: ${hudVisible ? 'visible' : 'hidden'}`);
                     break;
                     
-                case 'KeyM':
-                    // Toggle minimap visibility with M key
+                case UI_KEYS.TOGGLE_MINIMAP:
                     const minimapVisible = this.game.hudManager.toggleMiniMap();
                     console.debug(`Mini map visibility toggled: ${minimapVisible ? 'visible' : 'hidden'}`);
                     break;
                     
-                case 'BracketLeft':
-                    // Zoom in minimap with [ key
+                case UI_KEYS.MINIMAP_ZOOM_IN:
                     this.game.hudManager.decreaseMiniMapScale();
                     break;
                     
-                case 'BracketRight':
-                    // Zoom out minimap with ] key
+                case UI_KEYS.MINIMAP_ZOOM_OUT:
                     this.game.hudManager.increaseMiniMapScale();
                     break;
                     
-                case 'KeyH':
-                    // Mark H key as held down for basic attack
+                // Primary attack key
+                case SKILL_KEYS.PRIMARY_ATTACK:
+                    // Mark key as held down for basic attack
                     this.skillKeysHeld[event.code] = true;
                     
                     // Use basic attack (teleport or punch)
                     this.game.player.usePrimaryAttack();
                     break;
                     
-                case 'Digit1':
-                case 'Digit2':
-                case 'Digit3':
-                case 'Digit4':
-                case 'Digit5':
-                case 'Digit6':
-                case 'Digit7':
-                case 'Digit8':
-                case 'Digit9':
-                    // Mark skill key as held down
-                    this.skillKeysHeld[event.code] = true;
-                    
-                    // Initial skill cast when key is first pressed
-                    const keyDigit = parseInt(event.code.charAt(5));
-                    
-                    // On all devices, we subtract 1 to convert from 1-based to 0-based index
-                    // This ensures consistent behavior across all devices
-                    const skillIndex = keyDigit - 1;
-                    
-                    console.debug(`Using skill with index: ${skillIndex} from key: ${event.code} (key digit: ${keyDigit})`);
-                    
-                    // Check if this is Digit1 and if the first skill is a primary attack
-                    if (event.code === 'Digit1' && this.game.player.skills && this.game.player.skills.getSkills) {
-                        const skills = this.game.player.skills.getSkills();
-                        if (skills && skills.length > 0 && skills[0].primaryAttack) {
-                            console.debug('Digit1 is assigned to primary attack, using usePrimaryAttack() for consistent behavior');
-                            this.game.player.usePrimaryAttack();
-                        } else {
-                            this.game.player.useSkill(skillIndex);
-                        }
-                    } else {
-                        this.game.player.useSkill(skillIndex);
-                    }
-                    break;
-                    
-                case 'KeyE':
-                    // Interact with objects using the new keyboard-based interaction method
+                // Action keys
+                case ACTION_KEYS.INTERACT:
+                    // Interact with objects using the keyboard-based interaction method
                     this.handleInteractionWithNearestObject();
                     break;
                     
-                case 'KeyG':
+                case ACTION_KEYS.START_GAME:
                     // Only allow starting a new game when the game is not already running
                     if (this.game.isPaused && document.getElementById('game-menu')) {
-                        console.debug('G key pressed - starting new game');
+                        console.debug('Start game key pressed - starting new game');
                         
                         // Hide any existing game menu
                         const existingGameMenu = document.getElementById('game-menu');
@@ -193,39 +118,36 @@ export class InputHandler {
                             homeButton.style.display = 'block';
                         }
                         
-                        console.debug("Game started via G key - enemies and player are now active");
+                        console.debug("Game started - enemies and player are now active");
                     } else {
-                        console.debug('G key pressed but game is already running or not at main menu');
+                        console.debug('Start game key pressed but game is already running or not at main menu');
                     }
                     break;
                     
-                // Handle all alternative keys
+                // Handle all skill keys (Digit1-Digit9)
                 default:
-                    // Check if this is an alternative key
-                    if (this.keyMapping[event.code]) {
-                        console.debug(`Alternative key ${event.code} pressed`);
-                        
-                        // Mark alternative skill key as held down
+                    // Check if this is a skill key
+                    if (isSkillKey(event.code) && event.code !== SKILL_KEYS.PRIMARY_ATTACK) {
+                        // Mark skill key as held down
                         this.skillKeysHeld[event.code] = true;
                         
-                        // Get the corresponding digit key
-                        const mappedKey = this.keyMapping[event.code];
-                        console.debug(`${event.code} mapped to: ${mappedKey}`);
+                        // Get skill index from key code
+                        const skillIndex = getSkillIndexFromKeyCode(event.code);
                         
-                        // Also mark the original key as held down for consistency
-                        this.skillKeysHeld[mappedKey] = true;
+                        console.debug(`Using skill with index: ${skillIndex} from key: ${event.code}`);
                         
-                        // Get the key digit from the mapped key
-                        const altKeyDigit = parseInt(mappedKey.charAt(5));
-                        
-                        // On all devices, we subtract 1 to convert from 1-based to 0-based index
-                        // This ensures consistent behavior across all devices
-                        const altSkillIndex = altKeyDigit - 1;
-                        
-                        console.debug(`${event.code} skill index: ${altSkillIndex} (key digit: ${altKeyDigit})`);
-                        
-                        // Use the skill
-                        this.game.player.useSkill(altSkillIndex);
+                        // Check if this is Digit1 and if the first skill is a primary attack
+                        if (event.code === SKILL_KEYS.SKILL_1 && this.game.player.skills && this.game.player.skills.getSkills) {
+                            const skills = this.game.player.skills.getSkills();
+                            if (skills && skills.length > 0 && skills[0].primaryAttack) {
+                                console.debug('Skill 1 is assigned to primary attack, using usePrimaryAttack() for consistent behavior');
+                                this.game.player.usePrimaryAttack();
+                            } else {
+                                this.game.player.useSkill(skillIndex);
+                            }
+                        } else {
+                            this.game.player.useSkill(skillIndex);
+                        }
                     }
                     break;
             }
@@ -239,13 +161,6 @@ export class InputHandler {
             if (this.skillKeysHeld[event.code] !== undefined) {
                 this.skillKeysHeld[event.code] = false;
                 this.skillCastCooldowns[event.code] = 0;
-                
-                // If this is an alternative key, also reset the original key
-                if (this.keyMapping[event.code]) {
-                    const mappedKey = this.keyMapping[event.code];
-                    this.skillKeysHeld[mappedKey] = false;
-                    this.skillCastCooldowns[mappedKey] = 0;
-                }
             }
         });
     }
@@ -267,8 +182,8 @@ export class InputHandler {
             Math.cos(playerRotation.y)
         );
         
-        // Define interaction range
-        const interactionRange = 3; // Units in world space
+        // Use interaction range from config
+        const interactionRange = INTERACTION_RANGE; // Units in world space
         
         // Calculate interaction point in front of player
         const interactionPoint = new THREE.Vector3()
@@ -375,20 +290,20 @@ export class InputHandler {
     getMovementDirection() {
         const direction = new THREE.Vector3(0, 0, 0);
         
-        // Check for keyboard input
-        if (this.isKeyPressed('KeyW') || this.isKeyPressed('ArrowUp')) {
+        // Check for keyboard input using movement keys from config
+        if (MOVEMENT_KEYS.FORWARD.some(key => this.isKeyPressed(key))) {
             direction.z -= 1;
         }
         
-        if (this.isKeyPressed('KeyS') || this.isKeyPressed('ArrowDown')) {
+        if (MOVEMENT_KEYS.BACKWARD.some(key => this.isKeyPressed(key))) {
             direction.z += 1;
         }
         
-        if (this.isKeyPressed('KeyA') || this.isKeyPressed('ArrowLeft')) {
+        if (MOVEMENT_KEYS.LEFT.some(key => this.isKeyPressed(key))) {
             direction.x -= 1;
         }
         
-        if (this.isKeyPressed('KeyD') || this.isKeyPressed('ArrowRight')) {
+        if (MOVEMENT_KEYS.RIGHT.some(key => this.isKeyPressed(key))) {
             direction.x += 1;
         }
         
@@ -420,9 +335,6 @@ export class InputHandler {
             return; // Don't process inputs when game is paused
         }
         
-        // Handle continuous skill casting for held keys
-        const castInterval = 0.1; // Cast every 0.1 seconds when key is held
-        
         // Process only the keys that are actually held down
         for (const keyCode in this.skillKeysHeld) {
             if (this.skillKeysHeld[keyCode]) {
@@ -432,23 +344,21 @@ export class InputHandler {
                 // If cooldown is up, cast the skill again
                 if (this.skillCastCooldowns[keyCode] <= 0) {
                     try {
-                        if (keyCode === 'KeyH') {
-                            // Special handling for H key (Fist of Thunder)
-                            console.debug('Continuous casting: Basic attack (KeyH)');
+                        if (keyCode === SKILL_KEYS.PRIMARY_ATTACK) {
+                            // Special handling for primary attack key
+                            console.debug('Continuous casting: Basic attack');
                             this.game.player.usePrimaryAttack();
-                            this.skillCastCooldowns[keyCode] = castInterval;
-                        } else if (keyCode.startsWith('Digit')) {
-                            // For number keys
-                            const keyDigit = parseInt(keyCode.charAt(5));
-                            // Subtract 1 to convert from 1-based to 0-based index
-                            const skillIndex = keyDigit - 1;
-                            console.debug('Continuous casting: Digit key', keyCode, 'Key digit:', keyDigit, 'Skill index:', skillIndex);
+                            this.skillCastCooldowns[keyCode] = CAST_INTERVAL;
+                        } else if (isSkillKey(keyCode)) {
+                            // For skill keys
+                            const skillIndex = getSkillIndexFromKeyCode(keyCode);
+                            console.debug('Continuous casting: Skill key', keyCode, 'Skill index:', skillIndex);
                             
-                            // Check if this is Digit1 and if the first skill is a primary attack
-                            if (keyCode === 'Digit1' && this.game.player.skills && this.game.player.skills.getSkills) {
+                            // Check if this is Skill 1 and if the first skill is a primary attack
+                            if (keyCode === SKILL_KEYS.SKILL_1 && this.game.player.skills && this.game.player.skills.getSkills) {
                                 const skills = this.game.player.skills.getSkills();
                                 if (skills && skills.length > 0 && skills[0].primaryAttack) {
-                                    console.debug('Continuous casting: Digit1 is primary attack, using usePrimaryAttack()');
+                                    console.debug('Continuous casting: Skill 1 is primary attack, using usePrimaryAttack()');
                                     this.game.player.usePrimaryAttack();
                                 } else {
                                     this.game.player.useSkill(skillIndex);
@@ -456,19 +366,7 @@ export class InputHandler {
                             } else {
                                 this.game.player.useSkill(skillIndex);
                             }
-                            this.skillCastCooldowns[keyCode] = castInterval;
-                        } else if (this.keyMapping && this.keyMapping[keyCode]) {
-                            // For alternative keys (j,k,l,;,u,i,o)
-                            const mappedKey = this.keyMapping[keyCode];
-                            const keyDigit = parseInt(mappedKey.charAt(5));
-                            // Subtract 1 to convert from 1-based to 0-based index
-                            const skillIndex = keyDigit - 1;
-                            console.debug('Continuous casting: Alternative key', keyCode, 'mapped to', mappedKey, 'Key digit:', keyDigit, 'Skill index:', skillIndex);
-                            this.game.player.useSkill(skillIndex);
-                            
-                            // Reset cooldown for both the alternative key and the original key
-                            this.skillCastCooldowns[keyCode] = castInterval;
-                            this.skillCastCooldowns[mappedKey] = castInterval;
+                            this.skillCastCooldowns[keyCode] = CAST_INTERVAL;
                         }
                     } catch (error) {
                         console.error(`Error in continuous casting for key ${keyCode}:`, error);
