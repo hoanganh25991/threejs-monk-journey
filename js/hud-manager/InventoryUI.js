@@ -118,9 +118,9 @@ export class InventoryUI extends UIComponent {
                 // Get delta time with the clock
                 const delta = this.modelPreview.clock.getDelta();
                 
-                // Apply slowdown factor for better animation viewing
-                const slowdownFactor = 0.5; // Reduce animation speed by half
-                const effectiveDelta = Math.max(delta * slowdownFactor, 0.004);
+                // // Apply slowdown factor for better animation viewing
+                // const slowdownFactor = 0.5; // Reduce animation speed by half
+                // const effectiveDelta = Math.max(delta * slowdownFactor, 0.004);
                 // console.debug({ effectiveDelta })
                 
                 // Update animations with slowed-down delta
@@ -139,53 +139,6 @@ export class InventoryUI extends UIComponent {
                 this.modelPreview.animationId = null;
             }
         };
-        
-        // Add rotation hints
-        this.addModelViewingHints();
-    }
-    
-    /**
-     * Add helpful hints for model viewing
-     */
-    addModelViewingHints() {
-        if (!this.modelContainer) return;
-        
-        // Add rotation hints overlay to the model container
-        const hintContainer = document.createElement('div');
-        hintContainer.className = 'model-hints';
-        hintContainer.style.position = 'absolute';
-        hintContainer.style.bottom = '10px';
-        hintContainer.style.left = '50%';
-        hintContainer.style.transform = 'translateX(-50%)';
-        hintContainer.style.backgroundColor = 'rgba(0,0,0,0.5)';
-        hintContainer.style.color = 'white';
-        hintContainer.style.padding = '5px 10px';
-        hintContainer.style.borderRadius = '4px';
-        hintContainer.style.fontSize = '12px';
-        hintContainer.style.pointerEvents = 'none'; // Don't interfere with mouse events
-        hintContainer.style.opacity = '0.8';
-        hintContainer.style.transition = 'opacity 0.5s';
-        hintContainer.style.display = 'flex';
-        hintContainer.style.flexDirection = 'column';
-        hintContainer.style.alignItems = 'center';
-        hintContainer.style.gap = '5px';
-        
-        // Drag hint
-        const dragHint = document.createElement('div');
-        dragHint.innerHTML = '↔️ Drag to rotate';
-        hintContainer.appendChild(dragHint);
-        
-        // Double-click hint
-        const dblClickHint = document.createElement('div');
-        dblClickHint.innerHTML = '👆 Double-click to reset view';
-        hintContainer.appendChild(dblClickHint);
-        
-        this.modelContainer.appendChild(hintContainer);
-        
-        // Hide hints after 4 seconds
-        setTimeout(() => {
-            hintContainer.style.opacity = '0';
-        }, 4000);
     }
     
     /**
