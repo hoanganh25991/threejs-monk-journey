@@ -45,7 +45,8 @@ export class SkillEffect {
         const material = new THREE.MeshBasicMaterial({
             color: this.skill.color,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            depthWrite: false // Prevent hiding models behind the effect
         });
         
         const mesh = new THREE.Mesh(geometry, material);

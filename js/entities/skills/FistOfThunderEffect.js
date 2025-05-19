@@ -17,6 +17,7 @@ export class FistOfThunderEffect extends SkillEffect {
      * @returns {THREE.Group} - The created effect
      */
     create(position, direction) {
+        position.y -= 2.05;
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
@@ -54,7 +55,8 @@ export class FistOfThunderEffect extends SkillEffect {
                 emissive: this.skill.color,
                 emissiveIntensity: 1.5,
                 transparent: true,
-                opacity: 0.8
+                opacity: 0.8,
+                depthWrite: false // Prevent hiding models behind the effect
             });
             
             const segment = new THREE.Mesh(segmentGeometry, segmentMaterial);
@@ -97,7 +99,8 @@ export class FistOfThunderEffect extends SkillEffect {
             emissive: this.skill.color,
             emissiveIntensity: 2,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            depthWrite: false // Prevent hiding models behind the effect
         });
         
         const core = new THREE.Mesh(coreGeometry, coreMaterial);
@@ -108,7 +111,8 @@ export class FistOfThunderEffect extends SkillEffect {
         const flashMaterial = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             transparent: true,
-            opacity: 1.0
+            opacity: 1.0,
+            depthWrite: false // Prevent hiding models behind the effect
         });
         
         const flash = new THREE.Mesh(flashGeometry, flashMaterial);
@@ -279,7 +283,8 @@ export class FistOfThunderEffect extends SkillEffect {
         const hitMaterial = new THREE.MeshBasicMaterial({
             color: this.skill.color,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            depthWrite: false // Prevent hiding models behind the effect
         });
         
         const hitEffect = new THREE.Mesh(hitGeometry, hitMaterial);

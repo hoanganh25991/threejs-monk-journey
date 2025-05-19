@@ -108,7 +108,8 @@ export class ShieldOfZenEffect extends SkillEffect {
             transparent: true,
             opacity: 0.6,
             emissive: this.skill.color,
-            emissiveIntensity: 0.8
+            emissiveIntensity: 0.8,
+            depthWrite: false // Prevent hiding models behind the effect
         });
         
         // Use the preloaded Buddha model if available

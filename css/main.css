@@ -33,6 +33,9 @@
 /* Import HUD > Dialog styles */
 @import 'dialog.css';
 
+/* Import inventory styles */
+@import 'inventory.css';
+
 /* Import performance manager styles */
 @import 'performance-manager.css';
 

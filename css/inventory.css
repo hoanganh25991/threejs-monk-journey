@@ -1,0 +1,125 @@
+/**
+ * inventory.css - Inventory UI Styles
+ * Styling for the inventory interface
+ */
+
+/* Main Inventory Container */
+#inventory {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0);
+    border: 2px solid #8a6d3b;
+    border-radius: 10px;
+    padding: var(--padding-large);
+    color: white;
+    display: none;
+    pointer-events: auto;
+    z-index: 100; /* Dialogs and Menus */
+}
+
+/* Inventory Title */
+#inventory-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffcc00;
+    text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+    margin-bottom: 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(138, 109, 59, 0.5);
+    padding-bottom: var(--padding-medium);
+}
+
+/* Inventory Grid */
+#inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    padding: var(--padding-medium);
+    max-height: calc(100% - 100px);
+    overflow-y: auto;
+}
+
+/* Inventory Items */
+.inventory-item {
+    background-color: rgba(20, 20, 20, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: var(--padding-medium);
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.inventory-item:hover {
+    background-color: rgba(30, 30, 30, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+    border-color: #ffcc00;
+}
+
+.inventory-item:active {
+    transform: scale(0.98);
+}
+
+/* Empty inventory slots */
+.inventory-item:empty {
+    background-color: rgba(20, 20, 20, 0.3);
+    border: 1px dashed rgba(138, 109, 59, 0.3);
+    cursor: default;
+}
+
+.inventory-item:empty:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: rgba(138, 109, 59, 0.3);
+}
+
+/* Close Button */
+#inventory-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 30px;
+    height: 30px;
+    background-color: rgba(138, 109, 59, 0.5);
+    border: 1px solid #8a6d3b;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+#inventory-close:hover {
+    background-color: rgba(138, 109, 59, 0.7);
+    transform: scale(1.1);
+}
+
+/* Inventory Button (in the top right UI) */
+#inventory-button {
+    position: relative;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    #inventory-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    #inventory-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

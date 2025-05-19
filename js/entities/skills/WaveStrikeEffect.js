@@ -65,7 +65,8 @@ export class WaveStrikeEffect extends SkillEffect {
             opacity: 0.7,
             metalness: 0.2,
             roughness: 0.3,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            depthWrite: false // Prevent hiding models behind the effect
         });
         
         const wave = new THREE.Mesh(waveGeometry, waveMaterial);
