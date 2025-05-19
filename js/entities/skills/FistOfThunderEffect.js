@@ -17,7 +17,7 @@ export class FistOfThunderEffect extends SkillEffect {
      * @returns {THREE.Group} - The created effect
      */
     create(position, direction) {
-        position.y -= 0.35;
+        position.y -= 0.45;
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
