@@ -25,6 +25,15 @@ export class InventoryUI extends UIComponent {
         this.animationMixer = null;
         this.clock = new THREE.Clock();
         this.isModelInitialized = false;
+        
+        // User interaction properties
+        this.isUserInteracting = false;
+        this.autoRotate = true;
+        this.rotationSpeed = 0.01;
+        this.userRotationY = Math.PI; // Start facing the camera
+        this.userRotationYOnMouseDown = 0;
+        this.mouseX = 0;
+        this.mouseXOnMouseDown = 0;
     }
     
     /**
@@ -56,15 +65,30 @@ export class InventoryUI extends UIComponent {
     initModelPreview() {
         if (this.isModelInitialized) return;
         
+        console.debug('Initializing model preview...');
+        
         // Clear the model container
         this.modelContainer.innerHTML = '';
+        
+        // Get container dimensions, ensure they're valid
+        let containerWidth = this.modelContainer.clientWidth;
+        let containerHeight = this.modelContainer.clientHeight;
+        
+        // Use default dimensions if container size is invalid
+        if (containerWidth <= 0 || containerHeight <= 0) {
+            console.debug('Container has invalid dimensions, using defaults');
+            containerWidth = 300;  // Default width
+            containerHeight = 400; // Default height
+        }
+        
+        console.debug(`Container dimensions: ${containerWidth}x${containerHeight}`);
         
         // Create a new renderer
         this.modelRenderer = new THREE.WebGLRenderer({ 
             antialias: true,
             alpha: true
         });
-        this.modelRenderer.setSize(this.modelContainer.clientWidth, this.modelContainer.clientHeight);
+        this.modelRenderer.setSize(containerWidth, containerHeight);
         this.modelRenderer.setClearColor(0x000000, 0);
         this.modelRenderer.shadowMap.enabled = true;
         this.modelContainer.appendChild(this.modelRenderer.domElement);
@@ -75,12 +99,13 @@ export class InventoryUI extends UIComponent {
         // Create a camera
         this.modelCamera = new THREE.PerspectiveCamera(
             45, 
-            this.modelContainer.clientWidth / this.modelContainer.clientHeight, 
+            containerWidth / containerHeight, 
             0.1, 
             1000
         );
-        this.modelCamera.position.set(0, 0, 5);
-        this.modelCamera.lookAt(0, 0, 0);
+        // Position camera to frame the character from legs to head
+        this.modelCamera.position.set(0, 0.5, 5);
+        this.modelCamera.lookAt(0, 0.5, 0);
         
         // Add lights
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -101,6 +126,17 @@ export class InventoryUI extends UIComponent {
         
         // Handle window resize
         window.addEventListener('resize', () => this.onModelContainerResize());
+        
+        // Add mouse/touch interaction events
+        this.setupModelInteraction();
+        
+        // Force an initial render
+        if (this.modelRenderer && this.modelScene && this.modelCamera) {
+            this.modelRenderer.render(this.modelScene, this.modelCamera);
+        }
+        
+        // Schedule a resize check after a short delay to ensure proper dimensions
+        setTimeout(() => this.onModelContainerResize(), 100);
     }
     
     /**
@@ -118,14 +154,17 @@ export class InventoryUI extends UIComponent {
             // Update inventory items
             this.updateInventoryItems();
             
+            // Show inventory first so container has dimensions
+            this.show();
+            this.isInventoryOpen = true;
+            
             // Initialize model preview if not already done
             if (!this.isModelInitialized) {
                 this.initModelPreview();
+            } else {
+                // Force a resize update to ensure correct dimensions
+                this.onModelContainerResize();
             }
-            
-            // Show inventory
-            this.show();
-            this.isInventoryOpen = true;
             
             // Pause game
             this.game.pause(false);
@@ -154,7 +193,7 @@ export class InventoryUI extends UIComponent {
                 
                 // Apply proper scaling and positioning for the preview
                 this.characterModel.scale.set(0.8, 0.8, 0.8);
-                this.characterModel.position.set(0, -1.0, 0);
+                this.characterModel.position.set(0, -0.5, 0); // Adjusted to show from legs to head
                 this.characterModel.rotation.set(0, Math.PI, 0); // Face the camera
                 
                 // Add to scene
@@ -217,9 +256,17 @@ export class InventoryUI extends UIComponent {
         // Only process animation if initialized and inventory is open
         if (!this.isModelInitialized || !this.isInventoryOpen) return;
         
-        // Rotate the model slowly
+        // Apply rotation based on user interaction or auto-rotate
         if (this.characterModel) {
-            this.characterModel.rotation.y += 0.01;
+            if (this.isUserInteracting) {
+                // User is controlling the rotation - apply their rotation
+                this.characterModel.rotation.y = this.userRotationY;
+            } else if (this.autoRotate) {
+                // Auto-rotate when user is not interacting
+                this.characterModel.rotation.y += this.rotationSpeed;
+                // Keep track of the current rotation for smooth transition to user control
+                this.userRotationY = this.characterModel.rotation.y;
+            }
         }
         
         // Update animation mixer
@@ -240,8 +287,17 @@ export class InventoryUI extends UIComponent {
     onModelContainerResize() {
         if (!this.isModelInitialized) return;
         
-        const width = this.modelContainer.clientWidth;
-        const height = this.modelContainer.clientHeight;
+        let width = this.modelContainer.clientWidth;
+        let height = this.modelContainer.clientHeight;
+        
+        // Use default dimensions if container size is invalid
+        if (width <= 0 || height <= 0) {
+            console.debug('Container has invalid dimensions during resize, using defaults');
+            width = 300;  // Default width
+            height = 400; // Default height
+        }
+        
+        console.debug(`Resizing model container to: ${width}x${height}`);
         
         // Update camera aspect ratio
         this.modelCamera.aspect = width / height;
@@ -249,6 +305,11 @@ export class InventoryUI extends UIComponent {
         
         // Update renderer size
         this.modelRenderer.setSize(width, height);
+        
+        // Force a render after resize
+        if (this.modelRenderer && this.modelScene && this.modelCamera) {
+            this.modelRenderer.render(this.modelScene, this.modelCamera);
+        }
     }
     
     /**
@@ -380,6 +441,17 @@ export class InventoryUI extends UIComponent {
         if (this.isModelInitialized) {
             this.clock.start();
             this.animateModel();
+            
+            // Force a resize check after a short delay to ensure proper dimensions
+            // This is crucial when the container was previously hidden
+            setTimeout(() => {
+                this.onModelContainerResize();
+                
+                // Force an immediate render
+                if (this.modelRenderer && this.modelScene && this.modelCamera) {
+                    this.modelRenderer.render(this.modelScene, this.modelCamera);
+                }
+            }, 50);
         }
     }
     
@@ -394,6 +466,77 @@ export class InventoryUI extends UIComponent {
         if (this.isModelInitialized) {
             this.clock.stop();
         }
+    }
+    
+    /**
+     * Set up mouse and touch interaction for the model
+     */
+    setupModelInteraction() {
+        if (!this.modelContainer || !this.modelRenderer) return;
+        
+        const canvas = this.modelRenderer.domElement;
+        
+        // Mouse events
+        canvas.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+            this.isUserInteracting = true;
+            this.autoRotate = false;
+            this.mouseXOnMouseDown = event.clientX;
+            this.userRotationYOnMouseDown = this.userRotationY;
+        });
+        
+        document.addEventListener('mousemove', (event) => {
+            if (this.isUserInteracting) {
+                const deltaX = event.clientX - this.mouseXOnMouseDown;
+                // Convert mouse movement to rotation (adjust sensitivity as needed)
+                this.userRotationY = this.userRotationYOnMouseDown + deltaX * 0.01;
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
+            this.isUserInteracting = false;
+            // Resume auto-rotation after a delay
+            setTimeout(() => {
+                if (!this.isUserInteracting) {
+                    this.autoRotate = true;
+                }
+            }, 2000);
+        });
+        
+        // Touch events for mobile
+        canvas.addEventListener('touchstart', (event) => {
+            if (event.touches.length === 1) {
+                event.preventDefault();
+                this.isUserInteracting = true;
+                this.autoRotate = false;
+                this.mouseXOnMouseDown = event.touches[0].clientX;
+                this.userRotationYOnMouseDown = this.userRotationY;
+            }
+        });
+        
+        document.addEventListener('touchmove', (event) => {
+            if (this.isUserInteracting && event.touches.length === 1) {
+                const deltaX = event.touches[0].clientX - this.mouseXOnMouseDown;
+                // Convert touch movement to rotation (adjust sensitivity as needed)
+                this.userRotationY = this.userRotationYOnMouseDown + deltaX * 0.01;
+            }
+        });
+        
+        document.addEventListener('touchend', () => {
+            this.isUserInteracting = false;
+            // Resume auto-rotation after a delay
+            setTimeout(() => {
+                if (!this.isUserInteracting) {
+                    this.autoRotate = true;
+                }
+            }, 2000);
+        });
+        
+        // Double-click/tap to reset rotation
+        canvas.addEventListener('dblclick', () => {
+            this.userRotationY = Math.PI; // Reset to face the camera
+            this.characterModel.rotation.y = this.userRotationY;
+        });
     }
     
     /**
@@ -431,7 +574,11 @@ export class InventoryUI extends UIComponent {
             this.modelRenderer = null;
         }
         
-        // Remove event listener
+        // Remove event listeners
         window.removeEventListener('resize', this.onModelContainerResize);
+        
+        // Note: Since we're using anonymous functions for event listeners,
+        // we can't directly remove them. In a production app, you would
+        // store references to the bound event handlers.
     }
 }
