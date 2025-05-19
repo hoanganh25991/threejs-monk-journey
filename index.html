@@ -173,11 +173,54 @@
 
     <!-- Inventory -->
     <div id="inventory" style="display: none;">
-        <div id="inventory-title">
-            Inventory
+        <div id="inventory-header">
+            <div id="inventory-title">Character Inventory</div>
+            <div id="inventory-gold">Gold: <span id="gold-value">0</span></div>
             <button id="inventory-save" class="circle-btn" title="Save Inventory">💾</button>
         </div>
-        <div id="inventory-grid"></div>
+        <div id="inventory-container">
+            <div id="character-equipment">
+                <div id="character-preview">👤</div>
+                <div id="equipment-slots">
+                    <div class="equipment-slot" data-slot="head">
+                        <div class="slot-icon">🧢</div>
+                        <div class="slot-name">Head</div>
+                    </div>
+                    <div class="equipment-slot" data-slot="shoulders">
+                        <div class="slot-icon">👔</div>
+                        <div class="slot-name">Shoulders</div>
+                    </div>
+                    <div class="equipment-slot" data-slot="chest">
+                        <div class="slot-icon">👕</div>
+                        <div class="slot-name">Chest</div>
+                    </div>
+                    <div class="equipment-slot" data-slot="hands">
+                        <div class="slot-icon">🧤</div>
+                        <div class="slot-name">Hands</div>
+                    </div>
+                    <div class="equipment-slot" data-slot="weapon">
+                        <div class="slot-icon">⚔️</div>
+                        <div class="slot-name">Weapon</div>
+                    </div>
+                    <div class="equipment-slot" data-slot="legs">
+                        <div class="slot-icon">👖</div>
+                        <div class="slot-name">Legs</div>
+                    </div>
+                    <div class="equipment-slot" data-slot="feet">
+                        <div class="slot-icon">👟</div>
+                        <div class="slot-name">Feet</div>
+                    </div>
+                    <div class="equipment-slot" data-slot="accessory">
+                        <div class="slot-icon">💍</div>
+                        <div class="slot-name">Accessory</div>
+                    </div>
+                </div>
+            </div>
+            <div id="inventory-items">
+                <h3>Items</h3>
+                <div id="inventory-grid"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Skill Selection -->

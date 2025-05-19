@@ -121,7 +121,69 @@ export class NecromancerModel extends EnemyModel {
     }
     
     updateAnimations(delta) {
+        // Call the base class animations
+        super.updateAnimations(delta);
+        
         // Necromancer specific animations
-        // For example, floating skulls or glowing orb
+        const time = Date.now() * 0.001; // Convert to seconds
+        
+        if (this.modelGroup) {
+            // Get the staff and orb
+            const staff = this.modelGroup.children[3]; // Staff is the 4th child
+            const orb = this.modelGroup.children[4]; // Orb is the 5th child
+            
+            // Animate the orb pulsing
+            if (orb) {
+                const pulseFactor = 1.0 + Math.sin(time * 2.0) * 0.2;
+                orb.scale.set(pulseFactor, pulseFactor, pulseFactor);
+                orb.material.emissiveIntensity = 0.5 + Math.sin(time * 3.0) * 0.3;
+            }
+            
+            // Attack animation - raise staff and make orb glow brighter
+            if (this.enemy.state.isAttacking && staff && orb) {
+                // Raise the staff during attack
+                staff.rotation.z = Math.PI / 12 + Math.sin(time * 8.0) * 0.3;
+                
+                // Make the orb glow brighter during attack
+                orb.material.emissiveIntensity = 1.0 + Math.sin(time * 10.0) * 0.5;
+                
+                // Scale the orb up and down rapidly during attack
+                const attackPulse = 1.0 + Math.sin(time * 15.0) * 0.5;
+                orb.scale.set(attackPulse, attackPulse, attackPulse);
+                
+                // Create a slight movement of the arm holding the staff
+                const rightArm = this.modelGroup.children[2]; // Assuming right arm is the 3rd child
+                if (rightArm) {
+                    rightArm.rotation.x = Math.sin(time * 8.0) * 0.3;
+                }
+            }
+            
+            // Animate floating skulls for necromancer lord
+            if (this.enemy.type === 'necromancer_lord') {
+                // Start from index 5 (after the orb) for the floating skulls
+                for (let i = 5; i < 8; i++) {
+                    const skull = this.modelGroup.children[i];
+                    if (skull) {
+                        // Calculate the base angle for this skull
+                        const baseAngle = ((i - 5) / 3) * Math.PI * 2;
+                        const angle = baseAngle + time * 0.5;
+                        
+                        // Make skulls orbit around the necromancer
+                        skull.position.x = Math.cos(angle) * 0.8;
+                        skull.position.z = Math.sin(angle) * 0.8;
+                        skull.position.y = 1.5 + Math.sin(time * 2.0 + baseAngle) * 0.2;
+                        
+                        // During attack, make skulls move more aggressively
+                        if (this.enemy.state.isAttacking) {
+                            skull.position.x = Math.cos(angle) * (0.8 + Math.sin(time * 8.0) * 0.3);
+                            skull.position.z = Math.sin(angle) * (0.8 + Math.sin(time * 8.0) * 0.3);
+                            skull.rotation.y = time * 10.0;
+                        } else {
+                            skull.rotation.y = time * 2.0;
+                        }
+                    }
+                }
+            }
+        }
     }
 }

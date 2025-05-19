@@ -72,15 +72,132 @@ export class SkeletonArcherModel extends SkeletonModel {
     }
     
     updateAnimations(delta) {
+        // Call the base class animations
+        super.updateAnimations(delta);
+        
         // Implement skeleton archer specific animations
-        // For example, drawing the bow
         const time = Date.now() * 0.001; // Convert to seconds
         
-        // Make the bow arm move slightly to simulate aiming
-        if (this.modelGroup && this.modelGroup.children.length > 3) {
+        if (this.modelGroup) {
+            // Get references to important parts
             const leftArm = this.modelGroup.children[2]; // Left arm is the third child
+            const bow = this.modelGroup.children[8]; // Bow is the 9th child
+            const bowstring = this.modelGroup.children[9]; // Bowstring is the 10th child
+            const arrowShaft = this.modelGroup.children[10]; // Arrow shaft is the 11th child
+            const arrowhead = this.modelGroup.children[11]; // Arrowhead is the 12th child
+            
+            // Normal aiming animation
             if (leftArm) {
                 leftArm.rotation.z = Math.PI / 4 + Math.sin(time * 0.5) * 0.1;
+            }
+            
+            // Attack animation - draw bow and fire arrow
+            if (this.enemy.state.isAttacking) {
+                // Make the left arm pull back the bow
+                if (leftArm) {
+                    // More dramatic drawing motion during attack
+                    leftArm.rotation.z = Math.PI / 4 + Math.sin(time * 8.0) * 0.3;
+                    leftArm.rotation.y = Math.sin(time * 8.0) * 0.2;
+                }
+                
+                // Animate the bow bending more during attack
+                if (bow) {
+                    // Make the bow bend more during attack
+                    bow.scale.x = 1.0 + Math.sin(time * 8.0) * 0.2;
+                }
+                
+                // Animate the bowstring being pulled
+                if (bowstring && bowstring.geometry) {
+                    // Create a new geometry for the bowstring that changes shape
+                    const stringPull = Math.abs(Math.sin(time * 8.0)) * 0.15;
+                    const newStringGeometry = new THREE.BufferGeometry().setFromPoints([
+                        new THREE.Vector3(0, -0.4, 0),
+                        new THREE.Vector3(-0.05 - stringPull, 0, 0),
+                        new THREE.Vector3(0, 0.4, 0)
+                    ]);
+                    
+                    bowstring.geometry.dispose();
+                    bowstring.geometry = newStringGeometry;
+                }
+                
+                // Animate the arrow being drawn and released
+                if (arrowShaft && arrowhead) {
+                    // Calculate arrow position based on draw cycle
+                    const arrowCycle = (time * 8.0) % (2 * Math.PI);
+                    
+                    // Draw phase (first half of cycle)
+                    if (arrowCycle < Math.PI) {
+                        // Arrow is being drawn back
+                        const drawAmount = Math.sin(arrowCycle) * 0.15;
+                        
+                        // Move arrow back with the string
+                        arrowShaft.position.x = -0.3 - drawAmount;
+                        arrowhead.position.x = -0.05 - drawAmount;
+                    } else {
+                        // Release phase (second half of cycle)
+                        // Arrow is flying forward
+                        const releaseProgress = (arrowCycle - Math.PI) / Math.PI; // 0 to 1
+                        const releaseDistance = releaseProgress * 2.0; // How far the arrow has traveled
+                        
+                        // Move arrow forward rapidly
+                        arrowShaft.position.x = -0.3 + releaseDistance;
+                        arrowhead.position.x = -0.05 + releaseDistance;
+                        
+                        // Make arrow slightly transparent as it "flies away"
+                        const fadeOut = 1.0 - releaseProgress;
+                        if (arrowShaft.material) {
+                            arrowShaft.material.opacity = fadeOut;
+                            arrowShaft.material.transparent = true;
+                        }
+                        if (arrowhead.material) {
+                            arrowhead.material.opacity = fadeOut;
+                            arrowhead.material.transparent = true;
+                        }
+                        
+                        // Reset arrow position at the end of the cycle
+                        if (releaseProgress > 0.9) {
+                            // Prepare for next cycle by resetting arrow
+                            arrowShaft.position.x = -0.3;
+                            arrowhead.position.x = -0.05;
+                            
+                            // Reset opacity
+                            if (arrowShaft.material) {
+                                arrowShaft.material.opacity = 1.0;
+                            }
+                            if (arrowhead.material) {
+                                arrowhead.material.opacity = 1.0;
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Reset bowstring and arrow when not attacking
+                if (bowstring && bowstring.geometry) {
+                    const defaultStringGeometry = new THREE.BufferGeometry().setFromPoints([
+                        new THREE.Vector3(0, -0.4, 0),
+                        new THREE.Vector3(-0.05, 0, 0),
+                        new THREE.Vector3(0, 0.4, 0)
+                    ]);
+                    
+                    bowstring.geometry.dispose();
+                    bowstring.geometry = defaultStringGeometry;
+                }
+                
+                // Reset arrow position
+                if (arrowShaft && arrowhead) {
+                    arrowShaft.position.x = -0.3;
+                    arrowhead.position.x = -0.05;
+                    
+                    // Reset opacity
+                    if (arrowShaft.material) {
+                        arrowShaft.material.opacity = 1.0;
+                        arrowShaft.material.transparent = false;
+                    }
+                    if (arrowhead.material) {
+                        arrowhead.material.opacity = 1.0;
+                        arrowhead.material.transparent = false;
+                    }
+                }
             }
         }
     }

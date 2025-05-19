@@ -234,6 +234,9 @@ export class SwampWitchModel extends EnemyModel {
     }
     
     updateAnimations(delta) {
+        // Call the base class animations
+        super.updateAnimations(delta);
+        
         // Implement witch-specific animations
         const time = Date.now() * 0.001; // Convert to seconds
         
@@ -241,8 +244,13 @@ export class SwampWitchModel extends EnemyModel {
             // Slight hovering motion
             this.modelGroup.position.y = Math.sin(time * 1.5) * 0.05;
             
-            // Animate the staff orb
+            // Get references to important parts
+            const staff = this.modelGroup.children[6]; // Staff is the 7th child
             const orb = this.modelGroup.children[7]; // Staff orb is the 8th child
+            const rightArm = this.modelGroup.children[3]; // Right arm is the 4th child
+            const rightHand = this.modelGroup.children[5]; // Right hand is the 6th child
+            
+            // Animate the staff orb
             if (orb) {
                 // Pulse the orb
                 const pulseFactor = 1.0 + Math.sin(time * 3.0) * 0.2;
@@ -252,24 +260,81 @@ export class SwampWitchModel extends EnemyModel {
                 orb.material.emissiveIntensity = 0.6 + Math.sin(time * 2.0) * 0.3;
             }
             
-            // Animate the magical particles
-            for (let i = 8; i < this.modelGroup.children.length; i++) {
-                const particle = this.modelGroup.children[i];
-                if (particle && particle.userData && particle.userData.angle !== undefined) {
-                    // Rotate the particles around the witch
-                    const angle = particle.userData.angle + time * 0.5;
-                    const radius = 0.6 + Math.sin(time * 2.0 + particle.userData.angle) * 0.1;
-                    const height = 0.5 + Math.sin(time * 3.0 + particle.userData.angle) * 0.2;
+            // Attack animation - raise staff and cast spell
+            if (this.enemy.state.isAttacking) {
+                // Raise the staff during attack
+                if (staff) {
+                    staff.rotation.z = Math.PI * 0.1 + Math.sin(time * 10.0) * 0.2;
+                    staff.position.y = 0.75 + Math.sin(time * 8.0) * 0.2;
+                }
+                
+                // Make the orb glow brighter and pulse faster during attack
+                if (orb) {
+                    orb.material.emissiveIntensity = 1.0 + Math.sin(time * 15.0) * 0.5;
+                    const attackPulse = 1.0 + Math.sin(time * 20.0) * 0.5;
+                    orb.scale.set(attackPulse, attackPulse, attackPulse);
                     
-                    particle.position.set(
-                        Math.sin(angle) * radius,
-                        height,
-                        Math.cos(angle) * radius
-                    );
-                    
-                    // Pulse the particles
-                    const particleScale = 1.0 + Math.sin(time * 4.0 + particle.userData.angle * 2.0) * 0.3;
-                    particle.scale.set(particleScale, particleScale, particleScale);
+                    // Move the orb position slightly during attack
+                    orb.position.y = 1.5 + Math.sin(time * 12.0) * 0.2;
+                }
+                
+                // Animate the right arm (staff arm) during attack
+                if (rightArm && rightHand) {
+                    // Create a more dramatic arm movement for casting
+                    rightArm.rotation.x = Math.sin(time * 8.0) * 0.3;
+                    rightHand.position.y = 0.4 + Math.sin(time * 8.0) * 0.1;
+                }
+                
+                // Make particles move more aggressively during attack
+                for (let i = 8; i < this.modelGroup.children.length; i++) {
+                    const particle = this.modelGroup.children[i];
+                    if (particle && particle.userData && particle.userData.angle !== undefined) {
+                        // During attack, particles move outward as if being cast
+                        const attackAngle = particle.userData.angle + time * 2.0;
+                        const attackRadius = 0.6 + Math.sin(time * 8.0) * 0.5 + 0.5;
+                        const attackHeight = 0.5 + Math.sin(time * 10.0 + particle.userData.angle) * 0.3;
+                        
+                        particle.position.set(
+                            Math.sin(attackAngle) * attackRadius,
+                            attackHeight,
+                            Math.cos(attackAngle) * attackRadius
+                        );
+                        
+                        // Particles pulse more dramatically during attack
+                        const attackParticleScale = 1.0 + Math.sin(time * 15.0 + particle.userData.angle * 3.0) * 0.6;
+                        particle.scale.set(attackParticleScale, attackParticleScale, attackParticleScale);
+                        
+                        // Make particles glow brighter during attack
+                        if (particle.material) {
+                            particle.material.emissiveIntensity = 0.8 + Math.sin(time * 12.0) * 0.5;
+                        }
+                    }
+                }
+            } else {
+                // Normal idle animations for particles
+                for (let i = 8; i < this.modelGroup.children.length; i++) {
+                    const particle = this.modelGroup.children[i];
+                    if (particle && particle.userData && particle.userData.angle !== undefined) {
+                        // Rotate the particles around the witch
+                        const angle = particle.userData.angle + time * 0.5;
+                        const radius = 0.6 + Math.sin(time * 2.0 + particle.userData.angle) * 0.1;
+                        const height = 0.5 + Math.sin(time * 3.0 + particle.userData.angle) * 0.2;
+                        
+                        particle.position.set(
+                            Math.sin(angle) * radius,
+                            height,
+                            Math.cos(angle) * radius
+                        );
+                        
+                        // Pulse the particles
+                        const particleScale = 1.0 + Math.sin(time * 4.0 + particle.userData.angle * 2.0) * 0.3;
+                        particle.scale.set(particleScale, particleScale, particleScale);
+                        
+                        // Reset particle glow
+                        if (particle.material) {
+                            particle.material.emissiveIntensity = 0.8;
+                        }
+                    }
                 }
             }
         }
