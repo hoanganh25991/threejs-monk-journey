@@ -1,5 +1,6 @@
-import { UIComponent } from '../UIComponent.js';
 import * as THREE from 'three';
+import { UIComponent } from '../UIComponent.js';
+import { PlayerModel } from '../entities/player/PlayerModel.js';
 
 /**
  * Inventory UI component
@@ -124,9 +125,6 @@ export class InventoryUI extends UIComponent {
         
         this.isModelInitialized = true;
         
-        // Handle window resize
-        window.addEventListener('resize', () => this.onModelContainerResize());
-        
         // Add mouse/touch interaction events
         this.setupModelInteraction();
         
@@ -134,9 +132,6 @@ export class InventoryUI extends UIComponent {
         if (this.modelRenderer && this.modelScene && this.modelCamera) {
             this.modelRenderer.render(this.modelScene, this.modelCamera);
         }
-        
-        // Schedule a resize check after a short delay to ensure proper dimensions
-        setTimeout(() => this.onModelContainerResize(), 100);
     }
     
     /**
@@ -160,10 +155,7 @@ export class InventoryUI extends UIComponent {
             
             // Initialize model preview if not already done
             if (!this.isModelInitialized) {
-                this.initModelPreview();
-            } else {
-                // Force a resize update to ensure correct dimensions
-                this.onModelContainerResize();
+                setTimeout(() => this.initModelPreview());
             }
             
             // Pause game
@@ -175,75 +167,8 @@ export class InventoryUI extends UIComponent {
      * Create the character model by cloning the player model
      */
     createCharacterModel() {
-        try {
-            console.debug('Creating character model for inventory preview...');
-            
-            // Get the player model
-            const playerModel = this.game.player.model;
-            console.debug('Player model:', playerModel);
-            
-            // If player model exists and has a model group
-            if (playerModel && playerModel.getModelGroup()) {
-                // Get the model group
-                const modelGroup = playerModel.getModelGroup();
-                console.debug('Model group found:', modelGroup);
-                
-                // Clone the entire model group
-                this.characterModel = modelGroup.clone(true);
-                
-                // Apply proper scaling and positioning for the preview
-                this.characterModel.scale.set(0.8, 0.8, 0.8);
-                this.characterModel.position.set(0, -0.5, 0); // Adjusted to show from legs to head
-                this.characterModel.rotation.set(0, Math.PI, 0); // Face the camera
-                
-                // Add to scene
-                this.modelScene.add(this.characterModel);
-                
-                // Set up animation mixer if the player has animations
-                if (playerModel.mixer && playerModel.animations) {
-                    this.animationMixer = new THREE.AnimationMixer(this.characterModel);
-                    
-                    // Try to find an idle animation
-                    const idleAnimation = Object.keys(playerModel.animations).find(name => 
-                        name.toLowerCase().includes('idle') || 
-                        name.toLowerCase().includes('stand')
-                    );
-                    
-                    if (idleAnimation && playerModel.animations[idleAnimation]) {
-                        try {
-                            // Clone the animation clip
-                            const originalClip = playerModel.animations[idleAnimation].getClip();
-                            const action = this.animationMixer.clipAction(originalClip);
-                            action.play();
-                            console.debug('Playing idle animation:', idleAnimation);
-                        } catch (animError) {
-                            console.error('Error playing animation:', animError);
-                        }
-                    }
-                }
-                
-                console.debug('Character model created for inventory preview');
-            } else {
-                console.debug('No suitable player model found, creating placeholder');
-                // If no model or using fallback, create a simple placeholder
-                const geometry = new THREE.BoxGeometry(1, 2, 1);
-                const material = new THREE.MeshStandardMaterial({ color: 0x8866ff });
-                this.characterModel = new THREE.Mesh(geometry, material);
-                this.characterModel.position.set(0, 0, 0);
-                this.modelScene.add(this.characterModel);
-                
-                console.debug('Using placeholder model for inventory preview');
-            }
-        } catch (error) {
-            console.error('Error creating character model for inventory:', error);
-            
-            // Create a fallback model if there's an error
-            const geometry = new THREE.BoxGeometry(1, 2, 1);
-            const material = new THREE.MeshStandardMaterial({ color: 0x8866ff });
-            this.characterModel = new THREE.Mesh(geometry, material);
-            this.characterModel.position.set(0, 0, 0);
-            this.modelScene.add(this.characterModel);
-        }
+        console.debug('Creating character model for inventory preview...');
+        this.characterModel = new PlayerModel(this.modelScene);
     }
     
     /**
@@ -255,61 +180,10 @@ export class InventoryUI extends UIComponent {
         
         // Only process animation if initialized and inventory is open
         if (!this.isModelInitialized || !this.isInventoryOpen) return;
-        
-        // Apply rotation based on user interaction or auto-rotate
-        if (this.characterModel) {
-            if (this.isUserInteracting) {
-                // User is controlling the rotation - apply their rotation
-                this.characterModel.rotation.y = this.userRotationY;
-            } else if (this.autoRotate) {
-                // Auto-rotate when user is not interacting
-                this.characterModel.rotation.y += this.rotationSpeed;
-                // Keep track of the current rotation for smooth transition to user control
-                this.userRotationY = this.characterModel.rotation.y;
-            }
-        }
-        
-        // Update animation mixer
-        if (this.animationMixer) {
-            const delta = this.clock.getDelta();
-            this.animationMixer.update(delta);
-        }
-        
-        // Render the scene
-        if (this.modelRenderer && this.modelScene && this.modelCamera) {
-            this.modelRenderer.render(this.modelScene, this.modelCamera);
-        }
-    }
-    
-    /**
-     * Handle resize of the model container
-     */
-    onModelContainerResize() {
-        if (!this.isModelInitialized) return;
-        
-        let width = this.modelContainer.clientWidth;
-        let height = this.modelContainer.clientHeight;
-        
-        // Use default dimensions if container size is invalid
-        if (width <= 0 || height <= 0) {
-            console.debug('Container has invalid dimensions during resize, using defaults');
-            width = 300;  // Default width
-            height = 400; // Default height
-        }
-        
-        console.debug(`Resizing model container to: ${width}x${height}`);
-        
-        // Update camera aspect ratio
-        this.modelCamera.aspect = width / height;
-        this.modelCamera.updateProjectionMatrix();
-        
-        // Update renderer size
-        this.modelRenderer.setSize(width, height);
-        
-        // Force a render after resize
-        if (this.modelRenderer && this.modelScene && this.modelCamera) {
-            this.modelRenderer.render(this.modelScene, this.modelCamera);
-        }
+
+        const delta = this.clock.getDelta();
+
+        this.characterModel.updateAnimations(delta)
     }
     
     /**
@@ -441,17 +315,6 @@ export class InventoryUI extends UIComponent {
         if (this.isModelInitialized) {
             this.clock.start();
             this.animateModel();
-            
-            // Force a resize check after a short delay to ensure proper dimensions
-            // This is crucial when the container was previously hidden
-            setTimeout(() => {
-                this.onModelContainerResize();
-                
-                // Force an immediate render
-                if (this.modelRenderer && this.modelScene && this.modelCamera) {
-                    this.modelRenderer.render(this.modelScene, this.modelCamera);
-                }
-            }, 50);
         }
     }
     

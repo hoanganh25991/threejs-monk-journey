@@ -70,12 +70,11 @@
 
 #character-model-container {
     position: absolute;
-    width: 120px; /* Narrower width */
-    height: 70%; /* Taller height for vertical character model */
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%); /* Center in the preview area */
-    z-index: 1;
+    width: 100%; /* Full width of parent */
+    height: 100%; /* Full height of parent */
+    top: 0;
+    left: 0;
+    z-index: 1; /* Behind equipment slots which have z-index: 2 */
     overflow: hidden;
     border-radius: 8px;
     background-color: rgba(20, 20, 20, 0.5);
