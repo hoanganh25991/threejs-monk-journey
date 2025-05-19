@@ -6,6 +6,7 @@
 import { ModelPreview } from './ModelPreview.js';
 import { SkillPreview } from './SkillPreview.js';
 import { EnemyPreview } from './EnemyPreview.js';
+import { ControlsDisplay } from './ControlsDisplay.js';
 import { CHARACTER_MODELS } from '../config/player-models.js';
 import { UIComponent } from '../UIComponent.js';
 import { SKILLS } from '../config/skills.js';
@@ -686,6 +687,9 @@ export class SettingsMenu extends UIComponent {
         
         // Initialize audio settings
         this.initializeAudioSettings();
+        
+        // Initialize controls display
+        this.initializeControlsDisplay();
         
         // Initialize release settings
         this.initializeReleaseSettings();
@@ -1571,6 +1575,15 @@ export class SettingsMenu extends UIComponent {
                 }
             });
         }
+    }
+    
+    /**
+     * Initialize controls display
+     * @private
+     */
+    initializeControlsDisplay() {
+        // Initialize the controls display
+        ControlsDisplay.initialize();
     }
 
     /**
