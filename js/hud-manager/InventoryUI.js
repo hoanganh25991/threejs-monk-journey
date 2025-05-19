@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { UIComponent } from '../UIComponent.js';
 import { PlayerModel } from '../entities/player/PlayerModel.js';
+import { PlayerState } from '../entities/player/PlayerState.js';
+import { ModelPreview } from '../menu-system/ModelPreview.js';
+import { updateAnimation } from '../utils/AnimationUtils.js';
 
 /**
  * Inventory UI component
@@ -18,18 +21,11 @@ export class InventoryUI extends UIComponent {
         
         // 3D model preview properties
         this.modelContainer = null;
-        this.modelRenderer = null;
-        this.modelScene = null;
-        this.modelCamera = null;
-        this.modelLight = null;
-        this.characterModel = null;
-        this.animationMixer = null;
-        this.clock = new THREE.Clock();
+        this.modelPreview = null; // ModelPreview instance
         this.isModelInitialized = false;
         
         // User interaction properties
         this.isUserInteracting = false;
-        this.autoRotate = false; // Disable auto-rotation by default
         this.rotationSpeed = 0.01;
         this.userRotationY = Math.PI; // Start facing the camera
         this.userRotationYOnMouseDown = 0;
@@ -52,6 +48,8 @@ export class InventoryUI extends UIComponent {
             this.saveInventory();
             this.toggleInventory();
         });
+
+        setTimeout(() => this.initModelPreview(), 1000);
         
         // Hide initially
         this.hide();
@@ -84,54 +82,110 @@ export class InventoryUI extends UIComponent {
         
         console.debug(`Container dimensions: ${containerWidth}x${containerHeight}`);
         
-        // Create a new renderer
-        this.modelRenderer = new THREE.WebGLRenderer({ 
-            antialias: true,
-            alpha: true
-        });
-        this.modelRenderer.setSize(containerWidth, containerHeight);
-        this.modelRenderer.setClearColor(0x000000, 0);
-        this.modelRenderer.shadowMap.enabled = true;
-        this.modelContainer.appendChild(this.modelRenderer.domElement);
+        // Create a new ModelPreview instance
+        this.modelPreview = new ModelPreview(this.modelContainer, containerWidth, containerHeight);
         
-        // Create a new scene
-        this.modelScene = new THREE.Scene();
+        // Get the current player model path
+        const playerModel = this.game.player.model;
+        if (playerModel && playerModel.currentModel) {
+            const modelPath = playerModel.currentModel.path;
+            const baseScale = playerModel.currentModel.baseScale || 1.0;
+            const multiplier = playerModel.currentModel.multiplier || 1.0;
+            const effectiveScale = baseScale * multiplier;
+            
+            console.debug(`Loading player model: ${modelPath} with scale ${effectiveScale}`);
+            
+            // Load the model into the preview
+            this.modelPreview.loadModel(modelPath, effectiveScale);
+        } else {
+            console.warn('No player model available to display in inventory');
+        }
         
-        // Create a camera
-        this.modelCamera = new THREE.PerspectiveCamera(
-            45, 
-            containerWidth / containerHeight, 
-            0.1, 
-            1000
-        );
-        // Position camera to frame the character from legs to head
-        this.modelCamera.position.set(0, 0.5, 5);
-        this.modelCamera.lookAt(0, 0.5, 0);
-        
-        // Add lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        this.modelScene.add(ambientLight);
-        
-        this.modelLight = new THREE.DirectionalLight(0xffffff, 1);
-        this.modelLight.position.set(5, 5, 5);
-        this.modelLight.castShadow = true;
-        this.modelScene.add(this.modelLight);
-        
-        // Clone the player model
-        this.createCharacterModel();
-        
-        // Start animation loop
-        this.animateModel();
-        
+        // Mark as initialized
         this.isModelInitialized = true;
         
-        // Add mouse/touch interaction events
-        this.setupModelInteraction();
+        // Add a custom animation speed modifier to the ModelPreview
+        // This will slow down animations for better viewing
+        const originalAnimate = this.modelPreview.animate;
+        this.modelPreview.animate = () => {
+            // Only continue animation if visible
+            if (this.modelPreview.isVisible) {
+                this.modelPreview.animationId = requestAnimationFrame(() => this.modelPreview.animate());
+                
+                // Update controls
+                this.modelPreview.controls.update();
+                
+                // Get delta time with the clock
+                const delta = this.modelPreview.clock.getDelta();
+                
+                // Apply slowdown factor for better animation viewing
+                const slowdownFactor = 0.5; // Reduce animation speed by half
+                const effectiveDelta = Math.max(delta * slowdownFactor, 0.004);
+                console.debug({ effectiveDelta })
+                
+                // Update animations with slowed-down delta
+                if (this.modelPreview.mixer) {
+                    updateAnimation(this.modelPreview.mixer, delta);
+                }
+                
+                // Render scene
+                try {
+                    this.modelPreview.renderer.render(this.modelPreview.scene, this.modelPreview.camera);
+                } catch (error) {
+                    console.error('ModelPreview: Error rendering scene:', error);
+                }
+            } else {
+                // If not visible, don't request another frame
+                this.modelPreview.animationId = null;
+            }
+        };
         
-        // Force an initial render
-        if (this.modelRenderer && this.modelScene && this.modelCamera) {
-            this.modelRenderer.render(this.modelScene, this.modelCamera);
-        }
+        // Add rotation hints
+        this.addModelViewingHints();
+    }
+    
+    /**
+     * Add helpful hints for model viewing
+     */
+    addModelViewingHints() {
+        if (!this.modelContainer) return;
+        
+        // Add rotation hints overlay to the model container
+        const hintContainer = document.createElement('div');
+        hintContainer.className = 'model-hints';
+        hintContainer.style.position = 'absolute';
+        hintContainer.style.bottom = '10px';
+        hintContainer.style.left = '50%';
+        hintContainer.style.transform = 'translateX(-50%)';
+        hintContainer.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        hintContainer.style.color = 'white';
+        hintContainer.style.padding = '5px 10px';
+        hintContainer.style.borderRadius = '4px';
+        hintContainer.style.fontSize = '12px';
+        hintContainer.style.pointerEvents = 'none'; // Don't interfere with mouse events
+        hintContainer.style.opacity = '0.8';
+        hintContainer.style.transition = 'opacity 0.5s';
+        hintContainer.style.display = 'flex';
+        hintContainer.style.flexDirection = 'column';
+        hintContainer.style.alignItems = 'center';
+        hintContainer.style.gap = '5px';
+        
+        // Drag hint
+        const dragHint = document.createElement('div');
+        dragHint.innerHTML = '↔️ Drag to rotate';
+        hintContainer.appendChild(dragHint);
+        
+        // Double-click hint
+        const dblClickHint = document.createElement('div');
+        dblClickHint.innerHTML = '👆 Double-click to reset view';
+        hintContainer.appendChild(dblClickHint);
+        
+        this.modelContainer.appendChild(hintContainer);
+        
+        // Hide hints after 4 seconds
+        setTimeout(() => {
+            hintContainer.style.opacity = '0';
+        }, 4000);
     }
     
     /**
@@ -158,45 +212,9 @@ export class InventoryUI extends UIComponent {
         }
     }
     
-    /**
-     * Create the character model by cloning the player model
-     */
-    createCharacterModel() {
-        console.debug('Creating character model for inventory preview...');
-        this.characterModel = new PlayerModel(this.modelScene);
-    }
+    // The createCharacterModel method has been replaced by the ModelPreview's loadModel method
     
-    /**
-     * Animate the character model
-     */
-    animateModel() {
-        // Always request the next frame first to ensure continuous animation
-        requestAnimationFrame(() => this.animateModel());
-        
-        // Only process animation if initialized and inventory is open
-        if (!this.isModelInitialized || !this.isInventoryOpen) return;
-
-        const delta = this.clock.getDelta();
-
-        // Update character animations
-        this.characterModel.updateAnimations(delta);
-        
-        // Apply rotation from user interaction or auto-rotation
-        if (this.characterModel && this.characterModel.gltfModel) {
-            if (this.autoRotate) {
-                // Auto-rotate the model
-                this.userRotationY += this.rotationSpeed;
-            }
-            
-            // Apply the current rotation
-            this.characterModel.gltfModel.rotation.y = this.userRotationY;
-        }
-        
-        // Render the scene
-        if (this.modelRenderer && this.modelScene && this.modelCamera) {
-            this.modelRenderer.render(this.modelScene, this.modelCamera);
-        }
-    }
+    // The animateModel method has been replaced by the ModelPreview's animate method
     
     /**
      * Update inventory items
@@ -324,9 +342,15 @@ export class InventoryUI extends UIComponent {
         super.show();
         
         // Start the animation loop if the model is initialized
-        if (this.isModelInitialized) {
-            this.clock.start();
-            this.animateModel();
+        if (this.isModelInitialized && this.modelPreview) {
+            // The ModelPreview class handles animation resumption automatically
+            // through its visibility observer
+            this.modelPreview.isVisible = true;
+            
+            // Force an animation frame if needed
+            if (!this.modelPreview.animationId) {
+                this.modelPreview.animate();
+            }
         }
     }
     
@@ -337,72 +361,19 @@ export class InventoryUI extends UIComponent {
     hide() {
         super.hide();
         
-        // Stop the animation clock
-        if (this.isModelInitialized) {
-            this.clock.stop();
+        // Stop the animation when hidden
+        if (this.isModelInitialized && this.modelPreview) {
+            this.modelPreview.isVisible = false;
+            
+            // Cancel animation frame if it's running
+            if (this.modelPreview.animationId) {
+                cancelAnimationFrame(this.modelPreview.animationId);
+                this.modelPreview.animationId = null;
+            }
         }
     }
     
-    /**
-     * Set up mouse and touch interaction for the model
-     */
-    setupModelInteraction() {
-        if (!this.modelContainer || !this.modelRenderer) return;
-        
-        const canvas = this.modelRenderer.domElement;
-        
-        // Mouse events
-        canvas.addEventListener('mousedown', (event) => {
-            event.preventDefault();
-            this.isUserInteracting = true;
-            this.autoRotate = false;
-            this.mouseXOnMouseDown = event.clientX;
-            this.userRotationYOnMouseDown = this.userRotationY;
-        });
-        
-        document.addEventListener('mousemove', (event) => {
-            if (this.isUserInteracting) {
-                const deltaX = event.clientX - this.mouseXOnMouseDown;
-                // Convert mouse movement to rotation (adjust sensitivity as needed)
-                this.userRotationY = this.userRotationYOnMouseDown + deltaX * 0.01;
-            }
-        });
-        
-        document.addEventListener('mouseup', () => {
-            this.isUserInteracting = false;
-            // No longer re-enabling auto-rotation
-        });
-        
-        // Touch events for mobile
-        canvas.addEventListener('touchstart', (event) => {
-            if (event.touches.length === 1) {
-                event.preventDefault();
-                this.isUserInteracting = true;
-                this.autoRotate = false;
-                this.mouseXOnMouseDown = event.touches[0].clientX;
-                this.userRotationYOnMouseDown = this.userRotationY;
-            }
-        });
-        
-        document.addEventListener('touchmove', (event) => {
-            if (this.isUserInteracting && event.touches.length === 1) {
-                const deltaX = event.touches[0].clientX - this.mouseXOnMouseDown;
-                // Convert touch movement to rotation (adjust sensitivity as needed)
-                this.userRotationY = this.userRotationYOnMouseDown + deltaX * 0.01;
-            }
-        });
-        
-        document.addEventListener('touchend', () => {
-            this.isUserInteracting = false;
-            // No longer re-enabling auto-rotation
-        });
-        
-        // Double-click/tap to reset rotation
-        canvas.addEventListener('dblclick', () => {
-            this.userRotationY = Math.PI; // Reset to face the camera
-            this.characterModel.rotation.y = this.userRotationY;
-        });
-    }
+    // The setupModelInteraction method has been replaced by the ModelPreview's OrbitControls
     
     /**
      * Clean up resources when component is destroyed
@@ -412,31 +383,11 @@ export class InventoryUI extends UIComponent {
         // Stop animation loop
         this.isModelInitialized = false;
         
-        // Dispose of Three.js resources
-        if (this.characterModel) {
-            this.modelScene.remove(this.characterModel);
-            this.characterModel.traverse((child) => {
-                if (child.isMesh) {
-                    if (child.geometry) child.geometry.dispose();
-                    if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(material => material.dispose());
-                        } else {
-                            child.material.dispose();
-                        }
-                    }
-                }
-            });
-            this.characterModel = null;
-        }
-        
-        if (this.animationMixer) {
-            this.animationMixer = null;
-        }
-        
-        if (this.modelRenderer) {
-            this.modelRenderer.dispose();
-            this.modelRenderer = null;
+        // Dispose of ModelPreview resources
+        if (this.modelPreview) {
+            // The ModelPreview class has its own dispose method that handles cleanup
+            this.modelPreview.dispose();
+            this.modelPreview = null;
         }
         
         // Remove event listeners

@@ -206,7 +206,7 @@ export function updateStateBasedAnimations(params) {
     
     // Get all animation names for logging/debugging
     const animNames = Object.keys(animations);
-    console.debug(`Available animations: ${animNames.join(', ')}`);
+    // console.debug(`Available animations: ${animNames.join(', ')}`);
     
     // Use the detectModelType utility to determine the model type
     const modelInfo = detectModelType(animNames);
