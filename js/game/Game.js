@@ -272,6 +272,10 @@ export class Game {
      * @returns {Promise} A promise that resolves when fullscreen is entered or rejects if there's an error
      */
     requestFullscreen() {
+        if (window.location.hostname == "localhost") {
+            console.warn("Ignore full screen in localhost");
+            return Promise.resolve();
+        }
         console.debug("Requesting fullscreen mode...");
         
         // Set a flag to prevent pause on visibility change
