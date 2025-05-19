@@ -29,7 +29,7 @@ export class InventoryUI extends UIComponent {
         
         // User interaction properties
         this.isUserInteracting = false;
-        this.autoRotate = true;
+        this.autoRotate = false; // Disable auto-rotation by default
         this.rotationSpeed = 0.01;
         this.userRotationY = Math.PI; // Start facing the camera
         this.userRotationYOnMouseDown = 0;
@@ -153,11 +153,6 @@ export class InventoryUI extends UIComponent {
             this.show();
             this.isInventoryOpen = true;
             
-            // Initialize model preview if not already done
-            if (!this.isModelInitialized) {
-                setTimeout(() => this.initModelPreview());
-            }
-            
             // Pause game
             this.game.pause(false);
         }
@@ -183,7 +178,24 @@ export class InventoryUI extends UIComponent {
 
         const delta = this.clock.getDelta();
 
-        this.characterModel.updateAnimations(delta)
+        // Update character animations
+        this.characterModel.updateAnimations(delta);
+        
+        // Apply rotation from user interaction or auto-rotation
+        if (this.characterModel && this.characterModel.gltfModel) {
+            if (this.autoRotate) {
+                // Auto-rotate the model
+                this.userRotationY += this.rotationSpeed;
+            }
+            
+            // Apply the current rotation
+            this.characterModel.gltfModel.rotation.y = this.userRotationY;
+        }
+        
+        // Render the scene
+        if (this.modelRenderer && this.modelScene && this.modelCamera) {
+            this.modelRenderer.render(this.modelScene, this.modelCamera);
+        }
     }
     
     /**
@@ -358,12 +370,7 @@ export class InventoryUI extends UIComponent {
         
         document.addEventListener('mouseup', () => {
             this.isUserInteracting = false;
-            // Resume auto-rotation after a delay
-            setTimeout(() => {
-                if (!this.isUserInteracting) {
-                    this.autoRotate = true;
-                }
-            }, 2000);
+            // No longer re-enabling auto-rotation
         });
         
         // Touch events for mobile
@@ -387,12 +394,7 @@ export class InventoryUI extends UIComponent {
         
         document.addEventListener('touchend', () => {
             this.isUserInteracting = false;
-            // Resume auto-rotation after a delay
-            setTimeout(() => {
-                if (!this.isUserInteracting) {
-                    this.autoRotate = true;
-                }
-            }, 2000);
+            // No longer re-enabling auto-rotation
         });
         
         // Double-click/tap to reset rotation
