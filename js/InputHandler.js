@@ -9,7 +9,7 @@ import {
     isSkillKey,
     CAST_INTERVAL,
     INTERACTION_RANGE
-} from '../config/input.js';
+} from './config/input.js';
 import { InteractionResultHandler } from './services/InteractionResultHandler.js';
 
 export class InputHandler {

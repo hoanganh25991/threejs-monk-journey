@@ -1,38 +1,77 @@
-// Input configuration for UI display and documentation
+/**
+ * Input Configuration
+ * This file contains all key mappings and input-related configurations for the game.
+ */
+
+// Movement keys
+export const MOVEMENT_KEYS = {
+    FORWARD: ['KeyW', 'ArrowUp'],
+    BACKWARD: ['KeyS', 'ArrowDown'],
+    LEFT: ['KeyA', 'ArrowLeft'],
+    RIGHT: ['KeyD', 'ArrowRight']
+};
+
+// Action keys
+export const ACTION_KEYS = {
+    INTERACT: 'KeyE',
+    START_GAME: 'KeyG'
+};
+
+// UI toggle keys
+export const UI_KEYS = {
+    TOGGLE_INVENTORY: 'KeyY',
+    TOGGLE_SKILL_TREE: 'KeyT',
+    TOGGLE_HUD: 'KeyF',
+    TOGGLE_MINIMAP: 'KeyM',
+    MINIMAP_ZOOM_IN: 'BracketLeft',
+    MINIMAP_ZOOM_OUT: 'BracketRight'
+};
+
+// Skill keys
+export const SKILL_KEYS = {
+    PRIMARY_ATTACK: 'KeyH',
+    SKILL_1: 'Digit1',
+    SKILL_2: 'Digit2',
+    SKILL_3: 'Digit3',
+    SKILL_4: 'Digit4',
+    SKILL_5: 'Digit5',
+    SKILL_6: 'Digit6',
+    SKILL_7: 'Digit7',
+    SKILL_8: 'Digit8',
+    SKILL_9: 'Digit9'
+};
+
+// Get all skill keys as an array
+export const getAllSkillKeys = () => {
+    return Object.values(SKILL_KEYS);
+};
+
+// Get skill index from key code (returns 0-based index)
+export const getSkillIndexFromKeyCode = (keyCode) => {
+    if (keyCode === SKILL_KEYS.PRIMARY_ATTACK) {
+        return -1; // Special case for primary attack
+    }
+    
+    // For digit keys, extract the number and convert to 0-based index
+    if (keyCode.startsWith('Digit')) {
+        return parseInt(keyCode.charAt(5)) - 1;
+    }
+    
+    return -1; // Not a skill key
+};
+
+// Check if a key is a skill key
+export const isSkillKey = (keyCode) => {
+    return Object.values(SKILL_KEYS).includes(keyCode);
+};
+
+// Default cooldown for continuous casting (in seconds)
+export const CAST_INTERVAL = 0.1;
+
+// Interaction range (in world units)
+export const INTERACTION_RANGE = 3;
+
 export const INPUT_CONFIG = {
-    movement: {
-        title: 'Movement',
-        controls: [
-            { keys: ['KeyW', 'ArrowUp'], description: 'Move Forward' },
-            { keys: ['KeyS', 'ArrowDown'], description: 'Move Backward' },
-            { keys: ['KeyA', 'ArrowLeft'], description: 'Move Left' },
-            { keys: ['KeyD', 'ArrowRight'], description: 'Move Right' }
-        ]
-    },
-    actions: {
-        title: 'Basic Actions',
-        controls: [
-            { keys: ['KeyH'], description: 'Basic Attack (Fist of Thunder)' },
-            { keys: ['KeyE'], description: 'Interact with objects' },
-            { keys: ['KeyY'], description: 'Toggle Inventory' },
-            { keys: ['KeyT'], description: 'Toggle Skill Tree' },
-            { keys: ['KeyG'], description: 'Start New Game' }
-        ]
-    },
-    skills: {
-        title: 'Skills',
-        controls: [
-            { keys: ['Digit1', 'KeyJ'], description: 'Skill 1' },
-            { keys: ['Digit2', 'KeyK'], description: 'Skill 2' },
-            { keys: ['Digit3', 'KeyL'], description: 'Skill 3' },
-            { keys: ['Digit4', 'Semicolon'], description: 'Skill 4' },
-            { keys: ['Digit5', 'KeyU'], description: 'Skill 5' },
-            { keys: ['Digit6', 'KeyI'], description: 'Skill 6' },
-            { keys: ['Digit7', 'KeyO'], description: 'Skill 7' },
-            { keys: ['Digit8', 'KeyP'], description: 'Breath of Heaven' },
-            { keys: ['Digit9', 'BracketRight'], description: 'Shield of Zen' }
-        ]
-    },
     ui: {
         title: 'UI Settings',
         controls: [
@@ -47,4 +86,4 @@ export const INPUT_CONFIG = {
             handleSize: 60  // Handle size in pixels
         }
     }
-};
+}

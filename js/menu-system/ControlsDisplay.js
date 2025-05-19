@@ -3,7 +3,7 @@
  * Dynamically generates and updates the controls display in the settings menu
  */
 
-import { MOVEMENT_KEYS, ACTION_KEYS, UI_KEYS, SKILL_KEYS } from '../../../config/input.js';
+import { MOVEMENT_KEYS, ACTION_KEYS, UI_KEYS, SKILL_KEYS } from '../config/input.js';
 
 export class ControlsDisplay {
     /**
