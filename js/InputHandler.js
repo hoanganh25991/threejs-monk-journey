@@ -147,7 +147,19 @@ export class InputHandler {
                     const skillIndex = keyDigit - 1;
                     
                     console.debug(`Using skill with index: ${skillIndex} from key: ${event.code} (key digit: ${keyDigit})`);
-                    this.game.player.useSkill(skillIndex);
+                    
+                    // Check if this is Digit1 and if the first skill is a primary attack
+                    if (event.code === 'Digit1' && this.game.player.skills && this.game.player.skills.getSkills) {
+                        const skills = this.game.player.skills.getSkills();
+                        if (skills && skills.length > 0 && skills[0].primaryAttack) {
+                            console.debug('Digit1 is assigned to primary attack, using usePrimaryAttack() for consistent behavior');
+                            this.game.player.usePrimaryAttack();
+                        } else {
+                            this.game.player.useSkill(skillIndex);
+                        }
+                    } else {
+                        this.game.player.useSkill(skillIndex);
+                    }
                     break;
                     
                 case 'KeyE':
@@ -431,7 +443,19 @@ export class InputHandler {
                             // Subtract 1 to convert from 1-based to 0-based index
                             const skillIndex = keyDigit - 1;
                             console.debug('Continuous casting: Digit key', keyCode, 'Key digit:', keyDigit, 'Skill index:', skillIndex);
-                            this.game.player.useSkill(skillIndex);
+                            
+                            // Check if this is Digit1 and if the first skill is a primary attack
+                            if (keyCode === 'Digit1' && this.game.player.skills && this.game.player.skills.getSkills) {
+                                const skills = this.game.player.skills.getSkills();
+                                if (skills && skills.length > 0 && skills[0].primaryAttack) {
+                                    console.debug('Continuous casting: Digit1 is primary attack, using usePrimaryAttack()');
+                                    this.game.player.usePrimaryAttack();
+                                } else {
+                                    this.game.player.useSkill(skillIndex);
+                                }
+                            } else {
+                                this.game.player.useSkill(skillIndex);
+                            }
                             this.skillCastCooldowns[keyCode] = castInterval;
                         } else if (this.keyMapping && this.keyMapping[keyCode]) {
                             // For alternative keys (j,k,l,;,u,i,o)

@@ -15,7 +15,7 @@ export const PRIMARY_ATTACKS = [
         manaCost: 0,
         cooldown: 0, // Very short cooldown for basic attack
         range: 25, // Teleport range
-        radius: 2, // Area of effect after teleport
+        radius: 4, // Increased area of effect for more reliable hits
         duration: 1.0, // Short duration
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },

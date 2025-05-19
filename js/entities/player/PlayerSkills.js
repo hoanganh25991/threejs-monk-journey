@@ -363,12 +363,17 @@ export class PlayerSkills extends IPlayerSkills {
         
         // Find the nearest enemy
         if (this.game && this.game.enemyManager) {
+            // Define ranges for different attack behaviors
+            const meleeRange = 3.0; // Increased close range for punch to make it more reliable
+            const minTeleportRange = 4.0; // Minimum distance required for teleport
+            const maxTeleportRange = skillTemplate.range || 15.0; // Maximum teleport range
+            
             // First check if there's an enemy in melee range
-            const meleeRange = 2.0; // Melee range for punch
             const meleeEnemy = this.game.enemyManager.findNearestEnemy(this.playerPosition, meleeRange);
             
             if (meleeEnemy) {
-                // Enemy is in melee range, use combo punch system
+                // Enemy is in melee range, use normal attack (no teleport)
+                console.debug('Enemy in melee range, using normal attack without teleport');
                 
                 // Use mana
                 this.playerStats.setMana(this.playerStats.getMana() - skillTemplate.manaCost);
@@ -376,7 +381,7 @@ export class PlayerSkills extends IPlayerSkills {
                 // Start cooldown
                 skillTemplate.startCooldown();
                 
-                // Create a new instance of the skill using the template from BATTLE_SKILLS config
+                // Create a new instance of the skill
                 const skillConfig = SKILLS.find(config => config.name === skillTemplate.name);
                 const newSkillInstance = new Skill(skillConfig);
                 
@@ -411,17 +416,30 @@ export class PlayerSkills extends IPlayerSkills {
                 
                 return true;
             } else {
-                // No enemy in melee range, try to find a distant enemy
-                const distantEnemy = this.game.enemyManager.findNearestEnemy(this.playerPosition, skillTemplate.range);
+                // No enemy in melee range, check for enemies in teleport range
+                // First look for enemies between min and max teleport range
+                const teleportRangeEnemy = this.game.enemyManager.findNearestEnemy(this.playerPosition, maxTeleportRange);
                 
-                if (distantEnemy) {
+                if (teleportRangeEnemy) {
+                    // Get enemy position
+                    const enemyPosition = teleportRangeEnemy.getPosition();
+                    
+                    // Calculate distance to enemy
+                    const distanceToEnemy = this.playerPosition.distanceTo(enemyPosition);
+                    
+                    // Calculate direction to enemy
+                    const direction = new THREE.Vector3().subVectors(enemyPosition, this.playerPosition).normalize();
+                    
+                    // Update player rotation to face enemy
+                    this.playerRotation.y = Math.atan2(direction.x, direction.z);
+                    
                     // Use mana
                     this.playerStats.setMana(this.playerStats.getMana() - skillTemplate.manaCost);
                     
                     // Start cooldown
                     skillTemplate.startCooldown();
                     
-                    // Create a new instance of the skill using the template from BATTLE_SKILLS config
+                    // Create a new instance of the skill
                     const skillConfig = SKILLS.find(config => config.name === skillTemplate.name);
                     const newSkillInstance = new Skill(skillConfig);
                     
@@ -431,18 +449,16 @@ export class PlayerSkills extends IPlayerSkills {
                     // Pass game reference to the new skill instance
                     newSkillInstance.game = this.game;
                     
-                    // Get enemy position
-                    const enemyPosition = distantEnemy.getPosition();
-                    
-                    // Calculate direction to enemy
-                    const direction = new THREE.Vector3().subVectors(enemyPosition, this.playerPosition).normalize();
-                    
-                    // Update player rotation to face enemy
-                    this.playerRotation.y = Math.atan2(direction.x, direction.z);
-                    
-                    // Check if this is a stationary attack skill (like Deadly Reach)
-                    if (skillTemplate.stationaryAttack || skillTemplate.name === "Deadly Reach") {
-                        console.debug(`Primary attack ${skillTemplate.name} has stationaryAttack flag or is Deadly Reach, player will not move`);
+                    // Check if this is a stationary attack skill or if enemy is too close for teleport
+                    if (skillTemplate.stationaryAttack || 
+                        skillTemplate.name === "Deadly Reach" || 
+                        distanceToEnemy < minTeleportRange) {
+                        
+                        if (distanceToEnemy < minTeleportRange) {
+                            console.debug(`Enemy at distance ${distanceToEnemy.toFixed(2)} is too close for teleport (min: ${minTeleportRange}), using ranged attack`);
+                        } else {
+                            console.debug(`Primary attack ${skillTemplate.name} has stationaryAttack flag or is Deadly Reach, player will not move`);
+                        }
                         
                         // Create skill effect at the current position (no teleport)
                         const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
@@ -450,11 +466,11 @@ export class PlayerSkills extends IPlayerSkills {
                         // Add skill effect to scene
                         this.scene.add(skillEffect);
                     } else {
-                        // For non-stationary attacks (like Fist of Thunder), teleport to the enemy
-                        console.debug(`Primary attack ${skillTemplate.name} does not have stationaryAttack flag, player will move`);
+                        // Enemy is beyond minimum teleport range, teleport to the enemy
+                        console.debug(`Enemy at distance ${distanceToEnemy.toFixed(2)} is beyond minimum teleport range (${minTeleportRange}), teleporting`);
                         
                         // Calculate teleport position (slightly before the enemy)
-                        const teleportDistance = Math.min(this.playerPosition.distanceTo(enemyPosition) - 1.5, skillTemplate.range);
+                        const teleportDistance = Math.min(distanceToEnemy - 1.5, maxTeleportRange);
                         const teleportPosition = new THREE.Vector3(
                             this.playerPosition.x + direction.x * teleportDistance,
                             enemyPosition.y, // Match enemy height
@@ -481,7 +497,7 @@ export class PlayerSkills extends IPlayerSkills {
                     
                     return true;
                 } else {
-                    // No enemy found, show notification
+                    // No enemy found in any range, show notification
                     if (this.game && this.game.hudManager) {
                         this.game.hudManager.showNotification('No enemy in range');
                     }

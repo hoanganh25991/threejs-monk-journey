@@ -234,26 +234,36 @@ export class FistOfThunderEffect extends SkillEffect {
         }
         
         // Check for enemies hit by the teleport effect
-        if (this.skill.game && this.skill.game.enemyManager && this.teleportState.phase === 'stable') {
-            // Check every 0.2 seconds to avoid too frequent checks
-            if (Math.floor(this.teleportState.age * 5) > Math.floor((this.teleportState.age - delta) * 5)) {
-                // Get all enemies within range
-                const hitRadius = this.skill.radius;
+        // Always check for enemies regardless of teleport phase to ensure attacks work when stationary
+        if (this.skill.game && this.skill.game.enemyManager) {
+            // Check every frame for more responsive attacks
+            // Get all enemies within range
+            const hitRadius = this.skill.radius;
+            
+            // Debug log to help diagnose issues
+            console.debug(`Checking for enemies in radius ${hitRadius} at position ${this.skill.position.x.toFixed(2)}, ${this.skill.position.y.toFixed(2)}, ${this.skill.position.z.toFixed(2)}`);
+            
+            let enemiesHit = 0;
+            for (const enemy of this.skill.game.enemyManager.enemies) {
+                if (enemy.isDead()) continue;
                 
-                for (const enemy of this.skill.game.enemyManager.enemies) {
-                    if (enemy.isDead()) continue;
+                const enemyPos = enemy.getPosition();
+                const distance = this.skill.position.distanceTo(enemyPos);
+                
+                console.debug(`Enemy at distance ${distance.toFixed(2)}, hit radius: ${hitRadius}`);
+                
+                if (distance <= hitRadius) {
+                    // Apply damage
+                    enemy.takeDamage(this.skill.damage);
+                    enemiesHit++;
                     
-                    const enemyPos = enemy.getPosition();
-                    const distance = this.skill.position.distanceTo(enemyPos);
-                    
-                    if (distance <= hitRadius) {
-                        // Apply damage
-                        enemy.takeDamage(this.skill.damage);
-                        
-                        // Show hit effect
-                        this._createTeleportHitEffect(enemyPos);
-                    }
+                    // Show hit effect
+                    this._createTeleportHitEffect(enemyPos);
                 }
+            }
+            
+            if (enemiesHit > 0) {
+                console.debug(`Hit ${enemiesHit} enemies with Fist of Thunder`);
             }
         }
     }
