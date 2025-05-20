@@ -49,11 +49,78 @@
 
         /**
          * Show update notification
+         * @param {boolean} forceUpdate - Whether this is a forced update
          */
-        showUpdateNotification() {
+        showUpdateNotification(forceUpdate = false) {
             const notification = this.getElement('update-notification');
-            if (notification) {
-                notification.style.display = 'block';
+            if (!notification) return;
+            
+            notification.style.display = 'block';
+            
+            // Update notification text based on whether it's a forced update
+            const updateText = this.getElement('update-text');
+            if (updateText) {
+                if (forceUpdate) {
+                    updateText.textContent = 'A critical update is being installed...';
+                } else {
+                    updateText.textContent = 'A new version is available. Would you like to update now?';
+                }
+            }
+            
+            // Show/hide buttons based on whether it's a forced update
+            const updateButton = this.getElement('update-button');
+            const skipButton = this.getElement('skip-update-button');
+            
+            if (updateButton) {
+                updateButton.style.display = forceUpdate ? 'none' : 'inline-block';
+            }
+            
+            if (skipButton) {
+                skipButton.style.display = forceUpdate ? 'none' : 'inline-block';
+            }
+        }
+        
+        /**
+         * Approve the service worker update
+         * @param {ServiceWorkerRegistration} registration - The service worker registration
+         */
+        approveUpdate(registration) {
+            try {
+                console.debug('User approved update, notifying service worker');
+                
+                // Update UI to show progress
+                this.updateLoadingProgress(10, 'Installing update...', 'Preparing to apply update');
+                
+                // Send message to service worker to approve update
+                if (registration.waiting) {
+                    registration.waiting.postMessage({
+                        type: 'APPROVE_UPDATE'
+                    });
+                }
+            } catch (error) {
+                console.error('Error approving update:', error);
+            }
+        }
+        
+        /**
+         * Reject the service worker update
+         * @param {ServiceWorkerRegistration} registration - The service worker registration
+         */
+        rejectUpdate(registration) {
+            try {
+                console.debug('User rejected update, notifying service worker');
+                
+                // Send message to service worker to reject update
+                if (registration.waiting) {
+                    registration.waiting.postMessage({
+                        type: 'REJECT_UPDATE'
+                    });
+                }
+                
+                // Hide the notification
+                this.hideUpdateNotification();
+            } catch (error) {
+                console.error('Error rejecting update:', error);
             }
         }
 
@@ -97,42 +164,38 @@
                 progressBar.style.width = percent + '%';
             }
             
-            // Update status text with size information if available
+            // Update status text with simplified information
             if (status) {
                 const statusElement = this.getElement('update-status');
                 if (statusElement) {
                     let statusText = status;
                     
-                    // Add size information if available
-                    if (loadedBytes !== undefined && totalBytes !== undefined) {
-                        const loadedFormatted = this.formatFileSize(loadedBytes);
-                        const totalFormatted = totalSizeMB ? `${totalSizeMB} MB` : this.formatFileSize(totalBytes);
-                        statusText += ` (${loadedFormatted} / ${totalFormatted})`;
+                    // Add simplified size information if available
+                    if (loadedBytes !== undefined && totalBytes !== undefined && percent > 0) {
+                        statusText = `Updating in background: ${percent}%`;
                     }
                     
                     statusElement.textContent = statusText;
                 }
             }
             
-            // Update file info if provided
+            // Hide detailed file info for a cleaner UI
             const fileInfoElement = this.getElement('file-info');
-            if (!fileInfoElement) return;
+            if (fileInfoElement) {
+                fileInfoElement.style.display = 'none';
+            }
             
-            if (fileInfo) {
-                // If we have the file size, add it to the info
-                if (loadedBytes !== undefined && fileInfo.startsWith('Caching:')) {
-                    const filePath = fileInfo.substring(9).trim();
-                    const fileSize = window.FILE_SIZES && window.FILE_SIZES[filePath];
-                    
-                    if (fileSize) {
-                        fileInfo += ` (${this.formatFileSize(fileSize)})`;
-                    }
+            // If update is complete, show completion message
+            if (percent >= 100) {
+                const statusElement = this.getElement('update-status');
+                if (statusElement) {
+                    statusElement.textContent = 'Update complete! Reloading...';
                 }
                 
-                fileInfoElement.textContent = fileInfo;
-                fileInfoElement.style.display = 'block';
-            } else {
-                fileInfoElement.style.display = 'none';
+                // Auto-reload after a short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             }
         }
 
@@ -227,44 +290,59 @@
             try {
                 console.debug(`Service worker state changed to: ${worker.state}`);
                 
+                // Get size text if available
+                const sizeText = window.TOTAL_CACHE_SIZE_MB ? ` (${window.TOTAL_CACHE_SIZE_MB} MB)` : '';
+                
+                // Hide update buttons during installation process
+                const updateButtons = document.querySelector('#update-notification .update-buttons');
+                if (updateButtons && worker.state !== 'installed') {
+                    updateButtons.style.display = 'none';
+                }
+                
                 // Update based on the new service worker's state
                 switch (worker.state) {
                     case 'installing':
                         this.updateLoadingProgress(5, 'Installing update...', 'Preparing to download files');
                         break;
+                        
                     case 'installed':
-                        // Try to get the total size from the service worker
-                        let totalSizeText = '';
-                        if (window.TOTAL_CACHE_SIZE_MB) {
-                            totalSizeText = ` (${window.TOTAL_CACHE_SIZE_MB} MB)`;
+                        // The service worker is installed but waiting for activation
+                        this.updateLoadingProgress(90, `Update ready${sizeText}`, null);
+                        
+                        // Show update buttons again if they were hidden
+                        if (updateButtons) {
+                            updateButtons.style.display = 'flex';
                         }
                         
-                        this.updateLoadingProgress(90, `Update installed${totalSizeText}`, null);
+                        // Update the notification text
+                        const updateText = this.getElement('update-text');
+                        if (updateText) {
+                            updateText.textContent = 'Update ready! Would you like to apply it now?';
+                        }
                         
-                        // No need to reload regardless of controller status
-                        console.debug('Service worker installed - no reload needed');
-                        this.updateLoadingProgress(100, `Ready!${totalSizeText}`, null);
-                        
-                        // Use arrow function to preserve 'this' context
-                        setTimeout(() => this.hideUpdateNotification(), 1000);
-                        
-                        // Note: We don't need to reload the page when the service worker is installed
-                        // The service worker will handle caching at the network level and serve
-                        // cached resources for subsequent requests automatically
+                        console.debug('Service worker installed and waiting for activation');
                         break;
+                        
                     case 'activating':
-                        this.updateLoadingProgress(95, 'Activating...', null);
+                        this.updateLoadingProgress(95, 'Activating update...', null);
                         break;
-                    case 'activated':
-                        // Try to get the total size from the service worker
-                        let completedSizeText = '';
-                        if (window.TOTAL_CACHE_SIZE_MB) {
-                            completedSizeText = ` (${window.TOTAL_CACHE_SIZE_MB} MB)`;
-                        }
                         
-                        this.updateLoadingProgress(100, `Complete!${completedSizeText}`, null);
-                        setTimeout(() => this.hideUpdateNotification(), 1000);
+                    case 'activated':
+                        this.updateLoadingProgress(100, `Update complete!${sizeText}`, null);
+                        
+                        // Reload the page to ensure all assets are served from the new cache
+                        console.debug('Service worker activated, reloading page to use new version');
+                        setTimeout(() => {
+                            // Hide notification before reload
+                            this.hideUpdateNotification();
+                            
+                            // Reload the page after a short delay
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
+                        }, 1000);
                         break;
+                        
                     case 'redundant':
                         this.updateLoadingProgress(0, 'Update failed!', 'Please refresh the page to try again');
                         setTimeout(() => this.hideUpdateNotification(), 3000);
@@ -319,11 +397,43 @@
                                     return;
                                 }
 
-                                // Show update notification
-                                instance.showUpdateNotification();
-
                                 // Create a new message channel for the new worker
-                                instance.createMessageChannel(registration);
+                                const messageChannel = instance.createMessageChannel(registration);
+                                
+                                // Set up message handler for force update notifications
+                                if (messageChannel) {
+                                    messageChannel.port1.addEventListener('message', (event) => {
+                                        if (event.data && event.data.type === 'FORCE_UPDATE') {
+                                            console.debug('Force update requested by service worker');
+                                            // Show update notification with auto-update message
+                                            instance.showUpdateNotification(true);
+                                            // Auto-approve the update after a short delay
+                                            setTimeout(() => {
+                                                instance.approveUpdate(registration);
+                                            }, 3000);
+                                        }
+                                    });
+                                    messageChannel.port1.start();
+                                }
+
+                                // Show update notification with user choice
+                                instance.showUpdateNotification();
+                                
+                                // Set up update approval button
+                                const updateButton = instance.getElement('update-button');
+                                if (updateButton) {
+                                    updateButton.onclick = () => {
+                                        instance.approveUpdate(registration);
+                                    };
+                                }
+                                
+                                // Set up update skip button
+                                const skipButton = instance.getElement('skip-update-button');
+                                if (skipButton) {
+                                    skipButton.onclick = () => {
+                                        instance.rejectUpdate(registration);
+                                    };
+                                }
 
                                 // Listen for state changes
                                 newWorker.addEventListener('statechange', () => {

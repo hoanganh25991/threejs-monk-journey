@@ -40,9 +40,11 @@ const excludeFiles = [
   '.vscode',
   'progress',
   'scripts',
+  'config',
   'fuctional-requirement',
-  'file-tracker.js',
-  'file-sizes.json', // Exclude the output file itself
+  'README.md',
+  'LICENSE',
+  '.gitignore'
 ];
 
 // Helper function to categorize files by extension

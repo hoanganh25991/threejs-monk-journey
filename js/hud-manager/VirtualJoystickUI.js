@@ -1,5 +1,5 @@
 import { UIComponent } from '../UIComponent.js';
-import { INPUT_CONFIG } from '../config/input.js';
+import { JOYSTICK } from '../config/input.js';
 
 /**
  * Virtual Joystick UI component
@@ -32,7 +32,7 @@ export class VirtualJoystickUI extends UIComponent {
      */
     init() {
         // Get joystick configuration from INPUT_CONFIG
-        const joystickConfig = INPUT_CONFIG.ui.joystick;
+        const joystickConfig = JOYSTICK;
         const sizeMultiplier = joystickConfig.sizeMultiplier;
         const baseSize = joystickConfig.baseSize;
         const handleSize = joystickConfig.handleSize;

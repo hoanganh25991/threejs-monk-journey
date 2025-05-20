@@ -71,19 +71,8 @@ export const CAST_INTERVAL = 0.1;
 // Interaction range (in world units)
 export const INTERACTION_RANGE = 3;
 
-export const INPUT_CONFIG = {
-    ui: {
-        title: 'UI Settings',
-        controls: [
-            { keys: ['KeyF'], description: 'Toggle HUD Visibility' },
-            { keys: ['KeyM'], description: 'Toggle Mini Map' },
-            { keys: ['BracketLeft'], description: 'Zoom In Mini Map' },
-            { keys: ['BracketRight'], description: 'Zoom Out Mini Map' }
-        ],
-        joystick: {
-            sizeMultiplier: 1, // Size multiplier (1 = 100% of defined size)
-            baseSize: 130, // Base size in pixels
-            handleSize: 60  // Handle size in pixels
-        }
-    }
+export const JOYSTICK = {
+    sizeMultiplier: 1, // Size multiplier (1 = 100% of defined size)
+    baseSize: 130, // Base size in pixels
+    handleSize: 60  // Handle size in pixels
 }

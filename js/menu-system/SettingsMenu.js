@@ -117,6 +117,34 @@ export class SettingsMenu extends UIComponent {
     }
     
     /**
+     * Fetch the current cache version from the service worker
+     * @returns {Promise<string>} - Promise that resolves to the cache version
+     */
+    async fetchCacheVersion() {
+        try {
+            // Fetch the service worker file
+            const response = await fetch('service-worker.js');
+            if (!response.ok) {
+                throw new Error(`Failed to fetch service worker: ${response.status}`);
+            }
+            
+            // Get the text content
+            const text = await response.text();
+            
+            // Extract the cache version using regex
+            const versionMatch = text.match(/const CACHE_VERSION = ['"](\d+)['"]/);
+            if (versionMatch && versionMatch[1]) {
+                return versionMatch[1];
+            } else {
+                throw new Error('Could not find CACHE_VERSION in service-worker.js');
+            }
+        } catch (error) {
+            console.error('Error fetching cache version:', error);
+            return 'Unknown';
+        }
+    }
+    
+    /**
      * Initialize tab functionality
      * @private
      */
@@ -1520,10 +1548,15 @@ export class SettingsMenu extends UIComponent {
      * @private
      */
     initializeReleaseSettings() {
-        // Set current version
+        // Set current version from service worker cache version
         if (this.currentVersionSpan) {
-            // You can update this with your actual version tracking logic
-            this.currentVersionSpan.textContent = '1.0.0';
+            // Try to get the cache version from the service worker
+            this.fetchCacheVersion().then(version => {
+                this.currentVersionSpan.textContent = version;
+            }).catch(error => {
+                console.error('Error fetching cache version:', error);
+                this.currentVersionSpan.textContent = 'Unknown';
+            });
         }
         
         // Set up update to latest button

@@ -4,12 +4,15 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '12';
+const CACHE_VERSION = '17';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
+// Set this to true to force update without prompting the user
+const FORCE_UPDATE = false;
+
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 5628033;
-const TOTAL_CACHE_SIZE_MB = 5.37;
+const TOTAL_CACHE_SIZE_BYTES = 5512287;
+const TOTAL_CACHE_SIZE_MB = 5.26;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
@@ -43,23 +46,6 @@ const ASSETS_TO_CACHE = [
   'js/PerformanceManager.js',
   'js/QuestManager.js',
   'js/UIComponent.js',
-  'js/config/colors.js',
-  'js/config/drops.js',
-  'js/config/enemies.js',
-  'js/config/enemy-behavior.js',
-  'js/config/environment.js',
-  'js/config/input.js',
-  'js/config/player-models.js',
-  'js/config/quality-levels.js',
-  'js/config/render.js',
-  'js/config/skill-icons.js',
-  'js/config/skill-preview.js',
-  'js/config/skill-tree.js',
-  'js/config/skills.js',
-  'js/config/sounds.js',
-  'js/config/storage-keys.js',
-  'js/config/structure.js',
-  'js/config/terrain.js',
   'js/effects/EffectObjectPool.js',
   'js/entities/enemies/Enemy.js',
   'js/entities/enemies/EnemyManager.js',
@@ -475,44 +461,65 @@ self.addEventListener('message', event => {
   }
 });
 
-// Function to cache files with progress tracking
+// Function to cache files with progress tracking in the background
 async function cacheFilesWithProgress(cache) {
   const total = ASSETS_TO_CACHE.length;
   let completed = 0;
   let loadedBytes = 0;
   
-  // Process files sequentially to ensure accurate progress tracking
-  for (const url of ASSETS_TO_CACHE) {
+  // Initial progress update
+  sendProgressUpdate(completed, total, 'Starting download...', loadedBytes, TOTAL_CACHE_SIZE_BYTES);
+  
+  // Create batches of files to process in parallel
+  const BATCH_SIZE = 10; // Process 10 files at a time
+  const batches = [];
+  
+  // Split files into batches
+  for (let i = 0; i < ASSETS_TO_CACHE.length; i += BATCH_SIZE) {
+    batches.push(ASSETS_TO_CACHE.slice(i, i + BATCH_SIZE));
+  }
+  
+  // Process each batch in sequence (but files within batch in parallel)
+  for (const batch of batches) {
     try {
-      // Get file size (or 0 if not available)
-      const fileSize = FILE_SIZES[url] || 0;
-      
-      // Send progress update before starting the fetch
-      sendProgressUpdate(completed, total, url, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
-      
-      // Fetch and cache the file
-      const response = await fetch(url);
-      if (response.ok) {
-        await cache.put(url, response);
-        completed++;
-        loadedBytes += fileSize;
+      // Process all files in this batch in parallel
+      await Promise.all(batch.map(async (url) => {
+        try {
+          // Get file size (or 0 if not available)
+          const fileSize = FILE_SIZES[url] || 0;
+          
+          // Handle empty URL (root path) specially
+          const fetchUrl = url === '' ? './' : url;
+          
+          // Fetch and cache the file with proper request
+          const request = new Request(fetchUrl, { method: 'GET' });
+          const response = await fetch(request);
+          
+          if (response.ok) {
+            await cache.put(url, response.clone());
+            loadedBytes += fileSize;
+          } else {
+            console.warn(`Failed to cache ${url}: ${response.status} ${response.statusText}`);
+          }
+        } catch (error) {
+          console.error(`Error caching ${url}:`, error);
+        }
         
-        // Send progress update after successful caching
-        sendProgressUpdate(completed, total, url, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
-      } else {
-        console.warn(`Failed to cache ${url}: ${response.status} ${response.statusText}`);
-        // Still increment completed to keep progress moving
+        // Increment completed count and send progress update
         completed++;
-        sendProgressUpdate(completed, total, `Failed: ${url}`, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
-      }
+        
+        // Only send progress updates periodically to reduce UI updates
+        if (completed % 5 === 0 || completed === total) {
+          sendProgressUpdate(completed, total, null, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
+        }
+      }));
     } catch (error) {
-      console.error(`Error caching ${url}:`, error);
-      // Still increment completed to keep progress moving
-      completed++;
-      sendProgressUpdate(completed, total, `Error: ${url}`, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
+      console.error('Error processing batch:', error);
     }
   }
   
+  // Final progress update
+  sendProgressUpdate(completed, total, 'Download complete!', loadedBytes, TOTAL_CACHE_SIZE_BYTES);
   return completed;
 }
 
@@ -555,8 +562,14 @@ self.addEventListener('activate', event => {
 
 // Fetch event - serve from cache, fall back to network
 self.addEventListener('fetch', event => {
+  // Get the requested URL
+  const requestUrl = new URL(event.request.url);
+  
+  // Handle root path specially
+  const cacheKey = requestUrl.pathname === '/' ? '' : requestUrl.pathname;
+  
   event.respondWith(
-    caches.match(event.request)
+    caches.match(cacheKey)
       .then(response => {
         if (response) {
           return response;
