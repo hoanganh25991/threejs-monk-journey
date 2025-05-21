@@ -170,7 +170,10 @@ export class WorldManager {
                 this.cleanupDistantStructures(playerChunkX, playerChunkZ);
                 
                 // Clean up environment objects
-                this.environmentManager.cleanupDistantObjects(playerPosition);
+                // Use the existing updateForPlayer method which handles cleanup internally
+                if (this.environmentManager) {
+                    this.environmentManager.updateForPlayer(playerPosition, this.drawDistanceMultiplier);
+                }
                 
                 // Clean up enemies
                 if (this.game && this.game.enemyManager) {
