@@ -120,6 +120,11 @@ export class PlayerSkills extends IPlayerSkills {
         // Reset skills array
         this.skills = [];
         
+        // Load skill tree data from localStorage if not already loaded
+        if (!this.skillTreeData) {
+            this.loadSkillTreeData();
+        }
+        
         // Process each skill ID
         skillIds.forEach(skillIdObj => {
             const { id } = skillIdObj;
@@ -129,7 +134,27 @@ export class PlayerSkills extends IPlayerSkills {
 
             // If skill config is found, create a new skill instance
             if (skillConfig) {
-                this.skills.push(new Skill(skillConfig));
+                // Create a deep copy of the skill config to avoid modifying the original
+                const skillConfigCopy = JSON.parse(JSON.stringify(skillConfig));
+                
+                // Apply variant and buffs from skill tree data if available
+                if (this.skillTreeData && this.skillTreeData[id]) {
+                    const skillTreeEntry = this.skillTreeData[id];
+                    
+                    // Apply variant if one is selected
+                    if (skillTreeEntry.activeVariant) {
+                        console.debug(`Applying variant ${skillTreeEntry.activeVariant} to skill ${id} during initialization`);
+                        skillConfigCopy.variant = skillTreeEntry.activeVariant;
+                    }
+                    
+                    // Apply buffs if any are selected
+                    if (skillTreeEntry.buffs && Object.keys(skillTreeEntry.buffs).length > 0) {
+                        console.debug(`Applying buffs to skill ${id} during initialization:`, skillTreeEntry.buffs);
+                        skillConfigCopy.buffs = skillTreeEntry.buffs;
+                    }
+                }
+                
+                this.skills.push(new Skill(skillConfigCopy));
             } else {
                 console.error(`Skill configuration not found for ID: ${id}`);
             }

@@ -24,6 +24,13 @@ import { ShockingPalmEffect } from './variants/ShockingPalmEffect.js';
 import { InfusedWithLightEffect } from './variants/InfusedWithLightEffect.js';
 import { MysticWindsEffect } from './variants/MysticWindsEffect.js';
 
+// Import Flying Kick variant effects
+import { BlazingKickEffect } from './variants/BlazingKickEffect.js';
+import { CycloneKickEffect } from './variants/CycloneKickEffect.js';
+import { ThunderousKickEffect } from './variants/ThunderousKickEffect.js';
+import { ShadowKickEffect } from './variants/ShadowKickEffect.js';
+import { GaleKickEffect } from './variants/GaleKickEffect.js';
+
 /**
  * Factory class for creating skill effects
  */
@@ -65,23 +72,23 @@ export class SkillEffectFactory {
      * @returns {SkillEffect} - The created skill effect
      */
     static createEffect(skill) {
-        console.debug(`SkillEffectFactory.createEffect called for skill: ${skill.name}, type: ${skill.type}, variant: ${skill.variantName || 'none'}`);
+        console.debug(`SkillEffectFactory.createEffect called for skill: ${skill.name}, type: ${skill.type}, variant: ${skill.variant || 'none'}`);
         
         let effect;
         
         // First check if there's a variant-specific effect class
-        if (skill.variantName) {
+        if (skill.variant) {
             // Try to create a variant-specific effect
             effect = this.createVariantEffect(skill);
             
             // If a variant-specific effect was created, return it
             if (effect) {
-                console.debug(`Created variant-specific effect for ${skill.name} (${skill.variantName})`);
+                console.debug(`Created variant-specific effect for ${skill.name} (${skill.variant})`);
                 return effect;
             }
             
             // Otherwise, fall back to the base effect
-            console.debug(`No variant-specific effect found for ${skill.name} (${skill.variantName}), using base effect`);
+            console.debug(`No variant-specific effect found for ${skill.name} (${skill.variant}), using base effect`);
         }
         
         // Create the base effect for the skill
@@ -158,27 +165,21 @@ export class SkillEffectFactory {
      * @returns {SkillEffect|null} - The created effect, or null if no variant-specific effect exists
      */
     static createVariantEffect(skill) {
-        // This method will be expanded as variant-specific effects are implemented
-        // For now, it handles a few example variants
-        
         const skillName = skill.name;
-        const variantName = skill.variantName;
+        const variantName = skill.variant;
         
         if (!skillName || !variantName) return null;
+        
+        console.debug(`Creating variant effect for ${skillName} (${variantName})`);
         
         // Handle Breath of Heaven variants
         if (skillName === 'Breath of Heaven') {
             switch (variantName) {
                 case 'Circle of Life':
-                    // Use dedicated effect class with custom visuals
                     return new CircleOfLifeEffect(skill);
                     
                 case 'Infused with Light':
-                    // Add damage boost effect to allies
-                    const infusedEffect = new BreathOfHeavenEffect(skill);
-                    infusedEffect.damageBoost = true;
-                    infusedEffect.damageBoostMultiplier = 1.2; // 20% damage boost
-                    return infusedEffect;
+                    return new InfusedWithLightEffect(skill);
                     
                 case 'Radiant Breath':
                     // Add blinding effect to enemies
@@ -207,15 +208,10 @@ export class SkillEffectFactory {
         else if (skillName === 'Cyclone Strike') {
             switch (variantName) {
                 case 'Frigid Cyclone':
-                    // Use dedicated effect class with custom visuals
                     return new FrigidCycloneEffect(skill);
                     
                 case 'Mystic Winds':
-                    // Add continuous damage over time
-                    const mysticEffect = new CycloneStrikeEffect(skill);
-                    mysticEffect.continuousDamage = true;
-                    mysticEffect.damageTickRate = 0.5; // Damage every 0.5 seconds
-                    return mysticEffect;
+                    return new MysticWindsEffect(skill);
                     
                 case 'Sandstorm':
                     // Add vision reduction effect
@@ -259,12 +255,7 @@ export class SkillEffectFactory {
                     return bleedingEffect;
                     
                 case 'Shocking Palm':
-                    // Add chain lightning effect
-                    const shockingEffect = new ExplodingPalmEffect(skill);
-                    shockingEffect.chainLightning = true;
-                    shockingEffect.chainCount = 3; // Chain to 3 additional enemies
-                    shockingEffect.chainDamageMultiplier = 0.7; // 70% damage for each chain
-                    return shockingEffect;
+                    return new ShockingPalmEffect(skill);
                     
                 case 'Concussive Palm':
                     // Add stun effect
@@ -274,7 +265,6 @@ export class SkillEffectFactory {
                     return concussiveEffect;
                     
                 case 'Fiery Palm':
-                    // Use dedicated effect class with custom visuals
                     return new FieryPalmEffect(skill);
                     
                 case 'Icy Palm':
@@ -291,7 +281,6 @@ export class SkillEffectFactory {
         else if (skillName === 'Flying Dragon') {
             switch (variantName) {
                 case 'Dragon\'s Flight':
-                    // Use dedicated effect class with custom visuals
                     return new DragonFlightEffect(skill);
                     
                 case 'Inferno Dragon':
@@ -318,7 +307,6 @@ export class SkillEffectFactory {
                     return galeEffect;
                     
                 case 'Shadow Dragon':
-                    // Use dedicated effect class with custom visuals
                     return new ShadowDragonEffect(skill);
             }
         }
@@ -327,20 +315,29 @@ export class SkillEffectFactory {
         else if (skillName === 'Flying Kick') {
             switch (variantName) {
                 case 'Blazing Kick':
-                    // Add fire trail
-                    const blazingEffect = new FlyingKickEffect(skill);
-                    blazingEffect.fireTrail = true;
-                    blazingEffect.trailDuration = 3; // 3 seconds trail duration
-                    blazingEffect.trailDamage = skill.damage * 0.1; // 10% of base damage per tick
-                    return blazingEffect;
+                    // Adds fire damage to the kick, leaving a trail of flames
+                    return new BlazingKickEffect(skill);
                     
-                // Add more Flying Kick variants here
+                case 'Cyclone Kick':
+                    // Creates a whirlwind effect that pulls in nearby enemies
+                    return new CycloneKickEffect(skill);
+                    
+                case 'Thunderous Kick':
+                    // Each kick releases a thunderclap that stuns enemies
+                    return new ThunderousKickEffect(skill);
+                    
+                case 'Shadow Kick':
+                    // Leaves a shadow clone that continues to attack enemies
+                    return new ShadowKickEffect(skill);
+                    
+                case 'Gale Kick':
+                    // Increases the speed and distance of the kick
+                    return new GaleKickEffect(skill);
             }
         }
         
-        // Add more skills and their variants here
-        
         // No variant-specific effect found
+        console.debug(`No variant-specific effect found for ${skillName} (${variantName})`);
         return null;
     }
 }

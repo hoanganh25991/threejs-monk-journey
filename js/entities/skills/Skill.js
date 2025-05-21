@@ -22,10 +22,7 @@ export class Skill {
         this.color = config.color || 0xffffff;
         this.hits = config.hits || 1;
         this.icon = config.icon || '🤛';
-        
-        // Add variant information
-        this.variant = config.variant || null;
-        this.variantName = config.variantName || null;
+        this.variant = config.variant || '';
 
         for (const key in config) {
             if (Object.prototype.hasOwnProperty.call(config, key)) {
