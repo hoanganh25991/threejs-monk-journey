@@ -50,6 +50,24 @@ import { ThunderousKickEffect } from './variants/FlyingKick/ThunderousKickEffect
 import { ShadowKickEffect } from './variants/FlyingKick/ShadowKickEffect.js';
 import { GaleKickEffect } from './variants/FlyingKick/GaleKickEffect.js';
 
+// Import Inner Sanctuary variant effects
+import { CircleOfWrathEffect } from './variants/InnerSanctuary/CircleOfWrathEffect.js';
+import { SanctifiedGroundEffect } from './variants/InnerSanctuary/SanctifiedGroundEffect.js';
+import { SafeHavenEffect } from './variants/InnerSanctuary/SafeHavenEffect.js';
+import { TempleOfProtectionEffect } from './variants/InnerSanctuary/TempleOfProtectionEffect.js';
+import { ForbiddenPalaceEffect } from './variants/InnerSanctuary/ForbiddenPalaceEffect.js';
+
+// Import Mystic Allies variant effects
+import { FireAlliesEffect } from './variants/MysticAllies/FireAlliesEffect.js';
+import { WaterAlliesEffect } from './variants/MysticAllies/WaterAlliesEffect.js';
+
+// Import Imprisoned Fists variant effects
+import { ThunderousGripEffect } from './variants/ImprisonedFists/ThunderousGripEffect.js';
+import { FrozenShacklesEffect } from './variants/ImprisonedFists/FrozenShacklesEffect.js';
+import { ShadowBindEffect } from './variants/ImprisonedFists/ShadowBindEffect.js';
+import { GaleChainsEffect } from './variants/ImprisonedFists/GaleChainsEffect.js';
+import { FieryChainsEffect } from './variants/ImprisonedFists/FieryChainsEffect.js';
+
 /**
  * Factory class for creating skill effects
  */
@@ -296,6 +314,69 @@ export class SkillEffectFactory {
                 case 'Gale Kick':
                     // Increases the speed and distance of the kick
                     return new GaleKickEffect(skill);
+            }
+        }
+        
+        // Handle Inner Sanctuary variants
+        else if (skillName === 'Inner Sanctuary') {
+            switch (variantName) {
+                case 'Circle of Wrath':
+                    // Creates a damaging field that harms enemies who enter
+                    return new CircleOfWrathEffect(skill);
+                    
+                case 'Sanctified Ground':
+                    // Increases healing for allies standing within the sanctuary
+                    return new SanctifiedGroundEffect(skill);
+                    
+                case 'Safe Haven':
+                    // Provides additional damage reduction for allies
+                    return new SafeHavenEffect(skill);
+                    
+                case 'Temple of Protection':
+                    // Creates a barrier that blocks projectiles
+                    return new TempleOfProtectionEffect(skill);
+                    
+                case 'Forbidden Palace':
+                    // Reduces enemy attack speed and movement within the sanctuary
+                    return new ForbiddenPalaceEffect(skill);
+            }
+        }
+        
+        // Handle Mystic Allies variants
+        else if (skillName === 'Mystic Allies') {
+            switch (variantName) {
+                case 'Fire Allies':
+                    // Summons allies that deal fire damage and burn enemies
+                    return new FireAlliesEffect(skill);
+                    
+                case 'Water Allies':
+                    // Summons allies that deal water damage and slow enemies
+                    return new WaterAlliesEffect(skill);
+            }
+        }
+        
+        // Handle Imprisoned Fists variants
+        else if (skillName === 'Imprisoned Fists') {
+            switch (variantName) {
+                case 'Thunderous Grip':
+                    // Adds lightning damage that chains between enemies
+                    return new ThunderousGripEffect(skill);
+                    
+                case 'Frozen Shackles':
+                    // Freezes enemies in place for a short duration
+                    return new FrozenShacklesEffect(skill);
+                    
+                case 'Shadow Bind':
+                    // Creates shadow tendrils that hold enemies in place
+                    return new ShadowBindEffect(skill);
+                    
+                case 'Gale Chains':
+                    // Creates wind chains that pull enemies together
+                    return new GaleChainsEffect(skill);
+                    
+                case 'Fiery Chains':
+                    // Creates burning chains that deal damage over time
+                    return new FieryChainsEffect(skill);
             }
         }
         
