@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FlyingDragonEffect } from '../FlyingDragonEffect.js';
+import { FlyingDragonEffect } from '../../FlyingDragonEffect.js';
 
 /**
  * Effect for the Dragon's Flight variant of Flying Dragon

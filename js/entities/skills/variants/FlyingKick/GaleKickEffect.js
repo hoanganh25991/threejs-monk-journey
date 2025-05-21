@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FlyingKickEffect } from '../FlyingKickEffect.js';
+import { FlyingKickEffect } from '../../FlyingKickEffect.js';
 
 /**
  * Effect for the Gale Kick variant of Flying Kick

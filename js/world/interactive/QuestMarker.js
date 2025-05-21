@@ -266,6 +266,6 @@ export class QuestMarker {
      */
     playInteractionEffect() {
         // This could be expanded with particle effects, sound, etc.
-        console.log(`Quest marker "${this.questName}" clicked!`);
+        console.debug(`Quest marker "${this.questName}" clicked!`);
     }
 }

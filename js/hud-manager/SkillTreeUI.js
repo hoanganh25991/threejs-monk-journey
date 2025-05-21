@@ -704,7 +704,7 @@ ${iconData.emoji}
     }
     
     // Save the configuration to localStorage
-    console.log("Saving skill tree configuration:", this.playerSkills);
+    console.debug("Saving skill tree configuration:", this.playerSkills);
     
     try {
       localStorage.setItem(STORAGE_KEYS.SKILL_TREE_DATA, JSON.stringify(this.playerSkills));
@@ -722,7 +722,7 @@ ${iconData.emoji}
     if (this.game && this.game.player) {
       // Reload the player skills to apply the new variants
       this.game.player.loadSkillTreeData();
-      console.log("Player skills updated with new variants");
+      console.debug("Player skills updated with new variants");
     }
     
     // Show success message

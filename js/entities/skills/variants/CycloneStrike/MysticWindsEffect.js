@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CycloneStrikeEffect } from '../CycloneStrikeEffect.js';
+import { CycloneStrikeEffect } from '../../CycloneStrikeEffect.js';
 
 /**
  * Effect for the Mystic Winds variant of Cyclone Strike

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BreathOfHeavenEffect } from '../BreathOfHeavenEffect.js';
+import { BreathOfHeavenEffect } from '../../BreathOfHeavenEffect.js';
 
 /**
  * Effect for the Circle of Life variant of Breath of Heaven

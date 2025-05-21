@@ -22,7 +22,7 @@ export function debugLog(message, level = 'debug') {
     if (isDebugMode()) {
         switch (level) {
             case 'log':
-                console.log('[DEBUG]', message);
+                console.debug('[DEBUG]', message);
                 break;
             case 'info':
                 console.info('[DEBUG]', message);

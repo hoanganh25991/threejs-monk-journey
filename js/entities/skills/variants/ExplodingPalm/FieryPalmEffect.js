@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ExplodingPalmEffect } from '../ExplodingPalmEffect.js';
+import { ExplodingPalmEffect } from '../../ExplodingPalmEffect.js';
 
 /**
  * Effect for the Fiery Palm variant of Exploding Palm
