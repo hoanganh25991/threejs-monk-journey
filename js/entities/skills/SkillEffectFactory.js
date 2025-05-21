@@ -380,6 +380,106 @@ export class SkillEffectFactory {
             }
         }
         
+        // Handle Wave Strike variants
+        else if (skillName === 'Wave Strike') {
+            switch (variantName) {
+                case 'Tidal Force':
+                    // The wave travels further and deals increased damage to enemies at the end of its path
+                    return new TidalForceEffect(skill);
+                    
+                case 'Shocking Wave':
+                    // Enemies hit by the wave are electrified, taking additional lightning damage over time
+                    return new ShockingWaveEffect(skill);
+                    
+                case 'Freezing Wave':
+                    // The wave chills enemies, reducing their movement speed for a short duration
+                    return new FreezingWaveEffect(skill);
+                    
+                case 'Explosive Wave':
+                    // The wave explodes on impact, dealing area damage to nearby enemies
+                    return new ExplosiveWaveEffect(skill);
+                    
+                case 'Healing Surge':
+                    // Allies hit by the wave are healed for a portion of the damage dealt
+                    return new HealingSurgeEffect(skill);
+            }
+        }
+        
+        // Handle Seven-Sided Strike variants
+        else if (skillName === 'Seven-Sided Strike') {
+            switch (variantName) {
+                case 'Blazing Fists':
+                    // Each strike ignites enemies, dealing fire damage over time
+                    return new BlazingFistsEffect(skill);
+                    
+                case 'Frozen Assault':
+                    // Each strike has a chance to freeze enemies
+                    return new FrozenAssaultEffect(skill);
+                    
+                case 'Thunderclap':
+                    // Each strike releases a shockwave, dealing area damage
+                    return new ThunderclapEffect(skill);
+                    
+                case 'Phantom Echo':
+                    // Creates an echo that repeats the strikes after a delay
+                    return new PhantomEchoEffect(skill);
+                    
+                case 'Celestial Impact':
+                    // Increases the number of strikes and damage
+                    return new CelestialImpactEffect(skill);
+            }
+        }
+        
+        // Handle Shield of Zen variants
+        else if (skillName === 'Shield of Zen') {
+            switch (variantName) {
+                case 'Radiant Barrier':
+                    // The shield emits a healing aura, restoring health to nearby allies
+                    return new RadiantBarrierEffect(skill);
+                    
+                case 'Reflective Shield':
+                    // Reflects a portion of absorbed damage back to attackers
+                    return new ReflectiveShieldEffect(skill);
+                    
+                case 'Fortified Wall':
+                    // Increases the shield's absorption capacity and duration
+                    return new FortifiedWallEffect(skill);
+                    
+                case 'Mystic Veil':
+                    // Grants invisibility to the Monk while the shield is active
+                    return new MysticVeilEffect(skill);
+                    
+                case 'Zen\'s Retribution':
+                    // Upon expiration, the shield explodes, dealing damage to nearby enemies
+                    return new ZensRetributionEffect(skill);
+            }
+        }
+        
+        // Handle Wave of Light variants
+        else if (skillName === 'Wave of Light') {
+            switch (variantName) {
+                case 'Crashing Wave':
+                    // The wave travels further and deals increased damage to distant enemies
+                    return new CrashingWaveEffect(skill);
+                    
+                case 'Blinding Light':
+                    // Enemies hit by the wave are blinded for a short duration
+                    return new BlindingLightEffect(skill);
+                    
+                case 'Molten Wave':
+                    // The wave leaves a trail of fire, burning enemies over time
+                    return new MoltenWaveEffect(skill);
+                    
+                case 'Thunderous Wave':
+                    // The wave emits a thunderous sound, stunning enemies briefly
+                    return new ThunderousWaveEffect(skill);
+                    
+                case 'Healing Wave':
+                    // Allies hit by the wave are healed for a portion of the damage dealt
+                    return new HealingWaveEffect(skill);
+            }
+        }
+        
         // No variant-specific effect found
         console.debug(`No variant-specific effect found for ${skillName} (${variantName})`);
         return null;
