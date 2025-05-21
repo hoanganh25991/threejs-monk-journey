@@ -1,7 +1,7 @@
 import { UIComponent } from '../UIComponent.js';
 import { getSkillIcon } from '../config/skill-icons.js';
-import { PRIMARY_ATTACKS, NORMAL_SKILLS, SKILLS } from '../../config/skills.js';
-import { STORAGE_KEYS } from '../../config/storage-keys.js';
+import { PRIMARY_ATTACKS, NORMAL_SKILLS, SKILLS } from '../config/skills.js';
+import { STORAGE_KEYS } from '../config/storage-keys.js';
 
 /**
  * SkillSelectionUI component

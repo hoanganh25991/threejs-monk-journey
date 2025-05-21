@@ -1,9 +1,9 @@
 import { UIComponent } from "../UIComponent.js";
-import { SKILLS } from "../../config/skills.js";
-import { getSkillIcon, getBuffIcon } from "../../config/skill-icons.js";
-import { SKILL_TREES } from "../../config/skill-tree.js";
-import { applyBuffsToVariants } from "../../utils/SkillTreeUtils.js";
-import { STORAGE_KEYS } from "../../config/storage-keys.js";
+import { SKILLS } from "../config/skills.js";
+import { getSkillIcon, getBuffIcon } from "../config/skill-icons.js";
+import { SKILL_TREES } from "../config/skill-tree.js";
+import { applyBuffsToVariants } from "../utils/SkillTreeUtils.js";
+import { STORAGE_KEYS } from "../config/storage-keys.js";
 
 /**
  * Skill Tree UI component

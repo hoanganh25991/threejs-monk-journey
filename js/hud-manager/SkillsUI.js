@@ -1,5 +1,5 @@
 import { UIComponent } from '../UIComponent.js';
-import { getSkillIcon } from '../../config/skill-icons.js';
+import { getSkillIcon } from '../config/skill-icons.js';
 /**
  * Skills UI component
  * Displays player skills and cooldowns
