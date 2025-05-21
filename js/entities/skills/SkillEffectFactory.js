@@ -81,11 +81,10 @@ import { PandemoniumEffect } from './variants/SevenSidedStrike/PandemoniumEffect
 import { InnerPeaceEffect } from './variants/SevenSidedStrike/InnerPeaceEffect.js';
 
 // Import Shield of Zen variant effects
-import { RadiantBarrierEffect } from './variants/ShieldOfZen/RadiantBarrierEffect.js';
-import { ReflectiveShieldEffect } from './variants/ShieldOfZen/ReflectiveShieldEffect.js';
-import { FortifiedWallEffect } from './variants/ShieldOfZen/FortifiedWallEffect.js';
-import { MysticVeilEffect } from './variants/ShieldOfZen/MysticVeilEffect.js';
-import { ZensRetributionEffect } from './variants/ShieldOfZen/ZensRetributionEffect.js';
+import { TranscendenceEffect } from './variants/ShieldOfZen/TranscendenceEffect.js';
+import { RetributionAuraEffect } from './variants/ShieldOfZen/RetributionAuraEffect.js';
+import { SpiritualProtectionEffect } from './variants/ShieldOfZen/SpiritualProtectionEffect.js';
+import { DiamondAuraEffect } from './variants/ShieldOfZen/DiamondAuraEffect.js';
 
 // Import Wave of Light variant effects
 import { ExplosiveLightEffect } from './variants/WaveOfLight/ExplosiveLightEffect.js';
@@ -408,15 +407,15 @@ export class SkillEffectFactory {
         // Handle Wave Strike variants
         else if (skillName === 'Wave Strike') {
             switch (variantName) {
-                case 'Tidal Wave':
+                case 'Tidal Force':
                     // The wave travels further and deals increased damage to enemies at the end of its path
                     return new TidalWaveEffect(skill);
                     
-                case 'Thunder Wave':
+                case 'Shocking Wave':
                     // Enemies hit by the wave are electrified, taking additional lightning damage over time
                     return new ThunderWaveEffect(skill);
                     
-                case 'Frozen Wave':
+                case 'Freezing Wave':
                     // The wave chills enemies, reducing their movement speed for a short duration
                     return new FrozenWaveEffect(skill);
             }
@@ -450,25 +449,21 @@ export class SkillEffectFactory {
         // Handle Shield of Zen variants
         else if (skillName === 'Shield of Zen') {
             switch (variantName) {
-                case 'Radiant Barrier':
-                    // The shield emits a healing aura, restoring health to nearby allies
-                    return new RadiantBarrierEffect(skill);
+                case 'Transcendence':
+                    // Elevates the monk's spiritual state, providing enhanced protection
+                    return new TranscendenceEffect(skill);
                     
-                case 'Reflective Shield':
-                    // Reflects a portion of absorbed damage back to attackers
-                    return new ReflectiveShieldEffect(skill);
+                case 'Retribution Aura':
+                    // Creates an aura that damages enemies who attack the monk
+                    return new RetributionAuraEffect(skill);
                     
-                case 'Fortified Wall':
-                    // Increases the shield's absorption capacity and duration
-                    return new FortifiedWallEffect(skill);
+                case 'Spiritual Protection':
+                    // Provides protection against spiritual and magical attacks
+                    return new SpiritualProtectionEffect(skill);
                     
-                case 'Mystic Veil':
-                    // Grants invisibility to the Monk while the shield is active
-                    return new MysticVeilEffect(skill);
-                    
-                case 'Zen\'s Retribution':
-                    // Upon expiration, the shield explodes, dealing damage to nearby enemies
-                    return new ZensRetributionEffect(skill);
+                case 'Diamond Aura':
+                    // Creates a diamond-hard aura that significantly reduces physical damage
+                    return new DiamondAuraEffect(skill);
             }
         }
         
