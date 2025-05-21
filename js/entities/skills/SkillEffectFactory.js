@@ -427,25 +427,27 @@ export class SkillEffectFactory {
         // Handle Seven-Sided Strike variants
         else if (skillName === 'Seven-Sided Strike') {
             switch (variantName) {
-                case 'Shadow Assault':
-                    // Creates shadow clones that perform additional strikes
-                    return new ShadowAssaultEffect(skill);
+                case 'Blazing Fists':
+                    // Each strike ignites enemies, dealing fire damage over time
+                    return new ShadowAssaultEffect(skill); // Temporarily using existing effect
                     
-                case 'Sustained Assault':
-                    // Extends the duration of the attack with additional strikes
-                    return new SustainedAssaultEffect(skill);
+                case 'Frozen Assault':
+                    // Each strike has a chance to freeze enemies
+                    return new SustainedAssaultEffect(skill); // Temporarily using existing effect
                     
-                case 'Fist of Fury':
-                    // Increases the power of each strike
-                    return new FistOfFuryEffect(skill);
+                case 'Thunderclap':
+                    // Each strike releases a thunderclap that stuns enemies
+                    return new FistOfFuryEffect(skill); // Temporarily using existing effect
                     
-                case 'Pandemonium':
-                    // Strikes are chaotic and hit random targets in a larger area
-                    return new PandemoniumEffect(skill);
+                case 'Phantom Echo':
+                    // Creates an echo that repeats the strikes after a delay
+                    return new PandemoniumEffect(skill); // Temporarily using existing effect
                     
-                case 'Inner Peace':
-                    // Monk gains temporary invulnerability during the attack
-                    return new InnerPeaceEffect(skill);
+                case 'Celestial Impact':
+                    // Increases the number of strikes and damage
+                    return new InnerPeaceEffect(skill); // Temporarily using existing effect
+                    
+                // TODO: Implement proper effect classes for these variants
             }
         }
         
