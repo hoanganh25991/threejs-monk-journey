@@ -4,7 +4,7 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '20';
+const CACHE_VERSION = '21';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Set this to true to force update without prompting the user
