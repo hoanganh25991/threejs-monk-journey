@@ -69,18 +69,16 @@ import { GaleChainsEffect } from './variants/ImprisonedFists/GaleChainsEffect.js
 import { FieryChainsEffect } from './variants/ImprisonedFists/FieryChainsEffect.js';
 
 // Import Wave Strike variant effects
-import { TidalForceEffect } from './variants/WaveStrike/TidalForceEffect.js';
-import { ShockingWaveEffect } from './variants/WaveStrike/ShockingWaveEffect.js';
-import { FreezingWaveEffect } from './variants/WaveStrike/FreezingWaveEffect.js';
-import { ExplosiveWaveEffect } from './variants/WaveStrike/ExplosiveWaveEffect.js';
-import { HealingSurgeEffect } from './variants/WaveStrike/HealingSurgeEffect.js';
+import { TidalWaveEffect } from './variants/WaveStrike/TidalWaveEffect.js';
+import { ThunderWaveEffect } from './variants/WaveStrike/ThunderWaveEffect.js';
+import { FrozenWaveEffect } from './variants/WaveStrike/FrozenWaveEffect.js';
 
 // Import Seven-Sided Strike variant effects
-import { BlazingFistsEffect } from './variants/SevenSidedStrike/BlazingFistsEffect.js';
-import { FrozenAssaultEffect } from './variants/SevenSidedStrike/FrozenAssaultEffect.js';
-import { ThunderclapEffect } from './variants/SevenSidedStrike/ThunderclapEffect.js';
-import { PhantomEchoEffect } from './variants/SevenSidedStrike/PhantomEchoEffect.js';
-import { CelestialImpactEffect } from './variants/SevenSidedStrike/CelestialImpactEffect.js';
+import { ShadowAssaultEffect } from './variants/SevenSidedStrike/ShadowAssaultEffect.js';
+import { SustainedAssaultEffect } from './variants/SevenSidedStrike/SustainedAssaultEffect.js';
+import { FistOfFuryEffect } from './variants/SevenSidedStrike/FistOfFuryEffect.js';
+import { PandemoniumEffect } from './variants/SevenSidedStrike/PandemoniumEffect.js';
+import { InnerPeaceEffect } from './variants/SevenSidedStrike/InnerPeaceEffect.js';
 
 // Import Shield of Zen variant effects
 import { RadiantBarrierEffect } from './variants/ShieldOfZen/RadiantBarrierEffect.js';
@@ -90,11 +88,10 @@ import { MysticVeilEffect } from './variants/ShieldOfZen/MysticVeilEffect.js';
 import { ZensRetributionEffect } from './variants/ShieldOfZen/ZensRetributionEffect.js';
 
 // Import Wave of Light variant effects
-import { CrashingWaveEffect } from './variants/WaveOfLight/CrashingWaveEffect.js';
-import { BlindingLightEffect } from './variants/WaveOfLight/BlindingLightEffect.js';
-import { MoltenWaveEffect } from './variants/WaveOfLight/MoltenWaveEffect.js';
-import { ThunderousWaveEffect } from './variants/WaveOfLight/ThunderousWaveEffect.js';
-import { HealingWaveEffect } from './variants/WaveOfLight/HealingWaveEffect.js';
+import { ExplosiveLightEffect } from './variants/WaveOfLight/ExplosiveLightEffect.js';
+import { LightningBellEffect } from './variants/WaveOfLight/LightningBellEffect.js';
+import { PillarOfTheLightEffect } from './variants/WaveOfLight/PillarOfTheLightEffect.js';
+import { WallOfLightEffect } from './variants/WaveOfLight/WallOfLightEffect.js';
 
 /**
  * Factory class for creating skill effects
@@ -411,50 +408,42 @@ export class SkillEffectFactory {
         // Handle Wave Strike variants
         else if (skillName === 'Wave Strike') {
             switch (variantName) {
-                case 'Tidal Force':
+                case 'Tidal Wave':
                     // The wave travels further and deals increased damage to enemies at the end of its path
-                    return new TidalForceEffect(skill);
+                    return new TidalWaveEffect(skill);
                     
-                case 'Shocking Wave':
+                case 'Thunder Wave':
                     // Enemies hit by the wave are electrified, taking additional lightning damage over time
-                    return new ShockingWaveEffect(skill);
+                    return new ThunderWaveEffect(skill);
                     
-                case 'Freezing Wave':
+                case 'Frozen Wave':
                     // The wave chills enemies, reducing their movement speed for a short duration
-                    return new FreezingWaveEffect(skill);
-                    
-                case 'Explosive Wave':
-                    // The wave explodes on impact, dealing area damage to nearby enemies
-                    return new ExplosiveWaveEffect(skill);
-                    
-                case 'Healing Surge':
-                    // Allies hit by the wave are healed for a portion of the damage dealt
-                    return new HealingSurgeEffect(skill);
+                    return new FrozenWaveEffect(skill);
             }
         }
         
         // Handle Seven-Sided Strike variants
         else if (skillName === 'Seven-Sided Strike') {
             switch (variantName) {
-                case 'Blazing Fists':
-                    // Each strike ignites enemies, dealing fire damage over time
-                    return new BlazingFistsEffect(skill);
+                case 'Shadow Assault':
+                    // Creates shadow clones that perform additional strikes
+                    return new ShadowAssaultEffect(skill);
                     
-                case 'Frozen Assault':
-                    // Each strike has a chance to freeze enemies
-                    return new FrozenAssaultEffect(skill);
+                case 'Sustained Assault':
+                    // Extends the duration of the attack with additional strikes
+                    return new SustainedAssaultEffect(skill);
                     
-                case 'Thunderclap':
-                    // Each strike releases a shockwave, dealing area damage
-                    return new ThunderclapEffect(skill);
+                case 'Fist of Fury':
+                    // Increases the power of each strike
+                    return new FistOfFuryEffect(skill);
                     
-                case 'Phantom Echo':
-                    // Creates an echo that repeats the strikes after a delay
-                    return new PhantomEchoEffect(skill);
+                case 'Pandemonium':
+                    // Strikes are chaotic and hit random targets in a larger area
+                    return new PandemoniumEffect(skill);
                     
-                case 'Celestial Impact':
-                    // Increases the number of strikes and damage
-                    return new CelestialImpactEffect(skill);
+                case 'Inner Peace':
+                    // Monk gains temporary invulnerability during the attack
+                    return new InnerPeaceEffect(skill);
             }
         }
         
@@ -486,25 +475,21 @@ export class SkillEffectFactory {
         // Handle Wave of Light variants
         else if (skillName === 'Wave of Light') {
             switch (variantName) {
-                case 'Crashing Wave':
-                    // The wave travels further and deals increased damage to distant enemies
-                    return new CrashingWaveEffect(skill);
+                case 'Explosive Light':
+                    // Creates an explosion of light that damages enemies in an area
+                    return new ExplosiveLightEffect(skill);
                     
-                case 'Blinding Light':
-                    // Enemies hit by the wave are blinded for a short duration
-                    return new BlindingLightEffect(skill);
+                case 'Lightning Bell':
+                    // Summons a bell that strikes with lightning
+                    return new LightningBellEffect(skill);
                     
-                case 'Molten Wave':
-                    // The wave leaves a trail of fire, burning enemies over time
-                    return new MoltenWaveEffect(skill);
+                case 'Pillar of the Light':
+                    // Creates a pillar of light that damages enemies over time
+                    return new PillarOfTheLightEffect(skill);
                     
-                case 'Thunderous Wave':
-                    // The wave emits a thunderous sound, stunning enemies briefly
-                    return new ThunderousWaveEffect(skill);
-                    
-                case 'Healing Wave':
-                    // Allies hit by the wave are healed for a portion of the damage dealt
-                    return new HealingWaveEffect(skill);
+                case 'Wall of Light':
+                    // Creates a wall of light that blocks and damages enemies
+                    return new WallOfLightEffect(skill);
             }
         }
         
