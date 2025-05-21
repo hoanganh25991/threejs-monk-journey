@@ -17,18 +17,31 @@ import { ImprisonedFistsEffect } from './ImprisonedFistsEffect.js';
 // Import Breath of Heaven variant effects
 import { CircleOfLifeEffect } from './variants/BreathOfHeaven/CircleOfLifeEffect.js';
 import { InfusedWithLightEffect } from './variants/BreathOfHeaven/InfusedWithLightEffect.js';
+import { RadiantBreathEffect } from './variants/BreathOfHeaven/RadiantBreathEffect.js';
+import { SoothingMistEffect } from './variants/BreathOfHeaven/SoothingMistEffect.js';
+import { ZephyrsGraceEffect } from './variants/BreathOfHeaven/ZephyrsGraceEffect.js';
 
 // Import Cyclone Strike variant effects
 import { FrigidCycloneEffect } from './variants/CycloneStrike/FrigidCycloneEffect.js';
 import { MysticWindsEffect } from './variants/CycloneStrike/MysticWindsEffect.js';
+import { SandstormEffect } from './variants/CycloneStrike/SandstormEffect.js';
+import { TempestRushEffect } from './variants/CycloneStrike/TempestRushEffect.js';
+import { TornadoEffect } from './variants/CycloneStrike/TornadoEffect.js';
+import { VortexEffect } from './variants/CycloneStrike/VortexEffect.js';
 
 // Import Exploding Palm variant effects
 import { FieryPalmEffect } from './variants/ExplodingPalm/FieryPalmEffect.js';
 import { ShockingPalmEffect } from './variants/ExplodingPalm/ShockingPalmEffect.js';
+import { BleedingPalmEffect } from './variants/ExplodingPalm/BleedingPalmEffect.js';
+import { ConcussivePalmEffect } from './variants/ExplodingPalm/ConcussivePalmEffect.js';
+import { IcyPalmEffect } from './variants/ExplodingPalm/IcyPalmEffect.js';
 
 // Import Flying Dragon variant effects
 import { ShadowDragonEffect } from './variants/FlyingDragon/ShadowDragonEffect.js';
 import { DragonFlightEffect } from './variants/FlyingDragon/DragonFlightEffect.js';
+import { InfernoDragonEffect } from './variants/FlyingDragon/InfernoDragonEffect.js';
+import { ThunderDragonEffect } from './variants/FlyingDragon/ThunderDragonEffect.js';
+import { GaleDragonEffect } from './variants/FlyingDragon/GaleDragonEffect.js';
 
 // Import Flying Kick variant effects
 import { BlazingKickEffect } from './variants/FlyingKick/BlazingKickEffect.js';
@@ -188,25 +201,13 @@ export class SkillEffectFactory {
                     return new InfusedWithLightEffect(skill);
                     
                 case 'Radiant Breath':
-                    // Add blinding effect to enemies
-                    const radiantEffect = new BreathOfHeavenEffect(skill);
-                    radiantEffect.blindEffect = true;
-                    radiantEffect.blindDuration = 3; // 3 seconds of blindness
-                    return radiantEffect;
+                    return new RadiantBreathEffect(skill);
                     
                 case 'Soothing Mist':
-                    // Change to healing over time
-                    const soothingEffect = new BreathOfHeavenEffect(skill);
-                    soothingEffect.healOverTime = true;
-                    soothingEffect.healingTickRate = 0.5; // Heal every 0.5 seconds
-                    return soothingEffect;
+                    return new SoothingMistEffect(skill);
                     
                 case 'Zephyr\'s Grace':
-                    // Add movement speed boost
-                    const zephyrEffect = new BreathOfHeavenEffect(skill);
-                    zephyrEffect.speedBoost = true;
-                    zephyrEffect.speedBoostMultiplier = 1.3; // 30% speed boost
-                    return zephyrEffect;
+                    return new ZephyrsGraceEffect(skill);
             }
         }
         
@@ -220,32 +221,16 @@ export class SkillEffectFactory {
                     return new MysticWindsEffect(skill);
                     
                 case 'Sandstorm':
-                    // Add vision reduction effect
-                    const sandstormEffect = new CycloneStrikeEffect(skill);
-                    sandstormEffect.visionReduction = true;
-                    sandstormEffect.visionReductionDuration = 6; // 6 seconds of reduced vision
-                    return sandstormEffect;
+                    return new SandstormEffect(skill);
                     
                 case 'Tempest Rush':
-                    // Add knockback immunity
-                    const tempestEffect = new CycloneStrikeEffect(skill);
-                    tempestEffect.knockbackImmunity = true;
-                    return tempestEffect;
+                    return new TempestRushEffect(skill);
                     
                 case 'Tornado':
-                    // Add continuous damage over a longer duration
-                    const tornadoEffect = new CycloneStrikeEffect(skill);
-                    tornadoEffect.continuousDamage = true;
-                    tornadoEffect.damageTickRate = 1.0; // Damage every 1 second
-                    tornadoEffect.durationMultiplier = 1.5; // 50% longer duration
-                    return tornadoEffect;
+                    return new TornadoEffect(skill);
                     
                 case 'Vortex':
-                    // Add knockback effect
-                    const vortexEffect = new CycloneStrikeEffect(skill);
-                    vortexEffect.knockbackEffect = true;
-                    vortexEffect.knockbackForce = 5; // Knockback force
-                    return vortexEffect;
+                    return new VortexEffect(skill);
             }
         }
         
@@ -253,33 +238,19 @@ export class SkillEffectFactory {
         else if (skillName === 'Exploding Palm') {
             switch (variantName) {
                 case 'Bleeding Palm':
-                    // Add bleeding damage over time
-                    const bleedingEffect = new ExplodingPalmEffect(skill);
-                    bleedingEffect.bleedingEffect = true;
-                    bleedingEffect.bleedingDamage = skill.damage * 0.2; // 20% of base damage per tick
-                    bleedingEffect.bleedingTickRate = 0.5; // Bleed every 0.5 seconds
-                    return bleedingEffect;
+                    return new BleedingPalmEffect(skill);
                     
                 case 'Shocking Palm':
                     return new ShockingPalmEffect(skill);
                     
                 case 'Concussive Palm':
-                    // Add stun effect
-                    const concussiveEffect = new ExplodingPalmEffect(skill);
-                    concussiveEffect.stunEffect = true;
-                    concussiveEffect.stunDuration = 2; // 2 seconds stun
-                    return concussiveEffect;
+                    return new ConcussivePalmEffect(skill);
                     
                 case 'Fiery Palm':
                     return new FieryPalmEffect(skill);
                     
                 case 'Icy Palm':
-                    // Add slow effect
-                    const icyEffect = new ExplodingPalmEffect(skill);
-                    icyEffect.slowEffect = true;
-                    icyEffect.slowAmount = 0.5; // 50% slow
-                    icyEffect.slowDuration = 3; // 3 seconds slow
-                    return icyEffect;
+                    return new IcyPalmEffect(skill);
             }
         }
         
@@ -290,27 +261,13 @@ export class SkillEffectFactory {
                     return new DragonFlightEffect(skill);
                     
                 case 'Inferno Dragon':
-                    // Add fire damage over time
-                    const infernoEffect = new FlyingDragonEffect(skill);
-                    infernoEffect.fireDamage = true;
-                    infernoEffect.burnDuration = 3; // 3 seconds burn
-                    infernoEffect.burnDamage = skill.damage * 0.1; // 10% of base damage per tick
-                    return infernoEffect;
+                    return new InfernoDragonEffect(skill);
                     
                 case 'Thunder Dragon':
-                    // Add stun effect
-                    const thunderEffect = new FlyingDragonEffect(skill);
-                    thunderEffect.stunEffect = true;
-                    thunderEffect.stunDuration = 1.5; // 1.5 seconds stun
-                    thunderEffect.stunChance = 0.3; // 30% chance to stun per hit
-                    return thunderEffect;
+                    return new ThunderDragonEffect(skill);
                     
                 case 'Gale Dragon':
-                    // Add projectile deflection
-                    const galeEffect = new FlyingDragonEffect(skill);
-                    galeEffect.projectileDeflection = true;
-                    galeEffect.deflectionRadius = 3; // 3 unit radius for deflection
-                    return galeEffect;
+                    return new GaleDragonEffect(skill);
                     
                 case 'Shadow Dragon':
                     return new ShadowDragonEffect(skill);
