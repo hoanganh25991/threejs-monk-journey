@@ -33,6 +33,7 @@ export class TeleportManager {
         this.interactionRadius = 4; // Player must be within this distance to trigger teleport
         this.teleportCooldown = 3000; // 3 seconds cooldown between teleports
         this.lastTeleportTime = 0;
+        this.activePortal = null; // Currently active portal for interaction
         
         // Portal effect properties
         this.effectDuration = 1000; // 1 second teleport effect
@@ -42,6 +43,9 @@ export class TeleportManager {
         // Minimap properties
         this.minimapColor = 'rgba(0, 255, 255, 0.8)'; // Cyan color for minimap
         this.minimapSize = 6; // Size on minimap
+        
+        // Setup click/touch event listeners
+        this.setupTouchClickEvents();
     }
     
     /**
@@ -53,15 +57,65 @@ export class TeleportManager {
     }
     
     /**
+     * Setup touch and click event listeners for portal interaction
+     */
+    setupTouchClickEvents() {
+        // Add click/touch event listener to the canvas
+        const canvas = document.querySelector('canvas');
+        if (canvas) {
+            // Use both click and touchend events for better cross-device support
+            canvas.addEventListener('click', this.handleTouchClick.bind(this));
+            canvas.addEventListener('touchend', this.handleTouchClick.bind(this));
+            console.debug('Touch/click event listeners added for portal interaction');
+        } else {
+            console.warn('Canvas not found, touch/click events for portals not initialized');
+            // Try again when the DOM is fully loaded
+            window.addEventListener('DOMContentLoaded', () => {
+                const canvas = document.querySelector('canvas');
+                if (canvas) {
+                    canvas.addEventListener('click', this.handleTouchClick.bind(this));
+                    canvas.addEventListener('touchend', this.handleTouchClick.bind(this));
+                    console.debug('Touch/click event listeners added on DOMContentLoaded');
+                }
+            });
+        }
+    }
+    
+    /**
+     * Handle touch or click events for portal interaction
+     * @param {Event} event - The touch or click event
+     */
+    handleTouchClick(event) {
+        // Skip if no active portal or on cooldown
+        if (!this.activePortal || Date.now() - this.lastTeleportTime < this.teleportCooldown) {
+            return;
+        }
+        
+        // Prevent default behavior for touch events
+        if (event.type === 'touchend') {
+            event.preventDefault();
+        }
+        
+        console.debug('Touch/click detected with active portal - teleporting player');
+        this.teleportPlayer(this.activePortal);
+    }
+    
+    /**
      * Initialize the teleport manager
      */
     init() {
         console.debug("Initializing teleport manager...");
         
+        // Reset active portal
+        this.activePortal = null;
+        
         // Create default portals if none exist
         if (this.portals.length === 0) {
             this.createDefaultPortals();
         }
+        
+        // Re-setup touch/click events to ensure they're properly bound
+        this.setupTouchClickEvents();
         
         return true;
     }
@@ -293,16 +347,27 @@ export class TeleportManager {
                 // Show teleport prompt
                 if (this.game && this.game.hudManager) {
                     this.game.hudManager.showNotification(
-                        `Press E to teleport to ${portal.targetName}`,
+                        `Press E or tap/click to teleport to ${portal.targetName}`,
                         3000
                     );
                 }
                 
+                // Store the active portal for click/touch interaction
+                this.activePortal = portal;
+                
                 // Check for key press (handled by game's input manager)
-                if (this.game && this.game.inputManager && 
-                    this.game.inputManager.isKeyPressed('KeyE')) {
-                    this.teleportPlayer(portal);
+                if (this.game && this.game.inputManager) {
+                    // Check if E key is pressed
+                    if (this.game.inputManager.isKeyPressed('KeyE')) {
+                        console.debug('E key pressed - teleporting player');
+                        this.teleportPlayer(portal);
+                    }
                 }
+            }
+        } else {
+            // Player moved away from portal
+            if (portal === this.activePortal) {
+                this.activePortal = null;
             }
         }
     }
@@ -313,7 +378,14 @@ export class TeleportManager {
      */
     teleportPlayer(portal) {
         // Skip if no game or player
-        if (!this.game || !this.game.player) return;
+        if (!this.game || !this.game.player) {
+            console.error("Cannot teleport: game or player is null");
+            return;
+        }
+        
+        console.debug(`Starting teleport from ${portal.sourceName} to ${portal.targetName}`);
+        console.debug(`Current player position: ${this.game.player.getPosition().x}, ${this.game.player.getPosition().y}, ${this.game.player.getPosition().z}`);
+        console.debug(`Target position: ${portal.targetPosition.x}, ${portal.targetPosition.y}, ${portal.targetPosition.z}`);
         
         // Set cooldown
         this.lastTeleportTime = Date.now();
@@ -323,8 +395,46 @@ export class TeleportManager {
         
         // Teleport the player after a short delay
         setTimeout(() => {
+            // Ensure target position has correct terrain height
+            let targetY = portal.targetPosition.y;
+            
+            // If we have terrain height information, use it
+            if (this.worldManager && this.worldManager.getTerrainHeight) {
+                targetY = this.worldManager.getTerrainHeight(portal.targetPosition.x, portal.targetPosition.z) + 0.5;
+                console.debug(`Adjusted target height to terrain: ${targetY}`);
+            }
+            
             // Move player to target position
-            this.game.player.setPosition(portal.targetPosition);
+            // Extract x, y, z coordinates from the Vector3 object
+            this.game.player.setPosition(
+                portal.targetPosition.x,
+                targetY,
+                portal.targetPosition.z
+            );
+            
+            // Force update the player's target position if it has one
+            if (this.game.player.movement && this.game.player.movement.targetPosition) {
+                this.game.player.movement.targetPosition.set(
+                    portal.targetPosition.x,
+                    targetY,
+                    portal.targetPosition.z
+                );
+            }
+            
+            // Also update the player's model position directly if available
+            if (this.game.player.model && typeof this.game.player.model.setPosition === 'function') {
+                const position = new THREE.Vector3(portal.targetPosition.x, targetY, portal.targetPosition.z);
+                this.game.player.model.setPosition(position);
+                console.debug('Updated player model position directly');
+            }
+            
+            console.debug(`Teleported player to: ${portal.targetPosition.x}, ${targetY}, ${portal.targetPosition.z}`);
+            
+            // Force an immediate camera update if the player has a movement component
+            if (this.game.player.movement && typeof this.game.player.movement.updateCamera === 'function') {
+                this.game.player.movement.updateCamera();
+                console.debug('Forced camera update after teleport');
+            }
             
             // Show arrival notification
             if (this.game && this.game.hudManager) {
@@ -466,8 +576,9 @@ export class TeleportManager {
             }
         });
         
-        // Clear array
+        // Clear array and reset active portal
         this.portals = [];
+        this.activePortal = null;
         
         console.debug("Cleared all teleport portals");
     }
