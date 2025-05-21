@@ -36,9 +36,9 @@ export class TeleportManager {
         this.activePortal = null; // Currently active portal for interaction
         
         // Portal effect properties
-        this.effectDuration = 1000; // 1 second teleport effect
-        this.fadeOutDuration = 500; // 0.5 seconds fade out
-        this.fadeInDuration = 500; // 0.5 seconds fade in
+        this.effectDuration = 2000; // 2 seconds teleport effect for longer distances
+        this.fadeOutDuration = 1000; // 1 second fade out
+        this.fadeInDuration = 1000; // 1 second fade in
         
         // Minimap properties
         this.minimapColor = 'rgba(0, 255, 255, 0.8)'; // Cyan color for minimap
@@ -112,6 +112,9 @@ export class TeleportManager {
         // Create default portals if none exist
         if (this.portals.length === 0) {
             this.createDefaultPortals();
+            
+            // Also create a teleport network
+            this.createTeleportNetwork(3, 2000, 200, 0);
         }
         
         // Re-setup touch/click events to ensure they're properly bound
@@ -121,32 +124,114 @@ export class TeleportManager {
     }
     
     /**
+     * Create a network of interconnected teleport portals
+     * @param {number} portalCount - Number of portals in the network
+     * @param {number} radius - Radius of the circle on which to place portals
+     * @param {number} height - Height above ground for the network
+     * @param {number} yOffset - Y-axis offset for the entire network
+     */
+    createTeleportNetwork(portalCount = 5, radius = 3000, height = 0, yOffset = 0) {
+        console.debug(`Creating teleport network with ${portalCount} portals at radius ${radius}`);
+        
+        const networkPortals = [];
+        const centerPoint = new THREE.Vector3(0, height + yOffset, 0);
+        
+        // Create portals in a circle
+        for (let i = 0; i < portalCount; i++) {
+            const angle = (i / portalCount) * Math.PI * 2;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            
+            const portalPosition = new THREE.Vector3(x, height + yOffset, z);
+            
+            // Create a portal with a temporary target (will be updated later)
+            const portal = this.createPortal(
+                portalPosition,
+                centerPoint, // Temporary target
+                `Network Node ${i + 1}`,
+                `Network Destination ${i + 1}`
+            );
+            
+            networkPortals.push(portal);
+        }
+        
+        // Connect portals in a circular pattern (each portal leads to the next)
+        for (let i = 0; i < networkPortals.length; i++) {
+            const currentPortal = networkPortals[i];
+            const nextPortal = networkPortals[(i + 1) % networkPortals.length];
+            
+            // Update the target position to the next portal in the network
+            currentPortal.targetPosition.copy(nextPortal.sourcePosition);
+            currentPortal.targetName = nextPortal.sourceName;
+            
+            console.debug(`Connected ${currentPortal.sourceName} to ${currentPortal.targetName}`);
+        }
+        
+        return networkPortals;
+    }
+    
+    /**
      * Create default teleport portals
      */
     createDefaultPortals() {
-        // Create a few default portals at interesting locations
-        // Portal 1: Near starting area
+        // Create portals with 10x farther destinations
+        
+        // Portal 1: Near starting area (original but with 10x farther destination)
         this.createPortal(
             new THREE.Vector3(10, 0, 10),
-            new THREE.Vector3(100, 0, 100),
+            new THREE.Vector3(1000, 0, 1000), // 10x farther
             "Temple Entrance",
-            "Mountain Peak"
+            "Distant Mountain Peak"
         );
         
-        // Portal 2: Far away location
+        // Portal 2: Far away location (original but with 10x farther destination)
         this.createPortal(
             new THREE.Vector3(-80, 0, -80),
-            new THREE.Vector3(50, 0, -120),
+            new THREE.Vector3(500, 0, -1200), // 10x farther
             "Forest Clearing",
-            "Desert Oasis"
+            "Far Desert Oasis"
         );
         
-        // Portal 3: Another interesting location
+        // Portal 3: Another interesting location (original but with 10x farther destination)
         this.createPortal(
             new THREE.Vector3(120, 0, -50),
-            new THREE.Vector3(-100, 0, 80),
+            new THREE.Vector3(-1000, 0, 800), // 10x farther
             "Waterfall",
-            "Ancient Ruins"
+            "Distant Ancient Ruins"
+        );
+        
+        // Add new portals with even farther destinations
+        
+        // Portal 4: Extreme distance portal
+        this.createPortal(
+            new THREE.Vector3(50, 0, 50),
+            new THREE.Vector3(5000, 0, 5000), // 50x farther than original
+            "Mystic Gateway",
+            "Celestial Realm"
+        );
+        
+        // Portal 5: Another extreme distance portal
+        this.createPortal(
+            new THREE.Vector3(-50, 0, 50),
+            new THREE.Vector3(-5000, 0, -5000), // 50x farther
+            "Void Portal",
+            "Shadow Dimension"
+        );
+        
+        // Portal 6: Ultra-long distance portal
+        this.createPortal(
+            new THREE.Vector3(0, 0, 100),
+            new THREE.Vector3(10000, 0, 0), // 100x farther
+            "Astral Gateway",
+            "Edge of Reality"
+        );
+        
+        // Portal 7: Diagonal extreme distance
+        this.createPortal(
+            new THREE.Vector3(100, 0, 0),
+            new THREE.Vector3(-10000, 0, 10000), // 100x farther
+            "Quantum Tunnel",
+            "Parallel Universe"
         );
     }
     
@@ -350,8 +435,8 @@ export class TeleportManager {
                 // Show teleport prompt
                 if (this.game && this.game.hudManager) {
                     this.game.hudManager.showNotification(
-                        `Press E or tap/click to teleport to ${portal.targetName}`,
-                        3000
+                        `${portal.targetName}`,
+                        5000
                     );
                 }
                 
@@ -457,13 +542,19 @@ export class TeleportManager {
                 // Store original scale
                 const originalScale = miniMap.scale;
                 
-                // Zoom out
-                miniMap.setScale(originalScale * 3);
+                // Calculate zoom factor based on distance
+                const distance = portal.sourcePosition.distanceTo(portal.targetPosition);
+                const zoomFactor = Math.min(10, Math.max(3, Math.floor(distance / 500)));
                 
-                // Zoom back in after 5 seconds
+                console.debug(`Teleport distance: ${distance.toFixed(2)}, using zoom factor: ${zoomFactor}`);
+                
+                // Zoom out based on distance
+                miniMap.setScale(originalScale * zoomFactor);
+                
+                // Zoom back in after 8 seconds for longer distances
                 setTimeout(() => {
                     miniMap.setScale(originalScale);
-                }, 5000);
+                }, 8000);
             }
         }, this.effectDuration);
     }
@@ -475,6 +566,13 @@ export class TeleportManager {
     showTeleportEffect(portal) {
         // Skip if no game or player
         if (!this.game || !this.game.player) return;
+        
+        // Calculate distance to determine effect intensity
+        const distance = portal.sourcePosition.distanceTo(portal.targetPosition);
+        const isLongDistance = distance > 1000;
+        const isExtremeDistance = distance > 5000;
+        
+        console.debug(`Teleport distance: ${distance.toFixed(2)}, long: ${isLongDistance}, extreme: ${isExtremeDistance}`);
         
         // Create a flash effect
         if (this.game.hudManager) {
@@ -493,9 +591,61 @@ export class TeleportManager {
             // Add to DOM
             document.body.appendChild(flash);
             
-            // Fade in
+            // For extreme distances, add a more dramatic effect
+            if (isExtremeDistance) {
+                // Add pulsing stars for extreme distances
+                const starsContainer = document.createElement('div');
+                starsContainer.style.position = 'fixed';
+                starsContainer.style.top = '0';
+                starsContainer.style.left = '0';
+                starsContainer.style.width = '100%';
+                starsContainer.style.height = '100%';
+                starsContainer.style.pointerEvents = 'none';
+                starsContainer.style.zIndex = '10000';
+                
+                // Create 100 stars
+                for (let i = 0; i < 100; i++) {
+                    const star = document.createElement('div');
+                    star.style.position = 'absolute';
+                    star.style.width = `${Math.random() * 4 + 1}px`;
+                    star.style.height = star.style.width;
+                    star.style.backgroundColor = 'white';
+                    star.style.borderRadius = '50%';
+                    star.style.left = `${Math.random() * 100}%`;
+                    star.style.top = `${Math.random() * 100}%`;
+                    star.style.opacity = '0';
+                    star.style.animation = `starPulse ${Math.random() * 1 + 0.5}s ease-in-out infinite alternate`;
+                    
+                    // Add keyframe animation
+                    const style = document.createElement('style');
+                    style.innerHTML = `
+                        @keyframes starPulse {
+                            0% { opacity: 0; transform: scale(0.5); }
+                            100% { opacity: 1; transform: scale(1.5); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    
+                    starsContainer.appendChild(star);
+                }
+                
+                document.body.appendChild(starsContainer);
+                
+                // Remove stars after effect
+                setTimeout(() => {
+                    document.body.removeChild(starsContainer);
+                }, this.effectDuration + 500);
+            }
+            
+            // Fade in with color based on distance
             setTimeout(() => {
-                flash.style.backgroundColor = 'rgba(0, 255, 255, 0.7)';
+                if (isExtremeDistance) {
+                    flash.style.backgroundColor = 'rgba(255, 0, 255, 0.8)'; // Purple for extreme distances
+                } else if (isLongDistance) {
+                    flash.style.backgroundColor = 'rgba(0, 100, 255, 0.8)'; // Blue for long distances
+                } else {
+                    flash.style.backgroundColor = 'rgba(0, 255, 255, 0.7)'; // Original cyan
+                }
             }, 10);
             
             // Fade out
@@ -511,7 +661,16 @@ export class TeleportManager {
         
         // Play teleport sound if available
         if (this.game.audioManager) {
-            this.game.audioManager.playSound('teleport', 0.5);
+            // Adjust volume based on distance
+            const volume = isExtremeDistance ? 0.8 : (isLongDistance ? 0.7 : 0.5);
+            this.game.audioManager.playSound('teleport', volume);
+            
+            // For extreme distances, add a second sound effect
+            if (isExtremeDistance && this.game.audioManager.playSound) {
+                setTimeout(() => {
+                    this.game.audioManager.playSound('teleport', 0.4);
+                }, 300);
+            }
         }
     }
     
