@@ -2,6 +2,7 @@ import { UIComponent } from '../UIComponent.js';
 import { getSkillIcon } from '../config/skill-icons.js';
 import { PRIMARY_ATTACKS, NORMAL_SKILLS, SKILLS } from '../config/skills.js';
 import { STORAGE_KEYS } from '../config/storage-keys.js';
+import { SKILL_TREES } from '../config/skill-tree.js';
 
 /**
  * SkillSelectionUI component
@@ -26,11 +27,64 @@ export class SkillSelectionUI extends UIComponent {
         // Maximum number of normal skills that can be selected
         this.maxNormalSkills = 7;
         
+        // Get ordered skills based on skill-tree.js
+        this.orderedSkills = this.getOrderedSkills();
+        
         // Create HTML templates
         this.createTemplates();
         
         // Load saved skills from localStorage or use defaults
         this.loadSavedSkills();
+    }
+    
+    /**
+     * Get skills ordered according to skill-tree.js
+     * @returns {Object} Object containing ordered primary attacks and normal skills
+     */
+    getOrderedSkills() {
+        // Get skill names from skill-tree.js
+        const skillTreeNames = Object.keys(SKILL_TREES);
+        
+        // Filter primary attacks and normal skills based on skill-tree order
+        const orderedPrimaryAttacks = PRIMARY_ATTACKS.slice().sort((a, b) => {
+            const aIndex = skillTreeNames.indexOf(a.name);
+            const bIndex = skillTreeNames.indexOf(b.name);
+            
+            // If both skills are in the skill tree, sort by their order in the tree
+            if (aIndex !== -1 && bIndex !== -1) {
+                return aIndex - bIndex;
+            }
+            
+            // If only one skill is in the tree, prioritize it
+            if (aIndex !== -1) return -1;
+            if (bIndex !== -1) return 1;
+            
+            // If neither skill is in the tree, maintain original order
+            return 0;
+        });
+        
+        // Do the same for normal skills
+        const orderedNormalSkills = NORMAL_SKILLS.slice().sort((a, b) => {
+            const aIndex = skillTreeNames.indexOf(a.name);
+            const bIndex = skillTreeNames.indexOf(b.name);
+            
+            // If both skills are in the skill tree, sort by their order in the tree
+            if (aIndex !== -1 && bIndex !== -1) {
+                return aIndex - bIndex;
+            }
+            
+            // If only one skill is in the tree, prioritize it
+            if (aIndex !== -1) return -1;
+            if (bIndex !== -1) return 1;
+            
+            // If neither skill is in the tree, maintain original order
+            return 0;
+        });
+        
+        return {
+            primaryAttacks: orderedPrimaryAttacks,
+            normalSkills: orderedNormalSkills
+        };
     }
     
     /**
@@ -141,21 +195,20 @@ export class SkillSelectionUI extends UIComponent {
     }
     
     /**
-     * Load default skills from BATTLE_SKILLS config
+     * Load default skills from BATTLE_SKILLS config, respecting skill-tree order
      */
     loadDefaultSkills() {
-        // Find the primary attack in BATTLE_SKILLS
-        const primaryAttack = SKILLS.find(skill => skill.primaryAttack);
-        if (primaryAttack) {
-            this.selectedPrimaryAttack = primaryAttack.name;
+        // Find the primary attack in ordered skills
+        if (this.orderedSkills.primaryAttacks.length > 0) {
+            // Use the first primary attack from ordered list
+            this.selectedPrimaryAttack = this.orderedSkills.primaryAttacks[0].name;
         } else if (PRIMARY_ATTACKS.length > 0) {
-            // Fallback to first primary attack if none in BATTLE_SKILLS
+            // Fallback to first primary attack if none in ordered list
             this.selectedPrimaryAttack = PRIMARY_ATTACKS[0].name;
         }
         
-        // Get normal skills from BATTLE_SKILLS
-        this.selectedNormalSkills = SKILLS
-            .filter(skill => !skill.primaryAttack)
+        // Get normal skills from ordered list
+        this.selectedNormalSkills = this.orderedSkills.normalSkills
             .map(skill => skill.name)
             .slice(0, this.maxNormalSkills); // Ensure we don't exceed max
     }
@@ -218,8 +271,8 @@ export class SkillSelectionUI extends UIComponent {
         // Clear existing content
         primaryAttackList.innerHTML = '';
         
-        // Generate HTML for all primary attacks
-        const primaryAttacksHTML = PRIMARY_ATTACKS.map(skill => {
+        // Generate HTML for all primary attacks using ordered skills
+        const primaryAttacksHTML = this.orderedSkills.primaryAttacks.map(skill => {
             console.debug('Creating primary attack item for:', skill.name);
             
             // Get skill icon data
@@ -264,8 +317,8 @@ export class SkillSelectionUI extends UIComponent {
         // Clear existing content
         normalSkillsList.innerHTML = '';
         
-        // Generate HTML for all normal skills
-        const normalSkillsHTML = NORMAL_SKILLS.map(skill => {
+        // Generate HTML for all normal skills using ordered skills
+        const normalSkillsHTML = this.orderedSkills.normalSkills.map(skill => {
             console.debug('Creating normal skill item for:', skill.name);
             
             // Get skill icon data
@@ -430,7 +483,7 @@ export class SkillSelectionUI extends UIComponent {
         
         // Add primary attack if selected
         if (this.selectedPrimaryAttack) {
-            const primarySkill = PRIMARY_ATTACKS.find(skill => skill.name === this.selectedPrimaryAttack);
+            const primarySkill = this.orderedSkills.primaryAttacks.find(skill => skill.name === this.selectedPrimaryAttack);
             if (primarySkill) {
                 battleSkills.push({
                     ...primarySkill,
@@ -443,7 +496,7 @@ export class SkillSelectionUI extends UIComponent {
         // Add normal skills if selected (up to 7 skills)
         for (let i = 0; i < Math.min(7, this.selectedNormalSkills.length); i++) {
             const skillName = this.selectedNormalSkills[i];
-            const normalSkill = NORMAL_SKILLS.find(skill => skill.name === skillName);
+            const normalSkill = this.orderedSkills.normalSkills.find(skill => skill.name === skillName);
             if (normalSkill) {
                 battleSkills.push({
                     ...normalSkill,
