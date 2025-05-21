@@ -68,6 +68,34 @@ import { ShadowBindEffect } from './variants/ImprisonedFists/ShadowBindEffect.js
 import { GaleChainsEffect } from './variants/ImprisonedFists/GaleChainsEffect.js';
 import { FieryChainsEffect } from './variants/ImprisonedFists/FieryChainsEffect.js';
 
+// Import Wave Strike variant effects
+import { TidalForceEffect } from './variants/WaveStrike/TidalForceEffect.js';
+import { ShockingWaveEffect } from './variants/WaveStrike/ShockingWaveEffect.js';
+import { FreezingWaveEffect } from './variants/WaveStrike/FreezingWaveEffect.js';
+import { ExplosiveWaveEffect } from './variants/WaveStrike/ExplosiveWaveEffect.js';
+import { HealingSurgeEffect } from './variants/WaveStrike/HealingSurgeEffect.js';
+
+// Import Seven-Sided Strike variant effects
+import { BlazingFistsEffect } from './variants/SevenSidedStrike/BlazingFistsEffect.js';
+import { FrozenAssaultEffect } from './variants/SevenSidedStrike/FrozenAssaultEffect.js';
+import { ThunderclapEffect } from './variants/SevenSidedStrike/ThunderclapEffect.js';
+import { PhantomEchoEffect } from './variants/SevenSidedStrike/PhantomEchoEffect.js';
+import { CelestialImpactEffect } from './variants/SevenSidedStrike/CelestialImpactEffect.js';
+
+// Import Shield of Zen variant effects
+import { RadiantBarrierEffect } from './variants/ShieldOfZen/RadiantBarrierEffect.js';
+import { ReflectiveShieldEffect } from './variants/ShieldOfZen/ReflectiveShieldEffect.js';
+import { FortifiedWallEffect } from './variants/ShieldOfZen/FortifiedWallEffect.js';
+import { MysticVeilEffect } from './variants/ShieldOfZen/MysticVeilEffect.js';
+import { ZensRetributionEffect } from './variants/ShieldOfZen/ZensRetributionEffect.js';
+
+// Import Wave of Light variant effects
+import { CrashingWaveEffect } from './variants/WaveOfLight/CrashingWaveEffect.js';
+import { BlindingLightEffect } from './variants/WaveOfLight/BlindingLightEffect.js';
+import { MoltenWaveEffect } from './variants/WaveOfLight/MoltenWaveEffect.js';
+import { ThunderousWaveEffect } from './variants/WaveOfLight/ThunderousWaveEffect.js';
+import { HealingWaveEffect } from './variants/WaveOfLight/HealingWaveEffect.js';
+
 /**
  * Factory class for creating skill effects
  */
