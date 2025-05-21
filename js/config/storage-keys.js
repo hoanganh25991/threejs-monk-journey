@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
     ADAPTIVE_QUALITY: 'monk_journey_adaptive_quality',
     TARGET_FPS: 'monk_journey_target_fps',
     SHOW_PERFORMANCE_INFO: 'monk_journey_show_performance_info',
+    DEBUG_MODE: 'monk_journey_debug_mode',
     
     // Character settings
     CHARACTER_MODEL: 'monk_journey_character_model',
@@ -23,6 +24,7 @@ export const STORAGE_KEYS = {
     DIFFICULTY: 'monk_journey_difficulty',
     SELECTED_SKILLS: 'monk_journey_selected_skills',
     SELECTED_SKILL_PREVIEW: 'monk_journey_selected_skill_preview',
+    SKILL_TREE_DATA: 'monk_journey_skill_tree_data',
     
     // Save system keys
     SAVE_DATA: 'monk_journey_save',

@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { WorldManager } from '../world/WorldManager.js';
 import { Player } from '../entities/player/Player.js';
 import { InputHandler } from '../InputHandler.js';
-import { HUDManager } from '..//hud-manager/HUDManager.js';
+import { HUDManager } from '../hud-manager/HUDManager.js';
 import { EnemyManager } from '../entities/enemies/EnemyManager.js';
 import { CollisionManager } from '../CollisionManager.js';
 import { QuestManager } from '../QuestManager.js';
@@ -18,6 +18,7 @@ import { SceneOptimizer } from './SceneOptimizer.js';
 import { LoadingManager } from './LoadingManager.js';
 import { RENDER_CONFIG } from '../config/render.js';
 import { MenuManager } from '../menu-system/MenuManager.js';
+import { isDebugMode, debugLog } from '../utils/debug-utils.js';
 
 /**
  * Main Game class that serves as a facade to the underlying game systems
@@ -249,7 +250,8 @@ export class Game {
      * Set up event listeners for window and document events
      */
     setupEventListeners() {
-        if (window.location.hostname == "localhost") {
+        if (isDebugMode()) {
+            debugLog('Event listeners for PWA features are disabled in debug mode.');
             return;
         }
         // Handle window resize
@@ -272,8 +274,8 @@ export class Game {
      * @returns {Promise} A promise that resolves when fullscreen is entered or rejects if there's an error
      */
     requestFullscreen() {
-        if (window.location.hostname == "localhost") {
-            console.warn("Ignore full screen in localhost");
+        if (isDebugMode()) {
+            debugLog('Fullscreen request is ignored in debug mode.');
             return Promise.resolve();
         }
         console.debug("Requesting fullscreen mode...");

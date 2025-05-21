@@ -27,6 +27,7 @@ export class SettingsMenu extends UIComponent {
         this.fpsSlider = document.getElementById('fps-slider');
         this.fpsValue = document.getElementById('fps-value');
         this.showPerformanceInfoCheckbox = document.getElementById('show-performance-info-checkbox');
+        this.debugModeCheckbox = document.getElementById('debug-mode-checkbox');
         
         // Game settings elements
         this.difficultySelect = document.getElementById('difficulty-select');
@@ -819,6 +820,32 @@ export class SettingsMenu extends UIComponent {
                 
                 // Store the setting in localStorage
                 localStorage.setItem(STORAGE_KEYS.SHOW_PERFORMANCE_INFO, isChecked);
+            });
+        }
+        
+        if (this.debugModeCheckbox) {
+            // Get the stored value or default to false (debug mode disabled by default)
+            const debugMode = localStorage.getItem(STORAGE_KEYS.DEBUG_MODE);
+            const debugModeValue = debugMode === null ? false : debugMode === 'true';
+            
+            // Set the checkbox state
+            this.debugModeCheckbox.checked = debugModeValue;
+            
+            // Add change event
+            this.debugModeCheckbox.addEventListener('change', () => {
+                const isChecked = this.debugModeCheckbox.checked;
+                
+                // Store the setting in localStorage
+                localStorage.setItem(STORAGE_KEYS.DEBUG_MODE, isChecked);
+                
+                // Show a notification that changes will take effect after reload
+                if (this.game.notificationSystem) {
+                    this.game.notificationSystem.showNotification(
+                        'Debug mode ' + (isChecked ? 'enabled' : 'disabled') + '. Changes will take effect after page reload.',
+                        'info',
+                        5000
+                    );
+                }
             });
         }
     }

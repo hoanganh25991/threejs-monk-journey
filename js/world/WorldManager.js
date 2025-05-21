@@ -6,6 +6,7 @@ import { InteractiveObjectManager } from './interactive/InteractiveObjectManager
 import { ZoneManager } from './zones/ZoneManager.js';
 import { LightingManager } from './lighting/LightingManager.js';
 import { FogManager } from './environment/FogManager.js';
+import { TeleportManager } from './teleport/TeleportManager.js';
 
 /**
  * Main World Manager class that coordinates all world-related systems
@@ -26,6 +27,7 @@ export class WorldManager {
         this.environmentManager = new EnvironmentManager(scene, this);
         this.interactiveManager = new InteractiveObjectManager(scene, this);
         this.zoneManager = new ZoneManager(scene, this);
+        this.teleportManager = new TeleportManager(scene, this);
         
         // For screen-based enemy spawning
         this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
@@ -69,6 +71,7 @@ export class WorldManager {
         this.environmentManager.setGame(game);
         this.interactiveManager.setGame(game);
         this.zoneManager.setGame(game);
+        this.teleportManager.setGame(game);
     }
     
     /**
@@ -95,6 +98,9 @@ export class WorldManager {
         
         // Initialize interactive objects
         this.interactiveManager.init();
+        
+        // Initialize teleport portals
+        this.teleportManager.init();
         
         console.debug("World initialization complete");
         return true;
@@ -189,6 +195,15 @@ export class WorldManager {
                 const drawDistanceMultiplier = this.game.performanceManager.getDrawDistanceMultiplier();
                 // The fog manager will handle density adjustments internally
             }
+        }
+        
+        // Update teleport portals
+        if (this.teleportManager) {
+            // Get delta time from game if available
+            const deltaTime = this.game && this.game.clock ? this.game.clock.getDelta() : 0.016;
+            
+            // Update teleport portals with player position and delta time
+            this.teleportManager.update(deltaTime, playerPosition);
         }
         
         // Periodically check memory and performance
@@ -398,6 +413,7 @@ export class WorldManager {
         this.environmentManager.clear();
         this.interactiveManager.clear();
         this.zoneManager.clear();
+        this.teleportManager.clear();
         
         // Clear cached data to prevent memory leaks
         this.terrainFeatures = [];
@@ -428,7 +444,8 @@ export class WorldManager {
             structures: this.structureManager.save(),
             environment: this.environmentManager.save(),
             interactive: this.interactiveManager.save(),
-            zones: this.zoneManager.save()
+            zones: this.zoneManager.save(),
+            teleport: this.teleportManager.save ? this.teleportManager.save() : null
         };
         
         return worldState;
@@ -452,6 +469,11 @@ export class WorldManager {
         this.environmentManager.load(worldState.environment);
         this.interactiveManager.load(worldState.interactive);
         this.zoneManager.load(worldState.zones);
+        
+        // Load teleport data if available
+        if (worldState.teleport && this.teleportManager.load) {
+            this.teleportManager.load(worldState.teleport);
+        }
     }
     
     /**
@@ -639,5 +661,16 @@ export class WorldManager {
         }
         
         return this.paths;
+    }
+    
+    /**
+     * Get teleport portals for the minimap
+     * @returns {Array} - Array of teleport portals
+     */
+    getTeleportPortals() {
+        if (this.teleportManager && this.teleportManager.getPortals) {
+            return this.teleportManager.getPortals();
+        }
+        return [];
     }
 }

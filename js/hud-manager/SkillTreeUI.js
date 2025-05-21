@@ -3,6 +3,7 @@ import { SKILLS } from "../../config/skills.js";
 import { getSkillIcon, getBuffIcon } from "../../config/skill-icons.js";
 import { SKILL_TREES } from "../../config/skill-tree.js";
 import { applyBuffsToVariants } from "../../utils/SkillTreeUtils.js";
+import { STORAGE_KEYS } from "../../config/storage-keys.js";
 
 /**
  * Skill Tree UI component
@@ -702,13 +703,26 @@ ${iconData.emoji}
       return;
     }
     
-    // Save the configuration to player data (would connect to game state in a real implementation)
+    // Save the configuration to localStorage
     console.log("Saving skill tree configuration:", this.playerSkills);
     
-    // Update the game with the new skills (in a real implementation)
+    try {
+      localStorage.setItem(STORAGE_KEYS.SKILL_TREE_DATA, JSON.stringify(this.playerSkills));
+      console.debug('Skill tree data saved to localStorage successfully');
+    } catch (error) {
+      console.error('Error saving skill tree data to localStorage:', error);
+      // Show error notification
+      if (this.game && this.game.hudManager) {
+        this.game.hudManager.showNotification('Failed to save skill tree data. Please try again.');
+        return;
+      }
+    }
+    
+    // Update the game with the new skills
     if (this.game && this.game.player) {
-      // this.game.player.updateSkills(this.playerSkills);
-      console.log("Player skills updated");
+      // Reload the player skills to apply the new variants
+      this.game.player.skills.loadSkillTreeData();
+      console.log("Player skills updated with new variants");
     }
     
     // Show success message

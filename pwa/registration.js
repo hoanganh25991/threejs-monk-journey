@@ -18,9 +18,10 @@
                 return;
             }
 
-            // Check if running on file:// protocol
-            if (window.location.hostname === 'localhost') {
-                console.warn('Running from localhost hostname. Service workers are not supported when running with localhost.');
+            // Check if debug mode is enabled
+            // Using direct localStorage check instead of importing the utility
+            if (localStorage.getItem('monk_journey_debug_mode') === 'true') {
+                console.warn('Debug mode is enabled. Service workers are disabled in debug mode.');
                 return;
             }
 
@@ -48,36 +49,58 @@
         }
 
         /**
-         * Show update notification
+         * Show update notification as a toast message
          * @param {boolean} forceUpdate - Whether this is a forced update
          */
         showUpdateNotification(forceUpdate = false) {
             const notification = this.getElement('update-notification');
             if (!notification) return;
             
+            // Configure as toast notification
             notification.style.display = 'block';
             
-            // Update notification text based on whether it's a forced update
+            // Style as toast if not already styled
+            if (!notification.classList.contains('toast-style')) {
+                notification.classList.add('toast-style');
+                notification.style.position = 'fixed';
+                notification.style.bottom = '20px';
+                notification.style.right = '20px';
+                notification.style.padding = '10px 20px';
+                notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                notification.style.color = 'white';
+                notification.style.borderRadius = '4px';
+                notification.style.zIndex = '9999';
+                notification.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                notification.style.transition = 'opacity 0.5s ease-in-out';
+            }
+            
+            // Update notification text
             const updateText = this.getElement('update-text');
             if (updateText) {
+                const sizeText = window.TOTAL_CACHE_SIZE_MB ? ` (${window.TOTAL_CACHE_SIZE_MB} MB)` : '';
                 if (forceUpdate) {
-                    updateText.textContent = 'A critical update is being installed...';
+                    updateText.textContent = `Installing critical update${sizeText}...`;
                 } else {
-                    updateText.textContent = 'A new version is available. Would you like to update now?';
+                    updateText.textContent = `New version available${sizeText}. Installing...`;
                 }
             }
             
-            // Show/hide buttons based on whether it's a forced update
-            const updateButton = this.getElement('update-button');
-            const skipButton = this.getElement('skip-update-button');
-            
-            if (updateButton) {
-                updateButton.style.display = forceUpdate ? 'none' : 'inline-block';
+            // Hide update buttons as we're doing silent updates
+            const updateButtons = document.querySelector('#update-notification .update-buttons');
+            if (updateButtons) {
+                updateButtons.style.display = 'none';
             }
             
-            if (skipButton) {
-                skipButton.style.display = forceUpdate ? 'none' : 'inline-block';
-            }
+            // Auto-hide toast after 5 seconds
+            setTimeout(() => {
+                if (notification.style.display === 'block') {
+                    notification.style.opacity = '0';
+                    setTimeout(() => {
+                        notification.style.display = 'none';
+                        notification.style.opacity = '1';
+                    }, 500);
+                }
+            }, 5000);
         }
         
         /**
@@ -125,12 +148,20 @@
         }
 
         /**
-         * Hide update notification
+         * Hide update notification with fade-out effect
          */
         hideUpdateNotification() {
             const notification = this.getElement('update-notification');
             if (notification) {
-                notification.style.display = 'none';
+                // Apply fade-out effect
+                notification.style.opacity = '0';
+                
+                // Hide after transition completes
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                    // Reset opacity for next time
+                    notification.style.opacity = '1';
+                }, 500);
             }
         }
 
@@ -293,9 +324,9 @@
                 // Get size text if available
                 const sizeText = window.TOTAL_CACHE_SIZE_MB ? ` (${window.TOTAL_CACHE_SIZE_MB} MB)` : '';
                 
-                // Hide update buttons during installation process
+                // Always hide update buttons in silent update mode
                 const updateButtons = document.querySelector('#update-notification .update-buttons');
-                if (updateButtons && worker.state !== 'installed') {
+                if (updateButtons) {
                     updateButtons.style.display = 'none';
                 }
                 
@@ -309,15 +340,10 @@
                         // The service worker is installed but waiting for activation
                         this.updateLoadingProgress(90, `Update ready${sizeText}`, null);
                         
-                        // Show update buttons again if they were hidden
-                        if (updateButtons) {
-                            updateButtons.style.display = 'flex';
-                        }
-                        
-                        // Update the notification text
+                        // Update the notification text for toast
                         const updateText = this.getElement('update-text');
                         if (updateText) {
-                            updateText.textContent = 'Update ready! Would you like to apply it now?';
+                            updateText.textContent = `Update ready${sizeText}. Applying...`;
                         }
                         
                         console.debug('Service worker installed and waiting for activation');
@@ -330,17 +356,25 @@
                     case 'activated':
                         this.updateLoadingProgress(100, `Update complete!${sizeText}`, null);
                         
+                        // Show toast notification for successful update
+                        const completionText = this.getElement('update-text');
+                        if (completionText) {
+                            completionText.textContent = `Update complete!${sizeText}`;
+                        }
+                        
                         // Reload the page to ensure all assets are served from the new cache
                         console.debug('Service worker activated, reloading page to use new version');
+                        
+                        // Auto-hide toast after 3 seconds, then reload
                         setTimeout(() => {
-                            // Hide notification before reload
+                            // Hide notification with fade effect
                             this.hideUpdateNotification();
                             
-                            // Reload the page after a short delay
+                            // Reload the page after notification is hidden
                             setTimeout(() => {
                                 window.location.reload();
                             }, 500);
-                        }, 1000);
+                        }, 3000);
                         break;
                         
                     case 'redundant':
@@ -416,24 +450,15 @@
                                     messageChannel.port1.start();
                                 }
 
-                                // Show update notification with user choice
+                                // Show toast notification about the update
                                 instance.showUpdateNotification();
                                 
-                                // Set up update approval button
-                                const updateButton = instance.getElement('update-button');
-                                if (updateButton) {
-                                    updateButton.onclick = () => {
-                                        instance.approveUpdate(registration);
-                                    };
-                                }
-                                
-                                // Set up update skip button
-                                const skipButton = instance.getElement('skip-update-button');
-                                if (skipButton) {
-                                    skipButton.onclick = () => {
-                                        instance.rejectUpdate(registration);
-                                    };
-                                }
+                                // Automatically approve the update after a short delay
+                                // This implements silent updates without user interaction
+                                setTimeout(() => {
+                                    console.debug('Automatically applying update (silent update mode)');
+                                    instance.approveUpdate(registration);
+                                }, 1000);
 
                                 // Listen for state changes
                                 newWorker.addEventListener('statechange', () => {
