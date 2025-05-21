@@ -4,15 +4,15 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '17';
+const CACHE_VERSION = '20';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Set this to true to force update without prompting the user
 const FORCE_UPDATE = false;
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 5512287;
-const TOTAL_CACHE_SIZE_MB = 5.26;
+const TOTAL_CACHE_SIZE_BYTES = 6332162;
+const TOTAL_CACHE_SIZE_MB = 6.04;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
@@ -97,6 +97,59 @@ const ASSETS_TO_CACHE = [
   'js/entities/skills/TeleportSkillEffect.js',
   'js/entities/skills/WaveOfLightEffect.js',
   'js/entities/skills/WaveStrikeEffect.js',
+  'js/entities/skills/variants/BreathOfHeaven/CircleOfLifeEffect.js',
+  'js/entities/skills/variants/BreathOfHeaven/InfusedWithLightEffect.js',
+  'js/entities/skills/variants/BreathOfHeaven/RadiantBreathEffect.js',
+  'js/entities/skills/variants/BreathOfHeaven/SoothingMistEffect.js',
+  'js/entities/skills/variants/BreathOfHeaven/ZephyrsGraceEffect.js',
+  'js/entities/skills/variants/CycloneStrike/FrigidCycloneEffect.js',
+  'js/entities/skills/variants/CycloneStrike/MysticWindsEffect.js',
+  'js/entities/skills/variants/CycloneStrike/SandstormEffect.js',
+  'js/entities/skills/variants/CycloneStrike/TempestRushEffect.js',
+  'js/entities/skills/variants/CycloneStrike/TornadoEffect.js',
+  'js/entities/skills/variants/CycloneStrike/VortexEffect.js',
+  'js/entities/skills/variants/ExplodingPalm/BleedingPalmEffect.js',
+  'js/entities/skills/variants/ExplodingPalm/ConcussivePalmEffect.js',
+  'js/entities/skills/variants/ExplodingPalm/FieryPalmEffect.js',
+  'js/entities/skills/variants/ExplodingPalm/IcyPalmEffect.js',
+  'js/entities/skills/variants/ExplodingPalm/ShockingPalmEffect.js',
+  'js/entities/skills/variants/FlyingDragon/DragonFlightEffect.js',
+  'js/entities/skills/variants/FlyingDragon/GaleDragonEffect.js',
+  'js/entities/skills/variants/FlyingDragon/InfernoDragonEffect.js',
+  'js/entities/skills/variants/FlyingDragon/ShadowDragonEffect.js',
+  'js/entities/skills/variants/FlyingDragon/ThunderDragonEffect.js',
+  'js/entities/skills/variants/FlyingKick/BlazingKickEffect.js',
+  'js/entities/skills/variants/FlyingKick/CycloneKickEffect.js',
+  'js/entities/skills/variants/FlyingKick/GaleKickEffect.js',
+  'js/entities/skills/variants/FlyingKick/ShadowKickEffect.js',
+  'js/entities/skills/variants/FlyingKick/ThunderousKickEffect.js',
+  'js/entities/skills/variants/ImprisonedFists/FieryChainsEffect.js',
+  'js/entities/skills/variants/ImprisonedFists/FrozenShacklesEffect.js',
+  'js/entities/skills/variants/ImprisonedFists/GaleChainsEffect.js',
+  'js/entities/skills/variants/ImprisonedFists/ShadowBindEffect.js',
+  'js/entities/skills/variants/ImprisonedFists/ThunderousGripEffect.js',
+  'js/entities/skills/variants/InnerSanctuary/CircleOfWrathEffect.js',
+  'js/entities/skills/variants/InnerSanctuary/ForbiddenPalaceEffect.js',
+  'js/entities/skills/variants/InnerSanctuary/SafeHavenEffect.js',
+  'js/entities/skills/variants/InnerSanctuary/SanctifiedGroundEffect.js',
+  'js/entities/skills/variants/InnerSanctuary/TempleOfProtectionEffect.js',
+  'js/entities/skills/variants/MysticAllies/FireAlliesEffect.js',
+  'js/entities/skills/variants/MysticAllies/WaterAlliesEffect.js',
+  'js/entities/skills/variants/SevenSidedStrike/FistOfFuryEffect.js',
+  'js/entities/skills/variants/SevenSidedStrike/InnerPeaceEffect.js',
+  'js/entities/skills/variants/SevenSidedStrike/PandemoniumEffect.js',
+  'js/entities/skills/variants/SevenSidedStrike/ShadowAssaultEffect.js',
+  'js/entities/skills/variants/SevenSidedStrike/SustainedAssaultEffect.js',
+  'js/entities/skills/variants/ShieldOfZen/DiamondAuraEffect.js',
+  'js/entities/skills/variants/ShieldOfZen/RetributionAuraEffect.js',
+  'js/entities/skills/variants/ShieldOfZen/SpiritualProtectionEffect.js',
+  'js/entities/skills/variants/ShieldOfZen/TranscendenceEffect.js',
+  'js/entities/skills/variants/WaveOfLight/ExplosiveLightEffect.js',
+  'js/entities/skills/variants/WaveOfLight/LightningBellEffect.js',
+  'js/entities/skills/variants/WaveOfLight/PillarOfTheLightEffect.js',
+  'js/entities/skills/variants/WaveOfLight/WallOfLightEffect.js',
+  'js/entities/skills/variants/WaveStrike/FrozenWaveEffect.js',
+  'js/entities/skills/variants/WaveStrike/TidalWaveEffect.js',
   'js/entities/utils/CharacterModelPool.js',
   'js/entities/utils/EnemyObjectPool.js',
   'js/game/Game.js',
@@ -144,6 +197,7 @@ const ASSETS_TO_CACHE = [
   'js/types.js',
   'js/utils/AnimationUtils.js',
   'js/utils/SkillTreeUtils.js',
+  'js/utils/debug-utils.js',
   'js/world/WorldManager.js',
   'js/world/environment/Bush.js',
   'js/world/environment/EnvironmentManager.js',
@@ -164,6 +218,7 @@ const ASSETS_TO_CACHE = [
   'js/world/structures/StructureManager.js',
   'js/world/structures/Tower.js',
   'js/world/structures/Village.js',
+  'js/world/teleport/TeleportManager.js',
   'js/world/terrain/TerrainManager.js',
   'js/world/utils/EnvironmentObjectPool.js',
   'js/world/utils/ModelObjectPool.js',
