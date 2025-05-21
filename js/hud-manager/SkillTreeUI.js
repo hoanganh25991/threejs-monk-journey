@@ -22,7 +22,7 @@ export class SkillTreeUI extends UIComponent {
     this.selectedSkill = null;
     this.selectedVariant = null;
     this.selectedBuff = null;
-    this.skillPoints = 10; // Will be loaded from player data
+    this.skillPoints = 10_000_000; // Will be loaded from player data
 
     // Get the skill trees and apply buffs to variants
     this.skillTrees = JSON.parse(JSON.stringify(SKILL_TREES)); // Create a deep copy

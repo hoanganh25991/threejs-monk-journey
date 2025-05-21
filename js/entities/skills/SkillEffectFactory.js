@@ -19,6 +19,10 @@ import { CircleOfLifeEffect } from './variants/CircleOfLifeEffect.js';
 import { FrigidCycloneEffect } from './variants/FrigidCycloneEffect.js';
 import { FieryPalmEffect } from './variants/FieryPalmEffect.js';
 import { ShadowDragonEffect } from './variants/ShadowDragonEffect.js';
+import { DragonFlightEffect } from './variants/DragonFlightEffect.js';
+import { ShockingPalmEffect } from './variants/ShockingPalmEffect.js';
+import { InfusedWithLightEffect } from './variants/InfusedWithLightEffect.js';
+import { MysticWindsEffect } from './variants/MysticWindsEffect.js';
 
 /**
  * Factory class for creating skill effects
@@ -287,11 +291,8 @@ export class SkillEffectFactory {
         else if (skillName === 'Flying Dragon') {
             switch (variantName) {
                 case 'Dragon\'s Flight':
-                    // Increase distance and speed
-                    const flightEffect = new FlyingDragonEffect(skill);
-                    flightEffect.distanceMultiplier = 1.5; // 50% more distance
-                    flightEffect.speedMultiplier = 1.3; // 30% more speed
-                    return flightEffect;
+                    // Use dedicated effect class with custom visuals
+                    return new DragonFlightEffect(skill);
                     
                 case 'Inferno Dragon':
                     // Add fire damage over time
