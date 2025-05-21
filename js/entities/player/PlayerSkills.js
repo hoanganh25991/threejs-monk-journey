@@ -31,6 +31,66 @@ export class PlayerSkills extends IPlayerSkills {
         this.game = game;
     }
     
+    /**
+     * Load skill tree data from localStorage
+     * This method is called when the skill tree is saved
+     */
+    loadSkillTreeData() {
+        try {
+            const skillTreeDataJson = localStorage.getItem(STORAGE_KEYS.SKILL_TREE_DATA);
+            
+            if (skillTreeDataJson) {
+                const skillTreeData = JSON.parse(skillTreeDataJson);
+                console.debug('Loaded skill tree data from localStorage:', skillTreeData);
+                
+                // Apply skill variants and buffs to the player's skills
+                // This will be used when creating skill instances
+                this.skillTreeData = skillTreeData;
+                
+                // Update existing skills with the new variants and buffs
+                this.updateSkillsWithVariants();
+                
+                return true;
+            } else {
+                console.debug('No skill tree data found in localStorage');
+                return false;
+            }
+        } catch (error) {
+            console.error('Error loading skill tree data from localStorage:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Update existing skills with variants and buffs from skill tree data
+     */
+    updateSkillsWithVariants() {
+        if (!this.skillTreeData) return;
+        
+        // For each skill in the player's skills array
+        this.skills.forEach(skill => {
+            const skillName = skill.name;
+            const skillTreeEntry = this.skillTreeData[skillName];
+            
+            // If this skill has data in the skill tree
+            if (skillTreeEntry) {
+                // Apply variant if one is selected
+                if (skillTreeEntry.activeVariant) {
+                    console.debug(`Applying variant ${skillTreeEntry.activeVariant} to skill ${skillName}`);
+                    skill.variant = skillTreeEntry.activeVariant;
+                }
+                
+                // Apply buffs if any are selected
+                if (skillTreeEntry.buffs && Object.keys(skillTreeEntry.buffs).length > 0) {
+                    console.debug(`Applying buffs to skill ${skillName}:`, skillTreeEntry.buffs);
+                    skill.buffs = skillTreeEntry.buffs;
+                }
+            }
+        });
+        
+        console.debug('Updated skills with variants and buffs from skill tree data');
+    }
+    
     initializeSkills() {
         // Initialize monk skills using the configuration from config/skills.js
         const savedSkillsJson = localStorage.getItem(STORAGE_KEYS.SELECTED_SKILLS);
@@ -220,7 +280,27 @@ export class PlayerSkills extends IPlayerSkills {
             return false;
         }
         
-        const newSkillInstance = new Skill(skillConfig);
+        // Create a deep copy of the skill config to avoid modifying the original
+        const skillConfigCopy = JSON.parse(JSON.stringify(skillConfig));
+        
+        // Apply variant and buffs from skill tree data if available
+        if (this.skillTreeData && this.skillTreeData[skillTemplate.name]) {
+            const skillTreeEntry = this.skillTreeData[skillTemplate.name];
+            
+            // Apply variant if one is selected
+            if (skillTreeEntry.activeVariant) {
+                console.debug(`Applying variant ${skillTreeEntry.activeVariant} to new instance of ${skillTemplate.name}`);
+                skillConfigCopy.variant = skillTreeEntry.activeVariant;
+            }
+            
+            // Apply buffs if any are selected
+            if (skillTreeEntry.buffs && Object.keys(skillTreeEntry.buffs).length > 0) {
+                console.debug(`Applying buffs to new instance of ${skillTemplate.name}:`, skillTreeEntry.buffs);
+                skillConfigCopy.buffs = skillTreeEntry.buffs;
+            }
+        }
+        
+        const newSkillInstance = new Skill(skillConfigCopy);
         
         // Create a new effect handler for the new skill instance
         newSkillInstance.effectHandler = SkillEffectFactory.createEffect(newSkillInstance);

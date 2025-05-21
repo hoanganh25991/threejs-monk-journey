@@ -721,7 +721,7 @@ ${iconData.emoji}
     // Update the game with the new skills
     if (this.game && this.game.player) {
       // Reload the player skills to apply the new variants
-      this.game.player.skills.loadSkillTreeData();
+      this.game.player.loadSkillTreeData();
       console.log("Player skills updated with new variants");
     }
     

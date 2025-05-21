@@ -233,6 +233,14 @@ export class Player extends IPlayer {
         return this.skills.getActiveSkills();
     }
     
+    // Load skill tree data - delegate to PlayerSkills
+    loadSkillTreeData() {
+        if (this.skills) {
+            return this.skills.loadSkillTreeData();
+        }
+        return false;
+    }
+    
     // Inventory getters - delegate to PlayerInventory
     getInventory() {
         return this.inventory.getInventory();

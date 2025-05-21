@@ -165,6 +165,9 @@ export class TeleportManager {
             targetPosition.y = this.worldManager.getTerrainHeight(targetPosition.x, targetPosition.z) + 0.5;
         }
         
+        // Elevate the source position (this will affect the portal's height)
+        sourcePosition.y += 2.8;  
+        
         // Create portal geometry
         const geometry = new THREE.CylinderGeometry(
             this.portalRadius, // Top radius
