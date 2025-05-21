@@ -407,17 +407,20 @@ export class SkillEffectFactory {
         // Handle Wave Strike variants
         else if (skillName === 'Wave Strike') {
             switch (variantName) {
-                case 'Tidal Wave':
+                case 'Tidal Force':
                     // The wave travels further and deals increased damage to enemies at the end of its path
                     return new TidalWaveEffect(skill);
                     
-                case 'Thunder Wave':
+                case 'Shocking Wave':
                     // Enemies hit by the wave are electrified, taking additional lightning damage over time
                     return new ThunderWaveEffect(skill);
                     
-                case 'Frozen Wave':
+                case 'Freezing Wave':
                     // The wave chills enemies, reducing their movement speed for a short duration
                     return new FrozenWaveEffect(skill);
+                    
+                // Note: 'Explosive Wave' and 'Healing Surge' variants need implementation
+                // TODO: Add effect classes for these variants
             }
         }
         
