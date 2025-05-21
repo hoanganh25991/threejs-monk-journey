@@ -14,22 +14,28 @@ import { FlyingKickEffect } from './FlyingKickEffect.js';
 import { DeadlyReachEffect } from './DeadlyReachEffect.js';
 import { ImprisonedFistsEffect } from './ImprisonedFistsEffect.js';
 
-// Import variant-specific effects
-import { CircleOfLifeEffect } from './variants/CircleOfLifeEffect.js';
-import { FrigidCycloneEffect } from './variants/FrigidCycloneEffect.js';
-import { FieryPalmEffect } from './variants/FieryPalmEffect.js';
-import { ShadowDragonEffect } from './variants/ShadowDragonEffect.js';
-import { DragonFlightEffect } from './variants/DragonFlightEffect.js';
-import { ShockingPalmEffect } from './variants/ShockingPalmEffect.js';
-import { InfusedWithLightEffect } from './variants/InfusedWithLightEffect.js';
-import { MysticWindsEffect } from './variants/MysticWindsEffect.js';
+// Import Breath of Heaven variant effects
+import { CircleOfLifeEffect } from './variants/BreathOfHeaven/CircleOfLifeEffect.js';
+import { InfusedWithLightEffect } from './variants/BreathOfHeaven/InfusedWithLightEffect.js';
+
+// Import Cyclone Strike variant effects
+import { FrigidCycloneEffect } from './variants/CycloneStrike/FrigidCycloneEffect.js';
+import { MysticWindsEffect } from './variants/CycloneStrike/MysticWindsEffect.js';
+
+// Import Exploding Palm variant effects
+import { FieryPalmEffect } from './variants/ExplodingPalm/FieryPalmEffect.js';
+import { ShockingPalmEffect } from './variants/ExplodingPalm/ShockingPalmEffect.js';
+
+// Import Flying Dragon variant effects
+import { ShadowDragonEffect } from './variants/FlyingDragon/ShadowDragonEffect.js';
+import { DragonFlightEffect } from './variants/FlyingDragon/DragonFlightEffect.js';
 
 // Import Flying Kick variant effects
-import { BlazingKickEffect } from './variants/BlazingKickEffect.js';
-import { CycloneKickEffect } from './variants/CycloneKickEffect.js';
-import { ThunderousKickEffect } from './variants/ThunderousKickEffect.js';
-import { ShadowKickEffect } from './variants/ShadowKickEffect.js';
-import { GaleKickEffect } from './variants/GaleKickEffect.js';
+import { BlazingKickEffect } from './variants/FlyingKick/BlazingKickEffect.js';
+import { CycloneKickEffect } from './variants/FlyingKick/CycloneKickEffect.js';
+import { ThunderousKickEffect } from './variants/FlyingKick/ThunderousKickEffect.js';
+import { ShadowKickEffect } from './variants/FlyingKick/ShadowKickEffect.js';
+import { GaleKickEffect } from './variants/FlyingKick/GaleKickEffect.js';
 
 /**
  * Factory class for creating skill effects
