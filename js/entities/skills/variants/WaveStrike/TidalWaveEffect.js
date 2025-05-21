@@ -456,8 +456,10 @@ export class TidalWaveEffect extends WaveStrikeEffect {
             this.collisionParticles.length = 0;
         }
         
-        // Clear hit enemies set
-        this.hitEnemies.clear();
+        // Clear hit enemies set if it exists
+        if (this.hitEnemies) {
+            this.hitEnemies.clear();
+        }
         
         // Call parent dispose method
         super.dispose();
