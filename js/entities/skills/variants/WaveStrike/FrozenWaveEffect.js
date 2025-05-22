@@ -11,6 +11,8 @@ export class FrozenWaveEffect extends WaveStrikeEffect {
         // Override base properties for this variant
         this.freezeDuration = 2.0; // Duration of freeze effect in seconds
         this.freezeChance = 0.7; // 70% chance to freeze enemies
+        this.hitEnemies = new Set(); // Initialize hit enemies set
+        this.frostEffects = []; // Initialize frost effects array
     }
 
     /**
@@ -525,8 +527,10 @@ export class FrozenWaveEffect extends WaveStrikeEffect {
             this.frostEffects.length = 0;
         }
         
-        // Clear hit enemies set
-        this.hitEnemies.clear();
+        // Clear hit enemies set if it exists
+        if (this.hitEnemies) {
+            this.hitEnemies.clear();
+        }
         
         // Call parent dispose method
         super.dispose();
