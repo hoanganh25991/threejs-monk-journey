@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { MULTIPLIER_PORTALS, RETURN_PORTAL, DESTINATION_TERRAINS } from '../../config/teleport-portals.js';
+import { ZONE_COLORS } from '../../config/colors.js';
+import { ZONE_ENEMIES } from '../../config/enemies.js';
 
 /**
  * TeleportManager - Manages teleport portals in the game world
@@ -812,8 +814,7 @@ export class TeleportManager {
         let currentZone = this.game.world.getZoneAt(position);
 
         // Get enemy types for this zone
-        const zoneEnemyTypes = this.game.enemyManager.zoneEnemies[currentZone] || 
-                              Object.keys(this.game.enemyManager.zoneEnemies)[0];
+        const zoneEnemyTypes = this.getRandomzoneEnemyTypes();
         
         // Dramatically increase max enemies limit for extreme multipliers
         const originalMaxEnemies = this.game.enemyManager.maxEnemies;
@@ -884,7 +885,7 @@ export class TeleportManager {
         }
         
         // For extreme multipliers, start a continuous spawn loop with very short intervals
-        this.startContinuousSpawning(multiplier, spawnCount, zoneEnemyTypes);
+        this.startContinuousSpawning(multiplier, spawnCount);
     }
     
     /**
@@ -895,7 +896,7 @@ export class TeleportManager {
      * @param {number} totalEnemies - Total number of enemies to spawn
      * @param {Array} zoneEnemyTypes - Array of enemy types for the current zone
      */
-    spawnMassiveEnemyWave(position, multiplier, totalEnemies, zoneEnemyTypes) {
+    spawnMassiveEnemyWave(position, multiplier, totalEnemies) {
         console.debug(`Spawning massive wave of ${totalEnemies} enemies for ${multiplier}x multiplier`);
         
         // Create multiple rings of enemies to completely surround the player
@@ -931,6 +932,8 @@ export class TeleportManager {
             const startAngle = Math.random() * Math.PI * 2;
             
             // Select a random enemy type for this ring
+            const zoneEnemyTypes = this.getRandomzoneEnemyTypes();
+            console.log({zoneEnemyTypes});
             const ringEnemyType = zoneEnemyTypes[Math.floor(Math.random() * zoneEnemyTypes.length)];
             
             // Spawn enemies in this ring
@@ -960,7 +963,7 @@ export class TeleportManager {
      * @param {THREE.Vector3} position - Center position for spawning
      * @param {number} multiplier - The enemy spawn multiplier
      */
-    startContinuousSpawning(multiplier, spawnCount, zoneEnemyTypes) {
+    startContinuousSpawning(multiplier, spawnCount) {
         // Skip if no enemy manager
         if (!this.game || !this.game.enemyManager) {
             return;
@@ -975,6 +978,7 @@ export class TeleportManager {
         // x500 = every 1 second
         // x100 = every 2 seconds
         const spawnInterval = 1000 * multiplier / 100;
+        const zoneEnemyTypes = this.getRandomzoneEnemyTypes();
         
         console.debug(`Starting continuous enemy spawning every ${spawnInterval}ms for ${multiplier}x multiplier`);
         
@@ -1009,6 +1013,12 @@ export class TeleportManager {
         
         // Also track player movement to spawn enemies as they move
         this.trackPlayerMovement(multiplier);
+    }
+
+    getRandomzoneEnemyTypes() {
+        const keys = Object.keys(ZONE_ENEMIES);
+        const randomIndex = Math.floor(Math.random() * keys.length);
+        return ZONE_ENEMIES[keys[randomIndex]];
     }
     
     /**
