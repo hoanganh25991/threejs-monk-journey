@@ -6,7 +6,7 @@
 // Global enemy behavior settings
 export const ENEMY_BEHAVIOR_SETTINGS = {
     // Detection range - how far enemies can detect and start chasing the player (in units)
-    detectionRange: 30,
+    detectionRange: 3000,
     
     // Attack range multiplier - multiplies the base attack range defined in enemy types
     attackRangeMultiplier: 1.2,
@@ -25,7 +25,7 @@ export const ENEMY_BEHAVIOR_SETTINGS = {
 export const ENEMY_TYPE_BEHAVIOR = {
     // Default behavior applied to all enemies unless overridden
     'default': {
-        detectionRange: 30,
+        detectionRange: 3000,
         attackRangeMultiplier: 1.2,
         persistentAggression: true,
         aggressionTimeout: 5
