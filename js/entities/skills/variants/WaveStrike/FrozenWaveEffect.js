@@ -308,8 +308,8 @@ export class FrozenWaveEffect extends WaveStrikeEffect {
         // Get collision box rotation
         const boxRotation = this.effect.rotation.y;
         
-        // Get enemies
-        const enemies = this.skill.game.enemyManager.getEnemies();
+        // Get enemies from the enemyManager's enemies array
+        const enemies = this.skill.game.enemyManager.enemies || [];
         
         for (const enemy of enemies) {
             // Skip if already hit
