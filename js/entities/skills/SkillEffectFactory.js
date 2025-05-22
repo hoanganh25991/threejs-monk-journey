@@ -22,19 +22,17 @@ import { SoothingMistEffect } from './variants/BreathOfHeaven/SoothingMistEffect
 import { ZephyrsGraceEffect } from './variants/BreathOfHeaven/ZephyrsGraceEffect.js';
 
 // Import Cyclone Strike variant effects
-import { FrigidCycloneEffect } from './variants/CycloneStrike/FrigidCycloneEffect.js';
-import { MysticWindsEffect } from './variants/CycloneStrike/MysticWindsEffect.js';
-import { SandstormEffect } from './variants/CycloneStrike/SandstormEffect.js';
-import { TempestRushEffect } from './variants/CycloneStrike/TempestRushEffect.js';
-import { TornadoEffect } from './variants/CycloneStrike/TornadoEffect.js';
-import { VortexEffect } from './variants/CycloneStrike/VortexEffect.js';
+import { EyeOfTheStormEffect } from './variants/CycloneStrike/EyeOfTheStormEffect.js';
+import { PathOfTheStormEffect } from './variants/CycloneStrike/PathOfTheStormEffect.js';
+import { StormSpiritEffect } from './variants/CycloneStrike/StormSpiritEffect.js';
+import { TempestsHeartEffect } from './variants/CycloneStrike/TempestsHeartEffect.js';
 
 // Import Exploding Palm variant effects
-import { FieryPalmEffect } from './variants/ExplodingPalm/FieryPalmEffect.js';
-import { ShockingPalmEffect } from './variants/ExplodingPalm/ShockingPalmEffect.js';
-import { BleedingPalmEffect } from './variants/ExplodingPalm/BleedingPalmEffect.js';
-import { ConcussivePalmEffect } from './variants/ExplodingPalm/ConcussivePalmEffect.js';
-import { IcyPalmEffect } from './variants/ExplodingPalm/IcyPalmEffect.js';
+import { CripplingInsightEffect } from './variants/ExplodingPalm/CripplingInsightEffect.js';
+import { ReachingRebukeEffect } from './variants/ExplodingPalm/ReachingRebukeEffect.js';
+import { ScoldingStormEffect } from './variants/ExplodingPalm/ScoldingStormEffect.js';
+import { BreathOfIncenseEffect } from './variants/ExplodingPalm/BreathOfIncenseEffect.js';
+import { PathOfThePresentEffect } from './variants/ExplodingPalm/PathOfThePresentEffect.js';
 
 // Import Flying Dragon variant effects
 import { ShadowDragonEffect } from './variants/FlyingDragon/ShadowDragonEffect.js';
@@ -44,11 +42,11 @@ import { ThunderDragonEffect } from './variants/FlyingDragon/ThunderDragonEffect
 import { GaleDragonEffect } from './variants/FlyingDragon/GaleDragonEffect.js';
 
 // Import Flying Kick variant effects
-import { BlazingKickEffect } from './variants/FlyingKick/BlazingKickEffect.js';
-import { CycloneKickEffect } from './variants/FlyingKick/CycloneKickEffect.js';
-import { ThunderousKickEffect } from './variants/FlyingKick/ThunderousKickEffect.js';
-import { ShadowKickEffect } from './variants/FlyingKick/ShadowKickEffect.js';
-import { GaleKickEffect } from './variants/FlyingKick/GaleKickEffect.js';
+import { MantleOfTheCraneEffect } from './variants/FlyingKick/MantleOfTheCraneEffect.js';
+import { TigersFlightEffect } from './variants/FlyingKick/TigersFlightEffect.js';
+import { GracesBountyEffect } from './variants/FlyingKick/GracesBountyEffect.js';
+import { MomentumFlowEffect } from './variants/FlyingKick/MomentumFlowEffect.js';
+import { SpokesOfTheWheelEffect } from './variants/FlyingKick/SpokesOfTheWheelEffect.js';
 
 // Import Inner Sanctuary variant effects
 import { CircleOfWrathEffect } from './variants/InnerSanctuary/CircleOfWrathEffect.js';
@@ -257,20 +255,16 @@ export class SkillEffectFactory {
         else if (skillName === 'Cyclone Strike') {
             switch (variantName) {
                 case 'Eye of the Storm':
-                    // Reusing FrigidCycloneEffect for now - should be renamed later
-                    return new FrigidCycloneEffect(skill);
+                    return new EyeOfTheStormEffect(skill);
                     
                 case 'Path of the Storm':
-                    // Reusing MysticWindsEffect for now - should be renamed later
-                    return new MysticWindsEffect(skill);
+                    return new PathOfTheStormEffect(skill);
                     
                 case 'Storm Spirit':
-                    // This matches the actual legendary item - using TornadoEffect
-                    return new TornadoEffect(skill);
+                    return new StormSpiritEffect(skill);
                     
                 case 'Tempest\'s Heart':
-                    // This matches the actual legendary item - using VortexEffect
-                    return new VortexEffect(skill);
+                    return new TempestsHeartEffect(skill);
             }
         }
         
@@ -278,24 +272,19 @@ export class SkillEffectFactory {
         else if (skillName === 'Exploding Palm') {
             switch (variantName) {
                 case 'Crippling Insight':
-                    // Reusing BleedingPalmEffect for now - should be renamed later
-                    return new BleedingPalmEffect(skill);
+                    return new CripplingInsightEffect(skill);
                     
                 case 'Reaching Rebuke':
-                    // Reusing ShockingPalmEffect for now - should be renamed later
-                    return new ShockingPalmEffect(skill);
+                    return new ReachingRebukeEffect(skill);
                     
                 case 'Scolding Storm':
-                    // This is an icy effect - using IcyPalmEffect
-                    return new IcyPalmEffect(skill);
+                    return new ScoldingStormEffect(skill);
                     
                 case 'Breath of Incense':
-                    // Reusing ConcussivePalmEffect for now - should be renamed later
-                    return new ConcussivePalmEffect(skill);
+                    return new BreathOfIncenseEffect(skill);
                     
                 case 'Path of the Present':
-                    // Reusing FieryPalmEffect for now - should be renamed later
-                    return new FieryPalmEffect(skill);
+                    return new PathOfThePresentEffect(skill);
             }
         }
         
@@ -323,24 +312,19 @@ export class SkillEffectFactory {
         else if (skillName === 'Flying Kick') {
             switch (variantName) {
                 case 'Mantle of the Crane':
-                    // Increases range - reusing GaleKickEffect for now
-                    return new GaleKickEffect(skill);
+                    return new MantleOfTheCraneEffect(skill);
                     
                 case 'Tiger\'s Flight':
-                    // Fire tornado - reusing BlazingKickEffect for now
-                    return new BlazingKickEffect(skill);
+                    return new TigersFlightEffect(skill);
                     
                 case 'Grace\'s Bounty':
-                    // Spinning Kick - reusing CycloneKickEffect for now
-                    return new CycloneKickEffect(skill);
+                    return new GracesBountyEffect(skill);
                     
                 case 'Momentum\'s Flow':
-                    // Series of kicks - reusing ThunderousKickEffect for now
-                    return new ThunderousKickEffect(skill);
+                    return new MomentumFlowEffect(skill);
                     
                 case 'Spokes of the Wheel':
-                    // Damage boost - reusing ShadowKickEffect for now
-                    return new ShadowKickEffect(skill);
+                    return new SpokesOfTheWheelEffect(skill);
             }
         }
         
