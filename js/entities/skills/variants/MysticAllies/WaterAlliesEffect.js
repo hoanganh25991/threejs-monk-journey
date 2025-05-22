@@ -83,15 +83,23 @@ export class WaterAlliesEffect extends MysticAllyEffect {
                             child.material = child.material.clone();
                         }
                         
-                        // Modify the material color and emissive
+                        // Modify the material color and emissive (with safety checks)
                         if (Array.isArray(child.material)) {
                             child.material.forEach(mat => {
-                                mat.color.set(waterColor);
-                                mat.emissive.set(waterColor);
+                                if (mat && mat.color) {
+                                    mat.color.set(waterColor);
+                                }
+                                if (mat && mat.emissive) {
+                                    mat.emissive.set(waterColor);
+                                }
                             });
-                        } else {
-                            child.material.color.set(waterColor);
-                            child.material.emissive.set(waterColor);
+                        } else if (child.material) {
+                            if (child.material.color) {
+                                child.material.color.set(waterColor);
+                            }
+                            if (child.material.emissive) {
+                                child.material.emissive.set(waterColor);
+                            }
                         }
                     }
                 }
@@ -341,6 +349,11 @@ export class WaterAlliesEffect extends MysticAllyEffect {
                 const count = positions.length / 3;
                 
                 for (let i = 0; i < count; i++) {
+                    // Check if initialPositions exists and has enough elements
+                    if (!initialPositions || i * 3 + 2 >= initialPositions.length) {
+                        continue; // Skip this iteration if data is missing
+                    }
+                    
                     // Get initial position
                     const x0 = initialPositions[i * 3];
                     const y0 = initialPositions[i * 3 + 1];

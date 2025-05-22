@@ -98,48 +98,33 @@ const BASE_SKILL_TREES = {
     baseDescription:
       "Generate a vortex of wind that pulls in enemies and deals damage.",
     variants: {
-      "Frigid Cyclone": {
+      "Eye of the Storm": {
         description:
-          "Generates an icy blast that pulls in and freezes enemies for 2 seconds.",
-        effects: ["Freeze effect", "Area of effect"],
-        unlockedBy: "Legendary chest armor Winter's Embrace",
+          "Increases the radius of Cyclone Strike by 20%.",
+        effects: ["Increased radius", "Area of effect"],
+        unlockedBy: "Legendary off-hand Eye of the Storm",
         cost: 5,
         requiredPoints: 0,
       },
-      "Mystic Winds": {
+      "Path of the Storm": {
         description:
-          "Creates a torrent of mystic wind for 5 seconds, dealing continuous damage.",
-        effects: ["Continuous damage", "Area of effect"],
-        unlockedBy: "Legendary chest armor Balance in Moderation",
+          "Cyclone Strike also temporarily decreases all damage you take by 20%.",
+        effects: ["Damage reduction", "Area of effect"],
+        unlockedBy: "Legendary legs Path of the Storm",
         cost: 5,
         requiredPoints: 0,
       },
-      Sandstorm: {
+      "Storm Spirit": {
         description:
-          "Produces a dust storm that reduces vision and deals damage for 6 seconds.",
-        effects: ["Vision reduction", "Area of effect"],
-        unlockedBy: "Legendary chest armor Typhlot Robe",
-        cost: 5,
-        requiredPoints: 0,
-      },
-      "Tempest Rush": {
-        description:
-          "Channeled skill that makes you immune to knockback while spinning a staff of storms.",
-        effects: ["Knockback immunity", "Area of effect"],
-        unlockedBy: "Legendary chest armor Driven Thunder",
-        cost: 5,
-        requiredPoints: 0,
-      },
-      Tornado: {
-        description: "Generates a tornado that damages enemies over 6 seconds.",
+          "Generates a powerful tornado that continually damages all nearby enemies.",
         effects: ["Continuous damage", "Area of effect"],
         unlockedBy: "Legendary chest armor Storm Spirit",
         cost: 5,
         requiredPoints: 0,
       },
-      Vortex: {
+      "Tempest's Heart": {
         description:
-          "Turns the Monk into a vortex that pulls in and detonates enemies.",
+          "Turns the Monk into a vortex that pulls in enemies and then detonates, damaging and knocking away all nearby enemies.",
         effects: ["Knockback", "Area of effect"],
         unlockedBy: "Legendary chest armor Tempest's Heart",
         cost: 5,
@@ -203,40 +188,43 @@ const BASE_SKILL_TREES = {
     baseDescription:
       "A skill that marks an enemy for death, causing them to explode upon death and deal damage to nearby enemies.",
     variants: {
-      "Bleeding Palm": {
+      "Crippling Insight": {
         description:
-          "Causes the target to bleed, dealing damage over time before exploding.",
-        effects: ["Damage over time", "Area of effect"],
-        unlockedBy: "Legendary item Bleeding Palm",
+          "Maximum charges of Exploding Palm increased by 1.",
+        effects: ["Additional charge", "Area of effect"],
+        unlockedBy: "Legendary head Crippling Insight",
         cost: 5,
         requiredPoints: 0,
       },
-      "Shocking Palm": {
+      "Reaching Rebuke": {
         description:
-          "Adds a lightning effect that chains to nearby enemies upon explosion.",
-        effects: ["Chain lightning", "Area of effect"],
-        unlockedBy: "Legendary item Shocking Palm",
+          "Exploding Palm now launches you at a location and strikes that area with a giant palm as you land, damaging all nearby enemies.",
+        effects: ["Movement ability", "Area of effect"],
+        unlockedBy: "Legendary off-hand Reaching Rebuke",
         cost: 5,
         requiredPoints: 0,
       },
-      "Concussive Palm": {
-        description: "Stuns enemies within the explosion radius.",
+      "Scolding Storm": {
+        description:
+          "Exploding Palm is now icy and inflicts Chill on enemies.",
+        effects: ["Chill effect", "Area of effect"],
+        unlockedBy: "Legendary off-hand Scolding Storm",
+        cost: 5,
+        requiredPoints: 0,
+      },
+      "Breath of Incense": {
+        description:
+          "Seven-Sided Strike can now trigger the Exploding Palm explosion when it kills Bleeding enemies.",
+        effects: ["Skill synergy", "Area of effect"],
+        unlockedBy: "Legendary chest Breath of Incense",
+        cost: 5,
+        requiredPoints: 0,
+      },
+      "Path of the Present": {
+        description:
+          "Exploding Palm now throws a giant palm in a direction, damaging and Stunning all enemies in its path.",
         effects: ["Stun effect", "Area of effect"],
-        unlockedBy: "Legendary item Concussive Palm",
-        cost: 5,
-        requiredPoints: 0,
-      },
-      "Fiery Palm": {
-        description: "Adds fire damage to the explosion.",
-        effects: ["Fire damage", "Area of effect"],
-        unlockedBy: "Legendary item Fiery Palm",
-        cost: 5,
-        requiredPoints: 0,
-      },
-      "Icy Palm": {
-        description: "Slows enemies within the explosion radius.",
-        effects: ["Slow effect", "Area of effect"],
-        unlockedBy: "Legendary item Icy Palm",
+        unlockedBy: "Legendary weapon Path of the Present",
         cost: 5,
         requiredPoints: 0,
       },
@@ -391,42 +379,43 @@ const BASE_SKILL_TREES = {
     baseDescription:
       "A swift kick that propels the Monk forward, dealing damage to enemies in its path.",
     variants: {
-      "Blazing Kick": {
+      "Mantle of the Crane": {
         description:
-          "Adds fire damage to the kick, leaving a trail of flames that burns enemies over time.",
-        effects: ["Fire damage", "Damage over time"],
-        unlockedBy: "Legendary item Blazing Kick",
+          "Flying Kick range increased by 20%.",
+        effects: ["Increased range", "Area of effect"],
+        unlockedBy: "Legendary shoulder Mantle of the Crane",
         cost: 5,
         requiredPoints: 0,
       },
-      "Cyclone Kick": {
+      "Tiger's Flight": {
         description:
-          "Creates a whirlwind effect that pulls in nearby enemies as you kick.",
-        effects: ["Pull effect", "Area of effect"],
-        unlockedBy: "Legendary item Cyclone Kick",
+          "Flying Kick now generates a flaming tornado that damages enemies in its path.",
+        effects: ["Fire damage", "Area of effect"],
+        unlockedBy: "Legendary legs Tiger's Flight",
         cost: 5,
         requiredPoints: 0,
       },
-      "Thunderous Kick": {
-        description: "Each kick releases a thunderclap that stuns enemies.",
-        effects: ["Stun effect", "Area of effect"],
-        unlockedBy: "Legendary item Thunderous Kick",
+      "Grace's Bounty": {
+        description:
+          "Flying Kick becomes Spinning Kick, damaging all nearby enemies.",
+        effects: ["Area damage", "Transformation"],
+        unlockedBy: "Legendary legs Grace's Bounty",
         cost: 5,
         requiredPoints: 0,
       },
-      "Shadow Kick": {
+      "Momentum's Flow": {
         description:
-          "Leaves a shadow clone that continues to attack enemies for a short duration.",
-        effects: ["Shadow clone", "Increased damage"],
-        unlockedBy: "Legendary item Shadow Kick",
+          "Flying Kick now unleashes a series of kicks at enemies in a direction, with the final kick knocking enemies away.",
+        effects: ["Multiple hits", "Knockback"],
+        unlockedBy: "Legendary legs Momentum's Flow",
         cost: 5,
         requiredPoints: 0,
       },
-      "Gale Kick": {
+      "Spokes of the Wheel": {
         description:
-          "Increases the speed and distance of the kick, allowing for rapid repositioning.",
-        effects: ["Increased speed", "Increased distance"],
-        unlockedBy: "Legendary item Gale Kick",
+          "Flying Kick also temporarily increases all damage you deal by 10%.",
+        effects: ["Damage boost", "Temporary buff"],
+        unlockedBy: "Legendary weapon Spokes of the Wheel",
         cost: 5,
         requiredPoints: 0,
       },

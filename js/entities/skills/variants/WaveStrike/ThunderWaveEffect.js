@@ -329,8 +329,17 @@ export class ThunderWaveEffect extends WaveStrikeEffect {
         // Get collision box rotation
         const boxRotation = this.effect.rotation.y;
         
-        // Get enemies
-        const enemies = this.skill.game.enemyManager.getEnemies();
+        // Get enemies - safely handle different API patterns
+        let enemies = [];
+        if (this.skill.game.enemyManager) {
+            // Try different methods that might exist on enemyManager
+            if (typeof this.skill.game.enemyManager.getEnemies === 'function') {
+                enemies = this.skill.game.enemyManager.getEnemies();
+            } else if (Array.isArray(this.skill.game.enemyManager.enemies)) {
+                // Direct access to enemies array if getEnemies() doesn't exist
+                enemies = this.skill.game.enemyManager.enemies;
+            }
+        }
         
         for (const enemy of enemies) {
             // Skip if already hit
@@ -689,11 +698,15 @@ export class ThunderWaveEffect extends WaveStrikeEffect {
             this.lightningEffects.length = 0;
         }
         
-        // Clear hit enemies set
-        this.hitEnemies.clear();
+        // Clear hit enemies set (safely)
+        if (this.hitEnemies) {
+            this.hitEnemies.clear();
+        }
         
-        // Clear chain targets
-        this.chainTargets.length = 0;
+        // Clear chain targets (safely)
+        if (this.chainTargets) {
+            this.chainTargets.length = 0;
+        }
         
         // Call parent dispose method
         super.dispose();

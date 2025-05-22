@@ -256,22 +256,20 @@ export class SkillEffectFactory {
         // Handle Cyclone Strike variants
         else if (skillName === 'Cyclone Strike') {
             switch (variantName) {
-                case 'Frigid Cyclone':
+                case 'Eye of the Storm':
+                    // Reusing FrigidCycloneEffect for now - should be renamed later
                     return new FrigidCycloneEffect(skill);
                     
-                case 'Mystic Winds':
+                case 'Path of the Storm':
+                    // Reusing MysticWindsEffect for now - should be renamed later
                     return new MysticWindsEffect(skill);
                     
-                case 'Sandstorm':
-                    return new SandstormEffect(skill);
-                    
-                case 'Tempest Rush':
-                    return new TempestRushEffect(skill);
-                    
-                case 'Tornado':
+                case 'Storm Spirit':
+                    // This matches the actual legendary item - using TornadoEffect
                     return new TornadoEffect(skill);
                     
-                case 'Vortex':
+                case 'Tempest\'s Heart':
+                    // This matches the actual legendary item - using VortexEffect
                     return new VortexEffect(skill);
             }
         }
@@ -279,20 +277,25 @@ export class SkillEffectFactory {
         // Handle Exploding Palm variants
         else if (skillName === 'Exploding Palm') {
             switch (variantName) {
-                case 'Bleeding Palm':
+                case 'Crippling Insight':
+                    // Reusing BleedingPalmEffect for now - should be renamed later
                     return new BleedingPalmEffect(skill);
                     
-                case 'Shocking Palm':
+                case 'Reaching Rebuke':
+                    // Reusing ShockingPalmEffect for now - should be renamed later
                     return new ShockingPalmEffect(skill);
                     
-                case 'Concussive Palm':
+                case 'Scolding Storm':
+                    // This is an icy effect - using IcyPalmEffect
+                    return new IcyPalmEffect(skill);
+                    
+                case 'Breath of Incense':
+                    // Reusing ConcussivePalmEffect for now - should be renamed later
                     return new ConcussivePalmEffect(skill);
                     
-                case 'Fiery Palm':
+                case 'Path of the Present':
+                    // Reusing FieryPalmEffect for now - should be renamed later
                     return new FieryPalmEffect(skill);
-                    
-                case 'Icy Palm':
-                    return new IcyPalmEffect(skill);
             }
         }
         
@@ -319,25 +322,25 @@ export class SkillEffectFactory {
         // Handle Flying Kick variants
         else if (skillName === 'Flying Kick') {
             switch (variantName) {
-                case 'Blazing Kick':
-                    // Adds fire damage to the kick, leaving a trail of flames
+                case 'Mantle of the Crane':
+                    // Increases range - reusing GaleKickEffect for now
+                    return new GaleKickEffect(skill);
+                    
+                case 'Tiger\'s Flight':
+                    // Fire tornado - reusing BlazingKickEffect for now
                     return new BlazingKickEffect(skill);
                     
-                case 'Cyclone Kick':
-                    // Creates a whirlwind effect that pulls in nearby enemies
+                case 'Grace\'s Bounty':
+                    // Spinning Kick - reusing CycloneKickEffect for now
                     return new CycloneKickEffect(skill);
                     
-                case 'Thunderous Kick':
-                    // Each kick releases a thunderclap that stuns enemies
+                case 'Momentum\'s Flow':
+                    // Series of kicks - reusing ThunderousKickEffect for now
                     return new ThunderousKickEffect(skill);
                     
-                case 'Shadow Kick':
-                    // Leaves a shadow clone that continues to attack enemies
+                case 'Spokes of the Wheel':
+                    // Damage boost - reusing ShadowKickEffect for now
                     return new ShadowKickEffect(skill);
-                    
-                case 'Gale Kick':
-                    // Increases the speed and distance of the kick
-                    return new GaleKickEffect(skill);
             }
         }
         
