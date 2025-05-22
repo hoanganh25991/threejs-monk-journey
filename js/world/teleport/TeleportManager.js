@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { MULTIPLIER_PORTALS, RETURN_PORTAL, DESTINATION_TERRAINS } from '../../config/teleport-portals.js';
 
 /**
  * TeleportManager - Manages teleport portals in the game world
@@ -43,6 +44,18 @@ export class TeleportManager {
         // Minimap properties
         this.minimapColor = 'rgba(0, 255, 255, 0.8)'; // Cyan color for minimap
         this.minimapSize = 6; // Size on minimap
+        
+        // Multiplier portal properties
+        this.multiplierPortals = MULTIPLIER_PORTALS;
+        this.returnPortal = RETURN_PORTAL;
+        this.destinationTerrains = DESTINATION_TERRAINS;
+        this.activeMultiplier = 1; // Default multiplier (no effect)
+        this.lastPlayerPosition = null; // Store position before teleporting to multiplier zone
+        this.currentDestinationTerrain = null; // Current terrain type for multiplier destination
+        this.returnPortalMesh = null; // Reference to return portal mesh
+        
+        // Text display for portals
+        this.portalLabels = {}; // Store references to portal labels
         
         // Setup click/touch event listeners
         this.setupTouchClickEvents();
@@ -174,7 +187,7 @@ export class TeleportManager {
      * Create default teleport portals
      */
     createDefaultPortals() {
-        // Create portals with 10x farther destinations
+        // Create original portals with 10x farther destinations
         
         // Portal 1: Near starting area (original but with 10x farther destination)
         this.createPortal(
@@ -200,39 +213,101 @@ export class TeleportManager {
             "Distant Ancient Ruins"
         );
         
-        // Add new portals with even farther destinations
+        // Create multiplier portals in a circle around the starting area
+        this.createMultiplierPortals();
+    }
+    
+    /**
+     * Create multiplier portals for enemy spawning
+     */
+    createMultiplierPortals() {
+        console.debug("Creating multiplier portals for enemy spawning");
         
-        // Portal 4: Extreme distance portal
-        this.createPortal(
-            new THREE.Vector3(50, 0, 50),
-            new THREE.Vector3(5000, 0, 5000), // 50x farther than original
-            "Mystic Gateway",
-            "Celestial Realm"
-        );
+        // Create portals in a semi-circle arrangement
+        const centerPoint = new THREE.Vector3(0, 0, 0);
+        const radius = 30; // Distance from center
+        const startAngle = -Math.PI / 2; // Start at top (negative Z)
+        const angleStep = Math.PI / (this.multiplierPortals.length - 1); // Distribute across 180 degrees
         
-        // Portal 5: Another extreme distance portal
-        this.createPortal(
-            new THREE.Vector3(-50, 0, 50),
-            new THREE.Vector3(-5000, 0, -5000), // 50x farther
-            "Void Portal",
-            "Shadow Dimension"
-        );
+        // Create a portal for each multiplier
+        this.multiplierPortals.forEach((portalConfig, index) => {
+            // Calculate position in semi-circle
+            const angle = startAngle + (angleStep * index);
+            const x = centerPoint.x + Math.cos(angle) * radius;
+            const z = centerPoint.z + Math.sin(angle) * radius;
+            
+            // Create destination position (far away in a specific direction)
+            // Each multiplier portal goes to a different location
+            const destDistance = 2000 + (index * 500); // Increasing distances
+            const destAngle = Math.PI * 2 * (index / this.multiplierPortals.length);
+            const destX = Math.cos(destAngle) * destDistance;
+            const destZ = Math.sin(destAngle) * destDistance;
+            
+            // Select a random terrain type for this destination
+            const terrainType = this.destinationTerrains[index % this.destinationTerrains.length];
+            
+            // Create the portal with custom properties
+            const portal = this.createPortal(
+                new THREE.Vector3(x, 0, z),
+                new THREE.Vector3(destX, 0, destZ),
+                `${portalConfig.name} Portal`,
+                `${terrainType.name} (${portalConfig.name})`,
+                portalConfig.color,
+                portalConfig.emissiveColor,
+                portalConfig.size
+            );
+            
+            // Store additional properties on the portal object
+            portal.multiplier = portalConfig.multiplier;
+            portal.multiplierPortalId = portalConfig.id;
+            portal.destinationTerrain = terrainType;
+            
+            // Create text label for the portal
+            this.createPortalLabel(portal);
+            
+            console.debug(`Created ${portalConfig.name} portal at (${x.toFixed(1)}, ${z.toFixed(1)}) → (${destX.toFixed(1)}, ${destZ.toFixed(1)})`);
+        });
+    }
+    
+    /**
+     * Create a text label for a portal
+     * @param {Object} portal - The portal to label
+     */
+    createPortalLabel(portal) {
+        // Skip if document is not available (e.g., headless mode)
+        if (typeof document === 'undefined') return;
         
-        // Portal 6: Ultra-long distance portal
-        this.createPortal(
-            new THREE.Vector3(0, 0, 100),
-            new THREE.Vector3(10000, 0, 0), // 100x farther
-            "Astral Gateway",
-            "Edge of Reality"
-        );
+        // Create a div for the portal label
+        const label = document.createElement('div');
+        label.className = 'portal-label';
+        label.style.position = 'absolute';
+        label.style.color = '#ffffff';
+        label.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        label.style.padding = '5px 10px';
+        label.style.borderRadius = '5px';
+        label.style.fontFamily = 'Arial, sans-serif';
+        label.style.fontSize = '14px';
+        label.style.fontWeight = 'bold';
+        label.style.textAlign = 'center';
+        label.style.pointerEvents = 'none'; // Don't block clicks
+        label.style.zIndex = '1000';
+        label.style.transform = 'translate(-50%, -100%)'; // Center horizontally, position above
+        label.style.marginBottom = '10px'; // Space between label and portal
+        label.style.textShadow = '1px 1px 2px rgba(0, 0, 0, 0.8)'; // Text shadow for better visibility
+        label.style.display = 'none'; // Hidden by default, will be shown in update
         
-        // Portal 7: Diagonal extreme distance
-        this.createPortal(
-            new THREE.Vector3(100, 0, 0),
-            new THREE.Vector3(-10000, 0, 10000), // 100x farther
-            "Quantum Tunnel",
-            "Parallel Universe"
-        );
+        // Set label text
+        if (portal.multiplier) {
+            label.textContent = portal.sourceName;
+        } else {
+            label.textContent = portal.sourceName;
+        }
+        
+        // Add to document
+        document.body.appendChild(label);
+        
+        // Store reference to label
+        this.portalLabels[portal.id] = label;
     }
     
     /**
@@ -241,9 +316,12 @@ export class TeleportManager {
      * @param {THREE.Vector3} targetPosition - The position to teleport to
      * @param {string} sourceName - Name of the source portal
      * @param {string} targetName - Name of the target location
+     * @param {number} color - Custom color for the portal (optional)
+     * @param {number} emissiveColor - Custom emissive color (optional)
+     * @param {number} size - Custom size for the portal (optional)
      * @returns {Object} - The created portal object
      */
-    createPortal(sourcePosition, targetPosition, sourceName, targetName) {
+    createPortal(sourcePosition, targetPosition, sourceName, targetName, color, emissiveColor, size) {
         // Adjust Y position based on terrain height
         if (this.worldManager && this.worldManager.getTerrainHeight) {
             sourcePosition.y = this.worldManager.getTerrainHeight(sourcePosition.x, sourcePosition.z) + 0.5;
@@ -253,10 +331,13 @@ export class TeleportManager {
         // Elevate the source position (this will affect the portal's height)
         sourcePosition.y += 2.8;  
         
+        // Use custom size or default
+        const portalRadius = size || this.portalRadius;
+        
         // Create portal geometry
         const geometry = new THREE.CylinderGeometry(
-            this.portalRadius, // Top radius
-            this.portalRadius, // Bottom radius
+            portalRadius, // Top radius
+            portalRadius, // Bottom radius
             this.portalHeight, // Height
             32, // Radial segments
             1, // Height segments
@@ -265,10 +346,10 @@ export class TeleportManager {
         
         // Create portal material with glow effect
         const material = new THREE.MeshStandardMaterial({
-            color: this.portalColor,
+            color: color || this.portalColor,
             transparent: true,
             opacity: 0.7,
-            emissive: this.portalEmissiveColor,
+            emissive: emissiveColor || this.portalEmissiveColor,
             emissiveIntensity: this.portalEmissiveIntensity,
             side: THREE.DoubleSide
         });
@@ -282,7 +363,7 @@ export class TeleportManager {
         this.scene.add(portalMesh);
         
         // Create particle effect for the portal
-        const particles = this.createPortalParticles(sourcePosition);
+        const particles = this.createPortalParticles(sourcePosition, color || this.portalColor, portalRadius);
         
         // Create portal object
         const portal = {
@@ -294,7 +375,9 @@ export class TeleportManager {
             mesh: portalMesh,
             particles: particles,
             creationTime: Date.now(),
-            lastInteractionTime: 0
+            lastInteractionTime: 0,
+            color: color || this.portalColor,
+            size: portalRadius
         };
         
         // Add to portals array
@@ -308,9 +391,14 @@ export class TeleportManager {
     /**
      * Create particle effect for a portal
      * @param {THREE.Vector3} position - The position of the portal
+     * @param {number} color - Custom color for the particles (optional)
+     * @param {number} portalRadius - Custom radius for the portal (optional)
      * @returns {THREE.Points} - The particle system
      */
-    createPortalParticles(position) {
+    createPortalParticles(position, color, portalRadius) {
+        // Use provided radius or default
+        const radius = portalRadius || this.portalRadius;
+        
         // Create particle geometry
         const particleCount = 100;
         const particleGeometry = new THREE.BufferGeometry();
@@ -319,10 +407,10 @@ export class TeleportManager {
         // Initialize particle positions in a circle around the portal
         for (let i = 0; i < particleCount; i++) {
             const angle = (i / particleCount) * Math.PI * 2;
-            const radius = this.portalRadius * (0.5 + Math.random() * 0.5);
-            const x = position.x + Math.cos(angle) * radius;
+            const particleRadius = radius * (0.5 + Math.random() * 0.5);
+            const x = position.x + Math.cos(angle) * particleRadius;
             const y = position.y + Math.random() * this.portalHeight;
-            const z = position.z + Math.sin(angle) * radius;
+            const z = position.z + Math.sin(angle) * particleRadius;
             
             particlePositions[i * 3] = x;
             particlePositions[i * 3 + 1] = y;
@@ -333,7 +421,7 @@ export class TeleportManager {
         
         // Create particle material
         const particleMaterial = new THREE.PointsMaterial({
-            color: this.portalColor,
+            color: color || this.portalColor,
             size: 0.3,
             transparent: true,
             opacity: 0.7,
@@ -368,7 +456,59 @@ export class TeleportManager {
             
             // Check for player interaction
             this.checkPlayerInteraction(portal, playerPosition);
+            
+            // Update portal label position
+            this.updatePortalLabel(portal);
         });
+    }
+    
+    /**
+     * Update the position of a portal's label in screen space
+     * @param {Object} portal - The portal whose label to update
+     */
+    updatePortalLabel(portal) {
+        // Skip if no label for this portal
+        const label = this.portalLabels[portal.id];
+        if (!label) return;
+        
+        // Skip if no camera or renderer
+        if (!this.game || !this.game.camera || !this.game.renderer) return;
+        
+        // Get screen position
+        const screenPosition = portal.sourcePosition.clone();
+        screenPosition.y += 5; // Position label above portal
+        
+        // Project position to screen space
+        screenPosition.project(this.game.camera);
+        
+        // Convert to CSS coordinates
+        const x = (screenPosition.x * 0.5 + 0.5) * this.game.renderer.domElement.clientWidth;
+        const y = (-(screenPosition.y * 0.5) + 0.5) * this.game.renderer.domElement.clientHeight;
+        
+        // Check if portal is in front of camera (z < 1)
+        const isBehindCamera = screenPosition.z > 1;
+        
+        // Calculate distance to player
+        const distance = portal.sourcePosition.distanceTo(this.game.player.getPosition());
+        const isVisible = distance < 50; // Only show label if within 50 units
+        
+        // Update label position
+        label.style.left = `${x}px`;
+        label.style.top = `${y}px`;
+        
+        // Show/hide label based on visibility
+        if (isVisible && !isBehindCamera) {
+            label.style.display = 'block';
+            
+            // Scale based on distance (smaller when further away)
+            const scale = Math.max(0.5, Math.min(1.0, 1.0 - (distance / 50)));
+            label.style.transform = `translate(-50%, -100%) scale(${scale})`;
+            
+            // Adjust opacity based on distance
+            label.style.opacity = Math.max(0.3, Math.min(1.0, 1.0 - (distance / 50)));
+        } else {
+            label.style.display = 'none';
+        }
     }
     
     /**
@@ -478,6 +618,26 @@ export class TeleportManager {
         // Set cooldown
         this.lastTeleportTime = Date.now();
         
+        // Check if this is a return portal
+        const isReturnPortal = portal.isReturnPortal;
+        
+        // Check if this is a multiplier portal
+        const isMultiplierPortal = portal.multiplier && portal.multiplier > 1;
+        
+        // Store player's current position if teleporting to a multiplier zone
+        if (isMultiplierPortal) {
+            this.lastPlayerPosition = this.game.player.getPosition().clone();
+            this.activeMultiplier = portal.multiplier;
+            this.currentDestinationTerrain = portal.destinationTerrain;
+            console.debug(`Setting active multiplier to ${this.activeMultiplier}x`);
+        }
+        
+        // If returning from a multiplier zone, reset the multiplier
+        if (isReturnPortal) {
+            this.activeMultiplier = 1;
+            console.debug(`Returning from multiplier zone, resetting multiplier to 1x`);
+        }
+        
         // Show teleport effect
         this.showTeleportEffect(portal);
         
@@ -530,6 +690,14 @@ export class TeleportManager {
                     `Arrived at ${portal.targetName}`,
                     3000
                 );
+                
+                // If this is a multiplier portal, show additional notification
+                if (isMultiplierPortal) {
+                    this.game.hudManager.showNotification(
+                        `Enemy spawn rate: ${portal.multiplier}x`,
+                        5000
+                    );
+                }
             }
             
             // Zoom out minimap temporarily to show both locations
@@ -556,7 +724,168 @@ export class TeleportManager {
                     miniMap.setScale(originalScale);
                 }, 8000);
             }
+            
+            // If this is a multiplier portal, create a return portal
+            if (isMultiplierPortal && !isReturnPortal) {
+                this.createReturnPortal(
+                    new THREE.Vector3(
+                        portal.targetPosition.x + 10, // Offset slightly
+                        portal.targetPosition.y,
+                        portal.targetPosition.z + 10
+                    ),
+                    this.lastPlayerPosition
+                );
+                
+                // Spawn enemies based on multiplier
+                this.spawnMultiplierEnemies(portal.multiplier, portal.targetPosition);
+                
+                // Modify terrain if we have a destination terrain type
+                if (portal.destinationTerrain && this.worldManager && this.worldManager.terrainManager) {
+                    this.modifyDestinationTerrain(portal.targetPosition, portal.destinationTerrain);
+                }
+            }
         }, this.effectDuration);
+    }
+    
+    /**
+     * Create a return portal at the destination
+     * @param {THREE.Vector3} position - Position for the return portal
+     * @param {THREE.Vector3} targetPosition - Position to return to
+     */
+    createReturnPortal(position, targetPosition) {
+        // Remove any existing return portal
+        this.removeReturnPortal();
+        
+        // Create the return portal
+        const returnPortal = this.createPortal(
+            position,
+            targetPosition,
+            "Return Portal",
+            "Previous Location",
+            this.returnPortal.color,
+            this.returnPortal.emissiveColor,
+            this.returnPortal.size
+        );
+        
+        // Mark as return portal
+        returnPortal.isReturnPortal = true;
+        
+        // Store reference
+        this.returnPortalMesh = returnPortal.mesh;
+        
+        console.debug(`Created return portal at (${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)})`);
+        
+        return returnPortal;
+    }
+    
+    /**
+     * Remove the return portal if it exists
+     */
+    removeReturnPortal() {
+        // Find and remove any existing return portals
+        for (let i = this.portals.length - 1; i >= 0; i--) {
+            if (this.portals[i].isReturnPortal) {
+                this.removePortal(this.portals[i].id);
+            }
+        }
+        
+        this.returnPortalMesh = null;
+    }
+    
+    /**
+     * Spawn enemies based on the multiplier
+     * @param {number} multiplier - The enemy spawn multiplier
+     * @param {THREE.Vector3} position - Center position for spawning
+     */
+    spawnMultiplierEnemies(multiplier, position) {
+        // Skip if no enemy manager
+        if (!this.game || !this.game.enemyManager) {
+            console.warn("Cannot spawn multiplier enemies: enemy manager not found");
+            return;
+        }
+        
+        console.debug(`Spawning enemies with ${multiplier}x multiplier at (${position.x.toFixed(1)}, ${position.z.toFixed(1)})`);
+        
+        // Calculate how many enemies to spawn
+        // Base count is 5-10, multiplied by the multiplier, but capped at 100 for performance
+        const baseCount = 5 + Math.floor(Math.random() * 5);
+        const spawnCount = Math.min(baseCount * multiplier, 100);
+        
+        // Get current zone for appropriate enemy types
+        let currentZone = 'forest'; // Default zone
+        if (this.game.world) {
+            const zone = this.game.world.getZoneAt(position);
+            if (zone) {
+                currentZone = zone.name.toLowerCase();
+            }
+        }
+        
+        // Get enemy types for this zone
+        const zoneEnemyTypes = this.game.enemyManager.zoneEnemies[currentZone] || 
+                              Object.keys(this.game.enemyManager.zoneEnemies)[0];
+        
+        // Temporarily increase max enemies limit
+        const originalMaxEnemies = this.game.enemyManager.maxEnemies;
+        this.game.enemyManager.maxEnemies = Math.max(originalMaxEnemies, spawnCount + 20);
+        
+        // Spawn enemies in groups
+        const numGroups = Math.min(5, Math.ceil(spawnCount / 20));
+        const enemiesPerGroup = Math.ceil(spawnCount / numGroups);
+        
+        for (let g = 0; g < numGroups; g++) {
+            // Select a random enemy type from the zone for this group
+            const groupEnemyType = zoneEnemyTypes[Math.floor(Math.random() * zoneEnemyTypes.length)];
+            
+            // Determine group position (random direction from center)
+            const groupAngle = Math.random() * Math.PI * 2;
+            const groupDistance = 10 + Math.random() * 20; // 10-30 units from center
+            const groupX = position.x + Math.cos(groupAngle) * groupDistance;
+            const groupZ = position.z + Math.sin(groupAngle) * groupDistance;
+            
+            // Spawn the group of enemies
+            for (let i = 0; i < enemiesPerGroup; i++) {
+                // Calculate position within group (random spread)
+                const spreadRadius = 5 + Math.random() * 5;
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * spreadRadius;
+                const x = groupX + Math.cos(angle) * distance;
+                const z = groupZ + Math.sin(angle) * distance;
+                
+                // Get terrain height at position
+                const y = this.game.world.getTerrainHeight(x, z);
+                
+                // Spawn enemy
+                const enemyPosition = new THREE.Vector3(x, y, z);
+                this.game.enemyManager.spawnEnemy(groupEnemyType, enemyPosition);
+            }
+        }
+        
+        // Show notification
+        if (this.game.hudManager) {
+            this.game.hudManager.showNotification(
+                `Spawned ${spawnCount} enemies!`,
+                3000
+            );
+        }
+    }
+    
+    /**
+     * Modify the terrain at the destination based on the terrain type
+     * @param {THREE.Vector3} position - Center position of the destination
+     * @param {Object} terrainType - The terrain configuration
+     */
+    modifyDestinationTerrain(position, terrainType) {
+        // Skip if no terrain manager
+        if (!this.worldManager || !this.worldManager.terrainManager) {
+            console.warn("Cannot modify destination terrain: terrain manager not found");
+            return;
+        }
+        
+        console.debug(`Modifying destination terrain to ${terrainType.name} at (${position.x.toFixed(1)}, ${position.z.toFixed(1)})`);
+        
+        // TODO: Implement terrain modification based on terrainType
+        // This would require additional methods in the TerrainManager
+        // For now, we'll just log the intention
     }
     
     /**
