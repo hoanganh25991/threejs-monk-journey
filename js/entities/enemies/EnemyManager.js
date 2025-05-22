@@ -519,8 +519,24 @@ export class EnemyManager {
     
     cleanupDistantEnemies() {
         const playerPos = this.player.getPosition();
-        const maxDistance = 50; // Maximum distance to keep enemies (in world units)
-        const bossMaxDistance = 80; // Maximum distance to keep bosses (larger than regular enemies)
+        
+        // Increased distances to keep enemies around longer
+        const maxDistance = 80; // Maximum distance to keep enemies (in world units)
+        const bossMaxDistance = 120; // Maximum distance to keep bosses (larger than regular enemies)
+        
+        // Check if we're in a multiplier zone (higher enemy density)
+        let inMultiplierZone = false;
+        let multiplierValue = 1;
+        
+        if (this.game && this.game.teleportManager) {
+            inMultiplierZone = this.game.teleportManager.activeMultiplier > 1;
+            multiplierValue = this.game.teleportManager.activeMultiplier;
+        }
+        
+        // In multiplier zones, keep enemies around longer
+        const zoneDistanceMultiplier = inMultiplierZone ? 1.5 : 1.0;
+        const adjustedMaxDistance = maxDistance * zoneDistanceMultiplier;
+        const adjustedBossMaxDistance = bossMaxDistance * zoneDistanceMultiplier;
         
         let removedCount = 0;
         
@@ -533,10 +549,17 @@ export class EnemyManager {
             const distance = position.distanceTo(playerPos);
             
             // Different distance thresholds for bosses and regular enemies
-            const distanceThreshold = enemy.isBoss ? bossMaxDistance : maxDistance;
+            const distanceThreshold = enemy.isBoss ? adjustedBossMaxDistance : adjustedMaxDistance;
             
             // If enemy is too far away, remove it
             if (distance > distanceThreshold) {
+                // In multiplier zones, don't remove all enemies at once - stagger removal
+                // This creates a more gradual transition as player moves
+                if (inMultiplierZone && Math.random() > 0.3) {
+                    // Skip removal for 70% of enemies in multiplier zones
+                    continue;
+                }
+                
                 enemy.remove();
                 this.enemies.splice(i, 1);
                 removedCount++;
@@ -555,14 +578,44 @@ export class EnemyManager {
     }
     
     spawnEnemiesAroundPlayer(playerPosition) {
+        // Check if we're in a multiplier zone (higher enemy density)
+        let inMultiplierZone = false;
+        let multiplierValue = 1;
+        
+        if (this.game && this.game.teleportManager) {
+            inMultiplierZone = this.game.teleportManager.activeMultiplier > 1;
+            multiplierValue = this.game.teleportManager.activeMultiplier;
+        }
+        
+        // In multiplier zones, temporarily increase max enemies
+        const originalMaxEnemies = this.maxEnemies;
+        if (inMultiplierZone) {
+            // Scale max enemies based on multiplier, but cap it for performance
+            this.maxEnemies = Math.min(200, Math.floor(originalMaxEnemies * Math.sqrt(multiplierValue)));
+            console.debug(`In multiplier zone (${multiplierValue}x) - increased max enemies to ${this.maxEnemies}`);
+        }
+        
         // Skip if we're at max enemies
         if (this.enemies.length >= this.maxEnemies) {
+            // Restore original max enemies
+            this.maxEnemies = originalMaxEnemies;
             return;
         }
         
-        // Determine how many enemies to spawn
+        // Determine how many enemies to spawn - scale with multiplier
+        let baseEnemyCount = 5 + Math.floor(Math.random() * 5); // 5-9 enemies per screen normally
+        
+        // In multiplier zones, spawn more enemies per wave
+        if (inMultiplierZone) {
+            // Scale enemy count based on multiplier, using square root for more reasonable scaling
+            baseEnemyCount = Math.floor(baseEnemyCount * Math.sqrt(multiplierValue) * 0.5);
+            
+            // Ensure we spawn at least some enemies
+            baseEnemyCount = Math.max(5, baseEnemyCount);
+        }
+        
         const enemiesToSpawn = Math.min(
-            5 + Math.floor(Math.random() * 5), // 5-9 enemies per screen
+            baseEnemyCount,
             this.maxEnemies - this.enemies.length // Don't exceed max enemies
         );
         
@@ -578,17 +631,38 @@ export class EnemyManager {
         // Get enemy types for this zone
         const zoneEnemyTypes = this.zoneEnemies[currentZone] || Object.keys(this.zoneEnemies)[0];
         
-        // Spawn enemies in 1-3 groups
-        const numGroups = 1 + Math.floor(Math.random() * 2);
+        // Spawn enemies in multiple groups - more groups in multiplier zones
+        const numGroups = inMultiplierZone ? 
+            2 + Math.floor(Math.random() * 3) : // 2-4 groups in multiplier zones
+            1 + Math.floor(Math.random() * 2);  // 1-2 groups normally
+            
         const enemiesPerGroup = Math.ceil(enemiesToSpawn / numGroups);
+        
+        // In multiplier zones, spawn enemies in a more surrounding pattern
+        const angleStep = inMultiplierZone ? (Math.PI * 2) / numGroups : 0;
+        let startAngle = Math.random() * Math.PI * 2;
         
         for (let g = 0; g < numGroups; g++) {
             // Select a random enemy type from the zone for this group
             const groupEnemyType = zoneEnemyTypes[Math.floor(Math.random() * zoneEnemyTypes.length)];
             
-            // Determine group position (random direction from player, outside screen but not too far)
-            const groupAngle = Math.random() * Math.PI * 2;
-            const groupDistance = 25 + Math.random() * 10; // Just outside screen view
+            // Determine group position
+            let groupAngle;
+            
+            if (inMultiplierZone) {
+                // In multiplier zones, distribute groups more evenly around the player
+                // This creates a surrounding effect that's harder to escape
+                groupAngle = startAngle + (angleStep * g);
+            } else {
+                // Normal random angle
+                groupAngle = Math.random() * Math.PI * 2;
+            }
+            
+            // Adjust distance based on multiplier - closer in multiplier zones
+            const groupDistance = inMultiplierZone ?
+                20 + Math.random() * 10 : // Closer in multiplier zones (20-30 units)
+                25 + Math.random() * 10;  // Normal distance (25-35 units)
+                
             const groupX = playerPosition.x + Math.cos(groupAngle) * groupDistance;
             const groupZ = playerPosition.z + Math.sin(groupAngle) * groupDistance;
             
@@ -600,7 +674,11 @@ export class EnemyManager {
                 }
                 
                 // Calculate position within group (random spread)
-                const spreadRadius = 5 + Math.random() * 5;
+                // Tighter groups in multiplier zones
+                const spreadRadius = inMultiplierZone ?
+                    3 + Math.random() * 4 : // Tighter groups in multiplier zones
+                    5 + Math.random() * 5;  // Normal spread
+                    
                 const angle = Math.random() * Math.PI * 2;
                 const distance = Math.random() * spreadRadius;
                 const x = groupX + Math.cos(angle) * distance;
@@ -613,6 +691,26 @@ export class EnemyManager {
                 const position = new THREE.Vector3(x, y, z);
                 this.spawnEnemy(groupEnemyType, position);
             }
+        }
+        
+        // Restore original max enemies
+        this.maxEnemies = originalMaxEnemies;
+        
+        // In multiplier zones, schedule another wave of enemies after a delay
+        // This creates continuous waves that will overwhelm the player if they don't defeat enemies quickly
+        if (inMultiplierZone) {
+            const waveDelay = 5000 + Math.random() * 5000; // 5-10 seconds between waves
+            
+            setTimeout(() => {
+                // Only spawn if still in multiplier zone
+                if (this.game && 
+                    this.game.teleportManager && 
+                    this.game.teleportManager.activeMultiplier > 1) {
+                    
+                    console.debug(`Spawning additional wave of enemies in multiplier zone`);
+                    this.spawnEnemiesAroundPlayer(this.player.getPosition());
+                }
+            }, waveDelay);
         }
     }
     

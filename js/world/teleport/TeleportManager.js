@@ -807,9 +807,11 @@ export class TeleportManager {
         console.debug(`Spawning enemies with ${multiplier}x multiplier at (${position.x.toFixed(1)}, ${position.z.toFixed(1)})`);
         
         // Calculate how many enemies to spawn
-        // Base count is 5-10, multiplied by the multiplier, but capped at 100 for performance
+        // Base count is 5-10, multiplied by the multiplier, but capped at 150 for performance
+        // Using square root of multiplier for more reasonable scaling with very high multipliers
         const baseCount = 5 + Math.floor(Math.random() * 5);
-        const spawnCount = Math.min(baseCount * multiplier, 100);
+        const scaledMultiplier = Math.sqrt(multiplier) * 2; // Square root scaling with a boost
+        const spawnCount = Math.min(Math.ceil(baseCount * scaledMultiplier), 150);
         
         // Get current zone for appropriate enemy types
         let currentZone = 'forest'; // Default zone
@@ -826,26 +828,37 @@ export class TeleportManager {
         
         // Temporarily increase max enemies limit
         const originalMaxEnemies = this.game.enemyManager.maxEnemies;
-        this.game.enemyManager.maxEnemies = Math.max(originalMaxEnemies, spawnCount + 20);
+        this.game.enemyManager.maxEnemies = Math.max(originalMaxEnemies, spawnCount + 50);
         
-        // Spawn enemies in groups
-        const numGroups = Math.min(5, Math.ceil(spawnCount / 20));
+        // Spawn enemies in groups - more groups for higher multipliers
+        const numGroups = Math.min(8, Math.max(3, Math.ceil(Math.sqrt(multiplier))));
         const enemiesPerGroup = Math.ceil(spawnCount / numGroups);
+        
+        // Distribute groups evenly around the player in a circle
+        const angleStep = (Math.PI * 2) / numGroups;
+        let startAngle = Math.random() * Math.PI * 2;
         
         for (let g = 0; g < numGroups; g++) {
             // Select a random enemy type from the zone for this group
             const groupEnemyType = zoneEnemyTypes[Math.floor(Math.random() * zoneEnemyTypes.length)];
             
-            // Determine group position (random direction from center)
-            const groupAngle = Math.random() * Math.PI * 2;
-            const groupDistance = 10 + Math.random() * 20; // 10-30 units from center
+            // Determine group position (evenly distributed around center)
+            const groupAngle = startAngle + (angleStep * g);
+            
+            // Distance scales with multiplier - higher multipliers create a tighter circle
+            // This makes it harder to escape as the multiplier increases
+            const maxDistance = 30 / Math.log10(multiplier + 1); // Decreases as multiplier increases
+            const minDistance = 10;
+            const groupDistance = minDistance + Math.random() * (maxDistance - minDistance);
+            
             const groupX = position.x + Math.cos(groupAngle) * groupDistance;
             const groupZ = position.z + Math.sin(groupAngle) * groupDistance;
             
             // Spawn the group of enemies
             for (let i = 0; i < enemiesPerGroup; i++) {
                 // Calculate position within group (random spread)
-                const spreadRadius = 5 + Math.random() * 5;
+                // Higher multipliers create tighter groups
+                const spreadRadius = 5 / Math.log10(multiplier + 1);
                 const angle = Math.random() * Math.PI * 2;
                 const distance = Math.random() * spreadRadius;
                 const x = groupX + Math.cos(angle) * distance;
@@ -860,12 +873,139 @@ export class TeleportManager {
             }
         }
         
+        // For higher multipliers, add some elite or champion enemies
+        if (multiplier >= 10) {
+            // Number of special enemies scales with multiplier
+            const specialEnemyCount = Math.min(10, Math.floor(Math.sqrt(multiplier)));
+            
+            // Get elite or champion enemy types
+            const eliteTypes = this.game.enemyManager.enemyTypes.filter(type => 
+                type.rarity === 'elite' || type.rarity === 'champion'
+            );
+            
+            if (eliteTypes.length > 0) {
+                console.debug(`Adding ${specialEnemyCount} elite/champion enemies to multiplier zone`);
+                
+                for (let i = 0; i < specialEnemyCount; i++) {
+                    // Select a random elite type
+                    const eliteType = eliteTypes[Math.floor(Math.random() * eliteTypes.length)];
+                    
+                    // Random position within a closer range to the player
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 15 + Math.random() * 10; // 15-25 units from center
+                    const x = position.x + Math.cos(angle) * distance;
+                    const z = position.z + Math.sin(angle) * distance;
+                    const y = this.game.world.getTerrainHeight(x, z);
+                    
+                    // Spawn elite enemy
+                    const elitePosition = new THREE.Vector3(x, y, z);
+                    this.game.enemyManager.spawnEnemy(eliteType.type, elitePosition);
+                }
+            }
+        }
+        
         // Show notification
         if (this.game.hudManager) {
-            this.game.hudManager.showNotification(
-                `Spawned ${spawnCount} enemies!`,
-                3000
-            );
+            // More dramatic notification for higher multipliers
+            if (multiplier >= 50) {
+                this.game.hudManager.showNotification(
+                    `DANGER! Massive enemy wave approaching!`,
+                    5000
+                );
+            } else if (multiplier >= 20) {
+                this.game.hudManager.showNotification(
+                    `WARNING! Large enemy force detected!`,
+                    4000
+                );
+            } else {
+                this.game.hudManager.showNotification(
+                    `Spawned ${spawnCount} enemies!`,
+                    3000
+                );
+            }
+        }
+        
+        // Schedule additional waves for higher multipliers
+        if (multiplier >= 5) {
+            const waveDelay = 8000 - (multiplier * 50); // Shorter delays for higher multipliers
+            const minDelay = 3000; // Minimum 3 seconds between waves
+            
+            setTimeout(() => {
+                // Only spawn if still in multiplier zone
+                if (this.game && 
+                    this.game.teleportManager && 
+                    this.game.teleportManager.activeMultiplier > 1) {
+                    
+                    console.debug(`Spawning additional wave in multiplier zone`);
+                    // Spawn a smaller follow-up wave
+                    this.spawnFollowUpWave(position, multiplier);
+                }
+            }, Math.max(minDelay, waveDelay));
+        }
+    }
+    
+    /**
+     * Spawn a follow-up wave of enemies in a multiplier zone
+     * @param {THREE.Vector3} position - Center position for spawning
+     * @param {number} multiplier - The enemy spawn multiplier
+     */
+    spawnFollowUpWave(position, multiplier) {
+        // Skip if no enemy manager
+        if (!this.game || !this.game.enemyManager) {
+            return;
+        }
+        
+        // Smaller wave than the initial one
+        const waveSize = Math.min(50, Math.ceil(multiplier * 0.7));
+        
+        // Get current zone for appropriate enemy types
+        let currentZone = 'forest';
+        if (this.game.world) {
+            const zone = this.game.world.getZoneAt(position);
+            if (zone) {
+                currentZone = zone.name.toLowerCase();
+            }
+        }
+        
+        // Get enemy types for this zone
+        const zoneEnemyTypes = this.game.enemyManager.zoneEnemies[currentZone] || 
+                              Object.keys(this.game.enemyManager.zoneEnemies)[0];
+        
+        // Select a random enemy type
+        const enemyType = zoneEnemyTypes[Math.floor(Math.random() * zoneEnemyTypes.length)];
+        
+        // Spawn in a single group from a random direction
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 25 + Math.random() * 10; // 25-35 units from center
+        const groupX = position.x + Math.cos(angle) * distance;
+        const groupZ = position.z + Math.sin(angle) * distance;
+        
+        // Spawn the enemies
+        for (let i = 0; i < waveSize; i++) {
+            // Calculate position within group
+            const spreadRadius = 5;
+            const enemyAngle = Math.random() * Math.PI * 2;
+            const enemyDistance = Math.random() * spreadRadius;
+            const x = groupX + Math.cos(enemyAngle) * enemyDistance;
+            const z = groupZ + Math.sin(enemyAngle) * enemyDistance;
+            const y = this.game.world.getTerrainHeight(x, z);
+            
+            // Spawn enemy
+            const enemyPosition = new THREE.Vector3(x, y, z);
+            this.game.enemyManager.spawnEnemy(enemyType, enemyPosition);
+        }
+        
+        // Schedule another wave if multiplier is high enough
+        if (multiplier >= 10) {
+            setTimeout(() => {
+                // Only spawn if still in multiplier zone
+                if (this.game && 
+                    this.game.teleportManager && 
+                    this.game.teleportManager.activeMultiplier > 1) {
+                    
+                    this.spawnFollowUpWave(position, multiplier);
+                }
+            }, 5000 + Math.random() * 5000); // 5-10 seconds between waves
         }
     }
     
@@ -883,9 +1023,135 @@ export class TeleportManager {
         
         console.debug(`Modifying destination terrain to ${terrainType.name} at (${position.x.toFixed(1)}, ${position.z.toFixed(1)})`);
         
-        // TODO: Implement terrain modification based on terrainType
-        // This would require additional methods in the TerrainManager
-        // For now, we'll just log the intention
+        // Create a custom zone type for this terrain
+        const customZoneType = `danger_${terrainType.id}`;
+        
+        // Define the radius of terrain to modify
+        const modificationRadius = terrainType.size || 100;
+        
+        // Get all terrain chunks within the radius
+        const chunkSize = this.worldManager.terrainManager.terrainChunkSize;
+        const centerChunkX = Math.floor(position.x / chunkSize);
+        const centerChunkZ = Math.floor(position.z / chunkSize);
+        const chunkRadius = Math.ceil(modificationRadius / chunkSize) + 1;
+        
+        // Create a custom zone for this area
+        if (this.worldManager.createCustomZone) {
+            this.worldManager.createCustomZone(
+                customZoneType,
+                position,
+                modificationRadius,
+                {
+                    groundColor: terrainType.groundColor,
+                    name: terrainType.name,
+                    dangerLevel: Math.min(5, Math.ceil(this.activeMultiplier / 10)) // 1-5 based on multiplier
+                }
+            );
+        }
+        
+        // Apply custom coloring to terrain chunks in the area
+        for (let x = centerChunkX - chunkRadius; x <= centerChunkX + chunkRadius; x++) {
+            for (let z = centerChunkZ - chunkRadius; z <= centerChunkZ + chunkRadius; z++) {
+                const chunkKey = `${x},${z}`;
+                const chunk = this.worldManager.terrainManager.terrainChunks[chunkKey];
+                
+                if (chunk) {
+                    // Calculate distance from center to chunk center
+                    const chunkCenterX = (x + 0.5) * chunkSize;
+                    const chunkCenterZ = (z + 0.5) * chunkSize;
+                    const distX = chunkCenterX - position.x;
+                    const distZ = chunkCenterZ - position.z;
+                    const distance = Math.sqrt(distX * distX + distZ * distZ);
+                    
+                    // Only modify chunks within the radius
+                    if (distance <= modificationRadius) {
+                        // Apply custom coloring to this chunk
+                        this.applyDangerTerrainColor(chunk, terrainType);
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Apply danger-themed coloring to a terrain chunk
+     * @param {THREE.Mesh} terrain - The terrain mesh to color
+     * @param {Object} terrainType - The terrain configuration
+     */
+    applyDangerTerrainColor(terrain, terrainType) {
+        if (!terrain || !terrain.geometry || !terrain.geometry.attributes || !terrain.geometry.attributes.position) {
+            return;
+        }
+        
+        const colors = [];
+        const positions = terrain.geometry.attributes.position.array;
+        
+        // Use the terrain type's ground color as base
+        const baseColorHex = terrainType.groundColor || 0x880000; // Default to dark red if not specified
+        const baseColor = new THREE.Color(baseColorHex);
+        
+        // Add some variation based on terrain type
+        let accentColor;
+        switch (terrainType.id) {
+            case 'hellscape':
+                accentColor = new THREE.Color(0xFF4500); // Orange-red for lava
+                break;
+            case 'void':
+                accentColor = new THREE.Color(0x3311AA); // Deep purple for void
+                break;
+            case 'ancient_ruins':
+                accentColor = new THREE.Color(0xAA7722); // Golden for ruins
+                break;
+            case 'crystal_cavern':
+                accentColor = new THREE.Color(0x66CCFF); // Bright blue for crystals
+                break;
+            default:
+                accentColor = new THREE.Color(0xDD3311); // Default danger accent
+        }
+        
+        // Create deterministic noise patterns for natural variation
+        const noiseScale = 0.05;
+        const noiseOffset = terrain.position.x * 0.01 + terrain.position.z * 0.01;
+        
+        for (let i = 0; i < positions.length; i += 3) {
+            // Get vertex position for noise calculation
+            const x = positions[i];
+            const z = positions[i + 2];
+            
+            // Use deterministic noise pattern for natural variation
+            const noiseValue = Math.sin(x * noiseScale + noiseOffset) * Math.cos(z * noiseScale + noiseOffset);
+            
+            // Mix base color with accent color based on noise
+            let color = baseColor.clone();
+            
+            if (noiseValue > 0.7) {
+                // Areas with accent color
+                color.lerp(accentColor, 0.7);
+            } else if (noiseValue < -0.7) {
+                // Darker areas
+                color.multiplyScalar(0.7);
+            }
+            
+            // Add subtle micro-variation to make terrain look more natural
+            const microVariation = (Math.sin(x * 0.1 + z * 0.1) * 0.05);
+            
+            // Apply variation to each color channel
+            color = new THREE.Color(
+                Math.max(0, Math.min(1, color.r + microVariation)),
+                Math.max(0, Math.min(1, color.g + microVariation)),
+                Math.max(0, Math.min(1, color.b + microVariation))
+            );
+            
+            colors.push(color.r, color.g, color.b);
+        }
+        
+        // Apply colors to terrain
+        terrain.geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+        
+        // Make sure vertex colors are used
+        if (terrain.material) {
+            terrain.material.vertexColors = true;
+        }
     }
     
     /**
