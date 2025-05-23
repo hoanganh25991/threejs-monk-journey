@@ -933,7 +933,6 @@ export class TeleportManager {
             
             // Select a random enemy type for this ring
             const zoneEnemyTypes = this.getRandomzoneEnemyTypes();
-            console.log({zoneEnemyTypes});
             const ringEnemyType = zoneEnemyTypes[Math.floor(Math.random() * zoneEnemyTypes.length)];
             
             // Spawn enemies in this ring
@@ -984,11 +983,8 @@ export class TeleportManager {
         
         // Start the continuous spawning interval
         const intervalId = setInterval(() => {
-            console.log({spawnInterval, multiplier})
             // Only continue if still in multiplier zone
             if (this.activeMultiplier > 1) {
-                console.log({activeMultiplier: this.activeMultiplier})
-                
                 // Get player's current position
                 const playerPos = this.game.player.getPosition();
                 

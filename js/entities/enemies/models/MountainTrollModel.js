@@ -24,11 +24,17 @@ export class MountainTrollModel extends EnemyModel {
         body.castShadow = true;
         
         // Add some irregularity to the body
-        body.geometry.vertices.forEach(vertex => {
-            vertex.x += (Math.random() - 0.5) * 0.1;
-            vertex.y += (Math.random() - 0.5) * 0.1;
-            vertex.z += (Math.random() - 0.5) * 0.1;
-        });
+        // Using BufferGeometry API for newer Three.js versions
+        const positionAttribute = body.geometry.getAttribute('position');
+        const positions = positionAttribute.array;
+        
+        for (let i = 0; i < positions.length; i += 3) {
+            positions[i] += (Math.random() - 0.5) * 0.1;     // x
+            positions[i + 1] += (Math.random() - 0.5) * 0.1; // y
+            positions[i + 2] += (Math.random() - 0.5) * 0.1; // z
+        }
+        
+        positionAttribute.needsUpdate = true;
         
         this.modelGroup.add(body);
         
