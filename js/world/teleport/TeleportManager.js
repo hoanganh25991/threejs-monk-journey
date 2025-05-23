@@ -976,7 +976,7 @@ export class TeleportManager {
         // For extreme multipliers, spawn very frequently
         // x500 = every 1 second
         // x100 = every 2 seconds
-        const spawnInterval = 1000 * multiplier / 100;
+        const spawnInterval = 10_000 / Math.log(multiplier);
         const zoneEnemyTypes = this.getRandomzoneEnemyTypes();
         
         console.debug(`Starting continuous enemy spawning every ${spawnInterval}ms for ${multiplier}x multiplier`);
