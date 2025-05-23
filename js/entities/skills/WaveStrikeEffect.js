@@ -36,6 +36,18 @@ export class WaveStrikeEffect extends SkillEffect {
         effectGroup.position.copy(position);
         effectGroup.rotation.y = Math.atan2(direction.x, direction.z);
         
+        // Scale the effect based on skill radius
+        // Default radius is likely 1, so we use that as the baseline
+        const baseRadius = 3;
+        // Ensure we have a valid radius value (default to baseRadius if undefined or 0)
+        const skillRadius = (this.skill.radius && this.skill.radius > 0) ? this.skill.radius : baseRadius;
+        const scaleFactor = skillRadius / baseRadius;
+        
+        // Apply scaling if radius is different from the default
+        if (scaleFactor !== 1) {
+            effectGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
+        }
+        
         // Store effect
         this.effect = effectGroup;
         this.isActive = true;
@@ -53,6 +65,7 @@ export class WaveStrikeEffect extends SkillEffect {
         const waveGroup = new THREE.Group();
         
         // Create the main wave shape using a torus segment
+        // These are base dimensions that will be scaled by the skill.radius in the create method
         const waveWidth = 2.5;
         const waveHeight = 1.8;
         const waveDepth = 3.0;
