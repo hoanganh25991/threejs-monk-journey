@@ -1090,6 +1090,8 @@ export class TeleportManager {
         const centerChunkZ = Math.floor(position.z / chunkSize);
         const chunkRadius = Math.ceil(modificationRadius / chunkSize) + 1;
         
+        let modifiedChunks = 0;
+        
         // Apply custom coloring to terrain chunks in the area
         for (let x = centerChunkX - chunkRadius; x <= centerChunkX + chunkRadius; x++) {
             for (let z = centerChunkZ - chunkRadius; z <= centerChunkZ + chunkRadius; z++) {
@@ -1108,9 +1110,26 @@ export class TeleportManager {
                     if (distance <= modificationRadius) {
                         // Apply custom coloring to this chunk
                         this.applyDangerTerrainColor(chunk, terrainType);
+                        modifiedChunks++;
+                        
+                        // Force the chunk to update in the scene
+                        chunk.updateMatrix();
+                        chunk.updateMatrixWorld(true);
+                        
+                        // Mark the chunk as modified
+                        chunk.userData.isModified = true;
+                        chunk.userData.modifiedTerrainType = terrainType.id;
                     }
                 }
             }
+        }
+        
+        console.debug(`Modified ${modifiedChunks} terrain chunks with ${terrainType.id} theme`);
+        
+        // Request a render update if we have access to the renderer
+        if (this.game && this.game.renderer) {
+            this.game.renderer.render(this.scene, this.game.camera);
+            console.debug("Forced render update after terrain modification");
         }
     }
     
@@ -1121,8 +1140,11 @@ export class TeleportManager {
      */
     applyDangerTerrainColor(terrain, terrainType) {
         if (!terrain || !terrain.geometry || !terrain.geometry.attributes || !terrain.geometry.attributes.position) {
+            console.warn("Cannot apply danger terrain color: invalid terrain geometry");
             return;
         }
+        
+        console.debug(`Applying danger terrain color for ${terrainType.id || 'unknown'} terrain type`);
         
         const colors = [];
         const positions = terrain.geometry.attributes.position.array;
@@ -1189,9 +1211,31 @@ export class TeleportManager {
         // Apply colors to terrain
         terrain.geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
         
-        // Make sure vertex colors are used
+        // Make sure vertex colors are used by updating the material
         if (terrain.material) {
-            terrain.material.vertexColors = true;
+            // If it's an array of materials, update each one
+            if (Array.isArray(terrain.material)) {
+                terrain.material.forEach(mat => {
+                    mat.vertexColors = true;
+                    mat.needsUpdate = true; // Force material update
+                });
+            } else {
+                // Single material
+                terrain.material.vertexColors = true;
+                terrain.material.needsUpdate = true; // Force material update
+            }
+            
+            console.debug("Updated terrain material to use vertex colors");
+        } else {
+            console.warn("Terrain has no material to update for vertex colors");
+        }
+        
+        // Force geometry update
+        terrain.geometry.attributes.color.needsUpdate = true;
+        
+        // Mark the terrain for rendering update
+        if (terrain.geometry) {
+            terrain.geometry.computeVertexNormals();
         }
     }
     
