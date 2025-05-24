@@ -316,6 +316,27 @@ export const NORMAL_SKILLS = [
         piercing: true, // Can pierce through enemies
         projectileSpeed: 10 // Speed of the projectile
     },
+    {
+        name: 'Bul Breath Of Heaven',
+        description: 'Same like Breath of Heaven, which allows you to run faster, but x5 current effect, like cast 5 times continuously.',
+        type: 'buff',
+        damage: 1,
+        healing: 10, // Small healing amount per pulse
+        manaCost: 25,
+        cooldown: 0, // Moderate cooldown
+        range: 0, // Self-cast
+        radius: 8, // Large radius to affect multiple allies/enemies
+        duration: 10, // Duration in seconds
+        get color() { return 0x33ff00; }, // Bright green color
+        get icon() { return '🌪️'; }, // Tornado emoji as placeholder
+        sounds: {
+            cast: 'skillBreathOfHeaven', // Reusing Breath of Heaven sound
+            impact: 'healingPulse', // Soft healing pulse sound
+            end: 'divineEcho' // Echoing divine sound as effect fades
+        },
+        speedBoostMultiplier: 10, // 10x speed boost (5x the normal 2x boost)
+        speedBoostDuration: 10, // 10 seconds of speed boost
+    },
     // TODO: Add more skills here
 ];
 

@@ -669,6 +669,11 @@ export const SKILL_ICONS = {
         cssClass: "icon-bul-palm",
         color: "#33ff33"
     },
+    "Bul Breath Of Heavn": {
+        emoji: "🌿",
+        cssClass: "icon-bul-breath-of-heavn",
+        color: "#33ff00"
+    },
     // Generic buff icons
     "buff-damage": {
         emoji: "⚔️",
