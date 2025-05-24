@@ -38,7 +38,7 @@ export class PerformanceTab extends SettingsTab {
             }
             
             // Add quality options
-            const qualityLevels = ['minimal', 'low', 'medium', 'high', 'ultra'];
+            const qualityLevels = ['ultra'];
             qualityLevels.forEach(level => {
                 const option = document.createElement('option');
                 option.value = level;
@@ -47,7 +47,7 @@ export class PerformanceTab extends SettingsTab {
             });
             
             // Set current quality
-            const currentQuality = localStorage.getItem(STORAGE_KEYS.QUALITY_LEVEL) || 'medium';
+            const currentQuality = localStorage.getItem(STORAGE_KEYS.QUALITY_LEVEL) || 'ultra';
             this.qualitySelect.value = currentQuality;
             
             // Add change event listener
@@ -161,7 +161,7 @@ export class PerformanceTab extends SettingsTab {
      */
     resetToDefaults() {
         if (this.qualitySelect) {
-            this.qualitySelect.value = 'medium';
+            this.qualitySelect.value = 'ultra';
         }
         
         if (this.adaptiveCheckbox) {

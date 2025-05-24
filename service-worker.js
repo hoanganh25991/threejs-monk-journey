@@ -4,15 +4,15 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '30';
+const CACHE_VERSION = '32';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 // Set this to true to force update without prompting the user
 const FORCE_UPDATE = false;
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 6740648;
-const TOTAL_CACHE_SIZE_MB = 6.43;
+const TOTAL_CACHE_SIZE_BYTES = 5058235;
+const TOTAL_CACHE_SIZE_MB = 4.82;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
@@ -36,6 +36,7 @@ const ASSETS_TO_CACHE = [
   'css/skill-preview.css',
   'css/skill-selection.css',
   'css/skill-tree.css',
+  'css/teleport-manager.css',
   'css/utilities.css',
   'css/variables.css',
   'js/AudioManager.js',
@@ -43,6 +44,8 @@ const ASSETS_TO_CACHE = [
   'js/DifficultyManager.js',
   'js/EffectsManager.js',
   'js/InputHandler.js',
+  'js/InteractionResultHandler.js',
+  'js/Main.js',
   'js/PerformanceManager.js',
   'js/QuestManager.js',
   'js/UIComponent.js',
@@ -96,7 +99,6 @@ const ASSETS_TO_CACHE = [
   'js/entities/skills/Skill.js',
   'js/entities/skills/SkillEffect.js',
   'js/entities/skills/SkillEffectFactory.js',
-  'js/entities/skills/TeleportSkillEffect.js',
   'js/entities/skills/WaveOfLightEffect.js',
   'js/entities/skills/WaveStrikeEffect.js',
   'js/entities/skills/variants/BreathOfHeaven/CircleOfLifeEffect.js',
@@ -202,7 +204,6 @@ const ASSETS_TO_CACHE = [
   'js/menu-system/MenuManager.js',
   'js/menu-system/ModelPreview.js',
   'js/menu-system/SettingsMenu.js',
-  'js/menu-system/SkillPreview.js',
   'js/menu-system/settings-menu/AudioTab.js',
   'js/menu-system/settings-menu/CharacterModelTab.js',
   'js/menu-system/settings-menu/ControlsTab.js',
@@ -211,8 +212,8 @@ const ASSETS_TO_CACHE = [
   'js/menu-system/settings-menu/PerformanceTab.js',
   'js/menu-system/settings-menu/ReleaseTab.js',
   'js/menu-system/settings-menu/SettingsTab.js',
+  'js/menu-system/settings-menu/SkillPreview.js',
   'js/menu-system/settings-menu/SkillsPreviewTab.js',
-  'js/menu-system/settings-menu/index.js',
   'js/save-manager/ISaveSystem.js',
   'js/save-manager/IStorageAdapter.js',
   'js/save-manager/LocalStorageAdapter.js',
@@ -221,11 +222,9 @@ const ASSETS_TO_CACHE = [
   'js/save-manager/serializers/QuestSerializer.js',
   'js/save-manager/serializers/SettingsSerializer.js',
   'js/save-manager/utils/SaveOperationProgress.js',
-  'js/services/InteractionResultHandler.js',
-  'js/types.js',
   'js/utils/AnimationUtils.js',
+  'js/utils/FlagUtils.js',
   'js/utils/SkillTreeUtils.js',
-  'js/utils/debug-utils.js',
   'js/world/WorldManager.js',
   'js/world/environment/Bush.js',
   'js/world/environment/EnvironmentManager.js',
@@ -246,6 +245,7 @@ const ASSETS_TO_CACHE = [
   'js/world/structures/StructureManager.js',
   'js/world/structures/Tower.js',
   'js/world/structures/Village.js',
+  'js/world/teleport/PortalModelFactory.js',
   'js/world/teleport/TeleportManager.js',
   'js/world/terrain/TerrainManager.js',
   'js/world/utils/EnvironmentObjectPool.js',
@@ -301,6 +301,7 @@ const ASSETS_TO_CACHE = [
   'assets/audio/wind_dissipate.mp3',
   'assets/audio/wind_pull.mp3',
   'assets/effects/buddha.glb',
+  'assets/effects/flying-dragon.glb',
   'assets/images/background.jpg',
   'assets/models/monk-v3.glb',
   'assets/models/monk.glb'

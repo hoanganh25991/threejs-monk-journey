@@ -726,7 +726,7 @@ export class Game {
     createRenderer(qualityLevel) {
         if (!RENDER_CONFIG[qualityLevel]) {
             console.error(`Unknown quality level: ${qualityLevel}, falling back to medium`);
-            qualityLevel = 'medium';
+            qualityLevel = 'ultra';
         }
         
         const config = RENDER_CONFIG[qualityLevel].init;
