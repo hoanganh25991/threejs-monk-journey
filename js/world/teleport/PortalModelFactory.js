@@ -28,8 +28,16 @@ export class PortalModelFactory {
      * @returns {THREE.Mesh} - The created portal mesh
      */
     createPortalMesh(position, color, emissiveColor, size) {
-        // Use custom size or default
-        const portalRadius = size || this.portalRadius;
+        // Validate position
+        if (!position || typeof position.x !== 'number' || typeof position.y !== 'number' || typeof position.z !== 'number' ||
+            isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
+            console.warn('Invalid position provided for portal mesh:', position);
+            // Create a default position to avoid errors
+            position = new THREE.Vector3(0, 0, 0);
+        }
+        
+        // Use custom size or default, ensure it's a valid number
+        const portalRadius = (size && !isNaN(size)) ? size : this.portalRadius;
         
         // Create portal geometry
         const geometry = new THREE.CylinderGeometry(
@@ -53,7 +61,15 @@ export class PortalModelFactory {
         
         // Create portal mesh
         const portalMesh = new THREE.Mesh(geometry, material);
-        portalMesh.position.copy(position);
+        
+        // Safely set position
+        try {
+            portalMesh.position.copy(position);
+        } catch (e) {
+            console.warn('Error setting portal position:', e);
+            portalMesh.position.set(0, 0, 0);
+        }
+        
         portalMesh.rotation.x = Math.PI / 2; // Lay flat on the ground
         
         // Add to scene
@@ -70,8 +86,16 @@ export class PortalModelFactory {
      * @returns {THREE.Points} - The created particle system
      */
     createPortalParticles(position, color, portalRadius) {
-        // Use provided radius or default
-        const radius = portalRadius || this.portalRadius;
+        // Validate position
+        if (!position || typeof position.x !== 'number' || typeof position.y !== 'number' || typeof position.z !== 'number' ||
+            isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
+            console.warn('Invalid position provided for portal particles:', position);
+            // Create a default position to avoid errors
+            position = new THREE.Vector3(0, 0, 0);
+        }
+        
+        // Use provided radius or default, ensure it's a valid number
+        const radius = (portalRadius && !isNaN(portalRadius)) ? portalRadius : this.portalRadius;
         
         // Create particle geometry
         const particleCount = 100;
@@ -82,9 +106,16 @@ export class PortalModelFactory {
         for (let i = 0; i < particleCount; i++) {
             const angle = (i / particleCount) * Math.PI * 2;
             const particleRadius = radius * (0.5 + Math.random() * 0.5);
-            const x = position.x + Math.cos(angle) * particleRadius;
-            const y = position.y + Math.random() * this.portalHeight;
-            const z = position.z + Math.sin(angle) * particleRadius;
+            
+            // Calculate positions and ensure they're valid numbers
+            let x = position.x + Math.cos(angle) * particleRadius;
+            let y = position.y + Math.random() * this.portalHeight;
+            let z = position.z + Math.sin(angle) * particleRadius;
+            
+            // Safety check for NaN values
+            if (isNaN(x)) x = 0;
+            if (isNaN(y)) y = 0;
+            if (isNaN(z)) z = 0;
             
             particlePositions[i * 3] = x;
             particlePositions[i * 3 + 1] = y;
@@ -92,6 +123,9 @@ export class PortalModelFactory {
         }
         
         particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        
+        // Explicitly compute bounding sphere after setting attributes
+        particleGeometry.computeBoundingSphere();
         
         // Create particle material
         const particleMaterial = new THREE.PointsMaterial({
@@ -116,18 +150,44 @@ export class PortalModelFactory {
      * @param {THREE.Object3D} mesh - The mesh to remove
      */
     removeMesh(mesh) {
-        if (mesh && this.scene) {
+        if (!mesh) {
+            console.warn('Attempted to remove null or undefined mesh');
+            return;
+        }
+        
+        if (!this.scene) {
+            console.warn('Scene is not available for mesh removal');
+            return;
+        }
+        
+        try {
+            // Remove from scene
             this.scene.remove(mesh);
             
             // Dispose of geometry and material to free memory
-            if (mesh.geometry) mesh.geometry.dispose();
-            if (mesh.material) {
-                if (Array.isArray(mesh.material)) {
-                    mesh.material.forEach(material => material.dispose());
-                } else {
-                    mesh.material.dispose();
+            if (mesh.geometry) {
+                try {
+                    mesh.geometry.dispose();
+                } catch (e) {
+                    console.warn('Error disposing geometry:', e);
                 }
             }
+            
+            if (mesh.material) {
+                try {
+                    if (Array.isArray(mesh.material)) {
+                        mesh.material.forEach(material => {
+                            if (material) material.dispose();
+                        });
+                    } else {
+                        mesh.material.dispose();
+                    }
+                } catch (e) {
+                    console.warn('Error disposing material:', e);
+                }
+            }
+        } catch (e) {
+            console.error('Error removing mesh from scene:', e);
         }
     }
 }

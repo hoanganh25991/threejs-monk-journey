@@ -309,14 +309,32 @@ export class TeleportManager {
      * @returns {Object} - The created portal object
      */
     createPortal(sourcePosition, targetPosition, sourceName, targetName, color, emissiveColor, size) {
-        // Adjust Y position based on terrain height
-        if (this.worldManager && this.worldManager.getTerrainHeight) {
-            sourcePosition.y = this.worldManager.getTerrainHeight(sourcePosition.x, sourcePosition.z) + 0.5;
-            targetPosition.y = this.worldManager.getTerrainHeight(targetPosition.x, targetPosition.z) + 0.5;
+        // Validate positions
+        if (!sourcePosition || !targetPosition) {
+            console.error('Invalid positions provided for portal creation');
+            sourcePosition = sourcePosition || new THREE.Vector3(0, 0, 0);
+            targetPosition = targetPosition || new THREE.Vector3(0, 0, 0);
         }
         
-        // Elevate the source position (this will affect the portal's height)
-        sourcePosition.y += 2.8;  
+        // Create clones to avoid modifying the original vectors
+        sourcePosition = sourcePosition.clone();
+        targetPosition = targetPosition.clone();
+        
+        // Adjust Y position based on terrain height
+        try {
+            if (this.worldManager && this.worldManager.getTerrainHeight) {
+                sourcePosition.y = this.worldManager.getTerrainHeight(sourcePosition.x, sourcePosition.z) + 0.5;
+                targetPosition.y = this.worldManager.getTerrainHeight(targetPosition.x, targetPosition.z) + 0.5;
+            }
+            
+            // Elevate the source position (this will affect the portal's height)
+            sourcePosition.y += 2.8;
+        } catch (e) {
+            console.warn('Error adjusting portal height:', e);
+            // Set default heights if terrain height calculation fails
+            sourcePosition.y = 2.8;
+            targetPosition.y = 0.5;
+        }
         
         // Use the portal model factory to create the portal mesh
         const portalMesh = this.portalModelFactory.createPortalMesh(
