@@ -18,7 +18,7 @@ import { SceneOptimizer } from './SceneOptimizer.js';
 import { LoadingManager } from './LoadingManager.js';
 import { RENDER_CONFIG } from '../config/render.js';
 import { MenuManager } from '../menu-system/MenuManager.js';
-import { isDebugMode, debugLog } from '../utils/debug-utils.js';
+import { isDebugMode } from '../utils/FlagUtils.js';
 
 /**
  * Main Game class that serves as a facade to the underlying game systems
@@ -251,7 +251,7 @@ export class Game {
      */
     setupEventListeners() {
         if (isDebugMode()) {
-            debugLog('Event listeners for PWA features are disabled in debug mode.');
+            console.debug('Event listeners for PWA features are disabled in debug mode.');
             return;
         }
         // Handle window resize
@@ -275,7 +275,7 @@ export class Game {
      */
     requestFullscreen() {
         if (isDebugMode()) {
-            debugLog('Fullscreen request is ignored in debug mode.');
+            console.debug('Fullscreen request is ignored in debug mode.');
             return Promise.resolve();
         }
         console.debug("Requesting fullscreen mode...");

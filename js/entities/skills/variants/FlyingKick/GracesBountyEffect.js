@@ -172,6 +172,11 @@ export class GracesBountyEffect extends FlyingKickEffect {
     update(delta, effectObject) {
         super.update(delta, effectObject);
         
+        // Check if effectObject is defined before accessing its properties
+        if (!effectObject) {
+            return;
+        }
+        
         // Check if we've reached the target and should start spinning
         if (effectObject.progress >= 1 && !effectObject.isSpinning) {
             effectObject.isSpinning = true;
@@ -199,6 +204,8 @@ export class GracesBountyEffect extends FlyingKickEffect {
      * @param {Object} effectObject - The effect object to update
      */
     updateSpinEffect(delta, effectObject) {
+        if (!effectObject) return;
+        
         const currentTime = this.skill.game && this.skill.game.clock ? this.skill.game.clock.getElapsedTime() : 0;
         const spinElapsed = currentTime - effectObject.spinStartTime;
         const spinProgress = Math.min(spinElapsed / this.spinDuration, 1);
@@ -272,7 +279,7 @@ export class GracesBountyEffect extends FlyingKickEffect {
      * @param {Object} effectObject - The effect object to update
      */
     updateSpiralParticles(delta, effectObject) {
-        if (!this.spiralParticles) return;
+        if (!this.spiralParticles || !effectObject) return;
         
         // Get progress of the kick or spin
         let progress = effectObject.progress || 0;
@@ -344,7 +351,7 @@ export class GracesBountyEffect extends FlyingKickEffect {
         super.cleanup(effectObject);
         
         // Clean up spin trail
-        if (this.spinTrail && this.skill.game.scene) {
+        if (this.spinTrail && this.skill.game && this.skill.game.scene) {
             this.skill.game.scene.remove(this.spinTrail.line);
             this.spinTrail.geometry.dispose();
             this.spinTrail.material.dispose();
@@ -352,7 +359,7 @@ export class GracesBountyEffect extends FlyingKickEffect {
         }
         
         // Clean up spiral particles
-        if (this.spiralParticles && effectObject.player) {
+        if (this.spiralParticles && effectObject && effectObject.player) {
             effectObject.player.remove(this.spiralParticles.points);
             this.spiralParticles.geometry.dispose();
             this.spiralParticles.material.dispose();
