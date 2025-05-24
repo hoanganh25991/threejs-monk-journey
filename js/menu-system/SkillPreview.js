@@ -357,7 +357,8 @@ export class SkillPreview {
             duration: skillData.duration,
             color: skillData.color,
             hits: skillData.hits || 1,
-            sounds: skillData.sounds || {}
+            sounds: skillData.sounds || {},
+            variant: skillData.variant || '' // Add variant property
         });
         
         // Store the current skill

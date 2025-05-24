@@ -59,7 +59,7 @@ export const NORMAL_SKILLS = [
         description: 'Summon a massive bell that crashes down on enemies',
         type: 'wave',
         damage: 50,
-        manaCost: 0,
+        manaCost: 20,
         cooldown: 0, // Reduced cooldown
         range: 25,
         radius: 5,
@@ -76,12 +76,12 @@ export const NORMAL_SKILLS = [
         name: 'Shield of Zen',
         description: 'Envelop yourself in a golden aura with a protective Buddha figure that absorbs 30% of damage and reflects 10% back to attackers',
         type: 'buff',
-        damage: 0, // This is a defensive skill
+        damage: 2, // This is a defensive skill
         manaCost: 30,
         cooldown: 0, // Reduced cooldown
         range: 0, // Self-cast
         radius: 3, // Area of effect around player
-        duration: 10, // 10 seconds duration
+        duration: 8, // 10 seconds duration
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
@@ -94,13 +94,13 @@ export const NORMAL_SKILLS = [
         name: 'Breath of Heaven',
         description: 'A healing skill that restores health to the Monk and nearby allies.',
         type: 'heal',
-        damage: 10,
-        healing: 209000000000099, // Amount of health restored per pulse
-        manaCost: 0,
-        cooldown: 1, // Longer cooldown for healing ability
+        damage: 5,
+        healing: 10, // Amount of health restored per pulse
+        manaCost: 20,
+        cooldown: 0, // Longer cooldown for healing ability
         range: 0, // Centered on player
         radius: 8, // Large radius to affect multiple allies/enemies
-        duration: 8, // Duration in seconds
+        duration: 5, // Duration in seconds
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
@@ -114,8 +114,8 @@ export const NORMAL_SKILLS = [
         description: 'Send a wave of energy towards enemies',
         type: 'ranged',
         damage: 20,
-        manaCost: 0,
-        cooldown: 60, // Reduced cooldown
+        manaCost: 20,
+        cooldown: 0, // Reduced cooldown
         range: 25,
         radius: 3,
         duration: 3.5, // Further increased duration from 2.5 to 3.5
@@ -131,10 +131,10 @@ export const NORMAL_SKILLS = [
         name: 'Cyclone Strike',
         description: 'Generate a vortex of wind that pulls in enemies and deals damage.',
         type: 'aoe',
-        damage: 1500,
-        manaCost: 0,
+        damage: 30,
+        manaCost: 40,
         cooldown: 0, // Reduced cooldown
-        range: 20,
+        range: 0,
         radius: 4,
         get duration() { return 1.5 + Math.log(this.radius) },
         get color() { return SKILL_ICONS[this.name].color; },
@@ -149,10 +149,10 @@ export const NORMAL_SKILLS = [
         name: 'Seven-Sided Strike',
         description: 'Rapidly attack multiple enemies',
         type: 'multi',
-        damage: 10,
+        damage: 50,
         manaCost: 30,
         cooldown: 0, // Reduced cooldown
-        range: 6,
+        range: 0,
         radius: 5,
         duration: 2.5,
         get color() { return SKILL_ICONS[this.name].color; },
@@ -168,8 +168,8 @@ export const NORMAL_SKILLS = [
         name: 'Inner Sanctuary',
         description: 'Create a protective zone that reduces damage',
         type: 'buff',
-        damage: 1000,
-        manaCost: 0,
+        damage: 5,
+        manaCost: 20,
         cooldown: 0, // Reduced cooldown
         range: 0,
         radius: 5,
@@ -186,12 +186,12 @@ export const NORMAL_SKILLS = [
         name: 'Mystic Allies',
         description: 'Summon spirit allies to fight alongside you',
         type: 'summon',
-        damage: 1000,
+        damage: 50,
         manaCost: 0,
         cooldown: 0, // Reduced cooldown
-        range: 2, // Increased range for summoning
+        range: 0, // Increased range for summoning
         radius: 10, // Increased radius for summoning circle
-        duration: 10, // Increased duration to 30 seconds
+        duration: 8, // Increased duration to 30 seconds
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         allyCount: 2, // Number of allies to summon
@@ -205,12 +205,12 @@ export const NORMAL_SKILLS = [
         name: 'Exploding Palm',
         description: 'A skill that marks an enemy for death, causing them to explode upon death and deal damage to nearby enemies.',
         type: 'mark',
-        damage: 1000,
-        manaCost: 0,
+        damage: 55,
+        manaCost: 50,
         cooldown: 0, // Reduced cooldown
         range: 30,
         radius: 3,
-        duration: 5, // Further increased duration from 15 to 20 seconds
+        duration: 3, // Further increased duration from 15 to 20 seconds
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
@@ -265,7 +265,7 @@ export const NORMAL_SKILLS = [
         name: 'Imprisoned Fists',
         description: 'A powerful strike that locks enemies in place, preventing them from moving.',
         type: 'control',
-        damage: 1,
+        damage: 5,
         manaCost: 25,
         range: 10,
         radius: 5,
@@ -298,7 +298,7 @@ export const NORMAL_SKILLS = [
         name: 'Bul Palm',
         description: 'Giant palm moving, damaging all enemies on the path.',
         type: 'projectile',
-        damage: 150,
+        damage: 100,
         manaCost: 25,
         cooldown: 0, // Moderate cooldown
         range: 40, // Long range
@@ -321,12 +321,12 @@ export const NORMAL_SKILLS = [
         name: 'Bul Breath Of Heaven',
         description: 'Same like Breath of Heaven, which allows you to run faster, but x5 current effect, like cast 5 times continuously.',
         type: 'buff',
-        damage: 1,
+        damage: 5,
         healing: 10, // Small healing amount per pulse
         manaCost: 25,
         cooldown: 0, // Moderate cooldown
         range: 0, // Self-cast
-        radius: 8, // Large radius to affect multiple allies/enemies
+        radius: 5, // Large radius to affect multiple allies/enemies
         duration: 3, // Duration in seconds
         get color() { return SKILL_ICONS[this.name]?.color || 0x33ff00; }, // Green color
         get icon() { return SKILL_ICONS[this.name]?.emoji || '🌿'; }, // Leaf emoji as fallback
