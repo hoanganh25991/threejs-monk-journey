@@ -86,11 +86,17 @@ export class FireAlliesEffect extends MysticAllyEffect {
                         if (Array.isArray(child.material)) {
                             child.material.forEach(mat => {
                                 mat.color.set(fireColor);
-                                mat.emissive.set(fireColor);
+                                // Check if the material has an emissive property before setting it
+                                if (mat.emissive !== undefined) {
+                                    mat.emissive.set(fireColor);
+                                }
                             });
                         } else {
                             child.material.color.set(fireColor);
-                            child.material.emissive.set(fireColor);
+                            // Check if the material has an emissive property before setting it
+                            if (child.material.emissive !== undefined) {
+                                child.material.emissive.set(fireColor);
+                            }
                         }
                     }
                 }

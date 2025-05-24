@@ -329,19 +329,19 @@ export class SkillsPreviewTab extends SettingsTab {
             <div class="skill-stats">
                 <div class="skill-stat">
                     <span class="stat-label">Damage:</span>
-                    <span class="stat-value">${this.currentSkill.damage || 'N/A'}</span>
+                    <span class="stat-value">${this.currentSkill.damage !== undefined ? this.currentSkill.damage : 'N/A'}</span>
                 </div>
                 <div class="skill-stat">
                     <span class="stat-label">Cooldown:</span>
-                    <span class="stat-value">${this.currentSkill.cooldown || 'N/A'} seconds</span>
+                    <span class="stat-value">${this.currentSkill.cooldown !== undefined ? this.currentSkill.cooldown : 'N/A'} seconds</span>
                 </div>
                 <div class="skill-stat">
                     <span class="stat-label">Range:</span>
-                    <span class="stat-value">${this.currentSkill.range || 'N/A'}</span>
+                    <span class="stat-value">${this.currentSkill.range !== undefined ? this.currentSkill.range : 'N/A'}</span>
                 </div>
                 <div class="skill-stat">
-                    <span class="stat-label">Energy Cost:</span>
-                    <span class="stat-value">${this.currentSkill.energyCost || 'N/A'}</span>
+                    <span class="stat-label">Mana Cost:</span>
+                    <span class="stat-value">${this.currentSkill.manaCost !== undefined ? this.currentSkill.manaCost : 'N/A'}</span>
                 </div>
             </div>
         `;
