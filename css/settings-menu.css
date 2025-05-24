@@ -106,6 +106,19 @@
     box-sizing: border-box;
 }
 
+/* Settings Description */
+.settings-description {
+    color: #ccc;
+    font-size: 0.6rem;
+    margin-left: var(--margin-medium);
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    border-left: 3px solid rgba(255, 204, 0, 0.7);
+    border-right: 3px solid rgba(255, 204, 0, 0.7);
+    font-style: italic;
+    line-height: 1.4;
+}
+
 /* Add white color to all text elements in settings */
 #main-options-menu h2, 
 #main-options-menu h3,

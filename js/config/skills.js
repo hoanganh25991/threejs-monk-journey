@@ -314,7 +314,8 @@ export const NORMAL_SKILLS = [
         explosionInterval: 0.1, // Time between explosions in seconds
         explosionDamageMultiplier: 0.5, // Damage multiplier for each explosion
         piercing: true, // Can pierce through enemies
-        projectileSpeed: 10 // Speed of the projectile
+        projectileSpeed: 10, // Speed of the projectile
+        isCustomSkill: true,
     },
     {
         name: 'Bul Breath Of Heaven',
@@ -326,9 +327,9 @@ export const NORMAL_SKILLS = [
         cooldown: 0, // Moderate cooldown
         range: 0, // Self-cast
         radius: 8, // Large radius to affect multiple allies/enemies
-        duration: 10, // Duration in seconds
-        get color() { return 0x33ff00; }, // Bright green color
-        get icon() { return '🌪️'; }, // Tornado emoji as placeholder
+        duration: 3, // Duration in seconds
+        get color() { return SKILL_ICONS[this.name]?.color || 0x33ff00; }, // Green color
+        get icon() { return SKILL_ICONS[this.name]?.emoji || '🌿'; }, // Leaf emoji as fallback
         sounds: {
             cast: 'skillBreathOfHeaven', // Reusing Breath of Heaven sound
             impact: 'healingPulse', // Soft healing pulse sound
@@ -336,6 +337,7 @@ export const NORMAL_SKILLS = [
         },
         speedBoostMultiplier: 10, // 10x speed boost (5x the normal 2x boost)
         speedBoostDuration: 10, // 10 seconds of speed boost
+        isCustomSkill: true,
     },
     // TODO: Add more skills here
 ];

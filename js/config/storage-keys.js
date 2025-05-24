@@ -33,6 +33,7 @@ export const STORAGE_KEYS = {
     SKILL_TREE_DATA: 'monk_journey_skill_tree_data',
     SELECTED_ENEMY_PREVIEW: 'monk_journey_selected_enemy_preview',
     SELECTED_ENEMY_ANIMATION: 'monk_journey_selected_enemy_animation',
+    CUSTOM_SKILLS: 'monk_journey_custom_skills',
     
     // Save system keys
     SAVE_DATA: 'monk_journey_save',

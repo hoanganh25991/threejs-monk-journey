@@ -17,6 +17,7 @@ export class GameplayTab extends SettingsTab {
         
         // Game settings elements
         this.difficultySelect = document.getElementById('difficulty-select');
+        this.customSkillsCheckbox = document.getElementById('custom-skills-checkbox');
         
         this.init();
     }
@@ -56,6 +57,22 @@ export class GameplayTab extends SettingsTab {
             });
         }
         
+        if (this.customSkillsCheckbox) {
+            // Set current custom skills state (default is false)
+            const customSkillsEnabled = localStorage.getItem(STORAGE_KEYS.CUSTOM_SKILLS) === 'true';
+            this.customSkillsCheckbox.checked = customSkillsEnabled;
+            
+            // Add change event listener
+            this.customSkillsCheckbox.addEventListener('change', () => {
+                localStorage.setItem(STORAGE_KEYS.CUSTOM_SKILLS, this.customSkillsCheckbox.checked);
+                
+                // Apply custom skills settings immediately if game is available
+                if (this.game && this.game.player && this.game.player.skills) {
+                    this.game.player.skills.updateCustomSkillsVisibility();
+                }
+            });
+        }
+        
         return true;
     }
     
@@ -66,6 +83,10 @@ export class GameplayTab extends SettingsTab {
         if (this.difficultySelect) {
             localStorage.setItem(STORAGE_KEYS.DIFFICULTY, this.difficultySelect.value);
         }
+        
+        if (this.customSkillsCheckbox) {
+            localStorage.setItem(STORAGE_KEYS.CUSTOM_SKILLS, this.customSkillsCheckbox.checked);
+        }
     }
     
     /**
@@ -74,6 +95,10 @@ export class GameplayTab extends SettingsTab {
     resetToDefaults() {
         if (this.difficultySelect) {
             this.difficultySelect.value = 'normal';
+        }
+        
+        if (this.customSkillsCheckbox) {
+            this.customSkillsCheckbox.checked = false;
         }
         
         this.saveSettings();

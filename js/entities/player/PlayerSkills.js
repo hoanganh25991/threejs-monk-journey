@@ -25,10 +25,53 @@ export class PlayerSkills extends IPlayerSkills {
         
         // Game reference
         this.game = null;
+        
+        // Custom skills flag
+        this.customSkillsEnabled = localStorage.getItem(STORAGE_KEYS.CUSTOM_SKILLS) === 'true';
     }
     
     setGame(game) {
         this.game = game;
+    }
+    
+    /**
+     * Update custom skills visibility based on the flag in localStorage
+     */
+    updateCustomSkillsVisibility() {
+        // Update the flag
+        this.customSkillsEnabled = localStorage.getItem(STORAGE_KEYS.CUSTOM_SKILLS) === 'true';
+        console.debug(`Custom skills ${this.customSkillsEnabled ? 'enabled' : 'disabled'}`);
+        
+        // Reload skills to apply the filter
+        this.initializeSkills();
+        
+        // Notify UI components to update
+        if (this.game && this.game.ui) {
+            // Update skill UI if available
+            if (this.game.ui.skillsUI) {
+                this.game.ui.skillsUI.updateSkillButtons();
+            }
+            
+            // Update skill tree UI if available
+            if (this.game.ui.skillTreeUI) {
+                this.game.ui.skillTreeUI.refreshSkillTree();
+            }
+        }
+    }
+    
+    /**
+     * Filter skills based on the custom skills flag
+     * @param {Array} skills - Array of skill configurations
+     * @returns {Array} - Filtered array of skill configurations
+     */
+    filterCustomSkills(skills) {
+        if (this.customSkillsEnabled) {
+            // Include all skills
+            return skills;
+        } else {
+            // Filter out custom skills
+            return skills.filter(skill => !skill.isCustomSkill);
+        }
     }
     
     /**
@@ -104,11 +147,15 @@ export class PlayerSkills extends IPlayerSkills {
                 this.loadSkillsFromIds(savedSkills);
             } else {
                 // Old format - array of full skill objects
-                this.skills = savedSkills.map(skillConfig => new Skill(skillConfig));
+                // Filter out custom skills if disabled
+                const filteredSkills = this.filterCustomSkills(savedSkills);
+                this.skills = filteredSkills.map(skillConfig => new Skill(skillConfig));
             }
         } else {
             // No saved skills, use default battle skills
-            this.skills = BATTLE_SKILLS.map(skillConfig => new Skill(skillConfig));
+            // Filter out custom skills if disabled
+            const filteredSkills = this.filterCustomSkills(BATTLE_SKILLS);
+            this.skills = filteredSkills.map(skillConfig => new Skill(skillConfig));
         }
     }
     
@@ -125,12 +172,15 @@ export class PlayerSkills extends IPlayerSkills {
             this.loadSkillTreeData();
         }
         
+        // Get all available skills and filter out custom skills if disabled
+        const availableSkills = this.filterCustomSkills(SKILLS);
+        
         // Process each skill ID
         skillIds.forEach(skillIdObj => {
             const { id } = skillIdObj;
             
             // Find the full skill config based on the ID (name)
-            const skillConfig = SKILLS.find(skill => skill.name === id);
+            const skillConfig = availableSkills.find(skill => skill.name === id);
 
             // If skill config is found, create a new skill instance
             if (skillConfig) {
@@ -156,14 +206,15 @@ export class PlayerSkills extends IPlayerSkills {
                 
                 this.skills.push(new Skill(skillConfigCopy));
             } else {
-                console.error(`Skill configuration not found for ID: ${id}`);
+                console.debug(`Skill configuration not found for ID: ${id} (may be a custom skill that is disabled)`);
             }
         });
         
         // If no skills were loaded, use default battle skills
         if (this.skills.length === 0) {
             console.warn('No valid skills found from IDs, using default battle skills');
-            this.skills = BATTLE_SKILLS.map(skillConfig => new Skill(skillConfig));
+            const filteredDefaultSkills = this.filterCustomSkills(BATTLE_SKILLS);
+            this.skills = filteredDefaultSkills.map(skillConfig => new Skill(skillConfig));
         }
     }
     

@@ -24,6 +24,9 @@ export class SkillTreeUI extends UIComponent {
     this.selectedBuff = null;
     this.skillPoints = 10_000_000; // Will be loaded from player data
 
+    // Custom skills flag
+    this.customSkillsEnabled = localStorage.getItem(STORAGE_KEYS.CUSTOM_SKILLS) === 'true';
+
     // Get the skill trees and apply buffs to variants
     this.skillTrees = JSON.parse(JSON.stringify(SKILL_TREES)); // Create a deep copy
     applyBuffsToVariants(this.skillTrees);
@@ -41,6 +44,41 @@ export class SkillTreeUI extends UIComponent {
       skillBuffs: null,
       saveButton: null
     };
+  }
+  
+  /**
+   * Filter skills based on the custom skills flag
+   * @param {Object} skills - Object containing skill configurations
+   * @returns {Object} - Filtered object of skill configurations
+   */
+  filterCustomSkills(skills) {
+    if (this.customSkillsEnabled) {
+      // Include all skills
+      return skills;
+    } else {
+      // Filter out custom skills
+      const filteredSkills = {};
+      Object.entries(skills).forEach(([skillName, skillData]) => {
+        // Check if the skill is in SKILLS array and has isCustomSkill property
+        const skillConfig = SKILLS.find(skill => skill.name === skillName);
+        if (!skillConfig || !skillConfig.isCustomSkill) {
+          filteredSkills[skillName] = skillData;
+        }
+      });
+      return filteredSkills;
+    }
+  }
+  
+  /**
+   * Refresh the skill tree when custom skills setting changes
+   */
+  refreshSkillTree() {
+    // Update the flag
+    this.customSkillsEnabled = localStorage.getItem(STORAGE_KEYS.CUSTOM_SKILLS) === 'true';
+    console.debug(`Custom skills ${this.customSkillsEnabled ? 'enabled' : 'disabled'} in SkillTreeUI`);
+    
+    // Re-render the skill tree
+    this.renderSkillTree();
   }
 
   /**
@@ -124,9 +162,12 @@ export class SkillTreeUI extends UIComponent {
     // Create a structure to track player's skill allocations
     this.playerSkills = {};
 
-    // Initialize for each skill in the skill trees
-    if (this.skillTrees) {
-      Object.keys(this.skillTrees).forEach((skillName) => {
+    // Filter skill trees based on custom skills flag
+    const filteredSkillTrees = this.filterCustomSkills(this.skillTrees);
+
+    // Initialize for each skill in the filtered skill trees
+    if (filteredSkillTrees) {
+      Object.keys(filteredSkillTrees).forEach((skillName) => {
         this.playerSkills[skillName] = {
           activeVariant: null,
           buffs: {},
@@ -135,8 +176,13 @@ export class SkillTreeUI extends UIComponent {
       });
     }
 
-    // Also initialize for skills from BATTLE_SKILLS array that might not be in skillTrees
-    SKILLS.forEach((skill) => {
+    // Also initialize for skills from SKILLS array that might not be in skillTrees
+    // Filter out custom skills if disabled
+    const filteredSkills = this.customSkillsEnabled 
+      ? SKILLS 
+      : SKILLS.filter(skill => !skill.isCustomSkill);
+      
+    filteredSkills.forEach((skill) => {
       if (!this.playerSkills[skill.name]) {
         this.playerSkills[skill.name] = {
           activeVariant: null,
@@ -163,9 +209,12 @@ export class SkillTreeUI extends UIComponent {
     // Create the skill tree structure
     const skillsHtml = [];
 
-    // Add skills from the skill tree
-    Object.keys(this.skillTrees).forEach((skillName) => {
-      const skill = this.skillTrees[skillName];
+    // Filter skills based on custom skills flag
+    const filteredSkillTrees = this.filterCustomSkills(this.skillTrees);
+
+    // Add skills from the filtered skill tree
+    Object.keys(filteredSkillTrees).forEach((skillName) => {
+      const skill = filteredSkillTrees[skillName];
       const iconData = getSkillIcon(skillName);
 
       // Create the skill node
