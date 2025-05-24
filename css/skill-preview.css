@@ -40,7 +40,6 @@
 }
 
 .camera-info-button {
-    margin-top: 10px;
     padding: var(--padding-small) var(--padding-medium);
     background-color: #4a6fa5;
     border: none;
@@ -55,7 +54,6 @@
 }
 
 .camera-info-toggle {
-    margin-top: 5px;
     margin-left: 5px;
     padding: var(--padding-small) var(--padding-medium);
     background-color: #333;
@@ -68,4 +66,28 @@
 
 .camera-info-toggle:hover {
     background-color: #444;
+}
+
+/* Skill Details Styling */
+#skills-preview-selection-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#skills-preview-selection-container .settings-select {
+    flex: 1;
+}
+
+.skill-details-info {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: var(--padding-medium);
+    margin-top: 10px;
+}
+
+.skill-detail {
+    display: flex;
+    margin-bottom: 10px;
+    align-items: flex-start;
 }

@@ -97,7 +97,7 @@ export class GameMenu extends IMenu {
                     }
                     
                     // Pass the game menu element and indicate we're coming from the game menu
-                    this.settingsMenu.show(this.element, this.game.isPaused);
+                    this.settingsMenu.showSettings(this.game.isPaused, this);
                     
                     // Hide the game menu to prevent overlap
                     this.hide();

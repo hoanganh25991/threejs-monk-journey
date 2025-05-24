@@ -200,12 +200,20 @@ export class SettingsMenu extends UIComponent {
     
     /**
      * Show the settings menu
-     * @param {boolean} fromInGame - Whether the settings menu is being shown from in-game
-     * @param {MainMenu} mainMenu - Reference to the main menu
+     * @param {boolean|HTMLElement} fromInGameOrElement - Whether the settings menu is being shown from in-game or the element that triggered the show
+     * @param {MainMenu|boolean} mainMenuOrIsPaused - Reference to the main menu or whether the game is paused
      */
-    showSettings(fromInGame = false, mainMenu = null) {
-        this.fromInGame = fromInGame;
-        this.mainMenu = mainMenu;
+    showSettings(fromInGameOrElement = false, mainMenuOrIsPaused = null) {
+        // Handle both old and new parameter formats
+        if (typeof fromInGameOrElement === 'boolean') {
+            // New format: showSettings(fromInGame, mainMenu)
+            this.fromInGame = fromInGameOrElement;
+            this.mainMenu = mainMenuOrIsPaused;
+        } else {
+            // Old format: show(element, isPaused)
+            this.fromInGame = mainMenuOrIsPaused || false;
+            this.mainMenu = null;
+        }
         
         // Show the settings menu
         this.show();
