@@ -29,6 +29,8 @@ export class SkillsPreviewTab extends SettingsTab {
         // Variant selection elements
         this.variantsContainer = document.getElementById('skill-variants-container');
         this.variantsSelect = document.getElementById('skill-variants-select');
+        this.prevVariantButton = document.getElementById('prev-variant-button');
+        this.nextVariantButton = document.getElementById('next-variant-button');
         
         this.skillPreview = null;
         this.currentSkill = null;
@@ -159,41 +161,40 @@ export class SkillsPreviewTab extends SettingsTab {
     }
     
     /**
+     * Set up navigation buttons for variants preview
+     * @private
+     */
+    setupVariantsNavigationButtons() {
+        // Add event listeners
+        this.prevVariantButton.addEventListener('click', () => {
+            if (!this.variantsSelect || this.variantsSelect.options.length <= 1) return;
+            
+            const currentIndex = this.variantsSelect.selectedIndex;
+            const optionsLength = this.variantsSelect.options.length;
+            const newIndex = (currentIndex - 1 + optionsLength) % optionsLength;
+            
+            this.variantsSelect.selectedIndex = newIndex;
+            this.variantsSelect.dispatchEvent(new Event('change'));
+        });
+        
+        this.nextVariantButton.addEventListener('click', () => {
+            if (!this.variantsSelect || this.variantsSelect.options.length <= 1) return;
+            
+            const currentIndex = this.variantsSelect.selectedIndex;
+            const optionsLength = this.variantsSelect.options.length;
+            const newIndex = (currentIndex + 1) % optionsLength;
+            
+            this.variantsSelect.selectedIndex = newIndex;
+            this.variantsSelect.dispatchEvent(new Event('change'));
+        });
+    }
+    
+    /**
      * Initialize variants selection
      * @private
      */
     initializeVariantsSelection() {
-        if (!this.variantsSelect) {
-            // Create the variants select if it doesn't exist
-            this.variantsSelect = document.createElement('select');
-            this.variantsSelect.id = 'skill-variants-select';
-            this.variantsSelect.className = 'settings-select';
-            
-            // Create the variants container if it doesn't exist
-            if (!this.variantsContainer) {
-                this.variantsContainer = document.createElement('div');
-                this.variantsContainer.id = 'skill-variants-container';
-                this.variantsContainer.className = 'settings-section';
-                
-                // Add a label
-                const label = document.createElement('label');
-                label.htmlFor = 'skill-variants-select';
-                label.textContent = 'Skill Variant:';
-                this.variantsContainer.appendChild(label);
-                
-                // Add the select
-                this.variantsContainer.appendChild(this.variantsSelect);
-                
-                // Add the container after the skill details
-                if (this.skillDetailsContainer) {
-                    this.skillDetailsContainer.parentNode.insertBefore(
-                        this.variantsContainer, 
-                        this.skillDetailsContainer.nextSibling
-                    );
-                }
-            }
-        }
-        
+        this.setupVariantsNavigationButtons();
         // Add change event listener to variants select
         this.variantsSelect.addEventListener('change', () => {
             const selectedVariant = this.variantsSelect.value;
@@ -254,9 +255,16 @@ export class SkillsPreviewTab extends SettingsTab {
                 this.variantsSelect.appendChild(option);
             });
             
-            // Show the variants container
+            // Show the variants container and navigation buttons
             if (this.variantsContainer) {
                 this.variantsContainer.style.display = 'block';
+            }
+            
+            // Show navigation buttons if there are multiple variants
+            if (this.prevVariantButton && this.nextVariantButton) {
+                const showButtons = this.variantsSelect.options.length > 1;
+                this.prevVariantButton.style.display = showButtons ? 'inline-block' : 'none';
+                this.nextVariantButton.style.display = showButtons ? 'inline-block' : 'none';
             }
             
             // Get the stored selected variant or default to base
@@ -272,9 +280,15 @@ export class SkillsPreviewTab extends SettingsTab {
                 this.currentVariant = null;
             }
         } else {
-            // Hide the variants container if no variants
+            // Hide the variants container and navigation buttons if no variants
             if (this.variantsContainer) {
                 this.variantsContainer.style.display = 'none';
+            }
+            
+            // Hide navigation buttons
+            if (this.prevVariantButton && this.nextVariantButton) {
+                this.prevVariantButton.style.display = 'none';
+                this.nextVariantButton.style.display = 'none';
             }
             
             // Reset current variant
