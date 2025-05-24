@@ -6,6 +6,9 @@
 export const STORAGE_KEYS = {
     // Audio settings
     AUDIO_SETTINGS: 'monk_journey_audio_settings',
+    MUTED: 'monk_journey_muted',
+    MUSIC_VOLUME: 'monk_journey_music_volume',
+    SFX_VOLUME: 'monk_journey_sfx_volume',
     
     // Performance and quality settings
     QUALITY_LEVEL: 'monk_journey_quality_level',
@@ -19,12 +22,17 @@ export const STORAGE_KEYS = {
     MODEL_PREVIEW: 'monk_journey_model_preview',
     ANIMATION_PREVIEW: 'monk_journey_animation_preview',
     MODEL_ADJUSTMENTS: 'modelAdjustments',
+    SELECTED_MODEL: 'monk_journey_selected_model',
+    SELECTED_SIZE: 'monk_journey_selected_size',
+    SELECTED_ANIMATION: 'monk_journey_selected_animation',
     
     // Game settings
     DIFFICULTY: 'monk_journey_difficulty',
     SELECTED_SKILLS: 'monk_journey_selected_skills',
     SELECTED_SKILL_PREVIEW: 'monk_journey_selected_skill_preview',
     SKILL_TREE_DATA: 'monk_journey_skill_tree_data',
+    SELECTED_ENEMY_PREVIEW: 'monk_journey_selected_enemy_preview',
+    SELECTED_ENEMY_ANIMATION: 'monk_journey_selected_enemy_animation',
     
     // Save system keys
     SAVE_DATA: 'monk_journey_save',
