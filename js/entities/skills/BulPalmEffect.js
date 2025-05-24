@@ -21,6 +21,46 @@ export class BulPalmEffect extends SkillEffect {
     // State tracking
     this.direction = null;
     this.distanceTraveled = 0;
+    
+    // Default color (fallback if skill color is not defined)
+    this.defaultColor = 0x33ff33; // Green color for Bul Palm
+  }
+  
+  /**
+   * Get the skill color or use the default green color as fallback
+   * @returns {number} - The color value to use
+   * @private
+   */
+  getSkillColor() {
+    return this.skill && this.skill.color ? this.skill.color : this.defaultColor;
+  }
+  
+  /**
+   * Get a lighter variant of the skill color for highlights
+   * @returns {number} - The lighter color value
+   * @private
+   */
+  getLighterColor() {
+    const color = new THREE.Color(this.getSkillColor());
+    // Make the color lighter
+    color.r = Math.min(1, color.r * 1.3);
+    color.g = Math.min(1, color.g * 1.3);
+    color.b = Math.min(1, color.b * 1.3);
+    return color.getHex();
+  }
+  
+  /**
+   * Get a brighter variant of the skill color for emissive effects
+   * @returns {number} - The brighter color value
+   * @private
+   */
+  getBrighterColor() {
+    const color = new THREE.Color(this.getSkillColor());
+    // Make the color brighter for emissive
+    color.r = Math.min(1, color.r * 1.5);
+    color.g = Math.min(1, color.g * 1.5);
+    color.b = Math.min(1, color.b * 1.5);
+    return color.getHex();
   }
 
   /**
@@ -87,8 +127,8 @@ export class BulPalmEffect extends SkillEffect {
     // Create palm base (hand)
     const palmBaseGeometry = new THREE.BoxGeometry(1.5, 0.4, 1.8);
     const palmBaseMaterial = new THREE.MeshStandardMaterial({
-      color: 0x33ff33, // Green color for Bul Palm
-      emissive: 0x33ff33,
+      color: this.getSkillColor(),
+      emissive: this.getSkillColor(),
       emissiveIntensity: 2.5,
       transparent: true,
       opacity: 0.9,
@@ -118,8 +158,8 @@ export class BulPalmEffect extends SkillEffect {
         fingerLengths[i]
       );
       const fingerMaterial = new THREE.MeshStandardMaterial({
-        color: 0x33ff33,
-        emissive: 0x33ff33,
+        color: this.getSkillColor(),
+        emissive: this.getSkillColor(),
         emissiveIntensity: 2.5,
         transparent: true,
         opacity: 0.9,
@@ -137,8 +177,8 @@ export class BulPalmEffect extends SkillEffect {
       // Add finger joints (knuckles)
       const knuckleGeometry = new THREE.SphereGeometry(0.125, 8, 8);
       const knuckleMaterial = new THREE.MeshStandardMaterial({
-        color: 0x44ff44,
-        emissive: 0x44ff44,
+        color: this.getLighterColor(),
+        emissive: this.getLighterColor(),
         emissiveIntensity: 2.5,
         transparent: true,
         opacity: 0.9,
@@ -152,9 +192,22 @@ export class BulPalmEffect extends SkillEffect {
         
       // Add fingernails
       const nailGeometry = new THREE.BoxGeometry(0.18, 0.09, 0.18);
+      // Create a very light variant for nails
+      const baseColor = new THREE.Color(this.getSkillColor());
+      const nailColor = new THREE.Color(
+        Math.min(1, baseColor.r * 0.2 + 0.8),
+        Math.min(1, baseColor.g * 0.2 + 0.8),
+        Math.min(1, baseColor.b * 0.2 + 0.8)
+      );
+      const nailEmissive = new THREE.Color(
+        Math.min(1, baseColor.r * 0.4 + 0.6),
+        Math.min(1, baseColor.g * 0.4 + 0.6),
+        Math.min(1, baseColor.b * 0.4 + 0.6)
+      );
+      
       const nailMaterial = new THREE.MeshStandardMaterial({
-        color: 0xddffdd,
-        emissive: 0xaaffaa,
+        color: nailColor,
+        emissive: nailEmissive,
         emissiveIntensity: 1.8,
         transparent: true,
         opacity: 0.9,
@@ -173,8 +226,8 @@ export class BulPalmEffect extends SkillEffect {
     // Add energy aura around the hand
     const auraGeometry = new THREE.SphereGeometry(1.8, 16, 16);
     const auraMaterial = new THREE.MeshStandardMaterial({
-      color: 0x55ff00,
-      emissive: 0x55ff00,
+      color: this.getBrighterColor(),
+      emissive: this.getBrighterColor(),
       emissiveIntensity: 2.5,
       transparent: true,
       opacity: 0.6,
@@ -204,8 +257,8 @@ export class BulPalmEffect extends SkillEffect {
       const particleSize = 0.06 + Math.random() * 0.1;
       const particleGeometry = new THREE.SphereGeometry(particleSize, 8, 8);
       const particleMaterial = new THREE.MeshStandardMaterial({
-        color: 0x33ff00,
-        emissive: 0x33ff00,
+        color: this.getSkillColor(),
+        emissive: this.getSkillColor(),
         emissiveIntensity: 2.5,
         transparent: true,
         opacity: 0.8 + Math.random() * 0.2,
@@ -238,7 +291,7 @@ export class BulPalmEffect extends SkillEffect {
     for (let i = 0; i < trailCount; i++) {
       const trailGeometry = new THREE.PlaneGeometry(1.5, 1.5);
       const trailMaterial = new THREE.MeshBasicMaterial({
-        color: 0x33ff00,
+        color: this.getSkillColor(),
         transparent: true,
         opacity: 0.8 - i * 0.08,
         side: THREE.DoubleSide,
@@ -299,8 +352,8 @@ export class BulPalmEffect extends SkillEffect {
       
     const giantPalmGeometry = new THREE.ShapeGeometry(giantPalmShape);
     const giantPalmMaterial = new THREE.MeshStandardMaterial({
-      color: 0x33ff00,
-      emissive: 0x33ff00,
+      color: this.getSkillColor(),
+      emissive: this.getSkillColor(),
       emissiveIntensity: 3.5,
       transparent: true,
       opacity: 0.9,
@@ -331,8 +384,8 @@ export class BulPalmEffect extends SkillEffect {
     // Create explosion core
     const coreGeometry = new THREE.SphereGeometry(0.4, 16, 16);
     const coreMaterial = new THREE.MeshStandardMaterial({
-      color: 0x55ff00,
-      emissive: 0x55ff00,
+      color: this.getBrighterColor(),
+      emissive: this.getBrighterColor(),
       emissiveIntensity: 2.5,
       transparent: true,
       opacity: 0.9,
@@ -346,8 +399,8 @@ export class BulPalmEffect extends SkillEffect {
     for (let i = 0; i < waveCount; i++) {
       const waveGeometry = new THREE.SphereGeometry(0.4, 16, 16);
       const waveMaterial = new THREE.MeshStandardMaterial({
-        color: 0x33ff00,
-        emissive: 0x33ff00,
+        color: this.getSkillColor(),
+        emissive: this.getSkillColor(),
         emissiveIntensity: 1.5,
         transparent: true,
         opacity: 0.8 - i * 0.1,
@@ -387,8 +440,8 @@ export class BulPalmEffect extends SkillEffect {
       // Create particle
       const particleGeometry = new THREE.SphereGeometry(0.12, 8, 8);
       const particleMaterial = new THREE.MeshStandardMaterial({
-        color: 0x33ff00,
-        emissive: 0x33ff00,
+        color: this.getSkillColor(),
+        emissive: this.getSkillColor(),
         emissiveIntensity: 1.5,
         transparent: true,
         opacity: 0.9,
@@ -446,8 +499,8 @@ export class BulPalmEffect extends SkillEffect {
     // Create explosion core
     const coreGeometry = new THREE.SphereGeometry(0.3, 16, 16);
     const coreMaterial = new THREE.MeshStandardMaterial({
-      color: 0x55ff00, // Green color for Bul Palm
-      emissive: 0x55ff00,
+      color: this.getBrighterColor(), // Green color for Bul Palm
+      emissive: this.getBrighterColor(),
       emissiveIntensity: 2.5,
       transparent: true,
       opacity: 0.9,
@@ -462,8 +515,8 @@ export class BulPalmEffect extends SkillEffect {
     for (let i = 0; i < waveCount; i++) {
       const waveGeometry = new THREE.SphereGeometry(0.3, 16, 16);
       const waveMaterial = new THREE.MeshStandardMaterial({
-        color: 0x33ff00, // Green color for Bul Palm
-        emissive: 0x33ff00,
+        color: this.getSkillColor(), // Green color for Bul Palm
+        emissive: this.getSkillColor(),
         emissiveIntensity: 1.5,
         transparent: true,
         opacity: 0.8 - i * 0.1,
@@ -505,8 +558,8 @@ export class BulPalmEffect extends SkillEffect {
       // Create particle
       const particleGeometry = new THREE.SphereGeometry(0.1, 8, 8);
       const particleMaterial = new THREE.MeshStandardMaterial({
-        color: 0x33ff00, // Green color for Bul Palm
-        emissive: 0x33ff00,
+        color: this.getSkillColor(), // Green color for Bul Palm
+        emissive: this.getSkillColor(),
         emissiveIntensity: 1.5,
         transparent: true,
         opacity: 0.9,
