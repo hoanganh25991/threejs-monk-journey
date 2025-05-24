@@ -16,72 +16,59 @@ export class ExplodingPalmEffect extends SkillEffect {
   /**
    * Create an Exploding Palm effect
    * @param {THREE.Vector3} position - Position to place the mark
-   * @param {THREE.Vector3} direction - Direction (not used for marks)
+   * @param {THREE.Vector3} direction - Direction to move
    * @returns {THREE.Group} - The created effect
    */
   create(position, direction) {
-    position = position.clone();
-    position.y -= 3.0;
-    // Create a group for the effect
-    const effectGroup = new THREE.Group();
-
-    // Create the Exploding Palm effect
-    this.createMarkEffect(effectGroup, position, direction);
-
-    // Position effect at the hero's position
-    effectGroup.position.copy(position);
-
-    // Set the correct rotation to face the opposite direction the player is looking
-    if (direction) {
-      const rotationAngle = Math.atan2(direction.x, direction.z) + Math.PI; // Add PI (180 degrees)
-      effectGroup.rotation.y = rotationAngle;
-
-      // Ensure the palm group is properly rotated
-      if (this.explodingPalmState && this.explodingPalmState.palmGroup) {
-        // Set the palm group's initial rotation to face opposite to the player's direction
-        this.explodingPalmState.palmGroup.rotation.y = rotationAngle; // Already includes the 180-degree rotation
-
-        // Ensure the hand is oriented correctly within the palm group
-        if (this.explodingPalmState.handGroup) {
-          // Fine-tune hand orientation if needed
-          this.explodingPalmState.handGroup.rotation.y = 0; // Keep aligned with palm group
-        }
-        
-        // Position the palm behind the hero (opposite to the direction they're facing)
-        if (direction) {
-          // Calculate the position behind the hero (negative multiplier for backward direction)
-          const backwardPosition = direction.clone().normalize().multiplyScalar(-1.2);
-          // Move the palm group to this position
-          this.explodingPalmState.palmGroup.position.add(backwardPosition);
-          
-          console.debug(`Positioned palm behind the hero at: ${this.explodingPalmState.palmGroup.position.x.toFixed(2)}, ${this.explodingPalmState.palmGroup.position.y.toFixed(2)}, ${this.explodingPalmState.palmGroup.position.z.toFixed(2)}`);
-        }
+    try {
+      // Clone position to avoid modifying the original
+      position = position.clone();
+      
+      // Create a group for the effect
+      const effectGroup = new THREE.Group();
+      
+      // Store the direction for movement
+      this.direction = direction ? direction.clone().normalize() : new THREE.Vector3(0, 0, 1);
+      
+      // Create the palm effect
+      this.createMarkEffect(effectGroup, position);
+      
+      // Position effect at the starting position
+      // Adjust Y position to be on the ground
+      position.y = this.markHeight;
+      effectGroup.position.copy(position);
+      
+      // Set the correct rotation to face the direction
+      if (direction) {
+        const rotationAngle = Math.atan2(direction.x, direction.z);
+        effectGroup.rotation.y = rotationAngle;
       }
+      
+      // Calculate target position based on direction and range
+      this.targetPosition = position.clone().add(
+        this.direction.clone().multiplyScalar(this.explodingPalmState.maxDistance || 30)
+      );
+      
+      // Store effect
+      this.effect = effectGroup;
+      this.isActive = true;
+      
+      return effectGroup;
+    } catch (error) {
+      console.error("Error creating ExplodingPalm effect:", error);
+      return new THREE.Group();
     }
-
-    // Store effect
-    this.effect = effectGroup;
-    this.isActive = true;
-
-    return effectGroup;
   }
 
   /**
    * Create the Exploding Palm effect
    * @param {THREE.Group} effectGroup - Group to add the effect to
    * @param {THREE.Vector3} position - Position to place the mark
-   * @param {THREE.Vector3} direction - Direction to face
    * @private
    */
-  createMarkEffect(effectGroup, position, direction) {
-    // Create a flying palm effect that moves forward from the player
-    
-    // Store the direction for use in the update method
-    if (direction) {
-      this.currentDirection = direction.clone();
-    } else {
-      this.currentDirection = new THREE.Vector3(0, 0, 1);
-    }
+  createMarkEffect(effectGroup, position) {
+    try {
+      // Create a flying palm effect that moves forward from the player
 
     // Create the main palm group
     const palmGroup = new THREE.Group();
@@ -436,7 +423,16 @@ export class ExplodingPalmEffect extends SkillEffect {
       distanceTraveled: 0,
       maxDistance: 30, // Maximum travel distance
       explosionTriggered: false,
+      explosionTriggerTime: 0,
     };
+    
+    // Initialize state
+    this.age = 0;
+    this.distanceTraveled = 0;
+    
+    } catch (error) {
+      console.error("Error in createMarkEffect:", error);
+    }
   }
 
   /**
@@ -445,33 +441,20 @@ export class ExplodingPalmEffect extends SkillEffect {
    */
   update(delta) {
     if (!this.isActive || !this.effect) return;
-
+    
     this.elapsedTime += delta;
-
+    this.age += delta;
+    
     // Check if effect has expired
     if (this.elapsedTime >= this.skill.duration) {
       this.isActive = false;
-      this.dispose(); // Properly dispose of the effect when it expires
+      this.dispose();
       return;
     }
-
-    // IMPORTANT: Update the skill's position property to match the effect's position
-    // This is crucial for collision detection in CollisionManager
+    
+    // Update the skill's position property to match the effect's position
     this.skill.position.copy(this.effect.position);
-
-    // Update the Exploding Palm effect
-    this.updateExplodingPalmEffect(delta);
-  }
-
-  /**
-   * Update the Exploding Palm effect
-   * @param {number} delta - Time since last update in seconds
-   * @private
-   */
-  updateExplodingPalmEffect(delta) {
-    // Update palm state
-    this.explodingPalmState.age += delta;
-
+    
     // Handle different phases
     switch (this.explodingPalmState.phase) {
       case "flying":
@@ -486,77 +469,82 @@ export class ExplodingPalmEffect extends SkillEffect {
     }
   }
 
+
+
   /**
    * Update the flying phase of the palm
    * @param {number} delta - Time since last update in seconds
    * @private
    */
   updateFlyingPhase(delta) {
-    // Move palm forward
-    const moveDistance = this.explodingPalmState.flyingSpeed * delta;
-    this.explodingPalmState.distanceTraveled += moveDistance;
-
-    // Move the palm group forward
-    if (this.currentDirection) {
-      this.explodingPalmState.palmGroup.position.x +=
-        this.currentDirection.x * moveDistance;
-      this.explodingPalmState.palmGroup.position.z +=
-        this.currentDirection.z * moveDistance;
+    // Calculate distance to target
+    const currentPosition = this.effect.position.clone();
+    const distanceToTarget = currentPosition.distanceTo(this.targetPosition);
+    
+    // Calculate movement speed
+    const speed = this.explodingPalmState.flyingSpeed || 15;
+    const moveDistance = Math.min(speed * delta, distanceToTarget);
+    this.distanceTraveled += moveDistance;
+    this.explodingPalmState.distanceTraveled = this.distanceTraveled;
+    
+    // Move the palm forward
+    if (this.direction) {
+      this.effect.position.x += this.direction.x * moveDistance;
+      this.effect.position.z += this.direction.z * moveDistance;
     }
-
+    
+    // Update palm state age
+    this.explodingPalmState.age = this.age;
+    
     // Animate hand
-    const handGroup = this.explodingPalmState.handGroup;
-    if (handGroup) {
+    if (this.explodingPalmState.handGroup) {
       // Slight bobbing motion
-      handGroup.position.y =
-        1.5 + Math.sin(this.explodingPalmState.age * 5) * 0.1;
-
+      this.explodingPalmState.handGroup.position.y = 1.5 + Math.sin(this.age * 6) * 0.15;
+      
       // Slight rotation
-      handGroup.rotation.z = Math.sin(this.explodingPalmState.age * 3) * 0.1;
+      this.explodingPalmState.handGroup.rotation.z = Math.sin(this.age * 4) * 0.15;
     }
-
+    
     // Animate particles
     for (const particle of this.explodingPalmState.particles) {
       if (particle.userData) {
         // Orbit around hand
         const axis = particle.userData.orbitAxis;
-        const angle =
-          particle.userData.orbitAngle +
-          this.explodingPalmState.age * particle.userData.orbitSpeed;
+        const angle = particle.userData.orbitAngle + this.age * particle.userData.orbitSpeed;
         const radius = particle.userData.orbitRadius;
-
+        
         // Create rotation matrix
-        const rotationMatrix = new THREE.Matrix4().makeRotationAxis(
-          axis,
-          angle
-        );
+        const rotationMatrix = new THREE.Matrix4().makeRotationAxis(axis, angle);
         const initialPos = particle.userData.initialPosition.clone();
         initialPos.applyMatrix4(rotationMatrix);
-
+        
         particle.position.copy(initialPos);
       }
     }
-
+    
     // Animate trails
     for (let i = 0; i < this.explodingPalmState.trails.length; i++) {
       const trail = this.explodingPalmState.trails[i];
       // Fade out trails based on distance
-      trail.material.opacity =
-        (0.7 - i * 0.1) *
-        (1 -
-          this.explodingPalmState.distanceTraveled /
-            this.explodingPalmState.maxDistance);
+      const maxDistance = this.explodingPalmState.maxDistance || 30;
+      trail.material.opacity = (0.7 - i * 0.1) * (1 - this.distanceTraveled / maxDistance);
     }
-
-    // Check if palm has reached maximum distance
-    if (
-      this.explodingPalmState.distanceTraveled >=
-      this.explodingPalmState.maxDistance
-    ) {
+    
+    // Check if palm has reached the target or maximum distance
+    const maxDistance = this.explodingPalmState.maxDistance || 30;
+    if (distanceToTarget < 1.0 || this.distanceTraveled >= maxDistance) {
       // Transition to exploding phase
       this.explodingPalmState.phase = "exploding";
-      this.explodingPalmState.explosionGroup.visible = true;
-      this.explodingPalmState.handGroup.visible = false;
+      
+      // Make explosion group visible
+      if (this.explodingPalmState.explosionGroup) {
+        this.explodingPalmState.explosionGroup.visible = true;
+      }
+      
+      // Hide hand group
+      if (this.explodingPalmState.handGroup) {
+        this.explodingPalmState.handGroup.visible = false;
+      }
     }
   }
 
@@ -619,95 +607,78 @@ export class ExplodingPalmEffect extends SkillEffect {
    * @private
    */
   updateExplodingPhase(delta) {
-    const explosionGroup = this.explodingPalmState.explosionGroup;
-    const explosionAge =
-      this.explodingPalmState.age -
-      (this.explodingPalmState.explosionTriggered
-        ? this.explodingPalmState.explosionTriggerTime
-        : this.explodingPalmState.age);
-
-    // Mark explosion as triggered
+    // Calculate explosion age
     if (!this.explodingPalmState.explosionTriggered) {
       this.explodingPalmState.explosionTriggered = true;
-      this.explodingPalmState.explosionTriggerTime =
-        this.explodingPalmState.age;
+      this.explodingPalmState.explosionTriggerTime = this.age;
     }
-
+    
+    const explosionAge = this.age - this.explodingPalmState.explosionTriggerTime;
+    
     // Update giant palm
-    const giantPalm = explosionGroup.children[0];
+    const giantPalm = this.explodingPalmState.explosionGroup.children[0];
     if (giantPalm && giantPalm.userData) {
       // Scale up to target size
       const scaleProgress = Math.min(explosionAge * 2, 1); // Complete in 0.5 seconds
-      const currentScale =
-        giantPalm.userData.initialScale +
-        (giantPalm.userData.targetScale - giantPalm.userData.initialScale) *
-          scaleProgress;
-
+      const currentScale = giantPalm.userData.initialScale + 
+        (giantPalm.userData.targetScale - giantPalm.userData.initialScale) * scaleProgress;
+      
       giantPalm.scale.set(currentScale, currentScale, currentScale);
-
+      
       // Rotate
       giantPalm.rotation.z += giantPalm.userData.rotationSpeed * delta;
-
+      
       // Fade out after reaching full size
       if (scaleProgress >= 1) {
-        giantPalm.material.opacity = Math.max(
-          0,
-          giantPalm.material.opacity - delta
-        );
+        giantPalm.material.opacity = Math.max(0, giantPalm.material.opacity - delta);
       }
     }
-
+    
     // Update explosion core
-    const core = explosionGroup.children[1];
+    const core = this.explodingPalmState.explosionGroup.children[1];
     if (core) {
       // Pulse size
       const pulseScale = 1.0 + 0.5 * Math.sin(explosionAge * 10);
       core.scale.set(pulseScale, pulseScale, pulseScale);
-
+      
       // Fade out
       core.material.opacity = Math.max(0, 1 - explosionAge * 0.5);
     }
-
+    
     // Update explosion waves
-    for (let i = 2; i < 5; i++) {
-      // Waves are at indices 2, 3, 4
-      if (i < explosionGroup.children.length) {
-        const wave = explosionGroup.children[i];
+    for (let i = 2; i < 5; i++) { // Waves are at indices 2, 3, 4
+      if (i < this.explodingPalmState.explosionGroup.children.length) {
+        const wave = this.explodingPalmState.explosionGroup.children[i];
         if (wave && wave.userData) {
           // Expand wave
-          const expansionScale =
-            wave.userData.initialScale +
-            wave.userData.expansionSpeed * explosionAge;
+          const expansionScale = wave.userData.initialScale + wave.userData.expansionSpeed * explosionAge;
           wave.scale.set(expansionScale, expansionScale, expansionScale);
-
+          
           // Fade out
-          wave.material.opacity = Math.max(
-            0,
-            wave.material.opacity - delta * 0.5
-          );
+          wave.material.opacity = Math.max(0, wave.material.opacity - delta * 0.5);
         }
       }
     }
-
+    
     // Update explosion particles
-    for (let i = 5; i < explosionGroup.children.length; i++) {
-      const particle = explosionGroup.children[i];
+    for (let i = 5; i < this.explodingPalmState.explosionGroup.children.length; i++) {
+      const particle = this.explodingPalmState.explosionGroup.children[i];
       if (particle && particle.userData) {
         // Update age
         particle.userData.age += delta;
-
+        
         // Move particle
         particle.position.x += particle.userData.velocity.x * delta;
         particle.position.y += particle.userData.velocity.y * delta;
         particle.position.z += particle.userData.velocity.z * delta;
-
+        
         // Apply gravity
         particle.userData.velocity.y += particle.userData.gravity * delta;
-
+        
         // Fade out based on age
         const ageProgress = particle.userData.age / particle.userData.maxAge;
         particle.material.opacity = Math.max(0, 1 - ageProgress);
-
+        
         // Scale down
         const scale = Math.max(0.1, 1 - ageProgress);
         particle.scale.set(scale, scale, scale);

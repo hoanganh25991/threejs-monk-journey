@@ -209,7 +209,7 @@ export const NORMAL_SKILLS = [
         manaCost: 0,
         cooldown: 0, // Reduced cooldown
         range: 30,
-        radius: 100,
+        radius: 3,
         duration: 5, // Further increased duration from 15 to 20 seconds
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
@@ -311,10 +311,10 @@ export const NORMAL_SKILLS = [
             impact: 'markApplied', // Reusing sound temporarily
             end: 'massiveExplosion' // Reusing sound temporarily
         },
-        explosionInterval: 0.5, // Time between explosions in seconds
+        explosionInterval: 0.1, // Time between explosions in seconds
         explosionDamageMultiplier: 0.5, // Damage multiplier for each explosion
         piercing: true, // Can pierce through enemies
-        projectileSpeed: 18 // Speed of the projectile
+        projectileSpeed: 10 // Speed of the projectile
     },
     // TODO: Add more skills here
 ];

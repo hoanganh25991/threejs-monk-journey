@@ -7,7 +7,7 @@ export const FOG_CONFIG = {
     enabled: true,
     type: 'exp2', // 'exp2' for exponential squared fog (more realistic), 'exp' for exponential, 'linear' for linear
     color: 0x5a6d7e, // Darker blue-gray color for more atmospheric feel
-    density: 0.008, // Increased base fog density for darker atmosphere
+    density: 0.1 / 2 / 1.5 / 1.5, // Increased base fog density for darker atmosphere
     near: 8, // For linear fog only - reduced distance where fog begins
     far: 40, // For linear fog only - reduced distance where fog is fully opaque
     
@@ -15,9 +15,7 @@ export const FOG_CONFIG = {
     transitionSpeed: 0.05, // How quickly fog color transitions between zones
     
     // Distance-based fog settings
-    minDistance: 15, // Reduced minimum distance before fog starts to appear
-    maxDistance: 80, // Reduced maximum distance where fog is fully opaque
-    
+
     // Quality level adjustments
     qualityMultipliers: {
         ultra: 1.2, // Slightly increased fog density even at ultra quality
