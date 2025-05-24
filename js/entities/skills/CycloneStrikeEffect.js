@@ -28,6 +28,18 @@ export class CycloneStrikeEffect extends SkillEffect {
         // Position effect
         effectGroup.position.copy(position);
         
+        // Scale the effect based on skill radius
+        // Default radius is 3, so we use that as the baseline
+        const baseRadius = 3;
+        // Ensure we have a valid radius value (default to baseRadius if undefined or 0)
+        const skillRadius = (this.skill.radius && this.skill.radius > 0) ? this.skill.radius : baseRadius;
+        const scaleFactor = skillRadius / baseRadius;
+        
+        // Apply scaling if radius is different from the default
+        if (scaleFactor !== 1) {
+            effectGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
+        }
+        
         // Store effect
         this.effect = effectGroup;
         this.isActive = true;
@@ -44,9 +56,15 @@ export class CycloneStrikeEffect extends SkillEffect {
         // Create a tornado/cyclone effect
         const cycloneGroup = new THREE.Group();
         
-        // Create the base of the cyclone - now smaller
+        // Calculate a scale factor based on the skill radius compared to the default radius of 3
+        // This will be used to scale various dimensions within the effect
+        const defaultRadius = 3;
+        const radiusScaleFactor = (this.skill.radius && this.skill.radius > 0) ? 
+            this.skill.radius / defaultRadius : 1;
+        
+        // Create the base of the cyclone - now smaller and scales with radius
         const baseRadius = this.skill.radius * 0.4; // Reduced base radius
-        const baseHeight = 0.2;
+        const baseHeight = 0.2 * radiusScaleFactor; // Scale height with radius
         const baseGeometry = new THREE.CylinderGeometry(baseRadius, baseRadius * 0.8, baseHeight, 32);
         const baseMaterial = new THREE.MeshStandardMaterial({
             color: this.skill.color,
@@ -62,21 +80,31 @@ export class CycloneStrikeEffect extends SkillEffect {
         cycloneGroup.add(base);
         
         // Create the main cyclone body with multiple layers
-        const layerCount = 10;
-        const maxHeight = 4;
+        // Scale layer count with radius for larger cyclones (with a minimum)
+        const baseLayerCount = 10;
+        const layerCount = Math.max(baseLayerCount, Math.floor(baseLayerCount * radiusScaleFactor * 0.7));
+        
+        // Scale max height with radius
+        const baseMaxHeight = 4;
+        const maxHeight = baseMaxHeight * radiusScaleFactor;
+        
         const spiralFactor = 0.2; // Controls how much the cyclone spirals
         
+        // Calculate layer height based on max height and layer count
+        const layerHeight = (maxHeight - baseHeight) / layerCount;
+        
         for (let i = 0; i < layerCount; i++) {
-            const layerHeight = 0.4;
             const heightPosition = baseHeight + (i * layerHeight);
             // Gradually increase radius as we go up (reversed from original)
             const layerRadius = baseRadius * (1 + (i / layerCount) * 1.5);
             
-            const layerGeometry = new THREE.TorusGeometry(layerRadius, 0.2, 16, 32);
+            // Scale torus thickness with radius
+            const torusThickness = 0.2 * radiusScaleFactor;
+            const layerGeometry = new THREE.TorusGeometry(layerRadius, torusThickness, 16, 32);
             const layerMaterial = new THREE.MeshStandardMaterial({
                 color: this.skill.color,
                 transparent: true,
-                opacity: 0.6 - (i * 0.05), // Gradually decrease opacity
+                opacity: 0.6 - (i * 0.05 / layerCount * 10), // Adjust opacity scaling for different layer counts
                 metalness: 0.3,
                 roughness: 0.7,
                 side: THREE.DoubleSide
@@ -90,7 +118,7 @@ export class CycloneStrikeEffect extends SkillEffect {
             // Store initial position and rotation for animation
             layer.userData = {
                 initialHeight: heightPosition,
-                rotationSpeed: 2 + (i * 0.5), // Layers rotate at different speeds
+                rotationSpeed: 2 + (i * 0.5 / layerCount * 10), // Adjust rotation speed scaling
                 verticalSpeed: 0.5 + (Math.random() * 0.5)
             };
             
@@ -98,7 +126,9 @@ export class CycloneStrikeEffect extends SkillEffect {
         }
         
         // Add wind/dust particles swirling around the cyclone
-        const particleCount = 50 * 1.5;
+        // Scale particle count with radius
+        const baseParticleCount = 50 * 1.5;
+        const particleCount = Math.floor(baseParticleCount * radiusScaleFactor);
         const particles = [];
         
         for (let i = 0; i < particleCount; i++) {
@@ -112,8 +142,9 @@ export class CycloneStrikeEffect extends SkillEffect {
             const maxDistanceAtHeight = baseRadius * (1 + heightRatio * 2.5) * 1.2;
             const distance = (Math.random() * maxDistanceAtHeight * 0.8) + (maxDistanceAtHeight * 0.2);
             
-            // Create particle
-            const particleSize = 0.05 + (Math.random() * 0.15);
+            // Create particle with size scaled by radius
+            const baseParticleSize = 0.05;
+            const particleSize = (baseParticleSize + (Math.random() * 0.15)) * radiusScaleFactor;
             let particleGeometry;
             
             // Vary particle shapes
