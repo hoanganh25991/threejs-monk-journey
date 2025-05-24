@@ -13,6 +13,7 @@ export class SaveOperationProgress {
         this.progressElement = null;
         this.progressBarElement = null;
         this.progressTextElement = null;
+        this.titleElement = null;
         this.isActive = false;
     }
     
@@ -21,9 +22,9 @@ export class SaveOperationProgress {
      * @param {string} initialMessage - Initial message to display
      */
     start(initialMessage) {
-        // Create progress container if it doesn't exist
+        // Get progress container if it doesn't exist
         if (!this.progressElement) {
-            this.createProgressElements();
+            this.getProgressElements();
         }
         
         // Set initial message and progress
@@ -67,6 +68,7 @@ export class SaveOperationProgress {
         // Hide after a short delay
         setTimeout(() => {
             this.hide();
+            this.resetStyles();
         }, 1000);
         
         // Mark as inactive
@@ -88,7 +90,7 @@ export class SaveOperationProgress {
         }
         
         if (this.progressBarElement) {
-            this.progressBarElement.style.backgroundColor = '#ff3333';
+            this.progressBarElement.classList.add('error');
         }
         
         if (this.progressTextElement) {
@@ -98,10 +100,24 @@ export class SaveOperationProgress {
         // Hide after a delay
         setTimeout(() => {
             this.hide();
+            this.resetStyles();
         }, 3000);
         
         // Mark as inactive
         this.isActive = false;
+    }
+    
+    /**
+     * Reset styles after hiding
+     */
+    resetStyles() {
+        if (this.progressElement) {
+            this.progressElement.classList.remove('error');
+        }
+        
+        if (this.progressBarElement) {
+            this.progressBarElement.classList.remove('error');
+        }
     }
     
     /**
@@ -123,64 +139,27 @@ export class SaveOperationProgress {
     }
     
     /**
-     * Create the progress indicator elements
+     * Get the progress indicator elements from the DOM
      */
-    createProgressElements() {
-        // Create container
-        this.progressElement = document.createElement('div');
-        this.progressElement.className = 'save-operation-progress';
-        this.progressElement.style.position = 'fixed';
-        this.progressElement.style.top = '50%';
-        this.progressElement.style.left = '50%';
-        this.progressElement.style.transform = 'translate(-50%, -50%)';
-        this.progressElement.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        this.progressElement.style.borderRadius = '8px';
-        this.progressElement.style.padding = '20px';
-        this.progressElement.style.width = '300px';
-        this.progressElement.style.zIndex = '10000';
-        this.progressElement.style.display = 'none';
-        this.progressElement.style.flexDirection = 'column';
-        this.progressElement.style.alignItems = 'center';
-        this.progressElement.style.justifyContent = 'center';
-        this.progressElement.style.boxShadow = '0 0 20px rgba(0, 0, 0, 0.5)';
+    getProgressElements() {
+        // Get container
+        this.progressElement = document.getElementById('save-operation-progress');
         
-        // Create title
-        const titleElement = document.createElement('h3');
-        titleElement.textContent = this.operationType === 'save' ? 'Saving Game' : 'Loading Game';
-        titleElement.style.color = '#ffffff';
-        titleElement.style.margin = '0 0 15px 0';
-        titleElement.style.fontFamily = 'Arial, sans-serif';
+        // Add operation type class
+        if (this.progressElement) {
+            this.progressElement.classList.add(this.operationType === 'save' ? 'save-type' : 'load-type');
+        }
         
-        // Create progress text
-        this.progressTextElement = document.createElement('div');
-        this.progressTextElement.style.color = '#ffffff';
-        this.progressTextElement.style.marginBottom = '10px';
-        this.progressTextElement.style.width = '100%';
-        this.progressTextElement.style.textAlign = 'center';
-        this.progressTextElement.style.fontFamily = 'Arial, sans-serif';
+        // Get title element
+        this.titleElement = document.getElementById('save-operation-title');
+        if (this.titleElement) {
+            this.titleElement.textContent = this.operationType === 'save' ? 'Saving Game' : 'Loading Game';
+        }
         
-        // Create progress bar container
-        const progressBarContainer = document.createElement('div');
-        progressBarContainer.style.width = '100%';
-        progressBarContainer.style.height = '20px';
-        progressBarContainer.style.backgroundColor = '#333333';
-        progressBarContainer.style.borderRadius = '10px';
-        progressBarContainer.style.overflow = 'hidden';
+        // Get progress text element
+        this.progressTextElement = document.getElementById('save-operation-text');
         
-        // Create progress bar
-        this.progressBarElement = document.createElement('div');
-        this.progressBarElement.style.width = '0%';
-        this.progressBarElement.style.height = '100%';
-        this.progressBarElement.style.backgroundColor = this.operationType === 'save' ? '#4CAF50' : '#2196F3';
-        this.progressBarElement.style.transition = 'width 0.3s ease-in-out';
-        
-        // Add elements to container
-        progressBarContainer.appendChild(this.progressBarElement);
-        this.progressElement.appendChild(titleElement);
-        this.progressElement.appendChild(this.progressTextElement);
-        this.progressElement.appendChild(progressBarContainer);
-        
-        // Add to document
-        document.body.appendChild(this.progressElement);
+        // Get progress bar element
+        this.progressBarElement = document.getElementById('save-operation-bar');
     }
 }
