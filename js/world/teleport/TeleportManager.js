@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MULTIPLIER_PORTALS, RETURN_PORTAL, DESTINATION_TERRAINS } from '../../config/teleport-portals.js';
 import { ZONE_COLORS } from '../../config/colors.js';
 import { ZONE_ENEMIES } from '../../config/enemies.js';
+import { PortalModelFactory } from './PortalModelFactory.js';
 
 /**
  * TeleportManager - Manages teleport portals in the game world
@@ -17,15 +18,11 @@ export class TeleportManager {
         this.worldManager = worldManager;
         this.game = null;
         
+        // Create portal model factory
+        this.portalModelFactory = new PortalModelFactory(scene);
+        
         // Array to store all teleport portals
         this.portals = [];
-        
-        // Portal visual properties
-        this.portalRadius = 3;
-        this.portalHeight = 0.5;
-        this.portalColor = 0x00ffff; // Cyan color
-        this.portalEmissiveColor = 0x00ffff;
-        this.portalEmissiveIntensity = 0.8;
         
         // Portal animation properties
         this.animationSpeed = 1.5;
@@ -321,39 +318,20 @@ export class TeleportManager {
         // Elevate the source position (this will affect the portal's height)
         sourcePosition.y += 2.8;  
         
-        // Use custom size or default
-        const portalRadius = size || this.portalRadius;
-        
-        // Create portal geometry
-        const geometry = new THREE.CylinderGeometry(
-            portalRadius, // Top radius
-            portalRadius, // Bottom radius
-            this.portalHeight, // Height
-            32, // Radial segments
-            1, // Height segments
-            false // Open ended
+        // Use the portal model factory to create the portal mesh
+        const portalMesh = this.portalModelFactory.createPortalMesh(
+            sourcePosition, 
+            color, 
+            emissiveColor, 
+            size
         );
         
-        // Create portal material with glow effect
-        const material = new THREE.MeshStandardMaterial({
-            color: color || this.portalColor,
-            transparent: true,
-            opacity: 0.7,
-            emissive: emissiveColor || this.portalEmissiveColor,
-            emissiveIntensity: this.portalEmissiveIntensity,
-            side: THREE.DoubleSide
-        });
-        
-        // Create portal mesh
-        const portalMesh = new THREE.Mesh(geometry, material);
-        portalMesh.position.copy(sourcePosition);
-        portalMesh.rotation.x = Math.PI / 2; // Lay flat on the ground
-        
-        // Add to scene
-        this.scene.add(portalMesh);
-        
         // Create particle effect for the portal
-        const particles = this.createPortalParticles(sourcePosition, color || this.portalColor, portalRadius);
+        const particles = this.portalModelFactory.createPortalParticles(
+            sourcePosition, 
+            color || this.portalModelFactory.portalColor, 
+            size || this.portalModelFactory.portalRadius
+        );
         
         // Create portal object
         const portal = {
@@ -366,8 +344,8 @@ export class TeleportManager {
             particles: particles,
             creationTime: Date.now(),
             lastInteractionTime: 0,
-            color: color || this.portalColor,
-            size: portalRadius
+            color: color || this.portalModelFactory.portalColor,
+            size: size || this.portalModelFactory.portalRadius
         };
         
         // Add to portals array
@@ -378,54 +356,7 @@ export class TeleportManager {
         return portal;
     }
     
-    /**
-     * Create particle effect for a portal
-     * @param {THREE.Vector3} position - The position of the portal
-     * @param {number} color - Custom color for the particles (optional)
-     * @param {number} portalRadius - Custom radius for the portal (optional)
-     * @returns {THREE.Points} - The particle system
-     */
-    createPortalParticles(position, color, portalRadius) {
-        // Use provided radius or default
-        const radius = portalRadius || this.portalRadius;
-        
-        // Create particle geometry
-        const particleCount = 100;
-        const particleGeometry = new THREE.BufferGeometry();
-        const particlePositions = new Float32Array(particleCount * 3);
-        
-        // Initialize particle positions in a circle around the portal
-        for (let i = 0; i < particleCount; i++) {
-            const angle = (i / particleCount) * Math.PI * 2;
-            const particleRadius = radius * (0.5 + Math.random() * 0.5);
-            const x = position.x + Math.cos(angle) * particleRadius;
-            const y = position.y + Math.random() * this.portalHeight;
-            const z = position.z + Math.sin(angle) * particleRadius;
-            
-            particlePositions[i * 3] = x;
-            particlePositions[i * 3 + 1] = y;
-            particlePositions[i * 3 + 2] = z;
-        }
-        
-        particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-        
-        // Create particle material
-        const particleMaterial = new THREE.PointsMaterial({
-            color: color || this.portalColor,
-            size: 0.3,
-            transparent: true,
-            opacity: 0.7,
-            blending: THREE.AdditiveBlending
-        });
-        
-        // Create particle system
-        const particles = new THREE.Points(particleGeometry, particleMaterial);
-        
-        // Add to scene
-        this.scene.add(particles);
-        
-        return particles;
-    }
+
     
     /**
      * Update all portals
@@ -1355,18 +1286,14 @@ export class TeleportManager {
         if (portalIndex !== -1) {
             const portal = this.portals[portalIndex];
             
-            // Remove from scene
+            // Remove mesh using the factory
             if (portal.mesh) {
-                this.scene.remove(portal.mesh);
-                portal.mesh.geometry.dispose();
-                portal.mesh.material.dispose();
+                this.portalModelFactory.removeMesh(portal.mesh);
             }
             
-            // Remove particles
+            // Remove particles using the factory
             if (portal.particles) {
-                this.scene.remove(portal.particles);
-                portal.particles.geometry.dispose();
-                portal.particles.material.dispose();
+                this.portalModelFactory.removeMesh(portal.particles);
             }
             
             // Remove from array
@@ -1380,18 +1307,14 @@ export class TeleportManager {
      * Clear all portals
      */
     clear() {
-        // Remove all portals from scene
+        // Remove all portals from scene using the factory
         this.portals.forEach(portal => {
             if (portal.mesh) {
-                this.scene.remove(portal.mesh);
-                portal.mesh.geometry.dispose();
-                portal.mesh.material.dispose();
+                this.portalModelFactory.removeMesh(portal.mesh);
             }
             
             if (portal.particles) {
-                this.scene.remove(portal.particles);
-                portal.particles.geometry.dispose();
-                portal.particles.material.dispose();
+                this.portalModelFactory.removeMesh(portal.particles);
             }
         });
         
