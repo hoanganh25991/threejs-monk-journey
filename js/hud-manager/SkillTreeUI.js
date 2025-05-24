@@ -191,6 +191,24 @@ export class SkillTreeUI extends UIComponent {
         };
       }
     });
+    
+    // Load saved skill tree data from localStorage if available
+    try {
+      const skillTreeDataJson = localStorage.getItem(STORAGE_KEYS.SKILL_TREE_DATA);
+      if (skillTreeDataJson) {
+        const savedSkillTreeData = JSON.parse(skillTreeDataJson);
+        console.debug('Loaded skill tree data from localStorage in SkillTreeUI:', savedSkillTreeData);
+        
+        // Merge saved data with initialized data structure
+        Object.keys(savedSkillTreeData).forEach(skillName => {
+          if (this.playerSkills[skillName]) {
+            this.playerSkills[skillName] = savedSkillTreeData[skillName];
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading skill tree data from localStorage in SkillTreeUI:', error);
+    }
   }
 
   /**
@@ -264,11 +282,18 @@ ${iconData.emoji}
     // Show variants for the selected skill
     this.showSkillVariants(skillName);
 
-    // Clear buffs container initially
-    if (this.elements.skillBuffs) {
-      this.elements.skillBuffs.innerHTML = "";
+    // Check if there's an active variant for this skill
+    const playerSkillData = this.playerSkills[skillName];
+    if (playerSkillData && playerSkillData.activeVariant) {
+      // Show buffs for the active variant
+      this.showVariantBuffs(skillName, playerSkillData.activeVariant);
     } else {
-      console.error("Skill buffs container not found in the DOM");
+      // Clear buffs container if no active variant
+      if (this.elements.skillBuffs) {
+        this.elements.skillBuffs.innerHTML = "";
+      } else {
+        console.error("Skill buffs container not found in the DOM");
+      }
     }
   }
 
