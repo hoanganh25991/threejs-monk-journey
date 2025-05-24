@@ -288,12 +288,8 @@ ${iconData.emoji}
       // Show buffs for the active variant
       this.showVariantBuffs(skillName, playerSkillData.activeVariant);
     } else {
-      // Clear buffs container if no active variant
-      if (this.elements.skillBuffs) {
-        this.elements.skillBuffs.innerHTML = "";
-      } else {
-        console.error("Skill buffs container not found in the DOM");
-      }
+      // Show buffs for the base skill
+      this.showBaseSkillBuffs(skillName);
     }
   }
 
@@ -355,13 +351,31 @@ ${iconData.emoji}
     const playerSkillData = this.playerSkills[skillName];
     const variants = skillData.variants;
     
-    // Add base skill info at the top
-    const hasActiveVariant = playerSkillData && playerSkillData.activeVariant !== null;
+    // Determine if base skill is active (no variant selected)
+    const isBaseSkillActive = playerSkillData && playerSkillData.activeVariant === null;
     
     // Create HTML for variants
     const variantsHtml = [];
     
-    // We don't need to inform about base skill status anymore
+    // Add base skill as the first option
+    const baseSkillIconData = getSkillIcon(skillName);
+    const baseSkillHtml = `
+      <div class="skill-variant ${isBaseSkillActive ? "active" : ""}" data-variant="base">
+        <div class="variant-header">
+          <div class="variant-icon ${baseSkillIconData.cssClass}" style="background-color: rgba(0, 0, 0, 0.7); border: 2px solid ${baseSkillIconData.color}; box-shadow: 0 0 10px ${baseSkillIconData.color}40;">
+            ${baseSkillIconData.emoji}
+          </div>
+          <div class="variant-name">Base ${skillName}</div>
+          <div class="variant-cost">0 points</div>
+        </div>
+        <div class="variant-description">${skillData.baseDescription || "No description available."}</div>
+        <div class="variant-effects">
+          <span class="effect-tag">Base Skill</span>
+        </div>
+      </div>
+    `;
+    
+    variantsHtml.push(baseSkillHtml);
 
     // For each variant
     Object.entries(variants).forEach(([variantName, variantData]) => {
@@ -409,7 +423,13 @@ ${iconData.emoji}
     document.querySelectorAll(".skill-variant").forEach((variant) => {
       variant.addEventListener("click", () => {
         const variantName = variant.dataset.variant;
-        this.selectVariant(skillName, variantName);
+        if (variantName === "base") {
+          // Handle base skill selection
+          this.selectBaseSkill(skillName);
+        } else {
+          // Handle variant selection
+          this.selectVariant(skillName, variantName);
+        }
       });
     });
   }
@@ -459,6 +479,160 @@ ${iconData.emoji}
     this.updateAvailablePoints();
   }
 
+  /**
+   * Select the base skill for a skill
+   * @param {string} skillName - Name of the skill
+   */
+  selectBaseSkill(skillName) {
+    // Check if base skill is already active
+    const isAlreadyActive = 
+      this.playerSkills[skillName] && 
+      this.playerSkills[skillName].activeVariant === null;
+      
+    // Clear all active variants first
+    document.querySelectorAll(".skill-variant").forEach((variant) => {
+      variant.classList.remove("active");
+    });
+    
+    // Mark base skill as active
+    const baseSkillElement = document.querySelector(
+      `.skill-variant[data-variant="base"]`
+    );
+    if (baseSkillElement) {
+      baseSkillElement.classList.add("active");
+    }
+    
+    // Set the active variant to null (base skill)
+    if (this.playerSkills[skillName]) {
+      this.playerSkills[skillName].activeVariant = null;
+    }
+    
+    // Show buffs for the base skill
+    this.showBaseSkillBuffs(skillName);
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem(STORAGE_KEYS.SKILL_TREE_DATA, JSON.stringify(this.playerSkills));
+      console.debug('Skill tree data saved to localStorage after selecting base skill');
+    } catch (error) {
+      console.error('Error saving skill tree data to localStorage:', error);
+    }
+    
+    // Update the game with the new skills
+    if (this.game && this.game.player) {
+      // Reload the player skills to apply the changes
+      this.game.player.loadSkillTreeData();
+      console.debug("Player skills updated after selecting base skill");
+    }
+    
+    // Update available points display
+    this.updateAvailablePoints();
+  }
+  
+  /**
+   * Show buffs for the base skill
+   * @param {string} skillName - Name of the skill
+   */
+  showBaseSkillBuffs(skillName) {
+    // Check if the buffs container exists
+    if (!this.elements.skillBuffs) {
+      console.error("Skill buffs container not found in the DOM");
+      return;
+    }
+
+    // Clear container
+    this.elements.skillBuffs.innerHTML = "";
+
+    // Check if we have data for this skill and it has buffs
+    if (
+      !this.skillTrees ||
+      !this.skillTrees[skillName] ||
+      !this.skillTrees[skillName].buffs
+    ) {
+      this.elements.skillBuffs.innerHTML =
+        '<div class="no-buffs">No buffs available for the base skill.</div>';
+      return;
+    }
+
+    const skillData = this.skillTrees[skillName];
+    const playerSkillData = this.playerSkills[skillName];
+    const buffs = skillData.buffs;
+
+    // Create HTML for buffs
+    const buffsHtml = [];
+
+    // For each buff
+    Object.entries(buffs).forEach(([buffName, buffData]) => {
+      // Skip buffs that require specific variants
+      if (buffData.requiredVariant && buffData.requiredVariant !== "any") {
+        return;
+      }
+      
+      // Determine if this buff is active
+      const isActive =
+        playerSkillData &&
+        playerSkillData.buffs &&
+        playerSkillData.buffs[buffName];
+
+      // Get buff cost
+      const cost = buffData.cost || 5;
+
+      // Get icon for the buff
+      const iconData = getBuffIcon(
+        buffData.effects && buffData.effects.length > 0
+          ? buffData.effects[0]
+          : ""
+      );
+
+      // Create the buff element
+      const buffHtml = `
+        <div class="skill-buff ${isActive ? "active" : ""}" data-buff="${buffName}">
+          <div class="buff-header">
+            <div class="buff-icon ${iconData.cssClass}" 
+                style="background-color: rgba(0, 0, 0, 0.7); 
+                        border: 2px solid ${iconData.color}; 
+                        box-shadow: 0 0 10px ${iconData.color}40;">
+              ${iconData.emoji}
+            </div>
+            <div class="buff-name">${buffName}</div>
+            <div class="buff-cost">${cost} points</div>
+          </div>
+          <div class="buff-description">
+            ${buffData.description || "No description available."}
+          </div>
+          <div class="buff-effects">
+            ${buffData.effects
+              ? buffData.effects
+                  .map((effect) => `<span class="effect-tag">${effect}</span>`)
+                  .join("")
+              : ""
+            }
+          </div>
+        </div>
+      `;
+
+      buffsHtml.push(buffHtml);
+    });
+
+    // If no buffs are available for the base skill
+    if (buffsHtml.length === 0) {
+      this.elements.skillBuffs.innerHTML =
+        '<div class="no-buffs">No buffs available for the base skill.</div>';
+      return;
+    }
+
+    // Add the buffs to the container
+    this.elements.skillBuffs.innerHTML = buffsHtml.join("");
+
+    // Add click event to buff containers
+    document.querySelectorAll(".skill-buff").forEach((buffContainer) => {
+      buffContainer.addEventListener("click", () => {
+        const buffName = buffContainer.dataset.buff;
+        this.selectBuff(skillName, buffName);
+      });
+    });
+  }
+  
   /**
    * Select or unselect a variant for a skill
    * @param {string} skillName - Name of the skill
