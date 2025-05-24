@@ -64,7 +64,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 120; /* Game Menu */
+    z-index: 150; /* Game Menu */
 }
 
 /* Settings Menu - Moved to settings-menu.css */

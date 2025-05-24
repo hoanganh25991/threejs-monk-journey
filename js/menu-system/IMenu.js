@@ -3,33 +3,13 @@
  * Interface for menu components in the game
  */
 
+import { UIComponent } from "../UIComponent.js";
+
 /**
  * Interface for menu components
  * @interface
  */
-export class IMenu {
-    /**
-     * Show the menu
-     */
-    show() {
-        throw new Error('Method not implemented');
-    }
-    
-    /**
-     * Hide the menu
-     */
-    hide() {
-        throw new Error('Method not implemented');
-    }
-    
-    /**
-     * Check if the menu is visible
-     * @returns {boolean} True if the menu is visible
-     */
-    isVisible() {
-        throw new Error('Method not implemented');
-    }
-    
+export class IMenu extends UIComponent{
     /**
      * Get the menu type/name
      * @returns {string} The menu type/name

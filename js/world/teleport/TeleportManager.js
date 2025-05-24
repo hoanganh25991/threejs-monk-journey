@@ -279,15 +279,19 @@ export class TeleportManager {
         // Create a div for the portal label
         const label = document.createElement('div');
         label.className = 'portal-label';
+        
+        // Add specific classes based on portal type
+        if (portal.multiplier) {
+            label.classList.add('multiplier');
+        } else if (portal.isReturnPortal) {
+            label.classList.add('return');
+        }
+        
         // Styles are now defined in teleport-manager.css
         label.style.display = 'none'; // Hidden by default, will be shown in update
         
         // Set label text
-        if (portal.multiplier) {
-            label.textContent = portal.sourceName;
-        } else {
-            label.textContent = portal.sourceName;
-        }
+        label.textContent = portal.sourceName;
         
         // Add to document
         document.body.appendChild(label);
@@ -478,6 +482,9 @@ export class TeleportManager {
         const distance = portal.sourcePosition.distanceTo(this.game.player.getPosition());
         const isVisible = distance < 50; // Only show label if within 50 units
         
+        // Check if this is the active portal
+        const isActive = portal === this.activePortal;
+        
         // Update label position
         label.style.left = `${x}px`;
         label.style.top = `${y}px`;
@@ -486,14 +493,26 @@ export class TeleportManager {
         if (isVisible && !isBehindCamera) {
             label.style.display = 'block';
             
+            // Add or remove active class
+            if (isActive) {
+                label.classList.add('active');
+            } else {
+                label.classList.remove('active');
+            }
+            
             // Scale based on distance (smaller when further away)
             const scale = Math.max(0.5, Math.min(1.0, 1.0 - (distance / 50)));
-            label.style.transform = `translate(-50%, -100%) scale(${scale})`;
+            
+            // Don't override the transform for active portals (handled by CSS)
+            if (!isActive) {
+                label.style.transform = `translate(-50%, -100%) scale(${scale})`;
+            }
             
             // Adjust opacity based on distance
             label.style.opacity = Math.max(0.3, Math.min(1.0, 1.0 - (distance / 50)));
         } else {
             label.style.display = 'none';
+            label.classList.remove('active');
         }
     }
     
@@ -1242,15 +1261,8 @@ export class TeleportManager {
         if (this.game.hudManager) {
             // Create a full-screen flash element
             const flash = document.createElement('div');
-            flash.style.position = 'fixed';
-            flash.style.top = '0';
-            flash.style.left = '0';
-            flash.style.width = '100%';
-            flash.style.height = '100%';
-            flash.style.backgroundColor = 'rgba(0, 255, 255, 0)';
+            flash.className = 'teleport-flash';
             flash.style.transition = `background-color ${this.fadeOutDuration / 1000}s ease-in-out`;
-            flash.style.pointerEvents = 'none';
-            flash.style.zIndex = '9999';
             
             // Add to DOM
             document.body.appendChild(flash);
@@ -1259,36 +1271,17 @@ export class TeleportManager {
             if (isExtremeDistance) {
                 // Add pulsing stars for extreme distances
                 const starsContainer = document.createElement('div');
-                starsContainer.style.position = 'fixed';
-                starsContainer.style.top = '0';
-                starsContainer.style.left = '0';
-                starsContainer.style.width = '100%';
-                starsContainer.style.height = '100%';
-                starsContainer.style.pointerEvents = 'none';
-                starsContainer.style.zIndex = '10000';
+                starsContainer.className = 'stars-container';
                 
                 // Create 100 stars
                 for (let i = 0; i < 100; i++) {
                     const star = document.createElement('div');
-                    star.style.position = 'absolute';
+                    star.className = 'teleport-star';
                     star.style.width = `${Math.random() * 4 + 1}px`;
                     star.style.height = star.style.width;
-                    star.style.backgroundColor = 'white';
-                    star.style.borderRadius = '50%';
                     star.style.left = `${Math.random() * 100}%`;
                     star.style.top = `${Math.random() * 100}%`;
-                    star.style.opacity = '0';
                     star.style.animation = `starPulse ${Math.random() * 1 + 0.5}s ease-in-out infinite alternate`;
-                    
-                    // Add keyframe animation
-                    const style = document.createElement('style');
-                    style.innerHTML = `
-                        @keyframes starPulse {
-                            0% { opacity: 0; transform: scale(0.5); }
-                            100% { opacity: 1; transform: scale(1.5); }
-                        }
-                    `;
-                    document.head.appendChild(style);
                     
                     starsContainer.appendChild(star);
                 }
@@ -1304,17 +1297,17 @@ export class TeleportManager {
             // Fade in with color based on distance
             setTimeout(() => {
                 if (isExtremeDistance) {
-                    flash.style.backgroundColor = 'rgba(255, 0, 255, 0.8)'; // Purple for extreme distances
+                    flash.classList.add('extreme-distance');
                 } else if (isLongDistance) {
-                    flash.style.backgroundColor = 'rgba(0, 100, 255, 0.8)'; // Blue for long distances
+                    flash.classList.add('long-distance');
                 } else {
-                    flash.style.backgroundColor = 'rgba(0, 255, 255, 0.7)'; // Original cyan
+                    flash.classList.add('short-distance');
                 }
             }, 10);
             
             // Fade out
             setTimeout(() => {
-                flash.style.backgroundColor = 'rgba(0, 255, 255, 0)';
+                flash.classList.remove('extreme-distance', 'long-distance', 'short-distance');
                 
                 // Remove after fade out
                 setTimeout(() => {

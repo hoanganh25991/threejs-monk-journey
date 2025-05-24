@@ -24,7 +24,7 @@ export class MiniMapUI extends UIComponent {
         this.ctx = null;
         
         // Adjust map size based on device
-        this.mapSize = this.isMobile ? 120 : 200; // Smaller size on mobile
+        this.mapSize = this.mobile ? 120 : 200; // Smaller size on mobile
         this.canvasSize = this.mapSize; // Canvas size matches map size
         this.scale = 1; // Increased scale factor for better world coverage
         this.lastRenderTime = 0;
@@ -202,10 +202,10 @@ export class MiniMapUI extends UIComponent {
         // Add window resize listener to adjust map size on screen size changes
         window.addEventListener('resize', () => {
             // Check if we're on mobile
-            const isMobile = window.innerWidth <= 768;
+            const mobile = window.innerWidth <= 768;
             
             // Update map size based on device
-            this.mapSize = isMobile ? 100 : 200;
+            this.mapSize = mobile ? 100 : 200;
             this.canvasSize = this.mapSize;
             
             // Update the map dimensions

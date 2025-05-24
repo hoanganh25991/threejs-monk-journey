@@ -12,9 +12,7 @@ export class GameMenu extends IMenu {
      * @param {Game} game - The game instance
      */
     constructor(game) {
-        super();
-        this.game = game;
-        this.element = document.getElementById('game-menu');
+        super('game-menu', game);
         this.newGameButton = document.getElementById('new-game-button');
         this.loadGameButton = document.getElementById('load-game-button');
         this.saveGameButton = document.getElementById('save-game-button');
@@ -178,14 +176,6 @@ export class GameMenu extends IMenu {
         // Force Reload button has been moved to Settings > Release tab
     }
 
-    /**
-     * Check if the menu is visible
-     * @returns {boolean} True if the menu is visible
-     */
-    isVisible() {
-        return this.element && this.element.style.display !== 'none';
-    }
-    
     /**
      * Get the menu type/name
      * @returns {string} The menu type/name

@@ -11,6 +11,7 @@ export class UIComponent {
     constructor(containerId, game) {
         this.containerId = containerId;
         this.game = game;
+        this.element = document.getElementById(containerId);
         this.container = document.getElementById(containerId);
         
         // Validate container exists
@@ -67,10 +68,6 @@ export class UIComponent {
     hide() {
         this.container.style.display = 'none';
     }
-
-    isVisible() {
-        return this.container.style.display == 'block';
-    }
     
     /**
      * Toggle the component visibility
@@ -80,11 +77,11 @@ export class UIComponent {
         this.container.style.display = this.isVisible ? 'none' : 'block';
     }
 
-    get isVisible() {
+    get visible() {
         return this.container.style.display == 'block';
     }
 
-    get isMobile() {
+    get mobile() {
         return window.innerHeight <= 430;
     }
     

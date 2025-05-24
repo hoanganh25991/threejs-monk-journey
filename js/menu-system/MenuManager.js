@@ -148,7 +148,7 @@ export class MenuManager {
             let anyMenuVisible = false;
             
             for (const [type, menu] of this.menus.entries()) {
-                if (menu.isVisible()) {
+                if (menu.visible) {
                     console.debug(`Menu ${type} is already visible, keeping it active`);
                     anyMenuVisible = true;
                     this.activeMenu = menu; // Ensure active menu is set correctly
