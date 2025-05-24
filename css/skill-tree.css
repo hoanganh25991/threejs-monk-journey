@@ -12,7 +12,7 @@
     border: 2px solid #8a6d3b;
     border-radius: 8px;
     color: #fff;
-    z-index: 110; /* Dialogs and Menus - Skill Tree */
+    z-index: 100; /* Dialogs and Menus - Skill Tree */
     display: flex;
     flex-direction: column;
     overflow: hidden;

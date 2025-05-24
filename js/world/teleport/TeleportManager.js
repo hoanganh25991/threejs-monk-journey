@@ -10,7 +10,7 @@ export class TeleportManager {
     /**
      * Create a new TeleportManager
      * @param {THREE.Scene} scene - The Three.js scene
-     * @param {WorldManager} worldManager - Reference to the world manager
+     * @param {import("./../WorldManager.js").WorldManager} worldManager - Reference to the world manager
      */
     constructor(scene, worldManager) {
         this.scene = scene;
@@ -127,7 +127,7 @@ export class TeleportManager {
         // Create default portals if none exist
         if (this.portals.length === 0) {
             this.createDefaultPortals();
-            
+            this.createMultiplierPortals();
             // Also create a teleport network
             this.createTeleportNetwork(3, 2000, 200, 0);
         }
@@ -214,9 +214,6 @@ export class TeleportManager {
             "Waterfall",
             "Distant Ancient Ruins"
         );
-        
-        // Create multiplier portals in a circle around the starting area
-        this.createMultiplierPortals();
     }
     
     /**
@@ -282,20 +279,7 @@ export class TeleportManager {
         // Create a div for the portal label
         const label = document.createElement('div');
         label.className = 'portal-label';
-        label.style.position = 'absolute';
-        label.style.color = '#ffffff';
-        label.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        label.style.padding = '5px 10px';
-        label.style.borderRadius = '5px';
-        label.style.fontFamily = 'Arial, sans-serif';
-        label.style.fontSize = '14px';
-        label.style.fontWeight = 'bold';
-        label.style.textAlign = 'center';
-        label.style.pointerEvents = 'none'; // Don't block clicks
-        label.style.zIndex = '1000';
-        label.style.transform = 'translate(-50%, -100%)'; // Center horizontally, position above
-        label.style.marginBottom = '10px'; // Space between label and portal
-        label.style.textShadow = '1px 1px 2px rgba(0, 0, 0, 0.8)'; // Text shadow for better visibility
+        // Styles are now defined in teleport-manager.css
         label.style.display = 'none'; // Hidden by default, will be shown in update
         
         // Set label text

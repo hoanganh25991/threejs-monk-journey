@@ -11,7 +11,7 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 80; /* Notifications */
+    z-index: 100; /* Notifications */
 }
 
 /* Notification Item */
@@ -69,7 +69,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 200;
+    z-index: 100;
     pointer-events: none;
     display: flex;
     justify-content: center;

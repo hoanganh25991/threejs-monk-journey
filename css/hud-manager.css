@@ -521,7 +521,7 @@
     color: white;
     padding: var(--padding-medium) var(--padding-large);
     border-radius: 5px;
-    z-index: 140;
+    z-index: 100;
     text-align: center;
     min-width: 300px;
     max-width: 80%;

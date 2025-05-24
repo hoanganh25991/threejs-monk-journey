@@ -62,3 +62,6 @@
 
 /* Import save operation progress styles */
 @import 'save-operation-progress.css';
+
+/* Import teleport manager styles */
+@import 'teleport-manager.css';

@@ -15,7 +15,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 130; /* Loading Screens and Overlays */
+    z-index: 100; /* Loading Screens and Overlays */
 }
 
 #loading-screen h2 {
