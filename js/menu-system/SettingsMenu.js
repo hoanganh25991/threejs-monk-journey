@@ -4,16 +4,14 @@
  */
 
 import { UIComponent } from '../UIComponent.js';
-import {
-    PerformanceTab,
-    GameplayTab,
-    CharacterModelTab,
-    SkillsPreviewTab,
-    AudioTab,
-    ControlsTab,
-    EnemyPreviewTab,
-    ReleaseTab
-} from './settings-menu/index.js';
+import { PerformanceTab } from './settings-menu/PerformanceTab.js';
+import { GameplayTab } from './settings-menu/GameplayTab.js';
+import { CharacterModelTab } from './settings-menu/CharacterModelTab.js';
+import { SkillsPreviewTab } from './settings-menu/SkillsPreviewTab.js';
+import { AudioTab } from './settings-menu/AudioTab.js';
+import { ControlsTab } from './settings-menu/ControlsTab.js';
+import { EnemyPreviewTab } from './settings-menu/EnemyPreviewTab.js';
+import { ReleaseTab } from './settings-menu/ReleaseTab.js';
 import { SaveOperationProgress } from '../save-manager/utils/SaveOperationProgress.js';
 
 export class SettingsMenu extends UIComponent {

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { TreasureChest } from './TreasureChest.js';
 import { QuestMarker } from './QuestMarker.js';
 import { BossSpawnPoint } from './BossSpawnPoint.js';
-import { InteractionResultHandler } from '../../services/InteractionResultHandler.js';
+import { InteractionResultHandler } from '../../InteractionResultHandler.js';
 
 /**
  * Manages interactive objects in the world

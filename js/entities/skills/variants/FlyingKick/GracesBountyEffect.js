@@ -58,7 +58,8 @@ export class GracesBountyEffect extends FlyingKickEffect {
         
         // Store target position for spin effect
         effectObject.spinTargetPosition = targetPosition.clone();
-        effectObject.spinStartTime = this.skill.game.time.getElapsedTime();
+        // Use clock instead of time for getting elapsed time
+        effectObject.spinStartTime = this.skill.game && this.skill.game.clock ? this.skill.game.clock.getElapsedTime() : 0;
         effectObject.isSpinning = false;
         
         return effectObject;
@@ -174,7 +175,7 @@ export class GracesBountyEffect extends FlyingKickEffect {
         // Check if we've reached the target and should start spinning
         if (effectObject.progress >= 1 && !effectObject.isSpinning) {
             effectObject.isSpinning = true;
-            effectObject.spinStartTime = this.skill.game.time.getElapsedTime();
+            effectObject.spinStartTime = this.skill.game && this.skill.game.clock ? this.skill.game.clock.getElapsedTime() : 0;
             
             // Position spin trail at target
             if (this.spinTrail && this.spinTrail.line) {
@@ -198,7 +199,7 @@ export class GracesBountyEffect extends FlyingKickEffect {
      * @param {Object} effectObject - The effect object to update
      */
     updateSpinEffect(delta, effectObject) {
-        const currentTime = this.skill.game.time.getElapsedTime();
+        const currentTime = this.skill.game && this.skill.game.clock ? this.skill.game.clock.getElapsedTime() : 0;
         const spinElapsed = currentTime - effectObject.spinStartTime;
         const spinProgress = Math.min(spinElapsed / this.spinDuration, 1);
         
@@ -278,7 +279,7 @@ export class GracesBountyEffect extends FlyingKickEffect {
         
         // If spinning, use spin progress
         if (effectObject.isSpinning) {
-            const currentTime = this.skill.game.time.getElapsedTime();
+            const currentTime = this.skill.game && this.skill.game.clock ? this.skill.game.clock.getElapsedTime() : 0;
             const spinElapsed = currentTime - effectObject.spinStartTime;
             progress = Math.min(spinElapsed / this.spinDuration, 1);
         }
@@ -295,7 +296,7 @@ export class GracesBountyEffect extends FlyingKickEffect {
             
             if (effectObject.isSpinning) {
                 // During spin, create spiral patterns
-                const angle = (i / count) * Math.PI * 2 + this.skill.game.time.getElapsedTime() * 5;
+                const angle = (i / count) * Math.PI * 2 + (this.skill.game && this.skill.game.clock ? this.skill.game.clock.getElapsedTime() : 0) * 5;
                 const radius = 0.5 + (i / count) * 2;
                 
                 if (Math.random() < 0.1) {
@@ -441,11 +442,11 @@ export class GracesBountyEffect extends FlyingKickEffect {
         this.skill.game.scene.add(ring);
         
         // Animate the impact effect
-        const startTime = this.skill.game.time.getElapsedTime();
+        const startTime = this.skill.game && this.skill.game.clock ? this.skill.game.clock.getElapsedTime() : 0;
         const duration = 0.8; // 0.8 seconds
         
         const updateImpact = () => {
-            const currentTime = this.skill.game.time.getElapsedTime();
+            const currentTime = this.skill.game && this.skill.game.clock ? this.skill.game.clock.getElapsedTime() : 0;
             const elapsed = currentTime - startTime;
             const t = elapsed / duration;
             
