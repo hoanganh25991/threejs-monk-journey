@@ -30,7 +30,7 @@ export const PRIMARY_ATTACKS = [
         name: "Deadly Reach",
         description: "Extend your reach to strike enemies from a distance.",
         type: "projectile",
-        damage: 1,
+        damage: 1000,
         manaCost: 0,
         cooldown: 0,
         range: 15, // Increased range for a proper ranged attack
@@ -59,7 +59,7 @@ export const NORMAL_SKILLS = [
         description: 'Summon a massive bell that crashes down on enemies',
         type: 'wave',
         damage: 50,
-        manaCost: 40,
+        manaCost: 0,
         cooldown: 0, // Reduced cooldown
         range: 25,
         radius: 5,
@@ -95,9 +95,9 @@ export const NORMAL_SKILLS = [
         description: 'A healing skill that restores health to the Monk and nearby allies.',
         type: 'heal',
         damage: 10,
-        healing: 20, // Amount of health restored per pulse
-        manaCost: 30,
-        cooldown: 0, // Longer cooldown for healing ability
+        healing: 209000000000099, // Amount of health restored per pulse
+        manaCost: 0,
+        cooldown: 1, // Longer cooldown for healing ability
         range: 0, // Centered on player
         radius: 8, // Large radius to affect multiple allies/enemies
         duration: 8, // Duration in seconds
@@ -113,11 +113,11 @@ export const NORMAL_SKILLS = [
         name: 'Wave Strike',
         description: 'Send a wave of energy towards enemies',
         type: 'ranged',
-        damage: 20,
-        manaCost: 15,
-        cooldown: 0, // Reduced cooldown
+        damage: 1000,
+        manaCost: 0,
+        cooldown: 60, // Reduced cooldown
         range: 25,
-        radius: 2,
+        radius: 30,
         duration: 3.5, // Further increased duration from 2.5 to 3.5
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
@@ -131,12 +131,12 @@ export const NORMAL_SKILLS = [
         name: 'Cyclone Strike',
         description: 'Generate a vortex of wind that pulls in enemies and deals damage.',
         type: 'aoe',
-        damage: 15,
-        manaCost: 25,
+        damage: 1500,
+        manaCost: 0,
         cooldown: 0, // Reduced cooldown
-        range: 5,
+        range: 20,
         radius: 4,
-        duration: 2.5, // Further increased duration from 1.5 to 2.5
+        get duration() { return 1.5 + Math.log(this.radius) },
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
@@ -153,7 +153,7 @@ export const NORMAL_SKILLS = [
         manaCost: 30,
         cooldown: 0, // Reduced cooldown
         range: 6,
-        radius: 10,
+        radius: 5,
         duration: 2.5,
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
@@ -168,8 +168,8 @@ export const NORMAL_SKILLS = [
         name: 'Inner Sanctuary',
         description: 'Create a protective zone that reduces damage',
         type: 'buff',
-        damage: 10,
-        manaCost: 20,
+        damage: 1000,
+        manaCost: 0,
         cooldown: 0, // Reduced cooldown
         range: 0,
         radius: 5,
@@ -186,8 +186,8 @@ export const NORMAL_SKILLS = [
         name: 'Mystic Allies',
         description: 'Summon spirit allies to fight alongside you',
         type: 'summon',
-        damage: 12,
-        manaCost: 35,
+        damage: 1000,
+        manaCost: 0,
         cooldown: 0, // Reduced cooldown
         range: 2, // Increased range for summoning
         radius: 10, // Increased radius for summoning circle
@@ -205,11 +205,11 @@ export const NORMAL_SKILLS = [
         name: 'Exploding Palm',
         description: 'A skill that marks an enemy for death, causing them to explode upon death and deal damage to nearby enemies.',
         type: 'mark',
-        damage: 15,
-        manaCost: 25,
+        damage: 1000,
+        manaCost: 0,
         cooldown: 0, // Reduced cooldown
         range: 30,
-        radius: 5,
+        radius: 100,
         duration: 5, // Further increased duration from 15 to 20 seconds
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
@@ -293,6 +293,28 @@ export const NORMAL_SKILLS = [
             impact: 'chainImpact', // Sound of chains binding enemies
             end: 'chainsBreak' // Sound of chains breaking as effect ends
         }
+    },
+    {
+        name: 'Bul Palm',
+        description: 'Giant palm moving, damaging all enemies on the path.',
+        type: 'projectile',
+        damage: 150,
+        manaCost: 25,
+        cooldown: 0, // Moderate cooldown
+        range: 40, // Long range
+        radius: 3, // Explosion radius
+        duration: 5, // Duration in seconds
+        get color() { return SKILL_ICONS[this.name]?.color || 0x33ff00; }, // Green color
+        get icon() { return SKILL_ICONS[this.name]?.emoji || '🌿'; }, // Leaf emoji as fallback
+        sounds: {
+            cast: 'skillExplodingPalm', // Reusing sound temporarily
+            impact: 'markApplied', // Reusing sound temporarily
+            end: 'massiveExplosion' // Reusing sound temporarily
+        },
+        explosionInterval: 0.5, // Time between explosions in seconds
+        explosionDamageMultiplier: 0.5, // Damage multiplier for each explosion
+        piercing: true, // Can pierce through enemies
+        projectileSpeed: 18 // Speed of the projectile
     },
     // TODO: Add more skills here
 ];
