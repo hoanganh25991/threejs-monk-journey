@@ -352,6 +352,19 @@ export class SkillPreview {
                     console.debug(`Playing sound: ${sound}`);
                     return true;
                 }
+            },
+            enemyManager: {
+                getEnemiesNearPosition: (position, radius) => {
+                    // Return an empty array as there are no enemies in the preview
+                    return [];
+                }
+            },
+            scene: this.scene,
+            world: {
+                getTerrainHeight: (x, z) => {
+                    // Return a default height for preview
+                    return 0;
+                }
             }
         };
         
