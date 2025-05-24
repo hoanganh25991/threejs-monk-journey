@@ -36,7 +36,9 @@ export class MomentumFlowEffect extends FlyingKickEffect {
         
         // Reset kick counter
         this.currentKick = 0;
-        this.lastKickTime = this.skill.game.time.getElapsedTime();
+        // Check if game and clock are available, use 0 as fallback
+        this.lastKickTime = (this.skill.game && this.skill.game.clock) ? 
+            this.skill.game.clock.getElapsedTime() : 0;
         
         // Clear afterimages and lightning trails
         this.afterimages = [];
@@ -68,7 +70,9 @@ export class MomentumFlowEffect extends FlyingKickEffect {
      * @param {Object} effectObject - The effect object to add trails to
      */
     addLightningTrails(effectObject) {
-        if (!effectObject.player || !this.skill.game.scene) return;
+        // Check if effectObject exists and has required properties
+        if (!effectObject || !effectObject.player || 
+            !this.skill.game || !this.skill.game.scene) return;
         
         // Create several lightning trails
         const trailCount = 3;
@@ -124,7 +128,9 @@ export class MomentumFlowEffect extends FlyingKickEffect {
      * @param {Object} effectObject - The effect object to create afterimage for
      */
     createAfterimage(effectObject) {
-        if (!effectObject.player || !this.skill.game.scene) return;
+        // Check if effectObject exists and has required properties
+        if (!effectObject || !effectObject.player || 
+            !this.skill.game || !this.skill.game.scene) return;
         
         // Create a simple mesh to represent the player
         const geometry = new THREE.BoxGeometry(0.5, 1, 0.3);
@@ -149,7 +155,8 @@ export class MomentumFlowEffect extends FlyingKickEffect {
             mesh: afterimage,
             material: material,
             geometry: geometry,
-            creationTime: this.skill.game.time.getElapsedTime()
+            creationTime: (this.skill.game && this.skill.game.clock) ? 
+                this.skill.game.clock.getElapsedTime() : 0
         });
     }
     
@@ -161,6 +168,9 @@ export class MomentumFlowEffect extends FlyingKickEffect {
      */
     update(delta, effectObject) {
         super.update(delta, effectObject);
+        
+        // Skip additional effects if effectObject is not provided
+        if (!effectObject) return;
         
         // Create afterimages periodically
         if (Math.random() < delta * 10) {
@@ -174,9 +184,15 @@ export class MomentumFlowEffect extends FlyingKickEffect {
         this.updateLightningTrails(delta);
         
         // Check if we should perform additional kicks
-        const currentTime = this.skill.game.time.getElapsedTime();
+        const currentTime = (this.skill.game && this.skill.game.clock) ? 
+            this.skill.game.clock.getElapsedTime() : 0;
         
-        if (effectObject.progress >= 1 && 
+        // Check if effectObject exists and has progress property
+        // If not, use elapsed time as a fallback
+        const progress = (effectObject && effectObject.progress !== undefined) ? 
+            effectObject.progress : (this.elapsedTime / (this.skill.duration || 1));
+            
+        if (progress >= 1 && 
             this.currentKick < this.kickCount && 
             currentTime - this.lastKickTime >= this.kickInterval) {
             
@@ -189,8 +205,13 @@ export class MomentumFlowEffect extends FlyingKickEffect {
         }
         
         // End the effect when all kicks are complete
-        if (effectObject.progress >= 1 && this.currentKick >= this.kickCount) {
-            effectObject.complete = true;
+        if (effectObject && effectObject.progress !== undefined) {
+            if (effectObject.progress >= 1 && this.currentKick >= this.kickCount) {
+                effectObject.complete = true;
+            }
+        } else if (this.currentKick >= this.kickCount) {
+            // If we don't have an effectObject, mark the skill as inactive
+            this.isActive = false;
         }
     }
     
@@ -199,7 +220,8 @@ export class MomentumFlowEffect extends FlyingKickEffect {
      * @param {number} delta - Time since last update in seconds
      */
     updateAfterimages(delta) {
-        const currentTime = this.skill.game.time.getElapsedTime();
+        const currentTime = (this.skill.game && this.skill.game.clock) ? 
+            this.skill.game.clock.getElapsedTime() : 0;
         const activeAfterimages = [];
         
         for (let i = 0; i < this.afterimages.length; i++) {
@@ -250,7 +272,8 @@ export class MomentumFlowEffect extends FlyingKickEffect {
             trail.geometry.setFromPoints(trail.points);
             
             // Pulse opacity
-            const time = this.skill.game.time.getElapsedTime() + trail.offset;
+            const time = ((this.skill.game && this.skill.game.clock) ? 
+                this.skill.game.clock.getElapsedTime() : 0) + trail.offset;
             trail.material.opacity = 0.5 + 0.3 * Math.sin(time * 10);
         }
     }
@@ -260,7 +283,9 @@ export class MomentumFlowEffect extends FlyingKickEffect {
      * @param {Object} effectObject - The effect object
      */
     performAdditionalKick(effectObject) {
-        if (!effectObject.player || !this.skill.game.enemyManager) return;
+        // Check if effectObject exists and has required properties
+        if (!effectObject || !effectObject.player || 
+            !this.skill.game || !this.skill.game.enemyManager) return;
         
         // Get player position
         const playerPosition = effectObject.player.position.clone();
@@ -370,14 +395,18 @@ export class MomentumFlowEffect extends FlyingKickEffect {
         const lightning = new THREE.Line(geometry, material);
         
         // Add to scene
-        this.skill.game.scene.add(lightning);
+        if (this.skill.game && this.skill.game.scene) {
+            this.skill.game.scene.add(lightning);
+        }
         
         // Animate the dash effect
-        const startTime = this.skill.game.time.getElapsedTime();
+        const startTime = (this.skill.game && this.skill.game.clock) ? 
+            this.skill.game.clock.getElapsedTime() : 0;
         const duration = 0.3; // 0.3 seconds
         
         const updateDash = () => {
-            const currentTime = this.skill.game.time.getElapsedTime();
+            const currentTime = (this.skill.game && this.skill.game.clock) ? 
+                this.skill.game.clock.getElapsedTime() : startTime + 0.016; // Use 16ms as fallback delta
             const elapsed = currentTime - startTime;
             const t = elapsed / duration;
             
@@ -388,7 +417,9 @@ export class MomentumFlowEffect extends FlyingKickEffect {
                 material.dispose();
                 
                 // Remove from update loop
-                this.skill.game.removeFromUpdateList(updateDash);
+                if (this.skill.game && this.skill.game.removeFromUpdateList) {
+                    this.skill.game.removeFromUpdateList(updateDash);
+                }
                 return;
             }
             
@@ -397,7 +428,9 @@ export class MomentumFlowEffect extends FlyingKickEffect {
         };
         
         // Add to update loop
-        this.skill.game.addToUpdateList(updateDash);
+        if (this.skill.game && this.skill.game.addToUpdateList) {
+            this.skill.game.addToUpdateList(updateDash);
+        }
     }
     
     /**
@@ -549,11 +582,13 @@ export class MomentumFlowEffect extends FlyingKickEffect {
         }
         
         // Animate the impact effect
-        const startTime = this.skill.game.time.getElapsedTime();
+        const startTime = (this.skill.game && this.skill.game.clock) ? 
+            this.skill.game.clock.getElapsedTime() : 0;
         const duration = 0.5; // 0.5 seconds
         
         const updateImpact = () => {
-            const currentTime = this.skill.game.time.getElapsedTime();
+            const currentTime = (this.skill.game && this.skill.game.clock) ? 
+                this.skill.game.clock.getElapsedTime() : startTime + 0.016; // Use 16ms as fallback delta
             const elapsed = currentTime - startTime;
             const t = elapsed / duration;
             
@@ -571,7 +606,9 @@ export class MomentumFlowEffect extends FlyingKickEffect {
                 particleMaterial.dispose();
                 
                 // Remove from update loop
-                this.skill.game.removeFromUpdateList(updateImpact);
+                if (this.skill.game && this.skill.game.removeFromUpdateList) {
+                    this.skill.game.removeFromUpdateList(updateImpact);
+                }
                 return;
             }
             
@@ -609,6 +646,8 @@ export class MomentumFlowEffect extends FlyingKickEffect {
         };
         
         // Add to update loop
-        this.skill.game.addToUpdateList(updateImpact);
+        if (this.skill.game && this.skill.game.addToUpdateList) {
+            this.skill.game.addToUpdateList(updateImpact);
+        }
     }
 }
