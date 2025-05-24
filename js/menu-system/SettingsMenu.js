@@ -121,14 +121,10 @@ export class SettingsMenu extends UIComponent {
                 this.hide();
                 
                 // Show main menu if available
-                if (this.mainMenu) {
-                    this.mainMenu.show();
-                }
+                this.game.menuManager.showMenu('gameMenu');
                 
                 // Resume game if coming from in-game
-                if (this.fromInGame && this.game) {
-                    this.game.resume();
-                }
+                this.game.resume(false);
             });
         }
     }
@@ -152,6 +148,10 @@ export class SettingsMenu extends UIComponent {
                 // Remove confirmation message after a delay
                 setTimeout(() => {
                     document.body.removeChild(confirmationMessage);
+                    // Show main menu if available
+                    this.game.menuManager.showMenu('gameMenu');
+                    // Resume game if coming from in-game
+                    this.game.resume(false);
                 }, 2000);
             });
         }

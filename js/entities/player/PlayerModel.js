@@ -306,7 +306,7 @@ export class PlayerModel extends IPlayerModel {
         
         if (this.modelGroup) {
             this.modelGroup.rotation.y = rotation.y;
-            console.debug("PlayerModel: Rotation updated to:", this.modelGroup.rotation.y);
+            // console.debug("PlayerModel: Rotation updated to:", this.modelGroup.rotation.y);
         }
     }
     
