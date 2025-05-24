@@ -14,6 +14,7 @@ import {
     EnemyPreviewTab,
     ReleaseTab
 } from './settings-menu/index.js';
+import { SaveOperationProgress } from '../save-manager/utils/SaveOperationProgress.js';
 
 export class SettingsMenu extends UIComponent {
     /**
@@ -139,20 +140,21 @@ export class SettingsMenu extends UIComponent {
                 // Save settings
                 this.saveSettings();
                 
-                // Show confirmation message
-                const confirmationMessage = document.createElement('div');
-                confirmationMessage.className = 'settings-saved-message';
-                confirmationMessage.textContent = 'Settings saved!';
-                document.body.appendChild(confirmationMessage);
+                // Use SaveOperationProgress to show a simple "Settings saved!" message
+                const saveProgress = new SaveOperationProgress(this.game, 'save');
+                saveProgress.start('Settings saved!');
+                saveProgress.update('Settings saved!', 100);
                 
-                // Remove confirmation message after a delay
+                // Show main menu and resume game after a delay
                 setTimeout(() => {
-                    document.body.removeChild(confirmationMessage);
+                    // Hide the progress indicator
+                    saveProgress.hide();
+                    
                     // Show main menu if available
                     this.game.menuManager.showMenu('gameMenu');
                     // Resume game if coming from in-game
                     this.game.resume(false);
-                }, 2000);
+                }, 300);
             });
         }
     }
