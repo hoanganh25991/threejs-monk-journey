@@ -10,7 +10,7 @@ import {
     CAST_INTERVAL,
     INTERACTION_RANGE
 } from './config/input.js';
-import { InteractionResultHandler } from './services/InteractionResultHandler.js';
+import { InteractionResultHandler } from './InteractionResultHandler.js';
 
 export class InputHandler {
     constructor(game) {

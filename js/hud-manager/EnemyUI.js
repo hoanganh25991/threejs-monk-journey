@@ -13,6 +13,7 @@ export class EnemyUI extends UIComponent {
         super('enemy-health-container', game);
         this.enemyName = null;
         this.enemyHealthBar = null;
+        this.enemyHealthText = null;
     }
     
     /**
@@ -22,7 +23,10 @@ export class EnemyUI extends UIComponent {
     init() {
         const template = `
             <div id="enemy-name"></div>
-            <div id="enemy-health-bar"></div>
+            <div id="enemy-health-bar-container">
+                <div id="enemy-health-bar"></div>
+                <div id="enemy-health-text"></div>
+            </div>
         `;
         
         // Render the template
@@ -31,6 +35,7 @@ export class EnemyUI extends UIComponent {
         // Store references to elements we need to update
         this.enemyName = document.getElementById('enemy-name');
         this.enemyHealthBar = document.getElementById('enemy-health-bar');
+        this.enemyHealthText = document.getElementById('enemy-health-text');
         
         // Hide initially
         this.hide();
@@ -53,9 +58,16 @@ export class EnemyUI extends UIComponent {
             // Update enemy name
             this.enemyName.textContent = closestEnemy.getName();
             
+            // Get health values
+            const currentHealth = Math.round(closestEnemy.getHealth());
+            const maxHealth = closestEnemy.getMaxHealth();
+            const healthPercent = (currentHealth / maxHealth) * 100;
+            
             // Update enemy health bar
-            const healthPercent = (closestEnemy.getHealth() / closestEnemy.getMaxHealth()) * 100;
             this.enemyHealthBar.style.width = `${healthPercent}%`;
+            
+            // Update enemy health text
+            this.enemyHealthText.textContent = `${currentHealth}/${maxHealth}`;
         } else {
             // Hide enemy health bar
             this.hide();

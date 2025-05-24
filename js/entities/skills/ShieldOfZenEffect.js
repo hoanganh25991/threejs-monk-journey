@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { SkillEffect } from './SkillEffect.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 /**
  * Specialized effect for Shield of Zen skill
@@ -23,7 +24,15 @@ export class ShieldOfZenEffect extends SkillEffect {
             }
             
             console.debug('Preloading Buddha model...');
+            // Create and configure Draco loader
+            const dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+            dracoLoader.setDecoderConfig({ type: 'js' }); // Use JavaScript decoder for compatibility
+            
+            // Create GLTFLoader and set the Draco loader
             const loader = new GLTFLoader();
+            loader.setDRACOLoader(dracoLoader);
+            
             loader.load('assets/effects/buddha.glb', 
                 (gltf) => {
                     console.debug('Buddha model preloaded successfully');

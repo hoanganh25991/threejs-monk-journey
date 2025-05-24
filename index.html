@@ -292,7 +292,6 @@
             <!-- Right Column with Action Buttons -->
             <div class="right-actions-column">
                 <button id="settings-save-button" class="circle-btn" title="Save Settings">💾</button>
-                <button id="settings-back-button" class="circle-btn" title="Back to Home">⛩️</button>
             </div>
 
             <div class="settings-content">
@@ -427,7 +426,6 @@
                 
                 <!-- Skills Preview Tab -->
                 <div id="skills-preview-tab" class="tab-content">
-                    <h2 id="skills-preview-title">Skills Preview</h2>
                     <div class="skills-preview-layout">
                         <div class="skills-preview-section">
                             <div id="skills-preview-container">
@@ -466,6 +464,7 @@
                             </div>
                         </div>
                         <div class="skills-preview-controls-section">
+                            <h2 id="skills-preview-title">Skills Preview</h2>
                             <div id="skills-selection" class="setting-item">
                                 <label for="skills-preview-select" class="settings-label">Skill: </label>
                                 <div id="skills-preview-selection-container">
@@ -475,14 +474,16 @@
                                 </div>
                             </div>
                             <div id="skill-details-container" class="setting-item">
-                                <h3>Skill Details</h3>
                                 <div id="skill-details" class="skill-details-info">
                                     <!-- Skill details will be populated dynamically -->
                                 </div>
                             </div>
                             <div id="skill-variants-container" class="setting-item">
-                                <label for="skill-variants-select" class="settings-label">Skill Variant: </label>
+                                <label for="skill-variants-select" class="settings-label">Variant: </label>
+                                <button id="prev-variant-button" class="settings-button">◀</button>
                                 <select id="skill-variants-select" class="settings-select"></select>
+                                <button id="next-variant-button" class="settings-button">▶</button>
+                                <div id="variant-info"></div>
                             </div>
                         </div>
                     </div>
@@ -594,7 +595,7 @@
     <script src="pwa/registration.js"></script>
 
     <!-- Main script module -->
-    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/Main.js"></script>
 </body>
 
 </html>

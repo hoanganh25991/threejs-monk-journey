@@ -262,10 +262,6 @@
                                             console.debug('Force update requested by service worker');
                                             // Show update notification with auto-update message
                                             instance.showUpdateNotification(true);
-                                            // Auto-approve the update after a short delay
-                                            setTimeout(() => {
-                                                instance.approveUpdate(registration);
-                                            }, 3000);
                                         }
                                     });
                                     messageChannel.port1.start();
@@ -274,13 +270,6 @@
                                 // Show toast notification about the update
                                 instance.showUpdateNotification();
                                 
-                                // Automatically approve the update after a short delay
-                                // This implements silent updates without user interaction
-                                setTimeout(() => {
-                                    console.debug('Automatically applying update (silent update mode)');
-                                    instance.approveUpdate(registration);
-                                }, 1000);
-
                                 // Listen for state changes
                                 newWorker.addEventListener('statechange', () => {
                                     instance.handleStateChange(newWorker);

@@ -4,11 +4,10 @@
  */
 
 import { SettingsTab } from './SettingsTab.js';
-import { SkillPreview } from '../SkillPreview.js';
+import { SkillPreview } from './SkillPreview.js';
 import { SKILLS } from '../../config/skills.js';
 import { STORAGE_KEYS } from '../../config/storage-keys.js';
 import { SKILL_TREES } from '../../config/skill-tree.js';
-import { Skill } from '../../entities/skills/Skill.js';
 
 export class SkillsPreviewTab extends SettingsTab {
     /**
@@ -29,6 +28,9 @@ export class SkillsPreviewTab extends SettingsTab {
         // Variant selection elements
         this.variantsContainer = document.getElementById('skill-variants-container');
         this.variantsSelect = document.getElementById('skill-variants-select');
+        this.prevVariantButton = document.getElementById('prev-variant-button');
+        this.nextVariantButton = document.getElementById('next-variant-button');
+        this.variantInfo = document.getElementById('variant-info');
         
         this.skillPreview = null;
         this.currentSkill = null;
@@ -159,41 +161,40 @@ export class SkillsPreviewTab extends SettingsTab {
     }
     
     /**
+     * Set up navigation buttons for variants preview
+     * @private
+     */
+    setupVariantsNavigationButtons() {
+        // Add event listeners
+        this.prevVariantButton.addEventListener('click', () => {
+            if (!this.variantsSelect || this.variantsSelect.options.length <= 1) return;
+            
+            const currentIndex = this.variantsSelect.selectedIndex;
+            const optionsLength = this.variantsSelect.options.length;
+            const newIndex = (currentIndex - 1 + optionsLength) % optionsLength;
+            
+            this.variantsSelect.selectedIndex = newIndex;
+            this.variantsSelect.dispatchEvent(new Event('change'));
+        });
+        
+        this.nextVariantButton.addEventListener('click', () => {
+            if (!this.variantsSelect || this.variantsSelect.options.length <= 1) return;
+            
+            const currentIndex = this.variantsSelect.selectedIndex;
+            const optionsLength = this.variantsSelect.options.length;
+            const newIndex = (currentIndex + 1) % optionsLength;
+            
+            this.variantsSelect.selectedIndex = newIndex;
+            this.variantsSelect.dispatchEvent(new Event('change'));
+        });
+    }
+    
+    /**
      * Initialize variants selection
      * @private
      */
     initializeVariantsSelection() {
-        if (!this.variantsSelect) {
-            // Create the variants select if it doesn't exist
-            this.variantsSelect = document.createElement('select');
-            this.variantsSelect.id = 'skill-variants-select';
-            this.variantsSelect.className = 'settings-select';
-            
-            // Create the variants container if it doesn't exist
-            if (!this.variantsContainer) {
-                this.variantsContainer = document.createElement('div');
-                this.variantsContainer.id = 'skill-variants-container';
-                this.variantsContainer.className = 'settings-section';
-                
-                // Add a label
-                const label = document.createElement('label');
-                label.htmlFor = 'skill-variants-select';
-                label.textContent = 'Skill Variant:';
-                this.variantsContainer.appendChild(label);
-                
-                // Add the select
-                this.variantsContainer.appendChild(this.variantsSelect);
-                
-                // Add the container after the skill details
-                if (this.skillDetailsContainer) {
-                    this.skillDetailsContainer.parentNode.insertBefore(
-                        this.variantsContainer, 
-                        this.skillDetailsContainer.nextSibling
-                    );
-                }
-            }
-        }
-        
+        this.setupVariantsNavigationButtons();
         // Add change event listener to variants select
         this.variantsSelect.addEventListener('change', () => {
             const selectedVariant = this.variantsSelect.value;
@@ -254,9 +255,16 @@ export class SkillsPreviewTab extends SettingsTab {
                 this.variantsSelect.appendChild(option);
             });
             
-            // Show the variants container
+            // Show the variants container and navigation buttons
             if (this.variantsContainer) {
                 this.variantsContainer.style.display = 'block';
+            }
+            
+            // Show navigation buttons if there are multiple variants
+            if (this.prevVariantButton && this.nextVariantButton) {
+                const showButtons = this.variantsSelect.options.length > 1;
+                this.prevVariantButton.style.display = showButtons ? 'inline-block' : 'none';
+                this.nextVariantButton.style.display = showButtons ? 'inline-block' : 'none';
             }
             
             // Get the stored selected variant or default to base
@@ -272,9 +280,15 @@ export class SkillsPreviewTab extends SettingsTab {
                 this.currentVariant = null;
             }
         } else {
-            // Hide the variants container if no variants
+            // Hide the variants container and navigation buttons if no variants
             if (this.variantsContainer) {
                 this.variantsContainer.style.display = 'none';
+            }
+            
+            // Hide navigation buttons
+            if (this.prevVariantButton && this.nextVariantButton) {
+                this.prevVariantButton.style.display = 'none';
+                this.nextVariantButton.style.display = 'none';
             }
             
             // Reset current variant
@@ -308,46 +322,43 @@ export class SkillsPreviewTab extends SettingsTab {
     updateSkillDetails() {
         if (!this.skillDetailsContainer || !this.currentSkill) return;
         
-        // Get variant description if available
-        let variantDescription = '';
-        if (this.currentVariant) {
-            const skillTree = SKILL_TREES[this.currentSkill.name];
-            if (skillTree && skillTree.variants && skillTree.variants[this.currentVariant]) {
-                variantDescription = `
-                <div class="variant-info">
-                    <h4>Variant: ${this.currentVariant}</h4>
-                    <p>${skillTree.variants[this.currentVariant].description || 'No description available.'}</p>
-                </div>`;
-            }
-        }
-        
         // Create the skill details HTML
-        const html = `
-            <h3>${this.currentSkill.name}</h3>
-            <p>${this.currentSkill.description}</p>
-            ${variantDescription}
+        this.skillDetailsContainer.innerHTML = `
+            <h4>${this.currentSkill.name}</h3>
+            <p class="skill-preview-description">${this.currentSkill.description}</p>
+            <br/>
             <div class="skill-stats">
                 <div class="skill-stat">
                     <span class="stat-label">Damage:</span>
-                    <span class="stat-value">${this.currentSkill.damage || 'N/A'}</span>
+                    <span class="stat-value">${this.currentSkill.damage !== undefined ? this.currentSkill.damage : 'N/A'}</span>
                 </div>
                 <div class="skill-stat">
                     <span class="stat-label">Cooldown:</span>
-                    <span class="stat-value">${this.currentSkill.cooldown || 'N/A'} seconds</span>
+                    <span class="stat-value">${this.currentSkill.cooldown !== undefined ? this.currentSkill.cooldown : 'N/A'}</span>
                 </div>
                 <div class="skill-stat">
                     <span class="stat-label">Range:</span>
-                    <span class="stat-value">${this.currentSkill.range || 'N/A'}</span>
+                    <span class="stat-value">${this.currentSkill.range !== undefined ? this.currentSkill.range : 'N/A'}</span>
                 </div>
                 <div class="skill-stat">
-                    <span class="stat-label">Energy Cost:</span>
-                    <span class="stat-value">${this.currentSkill.energyCost || 'N/A'}</span>
+                    <span class="stat-label">Mana Cost:</span>
+                    <span class="stat-value">${this.currentSkill.manaCost !== undefined ? this.currentSkill.manaCost : 'N/A'}</span>
                 </div>
             </div>
         `;
-        
-        // Set the skill details HTML
-        this.skillDetailsContainer.innerHTML = html;
+
+        // Get variant description if available
+        if (this.currentVariant) {
+            const skillTree = SKILL_TREES[this.currentSkill.name];
+            if (skillTree && skillTree.variants && skillTree.variants[this.currentVariant]) {
+                this.variantInfo.innerHTML = `
+                    <h4>${this.currentVariant}</h4>
+                    <p class="skill-preview-description">${skillTree.variants[this.currentVariant].description || 'No description available.'}</p>
+                `;
+            }
+        } else {
+            this.variantInfo.innerHTML = ``;
+        }
     }
     
     /**

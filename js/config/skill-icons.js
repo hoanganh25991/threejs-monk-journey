@@ -669,7 +669,7 @@ export const SKILL_ICONS = {
         cssClass: "icon-bul-palm",
         color: "#1e90ff"
     },
-    "Bul Breath Of Heavn": {
+    "Bul Breath Of Heaven": {
         emoji: "🌿",
         cssClass: "icon-bul-breath-of-heaven",
         color: "#33ff00"

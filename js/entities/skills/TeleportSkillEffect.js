@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { SkillEffect } from './SkillEffect.js';
+import { COMBAT_BALANCE } from '../../config/game-balance.js';
 
 /**
  * Specialized effect for teleport skills
@@ -298,8 +299,12 @@ export class TeleportSkillEffect extends SkillEffect {
                     const distance = this.skill.position.distanceTo(enemyPos);
                     
                     if (distance <= hitRadius) {
-                        // Apply damage
-                        enemy.takeDamage(this.skill.damage);
+                        // Apply damage with skill damage multiplier
+                        const adjustedDamage = Math.round(this.skill.damage * COMBAT_BALANCE.player.skillDamageMultiplier);
+                        enemy.takeDamage(adjustedDamage);
+                        
+                        // Log damage for debugging
+                        console.debug(`Applied ${adjustedDamage} damage (base: ${this.skill.damage}, multiplier: ${COMBAT_BALANCE.player.skillDamageMultiplier})`);
                         
                         // Show hit effect
                         this._createTeleportHitEffect(enemyPos);

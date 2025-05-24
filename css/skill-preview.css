@@ -79,15 +79,14 @@
     flex: 1;
 }
 
-.skill-details-info {
+#skill-details {
     background-color: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
     padding: var(--padding-medium);
-    margin-top: 10px;
 }
 
-.skill-detail {
-    display: flex;
-    margin-bottom: 10px;
-    align-items: flex-start;
+#variant-info {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: var(--padding-medium);
 }

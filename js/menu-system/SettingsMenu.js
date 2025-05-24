@@ -4,16 +4,14 @@
  */
 
 import { UIComponent } from '../UIComponent.js';
-import {
-    PerformanceTab,
-    GameplayTab,
-    CharacterModelTab,
-    SkillsPreviewTab,
-    AudioTab,
-    ControlsTab,
-    EnemyPreviewTab,
-    ReleaseTab
-} from './settings-menu/index.js';
+import { PerformanceTab } from './settings-menu/PerformanceTab.js';
+import { GameplayTab } from './settings-menu/GameplayTab.js';
+import { CharacterModelTab } from './settings-menu/CharacterModelTab.js';
+import { SkillsPreviewTab } from './settings-menu/SkillsPreviewTab.js';
+import { AudioTab } from './settings-menu/AudioTab.js';
+import { ControlsTab } from './settings-menu/ControlsTab.js';
+import { EnemyPreviewTab } from './settings-menu/EnemyPreviewTab.js';
+import { ReleaseTab } from './settings-menu/ReleaseTab.js';
 import { SaveOperationProgress } from '../save-manager/utils/SaveOperationProgress.js';
 
 export class SettingsMenu extends UIComponent {
@@ -25,7 +23,6 @@ export class SettingsMenu extends UIComponent {
         super('main-options-menu', game);
         
         // Footer buttons
-        this.backButton = document.getElementById('settings-back-button');
         this.saveButton = document.getElementById('settings-save-button');
         
         this.fromInGame = false;
@@ -44,7 +41,6 @@ export class SettingsMenu extends UIComponent {
     init() {
         this.initializeTabs();
         this.initializeTabComponents();
-        this.setupBackButton();
         this.setupSaveButton();
         return true;
     }
@@ -109,28 +105,6 @@ export class SettingsMenu extends UIComponent {
     }
     
     /**
-     * Set up back button
-     * @private
-     */
-    setupBackButton() {
-        if (this.backButton) {
-            this.backButton.addEventListener('click', () => {
-                // Save settings before going back
-                // this.saveSettings();
-                
-                // Hide settings menu
-                this.hide();
-                
-                // Show main menu if available
-                this.game.menuManager.showMenu('gameMenu');
-                
-                // Resume game if coming from in-game
-                this.game.resume(false);
-            });
-        }
-    }
-    
-    /**
      * Set up save button
      * @private
      */
@@ -149,11 +123,10 @@ export class SettingsMenu extends UIComponent {
                 setTimeout(() => {
                     // Hide the progress indicator
                     saveProgress.hide();
-                    
                     // Show main menu if available
+                    this.game.start();
+                    this.game.pause(false);
                     this.game.menuManager.showMenu('gameMenu');
-                    // Resume game if coming from in-game
-                    this.game.resume(false);
                 }, 300);
             });
         }

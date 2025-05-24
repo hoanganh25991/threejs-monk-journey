@@ -38,6 +38,10 @@ button, a, div, input, select, textarea, [role="button"], [tabindex] {
     -webkit-touch-callout: none;
 }
 
+div, span, p {
+    font-size: 1rem;
+}
+
 /* Force landscape orientation */
 @media screen and (orientation: portrait) {
     html {

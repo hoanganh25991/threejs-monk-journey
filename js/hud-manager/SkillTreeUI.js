@@ -335,6 +335,8 @@ ${iconData.emoji}
     
     // Create HTML for variants
     const variantsHtml = [];
+    
+    // We don't need to inform about base skill status anymore
 
     // For each variant
     Object.entries(variants).forEach(([variantName, variantData]) => {
@@ -369,9 +371,6 @@ ${iconData.emoji}
                 : ""
             }
           </div>
-          <button class="variant-select-btn" data-variant="${variantName}" ${isActive ? "disabled" : ""}>
-            ${isActive ? "Selected" : "Select Variant"}
-          </button>
         </div>
       `;
 
@@ -381,30 +380,11 @@ ${iconData.emoji}
     // Add the variants to the container
     this.elements.skillVariants.innerHTML = variantsHtml.join("");
 
-    // Add click event to variant select buttons
-    document.querySelectorAll(".variant-select-btn").forEach((button) => {
-      button.addEventListener("click", () => {
-        const variantName = button.dataset.variant;
-        this.selectVariant(skillName, variantName);
-      });
-    });
-    
-    // Add "Use Base Skill" button event listener
-    const useBaseSkillBtn = document.getElementById("use-base-skill-btn");
-    if (useBaseSkillBtn) {
-      useBaseSkillBtn.addEventListener("click", () => {
-        this.unselectAllVariants(skillName);
-      });
-    }
-    
-    // Add click event to variant containers for toggling selection
+    // Add click event to variant containers
     document.querySelectorAll(".skill-variant").forEach((variant) => {
-      variant.addEventListener("click", (event) => {
-        // Don't trigger if clicking on the button (button has its own handler)
-        if (event.target.tagName !== 'BUTTON' && !event.target.closest('button')) {
-          const variantName = variant.dataset.variant;
-          this.selectVariant(skillName, variantName);
-        }
+      variant.addEventListener("click", () => {
+        const variantName = variant.dataset.variant;
+        this.selectVariant(skillName, variantName);
       });
     });
   }
@@ -419,17 +399,7 @@ ${iconData.emoji}
       variant.classList.remove("active");
     });
 
-    // Reset all variant buttons
-    document.querySelectorAll(".variant-select-btn").forEach((button) => {
-      button.disabled = false;
-      button.textContent = "Select Variant";
-    });
-
-    // Update the base skill status text
-    const baseSkillStatus = document.querySelector(".base-skill-status");
-    if (baseSkillStatus) {
-      baseSkillStatus.textContent = "Currently Using Base Skill";
-    }
+    // We've removed the variant buttons and base skill status from the UI
 
     // Unselect the variant in data
     if (this.playerSkills[skillName]) {
@@ -443,6 +413,21 @@ ${iconData.emoji}
       this.elements.skillBuffs.innerHTML = "";
     } else {
       console.error("Skill buffs container not found in the DOM");
+    }
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem(STORAGE_KEYS.SKILL_TREE_DATA, JSON.stringify(this.playerSkills));
+      console.debug('Skill tree data saved to localStorage after unselecting all variants');
+    } catch (error) {
+      console.error('Error saving skill tree data to localStorage:', error);
+    }
+    
+    // Update the game with the new skills
+    if (this.game && this.game.player) {
+      // Reload the player skills to apply the changes
+      this.game.player.loadSkillTreeData();
+      console.debug("Player skills updated after unselecting all variants");
     }
     
     // Update available points display
@@ -465,13 +450,9 @@ ${iconData.emoji}
       variant.classList.remove("active");
     });
 
-    // Reset all variant buttons
-    document.querySelectorAll(".variant-select-btn").forEach((button) => {
-      button.disabled = false;
-      button.textContent = "Select Variant";
-    });
-
-    // Clear buffs container if unselecting
+    // We've removed the variant buttons and base skill status from the UI
+    
+    // Handle unselection if the variant is already active
     if (isAlreadyActive) {
       // Unselect the variant
       if (this.playerSkills[skillName]) {
@@ -481,7 +462,24 @@ ${iconData.emoji}
       }
       
       // Clear the buffs display
-      document.getElementById("skill-buffs").innerHTML = "";
+      if (this.elements.skillBuffs) {
+        this.elements.skillBuffs.innerHTML = "";
+      }
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem(STORAGE_KEYS.SKILL_TREE_DATA, JSON.stringify(this.playerSkills));
+        console.debug('Skill tree data saved to localStorage after unselecting variant');
+      } catch (error) {
+        console.error('Error saving skill tree data to localStorage:', error);
+      }
+      
+      // Update the game with the new skills
+      if (this.game && this.game.player) {
+        // Reload the player skills to apply the changes
+        this.game.player.loadSkillTreeData();
+        console.debug("Player skills updated after unselecting variant");
+      }
       
       // Update available points display
       this.updateAvailablePoints();
@@ -506,20 +504,9 @@ ${iconData.emoji}
       selectedVariant.classList.add("active");
     }
 
-    // Update button for the selected variant
-    const button = document.querySelector(
-      `.variant-select-btn[data-variant="${variantName}"]`
-    );
-    if (button) {
-      button.disabled = true;
-      button.textContent = "Selected";
-    }
+    // We've removed the variant buttons from the UI
     
-    // Update the base skill status text
-    const baseSkillStatus = document.querySelector(".base-skill-status");
-    if (baseSkillStatus) {
-      baseSkillStatus.textContent = "Select a variant below or click on selected variant to unselect it";
-    }
+    // We've removed the base skill status and button from the UI
 
     // Show buffs for the selected variant
     this.showVariantBuffs(skillName, variantName);
@@ -605,11 +592,7 @@ ${iconData.emoji}
               : ""
             }
           </div>
-          <button class="buff-select-btn" 
-                  data-buff="${buffName}" 
-                  ${isActive ? "disabled" : ""}>
-            ${isActive ? "Selected" : "Select Buff"}
-          </button>
+
         </div>
       `;
 
@@ -619,22 +602,11 @@ ${iconData.emoji}
     // Add the buffs to the container
     this.elements.skillBuffs.innerHTML = buffsHtml.join("");
 
-    // Add click event to buff select buttons
-    document.querySelectorAll(".buff-select-btn").forEach((button) => {
-      button.addEventListener("click", () => {
-        const buffName = button.dataset.buff;
+    // Add click event to buff containers
+    document.querySelectorAll(".skill-buff").forEach((buffContainer) => {
+      buffContainer.addEventListener("click", () => {
+        const buffName = buffContainer.dataset.buff;
         this.selectBuff(skillName, buffName);
-      });
-    });
-    
-    // Add click event to buff containers for toggling selection
-    document.querySelectorAll(".skill-buff").forEach((buff) => {
-      buff.addEventListener("click", (event) => {
-        // Don't trigger if clicking on the button (button has its own handler)
-        if (event.target.tagName !== 'BUTTON' && !event.target.closest('button')) {
-          const buffName = buff.dataset.buff;
-          this.selectBuff(skillName, buffName);
-        }
       });
     });
   }

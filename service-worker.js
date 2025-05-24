@@ -592,7 +592,7 @@ const FILE_SIZES =   {
     "assets/audio/wave_strike.mp3": 2688,
     "assets/audio/wind_dissipate.mp3": 3456,
     "assets/audio/wind_pull.mp3": 2688,
-    "assets/effects/buddha.glb": 1902480,
+    "assets/effects/buddha.glb": 55000, // Updated size for compressed Draco model
     "assets/images/background.jpg": 465241,
     "assets/models/monk-v3.glb": 155292,
     "assets/models/monk.glb": 366580

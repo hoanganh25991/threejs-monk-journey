@@ -11,12 +11,12 @@ export const PRIMARY_ATTACKS = [
         name: 'Fist of Thunder',
         description: 'Teleport to the nearest enemy and strike them with lightning',
         type: 'teleport',
-        damage: 1,
+        damage: 45,
         manaCost: 0,
         cooldown: 0, // Very short cooldown for basic attack
-        range: 25, // Teleport range
+        range: 13, // Teleport range
         radius: 4, // Increased area of effect for more reliable hits
-        duration: 1.0, // Short duration
+        duration: 0.5, // Short duration
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         primaryAttack: true,
@@ -30,11 +30,11 @@ export const PRIMARY_ATTACKS = [
         name: "Deadly Reach",
         description: "Extend your reach to strike enemies from a distance.",
         type: "projectile",
-        damage: 1000,
-        manaCost: 0,
+        damage: 20,
+        manaCost: 5,
         cooldown: 0,
-        range: 15, // Increased range for a proper ranged attack
-        radius: 0.5, // Small area of effect at impact point
+        range: 25, // Increased range for a proper ranged attack
+        radius: 1, // Small area of effect at impact point
         duration: 1.5, // Duration for the beam to extend and retract
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
@@ -304,8 +304,8 @@ export const NORMAL_SKILLS = [
         range: 40, // Long range
         radius: 3, // Explosion radius
         duration: 5, // Duration in seconds
-        get color() { return SKILL_ICONS[this.name]?.color || 0x33ff00; }, // Green color
-        get icon() { return SKILL_ICONS[this.name]?.emoji || '🌿'; }, // Leaf emoji as fallback
+        get color() { return SKILL_ICONS[this.name]?.color; }, // Green color
+        get icon() { return SKILL_ICONS[this.name]?.emoji; }, // Leaf emoji as fallback
         sounds: {
             cast: 'skillExplodingPalm', // Reusing sound temporarily
             impact: 'markApplied', // Reusing sound temporarily
@@ -328,8 +328,8 @@ export const NORMAL_SKILLS = [
         range: 0, // Self-cast
         radius: 5, // Large radius to affect multiple allies/enemies
         duration: 3, // Duration in seconds
-        get color() { return SKILL_ICONS[this.name]?.color || 0x33ff00; }, // Green color
-        get icon() { return SKILL_ICONS[this.name]?.emoji || '🌿'; }, // Leaf emoji as fallback
+        get color() { return SKILL_ICONS[this.name]?.color; }, // Green color
+        get icon() { return SKILL_ICONS[this.name]?.emoji; }, // Leaf emoji as fallback
         sounds: {
             cast: 'skillBreathOfHeaven', // Reusing Breath of Heaven sound
             impact: 'healingPulse', // Soft healing pulse sound

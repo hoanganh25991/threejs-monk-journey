@@ -59,7 +59,8 @@ export class ShadowAssaultEffect extends SevenSidedStrikeEffect {
                 
                 // Face toward center
                 const direction = new THREE.Vector3();
-                direction.subVectors(this.effect.position, randomPoint.position).normalize();
+                // Use effectGroup's position instead of this.effect which might not be set yet
+                direction.subVectors(effectGroup.position, randomPoint.position).normalize();
                 shadowMonk.rotation.y = Math.atan2(direction.x, direction.z);
                 
                 // Store data
@@ -129,6 +130,9 @@ export class ShadowAssaultEffect extends SevenSidedStrikeEffect {
     _updateSevenSidedStrikeEffect(delta) {
         // Call the parent method to update the base effect
         super._updateSevenSidedStrikeEffect(delta);
+        
+        // Make sure we have the effect initialized
+        if (!this.effect) return;
         
         // Update shadow clones
         if (this.sevenSidedStrikeState && this.shadowClones) {
@@ -264,8 +268,15 @@ export class ShadowAssaultEffect extends SevenSidedStrikeEffect {
             isFlash: true
         };
         
-        this.effect.add(flash);
-        this.sevenSidedStrikeState.flashEffects.push(flash);
+        // Make sure this.effect exists before using it
+        if (this.effect) {
+            this.effect.add(flash);
+            
+            // Make sure sevenSidedStrikeState exists and has flashEffects array
+            if (this.sevenSidedStrikeState && this.sevenSidedStrikeState.flashEffects) {
+                this.sevenSidedStrikeState.flashEffects.push(flash);
+            }
+        }
         
         // Apply damage to enemies at this position if game reference exists
         if (this.skill.game && this.skill.game.enemyManager) {

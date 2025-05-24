@@ -40,7 +40,7 @@ export class GameMenu extends IMenu {
                     }
 
                     // Resume the game
-                    this.game.resume();
+                    this.game.resume(false);
                     
                     // Show all HUD elements
                     if (this.game.hudManager) {
