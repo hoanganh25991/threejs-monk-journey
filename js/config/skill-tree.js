@@ -896,6 +896,97 @@ const BASE_SKILL_TREES = {
       },
     },
   },
+  "Bul Palm": {
+    baseDescription:
+      "Giant palm moving, damaging all enemies on the path.",
+    variants: {
+      "Verdant Fury": {
+        description: "Increases the explosion radius and damage by 25%.",
+        effects: ["Increased damage", "Extended radius"],
+        unlockedBy: "Legendary gloves Verdant Fury",
+        cost: 5,
+        requiredPoints: 0,
+      },
+      "Jade Strike": {
+        description: "Adds a stunning effect to each explosion along the path.",
+        effects: ["Stun effect", "Area of effect"],
+        unlockedBy: "Legendary weapon Jade Strike",
+        cost: 5,
+        requiredPoints: 0,
+      },
+      "Emerald Crusher": {
+        description: "The palm now creates larger but fewer explosions with increased damage.",
+        effects: ["Increased damage", "Fewer explosions"],
+        unlockedBy: "Legendary chest Emerald Crusher",
+        cost: 5,
+        requiredPoints: 0,
+      },
+      "Forest's Wrath": {
+        description: "Each explosion leaves a damaging area on the ground for 3 seconds.",
+        effects: ["Damage over time", "Area of effect"],
+        unlockedBy: "Legendary boots Forest's Wrath",
+        cost: 5,
+        requiredPoints: 0,
+      },
+      "Viridian Path": {
+        description: "The palm travels farther and faster, with increased range.",
+        effects: ["Increased range", "Increased speed"],
+        unlockedBy: "Legendary helm Viridian Path",
+        cost: 5,
+        requiredPoints: 0,
+      },
+    },
+    buffs: {
+      "Crushing Force": {
+        description: "Increases the damage of Bul Palm by 20%.",
+        effects: ["Increased damage"],
+        cost: 5,
+        maxLevel: 3,
+        levelBonuses: [
+          "Increases damage by 20%",
+          "Increases damage by 40%",
+          "Increases damage by 60%",
+        ],
+        requiredVariant: "any",
+      },
+      "Explosive Path": {
+        description: "Reduces the interval between explosions by 0.1 seconds.",
+        effects: ["Faster explosions"],
+        cost: 5,
+        maxLevel: 3,
+        levelBonuses: [
+          "Reduces interval by 0.1 seconds",
+          "Reduces interval by 0.2 seconds",
+          "Reduces interval by 0.3 seconds",
+        ],
+        requiredVariant: "any",
+      },
+      "Extended Reach": {
+        description: "Increases the maximum travel distance by 15%.",
+        effects: ["Extended range"],
+        cost: 5,
+        maxLevel: 3,
+        levelBonuses: [
+          "Increases range by 15%",
+          "Increases range by 30%",
+          "Increases range by 45%",
+        ],
+        requiredVariant: "any",
+      },
+      "Swift Recovery": {
+        description: "Reduces the cooldown of Bul Palm by 1 second.",
+        effects: ["Cooldown reduction"],
+        cost: 5,
+        maxLevel: 3,
+        levelBonuses: [
+          "Reduces cooldown by 1 second",
+          "Reduces cooldown by 2 seconds",
+          "Reduces cooldown by 3 seconds",
+        ],
+        requiredVariant: "any",
+      },
+    },
+  },
 };
 
 // Apply buffs to variants by reference

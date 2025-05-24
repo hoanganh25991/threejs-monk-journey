@@ -664,7 +664,11 @@ export const SKILL_ICONS = {
         cssClass: "icon-zens-retribution",
         color: "#000000"
     },
-
+    "Bul Palm": {
+        emoji: "🌿",
+        cssClass: "icon-bul-palm",
+        color: "#33ff33"
+    },
     // Generic buff icons
     "buff-damage": {
         emoji: "⚔️",
