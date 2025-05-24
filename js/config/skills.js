@@ -11,12 +11,12 @@ export const PRIMARY_ATTACKS = [
         name: 'Fist of Thunder',
         description: 'Teleport to the nearest enemy and strike them with lightning',
         type: 'teleport',
-        damage: 1,
+        damage: 45,
         manaCost: 0,
         cooldown: 0, // Very short cooldown for basic attack
-        range: 25, // Teleport range
+        range: 8, // Teleport range
         radius: 4, // Increased area of effect for more reliable hits
-        duration: 1.0, // Short duration
+        duration: 0.5, // Short duration
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         primaryAttack: true,
@@ -30,11 +30,11 @@ export const PRIMARY_ATTACKS = [
         name: "Deadly Reach",
         description: "Extend your reach to strike enemies from a distance.",
         type: "projectile",
-        damage: 1000,
-        manaCost: 0,
+        damage: 20,
+        manaCost: 5,
         cooldown: 0,
         range: 15, // Increased range for a proper ranged attack
-        radius: 0.5, // Small area of effect at impact point
+        radius: 1, // Small area of effect at impact point
         duration: 1.5, // Duration for the beam to extend and retract
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },

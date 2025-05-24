@@ -8,7 +8,6 @@ import { SkillPreview } from './SkillPreview.js';
 import { SKILLS } from '../../config/skills.js';
 import { STORAGE_KEYS } from '../../config/storage-keys.js';
 import { SKILL_TREES } from '../../config/skill-tree.js';
-import { Skill } from '../../entities/skills/Skill.js';
 
 export class SkillsPreviewTab extends SettingsTab {
     /**
@@ -31,6 +30,7 @@ export class SkillsPreviewTab extends SettingsTab {
         this.variantsSelect = document.getElementById('skill-variants-select');
         this.prevVariantButton = document.getElementById('prev-variant-button');
         this.nextVariantButton = document.getElementById('next-variant-button');
+        this.variantInfo = document.getElementById('variant-info');
         
         this.skillPreview = null;
         this.currentSkill = null;
@@ -322,24 +322,11 @@ export class SkillsPreviewTab extends SettingsTab {
     updateSkillDetails() {
         if (!this.skillDetailsContainer || !this.currentSkill) return;
         
-        // Get variant description if available
-        let variantDescription = '';
-        if (this.currentVariant) {
-            const skillTree = SKILL_TREES[this.currentSkill.name];
-            if (skillTree && skillTree.variants && skillTree.variants[this.currentVariant]) {
-                variantDescription = `
-                <div class="variant-info">
-                    <h4>Variant: ${this.currentVariant}</h4>
-                    <p>${skillTree.variants[this.currentVariant].description || 'No description available.'}</p>
-                </div>`;
-            }
-        }
-        
         // Create the skill details HTML
-        const html = `
-            <h3>${this.currentSkill.name}</h3>
-            <p>${this.currentSkill.description}</p>
-            ${variantDescription}
+        this.skillDetailsContainer.innerHTML = `
+            <h4>${this.currentSkill.name}</h3>
+            <p class="skill-preview-description">${this.currentSkill.description}</p>
+            <br/>
             <div class="skill-stats">
                 <div class="skill-stat">
                     <span class="stat-label">Damage:</span>
@@ -347,7 +334,7 @@ export class SkillsPreviewTab extends SettingsTab {
                 </div>
                 <div class="skill-stat">
                     <span class="stat-label">Cooldown:</span>
-                    <span class="stat-value">${this.currentSkill.cooldown !== undefined ? this.currentSkill.cooldown : 'N/A'} seconds</span>
+                    <span class="stat-value">${this.currentSkill.cooldown !== undefined ? this.currentSkill.cooldown : 'N/A'}</span>
                 </div>
                 <div class="skill-stat">
                     <span class="stat-label">Range:</span>
@@ -359,9 +346,19 @@ export class SkillsPreviewTab extends SettingsTab {
                 </div>
             </div>
         `;
-        
-        // Set the skill details HTML
-        this.skillDetailsContainer.innerHTML = html;
+
+        // Get variant description if available
+        if (this.currentVariant) {
+            const skillTree = SKILL_TREES[this.currentSkill.name];
+            if (skillTree && skillTree.variants && skillTree.variants[this.currentVariant]) {
+                this.variantInfo.innerHTML = `
+                    <h4>${this.currentVariant}</h4>
+                    <p class="skill-preview-description">${skillTree.variants[this.currentVariant].description || 'No description available.'}</p>
+                `;
+            }
+        } else {
+            this.variantInfo.innerHTML = ``;
+        }
     }
     
     /**

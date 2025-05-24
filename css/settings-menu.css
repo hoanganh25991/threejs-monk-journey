@@ -803,7 +803,6 @@
     color: white;
     margin-right: 10px;
     display: inline-block;
-    min-width: 120px;
 }
 
 /* Value display styling */
@@ -821,6 +820,16 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
+}
+
+/* Skill Preview */
+.skill-preview-description {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Responsive adjustments for landscape mode */
@@ -850,7 +859,7 @@
     
     .settings-label {
         font-size: 12px;
-        min-width: 100px;
+        /* min-width: 100px; */
     }
     
     .settings-value {
