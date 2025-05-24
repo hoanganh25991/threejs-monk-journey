@@ -41,13 +41,13 @@ export class EnemyPreview {
         this.currentModel = new THREE.Group();
         this.animations = {};
         this.currentAnimation = null;
-        this.isVisible = true;
+        this.visible = true;
         
         // Set up visibility observer
         this.observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 console.debug('EnemyPreview visibility changed:', entry.isIntersecting);
-                this.isVisible = entry.isIntersecting;
+                this.visible = entry.isIntersecting;
                 
                 if (entry.isIntersecting) {
                     // Resume animation when visible
@@ -260,7 +260,7 @@ export class EnemyPreview {
      * Animation loop
      */
     animate() {
-        if (!this.isVisible) {
+        if (!this.visible) {
             return;
         }
         
@@ -294,7 +294,7 @@ export class EnemyPreview {
         console.debug('EnemyPreview: Force restarting animation');
         
         // Set visibility to true
-        this.isVisible = true;
+        this.visible = true;
         
         // Cancel existing animation frame if any
         if (this.animationId) {

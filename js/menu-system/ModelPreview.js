@@ -22,7 +22,7 @@ export class ModelPreview {
         this.mixer = null;
         this.clock = new THREE.Clock();
         this.animationId = null;
-        this.isVisible = true;
+        this.visible = true;
         this.animations = {};
         this.currentAnimation = null;
         
@@ -50,15 +50,15 @@ export class ModelPreview {
     
     setupVisibilityObserver() {
         // For debugging - always set visible to true initially
-        this.isVisible = true;
+        this.visible = true;
         
         // Create an intersection observer to detect when the preview is visible
         this.observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 console.debug('ModelPreview visibility changed:', entry.isIntersecting);
-                this.isVisible = entry.isIntersecting;
+                this.visible = entry.isIntersecting;
                 
-                if (this.isVisible) {
+                if (this.visible) {
                     // Resume animation when visible
                     if (!this.animationId) {
                         console.debug('ModelPreview: Resuming animation');
@@ -280,7 +280,7 @@ export class ModelPreview {
     
     animate() {
         // Only continue animation if visible
-        if (this.isVisible) {
+        if (this.visible) {
             this.animationId = requestAnimationFrame(() => this.animate());
             
             // Update controls

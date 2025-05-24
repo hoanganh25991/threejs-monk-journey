@@ -487,7 +487,7 @@
     right: 10px;
     color: white;
     pointer-events: auto; /* Ensure clicks are registered */
-    z-index: 40; /* Below UI Controls but above other elements */
+    z-index: 110; /* Below UI Controls but above other elements */
 }
 
 #mini-map-canvas {
@@ -495,19 +495,8 @@
     display: block;
     width: 100%;
     height: 100%;
-    opacity: 0.6;
-    transition: opacity 0.2s ease;
-}
-
-/* When checkbox is checked, increase opacity of the canvas */
-.mini-map-opacity-toggle:checked ~ #mini-map #mini-map-canvas {
     opacity: 1;
-    transition: opacity 0.2s ease-in;
-}
-
-/* Add a transition for when the checkbox becomes unchecked */
-.mini-map-opacity-toggle:not(:checked) ~ #mini-map #mini-map-canvas {
-    transition: opacity 0.5s ease-out;
+    transition: opacity 0.2s ease;
 }
 
 /* Update Notification */
@@ -526,74 +515,3 @@
     min-width: 300px;
     max-width: 80%;
 }
-
-#update-notification p {
-    margin: 0 0 10px 0;
-}
-
-#update-notification .update-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-#update-notification #update-button,
-#update-notification #skip-update-button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s;
-}
-
-#update-notification #update-button {
-    background-color: #4CAF50;
-    color: white;
-}
-
-#update-notification #update-button:hover {
-    background-color: #45a049;
-}
-
-#update-notification #skip-update-button {
-    background-color: #f1f1f1;
-    color: #333;
-}
-
-#update-notification #skip-update-button:hover {
-    background-color: #ddd;
-}
-
-#update-notification .loading-bar {
-    height: 5px;
-    width: 100%;
-    background-color: rgba(51, 51, 51, 0.5);
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-#update-notification #loading-progress {
-    height: 100%;
-    width: 0%;
-    background-color: #4CAF50;
-    transition: width 0.3s;
-}
-
-#update-notification #update-status {
-    margin: 10px 0 0 0;
-    font-size: 0.9em;
-}
-
-#update-notification #file-info {
-    margin: 5px 0 0 0;
-    font-size: 0.8em;
-    color: #ddd;
-    display: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Inventory styles moved to inventory.css */

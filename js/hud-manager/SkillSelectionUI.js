@@ -639,7 +639,8 @@ export class SkillSelectionUI extends UIComponent {
             }
         }
 
-        this.game.hudManager.toggleSkillSelection();
+        this.hide();
+        this.game.resume(false);
     }
     
     /**

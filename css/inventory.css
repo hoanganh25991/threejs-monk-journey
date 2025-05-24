@@ -17,7 +17,7 @@
     color: white;
     display: none; /* Will be toggled by JavaScript */
     pointer-events: auto;
-    z-index: 100; /* Dialogs and Menus */
+    z-index: 110; /* Dialogs and Menus */
     flex-direction: column;
     overflow: hidden;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);

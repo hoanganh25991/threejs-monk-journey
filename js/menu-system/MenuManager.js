@@ -100,7 +100,7 @@ export class MenuManager {
         }
         
         // If the requested menu is already active and visible, do nothing
-        if (this.activeMenu === menu && menu.isVisible) {
+        if (this.activeMenu === menu && menu.visible) {
             console.debug(`Menu ${menuType} is already active and visible`);
             return true;
         }

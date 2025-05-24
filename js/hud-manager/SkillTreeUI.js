@@ -778,7 +778,8 @@ ${iconData.emoji}
     this.game && this.game.hudManager.showNotification("Skill tree saved successfully!");
     
     // Close the skill tree
-    this.game.hudManager.toggleSkillTree();
+    this.hide();
+    this.game.resume(false);
   }
   
   /**

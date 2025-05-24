@@ -74,23 +74,6 @@
                 notification.style.transition = 'opacity 0.5s ease-in-out';
             }
             
-            // Update notification text
-            const updateText = this.getElement('update-text');
-            if (updateText) {
-                const sizeText = window.TOTAL_CACHE_SIZE_MB ? ` (${window.TOTAL_CACHE_SIZE_MB} MB)` : '';
-                if (forceUpdate) {
-                    updateText.textContent = `Installing critical update${sizeText}...`;
-                } else {
-                    updateText.textContent = `New version available${sizeText}. Installing...`;
-                }
-            }
-            
-            // Hide update buttons as we're doing silent updates
-            const updateButtons = document.querySelector('#update-notification .update-buttons');
-            if (updateButtons) {
-                updateButtons.style.display = 'none';
-            }
-            
             // Auto-hide toast after 5 seconds
             setTimeout(() => {
                 if (notification.style.display === 'block') {
@@ -101,133 +84,6 @@
                     }, 500);
                 }
             }, 5000);
-        }
-        
-        /**
-         * Approve the service worker update
-         * @param {ServiceWorkerRegistration} registration - The service worker registration
-         */
-        approveUpdate(registration) {
-            try {
-                console.debug('User approved update, notifying service worker');
-                
-                // Update UI to show progress
-                this.updateLoadingProgress(10, 'Installing update...', 'Preparing to apply update');
-                
-                // Send message to service worker to approve update
-                if (registration.waiting) {
-                    registration.waiting.postMessage({
-                        type: 'APPROVE_UPDATE'
-                    });
-                }
-            } catch (error) {
-                console.error('Error approving update:', error);
-            }
-        }
-        
-        /**
-         * Reject the service worker update
-         * @param {ServiceWorkerRegistration} registration - The service worker registration
-         */
-        rejectUpdate(registration) {
-            try {
-                console.debug('User rejected update, notifying service worker');
-                
-                // Send message to service worker to reject update
-                if (registration.waiting) {
-                    registration.waiting.postMessage({
-                        type: 'REJECT_UPDATE'
-                    });
-                }
-                
-                // Hide the notification
-                this.hideUpdateNotification();
-            } catch (error) {
-                console.error('Error rejecting update:', error);
-            }
-        }
-
-        /**
-         * Hide update notification with fade-out effect
-         */
-        hideUpdateNotification() {
-            const notification = this.getElement('update-notification');
-            if (notification) {
-                // Apply fade-out effect
-                notification.style.opacity = '0';
-                
-                // Hide after transition completes
-                setTimeout(() => {
-                    notification.style.display = 'none';
-                    // Reset opacity for next time
-                    notification.style.opacity = '1';
-                }, 500);
-            }
-        }
-
-        /**
-         * Format file size in human-readable format
-         * @param {number} bytes - Size in bytes
-         * @returns {string} - Formatted size string
-         */
-        formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-        
-        /**
-         * Update loading progress in the UI
-         * @param {number} percent - Progress percentage
-         * @param {string} status - Status message
-         * @param {string} fileInfo - Current file information
-         * @param {number} loadedBytes - Bytes loaded
-         * @param {number} totalBytes - Total bytes
-         * @param {number} totalSizeMB - Total size in MB
-         */
-        updateLoadingProgress(percent, status, fileInfo, loadedBytes, totalBytes, totalSizeMB) {
-            const progressBar = this.getElement('loading-progress');
-            if (progressBar) {
-                progressBar.style.width = percent + '%';
-            }
-            
-            // Update status text with simplified information
-            if (status) {
-                const statusElement = this.getElement('update-status');
-                if (statusElement) {
-                    let statusText = status;
-                    
-                    // Add simplified size information if available
-                    if (loadedBytes !== undefined && totalBytes !== undefined && percent > 0) {
-                        statusText = `Updating in background: ${percent}%`;
-                    }
-                    
-                    statusElement.textContent = statusText;
-                }
-            }
-            
-            // Hide detailed file info for a cleaner UI
-            const fileInfoElement = this.getElement('file-info');
-            if (fileInfoElement) {
-                fileInfoElement.style.display = 'none';
-            }
-            
-            // If update is complete, show completion message
-            if (percent >= 100) {
-                const statusElement = this.getElement('update-status');
-                if (statusElement) {
-                    statusElement.textContent = 'Update complete! Reloading...';
-                }
-                
-                // Auto-reload after a short delay
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            }
         }
 
         /**
@@ -268,7 +124,7 @@
                                 window.TOTAL_CACHE_SIZE_MB = data.totalSizeMB;
                             }
                             
-                            instance.updateLoadingProgress(
+                            console.debug(
                                 percent, 
                                 `Downloading files (${completed}/${total})`, 
                                 fileInfo,
@@ -324,29 +180,15 @@
                 // Get size text if available
                 const sizeText = window.TOTAL_CACHE_SIZE_MB ? ` (${window.TOTAL_CACHE_SIZE_MB} MB)` : '';
                 
-                // Always hide update buttons in silent update mode
-                const updateButtons = document.querySelector('#update-notification .update-buttons');
-                if (updateButtons) {
-                    updateButtons.style.display = 'none';
-                }
-                
                 // Update based on the new service worker's state
                 switch (worker.state) {
                     case 'installing':
                         this.updateLoadingProgress(5, 'Installing update...', 'Preparing to download files');
                         break;
-                        
+
                     case 'installed':
                         // The service worker is installed but waiting for activation
                         this.updateLoadingProgress(90, `Update ready${sizeText}`, null);
-                        
-                        // Update the notification text for toast
-                        const updateText = this.getElement('update-text');
-                        if (updateText) {
-                            updateText.textContent = `Update ready${sizeText}. Applying...`;
-                        }
-                        
-                        console.debug('Service worker installed and waiting for activation');
                         break;
                         
                     case 'activating':
@@ -355,31 +197,10 @@
                         
                     case 'activated':
                         this.updateLoadingProgress(100, `Update complete!${sizeText}`, null);
-                        
-                        // Show toast notification for successful update
-                        const completionText = this.getElement('update-text');
-                        if (completionText) {
-                            completionText.textContent = `Update complete!${sizeText}`;
-                        }
-                        
-                        // Reload the page to ensure all assets are served from the new cache
-                        console.debug('Service worker activated, reloading page to use new version');
-                        
-                        // Auto-hide toast after 3 seconds, then reload
-                        setTimeout(() => {
-                            // Hide notification with fade effect
-                            this.hideUpdateNotification();
-                            
-                            // Reload the page after notification is hidden
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 500);
-                        }, 3000);
                         break;
                         
                     case 'redundant':
                         this.updateLoadingProgress(0, 'Update failed!', 'Please refresh the page to try again');
-                        setTimeout(() => this.hideUpdateNotification(), 3000);
                         break;
                 }
             } catch (error) {

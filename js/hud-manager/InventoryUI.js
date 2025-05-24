@@ -109,7 +109,7 @@ export class InventoryUI extends UIComponent {
         const originalAnimate = this.modelPreview.animate;
         this.modelPreview.animate = () => {
             // Only continue animation if visible
-            if (this.modelPreview.isVisible) {
+            if (this.modelPreview.visible) {
                 this.modelPreview.animationId = requestAnimationFrame(() => this.modelPreview.animate());
                 
                 // Update controls
@@ -298,7 +298,7 @@ export class InventoryUI extends UIComponent {
         if (this.isModelInitialized && this.modelPreview) {
             // The ModelPreview class handles animation resumption automatically
             // through its visibility observer
-            this.modelPreview.isVisible = true;
+            this.modelPreview.visible = true;
             
             // Force an animation frame if needed
             if (!this.modelPreview.animationId) {
@@ -316,7 +316,7 @@ export class InventoryUI extends UIComponent {
         
         // Stop the animation when hidden
         if (this.isModelInitialized && this.modelPreview) {
-            this.modelPreview.isVisible = false;
+            this.modelPreview.visible = false;
             
             // Cancel animation frame if it's running
             if (this.modelPreview.animationId) {

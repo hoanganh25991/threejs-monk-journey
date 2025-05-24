@@ -31,7 +31,7 @@ export class SkillPreview {
         this.currentSkillData = null;
         this.clock = new THREE.Clock();
         this.animationId = null;
-        this.isVisible = true;
+        this.visible = true;
         
         // Custom skills flag
         this.customSkillsEnabled = localStorage.getItem(STORAGE_KEYS.CUSTOM_SKILLS) === 'true';
@@ -78,15 +78,15 @@ export class SkillPreview {
      */
     setupVisibilityObserver() {
         // For debugging - always set visible to true initially
-        this.isVisible = true;
+        this.visible = true;
         
         // Create an intersection observer to detect when the preview is visible
         this.observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 console.debug('SkillPreview visibility changed:', entry.isIntersecting);
-                this.isVisible = entry.isIntersecting;
+                this.visible = entry.isIntersecting;
                 
-                if (this.isVisible) {
+                if (this.visible) {
                     // Resume animation when visible
                     if (!this.animationId) {
                         console.debug('SkillPreview: Resuming animation');
@@ -572,7 +572,7 @@ export class SkillPreview {
      */
     animate() {
         // Only continue animation if visible
-        if (this.isVisible) {
+        if (this.visible) {
             this.animationId = requestAnimationFrame(() => this.animate());
             
             // Get delta time
@@ -621,7 +621,7 @@ export class SkillPreview {
         console.debug('SkillPreview: Force restarting animation');
         
         // Set visibility to true
-        this.isVisible = true;
+        this.visible = true;
         
         // Cancel any existing animation frame
         if (this.animationId) {

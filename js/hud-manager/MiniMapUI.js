@@ -281,7 +281,7 @@ export class MiniMapUI extends UIComponent {
         e.preventDefault();
         
         // Only allow dragging when map is visible
-        if (!this.isVisible) return;
+        if (!this.visible) return;
         
         this.isDragging = true;
         
@@ -427,7 +427,7 @@ export class MiniMapUI extends UIComponent {
      */
     update(delta) {
         // Skip updates if map is not visible
-        if (!this.isVisible) {
+        if (!this.visible) {
             return;
         }
         
@@ -974,7 +974,7 @@ export class MiniMapUI extends UIComponent {
         }
         
         // Only draw additional world elements if the map is visible
-        if (this.isVisible) {
+        if (this.visible) {
             this.drawWorldElements(playerX, playerY, centerX, centerY);
         }
     }
@@ -1285,7 +1285,7 @@ export class MiniMapUI extends UIComponent {
             // Get current visibility state
             
             // Toggle visibility
-            const newVisibility = !this.isVisible;
+            const newVisibility = !this.visible;
             this.mapElement.style.display = newVisibility ? 'block' : 'none';
             
             // If becoming visible, force a render
