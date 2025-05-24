@@ -7,6 +7,8 @@ import { SettingsTab } from './SettingsTab.js';
 import { SkillPreview } from '../SkillPreview.js';
 import { SKILLS } from '../../config/skills.js';
 import { STORAGE_KEYS } from '../../config/storage-keys.js';
+import { SKILL_TREES } from '../../config/skill-tree.js';
+import { Skill } from '../../entities/skills/Skill.js';
 
 export class SkillsPreviewTab extends SettingsTab {
     /**
@@ -24,9 +26,14 @@ export class SkillsPreviewTab extends SettingsTab {
         this.nextSkillButton = document.getElementById('next-skill-button');
         this.skillDetailsContainer = document.getElementById('skill-details');
         
+        // Variant selection elements
+        this.variantsContainer = document.getElementById('skill-variants-container');
+        this.variantsSelect = document.getElementById('skill-variants-select');
+        
         this.skillPreview = null;
         this.currentSkill = null;
         this.currentSkillEffect = null;
+        this.currentVariant = null;
         
         this.init();
     }
@@ -44,6 +51,9 @@ export class SkillsPreviewTab extends SettingsTab {
         
         // Initialize the skills preview container
         this.initializeSkillsPreviewContainer();
+        
+        // Initialize variants selection
+        this.initializeVariantsSelection();
         
         return true;
     }
@@ -89,6 +99,12 @@ export class SkillsPreviewTab extends SettingsTab {
             
             // Update the current skill
             this.currentSkill = SKILLS[selectedIndex];
+            
+            // Reset current variant
+            this.currentVariant = null;
+            
+            // Update variants selection
+            this.updateVariantsSelection();
             
             // Update the skill preview
             this.updateSkillPreview();
@@ -143,14 +159,146 @@ export class SkillsPreviewTab extends SettingsTab {
     }
     
     /**
-     * Update the skill preview with the current skill
+     * Initialize variants selection
+     * @private
+     */
+    initializeVariantsSelection() {
+        if (!this.variantsSelect) {
+            // Create the variants select if it doesn't exist
+            this.variantsSelect = document.createElement('select');
+            this.variantsSelect.id = 'skill-variants-select';
+            this.variantsSelect.className = 'settings-select';
+            
+            // Create the variants container if it doesn't exist
+            if (!this.variantsContainer) {
+                this.variantsContainer = document.createElement('div');
+                this.variantsContainer.id = 'skill-variants-container';
+                this.variantsContainer.className = 'settings-section';
+                
+                // Add a label
+                const label = document.createElement('label');
+                label.htmlFor = 'skill-variants-select';
+                label.textContent = 'Skill Variant:';
+                this.variantsContainer.appendChild(label);
+                
+                // Add the select
+                this.variantsContainer.appendChild(this.variantsSelect);
+                
+                // Add the container after the skill details
+                if (this.skillDetailsContainer) {
+                    this.skillDetailsContainer.parentNode.insertBefore(
+                        this.variantsContainer, 
+                        this.skillDetailsContainer.nextSibling
+                    );
+                }
+            }
+        }
+        
+        // Add change event listener to variants select
+        this.variantsSelect.addEventListener('change', () => {
+            const selectedVariant = this.variantsSelect.value;
+            this.currentVariant = selectedVariant === 'base' ? null : selectedVariant;
+            
+            // Save the selected variant
+            if (this.currentSkill) {
+                const variantKey = `${STORAGE_KEYS.SELECTED_SKILL_VARIANT}_${this.currentSkill.name}`;
+                localStorage.setItem(variantKey, selectedVariant);
+            }
+            
+            // Update the skill preview with the selected variant
+            this.updateSkillPreview();
+            
+            // Update the skill details
+            this.updateSkillDetails();
+            
+            // Play the skill effect
+            this.playCurrentSkillEffect();
+        });
+        
+        // Initialize variants for the current skill
+        this.updateVariantsSelection();
+    }
+    
+    /**
+     * Update variants selection based on the current skill
+     * @private
+     */
+    updateVariantsSelection() {
+        if (!this.variantsSelect || !this.currentSkill) return;
+        
+        // Clear existing options
+        while (this.variantsSelect.options.length > 0) {
+            this.variantsSelect.remove(0);
+        }
+        
+        // Add base skill option
+        const baseOption = document.createElement('option');
+        baseOption.value = 'base';
+        baseOption.textContent = 'Base Skill';
+        this.variantsSelect.appendChild(baseOption);
+        
+        // Check if this skill has variants in the skill tree
+        const skillTree = SKILL_TREES[this.currentSkill.name];
+        if (skillTree && skillTree.variants) {
+            // Add variant options
+            Object.keys(skillTree.variants).forEach(variantName => {
+                const option = document.createElement('option');
+                option.value = variantName;
+                option.textContent = variantName;
+                
+                const variantData = skillTree.variants[variantName];
+                if (variantData && variantData.description) {
+                    option.title = variantData.description;
+                }
+                
+                this.variantsSelect.appendChild(option);
+            });
+            
+            // Show the variants container
+            if (this.variantsContainer) {
+                this.variantsContainer.style.display = 'block';
+            }
+            
+            // Get the stored selected variant or default to base
+            const variantKey = `${STORAGE_KEYS.SELECTED_SKILL_VARIANT}_${this.currentSkill.name}`;
+            const storedVariant = localStorage.getItem(variantKey) || 'base';
+            
+            // Set the selected variant
+            if (storedVariant === 'base' || this.variantsSelect.querySelector(`option[value="${storedVariant}"]`)) {
+                this.variantsSelect.value = storedVariant;
+                this.currentVariant = storedVariant === 'base' ? null : storedVariant;
+            } else {
+                this.variantsSelect.value = 'base';
+                this.currentVariant = null;
+            }
+        } else {
+            // Hide the variants container if no variants
+            if (this.variantsContainer) {
+                this.variantsContainer.style.display = 'none';
+            }
+            
+            // Reset current variant
+            this.currentVariant = null;
+        }
+    }
+    
+    /**
+     * Update the skill preview with the current skill and variant
      * @private
      */
     updateSkillPreview() {
         if (!this.skillPreview || !this.currentSkill) return;
         
+        // Create a copy of the current skill data
+        const skillData = { ...this.currentSkill };
+        
+        // Add variant if selected
+        if (this.currentVariant) {
+            skillData.variant = this.currentVariant;
+        }
+        
         // Create the skill effect
-        this.skillPreview.createSkillEffect(this.currentSkill);
+        this.skillPreview.createSkillEffect(skillData);
     }
     
     /**
@@ -160,10 +308,24 @@ export class SkillsPreviewTab extends SettingsTab {
     updateSkillDetails() {
         if (!this.skillDetailsContainer || !this.currentSkill) return;
         
+        // Get variant description if available
+        let variantDescription = '';
+        if (this.currentVariant) {
+            const skillTree = SKILL_TREES[this.currentSkill.name];
+            if (skillTree && skillTree.variants && skillTree.variants[this.currentVariant]) {
+                variantDescription = `
+                <div class="variant-info">
+                    <h4>Variant: ${this.currentVariant}</h4>
+                    <p>${skillTree.variants[this.currentVariant].description || 'No description available.'}</p>
+                </div>`;
+            }
+        }
+        
         // Create the skill details HTML
         const html = `
             <h3>${this.currentSkill.name}</h3>
             <p>${this.currentSkill.description}</p>
+            ${variantDescription}
             <div class="skill-stats">
                 <div class="skill-stat">
                     <span class="stat-label">Damage:</span>
@@ -200,8 +362,16 @@ export class SkillsPreviewTab extends SettingsTab {
             this.currentSkillEffect = null;
         }
         
+        // Create a copy of the current skill data
+        const skillData = { ...this.currentSkill };
+        
+        // Add variant if selected
+        if (this.currentVariant) {
+            skillData.variant = this.currentVariant;
+        }
+        
         // Play the skill effect
-        this.skillPreview.createSkillEffect(this.currentSkill);
+        this.skillPreview.createSkillEffect(skillData);
         
         // Set a timeout to replay the skill effect
         this.currentSkillEffect = setTimeout(() => {
@@ -269,6 +439,11 @@ export class SkillsPreviewTab extends SettingsTab {
     saveSettings() {
         if (this.skillsPreviewSelect) {
             localStorage.setItem(STORAGE_KEYS.SELECTED_SKILL_PREVIEW, this.skillsPreviewSelect.value);
+        }
+        
+        if (this.currentSkill && this.variantsSelect) {
+            const variantKey = `${STORAGE_KEYS.SELECTED_SKILL_VARIANT}_${this.currentSkill.name}`;
+            localStorage.setItem(variantKey, this.variantsSelect.value);
         }
     }
 }

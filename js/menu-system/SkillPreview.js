@@ -375,9 +375,15 @@ export class SkillPreview {
                 }
             },
             enemyManager: {
+                enemies: [], // Add empty enemies array to prevent iteration errors
                 getEnemiesNearPosition: (position, radius) => {
                     // Return an empty array as there are no enemies in the preview
                     return [];
+                },
+                findNearestEnemy: (position, maxDistance) => {
+                    // Return null as there are no enemies in the preview
+                    console.debug(`Finding nearest enemy at position ${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)} with max distance ${maxDistance}`);
+                    return null;
                 }
             },
             scene: this.scene,

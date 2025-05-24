@@ -113,11 +113,11 @@ export const NORMAL_SKILLS = [
         name: 'Wave Strike',
         description: 'Send a wave of energy towards enemies',
         type: 'ranged',
-        damage: 1000,
+        damage: 20,
         manaCost: 0,
         cooldown: 60, // Reduced cooldown
         range: 25,
-        radius: 30,
+        radius: 3,
         duration: 3.5, // Further increased duration from 2.5 to 3.5
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },

@@ -30,6 +30,7 @@ export const STORAGE_KEYS = {
     DIFFICULTY: 'monk_journey_difficulty',
     SELECTED_SKILLS: 'monk_journey_selected_skills',
     SELECTED_SKILL_PREVIEW: 'monk_journey_selected_skill_preview',
+    SELECTED_SKILL_VARIANT: 'monk_journey_selected_skill_variant',
     SKILL_TREE_DATA: 'monk_journey_skill_tree_data',
     SELECTED_ENEMY_PREVIEW: 'monk_journey_selected_enemy_preview',
     SELECTED_ENEMY_ANIMATION: 'monk_journey_selected_enemy_animation',
