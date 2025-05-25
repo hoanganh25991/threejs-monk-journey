@@ -50,17 +50,22 @@ export class DeathScreenUI extends UIComponent {
         // Render the template
         this.render(template);
         
-        // Add event listeners
-        const respawnButton = document.getElementById('respawn-button');
-        respawnButton.addEventListener('click', () => {
+        // Create bound event handler methods to make them easier to remove later
+        this.handleRespawn = () => {
             this.game.player.revive();
-        });
+        };
         
-        const quitButton = document.getElementById('quit-button');
-        quitButton.addEventListener('click', () => {
+        this.handleQuit = () => {
             // Reload page to restart game
             location.reload();
-        });
+        };
+        
+        // Add event listeners
+        const respawnButton = document.getElementById('respawn-button');
+        respawnButton.addEventListener('click', this.handleRespawn);
+        
+        const quitButton = document.getElementById('quit-button');
+        quitButton.addEventListener('click', this.handleQuit);
         
         // Hide initially
         this.hide();
@@ -115,5 +120,22 @@ export class DeathScreenUI extends UIComponent {
         
         // Resume game
         this.game.resume(false);
+    }
+    
+    /**
+     * Remove event listeners when component is disposed
+     * Overrides the base class method
+     */
+    removeEventListeners() {
+        // Remove event listeners from buttons if they exist
+        const respawnButton = document.getElementById('respawn-button');
+        if (respawnButton && this.handleRespawn) {
+            respawnButton.removeEventListener('click', this.handleRespawn);
+        }
+        
+        const quitButton = document.getElementById('quit-button');
+        if (quitButton && this.handleQuit) {
+            quitButton.removeEventListener('click', this.handleQuit);
+        }
     }
 }

@@ -126,12 +126,19 @@ export class CollisionManager {
                 }
             }
             
-            // Handle interaction
-            this.handleInteraction(closestObject);
+            // Use the centralized interaction system if available
+            if (this.player.game && this.player.game.interactionSystem) {
+                this.player.game.interactionSystem.handleCollisionInteraction(closestObject);
+            } else {
+                // Fallback to legacy method
+                console.warn('Interaction system not available, using legacy method');
+                this.handleLegacyInteraction(closestObject);
+            }
         }
     }
     
-    handleInteraction(interactiveObject) {
+    // Legacy interaction handler for backward compatibility
+    handleLegacyInteraction(interactiveObject) {
         // Call the object's interaction handler
         const result = interactiveObject.onInteract();
         

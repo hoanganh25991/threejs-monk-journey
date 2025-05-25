@@ -19,6 +19,7 @@ import { LoadingManager } from './LoadingManager.js';
 import { RENDER_CONFIG } from '../config/render.js';
 import { MenuManager } from '../menu-system/MenuManager.js';
 import { isDebugMode } from '../utils/FlagUtils.js';
+import { InteractionSystem } from '../interaction/InteractionSystem.js';
 
 /**
  * Main Game class that serves as a facade to the underlying game systems
@@ -173,6 +174,10 @@ export class Game {
             
             // Initialize collision manager
             this.collisionManager = new CollisionManager(this.player, this.enemyManager, this.world);
+            
+            // Initialize interaction system
+            this.updateLoadingProgress(83, 'Setting up interaction system...', 'Unifying interaction methods');
+            this.interactionSystem = new InteractionSystem(this);
             
             this.updateLoadingProgress(85, 'Loading quests...', 'Initializing quest system');
             
@@ -623,6 +628,11 @@ export class Game {
         
         // Check collisions
         this.collisionManager.update();
+        
+        // Update interaction system
+        if (this.interactionSystem) {
+            this.interactionSystem.update(delta);
+        }
         
         // Update UI
         this.hudManager.update(delta);

@@ -175,6 +175,20 @@ export class InputHandler {
         // Set player interaction state to true
         this.game.player.setInteracting(true);
         
+        // Use the centralized interaction system if available
+        if (this.game.interactionSystem) {
+            console.debug('Using centralized interaction system for keyboard interaction');
+            this.game.interactionSystem.handleKeyboardInteraction();
+            return;
+        }
+        
+        // Legacy implementation as fallback
+        console.warn('Interaction system not available, using legacy method');
+        this.handleLegacyInteraction();
+    }
+    
+    // Legacy interaction handler for backward compatibility
+    handleLegacyInteraction() {
         // Get player position and rotation
         const playerPosition = this.game.player.getPosition();
         const playerRotation = this.game.player.getRotation();

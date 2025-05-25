@@ -2,24 +2,21 @@ import * as THREE from 'three';
 import { TreasureChest } from './TreasureChest.js';
 import { QuestMarker } from './QuestMarker.js';
 import { BossSpawnPoint } from './BossSpawnPoint.js';
-import { InteractionResultHandler } from '../../InteractionResultHandler.js';
 
 /**
  * Manages interactive objects in the world
+ * 
+ * This class is responsible for creating, positioning, and managing interactive objects.
+ * Interaction handling has been moved to the centralized InteractionSystem.
  */
 export class InteractiveObjectManager {
     constructor(scene, worldManager) {
         this.scene = scene;
         this.worldManager = worldManager;
         this.game = null;
-        this.interactionHandler = null;
         
         // Interactive object collections
         this.interactiveObjects = [];
-        
-        // Raycaster for click/touch detection
-        this.raycaster = new THREE.Raycaster();
-        this.clickableObjects = [];
     }
     
     /**
@@ -28,7 +25,6 @@ export class InteractiveObjectManager {
      */
     setGame(game) {
         this.game = game;
-        this.interactionHandler = new InteractionResultHandler(game);
     }
     
     /**
@@ -36,150 +32,19 @@ export class InteractiveObjectManager {
      */
     init() {
         this.createInteractiveObjects();
-        this.setupClickEvents();
-    }
-    
-    /**
-     * Set up click/touch event listeners for interactive objects
-     */
-    setupClickEvents() {
-        // Get the canvas element
-        const canvas = this.scene.renderer ? this.scene.renderer.domElement : document.querySelector('canvas');
-        
-        if (!canvas) {
-            console.warn('Canvas not found for click/touch events');
-            return;
-        }
-        
-        // Track touch start position to prevent accidental interactions during scrolling
-        let touchStartX = 0;
-        let touchStartY = 0;
-        const touchThreshold = 10; // Pixels of movement allowed before canceling the touch
-        
-        // Add click event listener
-        canvas.addEventListener('click', (event) => {
-            console.debug('Click event detected');
-            this.handleClick(event);
-        });
-        
-        // Touch start - record position
-        canvas.addEventListener('touchstart', (event) => {
-            if (event.touches && event.touches.length > 0) {
-                touchStartX = event.touches[0].clientX;
-                touchStartY = event.touches[0].clientY;
-            }
-        });
-        
-        // Add touch event listener for mobile
-        canvas.addEventListener('touchend', (event) => {
-            // Prevent default to avoid double events
-            event.preventDefault();
-            
-            // Use the first touch point
-            if (event.changedTouches && event.changedTouches.length > 0) {
-                const touch = event.changedTouches[0];
-                
-                // Check if the touch moved significantly (to avoid triggering on scrolls)
-                const touchMoveX = Math.abs(touch.clientX - touchStartX);
-                const touchMoveY = Math.abs(touch.clientY - touchStartY);
-                
-                if (touchMoveX <= touchThreshold && touchMoveY <= touchThreshold) {
-                    console.debug('Touch end event detected (within threshold)');
-                    this.handleClick(touch);
-                } else {
-                    console.debug('Touch moved too much, ignoring as interaction');
-                }
-            }
-        });
-        
-        // Also add touchcancel handler
-        canvas.addEventListener('touchcancel', () => {
-            console.debug('Touch cancelled');
-        });
-    }
-    
-    /**
-     * Handle click/touch event
-     * @param {Event} event - The click or touch event
-     */
-    handleClick(event) {
-        // Skip if game is paused
-        if (this.game && this.game.isPaused) return;
-        
-        // Get canvas
-        const canvas = this.scene.renderer ? this.scene.renderer.domElement : document.querySelector('canvas');
-        if (!canvas) return;
-        
-        // Calculate normalized device coordinates
-        const rect = canvas.getBoundingClientRect();
-        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-        
-        // Set raycaster
-        this.raycaster.setFromCamera(new THREE.Vector2(x, y), this.game.camera);
-        
-        // Get all meshes from interactive objects
-        const clickableObjects = this.interactiveObjects.map(obj => obj.mesh).filter(mesh => mesh);
-        
-        // Check for intersections
-        const intersects = this.raycaster.intersectObjects(clickableObjects, true);
-        
-        if (intersects.length > 0) {
-            // Find the interactive object that was clicked
-            const clickedMesh = intersects[0].object;
-            let clickedObject = null;
-            
-            // Find the parent interactive object by traversing up the hierarchy
-            for (const obj of this.interactiveObjects) {
-                // Check if the clicked mesh is the interactive object's mesh
-                if (obj.mesh === clickedMesh) {
-                    clickedObject = obj;
-                    break;
-                }
-                
-                // Check if the clicked mesh is a direct child of the interactive object's mesh
-                if (obj.mesh.children.includes(clickedMesh)) {
-                    clickedObject = obj;
-                    break;
-                }
-                
-                // Check if the clicked mesh is a descendant of the interactive object's mesh
-                // by traversing up the parent hierarchy
-                let parent = clickedMesh.parent;
-                while (parent) {
-                    if (parent === obj.mesh) {
-                        clickedObject = obj;
-                        break;
-                    }
-                    parent = parent.parent;
-                }
-                
-                if (clickedObject) break;
-            }
-            
-            // If we found the object, interact with it
-            if (clickedObject) {
-                console.debug('Interacting with clicked object:', clickedObject.type);
-                this.interactWithObject(clickedObject);
-            } else {
-                console.debug('Could not find interactive object for clicked mesh:', clickedMesh);
-            }
-        }
+        console.debug('Interactive objects initialized');
     }
     
     /**
      * Interact with an interactive object
+     * This method is kept for backward compatibility but now always delegates to the centralized system
      * @param {Object} interactiveObject - The interactive object to interact with
      */
     interactWithObject(interactiveObject) {
-        // Call the object's interaction handler
-        const result = interactiveObject.onInteract();
-        
-        // Use the shared interaction handler
-        if (this.interactionHandler) {
-            this.interactionHandler.handleInteractionResult(result, interactiveObject);
+        if (this.game && this.game.interactionSystem) {
+            this.game.interactionSystem.handleTouchInteraction(interactiveObject);
         } else {
-            console.warn('Interaction handler not initialized');
+            console.warn('Interaction system not available, interaction cannot be processed');
         }
     }
     
