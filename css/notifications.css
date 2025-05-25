@@ -78,10 +78,6 @@
     height: 100%;
 }
 
-#level-up-container.hidden {
-    display: none;
-}
-
 .level-up-content {
     display: flex;
     flex-direction: row;

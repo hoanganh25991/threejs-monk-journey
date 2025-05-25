@@ -1,6 +1,5 @@
 /* Orientation Message */
 #orientation-message {
-    display: none;
     position: fixed;
     top: 0;
     left: 0;

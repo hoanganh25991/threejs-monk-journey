@@ -13,6 +13,5 @@
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Add shadow for depth */
     z-index: 150; /* Dialogs and Menus */
     color: white;
-    display: none;
     pointer-events: auto;
 }

@@ -15,8 +15,7 @@
     border: 2px solid #8a6d3b;
     border-radius: 8px;
     color: #fff;
-    z-index: 150; /* Same z-index as skill tree */
-    display: none; /* Hidden by default */
+    z-index: 150; /* Same z-index as skill tree */ /* Hidden by default */
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
     overflow: auto; /* Changed from hidden to auto to allow scrolling */
     pointer-events: auto; /* Ensure clicks and scrolling work */

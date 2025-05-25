@@ -14,8 +14,7 @@
     background-color: rgba(0, 0, 0);
     border: 2px solid #8a6d3b;
     border-radius: 8px;
-    color: white;
-    display: none; /* Will be toggled by JavaScript */
+    color: white; /* Will be toggled by JavaScript */
     pointer-events: auto;
     z-index: 150; /* Dialogs and Menus */
     flex-direction: column;

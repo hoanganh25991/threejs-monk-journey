@@ -78,7 +78,6 @@
 }
 
 .tab-content {
-    display: none;
     padding: var(--padding-large);
     height: 100%;
     width: 100%;
@@ -627,8 +626,7 @@
     justify-content: center;
 }
 
-.top-tabs::-webkit-scrollbar {
-    display: none; /* Hide scrollbar for Chrome/Safari */
+.top-tabs::-webkit-scrollbar { /* Hide scrollbar for Chrome/Safari */
 }
 
 .top-tabs .tab-icon {

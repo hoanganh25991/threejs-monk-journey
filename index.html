@@ -38,7 +38,7 @@
 
 <body>
     <!-- Loading Screen -->
-    <div id="loading-screen">
+    <div id="loading-screen" style="display: none;">
         <h2>Loading Monk Journey...</h2>
         <div id="loading-bar-container">
             <div id="loading-bar"></div>
@@ -48,7 +48,7 @@
     </div>
     
     <!-- Orientation Message -->
-    <div id="orientation-message">
+    <div id="orientation-message" style="display: none;">
         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
             <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
             <path d="M12 18h.01" />
@@ -65,7 +65,7 @@
     </div>
     
     <!-- Performance Indicators -->
-    <div id="performance-indicators">
+    <div id="performance-indicators" style="display: none;">
         <!-- Stats.js will be appended here by the PerformanceManager -->
         <div id="memory-display">MEM: 0 MB</div>
         <div id="gpu-enabled-indicator">GPU Enabled</div>
@@ -144,10 +144,10 @@
         <div id="enemy-health-container"></div>
 
         <!-- Notifications Container -->
-        <div id="notifications-container"></div>
+        <div id="notifications-container" style="display: none;"></div>
         
         <!-- Level Up Container -->
-        <div id="level-up-container" class="hidden">
+        <div id="level-up-container" style="display: none;">
             <div class="level-up-content">
                 <div class="level-up-text">Level</div>
                 <div class="level-up-level"></div>
@@ -167,7 +167,7 @@
     </div>
 
     <!-- Save Operation Progress -->
-    <div id="save-operation-progress" class="save-operation-progress">
+    <div id="save-operation-progress" class="save-operation-progress" style="display: none;">
         <h3 id="save-operation-title">Saving Game</h3>
         <div id="save-operation-text" class="progress-text">Initializing...</div>
         <div class="progress-bar-container">
@@ -569,7 +569,7 @@
     </div>
 
     <!-- Death Screen -->
-    <div id="death-screen" class="game-menu"></div>
+    <div id="death-screen" class="game-menu" style="display: none;"></div>
 
     <!-- Orientation Lock -->
     <script src="pwa/orientation-lock.js"></script>

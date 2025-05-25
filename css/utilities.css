@@ -114,15 +114,6 @@
     text-shadow: 1px 1px 2px black;
 }
 
-/* Display utilities */
-.hidden {
-    display: none !important;
-}
-
-.visible {
-    display: block !important;
-}
-
 /* Interaction utilities */
 .pointer-events-none {
     pointer-events: none;
