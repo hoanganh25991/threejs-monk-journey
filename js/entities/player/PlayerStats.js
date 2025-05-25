@@ -13,10 +13,10 @@ export class PlayerStats extends IPlayerStats {
         this.level = initialStats.level || 1;
         this.experience = initialStats.experience || 0;
         this.experienceToNextLevel = initialStats.experienceToNextLevel || 100;
-        this.health = initialStats.health || 100_000;
-        this.maxHealth = initialStats.maxHealth || 100_000;
-        this.mana = initialStats.mana || 100_000;
-        this.maxMana = initialStats.maxMana || 100_000;
+        this.health = initialStats.health || 100;
+        this.maxHealth = initialStats.maxHealth || 100;
+        this.mana = initialStats.mana || 50;
+        this.maxMana = initialStats.maxMana || 50;
         this.strength = initialStats.strength || 10;
         this.dexterity = initialStats.dexterity || 10;
         this.intelligence = initialStats.intelligence || 10;

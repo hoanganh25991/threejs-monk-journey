@@ -184,6 +184,21 @@
     flex: 1;
 }
 
+#skill-variants-container {
+    background-color: rgba(30, 60, 90, 0.3);
+    border: 1px solid rgba(100, 150, 200, 0.5);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+#skill-buffs-container {
+    background-color: rgba(30, 90, 30, 0.3);
+    border: 1px solid rgba(102, 255, 102, 0.5);
+    border-radius: 8px;
+    padding: 10px;
+}
+
 #skill-variants-container h3,
 #skill-buffs-container h3 {
     font-size: 18px;
@@ -191,6 +206,16 @@
     margin-bottom: 15px;
     border-bottom: 1px dashed rgba(255, 204, 0, 0.3);
     padding-bottom: var(--padding-small);
+    text-align: center;
+    text-shadow: 0 0 5px rgba(255, 204, 0, 0.3);
+}
+
+#skill-variants-container h3::before {
+    content: "🔄 ";
+}
+
+#skill-buffs-container h3::before {
+    content: "✨ ";
 }
 
 #skill-variants {
@@ -200,8 +225,8 @@
 }
 
 .skill-variant {
-    background-color: rgba(20, 20, 20, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(40, 70, 100, 0.3);
+    border: 1px solid rgba(100, 150, 200, 0.3);
     border-radius: 8px;
     padding: var(--padding-medium);
     transition: all 0.2s;
@@ -209,7 +234,7 @@
 }
 
 .skill-variant:hover {
-    background-color: rgba(30, 30, 30, 0.8);
+    background-color: rgba(50, 80, 110, 0.5);
 }
 
 .skill-variant.active {
@@ -301,8 +326,8 @@
 }
 
 .skill-buff {
-    background-color: rgba(20, 20, 20, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(40, 100, 40, 0.3);
+    border: 1px solid rgba(102, 255, 102, 0.3);
     border-radius: 8px;
     padding: var(--padding-medium);
     transition: all 0.2s;
@@ -310,7 +335,7 @@
 }
 
 .skill-buff:hover {
-    background-color: rgba(30, 30, 30, 0.8);
+    background-color: rgba(50, 120, 50, 0.5);
 }
 
 .skill-buff.active {
