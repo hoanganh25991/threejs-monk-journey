@@ -58,7 +58,7 @@ export class DeathScreenUI extends UIComponent {
         
         this.handleQuit = () => {
             // Reload page to restart game
-            location.reload();
+            window.location.reload();
         };
         
         // Add event listeners
