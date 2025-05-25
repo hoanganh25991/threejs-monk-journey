@@ -26,6 +26,10 @@
     padding: calc(var(--padding-small) + 3px) var(--padding-medium);
 }
 
+#settings-save-button {
+    transform: translateY(calc(-1 * var(--padding-medium)));
+}
+
 .settings-container {
     display: flex;
     flex-direction: row;
@@ -78,6 +82,7 @@
 }
 
 .tab-content {
+    display: none;
     padding: var(--padding-large);
     height: 100%;
     width: 100%;
@@ -624,9 +629,6 @@
     height: 100%;
     align-items: center;
     justify-content: center;
-}
-
-.top-tabs::-webkit-scrollbar { /* Hide scrollbar for Chrome/Safari */
 }
 
 .top-tabs .tab-icon {

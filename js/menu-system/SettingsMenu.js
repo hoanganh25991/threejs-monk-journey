@@ -124,9 +124,10 @@ export class SettingsMenu extends UIComponent {
                     // Hide the progress indicator
                     saveProgress.hide();
                     // Show main menu if available
-                    this.game.start();
-                    this.game.pause(false);
-                    this.game.menuManager.showMenu('gameMenu');
+                    window.location.reload();
+                    // this.game.start();
+                    // this.game.pause(false);
+                    // this.game.menuManager.showMenu('gameMenu');
                 }, 300);
             });
         }
