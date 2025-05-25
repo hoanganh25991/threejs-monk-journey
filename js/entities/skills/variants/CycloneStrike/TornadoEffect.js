@@ -334,26 +334,27 @@ export class TornadoEffect extends CycloneStrikeEffect {
     applyDamageTick() {
         if (!this.skill.game || !this.skill.game.enemyManager) return;
         
-        const damagePosition = this.effect.position.clone();
+        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
+        // const damagePosition = this.effect.position.clone();
         
-        const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
-            damagePosition,
-            this.skill.radius
-        );
+        // const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
+        //     damagePosition,
+        //     this.skill.radius
+        // );
         
-        enemies.forEach(enemy => {
-            const damageAmount = this.skill.damage * 0.3; // 30% of base damage per tick
-            enemy.takeDamage(damageAmount);
+        // enemies.forEach(enemy => {
+        //     const damageAmount = this.skill.damage * 0.3; // 30% of base damage per tick
+        //     enemy.takeDamage(damageAmount);
             
-            // Apply a small knockback effect
-            if (enemy.applyKnockback) {
-                const direction = new THREE.Vector3()
-                    .subVectors(enemy.getPosition(), damagePosition)
-                    .normalize();
+        //     // Apply a small knockback effect
+        //     if (enemy.applyKnockback) {
+        //         const direction = new THREE.Vector3()
+        //             .subVectors(enemy.getPosition(), damagePosition)
+        //             .normalize();
                 
-                enemy.applyKnockback(direction, 1); // Small knockback force
-            }
-        });
+        //         enemy.applyKnockback(direction, 1); // Small knockback force
+        //     }
+        // });
     }
     
     /**

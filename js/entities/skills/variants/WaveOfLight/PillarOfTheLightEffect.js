@@ -267,9 +267,10 @@ export class PillarOfTheLightEffect extends WaveOfLightEffect {
         const enemies = this.skill.game.enemyManager.getEnemiesInRadius(position, damageRadius);
         
         for (const enemy of enemies) {
+            // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
             // Apply damage (20% of skill damage per tick)
-            const damage = this.skill.damage * 0.2;
-            enemy.takeDamage(damage, this.skill.damageType);
+            // const damage = this.skill.damage * 0.2;
+            // enemy.takeDamage(damage, this.skill.damageType);
             
             // Apply slow effect
             enemy.applyStatusEffect('slowed', 1.0, 0.3); // 30% slow for 1 second

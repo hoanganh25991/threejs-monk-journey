@@ -27,9 +27,10 @@ export class ScoldingStormEffect extends ExplodingPalmEffect {
      * @override
      */
     applyToEnemy(enemy) {
+        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
         // Apply base damage
-        const damage = this.calculateDamage(enemy);
-        enemy.takeDamage(damage);
+        // const damage = this.calculateDamage(enemy);
+        // enemy.takeDamage(damage);
         
         // Apply freeze effect
         this.applyFreezeEffect(enemy);
@@ -216,8 +217,9 @@ export class ScoldingStormEffect extends ExplodingPalmEffect {
             );
             
             enemies.forEach(enemy => {
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Apply explosion damage
-                enemy.takeDamage(this.explosionDamage);
+                // enemy.takeDamage(this.explosionDamage);
                 
                 // Apply freeze effect with shorter duration
                 if (enemy.addStatusEffect) {

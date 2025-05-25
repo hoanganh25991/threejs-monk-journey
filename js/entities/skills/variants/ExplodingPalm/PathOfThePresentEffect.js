@@ -30,9 +30,10 @@ export class PathOfThePresentEffect extends ExplodingPalmEffect {
      * @override
      */
     applyToEnemy(enemy) {
+        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
         // Apply base damage
-        const damage = this.calculateDamage(enemy);
-        enemy.takeDamage(damage);
+        // const damage = this.calculateDamage(enemy);
+        // enemy.takeDamage(damage);
         
         // Apply burn effect
         this.applyBurnEffect(enemy);
@@ -63,9 +64,10 @@ export class PathOfThePresentEffect extends ExplodingPalmEffect {
                 duration: this.burnDuration,
                 tickInterval: 0.5, // Apply damage every 0.5 seconds
                 onTick: (enemy, deltaTime) => {
+                    // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                     // Apply burn damage
-                    const burnDamage = this.burnDamagePerSecond * deltaTime;
-                    enemy.takeDamage(burnDamage);
+                    // const burnDamage = this.burnDamagePerSecond * deltaTime;
+                    // enemy.takeDamage(burnDamage);
                     
                     // Create fire effect on enemy
                     if (Math.random() < deltaTime * 2) {
@@ -244,8 +246,9 @@ export class PathOfThePresentEffect extends ExplodingPalmEffect {
             );
             
             enemies.forEach(enemy => {
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Apply explosion damage
-                enemy.takeDamage(this.skill.damage * 0.5);
+                // enemy.takeDamage(this.skill.damage * 0.5);
                 
                 // Apply burn effect
                 this.applyBurnEffect(enemy);
@@ -489,8 +492,9 @@ export class PathOfThePresentEffect extends ExplodingPalmEffect {
             );
             
             enemies.forEach(enemy => {
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Apply damage
-                enemy.takeDamage(this.burnDamagePerSecond * (this.skill.game.deltaTime || 0.016));
+                // enemy.takeDamage(this.burnDamagePerSecond * (this.skill.game.deltaTime || 0.016));
                 
                 // Chance to apply burn effect
                 if (Math.random() < 0.1) {

@@ -396,8 +396,9 @@ export class CircleOfWrathEffect extends InnerSanctuaryEffect {
         
         // Apply damage to each enemy
         enemies.forEach(enemy => {
-            const damage = this.damagePerSecond * this.damageInterval;
-            enemy.takeDamage(damage);
+            // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
+            // const damage = this.damagePerSecond * this.damageInterval;
+            // enemy.takeDamage(damage);
             
             // Create damage visual effect
             this.createDamageVisualEffect(enemy.getPosition());

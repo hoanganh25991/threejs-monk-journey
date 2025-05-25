@@ -262,8 +262,9 @@ export class ShadowBindEffect extends ImprisonedFistsEffect {
                 onTick: (delta) => {
                     this.lastShadowDamageTime += delta;
                     if (this.lastShadowDamageTime >= this.shadowDamageInterval) {
-                        const damage = this.shadowDamage;
-                        enemy.takeDamage(damage);
+                        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
+                        // const damage = this.shadowDamage;
+                        // enemy.takeDamage(damage);
                         this.lastShadowDamageTime = 0;
                         
                         // Create a shadow damage visual effect

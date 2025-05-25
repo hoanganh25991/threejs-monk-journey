@@ -277,19 +277,20 @@ export class SoothingMistEffect extends BreathOfHeavenEffect {
         }
         
         // Apply damage to enemies as normal
-        if (this.skill.game.enemyManager) {
-            const damagePosition = this.effect.position.clone();
+        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
+        // if (this.skill.game.enemyManager) {
+        //     const damagePosition = this.effect.position.clone();
             
-            const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
-                damagePosition,
-                this.skill.radius
-            );
+        //     const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
+        //         damagePosition,
+        //         this.skill.radius
+        //     );
             
-            enemies.forEach(enemy => {
-                const damageAmount = this.skill.damage * 0.5; // Reduced damage per tick
-                enemy.takeDamage(damageAmount);
-            });
-        }
+        //     enemies.forEach(enemy => {
+        //         const damageAmount = this.skill.damage * 0.5; // Reduced damage per tick
+        //         enemy.takeDamage(damageAmount);
+        //     });
+        // }
     }
     
     /**

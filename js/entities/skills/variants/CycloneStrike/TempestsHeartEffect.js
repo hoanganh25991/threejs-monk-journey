@@ -328,44 +328,45 @@ export class TempestsHeartEffect extends CycloneStrikeEffect {
     applyDamage(delta) {
         if (!this.skill.game || !this.skill.game.enemyManager) return;
         
+        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
         // Get position for damage calculations
-        const damagePosition = this.effect.position.clone();
+        // const damagePosition = this.effect.position.clone();
         
-        const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
-            damagePosition,
-            this.skill.radius
-        );
+        // const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
+        //     damagePosition,
+        //     this.skill.radius
+        // );
         
-        enemies.forEach(enemy => {
-            // Apply damage
-            enemy.takeDamage(this.skill.damage * delta);
+        // enemies.forEach(enemy => {
+        //     // Apply damage
+        //     enemy.takeDamage(this.skill.damage * delta);
             
-            // Chance to create a lightning strike to the enemy
-            if (Math.random() < delta * 2) {
-                const enemyPosition = enemy.getPosition();
-                if (enemyPosition) {
-                    // Start position (above the effect)
-                    const startPosition = new THREE.Vector3(
-                        this.effect.position.x,
-                        this.effect.position.y + 3,
-                        this.effect.position.z
-                    );
+        //     // Chance to create a lightning strike to the enemy
+        //     if (Math.random() < delta * 2) {
+        //         const enemyPosition = enemy.getPosition();
+        //         if (enemyPosition) {
+        //             // Start position (above the effect)
+        //             const startPosition = new THREE.Vector3(
+        //                 this.effect.position.x,
+        //                 this.effect.position.y + 3,
+        //                 this.effect.position.z
+        //             );
                     
-                    // End position (at the enemy)
-                    const endPosition = new THREE.Vector3(
-                        enemyPosition.x,
-                        enemyPosition.y + 1,
-                        enemyPosition.z
-                    );
+        //             // End position (at the enemy)
+        //             const endPosition = new THREE.Vector3(
+        //                 enemyPosition.x,
+        //                 enemyPosition.y + 1,
+        //                 enemyPosition.z
+        //             );
                     
-                    // Create the lightning bolt
-                    this.createLightningBolt(startPosition, endPosition);
+        //             // Create the lightning bolt
+        //             this.createLightningBolt(startPosition, endPosition);
                     
-                    // Apply extra damage from lightning
-                    enemy.takeDamage(this.skill.damage * 0.5);
-                }
-            }
-        });
+        //             // Apply extra damage from lightning
+        //             enemy.takeDamage(this.skill.damage * 0.5);
+        //         }
+        //     }
+        // });
     }
     
     /**

@@ -177,11 +177,10 @@ export class ShadowKickEffect extends FlyingKickEffect {
         enemies.forEach(enemy => {
             if (!enemy) return;
             
+            // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
             // Apply damage with reduced multiplier
-            const damage = this.skill.damage * this.shadowCloneDamageMultiplier;
-            if (enemy.takeDamage) {
-                enemy.takeDamage(damage);
-            }
+            // const damage = this.skill.damage * this.shadowCloneDamageMultiplier;
+            // enemy.takeDamage(damage);
             
             // Visual feedback for the attack
             this.createCloneAttackEffect(this.shadowClone.position, enemy.position);

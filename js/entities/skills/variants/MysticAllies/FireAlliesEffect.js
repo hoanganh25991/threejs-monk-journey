@@ -346,9 +346,10 @@ export class FireAlliesEffect extends MysticAllyEffect {
      * @param {number} baseDamage - The base damage amount
      */
     applyDamage(enemy, baseDamage) {
+        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
         // Apply increased damage
-        const damage = baseDamage * this.fireDamageMultiplier;
-        enemy.takeDamage(damage);
+        // const damage = baseDamage * this.fireDamageMultiplier;
+        // enemy.takeDamage(damage);
         
         // Chance to apply burn effect
         if (Math.random() < this.burnChance) {
@@ -369,8 +370,9 @@ export class FireAlliesEffect extends MysticAllyEffect {
                 source: 'FireAllies',
                 // Apply burn damage over time
                 onTick: (delta) => {
-                    const damage = this.burnDamagePerSecond * delta;
-                    enemy.takeDamage(damage);
+                    // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
+                    // const damage = this.burnDamagePerSecond * delta;
+                    // enemy.takeDamage(damage);
                     
                     // Create a fire damage visual effect
                     this.createFireDamageEffect(enemy.getPosition());

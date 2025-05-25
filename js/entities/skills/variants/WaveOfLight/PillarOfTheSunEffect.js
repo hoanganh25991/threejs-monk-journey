@@ -272,9 +272,10 @@ export class PillarOfTheSunEffect extends WaveOfLightEffect {
                 
                 // Check if enemy is within beam width
                 if (distance < this.beamWidth / 2 + 0.5) { // Add a small margin
+                    // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                     // Apply damage
-                    const damage = this.calculateDamage(enemy) * (this.skill.game.deltaTime || 0.016) * 2;
-                    enemy.takeDamage(damage);
+                    // const damage = this.calculateDamage(enemy) * (this.skill.game.deltaTime || 0.016) * 2;
+                    // enemy.takeDamage(damage);
                     
                     // Create hit effect
                     if (Math.random() < 0.1) {

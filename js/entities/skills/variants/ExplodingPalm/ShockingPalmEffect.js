@@ -346,9 +346,10 @@ export class ShockingPalmEffect extends ExplodingPalmEffect {
         
         // Apply damage and create visual effects
         targets.forEach(enemy => {
+            // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
             // Apply chain damage
-            const chainDamage = this.skill.damage * this.chainDamageMultiplier;
-            enemy.takeDamage(chainDamage);
+            // const chainDamage = this.skill.damage * this.chainDamageMultiplier;
+            // enemy.takeDamage(chainDamage);
             
             // Create lightning bolt effect
             const enemyPosition = enemy.getPosition();

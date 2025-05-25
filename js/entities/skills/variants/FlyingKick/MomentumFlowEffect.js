@@ -324,9 +324,10 @@ export class MomentumFlowEffect extends FlyingKickEffect {
                     enemyPosition.z
                 );
                 
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Apply damage
-                const damage = this.calculateDamage(closestEnemy) * 0.5; // 50% damage for additional kicks
-                closestEnemy.takeDamage(damage);
+                // const damage = this.calculateDamage(closestEnemy) * 0.5; // 50% damage for additional kicks
+                // closestEnemy.takeDamage(damage);
                 
                 // Create impact effect
                 this.createImpactEffect(enemyPosition);

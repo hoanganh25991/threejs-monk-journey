@@ -277,8 +277,9 @@ export class ExplosiveLightEffect extends WaveOfLightEffect {
             const damageFalloff = 1 - (distance / this.explosionRadius);
             const damage = this.skill.damage * damageFalloff * this.explosionForce;
             
+            // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
             // Apply damage
-            enemy.takeDamage(damage, 'fire');
+            // enemy.takeDamage(damage, 'fire');
             
             // Apply knockback
             const knockbackDirection = new THREE.Vector3().subVectors(enemy.getPosition(), position).normalize();

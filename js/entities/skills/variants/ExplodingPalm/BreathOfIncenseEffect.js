@@ -26,15 +26,16 @@ export class BreathOfIncenseEffect extends ExplodingPalmEffect {
      * @override
      */
     applyToEnemy(enemy) {
+        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
         // Apply base damage
-        const damage = this.calculateDamage(enemy);
-        enemy.takeDamage(damage);
+        // const damage = this.calculateDamage(enemy);
+        // enemy.takeDamage(damage);
         
-        // Create concussive blast
-        const position = enemy.getPosition();
-        if (position) {
-            this.createConcussiveBlast(position);
-        }
+        // // Create concussive blast
+        // const position = enemy.getPosition();
+        // if (position) {
+        //     this.createConcussiveBlast(position);
+        // }
         
         // Create visual effect
         this.createHitEffect(position);
@@ -55,8 +56,9 @@ export class BreathOfIncenseEffect extends ExplodingPalmEffect {
             );
             
             enemies.forEach(enemy => {
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Apply area damage
-                enemy.takeDamage(this.areaDamage);
+                // enemy.takeDamage(this.areaDamage);
                 
                 // Apply stun effect
                 if (enemy.addStatusEffect) {

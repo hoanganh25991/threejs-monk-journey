@@ -306,8 +306,9 @@ export class TidalWaveEffect extends WaveStrikeEffect {
                 Math.abs(localEnemyPosition.y) <= boxSize.y / 2 &&
                 Math.abs(localEnemyPosition.z) <= boxSize.z / 2
             ) {
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Apply damage
-                enemy.takeDamage(this.skill.damage, 'water');
+                // enemy.takeDamage(this.skill.damage, 'water');
                 
                 // Apply knockback in the direction of the wave
                 const knockbackDirection = new THREE.Vector3(

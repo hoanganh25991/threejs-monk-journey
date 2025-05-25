@@ -210,8 +210,9 @@ export class FieryChainsEffect extends ImprisonedFistsEffect {
                 onTick: (delta) => {
                     this.lastBurnDamageTime += delta;
                     if (this.lastBurnDamageTime >= this.burnDamageInterval) {
-                        const damage = this.burnDamagePerSecond * this.burnDamageInterval;
-                        enemy.takeDamage(damage);
+                        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
+                        // const damage = this.burnDamagePerSecond * this.burnDamageInterval;
+                        // enemy.takeDamage(damage);
                         this.lastBurnDamageTime = 0;
                         
                         // Create a fire damage visual effect

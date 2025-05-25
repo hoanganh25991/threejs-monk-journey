@@ -359,8 +359,9 @@ export class ThunderWaveEffect extends WaveStrikeEffect {
                 Math.abs(localEnemyPosition.y) <= boxSize.y / 2 &&
                 Math.abs(localEnemyPosition.z) <= boxSize.z / 2
             ) {
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Apply damage
-                enemy.takeDamage(this.skill.damage, 'lightning');
+                // enemy.takeDamage(this.skill.damage, 'lightning');
                 
                 // Apply shock effect
                 enemy.applyStatusEffect('shocked', 3.0, this.skill.damage * 0.1);
@@ -423,11 +424,12 @@ export class ThunderWaveEffect extends WaveStrikeEffect {
                 const chainEnemy = validTargets[0];
                 const chainPosition = chainEnemy.getPosition().clone();
                 
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Calculate chain damage
-                const chainDamage = target.damage * this.chainDamageMultiplier;
+                // const chainDamage = target.damage * this.chainDamageMultiplier;
                 
                 // Apply damage to chain target
-                chainEnemy.takeDamage(chainDamage, 'lightning');
+                // chainEnemy.takeDamage(chainDamage, 'lightning');
                 
                 // Apply shock effect
                 chainEnemy.applyStatusEffect('shocked', 2.0, chainDamage * 0.1);

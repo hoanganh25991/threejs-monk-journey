@@ -282,8 +282,9 @@ export class ThunderousGripEffect extends ImprisonedFistsEffect {
         
         // Apply stun and damage to each enemy
         enemies.forEach(enemy => {
+            // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
             // Apply damage
-            enemy.takeDamage(this.shockwaveDamage);
+            // enemy.takeDamage(this.shockwaveDamage);
             
             // Apply stun effect
             this.applyStunEffect(enemy);

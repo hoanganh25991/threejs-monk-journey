@@ -320,35 +320,36 @@ export class MysticWindsEffect extends CycloneStrikeEffect {
     applyContinuousDamage() {
         if (!this.skill.game || !this.skill.game.enemyManager) return;
         
+        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
         // Get position for damage calculations
-        const damagePosition = this.effect.position.clone();
+        // const damagePosition = this.effect.position.clone();
         
-        const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
-            damagePosition,
-            this.skill.radius
-        );
+        // const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
+        //     damagePosition,
+        //     this.skill.radius
+        // );
         
-        enemies.forEach(enemy => {
-            // Apply damage
-            enemy.takeDamage(this.damagePerTick);
+        // enemies.forEach(enemy => {
+        //     // Apply damage
+        //     enemy.takeDamage(this.damagePerTick);
             
-            // Create a visual effect for the damage
-            if (this.skill.game.effectsManager) {
-                // Get enemy position
-                const enemyPosition = enemy.getPosition();
-                if (enemyPosition) {
-                    // Create a position slightly above the enemy
-                    const effectPosition = new THREE.Vector3(
-                        enemyPosition.x,
-                        enemyPosition.y + 1,
-                        enemyPosition.z
-                    );
+        //     // Create a visual effect for the damage
+        //     if (this.skill.game.effectsManager) {
+        //         // Get enemy position
+        //         const enemyPosition = enemy.getPosition();
+        //         if (enemyPosition) {
+        //             // Create a position slightly above the enemy
+        //             const effectPosition = new THREE.Vector3(
+        //                 enemyPosition.x,
+        //                 enemyPosition.y + 1,
+        //                 enemyPosition.z
+        //             );
                     
-                    // Create a small particle burst
-                    this.createDamageEffect(effectPosition);
-                }
-            }
-        });
+        //             // Create a small particle burst
+        //             this.createDamageEffect(effectPosition);
+        //         }
+        //     }
+        // });
     }
     
     /**

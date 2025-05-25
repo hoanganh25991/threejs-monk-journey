@@ -111,9 +111,10 @@ export class LightningBurstEffect extends WaveOfLightEffect {
                 });
                 
                 if (closestEnemy) {
+                    // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                     // Apply damage to first target
-                    const damage = this.calculateDamage(closestEnemy);
-                    closestEnemy.takeDamage(damage);
+                    // const damage = this.calculateDamage(closestEnemy);
+                    // closestEnemy.takeDamage(damage);
                     
                     // Mark as hit
                     this.hitEnemies.add(closestEnemy.id);
@@ -169,9 +170,10 @@ export class LightningBurstEffect extends WaveOfLightEffect {
             });
             
             if (closestEnemy) {
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Apply reduced damage to chained target
-                const chainDamage = previousDamage * this.chainDamageMultiplier;
-                closestEnemy.takeDamage(chainDamage);
+                // const chainDamage = previousDamage * this.chainDamageMultiplier;
+                // closestEnemy.takeDamage(chainDamage);
                 
                 // Mark as hit
                 this.hitEnemies.add(closestEnemy.id);

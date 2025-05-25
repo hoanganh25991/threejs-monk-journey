@@ -373,8 +373,9 @@ export class RetributionAuraEffect extends ShieldOfZenEffect {
             const enemies = this.skill.game.enemyManager.getEnemiesInRadius(position, this.retributionRadius);
             
             for (const enemy of enemies) {
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Apply retribution damage
-                enemy.takeDamage(retributionDamage, 'fire');
+                // enemy.takeDamage(retributionDamage, 'fire');
                 
                 // Apply burning effect
                 if (!isPeriodic) {

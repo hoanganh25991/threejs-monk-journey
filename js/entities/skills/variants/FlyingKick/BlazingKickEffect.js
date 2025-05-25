@@ -229,13 +229,12 @@ export class BlazingKickEffect extends FlyingKickEffect {
                         );
                         
                         enemies.forEach(enemy => {
-                            if (enemy && enemy.takeDamage) {
-                                enemy.takeDamage(this.trailDamage);
-                                
-                                // Apply burn status effect if available
-                                if (enemy.addStatusEffect) {
-                                    enemy.addStatusEffect('burn', 1.0); // 1 second burn
-                                }
+                            // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
+                            // enemy.takeDamage(this.trailDamage);
+                            
+                            // Apply burn status effect if available
+                            if (enemy.addStatusEffect) {
+                                enemy.addStatusEffect('burn', 1.0); // 1 second burn
                             }
                         });
                     }

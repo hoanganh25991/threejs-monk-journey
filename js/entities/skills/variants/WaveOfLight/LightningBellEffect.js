@@ -174,8 +174,9 @@ export class LightningBellEffect extends WaveOfLightEffect {
                 // Create lightning bolt to enemy
                 this._createLightningBolt(bellPosition, enemyPosition);
                 
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Apply damage to enemy
-                enemy.takeDamage(this.skill.damage, 'lightning');
+                // enemy.takeDamage(this.skill.damage, 'lightning');
                 
                 // Apply shock effect
                 enemy.applyStatusEffect('shocked', 3.0, this.skill.damage * 0.1);
@@ -238,9 +239,10 @@ export class LightningBellEffect extends WaveOfLightEffect {
                 // Create lightning bolt from primary target to chain target
                 this._createLightningBolt(target.position, chainPosition);
                 
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Apply reduced damage to chain target
-                const chainDamage = this.skill.damage * 0.5;
-                chainEnemy.takeDamage(chainDamage, 'lightning');
+                // const chainDamage = this.skill.damage * 0.5;
+                // chainEnemy.takeDamage(chainDamage, 'lightning');
                 
                 // Apply shock effect
                 chainEnemy.applyStatusEffect('shocked', 2.0, chainDamage * 0.1);

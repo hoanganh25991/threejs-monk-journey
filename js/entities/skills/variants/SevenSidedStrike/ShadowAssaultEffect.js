@@ -284,9 +284,10 @@ export class ShadowAssaultEffect extends SevenSidedStrikeEffect {
             const enemies = this.skill.game.enemyManager.getEnemiesInRadius(position, damageRadius);
             
             for (const enemy of enemies) {
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Apply damage (50% of normal strike damage)
-                const damage = this.skill.damage * 0.5;
-                enemy.takeDamage(damage, this.skill.damageType);
+                // const damage = this.skill.damage * 0.5;
+                // enemy.takeDamage(damage, this.skill.damageType);
                 
                 // Apply shadow effect to enemy
                 enemy.applyStatusEffect('slowed', 1.0, 0.5); // 50% slow for 1 second

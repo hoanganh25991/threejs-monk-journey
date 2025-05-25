@@ -248,9 +248,10 @@ export class GracesBountyEffect extends FlyingKickEffect {
                 
                 // If close enough, hit the enemy
                 if (distance < 1.5) {
+                    // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                     // Apply damage
-                    const damage = this.calculateDamage(enemy);
-                    enemy.takeDamage(damage);
+                    // const damage = this.calculateDamage(enemy);
+                    // enemy.takeDamage(damage);
                     
                     // Create impact effect
                     this.createImpactEffect(enemyPosition);

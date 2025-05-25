@@ -392,8 +392,9 @@ export class WallOfLightEffect extends WaveOfLightEffect {
                     const velocityDotNormal = enemyVelocity.dot(wallNormal);
                     
                     if (Math.abs(velocityDotNormal) > 0.5) {
+                        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                         // Apply small damage
-                        enemy.takeDamage(this.skill.damage * 0.1, this.skill.damageType);
+                        // enemy.takeDamage(this.skill.damage * 0.1, this.skill.damageType);
                         
                         // Apply stun effect
                         enemy.applyStatusEffect('stunned', 0.5);

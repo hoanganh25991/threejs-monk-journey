@@ -329,8 +329,9 @@ export class FrozenWaveEffect extends WaveStrikeEffect {
                 Math.abs(localEnemyPosition.y) <= boxSize.y / 2 &&
                 Math.abs(localEnemyPosition.z) <= boxSize.z / 2
             ) {
+                // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
                 // Apply damage
-                enemy.takeDamage(this.skill.damage, 'ice');
+                // enemy.takeDamage(this.skill.damage, 'ice');
                 
                 // Apply freeze effect (with chance)
                 if (Math.random() < this.freezeChance) {

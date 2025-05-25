@@ -191,8 +191,9 @@ export class FrozenShacklesEffect extends ImprisonedFistsEffect {
                 onTick: (delta) => {
                     this.lastColdDamageTime += delta;
                     if (this.lastColdDamageTime >= this.coldDamageInterval) {
-                        const damage = this.coldDamagePerSecond * this.coldDamageInterval;
-                        enemy.takeDamage(damage);
+                        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
+                        // const damage = this.coldDamagePerSecond * this.coldDamageInterval;
+                        // enemy.takeDamage(damage);
                         this.lastColdDamageTime = 0;
                         
                         // Create a frost damage visual effect

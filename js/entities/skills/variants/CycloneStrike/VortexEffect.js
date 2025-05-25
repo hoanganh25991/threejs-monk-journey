@@ -350,27 +350,28 @@ export class VortexEffect extends CycloneStrikeEffect {
     applyKnockbackToEnemies() {
         if (!this.skill.game || !this.skill.game.enemyManager || !this.knockbackEffect) return;
         
-        const centerPosition = this.effect.position.clone();
+        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
+        // const centerPosition = this.effect.position.clone();
         
-        const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
-            centerPosition,
-            this.skill.radius * 1.5 // Slightly larger range for knockback effect
-        );
+        // const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
+        //     centerPosition,
+        //     this.skill.radius * 1.5 // Slightly larger range for knockback effect
+        // );
         
-        enemies.forEach(enemy => {
-            if (enemy.applyKnockback) {
-                const enemyPosition = enemy.getPosition();
-                const direction = new THREE.Vector3()
-                    .subVectors(enemyPosition, centerPosition)
-                    .normalize();
+        // enemies.forEach(enemy => {
+        //     if (enemy.applyKnockback) {
+        //         const enemyPosition = enemy.getPosition();
+        //         const direction = new THREE.Vector3()
+        //             .subVectors(enemyPosition, centerPosition)
+        //             .normalize();
                 
-                enemy.applyKnockback(direction, this.knockbackForce);
+        //         enemy.applyKnockback(direction, this.knockbackForce);
                 
-                // Apply damage
-                const damageAmount = this.skill.damage * 1.5; // 50% more damage for the burst
-                enemy.takeDamage(damageAmount);
-            }
-        });
+        //         // Apply damage
+        //         const damageAmount = this.skill.damage * 1.5; // 50% more damage for the burst
+        //         enemy.takeDamage(damageAmount);
+        //     }
+        // });
     }
     
     /**

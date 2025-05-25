@@ -330,48 +330,49 @@ export class StormSpiritEffect extends CycloneStrikeEffect {
     pullEnemies() {
         if (!this.skill.game || !this.skill.game.enemyManager) return;
         
+        // IMPORTANT: THIS CHECKED BY COLLISIONMANAGER
         // Get position for pull calculations
-        const pullPosition = this.effect.position.clone();
+        // const pullPosition = this.effect.position.clone();
         
-        const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
-            pullPosition,
-            this.skill.radius * 1.5 // Slightly larger than visual radius
-        );
+        // const enemies = this.skill.game.enemyManager.getEnemiesNearPosition(
+        //     pullPosition,
+        //     this.skill.radius * 1.5 // Slightly larger than visual radius
+        // );
         
-        enemies.forEach(enemy => {
-            // Get enemy position
-            const enemyPosition = enemy.getPosition();
-            if (!enemyPosition) return;
+        // enemies.forEach(enemy => {
+        //     // Get enemy position
+        //     const enemyPosition = enemy.getPosition();
+        //     if (!enemyPosition) return;
             
-            // Calculate direction to pull
-            const pullDirection = new THREE.Vector3(
-                pullPosition.x - enemyPosition.x,
-                0, // Don't pull vertically
-                pullPosition.z - enemyPosition.z
-            );
+        //     // Calculate direction to pull
+        //     const pullDirection = new THREE.Vector3(
+        //         pullPosition.x - enemyPosition.x,
+        //         0, // Don't pull vertically
+        //         pullPosition.z - enemyPosition.z
+        //     );
             
-            // Calculate distance
-            const distance = pullDirection.length();
+        //     // Calculate distance
+        //     const distance = pullDirection.length();
             
-            // Skip if already at center
-            if (distance < 0.1) return;
+        //     // Skip if already at center
+        //     if (distance < 0.1) return;
             
-            // Normalize direction
-            pullDirection.normalize();
+        //     // Normalize direction
+        //     pullDirection.normalize();
             
-            // Pull force decreases with distance
-            const pullStrength = this.pullForce * (1 - distance / (this.skill.radius * 1.5));
+        //     // Pull force decreases with distance
+        //     const pullStrength = this.pullForce * (1 - distance / (this.skill.radius * 1.5));
             
-            // Apply pull force
-            enemy.applyForce(
-                pullDirection.x * pullStrength * this.skill.game.deltaTime,
-                pullDirection.z * pullStrength * this.skill.game.deltaTime
-            );
+        //     // Apply pull force
+        //     enemy.applyForce(
+        //         pullDirection.x * pullStrength * this.skill.game.deltaTime,
+        //         pullDirection.z * pullStrength * this.skill.game.deltaTime
+        //     );
             
-            // Apply damage if very close to center
-            if (distance < this.skill.radius * 0.3) {
-                enemy.takeDamage(this.skill.damage * 0.1 * this.skill.game.deltaTime);
-            }
-        });
+        //     // Apply damage if very close to center
+        //     if (distance < this.skill.radius * 0.3) {
+        //         enemy.takeDamage(this.skill.damage * 0.1 * this.skill.game.deltaTime);
+        //     }
+        // });
     }
 }
