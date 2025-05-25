@@ -237,39 +237,8 @@ export class FistOfThunderEffect extends SkillEffect {
             });
         }
         
-        // Check for enemies hit by the teleport effect
-        // Always check for enemies regardless of teleport phase to ensure attacks work when stationary
-        if (this.skill.game && this.skill.game.enemyManager) {
-            // Check every frame for more responsive attacks
-            // Get all enemies within range
-            const hitRadius = this.skill.radius;
-            
-            // Debug log to help diagnose issues
-            console.debug(`Checking for enemies in radius ${hitRadius} at position ${this.skill.position.x.toFixed(2)}, ${this.skill.position.y.toFixed(2)}, ${this.skill.position.z.toFixed(2)}`);
-            
-            let enemiesHit = 0;
-            for (const enemy of this.skill.game.enemyManager.enemies) {
-                if (enemy.isDead()) continue;
-                
-                const enemyPos = enemy.getPosition();
-                const distance = this.skill.position.distanceTo(enemyPos);
-                
-                console.debug(`Enemy at distance ${distance.toFixed(2)}, hit radius: ${hitRadius}`);
-                
-                if (distance <= hitRadius) {
-                    // Apply damage
-                    enemy.takeDamage(this.skill.damage);
-                    enemiesHit++;
-                    
-                    // Show hit effect
-                    this._createTeleportHitEffect(enemyPos);
-                }
-            }
-            
-            if (enemiesHit > 0) {
-                console.debug(`Hit ${enemiesHit} enemies with Fist of Thunder`);
-            }
-        }
+        // NOTE: Enemy collision detection and damage application is now handled by CollisionManager
+        // This effect only needs to update its position for the CollisionManager to detect collisions
     }
 
     /**
