@@ -206,7 +206,8 @@ export class WaveOfLightEffect extends SkillEffect {
         }
         
         // Check if we have a game reference and can find a target enemy
-        let targetPosition = null;
+        let targetPosition = this.initialPosition.clone();
+        targetPosition.y -= 3.0;
         
         if (this.skill.game && this.skill.game.enemyManager) {
             // Try to find the nearest enemy within the skill's range
@@ -217,19 +218,17 @@ export class WaveOfLightEffect extends SkillEffect {
                 const enemyPosition = nearestEnemy.getPosition();
                 // Calculate target position (at the enemy's location)
                 targetPosition = enemyPosition.clone();
+                targetPosition.y -= 0.3;
                 console.debug(`Wave of Light targeting enemy at position: ${targetPosition.x}, ${targetPosition.z}`);
             } else {
                 // If no enemy found, use hero position
                 targetPosition = this.initialPosition.clone();
+                targetPosition.y -= 2.8;
                 console.debug('No enemy in range for Wave of Light, casting at hero position');
             }
-        } else {
-            // If no game or enemy manager, use hero position
-            targetPosition = this.initialPosition.clone();
         }
 
         // Move the effect group to the target position
-        targetPosition.y -= 0.3;
         effectGroup.position.copy(targetPosition);
         
         // Store animation state with configuration and target position
