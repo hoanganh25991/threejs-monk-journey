@@ -243,36 +243,117 @@ export class FistOfThunderEffect extends SkillEffect {
 
     /**
      * Create a hit effect when the teleport skill hits an enemy
+     * This method is kept for backward compatibility but now calls the base class implementation
      * @param {THREE.Vector3} position - Position to create the hit effect
      * @private
+     * @deprecated Use createHitEffect instead
      */
     _createTeleportHitEffect(position) {
-        // Create a lightning hit effect at the enemy position
-        const hitGeometry = new THREE.SphereGeometry(0.5, 8, 8);
-        const hitMaterial = new THREE.MeshBasicMaterial({
-            color: this.skill.color,
+        // Call the base class implementation
+        this.createHitEffect(position);
+    }
+    
+    /**
+     * Override the base class createHitEffect to add lightning-specific effects
+     * @param {THREE.Vector3} position - Position to create the hit effect
+     */
+    createHitEffect(position) {
+        if (!position || !this.skill || !this.skill.game || !this.skill.game.scene) {
+            console.warn('Cannot create hit effect: missing required references');
+            return;
+        }
+        
+        // Create a group for the hit effect
+        const hitEffectGroup = new THREE.Group();
+        
+        // Create a lightning flash
+        const flashGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+        const flashMaterial = new THREE.MeshBasicMaterial({
+            color: this.skill.color || 0x00ffff, // Default to cyan for lightning
             transparent: true,
             opacity: 0.8,
-            depthWrite: false // Prevent hiding models behind the effect
+            depthWrite: false
         });
         
-        const hitEffect = new THREE.Mesh(hitGeometry, hitMaterial);
-        hitEffect.position.copy(position);
-        hitEffect.position.y += 1; // Position at enemy center
+        const flash = new THREE.Mesh(flashGeometry, flashMaterial);
+        hitEffectGroup.add(flash);
+        
+        // Add lightning arcs
+        const arcCount = 4;
+        for (let i = 0; i < arcCount; i++) {
+            const angle = (i / arcCount) * Math.PI * 2;
+            
+            // Create a small lightning arc
+            const arcGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.5);
+            const arcMaterial = new THREE.MeshBasicMaterial({
+                color: this.skill.color || 0x00ffff,
+                transparent: true,
+                opacity: 0.7
+            });
+            
+            const arc = new THREE.Mesh(arcGeometry, arcMaterial);
+            arc.position.set(
+                Math.cos(angle) * 0.3,
+                0.2,
+                Math.sin(angle) * 0.3
+            );
+            
+            arc.rotation.y = angle;
+            hitEffectGroup.add(arc);
+        }
+        
+        // Position the hit effect
+        hitEffectGroup.position.copy(position);
+        hitEffectGroup.position.y += 1; // Position at enemy center
         
         // Add to scene
-        if (this.skill.game && this.skill.game.scene) {
-            this.skill.game.scene.add(hitEffect);
+        this.skill.game.scene.add(hitEffectGroup);
+        
+        // Animate the hit effect
+        let elapsedTime = 0;
+        const duration = 0.3; // seconds
+        
+        const animate = (delta) => {
+            elapsedTime += delta;
             
-            // Set up auto-removal
-            setTimeout(() => {
-                if (hitEffect.parent) {
-                    hitEffect.parent.remove(hitEffect);
-                }
-                hitEffect.geometry.dispose();
-                hitEffect.material.dispose();
-            }, 300); // Remove after 300ms
-        }
+            // Scale flash
+            const flashScale = 1.0 + (elapsedTime / duration);
+            flash.scale.set(flashScale, flashScale, flashScale);
+            flash.material.opacity = (1.0 - (elapsedTime / duration)) * 0.8;
+            
+            // Animate arcs
+            for (let i = 1; i < hitEffectGroup.children.length; i++) {
+                const arc = hitEffectGroup.children[i];
+                arc.scale.z = 1.0 + Math.sin(elapsedTime * 20 + i) * 0.5;
+                arc.material.opacity = (1.0 - (elapsedTime / duration)) * 0.7;
+            }
+            
+            // Remove when animation is complete
+            if (elapsedTime >= duration) {
+                // Clean up
+                hitEffectGroup.traverse(child => {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(m => m.dispose());
+                        } else {
+                            child.material.dispose();
+                        }
+                    }
+                });
+                
+                this.skill.game.scene.remove(hitEffectGroup);
+                return;
+            }
+            
+            // Continue animation
+            requestAnimationFrame(() => {
+                animate(1/60); // Approximate delta if not provided by game loop
+            });
+        };
+        
+        // Start animation
+        animate(1/60);
     }
 
     /**

@@ -19,27 +19,28 @@ export class DeathScreenUI extends UIComponent {
      * @returns {boolean} - True if initialization was successful
      */
     init() {
+        // <div class="death-stats">
+        //     <div class="death-stats-title">Battle Statistics</div>
+        //     <div class="death-stats-item">
+        //         <span class="death-stats-label">Time Survived:</span>
+        //         <span class="death-stats-value" id="time-survived">00:00</span>
+        //     </div>
+        //     <div class="death-stats-item">
+        //         <span class="death-stats-label">Enemies Defeated:</span>
+        //         <span class="death-stats-value" id="enemies-defeated">0</span>
+        //     </div>
+        //     <div class="death-stats-item">
+        //         <span class="death-stats-label">Level Reached:</span>
+        //         <span class="death-stats-value" id="level-reached">1</span>
+        //     </div>
+        // </div>
         const template = `
             <div id="death-screen-content">
                 <h1>You Died</h1>
                 <div class="death-message">
                     Your journey has come to an end, but your spirit lives on.
                 </div>
-                <div class="death-stats">
-                    <div class="death-stats-title">Battle Statistics</div>
-                    <div class="death-stats-item">
-                        <span class="death-stats-label">Time Survived:</span>
-                        <span class="death-stats-value" id="time-survived">00:00</span>
-                    </div>
-                    <div class="death-stats-item">
-                        <span class="death-stats-label">Enemies Defeated:</span>
-                        <span class="death-stats-value" id="enemies-defeated">0</span>
-                    </div>
-                    <div class="death-stats-item">
-                        <span class="death-stats-label">Level Reached:</span>
-                        <span class="death-stats-value" id="level-reached">1</span>
-                    </div>
-                </div>
+
                 <div class="menu-button-container">
                     <button class="menu-button" id="respawn-button">Respawn</button>
                     <button class="menu-button" id="quit-button">Quit Game</button>
@@ -105,9 +106,9 @@ export class DeathScreenUI extends UIComponent {
         const playerLevel = this.game.player.level || 1;
         
         // Update UI elements
-        document.getElementById('time-survived').textContent = timeString;
-        document.getElementById('enemies-defeated').textContent = enemiesDefeated.toString();
-        document.getElementById('level-reached').textContent = playerLevel.toString();
+        // document.getElementById('time-survived').textContent = timeString;
+        // document.getElementById('enemies-defeated').textContent = enemiesDefeated.toString();
+        // document.getElementById('level-reached').textContent = playerLevel.toString();
     }
     
     /**

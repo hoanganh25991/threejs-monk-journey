@@ -327,17 +327,11 @@ export class CollisionManager {
             this.player.game.questManager.updateEnemyKill(enemy);
         }
         
-        // Call the skill's hit effect method if it exists
+        // Call the skill's hit effect method
         // This allows skills to create visual effects when they hit an enemy
         if (skill.effect) {
-            // Try to call a generic createHitEffect method first
-            if (typeof skill.effect.createHitEffect === 'function') {
-                skill.effect.createHitEffect(enemy.getPosition());
-            } 
-            // For backward compatibility with FistOfThunderEffect
-            else if (typeof skill.effect._createTeleportHitEffect === 'function') {
-                skill.effect._createTeleportHitEffect(enemy.getPosition());
-            }
+            // All skill effects inherit from SkillEffect which has a createHitEffect method
+            skill.effect.createHitEffect(enemy.getPosition());
         }
         
         // Clean up old entries from the hit registry occasionally

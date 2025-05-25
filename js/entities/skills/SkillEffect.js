@@ -126,4 +126,68 @@ export class SkillEffect {
         
         // Additional reset logic can be added in derived classes
     }
+    
+    /**
+     * Create a hit effect when the skill hits an enemy
+     * This is a generic implementation that can be overridden by derived classes
+     * @param {THREE.Vector3} position - Position to create the hit effect at
+     */
+    createHitEffect(position) {
+        if (!position || !this.skill || !this.skill.game || !this.skill.game.scene) {
+            console.warn('Cannot create hit effect: missing required references');
+            return;
+        }
+        
+        // Create a group for the hit effect
+        const hitEffectGroup = new THREE.Group();
+        
+        // Create a flash of light
+        const flashGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+        const flashMaterial = new THREE.MeshBasicMaterial({
+            color: this.skill.color || 0xffffff,
+            transparent: true,
+            opacity: 0.7,
+            depthWrite: false
+        });
+        
+        const flash = new THREE.Mesh(flashGeometry, flashMaterial);
+        hitEffectGroup.add(flash);
+        
+        // Position the hit effect
+        hitEffectGroup.position.copy(position);
+        
+        // Add to scene
+        this.skill.game.scene.add(hitEffectGroup);
+        
+        // Animate the hit effect
+        let elapsedTime = 0;
+        const duration = 0.3; // seconds
+        
+        const animate = (delta) => {
+            elapsedTime += delta;
+            
+            // Scale flash
+            const flashScale = 1.0 + (elapsedTime / duration);
+            flash.scale.set(flashScale, flashScale, flashScale);
+            flash.material.opacity = (1.0 - (elapsedTime / duration)) * 0.7;
+            
+            // Remove when animation is complete
+            if (elapsedTime >= duration) {
+                // Clean up
+                if (flash.geometry) flash.geometry.dispose();
+                if (flash.material) flash.material.dispose();
+                
+                this.skill.game.scene.remove(hitEffectGroup);
+                return;
+            }
+            
+            // Continue animation
+            requestAnimationFrame(() => {
+                animate(1/60); // Approximate delta if not provided by game loop
+            });
+        };
+        
+        // Start animation
+        animate(1/60);
+    }
 }
