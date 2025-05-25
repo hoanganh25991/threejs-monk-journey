@@ -6,6 +6,7 @@ import { InventoryUI } from './InventoryUI.js';
 import { SkillTreeUI } from './SkillTreeUI.js';
 import { SkillSelectionUI } from './SkillSelectionUI.js';
 import { VirtualJoystickUI } from './VirtualJoystickUI.js';
+import { CameraControlUI } from './CameraControlUI.js';
 import { DeathScreenUI } from './DeathScreenUI.js';
 import { NotificationsUI } from './NotificationsUI.js';
 import { QuestLogUI } from './QuestLogUI.js';
@@ -125,6 +126,10 @@ export class HUDManager {
         this.components.joystickUI = new VirtualJoystickUI(this.game);
         this.components.joystickUI.init();
         
+        // Create camera control UI
+        this.components.cameraControlUI = new CameraControlUI(this.game);
+        this.components.cameraControlUI.init();
+        
         // Create death screen UI
         this.components.deathScreenUI = new DeathScreenUI(this.game);
         this.components.deathScreenUI.init();
@@ -166,6 +171,9 @@ export class HUDManager {
         
         // Update mini map UI
         this.components.miniMapUI.update(delta);
+        
+        // Update camera control UI
+        this.components.cameraControlUI.update(delta);
         
         // Update notifications UI
         this.components.notificationsUI.update(delta);
