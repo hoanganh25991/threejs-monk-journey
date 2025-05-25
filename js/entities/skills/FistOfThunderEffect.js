@@ -242,18 +242,6 @@ export class FistOfThunderEffect extends SkillEffect {
     }
 
     /**
-     * Create a hit effect when the teleport skill hits an enemy
-     * This method is kept for backward compatibility but now calls the base class implementation
-     * @param {THREE.Vector3} position - Position to create the hit effect
-     * @private
-     * @deprecated Use createHitEffect instead
-     */
-    _createTeleportHitEffect(position) {
-        // Call the base class implementation
-        this.createHitEffect(position);
-    }
-    
-    /**
      * Override the base class createHitEffect to add lightning-specific effects
      * @param {THREE.Vector3} position - Position to create the hit effect
      */
