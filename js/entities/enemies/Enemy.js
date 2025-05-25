@@ -6,6 +6,11 @@ export class Enemy {
     // Static counter for generating unique IDs
     static idCounter = 0;
     
+    /**
+     * @param {THREE.Scene} scene - Generation options
+     * @param {import("../player/Player.js").Player} player - Item level (defaults to player level)
+     * @param {Object} options.subType - Force a specific subType
+     */
     constructor(scene, player, config) {
         this.scene = scene;
         this.player = player;
@@ -262,7 +267,7 @@ export class Enemy {
         // (This could be expanded with different attack types based on enemy type)
         
         // Deal damage to player
-        const damageDealt = this.player.takeDamage(this.damage);
+        this.player.takeDamage(this.damage);
         
         // Reset attack state after a short delay
         setTimeout(() => {

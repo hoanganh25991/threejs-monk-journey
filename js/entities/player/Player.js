@@ -2,7 +2,6 @@
  * Player.js
  * Main player class that integrates all player components
  */
-
 import { IPlayer } from './PlayerInterface.js';
 import { PlayerStats } from './PlayerStats.js';
 import { PlayerState } from './PlayerState.js';
@@ -13,12 +12,20 @@ import { PlayerSkills } from './PlayerSkills.js';
 import { PlayerCombat } from './PlayerCombat.js';
 
 export class Player extends IPlayer {
-    constructor(scene, camera, loadingManager) {
+    
+    /**
+     * @param {import("../../game/Game.js").Game} game
+     * @param {import("three").Scene} scene
+     * @param {import("three").PerspectiveCamera} camera
+     * @param {Object} loadingManager
+     */
+    constructor(game, scene, camera, loadingManager) {
         super();
         
         this.scene = scene;
         this.camera = camera;
         this.loadingManager = loadingManager;
+        this.game = game;
         
         // Initialize components
         this.state = new PlayerState();
@@ -30,9 +37,6 @@ export class Player extends IPlayer {
         this.movement = null;
         this.skills = null;
         this.combat = null;
-        
-        // Game reference
-        this.game = null;
     }
     
     async init() {

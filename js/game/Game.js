@@ -135,8 +135,7 @@ export class Game {
             this.updateLoadingProgress(40, 'Loading character...', 'Preparing player model and animations');
             
             // Initialize player
-            this.player = new Player(this.scene, this.camera, this.loadingManager);
-            this.player.setGame(this);
+            this.player = new Player(this, this.scene, this.camera, this.loadingManager);
             await this.player.init();
             
             // Apply selected model and size if available from main.js
