@@ -53,7 +53,7 @@ export class EnemyUI extends UIComponent {
         
         if (closestEnemy && !closestEnemy.isDead()) {
             // Show enemy health bar
-            this.show();
+            this.container.style.display = 'block'; // Explicitly set display to block
             
             // Update enemy name
             this.enemyName.textContent = closestEnemy.getName();
@@ -70,7 +70,7 @@ export class EnemyUI extends UIComponent {
             this.enemyHealthText.textContent = `${currentHealth}/${maxHealth}`;
         } else {
             // Hide enemy health bar
-            this.hide();
+            this.container.style.display = 'none'; // Explicitly set display to none
         }
     }
 }

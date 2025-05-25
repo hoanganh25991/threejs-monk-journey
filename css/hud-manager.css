@@ -52,7 +52,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    z-index: 20; /* HUD Elements */
+    z-index: 2500; /* HUD Elements */
 }
 
 /* Player Stats Container */
@@ -212,7 +212,7 @@
     left: 50%;
     transform: translateX(-50%);
     width: 300px;
-    display: none;
+    z-index: 50;
 }
 
 #enemy-health-bar-container {
@@ -263,7 +263,7 @@
     flex-direction: column;
     align-items: flex-end;
     gap: 20px;
-    z-index: 30; /* HUD Elements - Skills */
+    z-index: 50; /* HUD Elements - Skills */
 }
 
 /* Skills Container */
@@ -343,7 +343,7 @@
     font-size: 10px;
     color: white;
     font-weight: bold;
-    z-index: 40; /* HUD Elements - Skill Key */
+    z-index: 50; /* HUD Elements - Skill Key */
     box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
     pointer-events: none; /* Don't block clicks */
 }
@@ -504,7 +504,7 @@
     right: 10px;
     color: white;
     pointer-events: auto; /* Ensure clicks are registered */
-    z-index: 110; /* Below UI Controls but above other elements */
+    z-index: 50; /* Below UI Controls but above other elements */
 }
 
 #mini-map-canvas {

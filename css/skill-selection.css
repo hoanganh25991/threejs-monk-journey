@@ -15,7 +15,7 @@
     border: 2px solid #8a6d3b;
     border-radius: 8px;
     color: #fff;
-    z-index: 110; /* Same z-index as skill tree */
+    z-index: 150; /* Same z-index as skill tree */
     display: none; /* Hidden by default */
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
     overflow: auto; /* Changed from hidden to auto to allow scrolling */
@@ -281,7 +281,7 @@
     font-size: 10px;
     color: white;
     font-weight: bold;
-    z-index: 5; /* Ensure it appears above other elements */
+    z-index: 10; /* Ensure it appears above other elements */
 }
 
 .skill-button .skill-cooldown {
@@ -331,5 +331,5 @@
     font-size: 10px;
     color: white;
     font-weight: bold;
-    z-index: 5; /* Ensure it appears above other elements */
+    z-index: 10; /* Ensure it appears above other elements */
 }

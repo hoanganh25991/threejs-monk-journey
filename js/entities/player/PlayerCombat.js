@@ -376,8 +376,8 @@ export class PlayerCombat extends IPlayerCombat {
     
     revive() {
         // Reset health and mana
-        this.playerStats.setHealth(this.playerStats.getMaxHealth() / 2);
-        this.playerStats.setMana(this.playerStats.getMaxMana() / 2);
+        this.playerStats.setHealth(this.playerStats.getMaxHealth() / 4 * 3);
+        this.playerStats.setMana(this.playerStats.getMaxMana() / 4 * 3);
         
         // Reset state
         this.playerState.setDead(false);

@@ -17,7 +17,7 @@
     color: white;
     display: none; /* Will be toggled by JavaScript */
     pointer-events: auto;
-    z-index: 110; /* Dialogs and Menus */
+    z-index: 150; /* Dialogs and Menus */
     flex-direction: column;
     overflow: hidden;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
@@ -74,7 +74,7 @@
     height: 100%; /* Full height of parent */
     top: 0;
     left: 0;
-    z-index: 1; /* Behind equipment slots which have z-index: 2 */
+    z-index: 10; /* Behind equipment slots which have z-index: 2 */
     overflow: hidden;
     border-radius: 8px;
     background-color: rgba(20, 20, 20, 0.5);
