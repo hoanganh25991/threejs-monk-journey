@@ -199,31 +199,25 @@ export class Skill {
         // Base damage from skill configuration
         let damage = this.damage;
         
-        // If we have access to the player's stats, use them to calculate damage
-        if (this.game && this.game.player) {
-            const player = this.game.player;
-            
-            // Base damage from attack power
-            damage = damage * (player.stats.getAttackPower() / 10);
-            
-            // Add bonus from strength (each point adds 0.5 damage)
-            damage += player.stats.strength * 0.5;
-            
-            // Add level bonus (each level adds 2 damage)
-            damage += (player.stats.getLevel() - 1) * 2;
-            
-            // Add small random variation (±10%)
-            const variation = damage * 0.2 * (Math.random() - 0.5);
-            damage += variation;
-            
-            // Round to integer
-            damage = Math.round(damage);
-            
-            console.debug(`Calculated skill damage: ${damage} (base: ${this.damage}, attackPower: ${player.stats.getAttackPower()}, strength: ${player.stats.strength})`);
-        }
+        // // If we have access to the player's stats, use them to calculate damage
+        // if (this.game && this.game.player) {
+        //     const player = this.game.player;
+        //     // Base damage from attack power
+        //     damage = damage * (player.stats.getAttackPower() / 10);
+        //     // Add bonus from strength (each point adds 0.5 damage)
+        //     damage += player.stats.strength * 0.5;
+        //     // Add level bonus (each level adds 2 damage)
+        //     damage += (player.stats.getLevel() - 1) * 2;
+        //     // Add small random variation (±10%)
+        //     const variation = damage * 0.2 * (Math.random() - 0.5);
+        //     damage += variation;
+        //     // Round to integer
+        //     damage = Math.round(damage);
+        //     console.debug(`Calculated skill damage: ${damage} (base: ${this.damage}, attackPower: ${player.stats.getAttackPower()}, strength: ${player.stats.strength})`);
+        // }
 
-        console.log({damage})
-        
+        console.debug("Skill getDamage", {damage});
+
         return damage;
     }
     

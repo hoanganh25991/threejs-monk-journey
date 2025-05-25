@@ -11,7 +11,7 @@ export const PRIMARY_ATTACKS = [
         name: 'Fist of Thunder',
         description: 'Teleport to the nearest enemy and strike them with lightning',
         type: 'teleport',
-        damage: 45,
+        damage: 5,
         manaCost: 0,
         cooldown: 0, // Very short cooldown for basic attack
         range: 13, // Teleport range
@@ -30,7 +30,7 @@ export const PRIMARY_ATTACKS = [
         name: "Deadly Reach",
         description: "Extend your reach to strike enemies from a distance.",
         type: "projectile",
-        damage: 20,
+        damage: 3,
         manaCost: 5,
         cooldown: 0,
         range: 25, // Increased range for a proper ranged attack
