@@ -405,6 +405,215 @@ export const SKILL_SOUNDS = {
             filter: 'lowpass',
             attack: 0.01
         }
+    },
+    
+    // Breath of Heaven
+    breathOfHeaven: {
+        id: 'skillBreathOfHeaven',
+        file: 'breath_of_heaven.mp3',
+        volume: 0.8,
+        simulated: {
+            frequency: 400,
+            duration: 0.5,
+            type: 'sine',
+            decay: false,
+            reverb: true,
+            arpeggio: [1, 1.2, 1.5, 1.8]
+        }
+    },
+    healingPulse: {
+        id: 'healingPulse',
+        file: 'healing_pulse.mp3',
+        volume: 0.7,
+        simulated: {
+            frequency: 450,
+            duration: 0.3,
+            type: 'sine',
+            decay: false,
+            reverb: true
+        }
+    },
+    divineEcho: {
+        id: 'divineEcho',
+        file: 'divine_echo.mp3',
+        volume: 0.6,
+        simulated: {
+            frequency: 380,
+            duration: 0.4,
+            type: 'sine',
+            decay: true,
+            slide: -20,
+            reverb: true
+        }
+    },
+    
+    // Deadly Reach
+    deadlyReachCast: {
+        id: 'deadlyReachCast',
+        file: 'deadly_reach_cast.mp3',
+        volume: 0.8,
+        simulated: {
+            frequency: 300,
+            duration: 0.3,
+            type: 'sine',
+            decay: false,
+            slide: 30,
+            filter: 'bandpass'
+        }
+    },
+    deadlyReachImpact: {
+        id: 'deadlyReachImpact',
+        file: 'deadly_reach_impact.mp3',
+        volume: 0.7,
+        simulated: {
+            frequency: 350,
+            duration: 0.2,
+            type: 'square',
+            decay: true,
+            attack: 0.01,
+            filter: 'highpass'
+        }
+    },
+    deadlyReachEnd: {
+        id: 'deadlyReachEnd',
+        file: 'deadly_reach_end.mp3',
+        volume: 0.6,
+        simulated: {
+            frequency: 280,
+            duration: 0.3,
+            type: 'sine',
+            decay: true,
+            slide: -20
+        }
+    },
+    
+    // Flying Dragon
+    flyingDragon: {
+        id: 'skillFlyingDragon',
+        file: 'flying_dragon.mp3',
+        volume: 0.9,
+        simulated: {
+            frequency: 380,
+            duration: 0.5,
+            type: 'sawtooth',
+            decay: false,
+            slide: 50,
+            vibrato: 10,
+            filter: 'highpass'
+        }
+    },
+    dragonStrike: {
+        id: 'dragonStrike',
+        file: 'dragon_strike.mp3',
+        volume: 0.9,
+        simulated: {
+            frequency: 420,
+            duration: 0.3,
+            type: 'sawtooth',
+            decay: true,
+            attack: 0.01,
+            noise: 0.1,
+            distortion: 0.3,
+            filter: 'highpass'
+        }
+    },
+    dragonLand: {
+        id: 'dragonLand',
+        file: 'dragon_land.mp3',
+        volume: 0.8,
+        simulated: {
+            frequency: 300,
+            duration: 0.4,
+            type: 'sawtooth',
+            decay: true,
+            slide: -40,
+            noise: 0.2,
+            filter: 'lowpass'
+        }
+    },
+    
+    // Flying Kick
+    flyingKick: {
+        id: 'skillFlyingKick',
+        file: 'flying_kick.mp3',
+        volume: 0.8,
+        simulated: {
+            frequency: 350,
+            duration: 0.3,
+            type: 'sawtooth',
+            decay: false,
+            slide: 30,
+            filter: 'bandpass'
+        }
+    },
+    kickImpact: {
+        id: 'kickImpact',
+        file: 'kick_impact.mp3',
+        volume: 0.8,
+        simulated: {
+            frequency: 380,
+            duration: 0.2,
+            type: 'square',
+            decay: true,
+            attack: 0.01,
+            noise: 0.1,
+            filter: 'highpass'
+        }
+    },
+    kickLand: {
+        id: 'kickLand',
+        file: 'kick_land.mp3',
+        volume: 0.7,
+        simulated: {
+            frequency: 320,
+            duration: 0.3,
+            type: 'sawtooth',
+            decay: true,
+            slide: -30,
+            filter: 'lowpass'
+        }
+    },
+    
+    // Imprisoned Fists
+    imprisonedFists: {
+        id: 'skillImprisonedFists',
+        file: 'imprisoned_fists.mp3',
+        volume: 0.8,
+        simulated: {
+            frequency: 300,
+            duration: 0.4,
+            type: 'sawtooth',
+            decay: false,
+            vibrato: 5,
+            filter: 'bandpass'
+        }
+    },
+    chainImpact: {
+        id: 'chainImpact',
+        file: 'chain_impact.mp3',
+        volume: 0.7,
+        simulated: {
+            frequency: 250,
+            duration: 0.3,
+            type: 'sawtooth',
+            decay: true,
+            noise: 0.1,
+            filter: 'lowpass'
+        }
+    },
+    chainsBreak: {
+        id: 'chainsBreak',
+        file: 'chains_break.mp3',
+        volume: 0.7,
+        simulated: {
+            frequency: 280,
+            duration: 0.4,
+            type: 'sawtooth',
+            decay: true,
+            slide: -20,
+            noise: 0.2,
+            filter: 'highpass'
+        }
     }
 };
 
@@ -546,14 +755,14 @@ export const MUSIC = {
         file: 'battle_theme.mp3',
         volume: 0.1,
         loop: true,
-        simulated: {
-            frequency: 280,
-            duration: 5.0,
-            type: 'square',
-            decay: false,
-            melody: true,
-            tempo: 140
-        }
+        // simulated: {
+        //     frequency: 280,
+        //     duration: 5.0,
+        //     type: 'square',
+        //     decay: false,
+        //     melody: true,
+        //     tempo: 140
+        // }
     },
     bossTheme: {
         id: 'bossTheme',

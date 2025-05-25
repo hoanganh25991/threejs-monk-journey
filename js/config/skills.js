@@ -1,5 +1,6 @@
 // Skills configuration
 import { SKILL_ICONS } from './skill-icons.js';
+import { SKILL_SOUNDS } from './sounds.js';
 // Type definitions are available in skill-types.d.ts
 // @ts-check
 /** @typedef {import('./config.ts').SkillConfig} SkillConfig */
@@ -21,9 +22,9 @@ export const PRIMARY_ATTACKS = [
         get icon() { return SKILL_ICONS[this.name].emoji; },
         primaryAttack: true,
         sounds: {
-            cast: 'skillFistOfThunder', // Sound of lightning charging
-            impact: 'thunderStrike', // Crackling lightning impact
-            end: 'thunderEcho' // Echo of thunder after strike
+            cast: SKILL_SOUNDS.fistOfThunder.id, // Sound of lightning charging
+            impact: SKILL_SOUNDS.thunderStrike.id, // Crackling lightning impact
+            end: SKILL_SOUNDS.thunderEcho.id // Echo of thunder after strike
         }
     },
     {
@@ -44,9 +45,9 @@ export const PRIMARY_ATTACKS = [
         projectileSpeed: 15, // Speed of the projectile
         stationaryAttack: true, // Flag to indicate this skill should not move the hero
         sounds: {
-            "cast": "deadlyReachCast", // Sound of energy focusing
-            "impact": "deadlyReachImpact", // Sound of strike hitting
-            "end": "deadlyReachEnd" // Sound of energy dispersing
+            cast: SKILL_SOUNDS.deadlyReachCast.id, // Sound of energy focusing
+            impact: SKILL_SOUNDS.deadlyReachImpact.id, // Sound of strike hitting
+            end: SKILL_SOUNDS.deadlyReachEnd.id // Sound of energy dispersing
         }
     }
 ];
@@ -67,9 +68,9 @@ export const NORMAL_SKILLS = [
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
-            cast: 'skillWaveOfLight', // Monk summoning the bell with chanting
-            impact: 'bellRing', // Deep, resonant bell sound
-            end: 'bellFade' // Bell sound fading with reverberations
+            cast: SKILL_SOUNDS.waveOfLight.id, // Monk summoning the bell with chanting
+            impact: SKILL_SOUNDS.bellRing.id, // Deep, resonant bell sound
+            end: SKILL_SOUNDS.bellFade.id // Bell sound fading with reverberations
         }
     },
     {
@@ -85,9 +86,9 @@ export const NORMAL_SKILLS = [
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
-            cast: 'skillInnerSanctuary', // Reusing Inner Sanctuary sound for now
-            impact: 'barrierForm', // Sound of protective barrier forming
-            end: 'barrierDissipate' // Sound of barrier fading away
+            cast: SKILL_SOUNDS.innerSanctuary.id, // Reusing Inner Sanctuary sound for now
+            impact: SKILL_SOUNDS.barrierForm.id, // Sound of protective barrier forming
+            end: SKILL_SOUNDS.barrierDissipate.id // Sound of barrier fading away
         }
     },
     {
@@ -104,9 +105,9 @@ export const NORMAL_SKILLS = [
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
-            cast: 'skillBreathOfHeaven', // Heavenly choir sound
-            impact: 'healingPulse', // Soft healing pulse sound
-            end: 'divineEcho' // Echoing divine sound as effect fades
+            cast: SKILL_SOUNDS.breathOfHeaven.id, // Heavenly choir sound
+            impact: SKILL_SOUNDS.healingPulse.id, // Soft healing pulse sound
+            end: SKILL_SOUNDS.divineEcho.id // Echoing divine sound as effect fades
         }
     },
     {
@@ -122,9 +123,9 @@ export const NORMAL_SKILLS = [
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
-            cast: 'skillWaveStrike', // Monk channels energy and releases a wave
-            impact: 'waterImpact', // Watery impact sound when hitting enemies
-            end: 'waterDissipate' // Sound of water energy dissipating
+            cast: SKILL_SOUNDS.waveStrike.id, // Monk channels energy and releases a wave
+            impact: SKILL_SOUNDS.waterImpact.id, // Watery impact sound when hitting enemies
+            end: SKILL_SOUNDS.waterDissipate.id // Sound of water energy dissipating
         }
     },
     {
@@ -140,9 +141,9 @@ export const NORMAL_SKILLS = [
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
-            cast: 'skillCycloneStrike', // Powerful wind gathering sound
-            impact: 'windPull', // Sound of enemies being pulled by wind
-            end: 'windDissipate' // Wind dissipating after the cyclone ends
+            cast: SKILL_SOUNDS.cycloneStrike.id, // Powerful wind gathering sound
+            impact: SKILL_SOUNDS.windPull.id, // Sound of enemies being pulled by wind
+            end: SKILL_SOUNDS.windDissipate.id // Wind dissipating after the cyclone ends
         }
     },
     {
@@ -159,9 +160,9 @@ export const NORMAL_SKILLS = [
         get icon() { return SKILL_ICONS[this.name].emoji; },
         hits: 7,
         sounds: {
-            cast: 'skillSevenSidedStrike', // Monk chanting and focusing energy
-            impact: 'rapidStrike', // Quick succession of strike impacts
-            end: 'strikeComplete' // Final strike with emphasis
+            cast: SKILL_SOUNDS.sevenSidedStrike.id, // Monk chanting and focusing energy
+            impact: SKILL_SOUNDS.rapidStrike.id, // Quick succession of strike impacts
+            end: SKILL_SOUNDS.strikeComplete.id // Final strike with emphasis
         }
     },
     {
@@ -177,9 +178,9 @@ export const NORMAL_SKILLS = [
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
-            cast: 'skillInnerSanctuary', // Monk chanting a protection mantra
-            impact: 'barrierForm', // Sound of protective barrier forming
-            end: 'barrierDissipate' // Sound of barrier fading away
+            cast: SKILL_SOUNDS.innerSanctuary.id, // Monk chanting a protection mantra
+            impact: SKILL_SOUNDS.barrierForm.id, // Sound of protective barrier forming
+            end: SKILL_SOUNDS.barrierDissipate.id // Sound of barrier fading away
         }
     },
     {
@@ -196,9 +197,9 @@ export const NORMAL_SKILLS = [
         get icon() { return SKILL_ICONS[this.name].emoji; },
         allyCount: 2, // Number of allies to summon
         sounds: {
-            cast: 'skillMysticAlly', // Mystical summoning incantation
-            impact: 'allySummonComplete', // Sound of ally materializing
-            end: 'allyDismiss' // Sound of ally returning to spirit realm
+            cast: SKILL_SOUNDS.mysticAlly.id, // Mystical summoning incantation
+            impact: SKILL_SOUNDS.allySummonComplete.id, // Sound of ally materializing
+            end: SKILL_SOUNDS.allyDismiss.id // Sound of ally returning to spirit realm
         }
     },
     {
@@ -214,9 +215,9 @@ export const NORMAL_SKILLS = [
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
-            cast: 'skillExplodingPalm', // Sound of monk focusing deadly energy
-            impact: 'markApplied', // Sound of mark being applied to enemy
-            end: 'massiveExplosion' // Powerful explosion when mark detonates
+            cast: SKILL_SOUNDS.explodingPalm.id, // Sound of monk focusing deadly energy
+            impact: SKILL_SOUNDS.markApplied.id, // Sound of mark being applied to enemy
+            end: SKILL_SOUNDS.massiveExplosion.id // Powerful explosion when mark detonates
         }
     },
     {
@@ -236,9 +237,9 @@ export const NORMAL_SKILLS = [
         multiHit: 5, // Number of kicks in the flurry
         windEffect: true, // Visual wind effect when moving forward
         sounds: {
-            cast: 'skillFlyingDragon', // Sound of monk leaping into the air
-            impact: 'dragonStrike', // Sound of powerful kicks landing
-            end: 'dragonLand' // Sound of monk landing after the attack
+            cast: SKILL_SOUNDS.flyingDragon.id, // Sound of monk leaping into the air
+            impact: SKILL_SOUNDS.dragonStrike.id, // Sound of powerful kicks landing
+            end: SKILL_SOUNDS.dragonLand.id // Sound of monk landing after the attack
         }
     },
     {
@@ -256,9 +257,9 @@ export const NORMAL_SKILLS = [
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         sounds: {
-            cast: 'skillFlyingKick', // Sound of monk preparing to kick
-            impact: 'kickImpact',    // Sound of kick connecting with enemies
-            end: 'kickLand'          // Sound of monk landing after the kick
+            cast: SKILL_SOUNDS.flyingKick.id, // Sound of monk preparing to kick
+            impact: SKILL_SOUNDS.kickImpact.id, // Sound of kick connecting with enemies
+            end: SKILL_SOUNDS.kickLand.id // Sound of monk landing after the kick
         }
     },
     {
@@ -289,9 +290,9 @@ export const NORMAL_SKILLS = [
         // Lock effect duration (in seconds)
         lockDuration: 5,
         sounds: {
-            cast: 'skillImprisonedFists', // Sound of monk focusing energy
-            impact: 'chainImpact', // Sound of chains binding enemies
-            end: 'chainsBreak' // Sound of chains breaking as effect ends
+            cast: SKILL_SOUNDS.imprisonedFists.id, // Sound of monk focusing energy
+            impact: SKILL_SOUNDS.chainImpact.id, // Sound of chains binding enemies
+            end: SKILL_SOUNDS.chainsBreak.id // Sound of chains breaking as effect ends
         }
     },
     {
@@ -307,9 +308,9 @@ export const NORMAL_SKILLS = [
         get color() { return SKILL_ICONS[this.name]?.color; }, // Green color
         get icon() { return SKILL_ICONS[this.name]?.emoji; }, // Leaf emoji as fallback
         sounds: {
-            cast: 'skillExplodingPalm', // Reusing sound temporarily
-            impact: 'markApplied', // Reusing sound temporarily
-            end: 'massiveExplosion' // Reusing sound temporarily
+            cast: SKILL_SOUNDS.explodingPalm.id, // Reusing sound temporarily
+            impact: SKILL_SOUNDS.markApplied.id, // Reusing sound temporarily
+            end: SKILL_SOUNDS.massiveExplosion.id // Reusing sound temporarily
         },
         explosionInterval: 0.1, // Time between explosions in seconds
         explosionDamageMultiplier: 0.5, // Damage multiplier for each explosion
@@ -331,9 +332,9 @@ export const NORMAL_SKILLS = [
         get color() { return SKILL_ICONS[this.name]?.color; }, // Green color
         get icon() { return SKILL_ICONS[this.name]?.emoji; }, // Leaf emoji as fallback
         sounds: {
-            cast: 'skillBreathOfHeaven', // Reusing Breath of Heaven sound
-            impact: 'healingPulse', // Soft healing pulse sound
-            end: 'divineEcho' // Echoing divine sound as effect fades
+            cast: SKILL_SOUNDS.breathOfHeaven.id, // Reusing Breath of Heaven sound
+            impact: SKILL_SOUNDS.healingPulse.id, // Soft healing pulse sound
+            end: SKILL_SOUNDS.divineEcho.id // Echoing divine sound as effect fades
         },
         speedBoostMultiplier: 10, // 10x speed boost (5x the normal 2x boost)
         speedBoostDuration: 10, // 10 seconds of speed boost
