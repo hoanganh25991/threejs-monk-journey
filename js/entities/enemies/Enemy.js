@@ -3,9 +3,15 @@ import { EnemyModelFactory } from './models/EnemyModelFactory.js';
 import { ENEMY_BEHAVIOR_SETTINGS, ENEMY_TYPE_BEHAVIOR } from '../../config/enemy-behavior.js';
 
 export class Enemy {
+    // Static counter for generating unique IDs
+    static idCounter = 0;
+    
     constructor(scene, player, config) {
         this.scene = scene;
         this.player = player;
+        
+        // Assign a unique ID to each enemy
+        this.id = Enemy.idCounter++;
         
         // Enemy configuration
         this.type = config.type || 'skeleton';

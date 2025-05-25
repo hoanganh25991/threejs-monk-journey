@@ -49,6 +49,10 @@ export class Skill {
         // Game reference
         this.game = null;
         
+        // Add a unique instance ID for this skill
+        // This helps with tracking which skill instance has hit which enemies
+        this.instanceId = `${this.name}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
         // Create the appropriate effect handler
         this.effectHandler = SkillEffectFactory.createEffect(this);
     }
@@ -192,7 +196,35 @@ export class Skill {
      * @returns {number} - The damage value
      */
     getDamage() {
-        return this.damage;
+        // Base damage from skill configuration
+        let damage = this.damage;
+        
+        // If we have access to the player's stats, use them to calculate damage
+        if (this.game && this.game.player) {
+            const player = this.game.player;
+            
+            // Base damage from attack power
+            damage = damage * (player.stats.getAttackPower() / 10);
+            
+            // Add bonus from strength (each point adds 0.5 damage)
+            damage += player.stats.strength * 0.5;
+            
+            // Add level bonus (each level adds 2 damage)
+            damage += (player.stats.getLevel() - 1) * 2;
+            
+            // Add small random variation (±10%)
+            const variation = damage * 0.2 * (Math.random() - 0.5);
+            damage += variation;
+            
+            // Round to integer
+            damage = Math.round(damage);
+            
+            console.debug(`Calculated skill damage: ${damage} (base: ${this.damage}, attackPower: ${player.stats.getAttackPower()}, strength: ${player.stats.strength})`);
+        }
+
+        console.log({damage})
+        
+        return damage;
     }
     
     /**
@@ -298,6 +330,10 @@ export class Skill {
         // Reset position and direction
         this.position = new THREE.Vector3();
         this.direction = new THREE.Vector3();
+        
+        // Generate a new instance ID when the skill is reset
+        // This ensures that each use of the skill is treated as a new instance
+        this.instanceId = `${this.name}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         
         // Reset the effect handler if it exists
         if (this.effectHandler) {

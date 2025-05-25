@@ -6,6 +6,9 @@ export class CollisionManager {
         this.enemyManager = enemyManager;
         this.world = world;
         this.collisionDistance = 1.0; // Default collision distance
+        
+        // Track which enemies have been hit by which skills to prevent multiple hits
+        this.skillHitRegistry = new Map();
     }
     
     update() {
@@ -268,6 +271,39 @@ export class CollisionManager {
     }
     
     handleSkillEnemyCollision(skill, enemy) {
+        // We need to generate a unique key that identifies:
+        // 1. The specific skill instance (not just the skill type)
+        // 2. The specific enemy
+        // 3. The specific cast of the skill (to allow multiple casts)
+        
+        // Get a unique identifier for this skill instance
+        // We'll use a combination of the skill name, creation time, and a unique ID if available
+        let skillInstanceId;
+        if (skill.instanceId) {
+            // If the skill has an instance ID, use it
+            skillInstanceId = skill.instanceId;
+        } else {
+            // Otherwise, generate one based on the skill's creation time and name
+            // This will be different for each cast of the skill
+            skillInstanceId = `${skill.name}-${Date.now()}`;
+            skill.instanceId = skillInstanceId; // Store it for future reference
+        }
+        
+        const enemyId = enemy.id || enemy.uuid || `enemy-${enemy.getPosition().toArray().join(',')}`;
+        const hitKey = `${skillInstanceId}-${enemyId}`;
+        
+        // Check if this specific instance of the skill has already hit this enemy
+        if (this.skillHitRegistry.has(hitKey)) {
+            return; // Skip if already hit by this specific instance
+        }
+        
+        // Mark this enemy as hit by this specific skill instance
+        this.skillHitRegistry.set(hitKey, {
+            timestamp: Date.now(),
+            skillName: skill.name,
+            enemyId: enemyId
+        });
+        
         // Apply skill damage to enemy
         const damage = skill.getDamage();
         enemy.takeDamage(damage);
@@ -282,6 +318,42 @@ export class CollisionManager {
             
             // Check for quest completion
             this.player.game.questManager.updateEnemyKill(enemy);
+        }
+        
+        // Clean up old entries from the hit registry occasionally
+        if (Math.random() < 0.01) { // ~1% chance per frame
+            this.cleanupHitRegistry();
+        }
+    }
+    
+    /**
+     * Clean up old entries from the hit registry
+     * This prevents the registry from growing too large over time
+     */
+    cleanupHitRegistry() {
+        // Get current time
+        const currentTime = Date.now();
+        
+        // Remove entries older than 5 seconds
+        // This allows the same skill to hit the same enemy again if cast after 5 seconds
+        let removedCount = 0;
+        for (const [key, data] of this.skillHitRegistry.entries()) {
+            if (data.timestamp && currentTime - data.timestamp > 5000) {
+                this.skillHitRegistry.delete(key);
+                removedCount++;
+            }
+        }
+        
+        // Log cleanup if entries were removed
+        if (removedCount > 0) {
+            console.debug(`Cleaned up ${removedCount} entries from hit registry. New size: ${this.skillHitRegistry.size}`);
+        }
+        
+        // If the registry is still too large, clear it completely
+        // This is a fallback to prevent memory issues
+        if (this.skillHitRegistry.size > 1000) {
+            console.debug(`Hit registry too large (${this.skillHitRegistry.size}), clearing all entries`);
+            this.skillHitRegistry.clear();
         }
     }
     
