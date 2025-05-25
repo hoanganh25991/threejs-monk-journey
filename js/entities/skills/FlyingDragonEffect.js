@@ -50,7 +50,7 @@ export class FlyingDragonEffect extends SkillEffect {
     }
     constructor(skill) {
         super(skill);
-        this.flightSpeed = 12; // Units per second
+        this.flightSpeed = skill.flightSpeed || 10; // Units per second
         this.initialPosition = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         this.distanceTraveled = 0;
@@ -67,6 +67,8 @@ export class FlyingDragonEffect extends SkillEffect {
      * @returns {THREE.Group} - The created effect
      */
     create(position, direction) {
+        position = position.clone();
+        position.y -= 3.0;
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
@@ -82,7 +84,6 @@ export class FlyingDragonEffect extends SkillEffect {
         
         // Position effect
         effectGroup.position.copy(position);
-        effectGroup.position.y += 1.5; // Start slightly above ground
         effectGroup.rotation.y = Math.atan2(direction.x, direction.z);
         
         // Store effect
@@ -101,27 +102,31 @@ export class FlyingDragonEffect extends SkillEffect {
         // Create dragon model group
         const dragonGroup = new THREE.Group();
         
-        // Create a material for the dragon model
-        const dragonMaterial = new THREE.MeshStandardMaterial({
-            color: this.skill.color || 0xff6600,
-            emissive: this.skill.color || 0xff6600,
-            emissiveIntensity: 1.5,
-            transparent: true,
-            opacity: 0.7,
-            side: THREE.DoubleSide
-        });
-        
         // Clone the preloaded model to avoid modifying the original
         const dragonModel = FlyingDragonEffect.dragonModel.clone();
         
-        // Apply the material to all meshes in the model
+        // Apply transparent materials to all meshes in the model
         dragonModel.traverse((child) => {
             if (child.isMesh) {
                 // Store the original material for reference if needed
                 child.userData.originalMaterial = child.material;
                 
-                // Apply our custom material
-                child.material = dragonMaterial.clone();
+                // Create a new material that preserves the original texture but adds transparency
+                const transparentMaterial = child.material.clone();
+                
+                // Apply skill color as a tint while keeping the texture
+                transparentMaterial.transparent = true;
+                transparentMaterial.opacity = 0.7;
+                
+                // Apply color tint if skill has a color
+                if (this.skill.color) {
+                    transparentMaterial.color = new THREE.Color(this.skill.color);
+                    transparentMaterial.emissive = new THREE.Color(this.skill.color);
+                    transparentMaterial.emissiveIntensity = 1.5;
+                }
+                
+                // Apply our modified material
+                child.material = transparentMaterial;
             }
         });
         
@@ -146,12 +151,20 @@ export class FlyingDragonEffect extends SkillEffect {
             const particleSize = 0.05 + Math.random() * 0.1;
             const particleGeometry = new THREE.SphereGeometry(particleSize, 8, 8);
             const particleMaterial = new THREE.MeshStandardMaterial({
-                color: this.skill.color || 0xff6600,
-                emissive: this.skill.color || 0xff6600,
-                emissiveIntensity: 2,
                 transparent: true,
                 opacity: 0.7 + Math.random() * 0.3
             });
+            
+            // Apply color if skill has one, otherwise use default
+            if (this.skill.color) {
+                particleMaterial.color = new THREE.Color(this.skill.color);
+                particleMaterial.emissive = new THREE.Color(this.skill.color);
+                particleMaterial.emissiveIntensity = 2;
+            } else {
+                particleMaterial.color = new THREE.Color(0xff6600);
+                particleMaterial.emissive = new THREE.Color(0xff6600);
+                particleMaterial.emissiveIntensity = 2;
+            }
             
             const particle = new THREE.Mesh(particleGeometry, particleMaterial);
             particle.position.set(
@@ -182,13 +195,21 @@ export class FlyingDragonEffect extends SkillEffect {
         // Create kick energy wave
         const kickWaveGeometry = new THREE.CylinderGeometry(0, 1.5, 2, 8);
         const kickWaveMaterial = new THREE.MeshStandardMaterial({
-            color: this.skill.color || 0xff6600,
-            emissive: this.skill.color || 0xff6600,
-            emissiveIntensity: 2,
             transparent: true,
             opacity: 0.7,
             side: THREE.DoubleSide
         });
+        
+        // Apply color if skill has one, otherwise use default
+        if (this.skill.color) {
+            kickWaveMaterial.color = new THREE.Color(this.skill.color);
+            kickWaveMaterial.emissive = new THREE.Color(this.skill.color);
+            kickWaveMaterial.emissiveIntensity = 2;
+        } else {
+            kickWaveMaterial.color = new THREE.Color(0xff6600);
+            kickWaveMaterial.emissive = new THREE.Color(0xff6600);
+            kickWaveMaterial.emissiveIntensity = 2;
+        }
         
         const kickWave = new THREE.Mesh(kickWaveGeometry, kickWaveMaterial);
         kickWave.rotation.x = Math.PI / 2;
@@ -255,7 +276,7 @@ export class FlyingDragonEffect extends SkillEffect {
         switch (phase) {
             case 'rising':
                 // Rise up to maximum height
-                this.dragonState.height += delta * 5;
+                this.dragonState.height += delta;
                 this.effect.position.y = this.initialPosition.y + this.dragonState.height;
                 
                 // Transition to kicking phase when max height is reached
@@ -294,7 +315,7 @@ export class FlyingDragonEffect extends SkillEffect {
         // Animate dragon model
         if (dragonGroup) {
             // Rotate the dragon model
-            dragonGroup.rotation.y += delta * 2;
+            // dragonGroup.rotation.y += delta * 2;
             
             // Find the actual model in the group (first child)
             const model = dragonGroup.children.find(child => child.isObject3D && !child.isMesh);
@@ -303,12 +324,15 @@ export class FlyingDragonEffect extends SkillEffect {
                 model.position.y = Math.sin(this.elapsedTime * 2) * 0.1;
                 
                 // Add subtle scale pulsing
-                const pulseScale = 1.0 + 0.05 * Math.sin(this.elapsedTime * 3);
+                const pulseScale = 3.0 + 0.05 * Math.sin(this.elapsedTime * 3);
                 model.scale.set(pulseScale, pulseScale, pulseScale);
                 
                 // Update material opacity for pulsing effect
                 model.traverse(child => {
                     if (child.isMesh && child.material) {
+                        // Ensure material is set to transparent
+                        child.material.transparent = true;
+                        // Apply pulsing opacity
                         child.material.opacity = 0.7 + 0.2 * Math.sin(this.elapsedTime * 2);
                     }
                 });
