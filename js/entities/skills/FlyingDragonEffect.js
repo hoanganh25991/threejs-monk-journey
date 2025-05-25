@@ -1,10 +1,53 @@
 import * as THREE from 'three';
 import { SkillEffect } from './SkillEffect.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 /**
  * Specialized effect for Flying Dragon skill
  */
 export class FlyingDragonEffect extends SkillEffect {
+    // Static property to store the preloaded dragon model
+    static dragonModel = null;
+    
+    /**
+     * Preload the Flying Dragon model to avoid loading it at runtime
+     * @returns {Promise} - Promise that resolves when the model is loaded
+     */
+    static preloadModel() {
+        return new Promise((resolve, reject) => {
+            if (FlyingDragonEffect.dragonModel) {
+                console.debug('Flying Dragon model already preloaded');
+                resolve(FlyingDragonEffect.dragonModel);
+                return;
+            }
+            
+            console.debug('Preloading Flying Dragon model...');
+            // Create and configure Draco loader
+            const dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+            dracoLoader.setDecoderConfig({ type: 'js' }); // Use JavaScript decoder for compatibility
+            
+            // Create GLTFLoader and set the Draco loader
+            const loader = new GLTFLoader();
+            loader.setDRACOLoader(dracoLoader);
+            
+            loader.load('assets/effects/flying-dragon.glb', 
+                (gltf) => {
+                    console.debug('Flying Dragon model preloaded successfully');
+                    FlyingDragonEffect.dragonModel = gltf.scene.clone();
+                    resolve(FlyingDragonEffect.dragonModel);
+                },
+                (xhr) => {
+                    console.debug(`Flying Dragon model ${(xhr.loaded / xhr.total * 100)}% preloaded`);
+                },
+                (error) => {
+                    console.error('Error preloading Flying Dragon model:', error);
+                    reject(error);
+                }
+            );
+        });
+    }
     constructor(skill) {
         super(skill);
         this.flightSpeed = 12; // Units per second
@@ -55,12 +98,11 @@ export class FlyingDragonEffect extends SkillEffect {
      * @private
      */
     createFlyingDragonEffect(effectGroup) {
-        // Create dragon aura
-        const auraGroup = new THREE.Group();
+        // Create dragon model group
+        const dragonGroup = new THREE.Group();
         
-        // Create dragon-shaped energy field
-        const dragonBodyGeometry = new THREE.CylinderGeometry(0.5, 0.3, 3, 8);
-        const dragonBodyMaterial = new THREE.MeshStandardMaterial({
+        // Create a material for the dragon model
+        const dragonMaterial = new THREE.MeshStandardMaterial({
             color: this.skill.color || 0xff6600,
             emissive: this.skill.color || 0xff6600,
             emissiveIntensity: 1.5,
@@ -69,56 +111,26 @@ export class FlyingDragonEffect extends SkillEffect {
             side: THREE.DoubleSide
         });
         
-        const dragonBody = new THREE.Mesh(dragonBodyGeometry, dragonBodyMaterial);
-        dragonBody.rotation.x = Math.PI / 2;
-        auraGroup.add(dragonBody);
+        // Clone the preloaded model to avoid modifying the original
+        const dragonModel = FlyingDragonEffect.dragonModel.clone();
         
-        // Create dragon head
-        const dragonHeadGeometry = new THREE.ConeGeometry(0.7, 1.5, 8);
-        const dragonHeadMaterial = new THREE.MeshStandardMaterial({
-            color: this.skill.color || 0xff6600,
-            emissive: this.skill.color || 0xff6600,
-            emissiveIntensity: 1.8,
-            transparent: true,
-            opacity: 0.8
+        // Apply the material to all meshes in the model
+        dragonModel.traverse((child) => {
+            if (child.isMesh) {
+                // Store the original material for reference if needed
+                child.userData.originalMaterial = child.material;
+                
+                // Apply our custom material
+                child.material = dragonMaterial.clone();
+            }
         });
         
-        const dragonHead = new THREE.Mesh(dragonHeadGeometry, dragonHeadMaterial);
-        dragonHead.position.set(0, 0, -2);
-        dragonHead.rotation.x = -Math.PI / 2;
-        auraGroup.add(dragonHead);
+        // Add the model to the group
+        dragonGroup.add(dragonModel);
         
-        // Create dragon wings
-        const wingShape = new THREE.Shape();
-        wingShape.moveTo(0, 0);
-        wingShape.quadraticCurveTo(1, 1, 2, 0);
-        wingShape.quadraticCurveTo(1, -0.5, 0, 0);
-        
-        const wingGeometry = new THREE.ShapeGeometry(wingShape);
-        const wingMaterial = new THREE.MeshStandardMaterial({
-            color: this.skill.color || 0xff6600,
-            emissive: this.skill.color || 0xff6600,
-            emissiveIntensity: 1.5,
-            transparent: true,
-            opacity: 0.6,
-            side: THREE.DoubleSide
-        });
-        
-        // Left wing
-        const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
-        leftWing.position.set(-0.5, 0, -1);
-        leftWing.rotation.y = Math.PI / 2;
-        leftWing.rotation.z = Math.PI / 4;
-        leftWing.scale.set(1.5, 1.5, 1.5);
-        auraGroup.add(leftWing);
-        
-        // Right wing
-        const rightWing = new THREE.Mesh(wingGeometry, wingMaterial);
-        rightWing.position.set(0.5, 0, -1);
-        rightWing.rotation.y = -Math.PI / 2;
-        rightWing.rotation.z = -Math.PI / 4;
-        rightWing.scale.set(1.5, 1.5, 1.5);
-        auraGroup.add(rightWing);
+        // Scale the model appropriately
+        const scale = 1.0; // Adjust scale as needed for the model
+        dragonModel.scale.set(scale, scale, scale);
         
         // Create energy particles around the dragon
         const particleCount = 30;
@@ -159,7 +171,7 @@ export class FlyingDragonEffect extends SkillEffect {
                 ).normalize()
             };
             
-            auraGroup.add(particle);
+            dragonGroup.add(particle);
             particles.push(particle);
         }
         
@@ -183,12 +195,12 @@ export class FlyingDragonEffect extends SkillEffect {
         kickGroup.add(kickWave);
         
         // Add the groups to the effect group
-        effectGroup.add(auraGroup);
+        effectGroup.add(dragonGroup);
         effectGroup.add(kickGroup);
         
         // Store animation state
         this.dragonState = {
-            auraGroup: auraGroup,
+            dragonGroup: dragonGroup,
             kickGroup: kickGroup,
             particles: particles,
             phase: 'rising', // 'rising', 'kicking', 'descending'
@@ -237,7 +249,7 @@ export class FlyingDragonEffect extends SkillEffect {
     updateFlyingDragonEffect(delta) {
         if (!this.dragonState) return;
         
-        const { auraGroup, kickGroup, particles, phase } = this.dragonState;
+        const { dragonGroup, kickGroup, particles, phase } = this.dragonState;
         
         // Update dragon flight animation based on phase
         switch (phase) {
@@ -279,9 +291,28 @@ export class FlyingDragonEffect extends SkillEffect {
                 break;
         }
         
-        // Animate dragon body
-        if (auraGroup) {
-            auraGroup.rotation.y += delta * 2;
+        // Animate dragon model
+        if (dragonGroup) {
+            // Rotate the dragon model
+            dragonGroup.rotation.y += delta * 2;
+            
+            // Find the actual model in the group (first child)
+            const model = dragonGroup.children.find(child => child.isObject3D && !child.isMesh);
+            if (model) {
+                // Add subtle floating motion
+                model.position.y = Math.sin(this.elapsedTime * 2) * 0.1;
+                
+                // Add subtle scale pulsing
+                const pulseScale = 1.0 + 0.05 * Math.sin(this.elapsedTime * 3);
+                model.scale.set(pulseScale, pulseScale, pulseScale);
+                
+                // Update material opacity for pulsing effect
+                model.traverse(child => {
+                    if (child.isMesh && child.material) {
+                        child.material.opacity = 0.7 + 0.2 * Math.sin(this.elapsedTime * 2);
+                    }
+                });
+            }
         }
         
         // Animate particles
@@ -347,6 +378,23 @@ export class FlyingDragonEffect extends SkillEffect {
                 kickWave.material.opacity = 0.7;
             }
         }
+        
+        // Trigger animation on the model
+        if (this.dragonState.dragonGroup) {
+            const model = this.dragonState.dragonGroup.children.find(child => child.isObject3D && !child.isMesh);
+            if (model) {
+                // Add a quick "kick" animation - a forward motion followed by return
+                // This is a simple animation since we don't have access to the model's animations
+                model.position.z -= 0.5; // Move forward
+                
+                // Return to original position after a short delay
+                setTimeout(() => {
+                    if (model && this.isActive) {
+                        model.position.z += 0.5;
+                    }
+                }, 150);
+            }
+        }
     }
 
     /**
@@ -361,6 +409,44 @@ export class FlyingDragonEffect extends SkillEffect {
             if (this.dragonState.particles) {
                 this.dragonState.particles.length = 0;
             }
+            
+            // Recursively dispose of geometries and materials
+            this.effect.traverse(child => {
+                // Dispose of geometries
+                if (child.geometry) {
+                    child.geometry.dispose();
+                }
+                
+                // Dispose of materials
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(material => {
+                            // Dispose of any textures
+                            if (material.map) material.map.dispose();
+                            if (material.normalMap) material.normalMap.dispose();
+                            if (material.specularMap) material.specularMap.dispose();
+                            if (material.emissiveMap) material.emissiveMap.dispose();
+                            
+                            // Dispose of the material itself
+                            material.dispose();
+                        });
+                    } else {
+                        // Dispose of any textures
+                        if (child.material.map) child.material.map.dispose();
+                        if (child.material.normalMap) child.material.normalMap.dispose();
+                        if (child.material.specularMap) child.material.specularMap.dispose();
+                        if (child.material.emissiveMap) child.material.emissiveMap.dispose();
+                        
+                        // Dispose of the material itself
+                        child.material.dispose();
+                    }
+                }
+                
+                // Clear any userData
+                if (child.userData) {
+                    child.userData = {};
+                }
+            });
             
             // Clear dragon state
             this.dragonState = null;

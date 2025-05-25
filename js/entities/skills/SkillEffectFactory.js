@@ -118,6 +118,7 @@ export class SkillEffectFactory {
             await ShieldOfZenEffect.preloadModel();
             
             // Add other model preloading here as needed
+            await FlyingDragonEffect.preloadModel();
             
             this.initialized = true;
             console.debug('SkillEffectFactory initialization complete');
