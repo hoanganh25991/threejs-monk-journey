@@ -20,9 +20,31 @@ export class DeathScreenUI extends UIComponent {
      */
     init() {
         const template = `
-            <h1 style="color: #ff0000;">You Died</h1>
-            <button class="menu-button" id="respawn-button">Respawn</button>
-            <button class="menu-button" id="quit-button">Quit Game</button>
+            <div id="death-screen-content">
+                <h1>You Died</h1>
+                <div class="death-message">
+                    Your journey has come to an end, but your spirit lives on.
+                </div>
+                <div class="death-stats">
+                    <div class="death-stats-title">Battle Statistics</div>
+                    <div class="death-stats-item">
+                        <span class="death-stats-label">Time Survived:</span>
+                        <span class="death-stats-value" id="time-survived">00:00</span>
+                    </div>
+                    <div class="death-stats-item">
+                        <span class="death-stats-label">Enemies Defeated:</span>
+                        <span class="death-stats-value" id="enemies-defeated">0</span>
+                    </div>
+                    <div class="death-stats-item">
+                        <span class="death-stats-label">Level Reached:</span>
+                        <span class="death-stats-value" id="level-reached">1</span>
+                    </div>
+                </div>
+                <div class="menu-button-container">
+                    <button class="menu-button" id="respawn-button">Respawn</button>
+                    <button class="menu-button" id="quit-button">Quit Game</button>
+                </div>
+            </div>
         `;
         
         // Render the template
@@ -50,12 +72,37 @@ export class DeathScreenUI extends UIComponent {
      * Show the death screen
      */
     showDeathScreen() {
+        // Update statistics
+        this.updateDeathStats();
+        
         // Show death screen
         this.show();
         this.isDeathScreenOpen = true;
         
         // Pause game
-        this.game.pause();
+        this.game.pause(false);
+    }
+    
+    /**
+     * Update death statistics
+     */
+    updateDeathStats() {
+        // Get player statistics
+        const gameTime = this.game.gameTime || 0;
+        const minutes = Math.floor(gameTime / 60);
+        const seconds = Math.floor(gameTime % 60);
+        const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Get enemies defeated (if available)
+        const enemiesDefeated = this.game.player.enemiesDefeated || 0;
+        
+        // Get player level
+        const playerLevel = this.game.player.level || 1;
+        
+        // Update UI elements
+        document.getElementById('time-survived').textContent = timeString;
+        document.getElementById('enemies-defeated').textContent = enemiesDefeated.toString();
+        document.getElementById('level-reached').textContent = playerLevel.toString();
     }
     
     /**
@@ -67,6 +114,6 @@ export class DeathScreenUI extends UIComponent {
         this.isDeathScreenOpen = false;
         
         // Resume game
-        this.game.resume();
+        this.game.resume(false);
     }
 }

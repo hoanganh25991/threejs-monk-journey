@@ -65,3 +65,6 @@
 
 /* Import teleport manager styles */
 @import 'teleport-manager.css';
+
+/* Import death screen styles */
+@import 'death-screen.css';

@@ -19,7 +19,6 @@ export class UIComponent {
             console.error(`Container element with ID "${containerId}" not found. Creating it dynamically.`);
             this.container = document.createElement('div');
             this.container.id = containerId;
-
             // Add to UI container
             document.body.appendChild(this.container);
         }
@@ -59,7 +58,8 @@ export class UIComponent {
      * Show the component
      */
     show() {
-        this.container.style.display = 'block';
+        // Remove inline display style to allow CSS to control the display property
+        this.container.style.removeProperty('display');
     }
     
     /**
@@ -74,11 +74,16 @@ export class UIComponent {
      * @returns {boolean} - New visibility state (true = visible)
      */
     toggle() {
-        this.container.style.display = this.visible ? 'none' : 'block';
+        if (this.visible) {
+            this.hide();
+        } else {
+            this.show();
+        }
+        return this.visible;
     }
 
     get visible() {
-        return this.container.style.display == 'block';
+        return this.container.style.display !== 'none';
     }
 
     get mobile() {

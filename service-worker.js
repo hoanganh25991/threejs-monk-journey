@@ -4,21 +4,20 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '32';
+const CACHE_VERSION = '34';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
-// Set this to true to force update without prompting the user
-const FORCE_UPDATE = false;
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 5058235;
-const TOTAL_CACHE_SIZE_MB = 4.82;
+const TOTAL_CACHE_SIZE_BYTES = 5072280;
+const TOTAL_CACHE_SIZE_MB = 4.84;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
   '',
   'manifest.json',
   'css/animations.css',
+  'css/death-screen.css',
   'css/dialog.css',
   'css/game-menu.css',
   'css/game.css',
@@ -196,6 +195,7 @@ const ASSETS_TO_CACHE = [
   'js/hud-manager/SkillTreeUI.js',
   'js/hud-manager/SkillsUI.js',
   'js/hud-manager/VirtualJoystickUI.js',
+  'js/interaction/InteractionSystem.js',
   'js/menu-system/ControlsDisplay.js',
   'js/menu-system/EnemyPreview.js',
   'js/menu-system/GameMenu.js',
