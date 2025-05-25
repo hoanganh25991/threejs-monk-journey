@@ -35,13 +35,18 @@ export class ReleaseTab extends SettingsTab {
      * @private
      */
     async initializeReleaseSettings() {
-        // Display current version
+        // Display current version (simplified)
         if (this.currentVersionSpan) {
-            const version = await this.fetchCacheVersion();
-            this.currentVersionSpan.textContent = version;
+            try {
+                const version = await this.fetchCacheVersion();
+                this.currentVersionSpan.textContent = version;
+            } catch (error) {
+                console.error('Error setting version display:', error);
+                this.currentVersionSpan.textContent = 'Current Version';
+            }
         }
         
-        // Set up update button
+        // Set up update button with simplified functionality
         if (this.updateToLatestButton) {
             this.updateToLatestButton.addEventListener('click', async () => {
                 // Show loading state
@@ -49,23 +54,29 @@ export class ReleaseTab extends SettingsTab {
                 this.updateToLatestButton.disabled = true;
                 
                 try {
-                    // Unregister service worker
+                    // Unregister all service workers
                     if ('serviceWorker' in navigator) {
                         const registrations = await navigator.serviceWorker.getRegistrations();
                         for (const registration of registrations) {
                             await registration.unregister();
+                            console.log('Service worker unregistered');
                         }
                     }
                     
-                    // Clear caches
+                    // Clear all caches
                     if ('caches' in window) {
                         const cacheNames = await caches.keys();
                         await Promise.all(
-                            cacheNames.map(cacheName => caches.delete(cacheName))
+                            cacheNames.map(cacheName => {
+                                console.log(`Deleting cache: ${cacheName}`);
+                                return caches.delete(cacheName);
+                            })
                         );
+                        console.log('All caches cleared');
                     }
                     
-                    // Reload the page
+                    // Force reload the page from server (bypass cache)
+                    console.log('Reloading page...');
                     window.location.reload(true);
                 } catch (error) {
                     console.error('Error updating to latest version:', error);
@@ -83,10 +94,10 @@ export class ReleaseTab extends SettingsTab {
 
     async fetchCacheVersion() {
         try {
-            // Fetch the service worker file
+            // Try to get the cache version from the service worker
             const response = await fetch('service-worker.js');
             if (!response.ok) {
-                throw new Error(`Failed to fetch service worker: ${response.status}`);
+                return 'Current Version';
             }
             
             // Get the text content
@@ -97,11 +108,12 @@ export class ReleaseTab extends SettingsTab {
             if (versionMatch && versionMatch[1]) {
                 return versionMatch[1];
             } else {
-                throw new Error('Could not find CACHE_VERSION in service-worker.js');
+                // If we can't find the version, just return a generic message
+                return 'Current Version';
             }
         } catch (error) {
             console.error('Error fetching cache version:', error);
-            return 'Unknown';
+            return 'Current Version';
         }
     }
 }
