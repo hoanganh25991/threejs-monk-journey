@@ -32,6 +32,7 @@ export class Player extends IPlayer {
         this.stats = new PlayerStats();
         this.inventory = new PlayerInventory();
         this.model = new PlayerModel(scene);
+        this.setGame(game);
         
         // Components that need to be initialized after model is created
         this.movement = null;

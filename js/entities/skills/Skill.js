@@ -59,7 +59,7 @@ export class Skill {
     
     /**
      * Set the game reference
-     * @param {Game} game - The game instance
+     * @param {import("../../game/Game.js").Game} game - The game instance
      */
     setGame(game) {
         this.game = game;

@@ -5,6 +5,11 @@ import { SkillEffect } from './SkillEffect.js';
  * Specialized effect for Wave of Light skill
  */
 export class WaveOfLightEffect extends SkillEffect {
+    
+    /**
+     * 
+     * @param {import("../skills/Skill.js").Skill} skill 
+     */
     constructor(skill) {
         super(skill);
         this.waveSpeed = 10; // Units per second
@@ -19,7 +24,6 @@ export class WaveOfLightEffect extends SkillEffect {
         this.radius = skill && skill.radius ? skill.radius : 2.0;
         this.color = skill && skill.color ? skill.color : 0xffffff;
         this.range = skill && skill.range ? skill.range : 10.0;
-        this.game = skill ? skill.game : null;
     }
 
     /**
@@ -29,8 +33,7 @@ export class WaveOfLightEffect extends SkillEffect {
      * @returns {THREE.Group} - The created effect
      */
     create(position, direction) {
-        position = position.clone();
-        position.y -= 3.0;
+        // Clone the position to avoid modifying the original vector
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
@@ -42,8 +45,9 @@ export class WaveOfLightEffect extends SkillEffect {
         // Create the Wave of Light effect (bell)
         this.createWaveEffect(effectGroup);
         
-        // Position effect
-        effectGroup.position.copy(position);
+        // Note: We don't need to position the effect here anymore
+        // as createWaveEffect will position it at either the enemy or hero position
+        // But we still need to set the rotation
         effectGroup.rotation.y = Math.atan2(direction.x, direction.z);
         
         // Store effect
@@ -205,37 +209,36 @@ export class WaveOfLightEffect extends SkillEffect {
         // Check if we have a game reference and can find a target enemy
         let targetPosition = null;
         
-        if (this.game && this.game.enemyManager) {
+        console.log
+        if (this.skill.game && this.skill.game.enemyManager) {
             // Try to find the nearest enemy within the skill's range
-            const nearestEnemy = this.game.enemyManager.findNearestEnemy(this.initialPosition, this.range);
+            const nearestEnemy = this.skill.game.enemyManager.findNearestEnemy(this.initialPosition, this.range);
+
+            console.log(this.range)
+            console.log({nearestEnemy})
             
             if (nearestEnemy) {
                 // Get enemy position
                 const enemyPosition = nearestEnemy.getPosition();
                 
-                // Calculate direction to enemy
-                const direction = new THREE.Vector3().subVectors(enemyPosition, this.initialPosition).normalize();
-                
                 // Calculate target position (at the enemy's location)
-                targetPosition = new THREE.Vector3(
-                    enemyPosition.x,
-                    this.initialPosition.y, // Keep the same Y height as the player
-                    enemyPosition.z
-                );
+                targetPosition = enemyPosition.clone();
                 
-                // Move the effect group to the target position
-                effectGroup.position.copy(targetPosition);
-                
-                console.debug(`Wave of Light targeting enemy at position: ${targetPosition.x}, ${targetPosition.z}`);
-                
-                // Show notification if UI manager is available
-                if (this.game.player && this.game.player.game && this.game.player.game.hudManager) {
-                    this.game.player.game.hudManager.showNotification(`Wave of Light targeting ${nearestEnemy.type}`);
-                }
+                console.log(`Wave of Light targeting enemy at position: ${targetPosition.x}, ${targetPosition.z}`);
             } else {
-                console.debug('No enemy in range for Wave of Light, dropping bell at current position');
+                // If no enemy found, use hero position
+                targetPosition = this.initialPosition.clone();
+                
+                console.log('No enemy in range for Wave of Light, casting at hero position');
             }
+        } else {
+            // If no game or enemy manager, use hero position
+            targetPosition = this.initialPosition.clone();
         }
+        
+        // Move the effect group to the target position
+        targetPosition.y -= 0.3;
+        effectGroup.position.copy(targetPosition);
         
         // Store animation state with configuration and target position
         this.bellState = {

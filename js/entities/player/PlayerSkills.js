@@ -11,6 +11,13 @@ import { SKILLS, BATTLE_SKILLS } from '../../config/skills.js';
 import { STORAGE_KEYS } from '../../config/storage-keys.js';
 
 export class PlayerSkills extends IPlayerSkills {
+    /**
+     * 
+     * @param {import("three").Scene} scene 
+     * @param {import("../player/PlayerStats.js")} playerStats 
+     * @param {import("three").Vector3} playerPosition 
+     * @param {Object} playerRotation 
+     */
     constructor(scene, playerStats, playerPosition, playerRotation) {
         super();
         
@@ -30,6 +37,10 @@ export class PlayerSkills extends IPlayerSkills {
         this.customSkillsEnabled = localStorage.getItem(STORAGE_KEYS.CUSTOM_SKILLS) === 'true';
     }
     
+    /**
+     * 
+     * @param {import("../../game/Game.js").Game} game 
+     */
     setGame(game) {
         this.game = game;
     }
