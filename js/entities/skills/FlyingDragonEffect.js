@@ -58,6 +58,7 @@ export class FlyingDragonEffect extends SkillEffect {
         this.maxKicks = 7; // Number of kicks to perform
         this.kickInterval = 0.3; // Time between kicks
         this.timeSinceLastKick = 0;
+        this.radius = skill.radius || 5;
     }
 
     /**
@@ -134,7 +135,7 @@ export class FlyingDragonEffect extends SkillEffect {
         dragonGroup.add(dragonModel);
         
         // Scale the model appropriately
-        const scale = 1.0; // Adjust scale as needed for the model
+        const scale = this.radius; // Adjust scale as needed for the model
         dragonModel.scale.set(scale, scale, scale);
         
         // Create energy particles around the dragon
@@ -324,7 +325,7 @@ export class FlyingDragonEffect extends SkillEffect {
                 model.position.y = Math.sin(this.elapsedTime * 2) * 0.1;
                 
                 // Add subtle scale pulsing
-                const pulseScale = 3.0 + 0.05 * Math.sin(this.elapsedTime * 3);
+                const pulseScale = this.radius + 0.05 * Math.sin(this.elapsedTime * 3);
                 model.scale.set(pulseScale, pulseScale, pulseScale);
                 
                 // Update material opacity for pulsing effect
