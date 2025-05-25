@@ -4,13 +4,13 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '35';
+const CACHE_VERSION = '36';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 5080624;
-const TOTAL_CACHE_SIZE_MB = 4.85;
+const TOTAL_CACHE_SIZE_BYTES = 6171046;
+const TOTAL_CACHE_SIZE_MB = 5.89;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
@@ -270,18 +270,33 @@ const ASSETS_TO_CACHE = [
   'assets/audio/bell_ring.mp3',
   'assets/audio/boss_death.mp3',
   'assets/audio/boss_theme.mp3',
+  'assets/audio/breath_of_heaven.mp3',
   'assets/audio/button_click.mp3',
+  'assets/audio/chain_impact.mp3',
+  'assets/audio/chains_break.mp3',
   'assets/audio/chest_open.mp3',
   'assets/audio/cyclone_strike.mp3',
+  'assets/audio/deadly_reach_cast.mp3',
+  'assets/audio/deadly_reach_end.mp3',
+  'assets/audio/deadly_reach_impact.mp3',
+  'assets/audio/divine_echo.mp3',
   'assets/audio/door_open.mp3',
+  'assets/audio/dragon_land.mp3',
+  'assets/audio/dragon_strike.mp3',
   'assets/audio/enemy_attack.mp3',
   'assets/audio/enemy_death.mp3',
   'assets/audio/enemy_hit.mp3',
   'assets/audio/exploding_palm.mp3',
   'assets/audio/fist_of_thunder.mp3',
+  'assets/audio/flying_dragon.mp3',
+  'assets/audio/flying_kick.mp3',
+  'assets/audio/healing_pulse.mp3',
+  'assets/audio/imprisoned_fists.mp3',
   'assets/audio/inner_sanctuary.mp3',
   'assets/audio/inventory_open.mp3',
   'assets/audio/item_pickup.mp3',
+  'assets/audio/kick_impact.mp3',
+  'assets/audio/kick_land.mp3',
   'assets/audio/level_up.mp3',
   'assets/audio/main_theme.mp3',
   'assets/audio/mark_applied.mp3',

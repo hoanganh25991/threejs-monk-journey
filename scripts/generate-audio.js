@@ -114,8 +114,9 @@ function generateAudioFiles() {
             
             if (params.noise && params.noise > 0) {
                 // Add noise by mixing with white noise
+                // Using a simpler approach to avoid SoX segmentation faults
                 const noiseLevel = params.noise;
-                command += ` synth ${params.duration} whitenoise vol ${noiseLevel} : mix`;
+                command += ` synth ${params.duration} whitenoise vol ${noiseLevel}`;
             }
             
             if (params.filter) {
@@ -158,64 +159,130 @@ function generateAudioFiles() {
                 if (error) {
                     console.error(`Error generating ${filename}:`, error);
                     console.error(`Command was: ${command}`);
+                    
+                    // Try a simplified fallback command if the original fails
+                    console.debug(`Attempting simplified fallback for ${filename}...`);
+                    
+                    // Create a simpler command without complex effects
+                    let fallbackCommand = '';
+                    if (params.type === 'sine') {
+                        fallbackCommand = `sox -n "${outputPath}" synth ${params.duration} sine ${params.frequency} vol ${params.volume}`;
+                    } else if (params.type === 'square') {
+                        fallbackCommand = `sox -n "${outputPath}" synth ${params.duration} square ${params.frequency} vol ${params.volume}`;
+                    } else if (params.type === 'sawtooth') {
+                        fallbackCommand = `sox -n "${outputPath}" synth ${params.duration} sawtooth ${params.frequency} vol ${params.volume}`;
+                    } else if (params.type === 'triangle') {
+                        fallbackCommand = `sox -n "${outputPath}" synth ${params.duration} triangle ${params.frequency} vol ${params.volume}`;
+                    }
+                    
+                    // Add basic fade if needed
+                    if (params.decay) {
+                        fallbackCommand += ' fade 0 ' + params.duration + ' ' + params.duration;
+                    }
+                    
+                    // Try the fallback command
+                    exec(fallbackCommand, (fallbackError, fallbackStdout, fallbackStderr) => {
+                        if (fallbackError) {
+                            console.error(`Fallback also failed for ${filename}:`, fallbackError);
+                            // Create a placeholder file as last resort
+                            generatePlaceholderFile(filename);
+                        } else {
+                            console.debug(`Generated ${filename} using fallback command`);
+                        }
+                    });
+                    
                     return;
                 }
-                console.debug(`Generated ${filename}`);
                 
-                // Special handling for music files
-                if (params.melody && filename.includes('theme')) {
-                    console.debug(`Generated ${filename} (music track)`);
+                // Verify the file was created successfully
+                if (fs.existsSync(outputPath) && fs.statSync(outputPath).size > 0) {
+                    console.debug(`✅ Successfully generated ${filename}`);
                     
-                    // For music files with tempo, we could add additional processing here
-                    if (params.tempo) {
-                        console.debug(`Music tempo: ${params.tempo} BPM`);
+                    // Special handling for music files
+                    if (params.melody && filename.includes('theme')) {
+                        console.debug(`Generated ${filename} (music track)`);
+                        
+                        // For music files with tempo, we could add additional processing here
+                        if (params.tempo) {
+                            console.debug(`Music tempo: ${params.tempo} BPM`);
+                        }
                     }
+                } else {
+                    console.error(`❌ File generation failed for ${filename} (file is empty or doesn't exist)`);
+                    // Create a placeholder as last resort
+                    generatePlaceholderFile(filename);
                 }
             });
         });
     });
 }
 
+// Generate a placeholder file for a specific sound
+function generatePlaceholderFile(filename) {
+    console.debug(`Generating placeholder for ${filename}...`);
+    
+    const outputPath = path.join(audioDir, filename);
+    
+    // Create an empty file with a valid WAV header
+    fs.writeFileSync(outputPath, Buffer.from([
+        // Simple WAV header (44 bytes)
+        0x52, 0x49, 0x46, 0x46, // "RIFF"
+        0x24, 0x00, 0x00, 0x00, // Chunk size (36 + data size)
+        0x57, 0x41, 0x56, 0x45, // "WAVE"
+        0x66, 0x6D, 0x74, 0x20, // "fmt "
+        0x10, 0x00, 0x00, 0x00, // Subchunk1 size (16)
+        0x01, 0x00,             // Audio format (1 = PCM)
+        0x01, 0x00,             // Number of channels (1)
+        0x44, 0xAC, 0x00, 0x00, // Sample rate (44100)
+        0x88, 0x58, 0x01, 0x00, // Byte rate (44100 * 1 * 2)
+        0x02, 0x00,             // Block align (1 * 2)
+        0x10, 0x00,             // Bits per sample (16)
+        0x64, 0x61, 0x74, 0x61, // "data"
+        0x00, 0x00, 0x00, 0x00  // Data size (0)
+    ]));
+    
+    console.debug(`Generated placeholder for ${filename}`);
+}
+
 // Generate placeholder audio files if SoX is not available
 function generatePlaceholderFiles() {
-    console.debug('Generating placeholder audio files...');
+    console.debug('Generating placeholder audio files for all sounds...');
     
     Object.keys(sounds).forEach(filename => {
-        const outputPath = path.join(audioDir, filename);
-        
-        // Create an empty file
-        fs.writeFileSync(outputPath, Buffer.from([
-            // Simple WAV header (44 bytes)
-            0x52, 0x49, 0x46, 0x46, // "RIFF"
-            0x24, 0x00, 0x00, 0x00, // Chunk size (36 + data size)
-            0x57, 0x41, 0x56, 0x45, // "WAVE"
-            0x66, 0x6D, 0x74, 0x20, // "fmt "
-            0x10, 0x00, 0x00, 0x00, // Subchunk1 size (16)
-            0x01, 0x00,             // Audio format (1 = PCM)
-            0x01, 0x00,             // Number of channels (1)
-            0x44, 0xAC, 0x00, 0x00, // Sample rate (44100)
-            0x88, 0x58, 0x01, 0x00, // Byte rate (44100 * 1 * 2)
-            0x02, 0x00,             // Block align (1 * 2)
-            0x10, 0x00,             // Bits per sample (16)
-            0x64, 0x61, 0x74, 0x61, // "data"
-            0x00, 0x00, 0x00, 0x00  // Data size (0)
-        ]));
-        
-        console.debug(`Generated placeholder for ${filename}`);
+        generatePlaceholderFile(filename);
     });
 }
 
 // Try to generate audio files with SoX, fall back to placeholders
 generateAudioFiles();
 
-// If SoX fails, generate placeholders after a delay
+// If SoX fails, check for empty files after a delay and generate placeholders
 setTimeout(() => {
-    // Check if any files were created
-    const files = fs.readdirSync(audioDir);
-    if (files.length === 0) {
-        console.debug('SoX audio generation failed or took too long, creating placeholders...');
-        generatePlaceholderFiles();
+    console.debug('Checking for empty or missing audio files...');
+    
+    // Get all sound files that should exist
+    const expectedFiles = Object.keys(sounds);
+    let emptyFiles = [];
+    
+    // Check each expected file
+    expectedFiles.forEach(filename => {
+        const filePath = path.join(audioDir, filename);
+        
+        // Check if file exists and has content
+        if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
+            emptyFiles.push(filename);
+        }
+    });
+    
+    // Generate placeholders for any empty or missing files
+    if (emptyFiles.length > 0) {
+        console.debug(`Found ${emptyFiles.length} empty or missing audio files, creating placeholders...`);
+        emptyFiles.forEach(filename => {
+            generatePlaceholderFile(filename);
+        });
+    } else {
+        console.debug('All audio files were generated successfully!');
     }
-}, 5000);
+}, 10000); // Increased timeout to allow more time for generation
 
 console.debug('Audio generation script started. Check the assets/audio directory for the generated files.');
