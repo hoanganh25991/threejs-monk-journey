@@ -5,6 +5,10 @@ import * as THREE from 'three';
  * Provides common functionality for creating and updating skill effects
  */
 export class SkillEffect {
+    
+    /**
+     * @param {import("../skills/Skill.js").Skill} skill 
+     */
     constructor(skill) {
         this.skill = skill;
         this.effect = null;

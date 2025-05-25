@@ -3,8 +3,54 @@ import { SkillEffectFactory } from './SkillEffectFactory.js';
 
 /**
  * Base class for all skills
+ * @class
  */
 export class Skill {
+    /** @type {string} */
+    name;
+    /** @type {string} */
+    description;
+    /** @type {string} */
+    type;
+    /** @type {number} */
+    damage;
+    /** @type {number} */
+    manaCost;
+    /** @type {number} */
+    cooldown;
+    /** @type {number} */
+    range;
+    /** @type {number} */
+    radius;
+    /** @type {number} */
+    duration;
+    /** @type {number} */
+    color;
+    /** @type {number} */
+    hits;
+    /** @type {string} */
+    icon;
+    /** @type {string} */
+    variant;
+    /** @type {Object} */
+    sounds;
+    /** @type {number} */
+    currentCooldown;
+    /** @type {boolean} */
+    isActive;
+    /** @type {number} */
+    elapsedTime;
+    /** @type {THREE.Vector3} */
+    position;
+    /** @type {THREE.Vector3} */
+    direction;
+    /** @type {import("../../game/Game.js").Game} */
+    game;
+    /** @type {string} */
+    instanceId;
+    /** @type {Object} */
+    effectHandler;
+
     /**
      * Create a new skill
      * @param {Object} config - Skill configuration

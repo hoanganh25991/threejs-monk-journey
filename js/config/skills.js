@@ -2,7 +2,7 @@
 import { SKILL_ICONS } from './skill-icons.js';
 // Type definitions are available in skill-types.d.ts
 // @ts-check
-/** @typedef {import('./skill-types').SkillConfig} SkillConfig */
+/** @typedef {import('./config.ts').SkillConfig} SkillConfig */
 
 // Primary attacks - basic attacks that don't consume mana
 /** @type {SkillConfig[]} */
