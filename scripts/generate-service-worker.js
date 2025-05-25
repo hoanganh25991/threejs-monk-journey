@@ -150,14 +150,12 @@ function createServiceWorker() {
   const serviceWorkerContent = `/**
  * Monk Journey PWA Service Worker
  * Handles caching and updates for the game
+ * Implements silent updates - downloads in background and applies on next app load
  */
 
 const CACHE_NAME = 'monk-journey-cache';
 const CACHE_VERSION = '1';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
-
-// Set this to true to force update without prompting the user
-const FORCE_UPDATE = false;
 
 // Total cache size in bytes and MB
 const TOTAL_CACHE_SIZE_BYTES = ${totalSizeBytes};
@@ -181,6 +179,16 @@ function sendProgressUpdate(completed, total, currentFile, loadedBytes, totalByt
       currentFile,
       loadedBytes,
       totalBytes,
+      totalSizeMB: TOTAL_CACHE_SIZE_MB
+    });
+  }
+}
+
+// Function to send update complete notification
+function sendUpdateCompleteNotification() {
+  if (messagePort) {
+    messagePort.postMessage({
+      type: 'UPDATE_COMPLETE',
       totalSizeMB: TOTAL_CACHE_SIZE_MB
     });
   }
@@ -210,8 +218,10 @@ async function cacheFilesWithProgress(cache) {
       // Get file size (or 0 if not available)
       const fileSize = FILE_SIZES[url] || 0;
       
-      // Send progress update before starting the fetch
-      sendProgressUpdate(completed, total, url, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
+      // Send progress update before starting the fetch (only in debug mode)
+      if (self.registration.scope.includes('debug=true')) {
+        sendProgressUpdate(completed, total, url, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
+      }
       
       // Handle empty URL (root path) specially
       const fetchUrl = url === '' ? './' : url;
@@ -225,19 +235,19 @@ async function cacheFilesWithProgress(cache) {
         completed++;
         loadedBytes += fileSize;
         
-        // Send progress update after successful caching
-        sendProgressUpdate(completed, total, url, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
+        // Send progress update after successful caching (only in debug mode)
+        if (self.registration.scope.includes('debug=true')) {
+          sendProgressUpdate(completed, total, url, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
+        }
       } else {
         console.warn(\`Failed to cache \${url}: \${response.status} \${response.statusText}\`);
         // Still increment completed to keep progress moving
         completed++;
-        sendProgressUpdate(completed, total, \`Failed: \${url}\`, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
       }
     } catch (error) {
       console.error(\`Error caching \${url}:\`, error);
       // Still increment completed to keep progress moving
       completed++;
-      sendProgressUpdate(completed, total, \`Error: \${url}\`, loadedBytes, TOTAL_CACHE_SIZE_BYTES);
     }
   }
   
@@ -249,12 +259,13 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_KEY)
       .then(cache => {
-        console.debug('Caching app assets with progress tracking');
-        console.debug(\`Total cache size: \${TOTAL_CACHE_SIZE_MB} MB with progress tracking\`);
+        console.debug('Caching app assets in background');
+        console.debug(\`Total cache size: \${TOTAL_CACHE_SIZE_MB} MB\`);
         return cacheFilesWithProgress(cache);
       })
       .then(completedCount => {
         console.debug(\`Cached \${completedCount} files successfully\`);
+        // Skip waiting to activate the new service worker immediately
         return self.skipWaiting();
       })
       .catch(error => {
@@ -263,7 +274,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and notify clients
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -276,7 +287,19 @@ self.addEventListener('activate', event => {
         })
       );
     }).then(() => {
+      // Claim clients to ensure the new service worker takes control immediately
       return self.clients.claim();
+    }).then(() => {
+      // Notify clients that update is complete
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          // Send update complete notification
+          client.postMessage({
+            type: 'UPDATE_COMPLETE',
+            totalSizeMB: TOTAL_CACHE_SIZE_MB
+          });
+        });
+      });
     })
   );
 });
@@ -312,7 +335,7 @@ self.addEventListener('fetch', event => {
   console.debug(`📦 Cache version set to: 1`);
   console.debug(`🔢 Total files to cache: ${filesToCache.length}`);
   console.debug(`📊 Total cache size: ${totalSizeMB} MB`);
-  console.debug(`🚫 FORCE_UPDATE is set to: false`);
+  console.debug(`🔄 Silent updates enabled - new versions will be applied automatically`);
   console.debug(`ℹ️ Background caching enabled for faster updates`);
 }
 
@@ -361,11 +384,11 @@ function updateServiceWorker() {
       );
     }
     
-    // Make sure FORCE_UPDATE flag exists
-    if (!serviceWorkerContent.includes('const FORCE_UPDATE =')) {
+    // Remove FORCE_UPDATE flag if it exists (we're using silent updates now)
+    if (serviceWorkerContent.includes('const FORCE_UPDATE =')) {
       serviceWorkerContent = serviceWorkerContent.replace(
-        /(const CACHE_KEY = CACHE_NAME \+ '-v' \+ CACHE_VERSION;)/,
-        `$1\n\n// Set this to true to force update without prompting the user\nconst FORCE_UPDATE = false;`
+        /\/\/ Set this to true to force update without prompting the user\nconst FORCE_UPDATE = (?:true|false);(\n|$)/,
+        ''
       );
     }
     

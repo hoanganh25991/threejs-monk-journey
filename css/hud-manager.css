@@ -516,19 +516,5 @@
     transition: opacity 0.2s ease;
 }
 
-/* Update Notification */
-#update-notification {
-    display: none;
-    position: fixed;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.3);
-    color: white;
-    padding: var(--padding-medium) var(--padding-large);
-    border-radius: 5px;
-    z-index: 100;
-    text-align: center;
-    min-width: 300px;
-    max-width: 80%;
-}
+
+
