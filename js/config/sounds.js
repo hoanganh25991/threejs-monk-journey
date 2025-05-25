@@ -533,13 +533,13 @@ export const MUSIC = {
         file: 'main_theme.mp3',
         volume: 0.1,
         loop: true,
-        simulated: {
-            frequency: 220,
-            duration: 5.0,
-            type: 'sine',
-            decay: false,
-            melody: true
-        }
+        // simulated: {
+        //     frequency: 220,
+        //     duration: 5.0,
+        //     type: 'sine',
+        //     decay: false,
+        //     melody: true
+        // }
     },
     battleTheme: {
         id: 'battleTheme',
@@ -560,14 +560,14 @@ export const MUSIC = {
         file: 'boss_theme.mp3',
         volume: 0.1,
         loop: true,
-        simulated: {
-            frequency: 180,
-            duration: 5.0,
-            type: 'sawtooth',
-            decay: false,
-            melody: true,
-            tempo: 160
-        }
+        // simulated: {
+        //     frequency: 180,
+        //     duration: 5.0,
+        //     type: 'sawtooth',
+        //     decay: false,
+        //     melody: true,
+        //     tempo: 160
+        // }
     }
 };
 
