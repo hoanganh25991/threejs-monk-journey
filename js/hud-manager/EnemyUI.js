@@ -47,9 +47,9 @@ export class EnemyUI extends UIComponent {
      * Update the enemy UI
      */
     update() {
-        // Find closest enemy
+        // Find closest enemy - increased detection range from 10 to 30 units
         const playerPosition = this.game.player.getPosition();
-        const closestEnemy = this.game.enemyManager.getClosestEnemy(playerPosition, 10);
+        const closestEnemy = this.game.enemyManager.getClosestEnemy(playerPosition, 30);
         
         if (closestEnemy && !closestEnemy.isDead()) {
             // Show enemy health bar
