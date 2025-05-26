@@ -68,3 +68,6 @@
 
 /* Import death screen styles */
 @import 'death-screen.css';
+
+/* Import camera control styles */
+@import 'camera-control.css';

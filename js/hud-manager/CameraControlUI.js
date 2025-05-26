@@ -55,75 +55,18 @@ export class CameraControlUI extends UIComponent {
     }
     
     /**
-     * Create visual indicator elements for camera control
+     * Get references to the visual indicator elements for camera control
      */
     createVisualIndicator() {
-        // Create container for the camera control indicator
-        const indicatorContainer = document.createElement('div');
-        indicatorContainer.id = 'camera-control-indicator';
-        indicatorContainer.style.position = 'absolute';
-        indicatorContainer.style.pointerEvents = 'auto'; // Allow touch events to be captured
-        indicatorContainer.style.zIndex = '1000';
-        indicatorContainer.style.display = 'none'; // Initially hidden
+        // Get references to the existing elements in the DOM
+        this.indicatorContainer = document.getElementById('camera-control-indicator');
+        this.baseElement = document.getElementById('camera-control-base');
+        this.handleElement = document.getElementById('camera-control-handle');
         
-        // Create base circle
-        const baseElement = document.createElement('div');
-        baseElement.id = 'camera-control-base';
-        baseElement.style.position = 'absolute';
-        baseElement.style.width = '80px';
-        baseElement.style.height = '80px';
-        baseElement.style.borderRadius = '50%';
-        baseElement.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
-        baseElement.style.border = '2px solid rgba(255, 255, 255, 0.5)';
-        baseElement.style.transform = 'translate(-50%, -50%)';
-        
-        // Create handle/indicator
-        const handleElement = document.createElement('div');
-        handleElement.id = 'camera-control-handle';
-        handleElement.style.position = 'absolute';
-        handleElement.style.width = '30px';
-        handleElement.style.height = '30px';
-        handleElement.style.borderRadius = '50%';
-        handleElement.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
-        handleElement.style.transform = 'translate(-50%, -50%)';
-        
-        // Add direction indicators (arrows)
-        const arrowsContainer = document.createElement('div');
-        arrowsContainer.style.position = 'absolute';
-        arrowsContainer.style.width = '100%';
-        arrowsContainer.style.height = '100%';
-        
-        // Add arrows for each direction
-        const directions = [
-            { name: 'up', symbol: '↑', top: '5px', left: '50%', transform: 'translateX(-50%)' },
-            { name: 'right', symbol: '→', top: '50%', left: 'calc(100% - 15px)', transform: 'translateY(-50%)' },
-            { name: 'down', symbol: '↓', top: 'calc(100% - 15px)', left: '50%', transform: 'translateX(-50%)' },
-            { name: 'left', symbol: '←', top: '50%', left: '5px', transform: 'translateY(-50%)' }
-        ];
-        
-        directions.forEach(dir => {
-            const arrow = document.createElement('div');
-            arrow.textContent = dir.symbol;
-            arrow.style.position = 'absolute';
-            arrow.style.top = dir.top;
-            arrow.style.left = dir.left;
-            arrow.style.transform = dir.transform;
-            arrow.style.color = 'white';
-            arrow.style.fontSize = '16px';
-            arrow.style.fontWeight = 'bold';
-            arrowsContainer.appendChild(arrow);
-        });
-        
-        // Add elements to the DOM
-        baseElement.appendChild(arrowsContainer);
-        indicatorContainer.appendChild(baseElement);
-        indicatorContainer.appendChild(handleElement);
-        document.body.appendChild(indicatorContainer);
-        
-        // Store references
-        this.indicatorContainer = indicatorContainer;
-        this.baseElement = baseElement;
-        this.handleElement = handleElement;
+        // Ensure the indicator is initially hidden
+        if (this.indicatorContainer) {
+            this.indicatorContainer.style.display = 'none';
+        }
     }
     
     /**
@@ -382,16 +325,16 @@ export class CameraControlUI extends UIComponent {
         const canvas = document.getElementById('game-canvas');
         if (canvas) {
             // We can't remove anonymous function listeners directly
-            // But we can ensure the indicator is removed
+            // But we can ensure the indicator is hidden
         }
         
         // We can remove the named handlers we stored as properties
         document.removeEventListener('mousemove', this.handleMouseMove);
         document.removeEventListener('mouseup', this.handleMouseUp);
         
-        // Remove the indicator from the DOM
-        if (this.indicatorContainer && this.indicatorContainer.parentNode) {
-            this.indicatorContainer.parentNode.removeChild(this.indicatorContainer);
+        // Hide the indicator instead of removing it
+        if (this.indicatorContainer) {
+            this.indicatorContainer.style.display = 'none';
         }
     }
 }

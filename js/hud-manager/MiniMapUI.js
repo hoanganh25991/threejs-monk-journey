@@ -194,10 +194,10 @@ export class MiniMapUI extends UIComponent {
         // Set exact dimensions for both container and canvas
         this.updateMapSize();
         
-        // Hide the map initially (since isVisible is false by default)
-        if (this.mapElement) {
-            this.mapElement.style.display = 'none';
-        }
+        // // Hide the map initially (since isVisible is false by default)
+        // if (this.mapElement) {
+        //     this.mapElement.style.display = 'none';
+        // }
         
         // Add window resize listener to adjust map size on screen size changes
         window.addEventListener('resize', () => {
