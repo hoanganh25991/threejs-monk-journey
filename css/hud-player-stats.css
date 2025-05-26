@@ -1,0 +1,190 @@
+/* 
+ * hud-player-stats.css - Player stats display
+ * Part of the Diablo Immortal CSS optimization
+ * This file contains styles for player stats, health, mana, and experience bars
+ */
+
+/* Player Stats Container */
+#player-stats-container {
+    width: 200px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #333;
+    border-radius: 5px;
+    padding: var(--padding-medium);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+    pointer-events: auto; /* Enable touch/click events */
+    cursor: pointer;
+}
+
+/* CSS-only solution for opacity change on hover/active */
+#player-stats-container:hover,
+#player-stats-container:active {
+    opacity: 1;
+    animation: fadeOut 3s forwards;
+    animation-delay: 3s; /* Start fading out after 3 seconds */
+    animation-play-state: running;
+}
+
+#player-stats-container:hover,
+#player-stats-container:active {
+    animation-play-state: paused; /* Pause the animation while hovering/active */
+}
+
+#player-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+#player-portrait {
+    width: 50px;
+    height: 50px;
+    background-color: #444;
+    border-radius: 50%;
+    margin-right: 10px;
+    overflow: hidden;
+    border: 2px solid #666;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+}
+
+#player-info {
+    flex: 1;
+}
+
+#player-name {
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+#level-indicator {
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px black;
+    color: #ffcc66;
+}
+
+/* Health Bar */
+#health-bar-container {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    border-radius: 3px;
+    margin-bottom: 5px;
+    overflow: hidden;
+}
+
+#health-bar {
+    height: 100%;
+    width: 100%;
+    background-color: #f00;
+    border-radius: 2px;
+}
+
+#health-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    text-shadow: 1px 1px 2px black;
+    white-space: nowrap;
+}
+
+#health-icon {
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 14px;
+}
+
+/* Mana Bar */
+#mana-bar-container {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+#mana-bar {
+    height: 100%;
+    width: 100%;
+    background-color: #00f;
+    border-radius: 2px;
+}
+
+#mana-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    text-shadow: 1px 1px 2px black;
+    white-space: nowrap;
+}
+
+#mana-icon {
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 14px;
+}
+
+/* Experience Bar */
+#experience-bar-container {
+    position: relative;
+    width: 100%;
+    height: 15px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    border-radius: 3px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+#experience-bar {
+    height: 100%;
+    width: 0%;
+    background-color: #ffcc00;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+#experience-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 10px;
+    text-shadow: 1px 1px 2px black;
+    white-space: nowrap;
+}
+
+#experience-icon {
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 12px;
+}
