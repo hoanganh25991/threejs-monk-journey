@@ -276,23 +276,24 @@ export class InputHandler {
     }
     
     getMovementDirection() {
-        const direction = new THREE.Vector3(0, 0, 0);
+        // Get raw input direction in local space (relative to screen)
+        const localDirection = new THREE.Vector3(0, 0, 0);
         
         // Check for keyboard input using movement keys from config
         if (MOVEMENT_KEYS.FORWARD.some(key => this.isKeyPressed(key))) {
-            direction.z -= 1;
+            localDirection.z -= 1;
         }
         
         if (MOVEMENT_KEYS.BACKWARD.some(key => this.isKeyPressed(key))) {
-            direction.z += 1;
+            localDirection.z += 1;
         }
         
         if (MOVEMENT_KEYS.LEFT.some(key => this.isKeyPressed(key))) {
-            direction.x -= 1;
+            localDirection.x -= 1;
         }
         
         if (MOVEMENT_KEYS.RIGHT.some(key => this.isKeyPressed(key))) {
-            direction.x += 1;
+            localDirection.x += 1;
         }
         
         // Check for joystick input (if available)
@@ -302,17 +303,50 @@ export class InputHandler {
             // Only use joystick if it's active (has non-zero values)
             if (joystickDir && (joystickDir.x !== 0 || joystickDir.y !== 0)) {
                 // Override keyboard input with joystick input
-                direction.x = joystickDir.x;
-                direction.z = joystickDir.y; // Y axis of joystick maps to Z axis in 3D space
+                localDirection.x = joystickDir.x;
+                localDirection.z = joystickDir.y; // Y axis of joystick maps to Z axis in 3D space
             }
         }
         
-        // Normalize direction vector
-        if (direction.length() > 0) {
-            direction.normalize();
+        // If no input, return zero vector
+        if (localDirection.length() === 0) {
+            return localDirection;
         }
         
-        return direction;
+        // Normalize the local direction
+        localDirection.normalize();
+        
+        // Transform the local direction to world space based on camera rotation
+        const worldDirection = new THREE.Vector3();
+        
+        // Get camera rotation around Y axis (horizontal rotation)
+        let cameraRotationY = 0;
+        
+        // If we have a camera control UI, use its rotation
+        if (this.game && this.game.hudManager && this.game.hudManager.components && 
+            this.game.hudManager.components.cameraControlUI) {
+            cameraRotationY = this.game.hudManager.components.cameraControlUI.cameraState.rotationY;
+        } 
+        // Fallback to camera's rotation if available
+        else if (this.game && this.game.camera) {
+            cameraRotationY = this.game.camera.rotation.y;
+        }
+        
+        // Create rotation matrix for the camera's Y rotation
+        const rotationMatrix = new THREE.Matrix4().makeRotationY(cameraRotationY);
+        
+        // Apply rotation to the local direction to get world direction
+        worldDirection.copy(localDirection).applyMatrix4(rotationMatrix);
+        
+        // Ensure Y component is zero (we only want horizontal movement)
+        worldDirection.y = 0;
+        
+        // Normalize again to ensure unit length
+        if (worldDirection.length() > 0) {
+            worldDirection.normalize();
+        }
+        
+        return worldDirection;
     }
     
     // Mouse target and state methods removed as per requirements
