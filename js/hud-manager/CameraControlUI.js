@@ -23,8 +23,10 @@ export class CameraControlUI extends UIComponent {
             currentY: 0,
             rotationX: 0,
             rotationY: 0,
-            sensitivity: 0.01 // Increased sensitivity for more responsive rotation
         };
+        
+        // Default camera distance (can be modified via settings)
+        this.cameraDistance = 20;
         
         // Store the initial camera position and rotation
         this.initialCameraPosition = null;
@@ -54,7 +56,29 @@ export class CameraControlUI extends UIComponent {
             this.initialCameraRotation = this.game.camera.rotation.clone();
         }
         
+        // Load camera distance from settings if available
+        this.loadCameraSettings();
+        
         return true;
+    }
+    
+    /**
+     * Load camera settings from localStorage
+     */
+    loadCameraSettings() {
+        // Import storage keys
+        import('../config/storage-keys.js').then(module => {
+            const STORAGE_KEYS = module.STORAGE_KEYS;
+            
+            // Load camera zoom setting
+            const storedZoom = localStorage.getItem(STORAGE_KEYS.CAMERA_ZOOM);
+            if (storedZoom) {
+                this.cameraDistance = parseInt(storedZoom);
+                console.log("Loaded camera distance from settings:", this.cameraDistance);
+            }
+        }).catch(error => {
+            console.error("Error loading storage keys:", error);
+        });
     }
     
     /**
@@ -251,8 +275,8 @@ export class CameraControlUI extends UIComponent {
         
         // Calculate new rotation based on delta and sensitivity
         // Use different sensitivity for horizontal and vertical movement
-        const horizontalSensitivity = 0.01; // For left/right movement
-        const verticalSensitivity = 0.025;  // Significantly increased for up/down movement
+        const horizontalSensitivity = 0.005; // Reduced for left/right movement
+        const verticalSensitivity = 0.005;    // Reduced for up/down movement
         
         // Calculate horizontal rotation (around Y axis)
         // Accumulate rotation from previous state
@@ -346,8 +370,8 @@ export class CameraControlUI extends UIComponent {
         const playerPosition = this.game.player.getPosition();
         console.log("Player position:", playerPosition);
         
-        // Calculate camera distance from player
-        const distance = 20; // Adjust this value to control camera distance
+        // Use the camera distance from settings or default
+        const distance = this.cameraDistance;
         
         // Create a new THREE.Spherical to handle the orbital position calculation
         // This is a more reliable way to position a camera in an orbit
@@ -488,6 +512,40 @@ export class CameraControlUI extends UIComponent {
             this.indicatorContainer.style.display = 'none';
         }
         
+        // Check if the drag was minimal (user just tapped or made a very small movement)
+        const dragDistanceX = Math.abs(this.cameraState.currentX - this.cameraState.startX);
+        const dragDistanceY = Math.abs(this.cameraState.currentY - this.cameraState.startY);
+        const minDragDistance = 5; // Threshold in pixels
+        
+        if (dragDistanceX < minDragDistance && dragDistanceY < minDragDistance) {
+            // If it was just a tap or minimal movement, reset to the initial camera position
+            // This allows users to quickly return to the default view
+            if (this.initialCameraPosition && this.initialCameraRotation && this.game && this.game.camera) {
+                // Calculate the initial rotation values based on the initial position
+                if (this.game.player) {
+                    const playerPosition = this.game.player.getPosition();
+                    const initialPos = this.initialCameraPosition;
+                    
+                    // Calculate the horizontal angle (around Y axis)
+                    const dx = initialPos.x - playerPosition.x;
+                    const dz = initialPos.z - playerPosition.z;
+                    const horizontalAngle = Math.atan2(dx, dz);
+                    
+                    // Calculate the vertical angle (around X axis)
+                    const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
+                    const dy = initialPos.y - (playerPosition.y + 10);
+                    const verticalAngle = Math.atan2(dy, horizontalDistance);
+                    
+                    // Store the calculated angles
+                    this.cameraState.rotationY = horizontalAngle;
+                    this.cameraState.rotationX = verticalAngle;
+                    
+                    // Update camera to the initial position
+                    this.updateCameraOrbit(verticalAngle, horizontalAngle);
+                }
+            }
+        }
+        
         // Keep the camera update pending flag true
         // This ensures the camera position is maintained even after the control is released
         // The player should be able to look around and maintain that view
@@ -509,8 +567,8 @@ export class CameraControlUI extends UIComponent {
                 // Get player position
                 const playerPosition = this.game.player.getPosition();
                 
-                // Calculate camera distance from player
-                const distance = 20; // Same as in updateCameraOrbit
+                // Use the camera distance from settings or default
+                const distance = this.cameraDistance;
                 
                 // Create a new THREE.Spherical to handle the orbital position calculation
                 const spherical = new THREE.Spherical(

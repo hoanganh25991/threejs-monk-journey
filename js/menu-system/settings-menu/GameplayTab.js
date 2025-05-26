@@ -19,6 +19,10 @@ export class GameplayTab extends SettingsTab {
         this.difficultySelect = document.getElementById('difficulty-select');
         this.customSkillsCheckbox = document.getElementById('custom-skills-checkbox');
         
+        // Camera settings
+        this.cameraZoomSlider = document.getElementById('camera-zoom-slider');
+        this.cameraZoomValue = document.getElementById('camera-zoom-value');
+        
         this.init();
     }
     
@@ -73,6 +77,45 @@ export class GameplayTab extends SettingsTab {
             });
         }
         
+        // Initialize camera zoom slider if it exists
+        if (this.cameraZoomSlider) {
+            // Set min, max and default values
+            this.cameraZoomSlider.min = 10;  // Closest zoom (10 units)
+            this.cameraZoomSlider.max = 30;  // Furthest zoom (30 units)
+            this.cameraZoomSlider.step = 1;  // 1 unit increments
+            
+            // Get stored zoom value or use default
+            const storedZoom = localStorage.getItem(STORAGE_KEYS.CAMERA_ZOOM);
+            const defaultZoom = 20; // Default camera distance
+            const currentZoom = storedZoom ? parseInt(storedZoom) : defaultZoom;
+            
+            // Set the slider to the current zoom value
+            this.cameraZoomSlider.value = currentZoom;
+            
+            // Update the display value
+            if (this.cameraZoomValue) {
+                this.cameraZoomValue.textContent = currentZoom;
+            }
+            
+            // Add event listener for zoom changes
+            this.cameraZoomSlider.addEventListener('input', () => {
+                const zoomValue = parseInt(this.cameraZoomSlider.value);
+                
+                // Update the display value
+                if (this.cameraZoomValue) {
+                    this.cameraZoomValue.textContent = zoomValue;
+                }
+                
+                // Store the zoom value
+                localStorage.setItem(STORAGE_KEYS.CAMERA_ZOOM, zoomValue);
+                
+                // Apply zoom immediately if game is available
+                if (this.game && this.game.hudManager && this.game.hudManager.cameraControl) {
+                    this.game.hudManager.cameraControl.cameraDistance = zoomValue;
+                }
+            });
+        }
+        
         return true;
     }
     
@@ -87,6 +130,10 @@ export class GameplayTab extends SettingsTab {
         if (this.customSkillsCheckbox) {
             localStorage.setItem(STORAGE_KEYS.CUSTOM_SKILLS, this.customSkillsCheckbox.checked);
         }
+        
+        if (this.cameraZoomSlider) {
+            localStorage.setItem(STORAGE_KEYS.CAMERA_ZOOM, this.cameraZoomSlider.value);
+        }
     }
     
     /**
@@ -99,6 +146,15 @@ export class GameplayTab extends SettingsTab {
         
         if (this.customSkillsCheckbox) {
             this.customSkillsCheckbox.checked = false;
+        }
+        
+        if (this.cameraZoomSlider) {
+            this.cameraZoomSlider.value = 20; // Default camera distance
+            
+            // Update the display value
+            if (this.cameraZoomValue) {
+                this.cameraZoomValue.textContent = 20;
+            }
         }
         
         this.saveSettings();
