@@ -4,7 +4,14 @@ import { ZONE_ENEMIES, ENEMY_TYPES, BOSS_TYPES, ZONE_DIFFICULTY_MULTIPLIERS } fr
 import { DROP_CHANCES, REGULAR_DROP_TABLE, BOSS_DROP_TABLE } from '../../config/drops.js';
 
 export class EnemyManager {
-    constructor(scene, player, loadingManager) {
+    /**
+     * Creates a new EnemyManager instance
+     * @param {THREE.Scene} scene - The Three.js scene
+     * @param {import("../player/Player.js").Player} player - The player instance
+     * @param {THREE.LoadingManager} loadingManager - The Three.js loading manager
+     * @param {import("../../game/Game.js").Game} [game=null] - The main game instance
+     */
+    constructor(scene, player, loadingManager, game = null) {
         this.scene = scene;
         this.player = player;
         this.loadingManager = loadingManager;
@@ -13,7 +20,7 @@ export class EnemyManager {
         this.spawnRadius = 30;
         this.spawnTimer = 0;
         this.spawnInterval = 5; // Spawn enemy every 5 seconds
-        this.game = null; // Will be set by Game.js
+        this.game = game; // Game reference passed in constructor
         
         // For chunk-based enemy spawning
         this.enemyChunks = {}; // Track enemies per chunk
@@ -33,7 +40,13 @@ export class EnemyManager {
         this.zoneDifficultyMultipliers = ZONE_DIFFICULTY_MULTIPLIERS;
     }
     
+    /**
+     * Sets the game reference
+     * @param {import("../../game/Game.js").Game} game - The main game instance
+     * @deprecated Game reference is now passed in constructor
+     */
     setGame(game) {
+        console.warn("setGame is deprecated - game reference should be passed in constructor");
         this.game = game;
     }
     
@@ -192,20 +205,12 @@ export class EnemyManager {
     }
     
     getRandomEnemyType() {
-        // Get current zone if available
-        let currentZone = 'forest'; // Default zone
+        // Get a random zone instead of using player's current zone
+        const availableZones = Object.keys(this.zoneEnemies);
+        const randomZone = availableZones[Math.floor(Math.random() * availableZones.length)];
         
-        if (this.game && this.game.world) {
-            const playerPosition = this.player.getPosition();
-            const zone = this.game.world.getZoneAt(playerPosition);
-            
-            if (zone) {
-                currentZone = zone.name.toLowerCase();
-            }
-        }
-        
-        // Get enemy types for this zone
-        const zoneEnemyTypes = this.zoneEnemies[currentZone] || Object.keys(this.zoneEnemies)[0];
+        // Get enemy types for this random zone
+        const zoneEnemyTypes = this.zoneEnemies[randomZone];
         
         // Select a random enemy type from the zone
         const randomTypeId = zoneEnemyTypes[Math.floor(Math.random() * zoneEnemyTypes.length)];
@@ -224,20 +229,15 @@ export class EnemyManager {
             playerLevel = this.game.player.getLevel();
         }
         
-        // Get current zone for zone-based difficulty
-        let currentZone = 'forest'; // Default zone
+        // Get random zone for zone-based difficulty
         let zoneDifficultyMultiplier = 1.0;
         
-        if (this.game && this.game.world) {
-            const playerPosition = this.player.getPosition();
-            const zone = this.game.world.getZoneAt(playerPosition);
-            
-            if (zone) {
-                currentZone = zone.name.toLowerCase();
-                // Get zone difficulty multiplier
-                zoneDifficultyMultiplier = this.zoneDifficultyMultipliers[currentZone] || 1.0;
-            }
-        }
+        // Get a random zone from available zones
+        const availableZones = Object.keys(this.zoneDifficultyMultipliers);
+        const randomZone = availableZones[Math.floor(Math.random() * availableZones.length)];
+        
+        // Get zone difficulty multiplier
+        zoneDifficultyMultiplier = this.zoneDifficultyMultipliers[randomZone] || 1.0;
         
         // Calculate level scaling factor (increases by 10% per player level)
         const levelScalingFactor = 1.0 + (playerLevel * 0.1);
@@ -634,17 +634,12 @@ export class EnemyManager {
             this.maxEnemies - this.enemies.length // Don't exceed max enemies
         );
         
-        // Get current zone for appropriate enemy types
-        let currentZone = 'forest'; // Default zone
-        if (this.game && this.game.world) {
-            const zone = this.game.world.getZoneAt(playerPosition);
-            if (zone) {
-                currentZone = zone.name.toLowerCase();
-            }
-        }
+        // Get a random zone instead of using player's current zone
+        const availableZones = Object.keys(this.zoneEnemies);
+        const randomZone = availableZones[Math.floor(Math.random() * availableZones.length)];
         
-        // Get enemy types for this zone
-        const zoneEnemyTypes = this.zoneEnemies[currentZone] || Object.keys(this.zoneEnemies)[0];
+        // Get enemy types for this random zone
+        const zoneEnemyTypes = this.zoneEnemies[randomZone];
         
         // Spawn enemies in multiple groups - more groups in multiplier zones
         const numGroups = inMultiplierZone ? 
@@ -802,15 +797,11 @@ export class EnemyManager {
         // Get terrain height at group position
         const terrainHeight = this.game.world.getTerrainHeight(groupX, groupZ);
         
-        // Get current zone for appropriate enemy types
-        let currentZone = 'forest'; // Default zone
-        const zone = this.game.world.getZoneAt(new THREE.Vector3(groupX, terrainHeight, groupZ));
-        if (zone) {
-            currentZone = zone.name.toLowerCase();
-        }
+        const availableZones = Object.keys(this.zoneEnemies);
+        const randomZone = availableZones[Math.floor(Math.random() * availableZones.length)];
         
-        // Get enemy types for this zone
-        const zoneEnemyTypes = this.zoneEnemies[currentZone] || Object.keys(this.zoneEnemies)[0];
+        // Get enemy types for this random zone
+        const zoneEnemyTypes = this.zoneEnemies[randomZone];
         
         // Select a random enemy type from the zone for this group
         const groupEnemyType = zoneEnemyTypes[Math.floor(Math.random() * zoneEnemyTypes.length)];
