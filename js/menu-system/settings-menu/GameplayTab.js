@@ -81,12 +81,12 @@ export class GameplayTab extends SettingsTab {
         if (this.cameraZoomSlider) {
             // Set min, max and default values
             this.cameraZoomSlider.min = 10;  // Closest zoom (10 units)
-            this.cameraZoomSlider.max = 30;  // Furthest zoom (30 units)
+            this.cameraZoomSlider.max = 100;  // Furthest zoom (100 units)
             this.cameraZoomSlider.step = 1;  // 1 unit increments
             
             // Get stored zoom value or use default
             const storedZoom = localStorage.getItem(STORAGE_KEYS.CAMERA_ZOOM);
-            const defaultZoom = 25; // Default camera distance
+            const defaultZoom = 20; // Default camera distance
             const currentZoom = storedZoom ? parseInt(storedZoom) : defaultZoom;
             
             // Set the slider to the current zoom value
@@ -110,8 +110,9 @@ export class GameplayTab extends SettingsTab {
                 localStorage.setItem(STORAGE_KEYS.CAMERA_ZOOM, zoomValue);
                 
                 // Apply zoom immediately if game is available
-                if (this.game && this.game.hudManager && this.game.hudManager.cameraControl) {
-                    this.game.hudManager.cameraControl.cameraDistance = zoomValue;
+                if (this.game && this.game.hudManager && this.game.hudManager.components && this.game.hudManager.components.cameraControlUI) {
+                    // Use the new setCameraDistance method
+                    this.game.hudManager.components.cameraControlUI.setCameraDistance(zoomValue);
                 }
             });
         }
