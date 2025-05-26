@@ -10,10 +10,10 @@ import { ENVIRONMENT_CONFIG } from '../../config/environment.js';
  * Manages environment objects like trees, rocks, bushes, etc.
  */
 export class EnvironmentManager {
-    constructor(scene, worldManager) {
+    constructor(scene, worldManager, game = null) {
         this.scene = scene;
         this.worldManager = worldManager;
-        this.game = null;
+        this.game = game;
         
         // Environment object collections
         this.environmentObjects = {}; // Store environment objects by chunk key
@@ -38,13 +38,7 @@ export class EnvironmentManager {
         this.paths = [];
     }
     
-    /**
-     * Set the game reference
-     * @param {Game} game - The game instance
-     */
-    setGame(game) {
-        this.game = game;
-    }
+    // setGame method removed - game is now passed in constructor
     
     /**
      * Update environment objects based on player position

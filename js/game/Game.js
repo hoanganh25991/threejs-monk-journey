@@ -157,8 +157,7 @@ export class Game {
             this.updateLoadingProgress(20, 'Building world...', 'Generating terrain and environment');
             
             // Initialize world
-            this.world = new WorldManager(this.scene, this.loadingManager);
-            this.world.setGame(this);
+            this.world = new WorldManager(this.scene, this.loadingManager, this);
             await this.world.init();
             
             this.updateLoadingProgress(40, 'Loading character...', 'Preparing player model and animations');
@@ -194,8 +193,7 @@ export class Game {
             this.updateLoadingProgress(75, 'Spawning enemies...', 'Initializing enemy AI and models');
             
             // Initialize enemy manager
-            this.enemyManager = new EnemyManager(this.scene, this.player, this.loadingManager);
-            this.enemyManager.setGame(this);
+            this.enemyManager = new EnemyManager(this.scene, this.player, this.loadingManager, this);
             await this.enemyManager.init();
             
             this.updateLoadingProgress(80, 'Setting up physics...', 'Initializing collision detection');

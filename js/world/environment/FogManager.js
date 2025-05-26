@@ -11,10 +11,10 @@ import { FOG_CONFIG } from '../../config/render.js';
  * - Performance settings
  */
 export class FogManager {
-    constructor(scene, worldManager) {
+    constructor(scene, worldManager, game = null) {
         this.scene = scene;
         this.worldManager = worldManager;
-        this.game = null;
+        this.game = game;
         
         // Current fog settings
         this.currentFogColor = new THREE.Color(FOG_CONFIG.color);
@@ -40,13 +40,7 @@ export class FogManager {
         this.drawDistanceMultiplier = 1.0;
     }
     
-    /**
-     * Set the game reference
-     * @param {Game} game - The game instance
-     */
-    setGame(game) {
-        this.game = game;
-    }
+    // setGame method removed - game is now passed in constructor
     
     /**
      * Initialize fog based on configuration

@@ -13,10 +13,10 @@ import { STRUCTURE_CONFIG } from '../../config/structure.js';
  * Manages structure generation and placement
  */
 export class StructureManager {
-    constructor(scene, worldManager) {
+    constructor(scene, worldManager, game = null) {
         this.scene = scene;
         this.worldManager = worldManager;
-        this.game = null;
+        this.game = game;
         
         // Structure collections
         this.structures = [];
@@ -33,13 +33,7 @@ export class StructureManager {
         this.structureDensity = STRUCTURE_CONFIG.structureDensity;
     }
     
-    /**
-     * Set the game reference
-     * @param {Game} game - The game instance
-     */
-    setGame(game) {
-        this.game = game;
-    }
+    // setGame method removed - game is now passed in constructor
     
     /**
      * Initialize the structure system

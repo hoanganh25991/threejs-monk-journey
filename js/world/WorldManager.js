@@ -12,22 +12,20 @@ import { TeleportManager } from './teleport/TeleportManager.js';
  * Main World Manager class that coordinates all world-related systems
  */
 export class WorldManager {
-    constructor(scene, loadingManager) {
+    constructor(scene, loadingManager, game = null) {
         this.scene = scene;
         this.loadingManager = loadingManager;
-        
-        // Reference to the game instance (will be set by Game.js)
-        this.game = null;
+        this.game = game;
         
         // Initialize managers
         this.lightingManager = new LightingManager(scene);
-        this.fogManager = new FogManager(scene, this);
-        this.terrainManager = new TerrainManager(scene, this);
-        this.structureManager = new StructureManager(scene, this);
-        this.environmentManager = new EnvironmentManager(scene, this);
-        this.interactiveManager = new InteractiveObjectManager(scene, this);
-        this.zoneManager = new ZoneManager(scene, this);
-        this.teleportManager = new TeleportManager(scene, this);
+        this.fogManager = new FogManager(scene, this, game);
+        this.terrainManager = new TerrainManager(scene, this, game);
+        this.structureManager = new StructureManager(scene, this, game);
+        this.environmentManager = new EnvironmentManager(scene, this, game);
+        this.interactiveManager = new InteractiveObjectManager(scene, this, game);
+        this.zoneManager = new ZoneManager(scene, this, game);
+        this.teleportManager = new TeleportManager(scene, this, game);
         
         // For screen-based enemy spawning
         this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
@@ -57,22 +55,7 @@ export class WorldManager {
         this.lowPerformanceMode = false;
     }
     
-    /**
-     * Set the game reference
-     * @param {Game} game - The game instance
-     */
-    setGame(game) {
-        this.game = game;
-        
-        // Pass game reference to all managers
-        this.fogManager.setGame(game);
-        this.terrainManager.setGame(game);
-        this.structureManager.setGame(game);
-        this.environmentManager.setGame(game);
-        this.interactiveManager.setGame(game);
-        this.zoneManager.setGame(game);
-        this.teleportManager.setGame(game);
-    }
+    // setGame method removed - game is now passed in constructor
     
     /**
      * Initialize the world

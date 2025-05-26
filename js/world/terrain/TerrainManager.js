@@ -7,10 +7,10 @@ import { TERRAIN_CONFIG } from '../../config/terrain.js';
  * Manages terrain generation and rendering
  */
 export class TerrainManager {
-    constructor(scene, worldManager) {
+    constructor(scene, worldManager, game = null) {
         this.scene = scene;
         this.worldManager = worldManager;
-        this.game = null;
+        this.game = game;
         
         // Terrain properties from config
         this.terrainSize = TERRAIN_CONFIG.size;
@@ -49,13 +49,7 @@ export class TerrainManager {
         this.textureCache = {};
     }
     
-    /**
-     * Set the game reference
-     * @param {Game} game - The game instance
-     */
-    setGame(game) {
-        this.game = game;
-    }
+    // setGame method removed - game is now passed in constructor
     
     /**
      * Initialize the terrain system

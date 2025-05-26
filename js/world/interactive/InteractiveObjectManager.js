@@ -10,10 +10,10 @@ import { BossSpawnPoint } from './BossSpawnPoint.js';
  * Interaction handling has been moved to the centralized InteractionSystem.
  */
 export class InteractiveObjectManager {
-    constructor(scene, worldManager) {
+    constructor(scene, worldManager, game = null) {
         this.scene = scene;
         this.worldManager = worldManager;
-        this.game = null;
+        this.game = game;
         
         // Interactive object collections
         this.interactiveObjects = [];

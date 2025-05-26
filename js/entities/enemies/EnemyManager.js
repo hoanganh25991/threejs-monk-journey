@@ -75,15 +75,7 @@ export class EnemyManager {
         this.zoneDifficultyMultipliers = ZONE_DIFFICULTY_MULTIPLIERS;
     }
     
-    /**
-     * Sets the game reference
-     * @param {import("../../game/Game.js").Game} game - The main game instance
-     * @deprecated Game reference is now passed in constructor
-     */
-    setGame(game) {
-        console.warn("setGame is deprecated - game reference should be passed in constructor");
-        this.game = game;
-    }
+    // setGame method removed - game is now passed in constructor
     
     /**
      * Pause all enemies in the game
