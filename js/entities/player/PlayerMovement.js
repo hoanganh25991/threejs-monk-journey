@@ -81,6 +81,7 @@ export class PlayerMovement extends IPlayerMovement {
     
     handleKeyboardMovement(delta) {
         // Get movement direction from input handler
+        // This now returns a direction that's already transformed based on camera rotation
         const direction = this.game.inputHandler.getMovementDirection();
         
         // If there's keyboard input, move the player
@@ -115,6 +116,14 @@ export class PlayerMovement extends IPlayerMovement {
             
             // Update target position to current position to prevent mouse movement overriding
             this.targetPosition.copy(this.position);
+            
+            // If the game has a player reference with setLookDirection method, update it
+            // This ensures the player's look direction is synchronized with movement
+            if (this.game && this.game.player && typeof this.game.player.setLookDirection === 'function') {
+                // Create a normalized direction vector for the look direction
+                const lookDirection = new THREE.Vector3(direction.x, 0, direction.z).normalize();
+                this.game.player.setLookDirection(lookDirection);
+            }
         }
     }
     
