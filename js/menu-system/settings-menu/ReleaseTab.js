@@ -59,7 +59,7 @@ export class ReleaseTab extends SettingsTab {
                         const registrations = await navigator.serviceWorker.getRegistrations();
                         for (const registration of registrations) {
                             await registration.unregister();
-                            console.log('Service worker unregistered');
+                            console.debug('Service worker unregistered');
                         }
                     }
                     
@@ -68,15 +68,15 @@ export class ReleaseTab extends SettingsTab {
                         const cacheNames = await caches.keys();
                         await Promise.all(
                             cacheNames.map(cacheName => {
-                                console.log(`Deleting cache: ${cacheName}`);
+                                console.debug(`Deleting cache: ${cacheName}`);
                                 return caches.delete(cacheName);
                             })
                         );
-                        console.log('All caches cleared');
+                        console.debug('All caches cleared');
                     }
                     
                     // Force reload the page from server (bypass cache)
-                    console.log('Reloading page...');
+                    console.debug('Reloading page...');
                     window.location.reload(true);
                 } catch (error) {
                     console.error('Error updating to latest version:', error);

@@ -367,7 +367,7 @@ export class PlayerModel extends IPlayerModel {
                 // Apply rotation to head bone
                 headBone.rotation.x = rotationAngle;
                 
-                console.log("Applied vertical look rotation to head bone:", 
+                console.debug("Applied vertical look rotation to head bone:", 
                     THREE.MathUtils.radToDeg(rotationAngle) + "°", 
                     "from vertical direction:", verticalDirection);
             }
@@ -380,7 +380,7 @@ export class PlayerModel extends IPlayerModel {
                 
                 neckBone.rotation.x = neckRotation;
                 
-                console.log("Applied vertical look rotation to neck bone:", 
+                console.debug("Applied vertical look rotation to neck bone:", 
                     THREE.MathUtils.radToDeg(neckRotation) + "°");
             }
         }

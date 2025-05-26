@@ -36,7 +36,7 @@ export class CameraControlUI extends UIComponent {
         this.baseElement = null;
         this.handleElement = null;
         
-        console.log("CameraControlUI initialized with increased sensitivity");
+        console.debug("CameraControlUI initialized with increased sensitivity");
     }
     
     /**
@@ -74,7 +74,7 @@ export class CameraControlUI extends UIComponent {
             const storedZoom = localStorage.getItem(STORAGE_KEYS.CAMERA_ZOOM);
             if (storedZoom) {
                 this.cameraDistance = parseInt(storedZoom);
-                console.log("Loaded camera distance from settings:", this.cameraDistance);
+                console.debug("Loaded camera distance from settings:", this.cameraDistance);
             }
         }).catch(error => {
             console.error("Error loading storage keys:", error);
@@ -178,7 +178,7 @@ export class CameraControlUI extends UIComponent {
      * @param {number} clientY - Y position of touch/mouse
      */
     handleCameraControlStart(clientX, clientY) {
-        console.log("Camera control start:", {clientX, clientY});
+        console.debug("Camera control start:", {clientX, clientY});
         
         // Set camera control state
         this.cameraState.active = true;
@@ -208,7 +208,7 @@ export class CameraControlUI extends UIComponent {
             this.cameraState.rotationY = horizontalAngle;
             this.cameraState.rotationX = verticalAngle;
             
-            console.log("Initial camera rotation calculated:", {
+            console.debug("Initial camera rotation calculated:", {
                 x: this.cameraState.rotationX,
                 y: this.cameraState.rotationY,
                 verticalDegrees: THREE.MathUtils.radToDeg(verticalAngle),
@@ -225,7 +225,7 @@ export class CameraControlUI extends UIComponent {
                 this.cameraState.rotationX = this.game.camera.rotation.x;
                 this.cameraState.rotationY = this.game.camera.rotation.y;
                 
-                console.log("Initial camera rotation (fallback):", {
+                console.debug("Initial camera rotation (fallback):", {
                     x: this.cameraState.rotationX,
                     y: this.cameraState.rotationY
                 });
@@ -297,7 +297,7 @@ export class CameraControlUI extends UIComponent {
         this.cameraState.rotationY = rotationY;
         
         // Log detailed information for debugging
-        console.log("Camera drag detected:", {
+        console.debug("Camera drag detected:", {
             deltaX, 
             deltaY, 
             rotationX: newRotationX, 
@@ -356,9 +356,9 @@ export class CameraControlUI extends UIComponent {
      * @param {number} rotationY - Y rotation (horizontal)
      */
     updateCameraOrbit(rotationX, rotationY) {
-        console.log("updateCameraOrbit", {rotationX, rotationY});
+        console.debug("updateCameraOrbit", {rotationX, rotationY});
         if (!this.game || !this.game.camera || !this.game.player) {
-            console.log("Missing required references:", {
+            console.debug("Missing required references:", {
                 game: !!this.game,
                 camera: !!(this.game && this.game.camera),
                 player: !!(this.game && this.game.player)
@@ -368,7 +368,7 @@ export class CameraControlUI extends UIComponent {
         
         // Get player position
         const playerPosition = this.game.player.getPosition();
-        console.log("Player position:", playerPosition);
+        console.debug("Player position:", playerPosition);
         
         // Use the camera distance from settings or default
         const distance = this.cameraDistance;
@@ -392,8 +392,8 @@ export class CameraControlUI extends UIComponent {
             playerPosition.z + cameraOffset.z
         );
         
-        console.log("New camera position calculated:", cameraPosition);
-        console.log("Vertical angle in degrees:", THREE.MathUtils.radToDeg(rotationX));
+        console.debug("New camera position calculated:", cameraPosition);
+        console.debug("Vertical angle in degrees:", THREE.MathUtils.radToDeg(rotationX));
         
         // Store original camera position for comparison
         const originalPosition = this.game.camera.position.clone();
@@ -401,7 +401,7 @@ export class CameraControlUI extends UIComponent {
         // Update camera position
         this.game.camera.position.copy(cameraPosition);
         
-        console.log("Camera position updated from:", originalPosition, "to:", this.game.camera.position);
+        console.debug("Camera position updated from:", originalPosition, "to:", this.game.camera.position);
         
         // Calculate look direction based on rotation
         // When looking up (positive rotationX), we want to look higher than the player's head
@@ -419,7 +419,7 @@ export class CameraControlUI extends UIComponent {
         );
         this.game.camera.lookAt(lookAtPosition);
         
-        console.log("Camera lookAt set to:", lookAtPosition, "with vertical offset:", verticalOffset);
+        console.debug("Camera lookAt set to:", lookAtPosition, "with vertical offset:", verticalOffset);
         
         // Update orbit controls target if available
         if (this.game.controls) {
@@ -427,18 +427,18 @@ export class CameraControlUI extends UIComponent {
             
             this.game.controls.target.copy(lookAtPosition);
             
-            console.log("OrbitControls target updated from:", originalTarget, "to:", this.game.controls.target);
+            console.debug("OrbitControls target updated from:", originalTarget, "to:", this.game.controls.target);
             
             // Check if controls are enabled
-            console.log("OrbitControls enabled:", this.game.controls.enabled);
+            console.debug("OrbitControls enabled:", this.game.controls.enabled);
             
             // Make sure controls are enabled and updated
             this.game.controls.enabled = true;
             this.game.controls.update();
             
-            console.log("OrbitControls updated");
+            console.debug("OrbitControls updated");
         } else {
-            console.log("OrbitControls not available");
+            console.debug("OrbitControls not available");
         }
         
         // Update player's view direction if needed
@@ -458,7 +458,7 @@ export class CameraControlUI extends UIComponent {
             lookDirection.setFromSpherical(sphericalLook);
             
             // Log the raw rotation values for debugging
-            console.log("Creating look direction from rotations:", {
+            console.debug("Creating look direction from rotations:", {
                 rotationX: rotationX,
                 rotationY: rotationY,
                 verticalDegrees: THREE.MathUtils.radToDeg(rotationX),
@@ -467,9 +467,9 @@ export class CameraControlUI extends UIComponent {
             
             // Update the player's look direction
             this.game.player.setLookDirection(lookDirection);
-            console.log("Player look direction updated to:", lookDirection);
+            console.debug("Player look direction updated to:", lookDirection);
         } else {
-            console.log("Player look direction update not available");
+            console.debug("Player look direction update not available");
         }
         
         // Force a render to update the scene
@@ -491,9 +491,9 @@ export class CameraControlUI extends UIComponent {
                 this.game.controls.enabled = orbitControlsEnabled;
             }
             
-            console.log("Forced scene render with camera matrix update");
+            console.debug("Forced scene render with camera matrix update");
         } else {
-            console.log("Game renderer not available");
+            console.debug("Game renderer not available");
         }
         
         // Set a flag to ensure the camera position is maintained in the next frame
@@ -613,7 +613,7 @@ export class CameraControlUI extends UIComponent {
                 this.game.camera.updateMatrixWorld(true);
                 
                 // Log that we're maintaining the camera position
-                console.log("Maintaining camera position in update loop");
+                console.debug("Maintaining camera position in update loop");
             }
         }
     }

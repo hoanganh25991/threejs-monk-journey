@@ -173,7 +173,7 @@ export class Player extends IPlayer {
             }
             
             // Log the look direction update
-            console.log("Player look direction updated:", {
+            console.debug("Player look direction updated:", {
                 direction,
                 horizontalRotation,
                 verticalDirection: direction.y

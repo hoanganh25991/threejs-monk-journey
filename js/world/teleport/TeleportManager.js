@@ -266,35 +266,70 @@ export class TeleportManager {
     }
     
     /**
-     * Create a text label for a portal
+     * Create a text label for a portal using Three.js
      * @param {Object} portal - The portal to label
      */
     createPortalLabel(portal) {
-        // Skip if document is not available (e.g., headless mode)
-        if (typeof document === 'undefined') return;
+        // Create a canvas for the nameplate
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 256;
+        canvas.height = 64;
         
-        // Create a div for the portal label
-        const label = document.createElement('div');
-        label.className = 'portal-label';
+        // Fill with transparent background
+        context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        context.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Add specific classes based on portal type
+        // Set text properties based on portal type first
         if (portal.multiplier) {
-            label.classList.add('multiplier');
+            context.fillStyle = '#FF9500'; // Orange for multiplier portals
+            context.strokeStyle = '#000000';
         } else if (portal.isReturnPortal) {
-            label.classList.add('return');
+            context.fillStyle = '#00FF00'; // Green for return portals
+            context.strokeStyle = '#000000';
+        } else {
+            context.fillStyle = '#FFFFFF'; // White for regular portals
+            context.strokeStyle = '#000000';
         }
         
-        // Styles are now defined in teleport-manager.css
-        label.style.display = 'none'; // Hidden by default, will be shown in update
+        // Add text with the correct portal name
+        context.font = 'bold 48px Arial';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
         
-        // Set label text
-        label.textContent = portal.sourceName;
+        // Use portal.sourceName instead of undefined 'name' variable
+        const displayName = portal.sourceName || `Portal ${portal.id}`;
+        context.fillText(displayName, canvas.width / 2, canvas.height / 2);
         
-        // Add to document
-        document.body.appendChild(label);
+        // Add stroke for better visibility
+        context.lineWidth = 2;
+        context.strokeText(displayName, canvas.width / 2, canvas.height / 2);
         
-        // Store reference to label
-        this.portalLabels[portal.id] = label;
+        // Create texture from canvas
+        const texture = new THREE.CanvasTexture(canvas);
+        
+        // Create a plane for the nameplate
+        const geometry = new THREE.PlaneGeometry(2, 0.5);
+        const material = new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: true,
+            side: THREE.DoubleSide,
+            depthTest: false // Make sure it's always visible
+        });
+        
+        const portalLabel = new THREE.Mesh(geometry, material);
+        
+        // Position nameplate above portal
+        portalLabel.position.copy(portal.sourcePosition.clone());
+        portalLabel.position.y += portal.size || 5; // Position above portal
+        
+        // Add to scene
+        this.scene.add(portalLabel);
+        
+        // Store reference to nameplate
+        this.portalLabels[portal.id] = portalLabel;
+        
+        console.debug(`Created label for portal "${displayName}" (ID: ${portal.id})`);
     }
     
     /**
@@ -402,67 +437,11 @@ export class TeleportManager {
     }
     
     /**
-     * Update the position of a portal's label in screen space
+     * Update the position of a portal's label in 3D space
      * @param {Object} portal - The portal whose label to update
      */
     updatePortalLabel(portal) {
-        // Skip if no label for this portal
-        const label = this.portalLabels[portal.id];
-        if (!label) return;
-        
-        // Skip if no camera or renderer
-        if (!this.game || !this.game.camera || !this.game.renderer) return;
-        
-        // Get screen position
-        const screenPosition = portal.sourcePosition.clone();
-        screenPosition.y += 5; // Position label above portal
-        
-        // Project position to screen space
-        screenPosition.project(this.game.camera);
-        
-        // Convert to CSS coordinates
-        const x = (screenPosition.x * 0.5 + 0.5) * this.game.renderer.domElement.clientWidth;
-        const y = (-(screenPosition.y * 0.5) + 0.5) * this.game.renderer.domElement.clientHeight;
-        
-        // Check if portal is in front of camera (z < 1)
-        const isBehindCamera = screenPosition.z > 1;
-        
-        // Calculate distance to player
-        const distance = portal.sourcePosition.distanceTo(this.game.player.getPosition());
-        const isVisible = distance < 50; // Only show label if within 50 units
-        
-        // Check if this is the active portal
-        const isActive = portal === this.activePortal;
-        
-        // Update label position
-        label.style.left = `${x}px`;
-        label.style.top = `${y}px`;
-        
-        // Show/hide label based on visibility
-        if (isVisible && !isBehindCamera) {
-            label.style.display = 'block';
-            
-            // Add or remove active class
-            if (isActive) {
-                label.classList.add('active');
-            } else {
-                label.classList.remove('active');
-            }
-            
-            // Scale based on distance (smaller when further away)
-            const scale = Math.max(0.5, Math.min(1.0, 1.0 - (distance / 50)));
-            
-            // Don't override the transform for active portals (handled by CSS)
-            if (!isActive) {
-                label.style.transform = `translate(-50%, -100%) scale(${scale})`;
-            }
-            
-            // Adjust opacity based on distance
-            label.style.opacity = Math.max(0.3, Math.min(1.0, 1.0 - (distance / 50)));
-        } else {
-            label.style.display = 'none';
-            label.classList.remove('active');
-        }
+        return;
     }
     
     /**
@@ -1314,6 +1293,24 @@ export class TeleportManager {
                 this.portalModelFactory.removeMesh(portal.particles);
             }
             
+            // Remove label sprite
+            const sprite = this.portalLabels[portal.id];
+            if (sprite) {
+                // Remove from scene
+                this.scene.remove(sprite);
+                
+                // Dispose of texture and material
+                if (sprite.material) {
+                    if (sprite.material.map) {
+                        sprite.material.map.dispose();
+                    }
+                    sprite.material.dispose();
+                }
+                
+                // Remove from portalLabels object
+                delete this.portalLabels[portal.id];
+            }
+            
             // Remove from array
             this.portals.splice(portalIndex, 1);
             
@@ -1334,10 +1331,26 @@ export class TeleportManager {
             if (portal.particles) {
                 this.portalModelFactory.removeMesh(portal.particles);
             }
+            
+            // Remove label sprite
+            const sprite = this.portalLabels[portal.id];
+            if (sprite) {
+                // Remove from scene
+                this.scene.remove(sprite);
+                
+                // Dispose of texture and material
+                if (sprite.material) {
+                    if (sprite.material.map) {
+                        sprite.material.map.dispose();
+                    }
+                    sprite.material.dispose();
+                }
+            }
         });
         
-        // Clear array and reset active portal
+        // Clear arrays and reset active portal
         this.portals = [];
+        this.portalLabels = {};
         this.activePortal = null;
         
         console.debug("Cleared all teleport portals");
