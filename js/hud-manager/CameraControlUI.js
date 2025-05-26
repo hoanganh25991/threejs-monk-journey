@@ -23,6 +23,9 @@ export class CameraControlUI extends UIComponent {
             currentY: 0,
             rotationX: 0,
             rotationY: 0,
+            // Store the original rotation values at the start of a drag
+            originalRotationX: 0,
+            originalRotationY: 0,
         };
         
         // Default camera distance (can be modified via settings)
@@ -231,9 +234,15 @@ export class CameraControlUI extends UIComponent {
             this.cameraState.rotationY = horizontalAngle;
             this.cameraState.rotationX = verticalAngle;
             
+            // Store the original rotation values at the start of the drag
+            this.cameraState.originalRotationX = verticalAngle;
+            this.cameraState.originalRotationY = horizontalAngle;
+            
             console.debug("Initial camera rotation calculated:", {
                 x: this.cameraState.rotationX,
                 y: this.cameraState.rotationY,
+                originalX: this.cameraState.originalRotationX,
+                originalY: this.cameraState.originalRotationY,
                 verticalDegrees: THREE.MathUtils.radToDeg(verticalAngle),
                 horizontalDegrees: THREE.MathUtils.radToDeg(horizontalAngle)
             });
@@ -248,9 +257,15 @@ export class CameraControlUI extends UIComponent {
                 this.cameraState.rotationX = this.game.camera.rotation.x;
                 this.cameraState.rotationY = this.game.camera.rotation.y;
                 
+                // Store the original rotation values at the start of the drag
+                this.cameraState.originalRotationX = this.game.camera.rotation.x;
+                this.cameraState.originalRotationY = this.game.camera.rotation.y;
+                
                 console.debug("Initial camera rotation (fallback):", {
                     x: this.cameraState.rotationX,
-                    y: this.cameraState.rotationY
+                    y: this.cameraState.rotationY,
+                    originalX: this.cameraState.originalRotationX,
+                    originalY: this.cameraState.originalRotationY
                 });
             }
         }
@@ -287,30 +302,29 @@ export class CameraControlUI extends UIComponent {
     handleCameraControlMove(clientX, clientY) {
         if (!this.cameraState.active || !this.game || !this.game.camera) return;
         
-        // Calculate delta from CURRENT position (not start position)
-        // This allows for continuous dragging to accumulate rotation
-        const deltaX = clientX - this.cameraState.currentX;
-        const deltaY = clientY - this.cameraState.currentY;
-        
         // Update current position
         this.cameraState.currentX = clientX;
         this.cameraState.currentY = clientY;
         
+        // Calculate delta from START position instead of current position
+        // This allows the camera to return to its original position when dragged back
+        const totalDeltaX = clientX - this.cameraState.startX;
+        const totalDeltaY = clientY - this.cameraState.startY;
+        
         // Calculate new rotation based on delta and sensitivity
         // Use different sensitivity for horizontal and vertical movement
         const horizontalSensitivity = 0.005; // Reduced for left/right movement
-        const verticalSensitivity = 0.005;    // Reduced for up/down movement
+        const verticalSensitivity = 0.005;   // Reduced for up/down movement
         
-        // Calculate horizontal rotation (around Y axis)
-        // Accumulate rotation from previous state
-        const rotationY = this.cameraState.rotationY - deltaX * horizontalSensitivity;
+        // Calculate horizontal rotation (around Y axis) from the original rotation
+        const rotationY = this.cameraState.originalRotationY - totalDeltaX * horizontalSensitivity;
         
-        // Calculate vertical rotation (around X axis)
+        // Calculate vertical rotation (around X axis) from the original rotation
         // Allow full vertical rotation range from -89° to +89° (in radians)
         const maxVerticalRotation = THREE.MathUtils.degToRad(89);
         
-        // Accumulate vertical rotation from previous state
-        let newRotationX = this.cameraState.rotationX - deltaY * verticalSensitivity;
+        // Calculate new rotation from the original rotation value
+        let newRotationX = this.cameraState.originalRotationX - totalDeltaY * verticalSensitivity;
         
         // Clamp to prevent flipping
         newRotationX = Math.max(-maxVerticalRotation, Math.min(maxVerticalRotation, newRotationX));
@@ -321,19 +335,21 @@ export class CameraControlUI extends UIComponent {
         
         // Log detailed information for debugging
         console.debug("Camera drag detected:", {
-            deltaX, 
-            deltaY, 
-            rotationX: newRotationX, 
+            totalDeltaX, 
+            totalDeltaY, 
+            originalRotationX: this.cameraState.originalRotationX,
+            originalRotationY: this.cameraState.originalRotationY,
+            newRotationX, 
             rotationY,
-            verticalDegrees: THREE.MathUtils.radToDeg(newRotationX), // Show degrees for easier debugging
-            accumulatedVerticalDegrees: THREE.MathUtils.radToDeg(this.cameraState.rotationX)
+            verticalDegrees: THREE.MathUtils.radToDeg(newRotationX),
+            horizontalDegrees: THREE.MathUtils.radToDeg(rotationY)
         });
         
         // Update camera position to orbit around the player
         this.updateCameraOrbit(newRotationX, rotationY);
         
         // Update visual indicator
-        this.updateVisualIndicator(clientX - this.cameraState.startX, clientY - this.cameraState.startY);
+        this.updateVisualIndicator(totalDeltaX, totalDeltaY);
         
         // Prevent default behavior to avoid scrolling
         return false;
