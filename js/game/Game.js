@@ -166,14 +166,6 @@ export class Game {
             this.player = new Player(this, this.scene, this.camera, this.loadingManager);
             await this.player.init();
             
-            // Apply selected model and size if available from main.js
-            if (window.selectedModelId) {
-                await this.player.model.setModel(window.selectedModelId);
-            }
-            if (window.selectedSizeMultiplier) {
-                this.player.model.setSizeMultiplier(window.selectedSizeMultiplier);
-            }
-            
             this.updateLoadingProgress(60, 'Setting up controls...', 'Initializing input handler');
             
             // Initialize input handler

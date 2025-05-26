@@ -79,18 +79,6 @@ export class Player {
     }
     
     /**
-     * Sets the game reference for the player and all its components
-     * This allows player components to access game systems like input, terrain, etc.
-     * 
-     * @param {import("../../game/Game.js").Game} game - The game instance
-     * @deprecated Game reference is now passed in constructor
-     */
-    setGame(game) {
-        console.warn("setGame is deprecated - game reference should be passed in constructor");
-        this.game = game;
-    }
-    
-    /**
      * Updates the player and all its components
      * This method should be called once per frame in the game loop
      * 

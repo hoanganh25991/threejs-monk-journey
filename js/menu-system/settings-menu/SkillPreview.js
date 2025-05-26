@@ -345,21 +345,7 @@ export class SkillPreview {
         this.currentSkillData = skillData;
         
         // Create a skill instance
-        const skill = new Skill({
-            name: skillData.name,
-            description: skillData.description,
-            type: skillData.type,
-            damage: skillData.damage,
-            manaCost: skillData.manaCost,
-            cooldown: skillData.cooldown,
-            range: skillData.range,
-            radius: skillData.radius,
-            duration: skillData.duration,
-            color: skillData.color,
-            hits: skillData.hits || 1,
-            sounds: skillData.sounds || {},
-            variant: skillData.variant || '' // Add variant property
-        });
+        const skill = new Skill(skillData);
         
         // Store the current skill
         this.currentSkill = skill;

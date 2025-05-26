@@ -50,12 +50,12 @@ export class FlyingDragonEffect extends SkillEffect {
     }
     constructor(skill) {
         super(skill);
-        this.flightSpeed = skill.flightSpeed || 10; // Units per second
+        this.flightSpeed = skill.flightSpeed; // Units per second
         this.initialPosition = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         this.distanceTraveled = 0;
         this.kickCount = 0;
-        this.maxKicks = 7; // Number of kicks to perform
+        this.maxKicks = 10; // Number of kicks to perform
         this.kickInterval = 0.3; // Time between kicks
         this.timeSinceLastKick = 0;
         this.radius = skill.radius || 5;
@@ -69,7 +69,7 @@ export class FlyingDragonEffect extends SkillEffect {
      */
     create(position, direction) {
         position = position.clone();
-        position.y -= 3.0;
+        // position.y -= 3.0;
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
@@ -227,7 +227,7 @@ export class FlyingDragonEffect extends SkillEffect {
             particles: particles,
             phase: 'rising', // 'rising', 'kicking', 'descending'
             height: 0,
-            maxHeight: 5, // Maximum height to rise
+            maxHeight: 0.1, // Maximum height to rise
             kicksPerformed: 0
         };
     }

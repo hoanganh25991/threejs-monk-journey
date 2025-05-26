@@ -230,7 +230,7 @@ export const NORMAL_SKILLS = [
         range: 30, // Increased range for fast forward movement
         radius: 5, // Adjusted radius for the area of effect
         duration: 3, // Slightly reduced duration for a faster, more impactful attack
-        flightSpeed: 15, // Speed of the dash forward
+        flightSpeed: 25, // Speed of the dash forward
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
         verticalLeap: true, // Indicates the monk leaps into the air

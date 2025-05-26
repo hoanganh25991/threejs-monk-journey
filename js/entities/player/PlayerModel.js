@@ -170,47 +170,10 @@ export class PlayerModel {
                 this.modelScale
             ); // Scale according to configuration
             
-            this.gltfModel.position.set(0, 0, 0);
+            this.gltfModel.position.set(0, -1.0, 0);
             this.gltfModel.rotation.set(0, 0, 0);
 
-            // Try to load saved adjustments for this model
-            let adjustmentsLoaded = false;
-            if (this.game && this.game.hudManager && this.game.hudManager.loadModelAdjustments) {
-                // This will be called again in setModel, but we need it here for initial model creation
-                adjustmentsLoaded = this.game.hudManager.loadModelAdjustments(this.currentModelId);
-            }
-            
             // If no saved adjustments, apply model-specific default positions from config
-            if (!adjustmentsLoaded) {
-                // Get default adjustments from the model configuration
-                const defaultAdjustments = this.currentModel.defaultAdjustments || {
-                    position: { x: 0, y: 0, z: 0 },
-                    rotation: { x: 0, y: 0, z: 0 }
-                };
-                
-                // Apply the default position
-                this.gltfModel.position.set(
-                    defaultAdjustments.position.x, 
-                    defaultAdjustments.position.y, 
-                    defaultAdjustments.position.z
-                );
-                console.debug(`Applied default position from config: X: ${defaultAdjustments.position.x}, Y: ${defaultAdjustments.position.y}, Z: ${defaultAdjustments.position.z}`);
-                
-                // Apply the default rotation
-                this.gltfModel.rotation.set(
-                    defaultAdjustments.rotation.x, 
-                    defaultAdjustments.rotation.y, 
-                    defaultAdjustments.rotation.z
-                );
-                console.debug(`Applied default rotation from config: X: ${defaultAdjustments.rotation.x}, Y: ${defaultAdjustments.rotation.y}, Z: ${defaultAdjustments.rotation.z}`);
-                
-                // Store these defaults in the model's preview property for later reference
-                if (!this.currentModel.preview) {
-                    this.currentModel.preview = {};
-                }
-                this.currentModel.preview.position = { ...defaultAdjustments.position };
-                this.currentModel.preview.rotation = { ...defaultAdjustments.rotation };
-            }
 
             // Add the loaded model to our group
             this.modelGroup.add(this.gltfModel);
@@ -524,112 +487,6 @@ export class PlayerModel {
     }
     
     /**
-     * Set the base scale of the model
-     * @param {number} scale - Base scale factor to apply to the model
-     */
-    setBaseScale(scale) {
-        this.baseScale = scale;
-        this.updateEffectiveScale();
-        console.debug(`Model base scale set to: ${scale}`);
-        
-        // Update the model configuration to persist this change
-        if (this.currentModel) {
-            this.currentModel.baseScale = scale;
-        }
-    }
-    
-    /**
-     * Set the size multiplier of the model
-     * @param {number} multiplier - Size multiplier to apply to the model
-     */
-    setSizeMultiplier(multiplier) {
-        this.sizeMultiplier = multiplier;
-        this.updateEffectiveScale();
-        console.debug(`Model size multiplier set to: ${multiplier}x`);
-        
-        // Update the model configuration to persist this change
-        if (this.currentModel) {
-            this.currentModel.multiplier = multiplier;
-        }
-    }
-    
-    /**
-     * Update the effective scale based on base scale and multiplier
-     */
-    updateEffectiveScale() {
-        this.modelScale = this.baseScale * this.sizeMultiplier;
-        
-        // Apply the new scale if the model is loaded
-        if (this.gltfModel) {
-            this.gltfModel.scale.set(
-                this.modelScale, 
-                this.modelScale, 
-                this.modelScale
-            );
-        }
-        
-        console.debug(`Model effective scale updated to: ${this.modelScale}`);
-    }
-    
-    /**
-     * Set the preview position of the model
-     * @param {Object} position - Position object with x, y, z properties
-     */
-    setPreviewPosition(position) {
-        if (!this.currentModel.preview) {
-            this.currentModel.preview = {};
-        }
-        
-        this.currentModel.preview.position = position;
-        
-        // Apply the new position if the model is loaded
-        if (this.gltfModel) {
-            this.gltfModel.position.set(position.x, position.y, position.z);
-            console.debug(`Model preview position updated to: X: ${position.x}, Y: ${position.y}, Z: ${position.z}`);
-        }
-    }
-    
-    /**
-     * Set the preview rotation of the model
-     * @param {Object} rotation - Rotation object with x, y, z properties
-     */
-    setPreviewRotation(rotation) {
-        if (!this.currentModel.preview) {
-            this.currentModel.preview = {};
-        }
-        
-        this.currentModel.preview.rotation = rotation;
-        
-        // Apply the new rotation if the model is loaded
-        if (this.gltfModel) {
-            this.gltfModel.rotation.set(rotation.x, rotation.y, rotation.z);
-            console.debug(`Model preview rotation updated to: X: ${rotation.x}, Y: ${rotation.y}, Z: ${rotation.z}`);
-        }
-    }
-    
-    /**
-     * Get the current preview position
-     * @returns {Object} Position object with x, y, z properties
-     */
-    getPreviewPosition() {
-        if (this.currentModel && this.currentModel.preview && this.currentModel.preview.position) {
-            return this.currentModel.preview.position;
-        }
-        return { x: 0, y: 0, z: 0 };
-    }
-    
-    /**
-     * Get the current preview rotation
-     * @returns {Object} Rotation object with x, y, z properties
-     */
-    getPreviewRotation() {
-        if (this.currentModel && this.currentModel.preview && this.currentModel.preview.rotation) {
-            return this.currentModel.preview.rotation;
-        }
-        return { x: 0, y: 0, z: 0 };
-    }
-    
-    /**
      * Set the model by ID
      * @param {string} modelId - ID of the model to set
      * @returns {Promise<boolean>} - True if model was changed successfully
@@ -649,7 +506,7 @@ export class PlayerModel {
         this.baseScale = modelConfig.baseScale;
         
         // Keep the current multiplier
-        this.updateEffectiveScale();
+        // this.updateEffectiveScale();
         
         // Save the model ID to localStorage for persistence
         try {
@@ -668,67 +525,7 @@ export class PlayerModel {
         // Create the new model
         await this.createModel();
         
-        // Adjust player movement height offset based on model configuration
-        if (this.game && this.game.player && this.game.player.movement) {
-            // Get the height offset from the model configuration
-            const heightOffset = modelConfig.defaultAdjustments?.heightOffset || 1.0;
-            this.game.player.movement.heightOffset = heightOffset;
-            console.debug(`Adjusted height offset for ${modelId} model to: ${heightOffset}`);
-            
-            // For the Ebon Knight model, clear any saved adjustments to ensure our new settings take effect
-            if (modelId === 'ebon-knight') {
-                this.clearSavedAdjustments(modelId);
-            }
-        }
-        
-        // Try to load saved adjustments for this model
-        let adjustmentsLoaded = false;
-        if (this.game && this.game.hudManager && this.game.hudManager.loadModelAdjustments) {
-            adjustmentsLoaded = this.game.hudManager.loadModelAdjustments(modelId);
-        }
-        
-        // If no saved adjustments were found, apply default model-specific adjustments
-        if (!adjustmentsLoaded) {
-            this.applyModelSpecificAdjustments(modelId);
-        }
-        
         return true;
-    }
-    
-    /**
-     * Apply model-specific adjustments based on model ID
-     * @param {string} modelId - ID of the model to adjust
-     */
-    applyModelSpecificAdjustments(modelId) {
-        // Try to get default adjustments from the model configuration first
-        const modelConfig = CHARACTER_MODELS.find(model => model.id === modelId);
-        if (modelConfig && modelConfig.defaultAdjustments) {
-            // Use the configuration from player-models.js
-            const defaultPosition = { ...modelConfig.defaultAdjustments.position };
-            const defaultRotation = { ...modelConfig.defaultAdjustments.rotation };
-            
-            // Apply the default position and rotation
-            this.setPreviewPosition(defaultPosition);
-            this.setPreviewRotation(defaultRotation);
-            
-            console.debug(`Applied ${modelId} adjustments from config:`, 
-                `Position: X: ${defaultPosition.x}, Y: ${defaultPosition.y}, Z: ${defaultPosition.z}`,
-                `Rotation: X: ${defaultRotation.x}, Y: ${defaultRotation.y}, Z: ${defaultRotation.z}`);
-            
-            return;
-        }
-        
-        // Fallback to hardcoded adjustments if no config is found
-        let defaultPosition = { x: 0, y: 0, z: 0 };
-        let defaultRotation = { x: 0, y: 0, z: 0 };
-        
-        // Apply the default position and rotation
-        this.setPreviewPosition(defaultPosition);
-        this.setPreviewRotation(defaultRotation);
-        
-        console.debug(`Applied ${modelId}-specific adjustments from hardcoded values:`, 
-            `Position: X: ${defaultPosition.x}, Y: ${defaultPosition.y}, Z: ${defaultPosition.z}`,
-            `Rotation: X: ${defaultRotation.x}, Y: ${defaultRotation.y}, Z: ${defaultRotation.z}`);
     }
     
     /**
@@ -770,14 +567,6 @@ export class PlayerModel {
     }
     
     /**
-     * Get the current size multiplier
-     * @returns {number} The current size multiplier
-     */
-    getCurrentSizeMultiplier() {
-        return this.sizeMultiplier;
-    }
-    
-    /**
      * Set the path to the 3D model
      * @param {string} path - Path to the 3D model file
      * @deprecated Use setModel instead
@@ -786,164 +575,6 @@ export class PlayerModel {
         this.modelPath = path;
         console.debug(`Model path set to: ${path}`);
         // Note: This won't reload the model - call createModel() again if needed
-    }
-    
-    /**
-     * Creates a left jab animation (quick straight punch with left hand)
-     * @returns {void}
-     */
-    createLeftPunchAnimation() {
-        // If using fallback model, delegate to it
-        if (this.usingFallbackModel && this.fallbackModel) {
-            this.fallbackModel.createLeftPunchAnimation();
-            return;
-        }
-        
-        // If we have a GLB model with animations, use the attack effect handler
-        if (this.gltfModel && this.mixer) {
-            // Create a function that will be passed to the attack effect handler
-            const playAnimationFunc = (primaryName, fallbackName, transitionDuration) => {
-                return this.playAnimation(primaryName, fallbackName, transitionDuration);
-            };
-            
-            // Delegate to the attack effect handler
-            this.attackEffect.createLeftPunchAnimation(
-                this.modelGroup, 
-                this.animations, 
-                this.currentAnimation, 
-                playAnimationFunc
-            );
-        }
-    }
-    
-    /**
-     * Creates a right cross animation (powerful straight punch with right hand)
-     * @returns {void}
-     */
-    createRightPunchAnimation() {
-        // If using fallback model, delegate to it
-        if (this.usingFallbackModel && this.fallbackModel) {
-            this.fallbackModel.createRightPunchAnimation();
-            return;
-        }
-        
-        // If we have a GLB model with animations, use the attack effect handler
-        if (this.gltfModel && this.mixer) {
-            // Create a function that will be passed to the attack effect handler
-            const playAnimationFunc = (primaryName, fallbackName, transitionDuration) => {
-                return this.playAnimation(primaryName, fallbackName, transitionDuration);
-            };
-            
-            // Delegate to the attack effect handler
-            this.attackEffect.createRightPunchAnimation(
-                this.modelGroup, 
-                this.animations, 
-                this.currentAnimation, 
-                playAnimationFunc
-            );
-        }
-    }
-    
-    /**
-     * Creates a left hook animation (circular punch with left hand)
-     * @returns {void}
-     */
-    createLeftHookAnimation() {
-        // If using fallback model, delegate to it
-        if (this.usingFallbackModel && this.fallbackModel) {
-            this.fallbackModel.createLeftHookAnimation();
-            return;
-        }
-        
-        // If we have a GLB model with animations, use the attack effect handler
-        if (this.gltfModel && this.mixer) {
-            // Create a function that will be passed to the attack effect handler
-            const playAnimationFunc = (primaryName, fallbackName, transitionDuration) => {
-                return this.playAnimation(primaryName, fallbackName, transitionDuration);
-            };
-            
-            // Delegate to the attack effect handler
-            this.attackEffect.createLeftHookAnimation(
-                this.modelGroup, 
-                this.animations, 
-                this.currentAnimation, 
-                playAnimationFunc
-            );
-        }
-    }
-    
-    /**
-     * Creates a heavy uppercut animation (powerful upward punch with right hand)
-     * @returns {void}
-     */
-    createHeavyPunchAnimation() {
-        // If using fallback model, delegate to it
-        if (this.usingFallbackModel && this.fallbackModel) {
-            this.fallbackModel.createHeavyPunchAnimation();
-            return;
-        }
-        
-        // If we have a GLB model with animations, use the attack effect handler
-        if (this.gltfModel && this.mixer) {
-            // Create a function that will be passed to the attack effect handler
-            const playAnimationFunc = (primaryName, fallbackName, transitionDuration) => {
-                return this.playAnimation(primaryName, fallbackName, transitionDuration);
-            };
-            
-            // Delegate to the attack effect handler
-            this.attackEffect.createHeavyPunchAnimation(
-                this.modelGroup, 
-                this.animations, 
-                this.currentAnimation, 
-                playAnimationFunc
-            );
-        }
-    }
-    
-    /**
-     * Creates a standard punch effect for normal punches
-     * @param {string} hand - Which hand is punching ('left' or 'right')
-     * @param {number} color - Color of the punch effect (hex value)
-     * @returns {void}
-     */
-    createPunchEffect(hand, color) {
-        // If using fallback model, delegate to it
-        if (this.usingFallbackModel && this.fallbackModel) {
-            this.fallbackModel.createPunchEffect(hand, color);
-            return;
-        }
-        
-        // Delegate to the attack effect handler
-        this.attackEffect.createPunchEffect(this.modelGroup, hand, color);
-    }
-    
-    /**
-     * Creates a special effect for the heavy uppercut (combo finisher)
-     * @returns {void}
-     */
-    createHeavyPunchEffect() {
-        // Delegate to the attack effect handler
-        this.attackEffect.createHeavyPunchEffect(this.modelGroup);
-    }
-    
-    /**
-     * Creates an attack effect in the specified direction
-     * @param {string} direction - Direction of the attack ('forward', 'left', 'right', etc.)
-     * @returns {void}
-     */
-    createAttackEffect(direction) {
-        // Delegate to the attack effect handler
-        this.attackEffect.createAttackEffect(this.modelGroup, direction);
-    }
-    
-    /**
-     * Creates a knockback effect at the specified position
-     * @param {THREE.Vector3} position - Position where the knockback effect should be created
-     * @returns {void}
-     */
-    createKnockbackEffect(position) {
-        // Delegate to the attack effect handler
-        this.attackEffect.createKnockbackEffect(position);
     }
     
     /**

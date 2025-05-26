@@ -25,6 +25,8 @@ export class DeadlyReachEffect extends SkillEffect {
      * @returns {THREE.Group} - The created effect
      */
     create(position, direction) {
+        position = position.clone();
+        position.y -= 0.5;
         // Create a group for the effect
         const effectGroup = new THREE.Group();
         
@@ -40,7 +42,6 @@ export class DeadlyReachEffect extends SkillEffect {
         
         // Position effect
         effectGroup.position.copy(position);
-        effectGroup.position.y -= 1.85; // Position at character's hand level (reduced by half)
         effectGroup.rotation.y = Math.atan2(this.direction.x, this.direction.z);
         
         // Store effect
