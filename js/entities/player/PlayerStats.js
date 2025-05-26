@@ -4,7 +4,6 @@
  * @module entities/player/PlayerStats
  */
 
-import { IPlayerStats } from './PlayerInterface.js';
 import { DEFAULT_PLAYER_STATS, LEVEL_UP_EXPERIENCE_MULTIPLIER, RESOURCE_REGENERATION, LEVEL_UP_STAT_INCREASES } from '../../../config/player.js';
 
 /**
@@ -35,13 +34,7 @@ import { DEFAULT_PLAYER_STATS, LEVEL_UP_EXPERIENCE_MULTIPLIER, RESOURCE_REGENERA
  * @property {number} [movementSpeed] - Movement speed
  * @property {number} [attackPower] - Attack power
  */
-
-/**
- * PlayerStats class that manages all player statistics, experience, and leveling
- * @class
- * @extends IPlayerStats
- */
-export class PlayerStats extends IPlayerStats {
+export class PlayerStats {
     /**
      * @property {number} level - Player's current level
      * @property {number} experience - Player's current experience points
@@ -63,8 +56,6 @@ export class PlayerStats extends IPlayerStats {
      * @param {PlayerStatsInitializer} [initialStats={}] - Initial stats to override defaults
      */
     constructor(initialStats = {}) {
-        super();
-        
         // Initialize stats from config with any provided overrides
         this.level = initialStats.level || DEFAULT_PLAYER_STATS.level;
         this.experience = initialStats.experience || DEFAULT_PLAYER_STATS.experience;

@@ -3,12 +3,8 @@
  * Manages the player's inventory and equipment
  */
 
-import { IPlayerInventory } from './PlayerInterface.js';
-
-export class PlayerInventory extends IPlayerInventory {
+export class PlayerInventory {
     constructor() {
-        super();
-        
         // Initialize inventory
         this.inventory = [];
         this.gold = 0;

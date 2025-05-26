@@ -14,8 +14,6 @@
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { IPlayerModel } from './PlayerInterface.js';
-import { FallbackPlayerModel } from './FallbackPlayerModel.js';
 import { CHARACTER_MODELS, DEFAULT_CHARACTER_MODEL } from '../../config/player-models.js';
 import * as AnimationUtils from '../../utils/AnimationUtils.js';
 import { PlayerAttackEffect } from './PlayerAttackEffect.js';
@@ -68,22 +66,18 @@ import { PlayerAttackEffect } from './PlayerAttackEffect.js';
  * @property {string} modelPath - Path to the 3D model file
  * @property {number} verticalLookDirection - Current vertical look direction (-1 to 1)
  */
-export class PlayerModel extends IPlayerModel {
+export class PlayerModel {
     /**
      * Creates a new PlayerModel instance
      * @param {THREE.Scene} scene - The Three.js scene where the model will be rendered
      */
     constructor(scene) {
-        super();
-        
         this.scene = scene;
         this.modelGroup = null;
         this.gltfModel = null;
         this.mixer = null;
         this.animations = {};
         this.currentAnimation = null;
-        this.fallbackModel = null;
-        this.usingFallbackModel = false;
         this.game = null; // Reference to the game
         // We'll use the game's clock instead of creating our own
         
@@ -120,6 +114,11 @@ export class PlayerModel extends IPlayerModel {
         return model || CHARACTER_MODELS.find(m => m.id === DEFAULT_CHARACTER_MODEL);
     }
     
+    /**
+     * Creates and loads the player's 3D model
+     * @async
+     * @returns {Promise<THREE.Group>} The model group containing the player model
+     */
     async createModel() {
         // Create a group for the player
         this.modelGroup = new THREE.Group();
@@ -230,34 +229,20 @@ export class PlayerModel extends IPlayerModel {
             console.debug(`Model from ${this.modelPath} loaded and added to scene:`, this.modelGroup);
         } catch (error) {
             console.error(`Failed to load model from ${this.modelPath}:`, error);
-            
-            // Fallback to simple geometric model if loading fails
-            this.createFallbackModel();
         }
         
         return this.modelGroup;
     }
     
-    // Create and use the fallback model when the GLB model fails to load
-    createFallbackModel() {
-        // Remove the existing model group from the scene if it exists
-        if (this.modelGroup) {
-            this.scene.remove(this.modelGroup);
-        }
-        
-        // Create a new fallback model
-        this.fallbackModel = new FallbackPlayerModel(this.scene);
-        this.modelGroup = this.fallbackModel.createModel();
-        this.usingFallbackModel = true;
-    }
+
     
+    /**
+     * Updates the model's animations based on player state
+     * @param {number} delta - Time in seconds since the last update
+     * @param {import("../player/PlayerState.js").PlayerState} playerState - Current state of the player
+     * @returns {void}
+     */
     updateAnimations(delta, playerState) {
-        // If using fallback model, delegate to it
-        if (this.usingFallbackModel && this.fallbackModel) {
-            this.fallbackModel.updateAnimations(delta, playerState);
-            return;
-        }
-        
         // If we have a loaded GLB model with animations
         if (this.mixer && this.gltfModel) {
             // Use the delta time passed from the game's update loop
@@ -336,8 +321,13 @@ export class PlayerModel extends IPlayerModel {
         }
     }
     
-    // Helper method to play animations with crossfade
-    // Returns true if animation was found and played, false otherwise
+    /**
+     * Plays an animation with crossfade transition
+     * @param {string} primaryName - Name of the primary animation to play
+     * @param {string} fallbackName - Name of the fallback animation if primary is not found
+     * @param {number} [transitionDuration=0.5] - Duration of the crossfade transition in seconds
+     * @returns {boolean} True if animation was found and played, false otherwise
+     */
     playAnimation(primaryName, fallbackName, transitionDuration = 0.5) {
         // Use the AnimationUtils to handle animation playback
         const result = AnimationUtils.playAnimation(
@@ -356,24 +346,24 @@ export class PlayerModel extends IPlayerModel {
         return result.success;
     }
     
+    /**
+     * Sets the position of the model in the scene
+     * @param {THREE.Vector3} position - The new position vector
+     * @returns {void}
+     */
     setPosition(position) {
-        if (this.usingFallbackModel && this.fallbackModel) {
-            this.fallbackModel.setPosition(position);
-            return;
-        }
-        
         if (this.modelGroup) {
             this.modelGroup.position.copy(position);
             console.debug("PlayerModel: Position updated to:", this.modelGroup.position);
         }
     }
     
+    /**
+     * Sets the rotation of the model in the scene
+     * @param {Object} rotation - The rotation object with x, y, z properties
+     * @returns {void}
+     */
     setRotation(rotation) {
-        if (this.usingFallbackModel && this.fallbackModel) {
-            this.fallbackModel.setRotation(rotation);
-            return;
-        }
-        
         if (this.modelGroup) {
             this.modelGroup.rotation.y = rotation.y;
             // console.debug("PlayerModel: Rotation updated to:", this.modelGroup.rotation.y);
@@ -388,14 +378,6 @@ export class PlayerModel extends IPlayerModel {
     setVerticalLookDirection(verticalDirection) {
         // Store the vertical look direction
         this.verticalLookDirection = verticalDirection;
-        
-        // If using fallback model, delegate to it
-        if (this.usingFallbackModel && this.fallbackModel) {
-            if (typeof this.fallbackModel.setVerticalLookDirection === 'function') {
-                this.fallbackModel.setVerticalLookDirection(verticalDirection);
-            }
-            return;
-        }
         
         // Apply vertical rotation to the model's head/neck if possible
         if (this.gltfModel) {
@@ -813,7 +795,10 @@ export class PlayerModel extends IPlayerModel {
         // Note: This won't reload the model - call createModel() again if needed
     }
     
-    // Left jab - quick straight punch with left hand
+    /**
+     * Creates a left jab animation (quick straight punch with left hand)
+     * @returns {void}
+     */
     createLeftPunchAnimation() {
         // If using fallback model, delegate to it
         if (this.usingFallbackModel && this.fallbackModel) {
@@ -838,7 +823,10 @@ export class PlayerModel extends IPlayerModel {
         }
     }
     
-    // Right cross - powerful straight punch with right hand
+    /**
+     * Creates a right cross animation (powerful straight punch with right hand)
+     * @returns {void}
+     */
     createRightPunchAnimation() {
         // If using fallback model, delegate to it
         if (this.usingFallbackModel && this.fallbackModel) {
@@ -863,7 +851,10 @@ export class PlayerModel extends IPlayerModel {
         }
     }
     
-    // Left hook - circular punch with left hand
+    /**
+     * Creates a left hook animation (circular punch with left hand)
+     * @returns {void}
+     */
     createLeftHookAnimation() {
         // If using fallback model, delegate to it
         if (this.usingFallbackModel && this.fallbackModel) {
@@ -888,7 +879,10 @@ export class PlayerModel extends IPlayerModel {
         }
     }
     
-    // Heavy uppercut - powerful upward punch with right hand
+    /**
+     * Creates a heavy uppercut animation (powerful upward punch with right hand)
+     * @returns {void}
+     */
     createHeavyPunchAnimation() {
         // If using fallback model, delegate to it
         if (this.usingFallbackModel && this.fallbackModel) {
@@ -913,7 +907,12 @@ export class PlayerModel extends IPlayerModel {
         }
     }
     
-    // Standard punch effect for normal punches
+    /**
+     * Creates a standard punch effect for normal punches
+     * @param {string} hand - Which hand is punching ('left' or 'right')
+     * @param {number} color - Color of the punch effect (hex value)
+     * @returns {void}
+     */
     createPunchEffect(hand, color) {
         // If using fallback model, delegate to it
         if (this.usingFallbackModel && this.fallbackModel) {
@@ -925,22 +924,39 @@ export class PlayerModel extends IPlayerModel {
         this.attackEffect.createPunchEffect(this.modelGroup, hand, color);
     }
     
-    // Special effect for the heavy uppercut (combo finisher)
+    /**
+     * Creates a special effect for the heavy uppercut (combo finisher)
+     * @returns {void}
+     */
     createHeavyPunchEffect() {
         // Delegate to the attack effect handler
         this.attackEffect.createHeavyPunchEffect(this.modelGroup);
     }
     
+    /**
+     * Creates an attack effect in the specified direction
+     * @param {string} direction - Direction of the attack ('forward', 'left', 'right', etc.)
+     * @returns {void}
+     */
     createAttackEffect(direction) {
         // Delegate to the attack effect handler
         this.attackEffect.createAttackEffect(this.modelGroup, direction);
     }
     
+    /**
+     * Creates a knockback effect at the specified position
+     * @param {THREE.Vector3} position - Position where the knockback effect should be created
+     * @returns {void}
+     */
     createKnockbackEffect(position) {
         // Delegate to the attack effect handler
         this.attackEffect.createKnockbackEffect(position);
     }
     
+    /**
+     * Gets the model group containing the player model
+     * @returns {THREE.Group} The model group
+     */
     getModelGroup() {
         return this.modelGroup;
     }

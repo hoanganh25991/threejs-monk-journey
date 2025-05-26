@@ -20,7 +20,6 @@
  * @property {PlayerSkills} skills - Manages player skills and abilities
  * @property {PlayerCombat} combat - Manages player combat interactions
  */
-import { IPlayer } from './PlayerInterface.js';
 import { PlayerStats } from './PlayerStats.js';
 import { PlayerState } from './PlayerState.js';
 import { PlayerInventory } from './PlayerInventory.js';
@@ -29,7 +28,7 @@ import { PlayerMovement } from './PlayerMovement.js';
 import { PlayerSkills } from './PlayerSkills.js';
 import { PlayerCombat } from './PlayerCombat.js';
 
-export class Player extends IPlayer {
+export class Player {
     /**
      * Creates a new Player instance
      * @param {import("../../game/Game.js").Game} game - The main game instance
@@ -38,8 +37,6 @@ export class Player extends IPlayer {
      * @param {THREE.LoadingManager} loadingManager - The Three.js loading manager
      */
     constructor(game, scene, camera, loadingManager) {
-        super();
-        
         this.scene = scene;
         this.camera = camera;
         this.loadingManager = loadingManager;
@@ -151,9 +148,6 @@ export class Player extends IPlayer {
         // Sync model rotation with movement rotation
         const currentRotation = this.movement.getRotation();
         this.model.setRotation(currentRotation);
-        
-        // Update combo punch system
-        this.combat.updateComboPunch(delta);
         
         // Regenerate resources
         this.stats.regenerateResources(delta);

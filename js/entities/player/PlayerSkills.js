@@ -1,19 +1,5 @@
-/**
- * PlayerSkills.js
- * Manages the player's skills and abilities, including skill initialization, 
- * activation, cooldown management, and effect creation.
- * 
- * This class handles:
- * - Loading and initializing player skills from configuration
- * - Managing active skills and their lifecycle
- * - Applying skill variants and buffs from the skill tree
- * - Handling skill targeting and positioning
- * - Processing skill cooldowns and mana costs
- */
-
 import * as THREE from 'three';
 import { Skill } from '../skills/Skill.js';
-import { IPlayerSkills } from './PlayerInterface.js';
 import { SkillEffectFactory } from '../skills/SkillEffectFactory.js';
 import { SKILLS, BATTLE_SKILLS } from '../../config/skills.js';
 import { STORAGE_KEYS } from '../../config/storage-keys.js';
@@ -31,7 +17,6 @@ import { STORAGE_KEYS } from '../../config/storage-keys.js';
 
 /**
  * Class responsible for managing all player skills and abilities
- * @extends IPlayerSkills
  * 
  * @property {import("three").Scene} scene - The Three.js scene where skill effects will be added
  * @property {import("../player/PlayerStats.js")} playerStats - Reference to the player's stats for mana management
@@ -43,7 +28,7 @@ import { STORAGE_KEYS } from '../../config/storage-keys.js';
  * @property {boolean} customSkillsEnabled - Flag indicating whether custom skills are enabled
  * @property {SkillTreeData} [skillTreeData] - Data from the skill tree, containing variants and buffs
  */
-export class PlayerSkills extends IPlayerSkills {
+export class PlayerSkills {
     /**
      * Creates a new PlayerSkills instance
      * @param {import("three").Scene} scene - The Three.js scene where skill effects will be added
@@ -52,8 +37,6 @@ export class PlayerSkills extends IPlayerSkills {
      * @param {Object} playerRotation - Reference to the player's rotation object
      */
     constructor(scene, playerStats, playerPosition, playerRotation) {
-        super();
-        
         this.scene = scene;
         this.playerStats = playerStats;
         this.playerPosition = playerPosition;

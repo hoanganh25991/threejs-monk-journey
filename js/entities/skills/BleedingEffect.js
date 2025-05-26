@@ -117,8 +117,8 @@ export class BleedingEffect extends SkillEffect {
      */
     createParticle(index) {
         // Randomize particle size based on damage
-        const minSize = 0.03;
-        const maxSize = 0.06 + (this.amount / 3000); // Reduced max size for better performance
+        const minSize = 0.03 * 3;
+        const maxSize = 0.06 * 3 + (this.amount / 3000); // Reduced max size for better performance
         const size = minSize + Math.random() * (maxSize - minSize);
         
         // Create or reuse geometry

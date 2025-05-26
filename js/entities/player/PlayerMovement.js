@@ -4,12 +4,9 @@
  */
 
 import * as THREE from 'three';
-import { IPlayerMovement } from './PlayerInterface.js';
 
-export class PlayerMovement extends IPlayerMovement {
+export class PlayerMovement {
     constructor(playerState, playerStats, modelGroup, camera) {
-        super();
-        
         // Store references
         this.playerState = playerState;
         this.playerStats = playerStats;

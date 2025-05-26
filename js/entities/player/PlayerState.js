@@ -2,13 +2,8 @@
  * PlayerState.js
  * Manages the player's state (moving, attacking, etc.)
  */
-
-import { IPlayerState } from './PlayerInterface.js';
-
-export class PlayerState extends IPlayerState {
+export class PlayerState {
     constructor() {
-        super();
-        
         // Initialize state
         this.state = {
             isMoving: false,

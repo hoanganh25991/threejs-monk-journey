@@ -1,25 +1,66 @@
-/**
- * PlayerCombat.js
- * Simplified combat system for player character
- */
-
 import * as THREE from 'three';
-import { IPlayerCombat } from './PlayerInterface.js';
 
-export class PlayerCombat extends IPlayerCombat {
+/**
+ * @typedef {Object} PunchSystem
+ * @property {number} cooldown - Current cooldown time remaining
+ * @property {number} cooldownTime - Total cooldown time between punches
+ * @property {number} range - Maximum range for detecting enemies to punch
+ * @property {number} comboCount - Current combo counter (0-3)
+ * @property {number} comboTimer - Time remaining in current combo window
+ * @property {number} comboTimeWindow - Total time window to continue a combo
+ * @property {number[]} damageMultipliers - Damage multipliers for each combo step
+ * @property {number} knockbackDistance - Distance to knock back enemies on heavy punch
+ * @property {number} knockbackDuration - Duration of knockback effect
+ */
+export class PlayerCombat {
+    /**
+     * @param {THREE.Scene} scene - The Three.js scene
+     * @param {import('./PlayerInterface.js').IPlayerState} playerState - Player state manager
+     * @param {import('./PlayerInterface.js').IPlayerStats} playerStats - Player statistics
+     * @param {import('./PlayerInterface.js').IPlayerModel} playerModel - Player model and animations
+     * @param {import('./PlayerInterface.js').IPlayerInventory} playerInventory - Player inventory
+     */
     constructor(scene, playerState, playerStats, playerModel, playerInventory) {
-        super();
-        
+        /**
+         * The Three.js scene
+         * @type {THREE.Scene}
+         */
         this.scene = scene;
+        
+        /**
+         * Player state manager
+         * @type {import('./PlayerInterface.js').IPlayerState}
+         */
         this.playerState = playerState;
+        
+        /**
+         * Player statistics
+         * @type {import('./PlayerInterface.js').IPlayerStats}
+         */
         this.playerStats = playerStats;
+        
+        /**
+         * Player model and animations
+         * @type {import('./PlayerInterface.js').IPlayerModel}
+         */
         this.playerModel = playerModel;
+        
+        /**
+         * Player inventory
+         * @type {import('./PlayerInterface.js').IPlayerInventory}
+         */
         this.playerInventory = playerInventory;
         
-        // Game reference
+        /**
+         * Game reference
+         * @type {Object|null}
+         */
         this.game = null;
         
-        // Simplified punch system
+        /**
+         * Simplified punch system
+         * @type {PunchSystem}
+         */
         this.punchSystem = {
             cooldown: 0,
             cooldownTime: 0.5,
@@ -33,121 +74,18 @@ export class PlayerCombat extends IPlayerCombat {
         };
     }
     
+    /**
+     * Sets the game instance reference
+     * @param {Object} game - The main game instance
+     */
     setGame(game) {
         this.game = game;
     }
     
-    updateComboPunch(delta) {
-        // Update cooldowns
-        if (this.punchSystem.cooldown > 0) {
-            this.punchSystem.cooldown -= delta;
-        }
-        
-        // Update combo timer
-        if (this.punchSystem.comboCount > 0) {
-            this.punchSystem.comboTimer -= delta;
-            if (this.punchSystem.comboTimer <= 0) {
-                this.punchSystem.comboCount = 0;
-            }
-        }
-        
-        // Don't punch if player is already in an action
-        if (this.playerState.isAttacking() || this.playerState.isUsingSkill()) {
-            return;
-        }
-        
-        // Check for punch input
-        if (this.game?.inputHandler?.skillKeysHeld.KeyH && this.punchSystem.cooldown <= 0) {
-            // Find nearest enemy in range
-            const playerPosition = this.playerModel.getModelGroup().position;
-            const nearestEnemy = this.game?.enemyManager?.findNearestEnemy(playerPosition, this.punchSystem.range);
-            
-            if (nearestEnemy) {
-                this.performComboPunch(nearestEnemy);
-                this.punchSystem.cooldown = this.punchSystem.cooldownTime;
-            }
-        }
-    }
-    
-    performComboPunch(enemy) {
-        // Set attack state
-        this.playerState.setAttacking(true);
-        
-        // Face enemy
-        const playerPosition = this.playerModel.getModelGroup().position;
-        const enemyPosition = enemy.getPosition();
-        const direction = new THREE.Vector3().subVectors(enemyPosition, playerPosition).normalize();
-        this.playerModel.setRotation(new THREE.Euler(0, Math.atan2(direction.x, direction.z), 0));
-        
-        // Update combo
-        this.punchSystem.comboCount = (this.punchSystem.comboCount + 1) % 4;
-        this.punchSystem.comboTimer = this.punchSystem.comboTimeWindow;
-        const comboStep = this.punchSystem.comboCount;
-        
-        // Play appropriate animation
-        switch (comboStep) {
-            case 0: this.playerModel.createLeftPunchAnimation(); break;
-            case 1: this.playerModel.createRightPunchAnimation(); break;
-            case 2: this.playerModel.createLeftHookAnimation(); break;
-            case 3: this.playerModel.createHeavyPunchAnimation(); break;
-        }
-        
-        // Calculate and apply damage
-        const damage = this.calculateComboPunchDamage(comboStep);
-        enemy.takeDamage(damage);
-        
-        // Visual effects
-        if (this.game?.effectsManager) {
-            this.game.effectsManager.createBleedingEffect(damage, enemyPosition, false);
-        }
-        
-        // Apply knockback on heavy punch
-        if (comboStep === 3) {
-            this.applyKnockback(enemy, direction);
-        }
-        
-        // Sound effects
-        if (this.game?.audioManager) {
-            this.game.audioManager.playSound(comboStep === 3 ? 'playerHeavyAttack' : 'playerAttack');
-        }
-        
-        // Reset attack state after delay
-        setTimeout(() => this.playerState.setAttacking(false), 300);
-    }
-    
-    applyKnockback(enemy, direction) {
-        // Calculate knockback vector
-        const knockbackVector = direction.clone().multiplyScalar(-this.punchSystem.knockbackDistance);
-        
-        // Apply knockback to enemy
-        if (typeof enemy.applyKnockback === 'function') {
-            enemy.applyKnockback(knockbackVector, this.punchSystem.knockbackDuration);
-        }
-        
-        // Create visual effect
-        this.playerModel.createKnockbackEffect(enemy.getPosition().clone());
-    }
-    
-    calculateComboPunchDamage(comboStep) {
-        // Base damage calculation
-        let damage = this.playerStats.getAttackPower();
-        damage += this.playerStats.strength * 0.5;
-        damage += (this.playerStats.getLevel() - 1) * 2;
-        
-        // Add weapon damage
-        const equipment = this.playerInventory.getEquipment();
-        if (equipment.weapon) {
-            damage += equipment.weapon.damage || 0;
-        }
-        
-        // Apply combo multiplier
-        damage *= this.punchSystem.damageMultipliers[comboStep];
-        
-        // Add variation and round
-        const variation = damage * 0.2 * (Math.random() - 0.5);
-        return Math.round(damage + variation);
-    }
-    
+    /**
+     * Performs a standard attack at the target position
+     * @param {THREE.Vector3} target - The target position to attack
+     */
     attack(target) {
         // Set attack state
         this.playerState.setAttacking(true);
@@ -170,6 +108,10 @@ export class PlayerCombat extends IPlayerCombat {
         this.checkAttackHit(direction);
     }
     
+    /**
+     * Checks for enemies hit by an attack in the specified direction
+     * @param {THREE.Vector3} direction - The direction of the attack
+     */
     checkAttackHit(direction) {
         if (!this.game?.enemyManager) return;
         
@@ -208,20 +150,11 @@ export class PlayerCombat extends IPlayerCombat {
         });
     }
     
-    calculateDamage() {
-        // Basic damage calculation
-        let damage = this.playerStats.getAttackPower();
-        
-        // Add weapon damage
-        const equipment = this.playerInventory.getEquipment();
-        if (equipment.weapon) {
-            damage += equipment.weapon.damage || 0;
-        }
-        
-        // Add variation and round
-        return Math.round(damage * (0.8 + Math.random() * 0.4));
-    }
-    
+    /**
+     * Handles player taking damage
+     * @param {number} damage - The amount of damage to take
+     * @returns {number} The actual amount of damage taken after reductions
+     */
     takeDamage(damage) {
         // Apply armor reduction
         let reducedDamage = damage;
@@ -252,6 +185,9 @@ export class PlayerCombat extends IPlayerCombat {
         return reducedDamage;
     }
     
+    /**
+     * Handles player death
+     */
     die() {
         // Set dead state
         this.playerState.setDead(true);
@@ -269,6 +205,9 @@ export class PlayerCombat extends IPlayerCombat {
         }
     }
     
+    /**
+     * Revives the player after death
+     */
     revive() {
         // Reset health and mana
         this.playerStats.setHealth(this.playerStats.getMaxHealth() * 0.75);

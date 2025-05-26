@@ -289,7 +289,7 @@ export class Enemy {
             Math.pow(targetPosition.z - this.player.getPosition().z, 2)
         );
         
-        if (distanceToPlayer < 3) {
+        if (distanceToPlayer < 5) {
             this.player.takeDamage(this.damage * 1.5);
             // Apply slow effect to player
             this.player.applyEffect('slow', 3);
