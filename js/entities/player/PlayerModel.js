@@ -54,7 +54,6 @@ import { PlayerAttackEffect } from './PlayerAttackEffect.js';
  * @property {THREE.AnimationMixer} mixer - Animation mixer for the model
  * @property {Object.<string, THREE.AnimationAction>} animations - Map of animation names to animation actions
  * @property {string} currentAnimation - Name of the currently playing animation
- * @property {FallbackPlayerModel} fallbackModel - Simple geometric model used as fallback
  * @property {boolean} usingFallbackModel - Flag indicating if fallback model is being used
  * @property {import("../../game/Game.js").Game} game - Reference to the main game instance
  * @property {PlayerAttackEffect} attackEffect - Handler for creating visual attack effects
