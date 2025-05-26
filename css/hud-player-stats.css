@@ -6,7 +6,7 @@
 
 /* Player Stats Container */
 #player-stats-container {
-    width: 200px;
+    width: 170px;
     background-color: rgba(0, 0, 0, 0.7);
     border: 2px solid #333;
     border-radius: 5px;
@@ -43,15 +43,16 @@
 .player-header-row {
     display: flex;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: 1px;
 }
 
 .player-bars {
     display: flex;
     flex-direction: column;
     flex: 1;
-    margin-left: 10px;
+    margin-left: 5px;
     gap: 5px;
+    width: 120px; /* Fixed width for the bars container */
 }
 
 #player-portrait {
@@ -59,7 +60,7 @@
     height: 50px;
     background-color: #444;
     border-radius: 50%;
-    margin-right: 10px;
+    /* margin-right: 10px; */
     overflow: hidden;
     border: 2px solid #666;
     display: flex;
@@ -69,8 +70,9 @@
 }
 
 #player-info {
-    flex: 0 0 auto;
-    margin-right: 10px;
+    width: 55px;
+    /* margin-right: 10px; */
+    text-align: center;
 }
 
 #player-name {
@@ -88,9 +90,12 @@
 }
 
 /* Health Bar */
-#health-bar-container {
+/* Common styles for all bar containers */
+.player-bars #health-bar-container,
+.player-bars #mana-bar-container,
+.player-header-row #experience-bar-container {
     position: relative;
-    width: 100%;
+    width: 100px;
     height: 18px;
     background-color: rgba(0, 0, 0, 0.5);
     border: 1px solid #333;
@@ -127,13 +132,7 @@
 
 /* Mana Bar */
 #mana-bar-container {
-    position: relative;
-    width: 100%;
-    height: 18px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border: 1px solid #333;
-    border-radius: 3px;
-    overflow: hidden;
+    /* Individual styles for mana bar if needed */
 }
 
 #mana-bar {
@@ -165,13 +164,7 @@
 
 /* Experience Bar */
 #experience-bar-container {
-    position: relative;
-    flex: 1;
-    height: 15px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border: 1px solid #333;
-    border-radius: 3px;
-    overflow: hidden;
+    /* Individual styles for experience bar if needed */
 }
 
 #experience-bar {

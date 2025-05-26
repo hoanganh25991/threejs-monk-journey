@@ -6,7 +6,7 @@
 
 /* Quest Log */
 #quest-log {
-    width: 200px;
+    width: 170px;
     background-color: rgba(0, 0, 0, 0.7);
     color: white;
     padding: var(--padding-medium);
