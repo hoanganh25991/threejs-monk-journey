@@ -328,7 +328,7 @@ export const NORMAL_SKILLS = [
         cooldown: 0, // Moderate cooldown
         range: 0, // Self-cast
         radius: 5, // Large radius to affect multiple allies/enemies
-        duration: 3, // Duration in seconds
+        duration: 5, // Duration in seconds
         get color() { return SKILL_ICONS[this.name]?.color; }, // Green color
         get icon() { return SKILL_ICONS[this.name]?.emoji; }, // Leaf emoji as fallback
         sounds: {

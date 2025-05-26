@@ -4,24 +4,25 @@
  */
 
 import { IPlayerStats } from './PlayerInterface.js';
+import { DEFAULT_PLAYER_STATS, LEVEL_UP_EXPERIENCE_MULTIPLIER, RESOURCE_REGENERATION, LEVEL_UP_STAT_INCREASES } from '../../../config/player.js';
 
 export class PlayerStats extends IPlayerStats {
     constructor(initialStats = {}) {
         super();
         
-        // Default stats
-        this.level = initialStats.level || 1;
-        this.experience = initialStats.experience || 0;
-        this.experienceToNextLevel = initialStats.experienceToNextLevel || 100;
-        this.health = initialStats.health || 300;
-        this.maxHealth = initialStats.maxHealth || 300;
-        this.mana = initialStats.mana || 200;
-        this.maxMana = initialStats.maxMana || 200;
-        this.strength = initialStats.strength || 10;
-        this.dexterity = initialStats.dexterity || 10;
-        this.intelligence = initialStats.intelligence || 10;
-        this.movementSpeed = initialStats.movementSpeed || 15;
-        this.attackPower = initialStats.attackPower || 10;
+        // Initialize stats from config with any provided overrides
+        this.level = initialStats.level || DEFAULT_PLAYER_STATS.level;
+        this.experience = initialStats.experience || DEFAULT_PLAYER_STATS.experience;
+        this.experienceToNextLevel = initialStats.experienceToNextLevel || DEFAULT_PLAYER_STATS.experienceToNextLevel;
+        this.health = initialStats.health || DEFAULT_PLAYER_STATS.health;
+        this.maxHealth = initialStats.maxHealth || DEFAULT_PLAYER_STATS.maxHealth;
+        this.mana = initialStats.mana || DEFAULT_PLAYER_STATS.mana;
+        this.maxMana = initialStats.maxMana || DEFAULT_PLAYER_STATS.maxMana;
+        this.strength = initialStats.strength || DEFAULT_PLAYER_STATS.strength;
+        this.dexterity = initialStats.dexterity || DEFAULT_PLAYER_STATS.dexterity;
+        this.intelligence = initialStats.intelligence || DEFAULT_PLAYER_STATS.intelligence;
+        this.movementSpeed = initialStats.movementSpeed || DEFAULT_PLAYER_STATS.movementSpeed;
+        this.attackPower = initialStats.attackPower || DEFAULT_PLAYER_STATS.attackPower;
         
         // Track temporary stat boosts
         this.temporaryBoosts = {};
@@ -107,15 +108,15 @@ export class PlayerStats extends IPlayerStats {
         this.experience -= this.experienceToNextLevel;
         
         // Calculate experience for next level
-        this.experienceToNextLevel = Math.floor(this.experienceToNextLevel * 1.5);
+        this.experienceToNextLevel = Math.floor(this.experienceToNextLevel * LEVEL_UP_EXPERIENCE_MULTIPLIER);
         
-        // Increase stats
-        this.maxHealth += 10;
-        this.maxMana += 5;
-        this.strength += 1;
-        this.dexterity += 1;
-        this.intelligence += 1;
-        this.attackPower += 2;
+        // Increase stats based on config
+        this.maxHealth += LEVEL_UP_STAT_INCREASES.maxHealth;
+        this.maxMana += LEVEL_UP_STAT_INCREASES.maxMana;
+        this.strength += LEVEL_UP_STAT_INCREASES.strength;
+        this.dexterity += LEVEL_UP_STAT_INCREASES.dexterity;
+        this.intelligence += LEVEL_UP_STAT_INCREASES.intelligence;
+        this.attackPower += LEVEL_UP_STAT_INCREASES.attackPower;
         
         // Restore health and mana
         this.health = this.maxHealth;
@@ -221,7 +222,7 @@ export class PlayerStats extends IPlayerStats {
         
         // Regenerate health
         if (this.health < this.maxHealth) {
-            this.health += delta * 2; // 2 health per second
+            this.health += delta * RESOURCE_REGENERATION.health;
             if (this.health > this.maxHealth) {
                 this.health = this.maxHealth;
             }
@@ -229,7 +230,7 @@ export class PlayerStats extends IPlayerStats {
         
         // Regenerate mana
         if (this.mana < this.maxMana) {
-            this.mana += delta * 5; // 5 mana per second
+            this.mana += delta * RESOURCE_REGENERATION.mana;
             if (this.mana > this.maxMana) {
                 this.mana = this.maxMana;
             }
