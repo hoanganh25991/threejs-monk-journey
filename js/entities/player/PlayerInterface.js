@@ -98,16 +98,6 @@ export class IPlayerModel {
     // Position and rotation
     setPosition(position) {}
     setRotation(rotation) {}
-    
-    // Combat animations
-    createLeftPunchAnimation() {}
-    createRightPunchAnimation() {}
-    createLeftHookAnimation() {}
-    createHeavyPunchAnimation() {}
-    createPunchEffect(hand, color) {}
-    createHeavyPunchEffect() {}
-    createAttackEffect(direction) {}
-    createKnockbackEffect(position) {}
 }
 
 /**

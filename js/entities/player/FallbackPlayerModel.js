@@ -151,15 +151,4 @@ export class FallbackPlayerModel extends IPlayerModel {
     getModelGroup() {
         return this.modelGroup;
     }
-    
-    // Implement required interface methods with empty implementations
-    // These are not needed for the fallback model but required by the interface
-    createLeftPunchAnimation() {}
-    createRightPunchAnimation() {}
-    createLeftHookAnimation() {}
-    createHeavyPunchAnimation() {}
-    createPunchEffect() {}
-    createHeavyPunchEffect() {}
-    createAttackEffect() {}
-    createKnockbackEffect() {}
 }

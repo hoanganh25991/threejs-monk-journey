@@ -1,6 +1,14 @@
 /**
  * PlayerSkills.js
- * Manages the player's skills and abilities
+ * Manages the player's skills and abilities, including skill initialization, 
+ * activation, cooldown management, and effect creation.
+ * 
+ * This class handles:
+ * - Loading and initializing player skills from configuration
+ * - Managing active skills and their lifecycle
+ * - Applying skill variants and buffs from the skill tree
+ * - Handling skill targeting and positioning
+ * - Processing skill cooldowns and mana costs
  */
 
 import * as THREE from 'three';
@@ -10,13 +18,38 @@ import { SkillEffectFactory } from '../skills/SkillEffectFactory.js';
 import { SKILLS, BATTLE_SKILLS } from '../../config/skills.js';
 import { STORAGE_KEYS } from '../../config/storage-keys.js';
 
+/**
+ * @typedef {Object} SkillTreeEntry
+ * @property {string} [activeVariant] - The active variant of the skill
+ * @property {Object.<string, number>} [buffs] - Buffs applied to the skill
+ */
+
+/**
+ * @typedef {Object} SkillTreeData
+ * @property {SkillTreeEntry} [skillName] - Skill tree data for a specific skill
+ */
+
+/**
+ * Class responsible for managing all player skills and abilities
+ * @extends IPlayerSkills
+ * 
+ * @property {import("three").Scene} scene - The Three.js scene where skill effects will be added
+ * @property {import("../player/PlayerStats.js")} playerStats - Reference to the player's stats for mana management
+ * @property {import("three").Vector3} playerPosition - Reference to the player's position vector
+ * @property {Object} playerRotation - Reference to the player's rotation object
+ * @property {Array<import("../skills/Skill.js").Skill>} skills - Array of available skill templates
+ * @property {Array<import("../skills/Skill.js").Skill>} activeSkills - Array of currently active skill instances
+ * @property {import("../../game/Game.js").Game} game - Reference to the main game instance
+ * @property {boolean} customSkillsEnabled - Flag indicating whether custom skills are enabled
+ * @property {SkillTreeData} [skillTreeData] - Data from the skill tree, containing variants and buffs
+ */
 export class PlayerSkills extends IPlayerSkills {
     /**
-     * 
-     * @param {import("three").Scene} scene 
-     * @param {import("../player/PlayerStats.js")} playerStats 
-     * @param {import("three").Vector3} playerPosition 
-     * @param {Object} playerRotation 
+     * Creates a new PlayerSkills instance
+     * @param {import("three").Scene} scene - The Three.js scene where skill effects will be added
+     * @param {import("../player/PlayerStats.js")} playerStats - Reference to the player's stats for mana management
+     * @param {import("three").Vector3} playerPosition - Reference to the player's position vector
+     * @param {Object} playerRotation - Reference to the player's rotation object
      */
     constructor(scene, playerStats, playerPosition, playerRotation) {
         super();
@@ -38,15 +71,18 @@ export class PlayerSkills extends IPlayerSkills {
     }
     
     /**
-     * 
-     * @param {import("../../game/Game.js").Game} game 
+     * Sets the game reference to access game systems like enemy manager, audio, etc.
+     * @param {import("../../game/Game.js").Game} game - Reference to the main game instance
+     * @returns {void}
      */
     setGame(game) {
         this.game = game;
     }
     
     /**
-     * Update custom skills visibility based on the flag in localStorage
+     * Updates custom skills visibility based on the flag in localStorage
+     * Reloads skills and updates UI components accordingly
+     * @returns {void}
      */
     updateCustomSkillsVisibility() {
         // Update the flag
@@ -71,9 +107,9 @@ export class PlayerSkills extends IPlayerSkills {
     }
     
     /**
-     * Filter skills based on the custom skills flag
-     * @param {Array} skills - Array of skill configurations
-     * @returns {Array} - Filtered array of skill configurations
+     * Filters skills based on the custom skills flag
+     * @param {Array<Object>} skills - Array of skill configurations
+     * @returns {Array<Object>} - Filtered array of skill configurations
      */
     filterCustomSkills(skills) {
         if (this.customSkillsEnabled) {
@@ -86,8 +122,9 @@ export class PlayerSkills extends IPlayerSkills {
     }
     
     /**
-     * Load skill tree data from localStorage
-     * This method is called when the skill tree is saved
+     * Loads skill tree data from localStorage
+     * This method is called when the skill tree is saved or when skills are initialized
+     * @returns {boolean} - True if skill tree data was successfully loaded, false otherwise
      */
     loadSkillTreeData() {
         try {
@@ -116,7 +153,9 @@ export class PlayerSkills extends IPlayerSkills {
     }
     
     /**
-     * Update existing skills with variants and buffs from skill tree data
+     * Updates existing skills with variants and buffs from skill tree data
+     * Applies selected variants and buffs to each skill in the player's skill array
+     * @returns {void}
      */
     updateSkillsWithVariants() {
         if (!this.skillTreeData) return;
@@ -145,6 +184,11 @@ export class PlayerSkills extends IPlayerSkills {
         console.debug('Updated skills with variants and buffs from skill tree data');
     }
     
+    /**
+     * Initializes player skills from localStorage or defaults to battle skills
+     * Handles both old and new skill storage formats
+     * @returns {void}
+     */
     initializeSkills() {
         // Initialize monk skills using the configuration from config/skills.js
         const savedSkillsJson = localStorage.getItem(STORAGE_KEYS.SELECTED_SKILLS);
@@ -171,8 +215,9 @@ export class PlayerSkills extends IPlayerSkills {
     }
     
     /**
-     * Load skills from an array of skill IDs
-     * @param {Array} skillIds - Array of { id, isPrimary } objects
+     * Loads skills from an array of skill IDs
+     * Creates skill instances with appropriate variants and buffs
+     * @param {Array<{id: string, isPrimary: boolean}>} skillIds - Array of skill ID objects
      */
     loadSkillsFromIds(skillIds) {
         // Reset skills array
@@ -229,6 +274,12 @@ export class PlayerSkills extends IPlayerSkills {
         }
     }
     
+    /**
+     * Updates all active skills and their cooldowns
+     * Handles skill expiration, error recovery, and cleanup
+     * @param {number} delta - Time delta since last update in seconds
+     * @returns {void}
+     */
     updateSkills(delta) {
         // Update active skills
         for (let i = this.activeSkills.length - 1; i >= 0; i--) {
@@ -295,6 +346,12 @@ export class PlayerSkills extends IPlayerSkills {
         this.skills.forEach(skill => skill.updateCooldown(delta));
     }
     
+    /**
+     * Activates a skill by its index in the skills array
+     * Handles mana cost, cooldown, targeting, and effect creation
+     * @param {number} skillIndex - Index of the skill in the skills array
+     * @returns {boolean} - True if skill was successfully used, false otherwise
+     */
     useSkill(skillIndex) {
         console.debug('PlayerSkills.useSkill called with index:', skillIndex);
         
@@ -508,6 +565,12 @@ export class PlayerSkills extends IPlayerSkills {
         return true;
     }
     
+    /**
+     * Activates the player's primary attack skill
+     * Handles different attack behaviors based on enemy distance
+     * Uses teleport for distant enemies and normal attack for close enemies
+     * @returns {boolean} - True if primary attack was successfully used, false otherwise
+     */
     usePrimaryAttack() {
         // Find the Fist of Thunder skill (should be the last skill in the array)
         // This is the basic attack skill with the "h" key
@@ -677,10 +740,18 @@ export class PlayerSkills extends IPlayerSkills {
         return false;
     }
     
+    /**
+     * Gets the array of available skill templates
+     * @returns {Array<Skill>} - Array of skill templates
+     */
     getSkills() {
         return this.skills;
     }
     
+    /**
+     * Gets the array of currently active skill instances
+     * @returns {Array<Skill>} - Array of active skill instances
+     */
     getActiveSkills() {
         return this.activeSkills;
     }
