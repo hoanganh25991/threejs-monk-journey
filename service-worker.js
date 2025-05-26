@@ -4,24 +4,33 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '36';
+const CACHE_VERSION = '37';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 6171046;
-const TOTAL_CACHE_SIZE_MB = 5.89;
+const TOTAL_CACHE_SIZE_BYTES = 6413218;
+const TOTAL_CACHE_SIZE_MB = 6.12;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
   '',
   'manifest.json',
   'css/animations.css',
+  'css/camera-control.css',
   'css/death-screen.css',
   'css/dialog.css',
   'css/game-menu.css',
   'css/game.css',
+  'css/hud-common.css',
+  'css/hud-enemy-health.css',
+  'css/hud-joystick.css',
+  'css/hud-layout.css',
   'css/hud-manager.css',
+  'css/hud-minimap.css',
+  'css/hud-player-stats.css',
+  'css/hud-quest-log.css',
+  'css/hud-skills.css',
   'css/icons.css',
   'css/initial-loading.css',
   'css/inventory.css',
@@ -70,10 +79,9 @@ const ASSETS_TO_CACHE = [
   'js/entities/enemies/models/VoidWraithModel.js',
   'js/entities/enemies/models/ZombieBruteModel.js',
   'js/entities/enemies/models/ZombieModel.js',
-  'js/entities/player/FallbackPlayerModel.js',
   'js/entities/player/Player.js',
+  'js/entities/player/PlayerAttackEffect.js',
   'js/entities/player/PlayerCombat.js',
-  'js/entities/player/PlayerInterface.js',
   'js/entities/player/PlayerInventory.js',
   'js/entities/player/PlayerModel.js',
   'js/entities/player/PlayerMovement.js',
@@ -177,6 +185,7 @@ const ASSETS_TO_CACHE = [
   'js/game/GameState.js',
   'js/game/LoadingManager.js',
   'js/game/SceneOptimizer.js',
+  'js/hud-manager/CameraControlUI.js',
   'js/hud-manager/DeathScreenUI.js',
   'js/hud-manager/DialogUI.js',
   'js/hud-manager/EnemyUI.js',
@@ -269,7 +278,7 @@ const ASSETS_TO_CACHE = [
   'assets/audio/bell_fade.mp3',
   'assets/audio/bell_ring.mp3',
   'assets/audio/boss_death.mp3',
-  'assets/audio/boss_theme.mp3',
+  'assets/audio/boss_theme.MP3',
   'assets/audio/breath_of_heaven.mp3',
   'assets/audio/button_click.mp3',
   'assets/audio/chain_impact.mp3',
