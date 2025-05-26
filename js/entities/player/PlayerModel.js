@@ -70,15 +70,16 @@ export class PlayerModel {
     /**
      * Creates a new PlayerModel instance
      * @param {THREE.Scene} scene - The Three.js scene where the model will be rendered
+     * @param {import("../../game/Game.js").Game} [game=null] - Reference to the main game instance
      */
-    constructor(scene) {
+    constructor(scene, game = null) {
         this.scene = scene;
         this.modelGroup = null;
         this.gltfModel = null;
         this.mixer = null;
         this.animations = {};
         this.currentAnimation = null;
-        this.game = null; // Reference to the game
+        this.game = game; // Reference to the game
         // We'll use the game's clock instead of creating our own
         
         // Create the attack effect handler
@@ -95,14 +96,7 @@ export class PlayerModel {
         this.modelPath = this.currentModel.path; // Path to the 3D model
     }
     
-    /**
-     * Sets the game reference to access game systems
-     * @param {import("../../game/Game.js").Game} game - Reference to the main game instance
-     * @returns {void}
-     */
-    setGame(game) {
-        this.game = game;
-    }
+    // setGame method removed - game is now passed in constructor
     
     /**
      * Get model configuration by ID

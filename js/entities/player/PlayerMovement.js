@@ -6,7 +6,14 @@
 import * as THREE from 'three';
 
 export class PlayerMovement {
-    constructor(playerState, playerStats, modelGroup, camera) {
+    /**
+     * @param {import('./PlayerInterface.js').IPlayerState} playerState - Player state manager
+     * @param {import('./PlayerInterface.js').IPlayerStats} playerStats - Player statistics
+     * @param {THREE.Group} modelGroup - The player's model group
+     * @param {THREE.PerspectiveCamera} camera - The main camera
+     * @param {Object} [game=null] - The main game instance
+     */
+    constructor(playerState, playerStats, modelGroup, camera, game = null) {
         // Store references
         this.playerState = playerState;
         this.playerStats = playerStats;
@@ -23,12 +30,10 @@ export class PlayerMovement {
         this.heightOffset = 1.0;
         
         // Game reference
-        this.game = null;
-    }
-    
-    setGame(game) {
         this.game = game;
     }
+    
+    // setGame method removed - game is now passed in constructor
     
     updateMovement(delta) {
         if (this.playerState.isMoving()) {

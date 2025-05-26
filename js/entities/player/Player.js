@@ -46,8 +46,7 @@ export class Player {
         this.state = new PlayerState();
         this.stats = new PlayerStats();
         this.inventory = new PlayerInventory();
-        this.model = new PlayerModel(scene);
-        this.setGame(game);
+        this.model = new PlayerModel(scene, game);
         
         // Components that need to be initialized after model is created
         this.movement = null;
@@ -67,19 +66,12 @@ export class Player {
         await this.model.createModel();
         
         // Initialize components that depend on the model
-        this.movement = new PlayerMovement(this.state, this.stats, this.model.getModelGroup(), this.camera);
-        this.skills = new PlayerSkills(this.scene, this.stats, this.movement.getPosition(), this.movement.getRotation());
-        this.combat = new PlayerCombat(this.scene, this.state, this.stats, this.model, this.inventory);
+        this.movement = new PlayerMovement(this.state, this.stats, this.model.getModelGroup(), this.camera, this.game);
+        this.skills = new PlayerSkills(this.scene, this.stats, this.movement.getPosition(), this.movement.getRotation(), this.game);
+        this.combat = new PlayerCombat(this.scene, this.state, this.stats, this.model, this.inventory, this.game);
         
         // Initialize skills
         this.skills.initializeSkills();
-        
-        // If game reference was set before initialization, pass it to components now
-        if (this.game) {
-            this.movement.setGame(this.game);
-            this.skills.setGame(this.game);
-            this.combat.setGame(this.game);
-        }
         
         console.debug("Player initialized with model group:", this.model.getModelGroup());
         
@@ -91,22 +83,11 @@ export class Player {
      * This allows player components to access game systems like input, terrain, etc.
      * 
      * @param {import("../../game/Game.js").Game} game - The game instance
+     * @deprecated Game reference is now passed in constructor
      */
     setGame(game) {
+        console.warn("setGame is deprecated - game reference should be passed in constructor");
         this.game = game;
-        
-        // Pass game reference to model
-        if (this.model) {
-            this.model.setGame(game);
-        }
-        
-        // If components are already initialized, pass game reference to them
-        if (this.movement && this.skills && this.combat) {
-            this.movement.setGame(game);
-            this.skills.setGame(game);
-            this.combat.setGame(game);
-        }
-        // Otherwise, the game reference will be passed to components in init()
     }
     
     /**

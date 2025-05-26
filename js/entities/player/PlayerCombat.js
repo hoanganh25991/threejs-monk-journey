@@ -20,7 +20,15 @@ export class PlayerCombat {
      * @param {import('./PlayerInterface.js').IPlayerModel} playerModel - Player model and animations
      * @param {import('./PlayerInterface.js').IPlayerInventory} playerInventory - Player inventory
      */
-    constructor(scene, playerState, playerStats, playerModel, playerInventory) {
+    /**
+     * @param {THREE.Scene} scene - The Three.js scene
+     * @param {import('./PlayerInterface.js').IPlayerState} playerState - Player state manager
+     * @param {import('./PlayerInterface.js').IPlayerStats} playerStats - Player statistics
+     * @param {import('./PlayerInterface.js').IPlayerModel} playerModel - Player model and animations
+     * @param {import('./PlayerInterface.js').IPlayerInventory} playerInventory - Player inventory
+     * @param {Object} [game=null] - The main game instance
+     */
+    constructor(scene, playerState, playerStats, playerModel, playerInventory, game = null) {
         /**
          * The Three.js scene
          * @type {THREE.Scene}
@@ -55,7 +63,7 @@ export class PlayerCombat {
          * Game reference
          * @type {Object|null}
          */
-        this.game = null;
+        this.game = game;
         
         /**
          * Simplified punch system
@@ -74,13 +82,7 @@ export class PlayerCombat {
         };
     }
     
-    /**
-     * Sets the game instance reference
-     * @param {Object} game - The main game instance
-     */
-    setGame(game) {
-        this.game = game;
-    }
+    // setGame method removed - game is now passed in constructor
     
     /**
      * Handles player taking damage

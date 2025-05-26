@@ -36,7 +36,15 @@ export class PlayerSkills {
      * @param {import("three").Vector3} playerPosition - Reference to the player's position vector
      * @param {Object} playerRotation - Reference to the player's rotation object
      */
-    constructor(scene, playerStats, playerPosition, playerRotation) {
+    /**
+     * Creates a new PlayerSkills instance
+     * @param {import("three").Scene} scene - The Three.js scene where skill effects will be added
+     * @param {import("../player/PlayerStats.js")} playerStats - Reference to the player's stats for mana management
+     * @param {import("three").Vector3} playerPosition - Reference to the player's position vector
+     * @param {Object} playerRotation - Reference to the player's rotation object
+     * @param {import("../../game/Game.js").Game} [game=null] - Reference to the main game instance
+     */
+    constructor(scene, playerStats, playerPosition, playerRotation, game = null) {
         this.scene = scene;
         this.playerStats = playerStats;
         this.playerPosition = playerPosition;
@@ -47,20 +55,13 @@ export class PlayerSkills {
         this.activeSkills = [];
         
         // Game reference
-        this.game = null;
+        this.game = game;
         
         // Custom skills flag
         this.customSkillsEnabled = localStorage.getItem(STORAGE_KEYS.CUSTOM_SKILLS) === 'true';
     }
     
-    /**
-     * Sets the game reference to access game systems like enemy manager, audio, etc.
-     * @param {import("../../game/Game.js").Game} game - Reference to the main game instance
-     * @returns {void}
-     */
-    setGame(game) {
-        this.game = game;
-    }
+    // setGame method removed - game is now passed in constructor
     
     /**
      * Updates custom skills visibility based on the flag in localStorage

@@ -273,7 +273,7 @@ export class TeleportManager {
         // Create a canvas for the nameplate
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-        canvas.width = 256;
+        canvas.width = 256 * 2;
         canvas.height = 64;
         
         // Fill with transparent background
