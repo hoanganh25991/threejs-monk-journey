@@ -308,7 +308,10 @@ export class NotificationsUI extends UIComponent {
         levelElement.textContent = level;
         
         // Show the level up animation
-        levelUpContainer.classList.remove('hidden');
+        levelUpContainer.style.removeProperty("display");
+        setTimeout(() => {
+            levelUpContainer.style.display = "none";
+        }, 2000)
     }
     
     /**
