@@ -3,6 +3,41 @@ import { Enemy } from './Enemy.js';
 import { ZONE_ENEMIES, ENEMY_TYPES, BOSS_TYPES, ZONE_DIFFICULTY_MULTIPLIERS } from '../../config/enemies.js';
 import { DROP_CHANCES, REGULAR_DROP_TABLE, BOSS_DROP_TABLE } from '../../config/drops.js';
 
+/**
+ * @typedef {Object} EnemyType
+ * @property {string} type - Unique identifier for the enemy type
+ * @property {string} name - Display name of the enemy
+ * @property {string} model - Path to the 3D model file
+ * @property {number} health - Base health points
+ * @property {number} damage - Base damage points
+ * @property {number} speed - Movement speed
+ * @property {number} experienceValue - Experience points awarded when defeated
+ * @property {number} [baseHealth] - Original health value before scaling
+ * @property {boolean} [isBoss] - Whether this enemy is a boss
+ * @property {string} [attackSound] - Sound to play when attacking
+ * @property {string} [deathSound] - Sound to play when dying
+ * @property {number} [attackRange] - Range at which enemy can attack
+ * @property {number} [detectionRange] - Range at which enemy detects player
+ */
+
+/**
+ * @typedef {Object} EnemyGroupSize
+ * @property {number} min - Minimum number of enemies in a group
+ * @property {number} max - Maximum number of enemies in a group
+ */
+
+/**
+ * @typedef {Object} DropItem
+ * @property {string} id - Unique identifier for the item
+ * @property {string} name - Display name of the item
+ * @property {string} type - Type of item (weapon, armor, consumable, etc.)
+ * @property {number} weight - Drop weight/probability
+ * @property {Object} [stats] - Item statistics
+ */
+
+/**
+ * Manages enemy spawning, updating, and removal in the game world
+ */
 export class EnemyManager {
     /**
      * Creates a new EnemyManager instance
