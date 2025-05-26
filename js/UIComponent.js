@@ -3,6 +3,17 @@
  * Provides common functionality for UI components
  */
 export class UIComponent {
+    /** @type {String} */
+    containerId;
+    /** @type {HTMLElement} */
+    container;
+    /** @type {import('./game/Game.js').Game} */
+    game;
+    /** @type {HTMLElement} */
+    element;
+    /** @type {String} */
+    originalDisplay;
+
     /**
      * Create a new UI component
      * @param {string} containerId - ID of the container element

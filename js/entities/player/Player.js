@@ -139,6 +139,18 @@ export class Player extends IPlayer {
         return this.movement.getRotation();
     }
     
+    setRotation(x, y, z) {
+        if (this.movement) {
+            // Update movement component rotation
+            this.movement.rotation.y = y;
+            
+            // Update model rotation
+            if (this.model) {
+                this.model.setRotation({y: y});
+            }
+        }
+    }
+    
     getCollisionRadius() {
         return this.movement.getCollisionRadius();
     }

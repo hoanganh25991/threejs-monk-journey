@@ -23,6 +23,35 @@ import { InteractionSystem } from '../interaction/InteractionSystem.js';
 
 /**
  * Main Game class that serves as a facade to the underlying game systems
+ * 
+ * @class
+ * @property {HTMLElement} canvas - The main game canvas element
+ * @property {THREE.Clock} clock - Clock used for tracking time and calculating delta time between frames
+ * @property {boolean} debugMode - Flag to enable/disable debug logging
+ * @property {boolean} animationLoopStarted - Flag to prevent multiple animation loops from starting
+ * @property {GameState} state - Manages the game state (running, paused, etc.)
+ * @property {GameEvents} events - Event system for game-wide event handling
+ * @property {THREE.LoadingManager} loadingManager - Manages asset loading and tracks loading progress
+ * @property {HTMLElement} loadingScreen - Reference to the loading screen element in the DOM
+ * @property {THREE.WebGLRenderer} renderer - WebGL renderer for the game
+ * @property {THREE.Scene} scene - The main 3D scene containing all game objects
+ * @property {THREE.PerspectiveCamera} camera - The main camera used for rendering the scene
+ * @property {OrbitControls} controls - Camera controls for development/debugging purposes
+ * @property {PerformanceManager} performanceManager - Manages performance optimizations and settings
+ * @property {WorldManager} world - Manages the game world, terrain, and environment
+ * @property {Player} player - The player character with model, animations, and controls
+ * @property {InputHandler} inputHandler - Handles user input (keyboard, mouse, touch)
+ * @property {EffectsManager} effectsManager - Manages visual effects, particles, and skill effects
+ * @property {HUDManager} hudManager - Manages the heads-up display and UI elements
+ * @property {EnemyManager} enemyManager - Manages enemy spawning, AI, and behavior
+ * @property {CollisionManager} collisionManager - Handles collision detection between game objects
+ * @property {InteractionSystem} interactionSystem - Manages interactions between the player and the world
+ * @property {QuestManager} questManager - Manages game quests and objectives
+ * @property {AudioManager} audioManager - Manages sound effects and music
+ * @property {SaveManager} saveManager - Handles saving and loading game state
+ * @property {DifficultyManager} difficultyManager - Manages game difficulty settings
+ * @property {MenuManager} menuManager - Manages game menus and UI screens
+ * @property {number} _lastMemoryLog - Timestamp of the last memory usage log
  */
 export class Game {
     constructor() {
@@ -471,7 +500,7 @@ export class Game {
         this.camera.lookAt(0, 0, 0);
         
         // Disable orbit controls when game starts
-        this.controls.enabled = false;
+        // this.controls.enabled = false;
         
         // Reset player position
         this.player.setPosition(0, 2, 0);
