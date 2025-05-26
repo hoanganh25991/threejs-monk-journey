@@ -65,18 +65,9 @@ export class HUDManager {
      */
     validateUIContainer() {
         this.uiContainer = document.getElementById('hud-container');
-        
         if (!this.uiContainer) {
-            console.debug('UI container not found in DOM. Creating it dynamically.');
-            
-            // Create UI container
-            this.uiContainer = document.createElement('div');
-            this.uiContainer.id = 'hud-container';
-            this.uiContainer.style.zIndex = 1000;
-            document.body.appendChild(this.uiContainer);
+            console.error('UI container not found in DOM. Creating it dynamically.');
         }
-        
-        // Don't force visibility here - it will be controlled by game state
     }
     
     /**

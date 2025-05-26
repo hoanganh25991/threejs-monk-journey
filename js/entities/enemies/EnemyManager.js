@@ -97,12 +97,20 @@ export class EnemyManager {
             this.spawnTimer = 0;
         }
         
+        // Track if any bosses are alive
+        let bossAlive = false;
+        
         // Update enemies
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
             
             // Update enemy
             enemy.update(delta);
+            
+            // Check if this is a boss and it's alive
+            if (enemy.isBoss && !enemy.isDead()) {
+                bossAlive = true;
+            }
             
             // Remove dead enemies
             if (enemy.isDead()) {
@@ -121,6 +129,13 @@ export class EnemyManager {
                     this.enemies.splice(i, 1);
                 }
             }
+        }
+        
+        // Check if boss theme should be stopped (all bosses are dead)
+        if (!bossAlive && this.game && this.game.audioManager && 
+            this.game.audioManager.getCurrentMusic() === 'bossTheme') {
+            // Stop boss theme and return to main theme
+            this.game.audioManager.playMusic('mainTheme');
         }
         
         // Periodically clean up distant enemies (approximately every 10 seconds)

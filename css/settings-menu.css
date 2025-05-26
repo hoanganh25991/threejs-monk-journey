@@ -27,7 +27,7 @@
 }
 
 #settings-save-button {
-    transform: translateY(calc(-1 * var(--padding-medium)));
+    transform: translateY(-5px);
 }
 
 .settings-container {
