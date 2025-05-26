@@ -36,8 +36,22 @@
 
 #player-header {
     display: flex;
+    flex-direction: column;
+    margin-bottom: 5px;
+}
+
+.player-header-row {
+    display: flex;
     align-items: center;
     margin-bottom: 5px;
+}
+
+.player-bars {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin-left: 10px;
+    gap: 5px;
 }
 
 #player-portrait {
@@ -55,7 +69,8 @@
 }
 
 #player-info {
-    flex: 1;
+    flex: 0 0 auto;
+    margin-right: 10px;
 }
 
 #player-name {
@@ -66,7 +81,7 @@
 }
 
 #level-indicator {
-    font-size: 18px;
+    font-size: 12px;
     font-weight: bold;
     text-shadow: 1px 1px 2px black;
     color: #ffcc66;
@@ -76,11 +91,10 @@
 #health-bar-container {
     position: relative;
     width: 100%;
-    height: 20px;
+    height: 18px;
     background-color: rgba(0, 0, 0, 0.5);
     border: 1px solid #333;
     border-radius: 3px;
-    margin-bottom: 5px;
     overflow: hidden;
 }
 
@@ -115,7 +129,7 @@
 #mana-bar-container {
     position: relative;
     width: 100%;
-    height: 20px;
+    height: 18px;
     background-color: rgba(0, 0, 0, 0.5);
     border: 1px solid #333;
     border-radius: 3px;
@@ -152,12 +166,11 @@
 /* Experience Bar */
 #experience-bar-container {
     position: relative;
-    width: 100%;
+    flex: 1;
     height: 15px;
     background-color: rgba(0, 0, 0, 0.5);
     border: 1px solid #333;
     border-radius: 3px;
-    margin-top: 5px;
     overflow: hidden;
 }
 
