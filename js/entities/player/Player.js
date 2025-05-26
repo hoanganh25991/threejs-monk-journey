@@ -403,6 +403,15 @@ export class Player {
         return this.stats;
     }
     
+    /**
+     * Gets the player's current animation name
+     * 
+     * @returns {string|null} The name of the current animation, or null if no animation is playing
+     */
+    getCurrentAnimation() {
+        return this.model ? this.model.currentAnimation : null;
+    }
+    
     // Skills getters - delegate to PlayerSkills
     /**
      * Gets all player skills

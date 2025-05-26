@@ -83,16 +83,39 @@
     margin-left: 10px;
 }
 
-.connected-players {
+.connected-players, .connected-players-list {
     margin-top: 10px;
     text-align: left;
-    max-height: 100px;
+    max-height: 150px;
     overflow-y: auto;
+    background-color: #333;
+    border-radius: 5px;
+    padding: 5px;
 }
 
 .player-item {
-    padding: 5px;
+    padding: 8px;
     border-bottom: 1px solid #444;
+    display: flex;
+    align-items: center;
+}
+
+.player-item:before {
+    content: "👤";
+    margin-right: 8px;
+}
+
+.player-item.host:before {
+    content: "👑";
+}
+
+#start-game-btn {
+    transition: all 0.3s ease;
+}
+
+#start-game-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .manual-connection-info,

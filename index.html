@@ -237,6 +237,14 @@
                     <p>Or share this connection code:</p>
                     <div id="connection-code" class="connection-code"></div>
                 </div>
+                <div id="host-controls" style="display: none; margin-top: 20px;">
+                    <h3>Connected Players</h3>
+                    <div id="connected-players-list" class="connected-players-list">
+                        <div class="player-item">You (Host)</div>
+                        <!-- Connected players will be listed here -->
+                    </div>
+                    <button id="start-game-btn" class="menu-button" style="margin-top: 15px; background-color: #4CAF50;" disabled>Start Game</button>
+                </div>
             </div>
             <div id="qr-scanner-container" class="scrollable-container">
                 <div id="qr-scanner"></div>
@@ -677,6 +685,9 @@
 
     <!-- Service Worker Registration -->
     <script src="pwa/registration.js"></script>
+
+    <!-- Simple Peer Library - Removed external dependency and using our own implementation -->
+    <!-- The SimplePeer implementation is now included directly in SimplePeerConnection.js -->
 
     <!-- Main script module -->
     <script type="module" src="js/Main.js"></script>
