@@ -26,7 +26,7 @@ export class CameraControlUI extends UIComponent {
         };
         
         // Default camera distance (can be modified via settings)
-        this.cameraDistance = 20;
+        this.cameraDistance = 25;
         
         // Store the initial camera position and rotation
         this.initialCameraPosition = null;

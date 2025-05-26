@@ -86,7 +86,7 @@ export class GameplayTab extends SettingsTab {
             
             // Get stored zoom value or use default
             const storedZoom = localStorage.getItem(STORAGE_KEYS.CAMERA_ZOOM);
-            const defaultZoom = 20; // Default camera distance
+            const defaultZoom = 25; // Default camera distance
             const currentZoom = storedZoom ? parseInt(storedZoom) : defaultZoom;
             
             // Set the slider to the current zoom value

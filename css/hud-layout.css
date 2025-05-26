@@ -48,7 +48,7 @@
     right: 10px;
     display: flex;
     align-items: flex-start; /* Changed from center to flex-start to align items to the top */
-    gap: 15px;
+    gap: var(--padding-small);
     z-index: 50; /* UI Controls */
 }
 
