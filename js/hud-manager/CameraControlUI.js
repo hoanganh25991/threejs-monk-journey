@@ -26,7 +26,7 @@ export class CameraControlUI extends UIComponent {
         };
         
         // Default camera distance (can be modified via settings)
-        this.cameraDistance = 25;
+        this.cameraDistance = 20;
         
         // Store the initial camera position and rotation
         this.initialCameraPosition = null;
@@ -75,6 +75,29 @@ export class CameraControlUI extends UIComponent {
             if (storedZoom) {
                 this.cameraDistance = parseInt(storedZoom);
                 console.debug("Loaded camera distance from settings:", this.cameraDistance);
+                
+                // Apply the camera distance immediately if the game and player are available
+                if (this.game && this.game.camera && this.game.player) {
+                    // If we have rotation values, update the camera orbit
+                    if (this.cameraState.rotationX !== undefined && this.cameraState.rotationY !== undefined) {
+                        this.updateCameraOrbit(this.cameraState.rotationX, this.cameraState.rotationY);
+                    } else {
+                        // Otherwise, just set the initial position with the new distance
+                        const playerPosition = this.game.player.getPosition();
+                        if (playerPosition) {
+                            // Calculate a default position behind the player
+                            const defaultRotationX = 0.3; // Slight angle from horizontal
+                            const defaultRotationY = Math.PI; // Behind the player
+                            
+                            // Store these as the initial rotation values
+                            this.cameraState.rotationX = defaultRotationX;
+                            this.cameraState.rotationY = defaultRotationY;
+                            
+                            // Update the camera position
+                            this.updateCameraOrbit(defaultRotationX, defaultRotationY);
+                        }
+                    }
+                }
             }
         }).catch(error => {
             console.error("Error loading storage keys:", error);
@@ -616,6 +639,29 @@ export class CameraControlUI extends UIComponent {
                 console.debug("Maintaining camera position in update loop");
             }
         }
+    }
+    
+    /**
+     * Set the camera distance and update the camera position
+     * @param {number} distance - New camera distance
+     */
+    setCameraDistance(distance) {
+        // Update the camera distance
+        this.cameraDistance = distance;
+        console.debug("Camera distance set to:", distance);
+        
+        // Apply the new distance if we have rotation values
+        if (this.cameraState.rotationX !== undefined && this.cameraState.rotationY !== undefined) {
+            this.updateCameraOrbit(this.cameraState.rotationX, this.cameraState.rotationY);
+        }
+        
+        // Save the setting to localStorage
+        import('../config/storage-keys.js').then(module => {
+            const STORAGE_KEYS = module.STORAGE_KEYS;
+            localStorage.setItem(STORAGE_KEYS.CAMERA_ZOOM, distance);
+        }).catch(error => {
+            console.error("Error saving camera distance to localStorage:", error);
+        });
     }
     
     /**
