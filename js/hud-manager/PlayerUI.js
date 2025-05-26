@@ -25,47 +25,6 @@ export class PlayerUI extends UIComponent {
      * @returns {boolean} - True if initialization was successful
      */
     init() {
-        // Create player header (portrait and info)
-        const headerTemplate = `
-            <div id="player-header">
-                <div id="player-portrait">🧘</div>
-                <div id="player-info">
-                    <div id="player-name">Monk</div>
-                    <div id="level-indicator">Level: ${this.game.player.getLevel()}</div>
-                </div>
-            </div>
-        `;
-        
-        // Create health bar
-        const healthTemplate = `
-            <div id="health-bar-container">
-                <div id="health-icon">❤️</div>
-                <div id="health-bar"></div>
-                <div id="health-text"></div>
-            </div>
-        `;
-        
-        // Create mana bar
-        const manaTemplate = `
-            <div id="mana-bar-container">
-                <div id="mana-icon">🔷</div>
-                <div id="mana-bar"></div>
-                <div id="mana-text"></div>
-            </div>
-        `;
-        
-        // Create experience bar
-        const experienceTemplate = `
-            <div id="experience-bar-container">
-                <div id="experience-icon">✨</div>
-                <div id="experience-bar"></div>
-                <div id="experience-text"></div>
-            </div>
-        `;
-        
-        // Render the template
-        this.render(headerTemplate + healthTemplate + manaTemplate + experienceTemplate);
-        
         // Store references to elements we need to update
         this.levelIndicator = document.getElementById('level-indicator');
         this.healthBar = document.getElementById('health-bar');
@@ -74,6 +33,9 @@ export class PlayerUI extends UIComponent {
         this.manaText = document.getElementById('mana-text');
         this.experienceBar = document.getElementById('experience-bar');
         this.experienceText = document.getElementById('experience-text');
+        
+        // Initialize with current player data
+        this.update();
         
         return true;
     }

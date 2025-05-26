@@ -81,10 +81,38 @@
         <!-- Left Side UI (Player Stats, Quest Log) -->
         <div id="left-side-ui">
             <!-- Player UI -->
-            <div id="player-stats-container"></div>
+            <div id="player-stats-container">
+                <div id="player-header">
+                    <div id="player-portrait">🧘</div>
+                    <div id="player-info">
+                        <div id="level-indicator">Level: 1</div>
+                    </div>
+                </div>
+                
+                <div id="health-bar-container">
+                    <div id="health-icon">❤️</div>
+                    <div id="health-bar"></div>
+                    <div id="health-text"></div>
+                </div>
+                
+                <div id="mana-bar-container">
+                    <div id="mana-icon">🔷</div>
+                    <div id="mana-bar"></div>
+                    <div id="mana-text"></div>
+                </div>
+                
+                <div id="experience-bar-container">
+                    <div id="experience-icon">✨</div>
+                    <div id="experience-bar"></div>
+                    <div id="experience-text"></div>
+                </div>
+            </div>
 
             <!-- Quest Log -->
-            <div id="quest-log"></div>
+            <div id="quest-log">
+                <div class="quest-title">Active Quests</div>
+                <div id="quest-list"></div>
+            </div>
         </div>
         
         <!-- Virtual Joystick Container (moved outside left-side-ui) -->

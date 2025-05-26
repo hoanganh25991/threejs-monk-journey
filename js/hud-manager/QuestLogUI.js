@@ -19,14 +19,6 @@ export class QuestLogUI extends UIComponent {
      * @returns {boolean} - True if initialization was successful
      */
     init() {
-        const template = `
-            <div class="quest-title">Active Quests</div>
-            <div id="quest-list"></div>
-        `;
-        
-        // Render the template
-        this.render(template);
-        
         // Store references to elements we need to update
         this.questList = document.getElementById('quest-list');
         
