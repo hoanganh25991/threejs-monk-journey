@@ -144,6 +144,13 @@ export class PlayerMovement extends IPlayerMovement {
     }
     
     updateCamera() {
+        // Check if camera control is active - if so, don't update camera
+        if (this.game && this.game.hudManager && this.game.hudManager.components.cameraControlUI &&
+            this.game.hudManager.components.cameraControlUI.cameraUpdatePending) {
+            // Skip camera update when camera control is active
+            return;
+        }
+        
         // Position camera in a more top-down view with greater height and distance
         const cameraOffset = new THREE.Vector3(0, 15, 20);
         

@@ -151,6 +151,36 @@ export class Player extends IPlayer {
         }
     }
     
+    /**
+     * Set the player's look direction (for camera control)
+     * @param {THREE.Vector3} direction - Normalized direction vector
+     */
+    setLookDirection(direction) {
+        // Update player's look direction
+        if (this.movement) {
+            // Calculate the horizontal rotation (around Y axis)
+            const horizontalRotation = Math.atan2(direction.x, direction.z);
+            
+            // Update movement component rotation
+            this.movement.rotation.y = horizontalRotation;
+            
+            // Update model rotation
+            if (this.model) {
+                this.model.setRotation({y: horizontalRotation});
+                
+                // Store vertical look direction for use in rendering/animations
+                this.model.setVerticalLookDirection(direction.y);
+            }
+            
+            // Log the look direction update
+            console.log("Player look direction updated:", {
+                direction,
+                horizontalRotation,
+                verticalDirection: direction.y
+            });
+        }
+    }
+    
     getCollisionRadius() {
         return this.movement.getCollisionRadius();
     }

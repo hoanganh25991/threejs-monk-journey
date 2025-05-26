@@ -311,6 +311,82 @@ export class PlayerModel extends IPlayerModel {
     }
     
     /**
+     * Set the vertical look direction for the player model
+     * This allows the player to look up and down
+     * @param {number} verticalDirection - Vertical direction value (-1 to 1)
+     */
+    setVerticalLookDirection(verticalDirection) {
+        // Store the vertical look direction
+        this.verticalLookDirection = verticalDirection;
+        
+        // If using fallback model, delegate to it
+        if (this.usingFallbackModel && this.fallbackModel) {
+            if (typeof this.fallbackModel.setVerticalLookDirection === 'function') {
+                this.fallbackModel.setVerticalLookDirection(verticalDirection);
+            }
+            return;
+        }
+        
+        // Apply vertical rotation to the model's head/neck if possible
+        if (this.gltfModel) {
+            // Find head/neck bones in the model if they exist
+            let headBone = null;
+            let neckBone = null;
+            
+            this.gltfModel.traverse((node) => {
+                if (node.isBone || node.type === 'Bone') {
+                    const name = node.name.toLowerCase();
+                    if (name.includes('head')) {
+                        headBone = node;
+                    } else if (name.includes('neck')) {
+                        neckBone = node;
+                    }
+                }
+            });
+            
+            // Apply rotation to head bone if found
+            if (headBone) {
+                // Calculate rotation angle based on vertical direction
+                // Limit the rotation to a reasonable range (e.g., -30 to +60 degrees)
+                const maxLookUpAngle = THREE.MathUtils.degToRad(60);   // Looking up (positive)
+                const maxLookDownAngle = THREE.MathUtils.degToRad(30); // Looking down (negative)
+                
+                // Map verticalDirection (-1 to 1) to rotation angle
+                // IMPORTANT: For head bone rotation, we need to INVERT the direction
+                // When looking up (positive verticalDirection), the head needs to rotate BACKWARD (negative rotation)
+                // When looking down (negative verticalDirection), the head needs to rotate FORWARD (positive rotation)
+                let rotationAngle = 0;
+                if (verticalDirection > 0) {
+                    // Looking up - rotate head backward (negative rotation)
+                    rotationAngle = -verticalDirection * maxLookUpAngle;
+                } else {
+                    // Looking down - rotate head forward (positive rotation)
+                    rotationAngle = -verticalDirection * maxLookDownAngle;
+                }
+                
+                // Apply rotation to head bone
+                headBone.rotation.x = rotationAngle;
+                
+                console.log("Applied vertical look rotation to head bone:", 
+                    THREE.MathUtils.radToDeg(rotationAngle) + "°", 
+                    "from vertical direction:", verticalDirection);
+            }
+            
+            // Apply smaller rotation to neck bone if found and head bone wasn't
+            if (neckBone && !headBone) {
+                // Use a smaller angle for the neck
+                const maxNeckAngle = THREE.MathUtils.degToRad(20);
+                const neckRotation = verticalDirection * maxNeckAngle;
+                
+                neckBone.rotation.x = neckRotation;
+                
+                console.log("Applied vertical look rotation to neck bone:", 
+                    THREE.MathUtils.radToDeg(neckRotation) + "°");
+            }
+        }
+    }
+    
+    /**
      * Get the model group
      * @returns {THREE.Group} The model group
      */
