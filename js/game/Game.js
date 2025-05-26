@@ -20,6 +20,7 @@ import { RENDER_CONFIG } from '../config/render.js';
 import { MenuManager } from '../menu-system/MenuManager.js';
 import { isDebugMode } from '../utils/FlagUtils.js';
 import { InteractionSystem } from '../interaction/InteractionSystem.js';
+import { MultiplayerManager } from '../multiplayer/MultiplayerManager.js';
 
 /**
  * Main Game class that serves as a facade to the underlying game systems
@@ -223,6 +224,11 @@ export class Game {
             // Initialize menu manager
             this.updateLoadingProgress(99, 'Initializing menu system...', 'Setting up game menus');
             this.menuManager = new MenuManager(this);
+            
+            // Initialize multiplayer manager
+            this.updateLoadingProgress(99.5, 'Setting up multiplayer...', 'Initializing WebRTC connections');
+            this.multiplayerManager = new MultiplayerManager(this);
+            await this.multiplayerManager.init();
             
             this.updateLoadingProgress(100, 'Game ready!', 'Initialization complete');
             
@@ -657,6 +663,11 @@ export class Game {
         
         // Update effects
         this.effectsManager.update(delta);
+        
+        // Update multiplayer
+        if (this.multiplayerManager) {
+            this.multiplayerManager.update(delta);
+        }
         
         // Render scene with potential optimizations
         this.renderer.render(this.scene, this.camera);
