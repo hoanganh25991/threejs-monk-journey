@@ -162,6 +162,7 @@
 
         <!-- Top Right UI (Home Button, Full Screen Button and Mini Map) -->
         <div id="top-right-container">
+            <button id="multiplayer-button" class="circle-btn" title="Multiplayer">👥</button>
             <button id="inventory-button" class="circle-btn" title="Inventory">🎒</button>
             <button id="skill-tree-button" class="circle-btn" title="Skill Tree">🌲</button>
             <button id="skill-selection-button" class="circle-btn" title="Skill Selection">✨</button>
@@ -217,6 +218,36 @@
         <div id="save-operation-text" class="progress-text">Initializing...</div>
         <div class="progress-bar-container">
             <div id="save-operation-bar" class="progress-bar"></div>
+        </div>
+    </div>
+    
+    <!-- Multiplayer Modal -->
+    <div id="multiplayer-modal" class="game-menu">
+        <div class="multiplayer-modal-content">
+            <h2>Multiplayer</h2>
+            <div class="multiplayer-options">
+                <button id="host-game-btn" class="menu-button">Host Game</button>
+                <button id="join-game-btn" class="menu-button">Join Game</button>
+                <button id="close-multiplayer-btn" class="menu-button">Close</button>
+            </div>
+            <div id="qr-container" class="scrollable-container">
+                <div id="qr-code"></div>
+                <p>Scan this QR code with another device to join the game</p>
+                <div class="manual-connection-info">
+                    <p>Or share this connection code:</p>
+                    <div id="connection-code" class="connection-code"></div>
+                </div>
+            </div>
+            <div id="qr-scanner-container" class="scrollable-container">
+                <div id="qr-scanner"></div>
+                <p>Scan a QR code to join a game</p>
+                <div class="manual-connection-input">
+                    <p>Or enter connection code manually:</p>
+                    <input type="text" id="manual-connection-input" placeholder="Paste connection code here">
+                    <button id="manual-connect-btn" class="menu-button">Connect</button>
+                </div>
+            </div>
+            <div id="connection-status"></div>
         </div>
     </div>
 

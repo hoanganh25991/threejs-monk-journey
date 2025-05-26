@@ -60,136 +60,27 @@ export class MultiplayerManager {
      * Setup UI elements for multiplayer
      */
     setupUI() {
-        // Create multiplayer modal container if it doesn't exist
-        if (!document.getElementById('multiplayer-modal')) {
-            const modalContainer = document.createElement('div');
-            modalContainer.id = 'multiplayer-modal';
-            modalContainer.className = 'game-menu';
-            modalContainer.style.display = 'none';
-            
-            modalContainer.innerHTML = `
-                <div class="multiplayer-modal-content">
-                    <h2>Multiplayer</h2>
-                    <div class="multiplayer-options">
-                        <button id="host-game-btn" class="menu-button">Host Game</button>
-                        <button id="join-game-btn" class="menu-button">Join Game</button>
-                        <button id="close-multiplayer-btn" class="menu-button">Close</button>
-                    </div>
-                    <div id="qr-container" style="display: none;">
-                        <div id="qr-code"></div>
-                        <p>Scan this QR code with another device to join the game</p>
-                    </div>
-                    <div id="qr-scanner-container" style="display: none;">
-                        <div id="qr-scanner"></div>
-                        <p>Scan a QR code to join a game</p>
-                    </div>
-                    <div id="connection-status"></div>
-                </div>
-            `;
-            
-            document.body.appendChild(modalContainer);
-            
-            // Add event listeners for buttons
-            document.getElementById('host-game-btn').addEventListener('click', this.createHostSession);
-            document.getElementById('join-game-btn').addEventListener('click', this.showQRScanner.bind(this));
-            document.getElementById('close-multiplayer-btn').addEventListener('click', () => {
-                document.getElementById('multiplayer-modal').style.display = 'none';
-            });
-        }
-        
-        // Add CSS for multiplayer UI
-        if (!document.getElementById('multiplayer-styles')) {
-            const styleElement = document.createElement('style');
-            styleElement.id = 'multiplayer-styles';
-            styleElement.textContent = `
-                #multiplayer-modal {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background-color: rgba(0, 0, 0, 0.8);
-                    z-index: 1000;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                }
-                
-                .multiplayer-modal-content {
-                    background-color: #2a2a2a;
-                    border-radius: 10px;
-                    padding: 20px;
-                    width: 80%;
-                    max-width: 500px;
-                    text-align: center;
-                }
-                
-                #qr-container, #qr-scanner-container {
-                    margin-top: 20px;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                }
-                
-                #qr-code, #qr-scanner {
-                    width: 256px;
-                    height: 256px;
-                    margin: 0 auto;
-                    background-color: #fff;
-                    padding: 10px;
-                    border-radius: 5px;
-                }
-                
-                #connection-status {
-                    margin-top: 20px;
-                    font-weight: bold;
-                }
-                
-                #multiplayer-button {
-                    margin-left: 10px;
-                }
-                
-                .connected-players {
-                    margin-top: 10px;
-                    text-align: left;
-                    max-height: 100px;
-                    overflow-y: auto;
-                }
-                
-                .player-item {
-                    padding: 5px;
-                    border-bottom: 1px solid #444;
-                }
-            `;
-            document.head.appendChild(styleElement);
-        }
+        // Add event listeners for buttons
+        document.getElementById('host-game-btn').addEventListener('click', this.createHostSession);
+        document.getElementById('join-game-btn').addEventListener('click', this.showQRScanner.bind(this));
+        document.getElementById('close-multiplayer-btn').addEventListener('click', () => {
+            document.getElementById('multiplayer-modal').style.display = 'none';
+        });
     }
     
     /**
      * Add multiplayer button to the top-right UI
      */
     addMultiplayerButton() {
-        const topRightContainer = document.getElementById('top-right-container');
-        if (topRightContainer) {
-            // Create multiplayer button if it doesn't exist
-            if (!document.getElementById('multiplayer-button')) {
-                const multiplayerButton = document.createElement('button');
-                multiplayerButton.id = 'multiplayer-button';
-                multiplayerButton.className = 'circle-btn';
-                multiplayerButton.title = 'Multiplayer';
-                multiplayerButton.innerHTML = '👥';
-                multiplayerButton.addEventListener('click', this.showMultiplayerModal.bind(this));
-                
-                // Insert after home button
-                topRightContainer.appendChild(multiplayerButton);
-            }
-        }
+        const multiplayerButton = document.getElementById('multiplayer-button');
+        multiplayerButton.addEventListener('click', this.showMultiplayerModal.bind(this));
     }
     
     /**
      * Show the multiplayer modal
      */
     showMultiplayerModal() {
+        this.game.pause(false);
         const modal = document.getElementById('multiplayer-modal');
         if (modal) {
             modal.style.display = 'flex';
@@ -241,10 +132,30 @@ export class MultiplayerManager {
             
             // Generate QR code
             const qrCodeElement = document.getElementById('qr-code');
-            await this.qrCodeGenerator.generateQRCode(JSON.stringify(sessionData), qrCodeElement);
+            const sessionDataString = JSON.stringify(sessionData);
+            await this.qrCodeGenerator.generateQRCode(sessionDataString, qrCodeElement);
+            
+            // Display connection code for manual entry
+            const connectionCodeElement = document.getElementById('connection-code');
+            connectionCodeElement.textContent = sessionDataString;
+            
+            // Add click-to-copy functionality
+            connectionCodeElement.addEventListener('click', () => {
+                navigator.clipboard.writeText(sessionDataString)
+                    .then(() => {
+                        const originalText = connectionCodeElement.textContent;
+                        connectionCodeElement.textContent = 'Copied!';
+                        setTimeout(() => {
+                            connectionCodeElement.textContent = originalText;
+                        }, 1500);
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy: ', err);
+                    });
+            });
             
             // Show QR container
-            document.getElementById('qr-container').style.display = 'block';
+            document.getElementById('qr-container').style.display = 'flex';
             document.getElementById('qr-scanner-container').style.display = 'none';
             
             // Update status
@@ -277,11 +188,51 @@ export class MultiplayerManager {
         try {
             // Show QR scanner container
             document.getElementById('qr-container').style.display = 'none';
-            document.getElementById('qr-scanner-container').style.display = 'block';
+            document.getElementById('qr-scanner-container').style.display = 'flex';
             
             // Initialize QR scanner
             const scannerElement = document.getElementById('qr-scanner');
             await this.qrCodeGenerator.initQRScanner(scannerElement, this.handleQRScan.bind(this));
+            
+            // Set up manual connection button
+            const manualConnectBtn = document.getElementById('manual-connect-btn');
+            const manualInputField = document.getElementById('manual-connection-input');
+            
+            // Remove any existing event listeners
+            const newManualConnectBtn = manualConnectBtn.cloneNode(true);
+            manualConnectBtn.parentNode.replaceChild(newManualConnectBtn, manualConnectBtn);
+            
+            // Add event listener for manual connection
+            newManualConnectBtn.addEventListener('click', () => {
+                const connectionCode = manualInputField.value.trim();
+                if (connectionCode) {
+                    try {
+                        // Try to parse the connection code
+                        const sessionData = JSON.parse(connectionCode);
+                        
+                        // Join the session
+                        this.joinSession(sessionData);
+                        
+                        // Stop scanner
+                        this.qrCodeGenerator.stopQRScanner();
+                        
+                        // Hide scanner container
+                        document.getElementById('qr-scanner-container').style.display = 'none';
+                    } catch (error) {
+                        console.error('Error processing connection code:', error);
+                        document.getElementById('connection-status').textContent = 'Invalid connection code: ' + error.message;
+                    }
+                } else {
+                    document.getElementById('connection-status').textContent = 'Please enter a connection code';
+                }
+            });
+            
+            // Add enter key support for the input field
+            manualInputField.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    newManualConnectBtn.click();
+                }
+            });
             
             // Update status
             document.getElementById('connection-status').textContent = 'Scanning for QR code...';
