@@ -2,7 +2,7 @@ import { UIComponent } from '../UIComponent.js';
 
 /**
  * Player UI component
- * Displays player health, mana, level, and other stats
+ * Displays player health, mana, level, experience, and other stats
  */
 export class PlayerUI extends UIComponent {
     /**
@@ -16,6 +16,8 @@ export class PlayerUI extends UIComponent {
         this.healthText = null;
         this.manaBar = null;
         this.manaText = null;
+        this.experienceBar = null;
+        this.experienceText = null;
     }
     
     /**
@@ -52,8 +54,17 @@ export class PlayerUI extends UIComponent {
             </div>
         `;
         
+        // Create experience bar
+        const experienceTemplate = `
+            <div id="experience-bar-container">
+                <div id="experience-icon">✨</div>
+                <div id="experience-bar"></div>
+                <div id="experience-text"></div>
+            </div>
+        `;
+        
         // Render the template
-        this.render(headerTemplate + healthTemplate + manaTemplate);
+        this.render(headerTemplate + healthTemplate + manaTemplate + experienceTemplate);
         
         // Store references to elements we need to update
         this.levelIndicator = document.getElementById('level-indicator');
@@ -61,6 +72,8 @@ export class PlayerUI extends UIComponent {
         this.healthText = document.getElementById('health-text');
         this.manaBar = document.getElementById('mana-bar');
         this.manaText = document.getElementById('mana-text');
+        this.experienceBar = document.getElementById('experience-bar');
+        this.experienceText = document.getElementById('experience-text');
         
         return true;
     }
@@ -96,6 +109,17 @@ export class PlayerUI extends UIComponent {
         // Update mana text
         this.manaText.textContent = `${currentMana}/${maxMana}`;
         
+        // Get experience values
+        const currentExperience = Math.round(this.game.player.getExperience());
+        const experienceToNextLevel = this.game.player.getExperienceToNextLevel();
+        const experiencePercent = (currentExperience / experienceToNextLevel) * 100;
+        
+        // Update experience bar
+        this.experienceBar.style.width = `${experiencePercent}%`;
+        
+        // Update experience text
+        this.experienceText.textContent = `${currentExperience}/${experienceToNextLevel}`;
+        
         // Change health bar color based on health percentage
         if (healthPercent < 25) {
             this.healthBar.style.backgroundColor = '#ff3333'; // Bright red when low
@@ -107,5 +131,9 @@ export class PlayerUI extends UIComponent {
             this.healthBar.style.backgroundColor = '#ff0000'; // Normal red when high
             this.healthBar.style.boxShadow = 'none';
         }
+        
+        // Set experience bar color
+        this.experienceBar.style.backgroundColor = '#ffcc00'; // Gold color
+        this.experienceBar.style.boxShadow = '0 0 5px #ffcc00';
     }
 }

@@ -205,6 +205,46 @@
     font-size: 14px;
 }
 
+/* Experience Bar */
+#experience-bar-container {
+    position: relative;
+    width: 100%;
+    height: 15px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    border-radius: 3px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+#experience-bar {
+    height: 100%;
+    width: 0%;
+    background-color: #ffcc00;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+#experience-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 10px;
+    text-shadow: 1px 1px 2px black;
+    white-space: nowrap;
+}
+
+#experience-icon {
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 12px;
+}
+
 /* Enemy Health */
 #enemy-health-container {
     position: absolute;
