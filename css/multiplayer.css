@@ -33,6 +33,7 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    justify-content: center; /* Center content vertically */
 }
 
 /* Fullscreen layout for host and join screens */
@@ -59,9 +60,9 @@
 .multiplayer-options {
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
-    height: 100%;
+    align-items: center;
+    flex: 1; /* Take up available space in the flex container */
 }
 
 /* Host game layout - optimized for landscape */
@@ -175,12 +176,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     flex: 1;
     width: 100%;
     height: 100%;
     overflow: hidden; /* Container shouldn't scroll */
     box-sizing: border-box;
+    padding: var(--padding-small);
 }
 
 /* Join options container */
@@ -192,25 +194,33 @@
     flex-direction: column;
     background-color: rgba(0, 0, 0, 0.2);
     border-radius: 10px;
-    padding: var(--padding-medium);
+    padding: var(--padding-small);
+    flex: 1;
+}
+
+/* Join tabs container */
+.join-tabs-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 var(--padding-small);
 }
 
 /* Join option tabs */
 .join-option-tabs {
     display: flex;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    margin-bottom: var(--margin-medium);
+    margin-bottom: var(--margin-small);
 }
 
 .join-tab-button {
-    flex: 1;
     background: none;
     border: none;
     color: white;
-    padding: var(--padding-medium);
+    padding: var(--padding-small) var(--padding-medium);
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 16px;
+    font-size: 14px;
     opacity: 0.7;
 }
 
@@ -226,11 +236,14 @@
 /* Join tab content */
 .join-tab-content {
     display: none;
-    padding: var(--padding-medium);
+    padding: var(--padding-small);
+    flex: 1;
+    height: 100%;
 }
 
 .join-tab-content.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Scanner section - centered in tab */
@@ -238,7 +251,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 10px;
+    flex: 1;
+    height: 100%;
 }
 
 /* Scanner controls - horizontal layout for camera button and quick input */
@@ -255,13 +270,14 @@
 /* QR scanner - maximized for better scanning */
 #qr-scanner {
     width: 100%;
-    max-height: 200px;
-    width: 200px;
+    height: 300px;
+    max-width: 400px;
     margin: 0 auto;
     background-color: #000;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    flex: 1;
 }
 
 #qr-scanner-view {
@@ -314,14 +330,14 @@
 
 /* Camera select dropdown */
 .camera-select {
-    width: 80%;
-    padding: 8px;
+    padding: 5px;
     border-radius: 5px;
     background-color: #333;
     color: white;
     border: 1px solid #555;
-    margin-top: 15px;
     cursor: pointer;
+    font-size: 12px;
+    max-width: 150px;
 }
 
 /* Waiting screen */

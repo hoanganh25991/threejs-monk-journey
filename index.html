@@ -350,9 +350,15 @@
             </div>
             <div class="join-game-layout">
                 <div class="join-options-container">
-                    <div class="join-option-tabs">
-                        <button id="scan-qr-tab-btn" class="join-tab-button active">Scan QR Code</button>
-                        <button id="manual-code-tab-btn" class="join-tab-button">Enter Code</button>
+                    <div class="join-tabs-container">
+                        <div class="join-option-tabs">
+                            <button id="scan-qr-tab-btn" class="join-tab-button active">Scan QR</button>
+                            <button id="manual-code-tab-btn" class="join-tab-button">Enter Code</button>
+                        </div>
+                        
+                        <select id="camera-select" class="camera-select" style="display: none;">
+                            <option value="">Loading cameras...</option>
+                        </select>
                     </div>
                     
                     <div id="scan-qr-tab" class="join-tab-content active">
@@ -372,16 +378,11 @@
                                 <input type="text" id="manual-connection-input" placeholder="Enter connection code">
                                 <button id="paste-code-btn" class="small-btn" title="Paste from clipboard">📋</button>
                             </div>
+                            <div class="connect-button-container">
+                                <button id="manual-connect-btn" class="settings-button">Connect</button>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="connect-button-container">
-                        <button id="manual-connect-btn" class="settings-button">Connect</button>
-                    </div>
-                    
-                    <select id="camera-select" class="camera-select" style="display: none;">
-                        <option value="">Loading cameras...</option>
-                    </select>
                 </div>
             </div>
             <div id="join-connection-status" class="connection-status"></div>

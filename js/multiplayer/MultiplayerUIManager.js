@@ -229,7 +229,7 @@ export class MultiplayerUIManager {
             modal.style.display = 'flex';
             
             // Show initial screen, hide others
-            document.getElementById('multiplayer-initial-screen').style.display = 'block';
+            document.getElementById('multiplayer-initial-screen').style.display = 'flex';
             document.getElementById('host-game-screen').style.display = 'none';
             document.getElementById('join-game-screen').style.display = 'none';
             document.getElementById('player-waiting-screen').style.display = 'none';
@@ -485,9 +485,9 @@ export class MultiplayerUIManager {
                 cameraConfig,
                 { fps: 10, qrbox: { width: 250, height: 250 } },
                 (decodedText) => {
-                    // Stop scanning
+                    // Stop scanning immediately when QR code is detected
                     this.stopQRScanner();
-                    this.updateConnectionStatus('Connecting...', 'join-connection-status');
+                    this.updateConnectionStatus('QR code detected! Connecting...', 'join-connection-status');
                     
                     // Check if the decoded text is a URL with our parameters
                     let connectId = decodedText;
@@ -506,7 +506,7 @@ export class MultiplayerUIManager {
                         console.debug('Not a URL, using as direct connection ID');
                     }
                     
-                    // Join game with the connection ID
+                    // Auto-connect with the scanned connection ID
                     this.multiplayerManager.joinGame(connectId);
                 },
                 (errorMessage) => {
