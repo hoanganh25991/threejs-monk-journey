@@ -3,7 +3,6 @@
  * Manages the main game menu UI component
  */
 
-import { SettingsMenu } from './SettingsMenu.js';
 import { IMenu } from './IMenu.js';
 
 export class GameMenu extends IMenu {
@@ -15,7 +14,6 @@ export class GameMenu extends IMenu {
         super('game-menu', game);
         this.loadGameButton = document.getElementById('load-game-button');
         this.settingsMenuButton = document.getElementById('settings-menu-button');
-        this.settingsMenu = null;
         this.setupEventListeners();
     }
 
@@ -26,40 +24,9 @@ export class GameMenu extends IMenu {
     setupEventListeners() {
         // Play Game button - show only if save data exists
         if (this.loadGameButton) {
-            this.loadGameButton.addEventListener('click', () => {
+            this.loadGameButton.addEventListener('click', async () => {
                 console.debug("Continue Game button clicked - attempting to load saved game...");
-                if (this.game.saveManager && this.game.saveManager.hasSaveData()) {
-                    this.loadGameButton.style.display = 'block';
-                    if (this.game.saveManager.loadGame()) {
-                            console.debug("Game data loaded successfully");
-                            this.hide();
-                            
-                            // Hide the main background when loading a game
-                            if (this.game.hudManager && this.game.hudManager.mainBackground) {
-                                this.game.hudManager.mainBackground.hide();
-                            }
-                            
-                            // Start the game with loaded data - this will set isPaused to false and start the game loop
-                            this.game.start();
-                            
-                            // Make sure settings button is visible
-                            const homeButton = document.getElementById('home-button');
-                            if (homeButton) {
-                                homeButton.style.display = 'block';
-                            }
-                            
-                            // Show all HUD elements
-                            if (this.game.hudManager) {
-                                this.game.hudManager.showAllUI();
-                            }
-                            
-                            console.debug("Game started with loaded data - enemies and player are now active");
-                        } else {
-                            console.error("Failed to Continue Game data");
-                            alert('Failed to Continue Game data.');
-                        }
-                    ;
-                } else if (this.game.hasStarted && !this.game.isRunning) {
+                if (this.game.hasStarted) {
                     // Game has been started but is currently paused
                     console.debug("Resume Game button clicked - resuming game...");
                     this.hide();
@@ -78,7 +45,36 @@ export class GameMenu extends IMenu {
                     }
                     
                     console.debug("Game resumed - enemies and player are now active");
-                } else if (!this.game.hasStarted) {
+                } else  if (this.game.saveManager && this.game.saveManager.hasSaveData()) {
+                    if (await this.game.saveManager.loadGame()) {
+                        console.debug("Game data loaded successfully");
+                        this.hide();
+                        
+                        // Hide the main background when loading a game
+                        if (this.game.hudManager && this.game.hudManager.mainBackground) {
+                            this.game.hudManager.mainBackground.hide();
+                        }
+                        
+                        // Start the game with loaded data - this will set isPaused to false and start the game loop
+                        this.game.start();
+                        
+                        // Make sure settings button is visible
+                        const homeButton = document.getElementById('home-button');
+                        if (homeButton) {
+                            homeButton.style.display = 'block';
+                        }
+                        
+                        // Show all HUD elements
+                        if (this.game.hudManager) {
+                            this.game.hudManager.showAllUI();
+                        }
+                        
+                        console.debug("Game started with loaded data - enemies and player are now active");
+                    } else {
+                        console.error("Failed to Continue Game data");
+                        alert('Failed to Continue Game data.');
+                    };
+                } else {
                     // Game has never been started - start a new game
                     console.debug("New Game button clicked - starting new game...");
                     this.hide();
@@ -104,7 +100,6 @@ export class GameMenu extends IMenu {
                     
                     console.debug("New game started - enemies and player are now active");
                 }
-                    
             })
         }
 
@@ -114,22 +109,6 @@ export class GameMenu extends IMenu {
                 // Use the menu manager to show the settings menu
                 if (this.game.menuManager) {
                     this.game.menuManager.showMenu('settingsMenu');
-                } else {
-                    // Fallback to old behavior if menu manager is not available
-                    if (!this.settingsMenu) {
-                        this.settingsMenu = new SettingsMenu(this.game);
-                    }
-                    
-                    // Show the main background when opening settings
-                    if (this.game.hudManager && this.game.hudManager.mainBackground) {
-                        this.game.hudManager.mainBackground.show();
-                    }
-                    
-                    // Pass the game menu element and indicate we're coming from the game menu
-                    this.settingsMenu.showSettings(this.game.isPaused, this);
-                    
-                    // Hide the game menu to prevent overlap
-                    this.hide();
                 }
             });
         }
