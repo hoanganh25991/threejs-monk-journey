@@ -266,6 +266,7 @@ export class MultiplayerUIManager {
                 (decodedText) => {
                     // Stop scanning and join game with the decoded text
                     this.stopQRScanner();
+                    this.updateConnectionStatus('Connecting...', 'join-connection-status');
                     this.multiplayerManager.joinGame(decodedText);
                 },
                 (errorMessage) => {
@@ -355,19 +356,41 @@ export class MultiplayerUIManager {
      */
     copyConnectionCode() {
         const codeElement = document.getElementById('connection-code');
-        if (!codeElement || !this.multiplayerManager.roomId) return;
+        if (!codeElement) {
+            console.error('Connection code element not found');
+            return;
+        }
+        
+        // Get the room ID from the connection manager
+        const roomId = this.multiplayerManager.connection && this.multiplayerManager.connection.roomId;
+        if (!roomId) {
+            console.error('No room ID available to copy');
+            this.updateConnectionStatus('No connection code available', 'host-connection-status');
+            return;
+        }
+        
+        // Make sure the connection code element has the roomId text
+        if (codeElement.textContent !== roomId) {
+            codeElement.textContent = roomId;
+        }
         
         try {
-            navigator.clipboard.writeText(this.multiplayerManager.roomId).then(() => {
-                // Show success message
-                this.updateConnectionStatus('Connection code copied to clipboard!', 'host-connection-status');
-                
-                // Highlight the code element briefly
-                codeElement.classList.add('copied');
-                setTimeout(() => {
-                    codeElement.classList.remove('copied');
-                }, 1000);
-            });
+            // Use the Clipboard API with proper error handling
+            navigator.clipboard.writeText(roomId)
+                .then(() => {
+                    // Show success message
+                    this.updateConnectionStatus('Connection code copied to clipboard!', 'host-connection-status');
+                    
+                    // Highlight the code element briefly
+                    codeElement.classList.add('copied');
+                    setTimeout(() => {
+                        codeElement.classList.remove('copied');
+                    }, 1000);
+                })
+                .catch(err => {
+                    console.error('Clipboard write failed:', err);
+                    this.updateConnectionStatus('Failed to copy code. Please copy it manually.', 'host-connection-status');
+                });
         } catch (error) {
             console.error('Failed to copy code:', error);
             this.updateConnectionStatus('Failed to copy code. Please copy it manually.', 'host-connection-status');
@@ -456,6 +479,17 @@ export class MultiplayerUIManager {
         const codeElement = document.getElementById('connection-code');
         if (codeElement) {
             codeElement.textContent = code;
+            
+            // Make sure the copy button is visible and working
+            const copyBtn = document.getElementById('copy-code-btn');
+            if (copyBtn) {
+                copyBtn.style.display = 'inline-block';
+                copyBtn.onclick = () => this.copyConnectionCode();
+            }
+            
+            // Also make the connection code element clickable
+            codeElement.style.cursor = 'pointer';
+            codeElement.onclick = () => this.copyConnectionCode();
         }
     }
 

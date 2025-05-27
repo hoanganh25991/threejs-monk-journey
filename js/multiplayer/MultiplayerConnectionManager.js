@@ -3,6 +3,8 @@
  * Handles WebRTC connections, peer management, and data transfer
  */
 
+import { DEFAULT_CHARACTER_MODEL } from '../config/player-models.js';
+
 export class MultiplayerConnectionManager {
     /**
      * Initialize the multiplayer connection manager
@@ -125,7 +127,16 @@ export class MultiplayerConnectionManager {
                 this.isConnected = true;
                 
                 // Update connection status
-                this.multiplayerManager.ui.updateConnectionStatus('Connected to host! Waiting for game to start...');
+                this.multiplayerManager.ui.updateConnectionStatus('Connected to host! Waiting for game to start...', 'join-connection-status');
+                
+                // Show the waiting screen to indicate successful connection
+                this.multiplayerManager.ui.showPlayerWaitingScreen();
+                
+                // Disable the connect button to prevent multiple connections
+                const manualConnectBtn = document.getElementById('manual-connect-btn');
+                if (manualConnectBtn) {
+                    manualConnectBtn.disabled = true;
+                }
                 
                 // Set up data handler
                 conn.on('data', data => this.handleDataFromHost(data));

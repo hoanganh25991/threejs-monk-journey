@@ -151,6 +151,12 @@ export class MultiplayerManager {
         // Close multiplayer modal
         this.ui.closeMultiplayerModal();
         
+        // Hide the Game Menu first if it's visible
+        if (this.game.menuManager) {
+            console.log('[MultiplayerManager] Hiding Game Menu before starting multiplayer game');
+            this.game.menuManager.hideActiveMenu();
+        }
+        
         // Start the game
         this.startGame();
     }
@@ -160,9 +166,6 @@ export class MultiplayerManager {
      */
     startGame() {
         console.log('[MultiplayerManager] Starting game...');
-        
-        // Close multiplayer modal
-        this.ui.closeMultiplayerModal();
         
         // Start the game or transition to gameplay
         if (this.game.state) {

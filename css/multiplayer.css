@@ -349,7 +349,9 @@
 /* Copied animation */
 .connection-code.copied {
     background-color: #4CAF50;
-    transition: background-color 0.3s;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.8);
 }
 
 /* Player color indicator */
