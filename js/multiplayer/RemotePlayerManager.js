@@ -42,11 +42,12 @@ export class RemotePlayerManager {
     /**
      * Create a new remote player
      * @param {string} peerId - The ID of the remote player
+     * @param {string} [playerColor] - The color assigned to the player
      * @returns {RemotePlayer} The created remote player
      */
-    createRemotePlayer(peerId) {
+    createRemotePlayer(peerId, playerColor) {
         // Create new remote player
-        const remotePlayer = new RemotePlayer(this.game, peerId);
+        const remotePlayer = new RemotePlayer(this.game, peerId, playerColor);
         
         // Add to map
         this.remotePlayers.set(peerId, remotePlayer);
@@ -92,6 +93,15 @@ export class RemotePlayerManager {
      */
     getPlayers() {
         return this.remotePlayers;
+    }
+    
+    /**
+     * Get a specific remote player by ID
+     * @param {string} peerId - The ID of the remote player
+     * @returns {RemotePlayer|null} The remote player or null if not found
+     */
+    getPlayer(peerId) {
+        return this.remotePlayers.get(peerId) || null;
     }
     
     /**

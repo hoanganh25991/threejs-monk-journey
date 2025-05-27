@@ -19,6 +19,19 @@ export class MultiplayerManager {
         this.roomId = null; // Room ID (if host)
         this.remotePlayerManager = null;
         this._lastBroadcast = 0; // Timestamp of last state broadcast
+        
+        // Player colors for multiplayer
+        this.playerColors = [
+            '#FF5733', // Red-Orange
+            '#33FF57', // Green
+            '#3357FF', // Blue
+            '#FF33F5', // Pink
+            '#F5FF33', // Yellow
+            '#33FFF5', // Cyan
+            '#FF8333', // Orange
+            '#8333FF'  // Purple
+        ];
+        this.assignedColors = new Map(); // Map of assigned colors by peer ID
     }
 
     /**
@@ -82,6 +95,35 @@ export class MultiplayerManager {
         const closeMultiplayerBtn = document.getElementById('close-multiplayer-btn');
         if (closeMultiplayerBtn) {
             closeMultiplayerBtn.addEventListener('click', () => this.closeMultiplayerModal());
+        }
+        
+        // Copy connection code button
+        const connectionCode = document.getElementById('connection-code');
+        if (connectionCode) {
+            connectionCode.addEventListener('click', () => this.copyConnectionCode());
+        }
+        
+        // Copy button for connection code
+        const copyCodeBtn = document.getElementById('copy-code-btn');
+        if (copyCodeBtn) {
+            copyCodeBtn.addEventListener('click', () => this.copyConnectionCode());
+        }
+        
+        // Paste button for connection code
+        const pasteCodeBtn = document.getElementById('paste-code-btn');
+        if (pasteCodeBtn) {
+            pasteCodeBtn.addEventListener('click', async () => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    const input = document.getElementById('manual-connection-input');
+                    if (input) {
+                        input.value = text;
+                    }
+                } catch (err) {
+                    console.error('Failed to read clipboard contents: ', err);
+                    this.updateConnectionStatus('Failed to paste from clipboard. Please enter code manually.');
+                }
+            });
         }
     }
 
@@ -154,6 +196,28 @@ export class MultiplayerManager {
             // Set host flag
             this.isHost = true;
             
+            // Assign a color to the host
+            const hostColor = this.playerColors[0]; // First color for host
+            this.assignedColors.set(this.roomId, hostColor);
+            
+            // Add host color indicator to the "You (Host)" entry
+            const hostEntry = document.querySelector('.connected-players-list .player-item');
+            if (hostEntry) {
+                // Clear existing content
+                hostEntry.innerHTML = '';
+                
+                // Add color indicator
+                const colorIndicator = document.createElement('div');
+                colorIndicator.className = 'player-color-indicator';
+                colorIndicator.style.backgroundColor = hostColor;
+                hostEntry.appendChild(colorIndicator);
+                
+                // Add host text
+                const hostText = document.createElement('span');
+                hostText.textContent = 'You (Host)';
+                hostEntry.appendChild(hostText);
+            }
+            
             // Update connection status
             this.updateConnectionStatus('Waiting for players to join...');
             
@@ -174,8 +238,83 @@ export class MultiplayerManager {
         document.getElementById('qr-scanner-container').style.display = 'flex';
         document.getElementById('host-controls').style.display = 'none';
         
-        // Initialize QR scanner (placeholder)
-        this.updateConnectionStatus('Enter connection code to join a game');
+        // Initialize QR scanner
+        try {
+            // Load HTML5-QRCode library if not already loaded
+            if (typeof Html5Qrcode === 'undefined') {
+                await this.loadQRScannerJS();
+            }
+            
+            const qrScanner = document.getElementById('qr-scanner');
+            if (qrScanner) {
+                // Clear previous scanner
+                qrScanner.innerHTML = '';
+                
+                // Create scanner container
+                const scannerContainer = document.createElement('div');
+                scannerContainer.id = 'qr-scanner-view';
+                qrScanner.appendChild(scannerContainer);
+                
+                // Initialize scanner
+                const html5QrCode = new Html5Qrcode('qr-scanner-view');
+                
+                // Add start/stop scanner buttons
+                const scannerControls = document.createElement('div');
+                scannerControls.className = 'scanner-controls';
+                
+                const startScanBtn = document.createElement('button');
+                startScanBtn.className = 'menu-button';
+                startScanBtn.textContent = 'Start Camera';
+                startScanBtn.addEventListener('click', () => {
+                    html5QrCode.start(
+                        { facingMode: 'environment' },
+                        { fps: 10, qrbox: 250 },
+                        (decodedText) => {
+                            // Stop scanning and join game with the decoded text
+                            html5QrCode.stop();
+                            this.joinGame(decodedText);
+                        },
+                        (errorMessage) => {
+                            // Handle scan errors silently
+                        }
+                    ).catch(err => {
+                        this.updateConnectionStatus('Error starting camera: ' + err);
+                    });
+                });
+                
+                const stopScanBtn = document.createElement('button');
+                stopScanBtn.className = 'menu-button';
+                stopScanBtn.textContent = 'Stop Camera';
+                stopScanBtn.addEventListener('click', () => {
+                    html5QrCode.stop().catch(err => {
+                        console.error('Error stopping camera:', err);
+                    });
+                });
+                
+                scannerControls.appendChild(startScanBtn);
+                scannerControls.appendChild(stopScanBtn);
+                qrScanner.appendChild(scannerControls);
+            }
+            
+            this.updateConnectionStatus('Click "Start Camera" to scan a QR code or enter code manually');
+        } catch (error) {
+            console.error('Error initializing QR scanner:', error);
+            this.updateConnectionStatus('QR scanner not available. Please enter connection code manually.');
+        }
+    }
+    
+    /**
+     * Load HTML5-QRCode library
+     * @returns {Promise} A promise that resolves when HTML5-QRCode is loaded
+     */
+    loadQRScannerJS() {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load HTML5-QRCode'));
+            document.head.appendChild(script);
+        });
     }
     
     /**
@@ -260,6 +399,17 @@ export class MultiplayerManager {
             type: 'welcome',
             message: 'Connected to host'
         });
+        
+        // Send all player colors to the new member
+        const colors = {};
+        this.assignedColors.forEach((color, id) => {
+            colors[id] = color;
+        });
+        
+        conn.send({
+            type: 'playerColors',
+            colors: colors
+        });
     }
     
     /**
@@ -280,10 +430,33 @@ export class MultiplayerManager {
                 this.startGame();
                 break;
             case 'playerJoined':
-                this.remotePlayerManager.createRemotePlayer(data.playerId);
+                // Store the player color
+                if (data.playerColor) {
+                    this.assignedColors.set(data.playerId, data.playerColor);
+                }
+                
+                // Create remote player with the assigned color
+                this.remotePlayerManager.createRemotePlayer(data.playerId, data.playerColor);
                 break;
             case 'playerLeft':
                 this.remotePlayerManager.removePlayer(data.playerId);
+                
+                // Remove color assignment
+                this.assignedColors.delete(data.playerId);
+                break;
+            case 'playerColors':
+                // Update all player colors
+                if (data.colors) {
+                    Object.entries(data.colors).forEach(([playerId, color]) => {
+                        this.assignedColors.set(playerId, color);
+                        
+                        // Update remote player color if it exists
+                        const remotePlayer = this.remotePlayerManager.getPlayer(playerId);
+                        if (remotePlayer) {
+                            remotePlayer.setPlayerColor(color);
+                        }
+                    });
+                }
                 break;
             default:
                 console.warn('Unknown data type from host:', data.type);
@@ -444,11 +617,45 @@ export class MultiplayerManager {
         const playersList = document.getElementById('connected-players-list');
         if (!playersList) return;
         
+        // Assign a color to the player if not already assigned
+        if (!this.assignedColors.has(playerId)) {
+            // Get next available color
+            const usedColors = Array.from(this.assignedColors.values());
+            const availableColor = this.playerColors.find(color => !usedColors.includes(color)) || 
+                                  this.playerColors[Math.floor(Math.random() * this.playerColors.length)];
+            
+            // Assign the color
+            this.assignedColors.set(playerId, availableColor);
+        }
+        
+        const playerColor = this.assignedColors.get(playerId);
+        
+        // Create player item with color indicator
         const playerItem = document.createElement('div');
         playerItem.className = 'player-item';
         playerItem.id = `player-${playerId}`;
-        playerItem.textContent = `Player ${playerId.substring(0, 8)}`;
+        
+        // Add color indicator
+        const colorIndicator = document.createElement('div');
+        colorIndicator.className = 'player-color-indicator';
+        colorIndicator.style.backgroundColor = playerColor;
+        playerItem.appendChild(colorIndicator);
+        
+        // Add player name
+        const playerName = document.createElement('span');
+        playerName.textContent = `Player ${playerId.substring(0, 8)}`;
+        playerItem.appendChild(playerName);
+        
         playersList.appendChild(playerItem);
+        
+        // Notify other peers about the new player and their color
+        this.peers.forEach(conn => {
+            conn.send({
+                type: 'playerJoined',
+                playerId: playerId,
+                playerColor: playerColor
+            });
+        });
     }
     
     /**
@@ -477,15 +684,72 @@ export class MultiplayerManager {
      * Generate QR code for connection
      * @param {string} data - The data to encode in the QR code
      */
-    generateQRCode(data) {
-        // Placeholder for QR code generation
-        // In a real implementation, you would use a library like qrcode.js
+    async generateQRCode(data) {
         const qrContainer = document.getElementById('qr-code');
-        if (qrContainer) {
+        if (!qrContainer) return;
+        
+        try {
+            // Load QRCode.js library if not already loaded
+            if (typeof QRCode === 'undefined') {
+                await this.loadQRCodeJS();
+            }
+            
+            // Clear previous QR code
+            qrContainer.innerHTML = '';
+            
+            // Generate new QR code
+            new QRCode(qrContainer, {
+                text: data,
+                width: 256,
+                height: 256,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        } catch (error) {
+            console.error('Error generating QR code:', error);
             qrContainer.textContent = `Connection code: ${data}`;
             qrContainer.style.padding = '20px';
             qrContainer.style.textAlign = 'center';
             qrContainer.style.fontFamily = 'monospace';
+        }
+    }
+    
+    /**
+     * Load QRCode.js library
+     * @returns {Promise} A promise that resolves when QRCode.js is loaded
+     */
+    loadQRCodeJS() {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load QRCode.js'));
+            document.head.appendChild(script);
+        });
+    }
+    
+    /**
+     * Copy connection code to clipboard
+     */
+    copyConnectionCode() {
+        const codeElement = document.getElementById('connection-code');
+        if (!codeElement || !this.roomId) return;
+        
+        try {
+            navigator.clipboard.writeText(this.roomId).then(() => {
+                // Show success message
+                this.updateConnectionStatus('Connection code copied to clipboard!');
+                
+                // Highlight the code element briefly
+                codeElement.classList.add('copied');
+                setTimeout(() => {
+                    codeElement.classList.remove('copied');
+                }, 1000);
+            });
+        } catch (error) {
+            console.error('Failed to copy code:', error);
+            this.updateConnectionStatus('Failed to copy code. Please copy it manually.');
         }
     }
     
@@ -545,20 +809,30 @@ export class MultiplayerManager {
         // Collect player data
         const players = {};
         
-        // Add host player
-        players[this.peer.id] = {
-            position: {
-                x: this.game.player.model.position.x,
-                y: this.game.player.model.position.y,
-                z: this.game.player.model.position.z
-            },
-            rotation: {
-                x: this.game.player.model.rotation.x,
-                y: this.game.player.model.rotation.y,
-                z: this.game.player.model.rotation.z
-            },
-            animation: this.game.player.currentAnimation
-        };
+        // Add host player - check if model exists before accessing its properties
+        if (this.game.player.model && this.game.player.model.position && this.game.player.model.rotation) {
+            players[this.peer.id] = {
+                position: {
+                    x: this.game.player.model.position.x,
+                    y: this.game.player.model.position.y,
+                    z: this.game.player.model.position.z
+                },
+                rotation: {
+                    x: this.game.player.model.rotation.x,
+                    y: this.game.player.model.rotation.y,
+                    z: this.game.player.model.rotation.z
+                },
+                animation: this.game.player.currentAnimation
+            };
+        } else {
+            // Provide default values if model is not available
+            players[this.peer.id] = {
+                position: { x: 0, y: 0, z: 0 },
+                rotation: { x: 0, y: 0, z: 0 },
+                animation: 'idle'
+            };
+            console.warn('Player model not fully initialized when broadcasting game state');
+        }
         
         // Add remote players
         this.remotePlayerManager.getPlayers().forEach((player, peerId) => {

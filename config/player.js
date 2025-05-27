@@ -10,8 +10,8 @@ export const DEFAULT_PLAYER_STATS = {
     experienceToNextLevel: 100,
     
     // Health and mana
-    health: 300,
-    maxHealth: 300,
+    health: 300_000,
+    maxHealth: 300_000,
     mana: 200,
     maxMana: 200,
     

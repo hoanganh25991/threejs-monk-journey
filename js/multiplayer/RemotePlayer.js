@@ -11,8 +11,9 @@ export class RemotePlayer {
      * Initialize a remote player
      * @param {Game} game - The main game instance
      * @param {string} peerId - The ID of the remote player
+     * @param {string} [playerColor] - The color assigned to the player
      */
-    constructor(game, peerId) {
+    constructor(game, peerId, playerColor) {
         this.game = game;
         this.peerId = peerId;
         this.model = null;
@@ -23,6 +24,8 @@ export class RemotePlayer {
         this.targetRotation = new THREE.Euler();
         this.interpolationFactor = 0.1; // Smoothing factor for movement
         this.nameTag = null;
+        this.playerColor = playerColor || '#FFFFFF'; // Default to white if no color provided
+        this.colorIndicator = null;
         
         // Create a group to hold the player model and name tag
         this.group = new THREE.Group();
@@ -39,9 +42,40 @@ export class RemotePlayer {
             
             // Create name tag
             this.createNameTag();
+            
+            // Create color indicator
+            this.createColorIndicator();
         } catch (error) {
             console.error(`Error initializing remote player ${this.peerId}:`, error);
         }
+    }
+    
+    /**
+     * Create a color indicator circle around the player's feet
+     */
+    createColorIndicator() {
+        // Create a ring geometry for the indicator
+        const geometry = new THREE.RingGeometry(0.6, 0.8, 32);
+        
+        // Create a material with the player's color
+        const material = new THREE.MeshBasicMaterial({ 
+            color: this.playerColor,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.7
+        });
+        
+        // Create the mesh
+        this.colorIndicator = new THREE.Mesh(geometry, material);
+        
+        // Rotate to lay flat on the ground
+        this.colorIndicator.rotation.x = -Math.PI / 2;
+        
+        // Position slightly above ground to avoid z-fighting
+        this.colorIndicator.position.y = 0.02;
+        
+        // Add to group
+        this.group.add(this.colorIndicator);
     }
     
     /**
@@ -118,9 +152,9 @@ export class RemotePlayer {
         context.fillStyle = 'rgba(0, 0, 0, 0.5)';
         context.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Draw border
-        context.strokeStyle = '#ffffff';
-        context.lineWidth = 2;
+        // Draw border with player color
+        context.strokeStyle = this.playerColor;
+        context.lineWidth = 3;
         context.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
         
         // Draw text
@@ -176,6 +210,55 @@ export class RemotePlayer {
         
         // Play the new animation
         this.playAnimation(animation);
+    }
+    
+    /**
+     * Set the player's color
+     * @param {string} color - The color to set
+     */
+    setPlayerColor(color) {
+        if (!color) return;
+        
+        // Update stored color
+        this.playerColor = color;
+        
+        // Update color indicator if it exists
+        if (this.colorIndicator && this.colorIndicator.material) {
+            this.colorIndicator.material.color.set(color);
+        } else {
+            // Create color indicator if it doesn't exist
+            this.createColorIndicator();
+        }
+        
+        // Update name tag color if it exists
+        if (this.nameTag && this.nameTag.material && this.nameTag.material.map) {
+            // Redraw the name tag with the new color
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 256;
+            canvas.height = 64;
+            
+            // Draw background
+            context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw border with player color
+            context.strokeStyle = this.playerColor;
+            context.lineWidth = 3;
+            context.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+            
+            // Draw text
+            context.fillStyle = '#ffffff';
+            context.font = '24px Arial';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(`Player ${this.peerId.substring(0, 8)}`, canvas.width / 2, canvas.height / 2);
+            
+            // Update texture
+            this.nameTag.material.map.dispose();
+            this.nameTag.material.map = new THREE.CanvasTexture(canvas);
+            this.nameTag.material.needsUpdate = true;
+        }
     }
     
     /**
@@ -258,11 +341,18 @@ export class RemotePlayer {
             this.nameTag.material.dispose();
         }
         
+        // Dispose of color indicator
+        if (this.colorIndicator && this.colorIndicator.material) {
+            this.colorIndicator.geometry.dispose();
+            this.colorIndicator.material.dispose();
+        }
+        
         // Clear references
         this.model = null;
         this.mixer = null;
         this.animations.clear();
         this.nameTag = null;
+        this.colorIndicator = null;
         this.group = null;
     }
 }

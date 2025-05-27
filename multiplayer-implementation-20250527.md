@@ -1,5 +1,26 @@
 # Multiplayer Implementation with WebRTC
 
+<!-- TOC -->
+
+- [Multiplayer Implementation with WebRTC](#multiplayer-implementation-with-webrtc)
+    - [Overview](#overview)
+    - [Architecture](#architecture)
+        - [Host-Based Model](#host-based-model)
+        - [Data Flow](#data-flow)
+    - [WebRTC Implementation](#webrtc-implementation)
+        - [Library Selection: PeerJS](#library-selection-peerjs)
+        - [Connection Flow](#connection-flow)
+    - [Implementation Plan](#implementation-plan)
+        - [Setup Dependencies](#setup-dependencies)
+        - [MultiplayerManager Implementation](#multiplayermanager-implementation)
+        - [Enemy Manager Enhancements](#enemy-manager-enhancements)
+        - [Player Class Enhancements](#player-class-enhancements)
+    - [Required Dependencies](#required-dependencies)
+    - [Considerations and Limitations](#considerations-and-limitations)
+    - [Conclusion](#conclusion)
+
+<!-- /TOC -->
+
 ## Overview
 
 This document outlines the implementation of multiplayer functionality in Monk Journey using WebRTC for peer-to-peer connections. The multiplayer system will follow a host-based model where one player acts as the host and others join as members.
