@@ -77,7 +77,16 @@ export class MultiplayerUIManager {
         // Join game button
         const joinGameBtn = document.getElementById('join-game-btn');
         if (joinGameBtn) {
-            joinGameBtn.addEventListener('click', () => this.showJoinUI());
+            joinGameBtn.addEventListener('click', async () => {
+                // Show join UI first
+                await this.showJoinUI();
+                
+                // Then immediately start camera scan
+                const startScanBtn = document.getElementById('start-scan-btn');
+                if (startScanBtn && startScanBtn.onclick) {
+                    startScanBtn.onclick();
+                }
+            });
         }
         
         // Manual connect button
@@ -301,6 +310,27 @@ export class MultiplayerUIManager {
                 document.getElementById('manual-code-view').style.display = 'none';
                 
                 try {
+                    // Show loading indicator
+                    const qrScannerView = document.getElementById('qr-scanner-view');
+                    if (qrScannerView) {
+                        // Create and add loading overlay if it doesn't exist
+                        let loadingOverlay = document.getElementById('qr-scanner-loading');
+                        if (!loadingOverlay) {
+                            loadingOverlay = document.createElement('div');
+                            loadingOverlay.id = 'qr-scanner-loading';
+                            loadingOverlay.className = 'loading-overlay';
+                            loadingOverlay.innerHTML = `
+                                <div class="loading-spinner"></div>
+                                <div class="loading-text">Initializing camera...</div>
+                            `;
+                            qrScannerView.parentNode.appendChild(loadingOverlay);
+                        } else {
+                            loadingOverlay.style.display = 'flex';
+                        }
+                    }
+                    
+                    this.updateConnectionStatus('Initializing camera...', 'join-connection-status');
+                    
                     // Load HTML5-QRCode library if not already loaded
                     if (typeof Html5Qrcode === 'undefined') {
                         await this.loadQRScannerJS();
@@ -310,7 +340,13 @@ export class MultiplayerUIManager {
                     await this.getAvailableCameras();
                     
                     // Start scanner automatically
-                    this.startQRScanner();
+                    await this.startQRScanner();
+                    
+                    // Hide loading overlay
+                    const loadingOverlay = document.getElementById('qr-scanner-loading');
+                    if (loadingOverlay) {
+                        loadingOverlay.style.display = 'none';
+                    }
                     
                     this.updateConnectionStatus('Camera active. Point at a QR code to connect.', 'join-connection-status');
                 } catch (error) {
@@ -473,8 +509,47 @@ export class MultiplayerUIManager {
                 cameraConfig = { facingMode: 'environment' };
             }
             
+            // Add "Enter Code" button overlay if it doesn't exist
+            let enterCodeOverlay = document.getElementById('enter-code-overlay');
+            if (!enterCodeOverlay) {
+                const scannerContainer = document.querySelector('.qr-scanner-container');
+                if (scannerContainer) {
+                    enterCodeOverlay = document.createElement('div');
+                    enterCodeOverlay.id = 'enter-code-overlay';
+                    enterCodeOverlay.className = 'enter-code-overlay';
+                    enterCodeOverlay.innerHTML = `
+                        <button id="overlay-enter-code-btn" class="btn">Enter Code Manually</button>
+                    `;
+                    scannerContainer.appendChild(enterCodeOverlay);
+                    
+                    // Add event listener to the button
+                    const overlayEnterCodeBtn = document.getElementById('overlay-enter-code-btn');
+                    if (overlayEnterCodeBtn) {
+                        overlayEnterCodeBtn.addEventListener('click', () => {
+                            // Stop scanner
+                            this.stopQRScanner();
+                            
+                            // Show manual code view
+                            document.getElementById('join-initial-options').style.display = 'none';
+                            document.getElementById('scan-qr-view').style.display = 'none';
+                            document.getElementById('manual-code-view').style.display = 'flex';
+                            
+                            // Focus on the input field
+                            const input = document.getElementById('manual-connection-input');
+                            if (input) {
+                                input.focus();
+                            }
+                            
+                            this.updateConnectionStatus('Enter the connection code to join the game', 'join-connection-status');
+                        });
+                    }
+                }
+            } else {
+                enterCodeOverlay.style.display = 'block';
+            }
+            
             // Start the scanner
-            this.qrCodeScanner.start(
+            await this.qrCodeScanner.start(
                 cameraConfig,
                 { fps: 10, aspectRatio: 1},
                 (decodedText) => {
@@ -538,6 +613,18 @@ export class MultiplayerUIManager {
             const cameraSelect = document.getElementById('camera-select');
             if (cameraSelect && this.availableCameras.length > 1) {
                 cameraSelect.style.display = 'block';
+            }
+            
+            // Hide loading overlay if it exists
+            const loadingOverlay = document.getElementById('qr-scanner-loading');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+            
+            // Hide enter code overlay if it exists
+            const enterCodeOverlay = document.getElementById('enter-code-overlay');
+            if (enterCodeOverlay) {
+                enterCodeOverlay.style.display = 'none';
             }
         }
     }
