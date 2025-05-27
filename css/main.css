@@ -74,3 +74,6 @@
 
 /* Import multiplayer styles */
 @import 'multiplayer.css';
+
+/* Import difficulty menu styles */
+@import 'difficulty-menu.css';

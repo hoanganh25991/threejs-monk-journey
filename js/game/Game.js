@@ -21,6 +21,8 @@ import { MenuManager } from '../menu-system/MenuManager.js';
 import { isDebugMode } from '../utils/FlagUtils.js';
 import { InteractionSystem } from '../interaction/InteractionSystem.js';
 import { MultiplayerManager } from '../multiplayer/MultiplayerManager.js';
+import { DifficultyMenu } from '../menu-system/DifficultyMenu.js';
+import { ItemGenerator } from '../entities/items/ItemGenerator.js';
 
 /**
  * Main Game class that serves as a facade to the underlying game systems
@@ -67,6 +69,9 @@ export class Game {
         this.state = new GameState();
         this.events = new GameEvents();
         this.loadingManager = new LoadingManager().getManager();
+        this.difficultyMenu = new DifficultyMenu(this);
+        this.itemGenerator = new ItemGenerator(this);
+        this.difficulty = 'medium';
     }
     
     /**
@@ -229,7 +234,10 @@ export class Game {
             this.updateLoadingProgress(99.5, 'Setting up multiplayer...', 'Initializing WebRTC connections');
             this.multiplayerManager = new MultiplayerManager(this);
             await this.multiplayerManager.init();
-            
+
+            // Set initial difficulty
+            this.enemyManager.setDifficulty(this.difficulty);
+
             this.updateLoadingProgress(100, 'Game ready!', 'Initialization complete');
             
             // Apply performance optimizations to the scene

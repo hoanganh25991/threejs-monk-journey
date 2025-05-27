@@ -10,7 +10,7 @@
     background-color: rgba(0, 0, 0, 0.7);
     border: 2px solid #333;
     border-radius: 5px;
-    padding: var(--padding-medium);
+    padding: 5px;
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -160,11 +160,6 @@
     transform: translateY(-50%);
     color: white;
     font-size: 14px;
-}
-
-/* Experience Bar */
-#experience-bar-container {
-    /* Individual styles for experience bar if needed */
 }
 
 #experience-bar {

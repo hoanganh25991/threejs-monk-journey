@@ -47,7 +47,7 @@ export class PlayerUI extends UIComponent {
         if (!this.game.player) return;
         
         // Update level indicator
-        this.levelIndicator.textContent = `Level: ${this.game.player.getLevel()}`;
+        this.levelIndicator.textContent = `Level ${this.game.player.getLevel()}`;
         
         // Get health values
         const currentHealth = Math.round(this.game.player.getHealth());

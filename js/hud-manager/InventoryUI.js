@@ -49,8 +49,6 @@ export class InventoryUI extends UIComponent {
             this.toggleInventory();
         });
 
-        setTimeout(() => this.initModelPreview(), 1000);
-        
         // Hide initially
         this.hide();
         
@@ -75,7 +73,7 @@ export class InventoryUI extends UIComponent {
         
         // Use default dimensions if container size is invalid
         if (containerWidth <= 0 || containerHeight <= 0) {
-            console.debug('Container has invalid dimensions, using defaults');
+            console.error('Container has invalid dimensions, using defaults');
             containerWidth = 300;  // Default width
             containerHeight = 400; // Default height
         }
@@ -293,6 +291,7 @@ export class InventoryUI extends UIComponent {
      */
     show() {
         super.show();
+        this.initModelPreview();
         
         // Start the animation loop if the model is initialized
         if (this.isModelInitialized && this.modelPreview) {

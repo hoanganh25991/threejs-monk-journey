@@ -245,24 +245,61 @@ export class Skill {
         // Base damage from skill configuration
         let damage = this.damage;
         
-        // // If we have access to the player's stats, use them to calculate damage
-        // if (this.game && this.game.player) {
-        //     const player = this.game.player;
-        //     // Base damage from attack power
-        //     damage = damage * (player.stats.getAttackPower() / 10);
-        //     // Add bonus from strength (each point adds 0.5 damage)
-        //     damage += player.stats.strength * 0.5;
-        //     // Add level bonus (each level adds 2 damage)
-        //     damage += (player.stats.getLevel() - 1) * 2;
-        //     // Add small random variation (±10%)
-        //     const variation = damage * 0.2 * (Math.random() - 0.5);
-        //     damage += variation;
-        //     // Round to integer
-        //     damage = Math.round(damage);
-        //     console.debug(`Calculated skill damage: ${damage} (base: ${this.damage}, attackPower: ${player.stats.getAttackPower()}, strength: ${player.stats.strength})`);
-        // }
-
-        console.debug("Skill getDamage", {damage});
+        // If we have access to the player's stats, use them to calculate damage
+        if (this.game && this.game.player) {
+            const player = this.game.player;
+            
+            // Base damage from attack power
+            damage = damage * (player.stats.getAttackPower() / 10);
+            
+            // Add bonus from strength (each point adds 0.5 damage)
+            damage += player.stats.strength * 0.5;
+            
+            // Add level bonus (each level adds 2 damage)
+            damage += (player.stats.getLevel() - 1) * 2;
+            
+            // Add weapon damage if equipped
+            const equipment = player.inventory.getEquipment();
+            if (equipment.weapon) {
+                damage += equipment.weapon.getStat('damage') || 0;
+                
+                // Apply elemental bonuses if matching
+                if (this.element && equipment.weapon.getStat(`${this.element}Damage`)) {
+                    damage *= (1 + (equipment.weapon.getStat(`${this.element}Damage`) / 100));
+                }
+            }
+            
+            // Apply skill damage bonuses from items
+            let skillDamageBonus = 0;
+            
+            // Check all equipped items for skill damage bonuses
+            for (const slot in equipment) {
+                const item = equipment[slot];
+                if (item) {
+                    // General skill damage bonus
+                    skillDamageBonus += item.getStat('skillDamage') || 0;
+                    
+                    // Specific skill type bonus
+                    if (this.variant) {
+                        skillDamageBonus += item.getStat(`${this.variant}Damage`) || 0;
+                    }
+                    
+                    // Specific skill bonus
+                    skillDamageBonus += item.getStat(`${this.name}Damage`) || 0;
+                }
+            }
+            
+            // Apply skill damage bonus
+            damage *= (1 + (skillDamageBonus / 100));
+            
+            // Apply small random variation (±10%)
+            const variation = damage * 0.2 * (Math.random() - 0.5);
+            damage += variation;
+            
+            // Round to integer
+            damage = Math.round(damage);
+            console.debug(`Calculated skill damage: ${damage} (base: ${this.damage}, attackPower: ${player.stats.getAttackPower()}, strength: ${player.stats.strength})`);
+        }
 
         return damage;
     }

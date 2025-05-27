@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Enemy } from './Enemy.js';
 import { ZONE_ENEMIES, ENEMY_TYPES, BOSS_TYPES, ZONE_DIFFICULTY_MULTIPLIERS } from '../../config/enemies.js';
 import { DROP_CHANCES, REGULAR_DROP_TABLE, BOSS_DROP_TABLE } from '../../config/drops.js';
+import { DIFFICULTY_SETTINGS } from '../../config/difficulty-settings.js';
 
 /**
  * @typedef {Object} EnemyType
@@ -51,6 +52,7 @@ export class EnemyManager {
         this.player = player;
         this.loadingManager = loadingManager;
         this.enemies = [];
+        this.enemyMeshes = [];
         this.maxEnemies = 30; // Increased max enemies for world exploration
         this.spawnRadius = 30;
         this.spawnTimer = 0;
@@ -73,6 +75,8 @@ export class EnemyManager {
         
         // Import zone difficulty multipliers from config
         this.zoneDifficultyMultipliers = ZONE_DIFFICULTY_MULTIPLIERS;
+        // Track current difficulty
+        this.currentDifficulty = 'medium'; // Default difficulty
     }
     
     // setGame method removed - game is now passed in constructor
@@ -230,7 +234,93 @@ export class EnemyManager {
         
         return enemy;
     }
-    
+
+    setDifficulty(difficulty) {
+        if (DIFFICULTY_SETTINGS[difficulty]) {
+            this.currentDifficulty = difficulty;
+            console.log(`Difficulty set to ${DIFFICULTY_SETTINGS[difficulty].name}`);
+        } else {
+            console.warn(`Unknown difficulty: ${difficulty}, defaulting to medium`);
+            this.currentDifficulty = 'medium';
+        }
+    }
+
+    getDifficultySettings() {
+        return DIFFICULTY_SETTINGS[this.currentDifficulty];
+    }
+
+    // Removed duplicate spawnEnemy method that was causing conflicts
+
+    applyDifficultyScaling(enemy, difficultySettings) {
+        // Scale health
+        enemy.maxHealth *= difficultySettings.healthMultiplier;
+        enemy.health = enemy.maxHealth;
+        
+        // Scale damage
+        enemy.damage *= difficultySettings.damageMultiplier;
+        
+        // Scale boss stats further if this is a boss
+        if (enemy.isBoss) {
+            enemy.maxHealth *= difficultySettings.bossHealthMultiplier;
+            enemy.health = enemy.maxHealth;
+            enemy.damage *= difficultySettings.bossDamageMultiplier;
+        }
+        
+        // Scale experience and item drops
+        enemy.experienceValue *= difficultySettings.experienceMultiplier;
+        enemy.itemDropChance *= difficultySettings.itemDropRateMultiplier;
+        enemy.itemQualityBonus = (enemy.itemQualityBonus || 0) + 
+            (difficultySettings.itemQualityMultiplier - 1) * 100;
+    }
+
+    assignRandomAffixes(enemy, count) {
+        // Copy available affixes
+        const availableAffixes = [...ENEMY_AFFIXES];
+        
+        // Assign random affixes
+        enemy.affixes = [];
+        
+        for (let i = 0; i < count && availableAffixes.length > 0; i++) {
+            // Select random affix
+            const index = Math.floor(Math.random() * availableAffixes.length);
+            const affix = availableAffixes[index];
+            
+            // Remove from available affixes
+            availableAffixes.splice(index, 1);
+            
+            // Add to enemy
+            enemy.affixes.push(affix);
+            
+            // Apply affix effects
+            this.applyAffixToEnemy(enemy, affix);
+        }
+        
+        // Update enemy name to reflect affixes
+        if (enemy.affixes.length > 0) {
+            const affixNames = enemy.affixes.map(affix => affix.name);
+            enemy.name = `${affixNames.join(' ')} ${enemy.name}`;
+        }
+    }
+
+    applyAffixToEnemy(enemy, affix) {
+        // Add visual effect
+        if (affix.visualEffect) {
+            enemy.addVisualEffect(affix.visualEffect);
+        }
+        
+        // Add abilities
+        if (affix.abilities) {
+            affix.abilities.forEach(ability => {
+                enemy.addAbility(ability);
+            });
+        }
+        
+        // Apply passive effects
+        if (affix.id === 'fast') {
+            enemy.moveSpeed *= 1.5;
+            enemy.attackSpeed *= 1.3;
+        }
+    }
     getRandomEnemyType() {
         // Get a random zone instead of using player's current zone
         const availableZones = Object.keys(this.zoneEnemies);

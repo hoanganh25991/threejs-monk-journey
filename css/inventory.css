@@ -97,6 +97,7 @@
     grid-template-columns: 1fr 2.5fr 1fr;
     grid-template-rows: repeat(4, 1fr); /* Equal height rows */
     pointer-events: none; /* Allow clicks to pass through to slots */
+    z-index: 50;
 }
 
 .equipment-slot {
