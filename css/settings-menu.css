@@ -241,7 +241,7 @@
 /* Fullscreen Model Preview Layout */
 .model-preview-fullscreen-layout {
     display: flex;
-    height: calc(100% - 50px);
+    height: 100%;
 }
 
 .model-preview-fullscreen-section {

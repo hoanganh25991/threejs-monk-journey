@@ -525,67 +525,34 @@
 
                 <!-- Model Preview Tab (Dedicated) -->
                 <div id="model-preview-tab" class="tab-content">
-                    <h2 id="model-preview-title">Model Preview</h2>
+                    <!-- <h2 id="model-preview-title">Model Preview</h2> -->
                     <div class="model-preview-fullscreen-layout">
                         <div class="model-preview-fullscreen-section">
                             <!-- Regular model preview container -->
-                            <div id="model-preview-container" style="display: none; width: 300px; height: 485px;">
-                                <div id="model-preview-wrapper" style="width: 100%; height: 100%;"></div>
+                            <div id="model-preview-container">
+                                <div id="model-preview-wrapper"></div>
                             </div>
                             
                             <!-- Fullscreen model preview container -->
                             <div id="model-preview-fullscreen-container">
-                                <div id="model-preview-fullscreen-wrapper" style="width: 100%; height: 100%;"></div>
+                                <div id="model-preview-fullscreen-wrapper"></div>
                             </div>
                         </div>
                         <div class="model-preview-controls-section">
                             <!-- Regular model selection (for CharacterModelTab.js) -->
                             <div id="model-selection" class="setting-item">
-                                <label for="model-select" class="settings-label">Character Model: </label>
-                                <div id="model-selection-container">
-                                    <button id="prev-model-button" class="settings-button">◀</button>
-                                    <select id="model-select" class="settings-select"></select>
-                                    <button id="next-model-button" class="settings-button">▶</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Size selection -->
-                            <div id="size-selection" class="setting-item">
-                                <label for="size-select" class="settings-label">Size: </label>
-                                <div id="size-selection-container">
-                                    <button id="prev-size-button" class="settings-button">◀</button>
-                                    <select id="size-select" class="settings-select"></select>
-                                    <button id="next-size-button" class="settings-button">▶</button>
-                                </div>
+                                <label for="model-select" class="settings-label">Model: </label>
+                                <button id="prev-model-button" class="settings-button">◀</button>
+                                <select id="model-select" class="settings-select"></select>
+                                <button id="next-model-button" class="settings-button">▶</button>
                             </div>
                             
                             <!-- Animation selection -->
                             <div id="animation-selection" class="setting-item">
                                 <label for="animation-select" class="settings-label">Animation: </label>
-                                <div id="animation-selection-container">
-                                    <button id="prev-anim-button" class="settings-button">◀</button>
-                                    <select id="animation-select" class="settings-select"></select>
-                                    <button id="next-anim-button" class="settings-button">▶</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Fullscreen model preview selection -->
-                            <div id="model-preview-selection" class="setting-item">
-                                <label for="model-preview-select" class="settings-label">Model: </label>
-                                <div id="model-preview-selection-container">
-                                    <button id="prev-model-preview-button" class="settings-button">◀</button>
-                                    <select id="model-preview-select" class="settings-select"></select>
-                                    <button id="next-model-preview-button" class="settings-button">▶</button>
-                                </div>
-                            </div>
-
-                            <div id="animation-preview-container" class="setting-item">
-                                <label for="animation-preview-select" class="settings-label">Animation: </label>
-                                <div id="animation-preview-selection-container">
-                                    <button id="prev-anim-preview-button" class="settings-button">◀</button>
-                                    <select id="animation-preview-select" class="settings-select"></select>
-                                    <button id="next-anim-preview-button" class="settings-button">▶</button>
-                                </div>
+                                <button id="prev-anim-button" class="settings-button">◀</button>
+                                <select id="animation-select" class="settings-select"></select>
+                                <button id="next-anim-button" class="settings-button">▶</button>
                             </div>
 
                             <div id="camera-controls-container" class="setting-item">
