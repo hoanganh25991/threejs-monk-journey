@@ -12,6 +12,8 @@ export class MultiplayerUIManager {
     constructor(multiplayerManager) {
         this.multiplayerManager = multiplayerManager;
         this.qrCodeScanner = null;
+        this.availableCameras = [];
+        this.selectedCameraId = null;
     }
 
     /**
@@ -241,8 +243,11 @@ export class MultiplayerUIManager {
                 await this.loadQRScannerJS();
             }
             
+            // Get available cameras and set up camera selection
+            await this.getAvailableCameras();
+            
             // Start scanner automatically
-            this.startQRScanner();
+            await this.startQRScanner();
             
             this.updateConnectionStatus('Scan a QR code or enter connection code manually', 'join-connection-status');
         } catch (error) {
@@ -275,18 +280,111 @@ export class MultiplayerUIManager {
     }
     
     /**
+     * Get available cameras
+     * @returns {Promise<Array>} A promise that resolves with an array of camera devices
+     */
+    async getAvailableCameras() {
+        if (typeof Html5Qrcode === 'undefined') {
+            await this.loadQRScannerJS();
+        }
+        
+        try {
+            // Get available cameras using the Html5Qrcode API
+            this.availableCameras = await Html5Qrcode.getCameras();
+            console.log('Available cameras:', this.availableCameras);
+            
+            // Populate the camera select dropdown
+            const cameraSelect = document.getElementById('camera-select');
+            if (cameraSelect) {
+                // Clear existing options
+                cameraSelect.innerHTML = '';
+                
+                // Add options for each camera
+                this.availableCameras.forEach(camera => {
+                    const option = document.createElement('option');
+                    option.value = camera.id;
+                    option.textContent = camera.label || `Camera ${camera.id.substring(0, 4)}`;
+                    cameraSelect.appendChild(option);
+                });
+                
+                // Show the select dropdown if we have multiple cameras
+                if (this.availableCameras.length > 1) {
+                    cameraSelect.style.display = 'block';
+                    
+                    // Set up event listener for camera selection
+                    cameraSelect.onchange = (e) => {
+                        this.selectedCameraId = e.target.value;
+                        
+                        // Restart scanner with new camera if it's currently running
+                        if (this.qrCodeScanner) {
+                            this.stopQRScanner();
+                            this.startQRScanner();
+                        }
+                    };
+                    
+                    // Set initial selected camera (prefer back camera if available)
+                    const backCamera = this.availableCameras.find(camera => 
+                        camera.label && (
+                            camera.label.toLowerCase().includes('back') || 
+                            camera.label.toLowerCase().includes('rear') ||
+                            camera.label.toLowerCase().includes('environment')
+                        )
+                    );
+                    
+                    if (backCamera) {
+                        this.selectedCameraId = backCamera.id;
+                        cameraSelect.value = backCamera.id;
+                    } else if (this.availableCameras.length > 0) {
+                        this.selectedCameraId = this.availableCameras[0].id;
+                        cameraSelect.value = this.availableCameras[0].id;
+                    }
+                } else if (this.availableCameras.length === 1) {
+                    // Only one camera available
+                    this.selectedCameraId = this.availableCameras[0].id;
+                    cameraSelect.style.display = 'none';
+                }
+            }
+            
+            return this.availableCameras;
+        } catch (error) {
+            console.error('Error getting cameras:', error);
+            this.updateConnectionStatus('Could not access cameras. Please check permissions.', 'join-connection-status');
+            return [];
+        }
+    }
+    
+    /**
      * Start the QR scanner
      */
-    startQRScanner() {
+    async startQRScanner() {
         if (typeof Html5Qrcode === 'undefined') {
             this.updateConnectionStatus('QR scanner library not loaded. Please enter code manually.', 'join-connection-status');
             return;
         }
         
         try {
+            // Get available cameras if we haven't already
+            if (this.availableCameras.length === 0) {
+                await this.getAvailableCameras();
+            }
+            
+            // Create QR scanner instance
             this.qrCodeScanner = new Html5Qrcode('qr-scanner-view');
+            
+            // Configure camera settings
+            let cameraConfig;
+            
+            if (this.selectedCameraId) {
+                // Use selected camera ID if available
+                cameraConfig = { deviceId: this.selectedCameraId };
+            } else {
+                // Fall back to environment facing camera
+                cameraConfig = { facingMode: 'environment' };
+            }
+            
+            // Start the scanner
             this.qrCodeScanner.start(
-                { facingMode: 'environment' },
+                cameraConfig,
                 { fps: 10, qrbox: 250 },
                 (decodedText) => {
                     // Stop scanning
@@ -347,6 +445,12 @@ export class MultiplayerUIManager {
             if (toggleButton) {
                 toggleButton.textContent = 'Start Camera';
                 toggleButton.onclick = () => this.startQRScanner();
+            }
+            
+            // Keep camera select visible if we have multiple cameras
+            const cameraSelect = document.getElementById('camera-select');
+            if (cameraSelect && this.availableCameras.length > 1) {
+                cameraSelect.style.display = 'block';
             }
         }
     }
@@ -424,23 +528,13 @@ export class MultiplayerUIManager {
             codeElement.textContent = roomId;
         }
         
-        // Get the full URL from the QR code container or generate it
-        const qrContainer = document.getElementById('qr-code');
-        let textToCopy = roomId;
-        
-        if (qrContainer && qrContainer.dataset.fullUrl) {
-            textToCopy = qrContainer.dataset.fullUrl;
-        } else {
-            // Create the full URL if not available from QR code
-            textToCopy = `${window.location.href.split('?')[0]}?join=true&connect-id=${roomId}`;
-        }
-        
+        // Copy only the connection ID (roomId) to clipboard
         try {
             // Use the Clipboard API with proper error handling
-            navigator.clipboard.writeText(textToCopy)
+            navigator.clipboard.writeText(roomId)
                 .then(() => {
                     // Show success message
-                    this.updateConnectionStatus('Full join link copied to clipboard!', 'host-connection-status');
+                    this.updateConnectionStatus('Connection ID copied to clipboard!', 'host-connection-status');
                     
                     // Highlight the code element briefly
                     codeElement.classList.add('copied');
@@ -450,11 +544,11 @@ export class MultiplayerUIManager {
                 })
                 .catch(err => {
                     console.error('Clipboard write failed:', err);
-                    this.updateConnectionStatus('Failed to copy link. Please copy it manually.', 'host-connection-status');
+                    this.updateConnectionStatus('Failed to copy connection ID. Please copy it manually.', 'host-connection-status');
                 });
         } catch (error) {
-            console.error('Failed to copy link:', error);
-            this.updateConnectionStatus('Failed to copy link. Please copy it manually.', 'host-connection-status');
+            console.error('Failed to copy connection ID:', error);
+            this.updateConnectionStatus('Failed to copy connection ID. Please copy it manually.', 'host-connection-status');
         }
     }
     
