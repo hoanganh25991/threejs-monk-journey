@@ -227,7 +227,7 @@ export class CameraControlUI extends UIComponent {
             // Calculate the vertical angle (around X axis)
             // This is the angle from the XZ plane to the camera
             const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
-            const dy = cameraPosition.y - (playerPosition.y + 10); // Adjust for height offset
+            const dy = cameraPosition.y - (playerPosition.y + 20); // Adjust for height offset
             const verticalAngle = Math.atan2(dy, horizontalDistance);
             
             // Store the calculated angles
@@ -427,7 +427,7 @@ export class CameraControlUI extends UIComponent {
         // Add the player position to get the final camera position
         const cameraPosition = new THREE.Vector3(
             playerPosition.x + cameraOffset.x,
-            playerPosition.y + cameraOffset.y + 10, // Add height offset
+            playerPosition.y + cameraOffset.y + 20, // Add height offset
             playerPosition.z + cameraOffset.z
         );
         
@@ -572,7 +572,7 @@ export class CameraControlUI extends UIComponent {
                     
                     // Calculate the vertical angle (around X axis)
                     const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
-                    const dy = initialPos.y - (playerPosition.y + 10);
+                    const dy = initialPos.y - (playerPosition.y + 20);
                     const verticalAngle = Math.atan2(dy, horizontalDistance);
                     
                     // Store the calculated angles
@@ -623,7 +623,7 @@ export class CameraControlUI extends UIComponent {
                 // Add the player position to get the final camera position
                 const cameraPosition = new THREE.Vector3(
                     playerPosition.x + cameraOffset.x,
-                    playerPosition.y + cameraOffset.y + 10, // Add height offset
+                    playerPosition.y + cameraOffset.y + 20, // Add height offset
                     playerPosition.z + cameraOffset.z
                 );
                 
