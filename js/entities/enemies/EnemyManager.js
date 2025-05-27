@@ -51,13 +51,14 @@ export class EnemyManager {
         this.scene = scene;
         this.player = player;
         this.loadingManager = loadingManager;
-        this.enemies = [];
+        this.enemies = new Map(); // Changed to Map for easier lookup by ID
         this.enemyMeshes = [];
         this.maxEnemies = 30; // Increased max enemies for world exploration
         this.spawnRadius = 30;
         this.spawnTimer = 0;
         this.spawnInterval = 5; // Spawn enemy every 5 seconds
         this.game = game; // Game reference passed in constructor
+        this.nextEnemyId = 1; // For generating unique enemy IDs
         
         // For chunk-based enemy spawning
         this.enemyChunks = {}; // Track enemies per chunk
@@ -77,6 +78,10 @@ export class EnemyManager {
         this.zoneDifficultyMultipliers = ZONE_DIFFICULTY_MULTIPLIERS;
         // Track current difficulty
         this.currentDifficulty = 'medium'; // Default difficulty
+        
+        // Multiplayer support
+        this.isMultiplayer = false;
+        this.isHost = false;
     }
     
     // setGame method removed - game is now passed in constructor
@@ -132,22 +137,23 @@ export class EnemyManager {
             return; // Skip all enemy updates when game is paused
         }
         
-        // Update spawn timer
-        this.spawnTimer += delta;
-        
-        // Spawn new enemies if needed
-        if (this.spawnTimer >= this.spawnInterval && this.enemies.length < this.maxEnemies) {
-            this.spawnEnemy();
-            this.spawnTimer = 0;
+        // In multiplayer mode, only the host should spawn enemies
+        if (!this.isMultiplayer || (this.isMultiplayer && this.isHost)) {
+            // Update spawn timer
+            this.spawnTimer += delta;
+            
+            // Spawn new enemies if needed
+            if (this.spawnTimer >= this.spawnInterval && this.enemies.size < this.maxEnemies) {
+                this.spawnEnemy();
+                this.spawnTimer = 0;
+            }
         }
         
         // Track if any bosses are alive
         let bossAlive = false;
         
         // Update enemies
-        for (let i = this.enemies.length - 1; i >= 0; i--) {
-            const enemy = this.enemies[i];
-            
+        for (const [id, enemy] of this.enemies.entries()) {
             // Update enemy
             enemy.update(delta);
             
@@ -158,19 +164,22 @@ export class EnemyManager {
             
             // Remove dead enemies
             if (enemy.isDead()) {
-                // Check for quest updates
-                if (this.game && this.game.questManager) {
-                    this.game.questManager.updateEnemyKill(enemy);
+                // In multiplayer mode, only the host should handle quest updates and drops
+                if (!this.isMultiplayer || (this.isMultiplayer && this.isHost)) {
+                    // Check for quest updates
+                    if (this.game && this.game.questManager) {
+                        this.game.questManager.updateEnemyKill(enemy);
+                    }
+                    
+                    // Check for item drops
+                    this.handleEnemyDrop(enemy);
                 }
-                
-                // Check for item drops
-                this.handleEnemyDrop(enemy);
                 
                 // Check if death animation is still in progress
                 if (!enemy.deathAnimationInProgress) {
                     // Remove enemy only after death animation is complete
                     enemy.remove();
-                    this.enemies.splice(i, 1);
+                    this.enemies.delete(id);
                 }
             }
         }
@@ -189,7 +198,7 @@ export class EnemyManager {
         }
     }
     
-    spawnEnemy(specificType = null, position = null) {
+    spawnEnemy(specificType = null, position = null, enemyId = null) {
         let enemyType;
         
         if (specificType) {
@@ -229,10 +238,162 @@ export class EnemyManager {
         enemy.init();
         enemy.setPosition(spawnPosition.x, spawnPosition.y, spawnPosition.z);
         
-        // Add to enemies array
-        this.enemies.push(enemy);
+        // Assign enemy ID (for multiplayer)
+        const id = enemyId || `enemy_${this.nextEnemyId++}`;
+        enemy.id = id;
+        
+        // Add to enemies map
+        this.enemies.set(id, enemy);
         
         return enemy;
+    }
+    
+    /**
+     * Get serializable enemy data for network transmission
+     * @returns {Object} Object containing serialized enemy data
+     */
+    getSerializableEnemyData() {
+        const enemyData = {};
+        
+        this.enemies.forEach((enemy, id) => {
+            const position = enemy.getPosition();
+            const rotation = enemy.mesh ? enemy.mesh.rotation : { x: 0, y: 0, z: 0 };
+            
+            enemyData[id] = {
+                id: id,
+                position: {
+                    x: position.x,
+                    y: position.y,
+                    z: position.z
+                },
+                rotation: {
+                    x: rotation.x,
+                    y: rotation.y,
+                    z: rotation.z
+                },
+                health: enemy.health,
+                maxHealth: enemy.maxHealth,
+                type: enemy.type,
+                state: enemy.state || 'idle',
+                isBoss: enemy.isBoss || false
+            };
+        });
+        
+        return enemyData;
+    }
+    
+    /**
+     * Update enemies from host data (member only)
+     * @param {Object} enemiesData - Enemy data received from host
+     */
+    updateEnemiesFromHost(enemiesData) {
+        if (!enemiesData) return;
+        
+        // Process enemy updates
+        Object.values(enemiesData).forEach(enemyData => {
+            const id = enemyData.id;
+            
+            // Check if enemy exists
+            if (this.enemies.has(id)) {
+                // Update existing enemy
+                const enemy = this.enemies.get(id);
+                
+                // Update position
+                enemy.setPosition(
+                    enemyData.position.x,
+                    enemyData.position.y,
+                    enemyData.position.z
+                );
+                
+                // Update rotation
+                if (enemy.mesh) {
+                    enemy.mesh.rotation.set(
+                        enemyData.rotation.x,
+                        enemyData.rotation.y,
+                        enemyData.rotation.z
+                    );
+                }
+                
+                // Update health
+                enemy.health = enemyData.health;
+                enemy.updateHealthBar();
+                
+                // Update state
+                if (enemy.state !== enemyData.state) {
+                    enemy.state = enemyData.state;
+                    // Update animation based on state if needed
+                    if (enemy.state === 'attacking') {
+                        enemy.playAttackAnimation();
+                    } else if (enemy.state === 'idle') {
+                        enemy.playIdleAnimation();
+                    } else if (enemy.state === 'moving') {
+                        enemy.playWalkAnimation();
+                    }
+                }
+            } else {
+                // Create new enemy
+                this.createEnemyFromData(enemyData);
+            }
+        });
+        
+        // Remove enemies that no longer exist in the host data
+        const hostEnemyIds = new Set(Object.keys(enemiesData));
+        
+        for (const [id, enemy] of this.enemies.entries()) {
+            if (!hostEnemyIds.has(id)) {
+                enemy.remove();
+                this.enemies.delete(id);
+            }
+        }
+    }
+    
+    /**
+     * Create enemy from network data
+     * @param {Object} enemyData - Enemy data received from host
+     * @returns {Enemy} The created enemy
+     */
+    createEnemyFromData(enemyData) {
+        // Find enemy type
+        let enemyType = this.enemyTypes.find(type => type.type === enemyData.type);
+        
+        // If not found, use a default type
+        if (!enemyType) {
+            console.warn(`Enemy type ${enemyData.type} not found, using default`);
+            enemyType = this.enemyTypes[0];
+        }
+        
+        // Create position vector
+        const position = new THREE.Vector3(
+            enemyData.position.x,
+            enemyData.position.y,
+            enemyData.position.z
+        );
+        
+        // Spawn enemy with the specified ID
+        const enemy = this.spawnEnemy(enemyType.type, position, enemyData.id);
+        
+        // Update enemy properties
+        enemy.health = enemyData.health;
+        enemy.maxHealth = enemyData.maxHealth;
+        enemy.state = enemyData.state;
+        enemy.isBoss = enemyData.isBoss;
+        
+        // Update health bar
+        enemy.updateHealthBar();
+        
+        return enemy;
+    }
+    
+    /**
+     * Set multiplayer mode
+     * @param {boolean} isMultiplayer - Whether multiplayer is enabled
+     * @param {boolean} isHost - Whether this client is the host
+     */
+    setMultiplayerMode(isMultiplayer, isHost) {
+        this.isMultiplayer = isMultiplayer;
+        this.isHost = isHost;
+        
+        console.log(`EnemyManager: Multiplayer mode ${isMultiplayer ? 'enabled' : 'disabled'}, isHost: ${isHost}`);
     }
 
     setDifficulty(difficulty) {
