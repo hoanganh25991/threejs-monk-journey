@@ -476,11 +476,7 @@ export class MultiplayerUIManager {
             // Start the scanner
             this.qrCodeScanner.start(
                 cameraConfig,
-                { 
-                    fps: 10, 
-                    qrbox: { width: 250, height: 250 },
-                    aspectRatio: window.innerWidth > window.innerHeight ? 1.77 : 0.56 // 16:9 or 9:16 based on orientation
-                },
+                { fps: 10, aspectRatio: 1},
                 (decodedText) => {
                     // Stop scanning immediately when QR code is detected
                     this.stopQRScanner();
