@@ -13,10 +13,10 @@ export const PRIMARY_ATTACKS = [
         description: 'Teleport to the nearest enemy and strike them with lightning',
         type: 'teleport',
         damage: 25,
-        manaCost: 5,
-        cooldown: 0, // Very short cooldown for basic attack
+        manaCost: 0,
+        cooldown: 0.2, // Very short cooldown for basic attack
         range: 13, // Teleport range
-        radius: 4, // Increased area of effect for more reliable hits
+        radius: 3, // Increased area of effect for more reliable hits
         duration: 0.5, // Short duration
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
@@ -32,8 +32,8 @@ export const PRIMARY_ATTACKS = [
         description: "Extend your reach to strike enemies from a distance.",
         type: "projectile",
         damage: 10,
-        manaCost: 10,
-        cooldown: 0,
+        manaCost: 0,
+        cooldown: 0.2,
         range: 25, // Increased range for a proper ranged attack
         radius: 1, // Small area of effect at impact point
         duration: 1.5, // Duration for the beam to extend and retract
@@ -61,7 +61,7 @@ export const NORMAL_SKILLS = [
         type: 'wave',
         damage: 50,
         manaCost: 20,
-        cooldown: 0, // Reduced cooldown
+        cooldown: 0.2, // Reduced cooldown
         range: 25,
         radius: 5,
         duration: 5.0, // Further increased duration from 3.5 to 5.0
@@ -79,7 +79,7 @@ export const NORMAL_SKILLS = [
         type: 'buff',
         damage: 2, // This is a defensive skill
         manaCost: 30,
-        cooldown: 0, // Reduced cooldown
+        cooldown: 0.2, // Reduced cooldown
         range: 0, // Self-cast
         radius: 3, // Area of effect around player
         duration: 8, // 10 seconds duration
@@ -98,7 +98,7 @@ export const NORMAL_SKILLS = [
         damage: 5,
         healing: 10, // Amount of health restored per pulse
         manaCost: 20,
-        cooldown: 0, // Longer cooldown for healing ability
+        cooldown: 0.2, // Longer cooldown for healing ability
         range: 0, // Centered on player
         radius: 8, // Large radius to affect multiple allies/enemies
         duration: 5, // Duration in seconds
@@ -116,7 +116,7 @@ export const NORMAL_SKILLS = [
         type: 'ranged',
         damage: 20,
         manaCost: 20,
-        cooldown: 0, // Reduced cooldown
+        cooldown: 0.2, // Reduced cooldown
         range: 25,
         radius: 3,
         duration: 3.5, // Further increased duration from 2.5 to 3.5
@@ -134,7 +134,7 @@ export const NORMAL_SKILLS = [
         type: 'aoe',
         damage: 30,
         manaCost: 40,
-        cooldown: 0, // Reduced cooldown
+        cooldown: 0.2, // Reduced cooldown
         range: 0,
         radius: 4,
         get duration() { return 1.5 + Math.log(this.radius) },
@@ -152,7 +152,7 @@ export const NORMAL_SKILLS = [
         type: 'multi',
         damage: 50,
         manaCost: 30,
-        cooldown: 0, // Reduced cooldown
+        cooldown: 0.2, // Reduced cooldown
         range: 0,
         radius: 5,
         duration: 2.5,
@@ -171,7 +171,7 @@ export const NORMAL_SKILLS = [
         type: 'buff',
         damage: 5,
         manaCost: 20,
-        cooldown: 0, // Reduced cooldown
+        cooldown: 0.2, // Reduced cooldown
         range: 0,
         radius: 5,
         duration: 10, // Further increased duration from 7 to 10
@@ -189,7 +189,7 @@ export const NORMAL_SKILLS = [
         type: 'summon',
         damage: 50,
         manaCost: 0,
-        cooldown: 0, // Reduced cooldown
+        cooldown: 0.2, // Reduced cooldown
         range: 0, // Increased range for summoning
         radius: 10, // Increased radius for summoning circle
         duration: 8, // Increased duration to 30 seconds
@@ -208,7 +208,7 @@ export const NORMAL_SKILLS = [
         type: 'mark',
         damage: 55,
         manaCost: 50,
-        cooldown: 0, // Reduced cooldown
+        cooldown: 0.2, // Reduced cooldown
         range: 30,
         radius: 3,
         duration: 3, // Further increased duration from 15 to 20 seconds
@@ -226,7 +226,7 @@ export const NORMAL_SKILLS = [
         type: 'dash',
         damage: 120,
         manaCost: 100,
-        cooldown: 0,
+        cooldown: 0.2,
         range: 30, // Increased range for fast forward movement
         radius: 5, // Adjusted radius for the area of effect
         duration: 3, // Slightly reduced duration for a faster, more impactful attack
@@ -248,7 +248,7 @@ export const NORMAL_SKILLS = [
         type: 'dash',
         damage: 30,
         manaCost: 20,
-        cooldown: 0,
+        cooldown: 0.2,
         radius: 2,
         // Configuration parameters for the kick effect:
         range: 30,       // Maximum distance the kick can travel (in units)
@@ -271,7 +271,7 @@ export const NORMAL_SKILLS = [
         range: 10,
         radius: 5,
         moveSpeed: 30, // Speed at which the effect moves forward
-        cooldown: 0,
+        cooldown: 0.2,
         get duration() { return this.lockDuration + (this.range / this.moveSpeed) },
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
@@ -301,7 +301,7 @@ export const NORMAL_SKILLS = [
         type: 'projectile',
         damage: 100,
         manaCost: 25,
-        cooldown: 0, // Moderate cooldown
+        cooldown: 0.2, // Moderate cooldown
         range: 40, // Long range
         radius: 3, // Explosion radius
         duration: 5, // Duration in seconds
@@ -325,7 +325,7 @@ export const NORMAL_SKILLS = [
         damage: 5,
         healing: 10, // Small healing amount per pulse
         manaCost: 25,
-        cooldown: 0, // Moderate cooldown
+        cooldown: 0.2, // Moderate cooldown
         range: 0, // Self-cast
         radius: 5, // Large radius to affect multiple allies/enemies
         duration: 5, // Duration in seconds

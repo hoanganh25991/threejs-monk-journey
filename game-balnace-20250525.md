@@ -1,5 +1,47 @@
 # Item System and Difficulty Scaling Plan
 
+<!-- TOC -->
+
+- [Item System and Difficulty Scaling Plan](#item-system-and-difficulty-scaling-plan)
+    - [Enhanced Item System](#1-enhanced-item-system)
+        - [Item Categories and Stats](#item-categories-and-stats)
+            - [Weapons](#weapons)
+            - [Armor](#armor)
+            - [Accessories](#accessories)
+        - [Item Rarity System](#item-rarity-system)
+        - [Item Level Scaling](#item-level-scaling)
+        - [Set Items](#set-items)
+    - [Integration with Skill System](#2-integration-with-skill-system)
+        - [Item Effects on Skills](#item-effects-on-skills)
+        - [Skill Variants and Buffs](#skill-variants-and-buffs)
+    - [Enemy and Boss Scaling System](#3-enemy-and-boss-scaling-system)
+        - [Base Enemy Scaling](#base-enemy-scaling)
+        - [Enemy Types](#enemy-types)
+        - [Boss Mechanics](#boss-mechanics)
+        - [Enemy Affixes System](#enemy-affixes-system)
+    - [Difficulty Scaling System](#4-difficulty-scaling-system)
+        - [Difficulty Levels](#difficulty-levels)
+        - [Dynamic Difficulty Adjustment](#dynamic-difficulty-adjustment)
+        - [World Tiers Optional Endgame System](#world-tiers-optional-endgame-system)
+    - [Implementation Plan](#5-implementation-plan)
+        - [Phase 1: Core Item System](#phase-1-core-item-system)
+        - [Phase 2: Skill Integration](#phase-2-skill-integration)
+        - [Phase 3: Enemy Scaling](#phase-3-enemy-scaling)
+        - [Phase 4: Difficulty System](#phase-4-difficulty-system)
+        - [Phase 5: Advanced Features](#phase-5-advanced-features)
+    - [Technical Implementation Details](#6-technical-implementation-details)
+        - [Item Data Structure](#item-data-structure)
+        - [Skill Damage Calculation](#skill-damage-calculation)
+        - [Enemy Scaling Implementation](#enemy-scaling-implementation)
+    - [Balance Considerations](#7-balance-considerations)
+        - [Power Curve Management](#power-curve-management)
+        - [Avoiding Common Pitfalls](#avoiding-common-pitfalls)
+        - [Testing Methodology](#testing-methodology)
+    - [Future Expansion Possibilities](#8-future-expansion-possibilities)
+    - [Conclusion](#conclusion)
+
+<!-- /TOC -->
+
 ## 1. Enhanced Item System
 
 ### Item Categories and Stats
@@ -218,38 +260,6 @@ Similar to Diablo, enemies can have special affixes:
 - After reaching max level, unlock World Tier system
 - Each tier increases enemy difficulty but improves rewards
 - Special items and bosses only appear at higher tiers
-
-## 5. Implementation Plan
-
-### Phase 1: Core Item System
-- Implement item categories and basic stats
-- Create item generation algorithm
-- Update UI to display item stats
-- Implement inventory management
-
-### Phase 2: Skill Integration
-- Update skill damage calculation to include items
-- Implement cooldown reduction
-- Add elemental damage types
-- Create basic skill variants
-
-### Phase 3: Enemy Scaling
-- Implement enemy level scaling
-- Add elite and champion enemies
-- Create boss mechanics
-- Implement affix system
-
-### Phase 4: Difficulty System
-- Add difficulty selection UI
-- Implement difficulty multipliers
-- Create reward scaling
-- Test balance across all levels
-
-### Phase 5: Advanced Features
-- Implement set items
-- Add skill modification system
-- Create synergy bonuses
-- Implement World Tier system
 
 ## 6. Technical Implementation Details
 
