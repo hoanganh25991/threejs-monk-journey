@@ -349,6 +349,9 @@ export class MultiplayerUIManager {
      * Show the player waiting screen (after joining a game)
      */
     showPlayerWaitingScreen() {
+        // Make sure QR scanner is stopped
+        this.stopQRScanner();
+        
         // Hide other screens, show waiting screen
         document.getElementById('multiplayer-initial-screen').style.display = 'none';
         document.getElementById('host-game-screen').style.display = 'none';
@@ -513,11 +516,10 @@ export class MultiplayerUIManager {
                 this.updateConnectionStatus('Error starting camera: ' + err, 'join-connection-status');
             });
             
-            // Update toggle button text
+            // Hide the toggle button after starting the camera
             const toggleButton = document.getElementById('toggle-scan-btn');
             if (toggleButton) {
-                toggleButton.textContent = 'Stop Camera';
-                toggleButton.onclick = () => this.stopQRScanner();
+                toggleButton.style.display = 'none';
             }
             
             this.updateConnectionStatus('Camera active. Point at a QR code to connect.', 'join-connection-status');
@@ -543,11 +545,12 @@ export class MultiplayerUIManager {
             });
             this.qrCodeScanner = null;
             
-            // Update toggle button text
+            // Show toggle button again
             const toggleButton = document.getElementById('toggle-scan-btn');
             if (toggleButton) {
                 toggleButton.textContent = 'Start Camera';
                 toggleButton.onclick = () => this.startQRScanner();
+                toggleButton.style.display = 'block';
             }
             
             // Keep camera select visible if we have multiple cameras

@@ -14,6 +14,7 @@ Monk Journey is an action RPG game where you play as a monk with powerful martia
 ![monk-journey](screenshots/monk-journey-model-preview-20250520.png)
 ![monk-journey](screenshots/monk-journey-skill-preview-20250520.png)
 ![monk-journey](screenshots/monk-journey-enemy-preview-20250520.png)
+![monk-journey](screenshots/monk-journey-multi-player-205942-20250527.gif)
 
 ## Features
 
