@@ -269,6 +269,21 @@ export class MultiplayerConnectionManager {
                     });
                 }
                 break;
+            case 'skillCast':
+                // Handle skill cast from host or forwarded from another member
+                if (!data.skillName) {
+                    console.warn('Received incomplete skill cast data from host');
+                    return;
+                }
+                
+                // Get the player ID who cast the skill
+                const casterId = data.playerId || this.hostId;
+                
+                console.log(`[MultiplayerConnectionManager] Player ${casterId} cast skill: ${data.skillName}`);
+                
+                // Trigger skill cast animation on remote player
+                this.multiplayerManager.remotePlayerManager.handleSkillCast(casterId, data.skillName);
+                break;
             default:
                 console.warn('Unknown data type from host:', data.type);
         }
@@ -305,6 +320,29 @@ export class MultiplayerConnectionManager {
                         data.rotation, 
                         data.animation || 'idle'
                     );
+                    break;
+                case 'skillCast':
+                    // Handle skill cast from member
+                    if (!data.skillName) {
+                        console.warn('[MultiplayerConnectionManager] Received incomplete skill cast data from member:', peerId);
+                        return;
+                    }
+                    
+                    console.log(`[MultiplayerConnectionManager] Member ${peerId} cast skill: ${data.skillName}`);
+                    
+                    // Trigger skill cast animation on remote player
+                    this.multiplayerManager.remotePlayerManager.handleSkillCast(peerId, data.skillName);
+                    
+                    // Forward skill cast to other members
+                    this.peers.forEach((conn, id) => {
+                        if (id !== peerId) {
+                            conn.send({
+                                type: 'skillCast',
+                                skillName: data.skillName,
+                                playerId: peerId
+                            });
+                        }
+                    });
                     break;
                 default:
                     console.warn('[MultiplayerConnectionManager] Unknown data type from member:', data.type);

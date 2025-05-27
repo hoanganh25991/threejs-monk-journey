@@ -398,6 +398,9 @@ export class PlayerSkills {
             }
         }
         
+        // Broadcast skill cast to other players in multiplayer mode
+        this.broadcastSkillCast(skillTemplate.name);
+        
         // Create a new instance of the skill using the template from SKILLS config
         // Find the skill configuration by name (ID)
         const skillConfig = SKILLS.find(config => config.name === skillTemplate.name);
@@ -516,6 +519,9 @@ export class PlayerSkills {
         if (this.playerStats.getMana() < skillTemplate.manaCost) {
             return false;
         }
+        
+        // Broadcast skill cast to other players in multiplayer mode
+        this.broadcastSkillCast(skillTemplate.name);
         
         // Find the nearest enemy
         if (this.game && this.game.enemyManager) {
@@ -682,5 +688,45 @@ export class PlayerSkills {
      */
     getActiveSkills() {
         return this.activeSkills;
+    }
+    
+    /**
+     * Broadcasts a skill cast to other players in multiplayer mode
+     * @param {string} skillName - The name of the skill being cast
+     */
+    broadcastSkillCast(skillName) {
+        // Check if game and multiplayer manager exist
+        if (!this.game || !this.game.multiplayerManager || !this.game.multiplayerManager.connection) {
+            return;
+        }
+        
+        // Check if connected to multiplayer
+        if (!this.game.multiplayerManager.connection.isConnected) {
+            return;
+        }
+        
+        console.debug(`[PlayerSkills] Broadcasting skill cast: ${skillName}`);
+        
+        // If player is host, broadcast to all members
+        if (this.game.multiplayerManager.connection.isHost) {
+            this.game.multiplayerManager.connection.broadcast({
+                type: 'skillCast',
+                skillName: skillName,
+                playerId: this.game.multiplayerManager.connection.peer.id
+            });
+        } 
+        // If player is member, send to host
+        else {
+            const hostConn = this.game.multiplayerManager.connection.peers.get(
+                this.game.multiplayerManager.connection.hostId
+            );
+            
+            if (hostConn) {
+                hostConn.send({
+                    type: 'skillCast',
+                    skillName: skillName
+                });
+            }
+        }
     }
 }
