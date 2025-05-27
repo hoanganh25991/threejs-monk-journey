@@ -3,7 +3,8 @@ export const CHARACTER_MODELS = [
     {
         id: 'monk',
         name: 'Monk',
-        path: 'assets/models/monk.glb',
+        modelPath: 'assets/models/monk.glb',
+        path: 'assets/models/monk.glb', // Keep for backward compatibility
         description: 'Default monk character model',
         baseScale: 1.5, // Base scale to fit the model to game world
         multiplier: 1.0,  // Default multiplier (1x size)
@@ -12,13 +13,20 @@ export const CHARACTER_MODELS = [
             position: { x: 0, y: -2.05, z: 0 },
             rotation: { x: 0, y: 0, z: 0 },
             heightOffset: 2.05 // Default height offset for movement
-        }
+        },
+        // Add animations array for the model preview
+        animations: [
+            { name: 'idle', displayName: 'Idle' },
+            { name: 'walk', displayName: 'Walk' },
+            { name: 'run', displayName: 'Run' }
+        ]
         // Preview position and rotation are handled dynamically by the adjustment system
     },
     {
         id: 'monk-v3',
         name: 'Monk V3',
-        path: 'assets/models/monk-v3.glb',
+        modelPath: 'assets/models/monk-v3.glb',
+        path: 'assets/models/monk-v3.glb', // Keep for backward compatibility
         description: 'Enhanced monk character model',
         baseScale: 0.7, // Base scale to fit the model to game world
         multiplier: 1.0,  // Default multiplier (1x size)
@@ -27,7 +35,13 @@ export const CHARACTER_MODELS = [
             position: { x: 0, y: -2.05, z: 0 },
             rotation: { x: 0, y: 0, z: 0 },
             heightOffset: 2.05 // Default height offset for movement
-        }
+        },
+        // Add animations array for the model preview
+        animations: [
+            { name: 'idle', displayName: 'Idle' },
+            { name: 'walk', displayName: 'Walk' },
+            { name: 'run', displayName: 'Run' }
+        ]
         // Preview position and rotation are handled dynamically by the adjustment system
     },
 ];

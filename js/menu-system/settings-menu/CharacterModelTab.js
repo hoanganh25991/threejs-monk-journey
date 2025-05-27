@@ -183,10 +183,15 @@ export class CharacterModelTab extends SettingsTab {
      * @private
      */
     initializeModelPreviewContainer() {
-        if (!this.modelPreviewContainer) return;
+        if (!this.modelPreviewContainer) {
+            console.error('ModelPreviewContainer not found in the DOM');
+            return;
+        }
         
-        // Create model preview
-        this.modelPreview = new ModelPreview(this.modelPreviewContainer);
+        console.debug('Initializing model preview container');
+        
+        // Create model preview with specific dimensions
+        this.modelPreview = new ModelPreview(this.modelPreviewContainer, 300, 485);
         
         // Get the selected model
         const selectedModelIndex = parseInt(this.modelSelect.value || 0);
@@ -195,7 +200,9 @@ export class CharacterModelTab extends SettingsTab {
         
         // Set the model
         if (selectedModel && selectedModel.modelPath) {
-            this.modelPreview.loadModel(selectedModel.modelPath, selectedModel.scale || 1.0);
+            console.debug(`Loading model: ${selectedModel.modelPath}`);
+            const scale = selectedModel.baseScale || selectedModel.scale || 1.0;
+            this.modelPreview.loadModel(selectedModel.modelPath, scale);
             
             // Get the selected animation
             const selectedAnimationIndex = parseInt(this.animationSelect.value || 0);
@@ -204,9 +211,12 @@ export class CharacterModelTab extends SettingsTab {
             if (selectedModel.animations && selectedModel.animations.length > 0) {
                 const animation = selectedModel.animations[selectedAnimationIndex];
                 if (animation && animation.name) {
+                    console.debug(`Playing animation: ${animation.name}`);
                     this.modelPreview.playAnimation(animation.name);
                 }
             }
+        } else {
+            console.error('Selected model not found or has no modelPath', selectedModel);
         }
     }
     
@@ -215,10 +225,23 @@ export class CharacterModelTab extends SettingsTab {
      * @private
      */
     initializeModelPreviewFullscreen() {
-        if (!this.modelPreviewFullscreenContainer) return;
+        if (!this.modelPreviewFullscreenContainer) {
+            console.error('ModelPreviewFullscreenContainer not found in the DOM');
+            return;
+        }
         
-        // Create model preview
-        this.modelPreviewFullscreen = new ModelPreview(this.modelPreviewFullscreenContainer, true);
+        console.debug('Initializing fullscreen model preview container');
+        
+        // Get container dimensions
+        const containerWidth = this.modelPreviewFullscreenContainer.clientWidth || 600;
+        const containerHeight = this.modelPreviewFullscreenContainer.clientHeight || 400;
+        
+        // Create model preview with container dimensions
+        this.modelPreviewFullscreen = new ModelPreview(
+            this.modelPreviewFullscreenContainer, 
+            containerWidth, 
+            containerHeight
+        );
         
         // Get the selected model
         const selectedModelIndex = parseInt(this.modelPreviewSelect.value || 0);
@@ -227,7 +250,9 @@ export class CharacterModelTab extends SettingsTab {
         
         // Set the model
         if (selectedModel && selectedModel.modelPath) {
-            this.modelPreviewFullscreen.loadModel(selectedModel.modelPath, selectedModel.scale || 1.0);
+            console.debug(`Loading fullscreen model: ${selectedModel.modelPath}`);
+            const scale = selectedModel.baseScale || selectedModel.scale || 1.0;
+            this.modelPreviewFullscreen.loadModel(selectedModel.modelPath, scale);
             
             // Get the selected animation
             const selectedAnimationIndex = parseInt(this.animationPreviewSelect.value || 0);
@@ -236,9 +261,12 @@ export class CharacterModelTab extends SettingsTab {
             if (selectedModel.animations && selectedModel.animations.length > 0) {
                 const animation = selectedModel.animations[selectedAnimationIndex];
                 if (animation && animation.name) {
+                    console.debug(`Playing fullscreen animation: ${animation.name}`);
                     this.modelPreviewFullscreen.playAnimation(animation.name);
                 }
             }
+        } else {
+            console.error('Selected model not found or has no modelPath for fullscreen preview', selectedModel);
         }
         
         // Set up reset camera button
@@ -313,11 +341,22 @@ export class CharacterModelTab extends SettingsTab {
      * @private
      */
     initializeAnimationOptions() {
-        if (!this.animationSelect || !this.animationPreviewSelect) return;
+        if (!this.animationSelect || !this.animationPreviewSelect) {
+            console.error('Animation select elements not found in the DOM');
+            return;
+        }
+        
+        console.debug('Initializing animation options');
         
         // Get the selected model
-        const selectedModelIndex = parseInt(this.modelSelect.value);
-        const selectedModel = CHARACTER_MODELS[selectedModelIndex];
+        const selectedModelIndex = parseInt(this.modelSelect.value || 0);
+        const selectedModel = selectedModelIndex >= 0 && selectedModelIndex < CHARACTER_MODELS.length ? 
+            CHARACTER_MODELS[selectedModelIndex] : null;
+            
+        if (!selectedModel) {
+            console.error('Selected model not found for animation options');
+            return;
+        }
         
         // Clear existing options
         while (this.animationSelect.options.length > 0) {
@@ -330,17 +369,31 @@ export class CharacterModelTab extends SettingsTab {
         
         // Add animation options
         if (selectedModel.animations && selectedModel.animations.length > 0) {
+            console.debug(`Adding ${selectedModel.animations.length} animation options`);
             selectedModel.animations.forEach((animation, index) => {
                 const option = document.createElement('option');
                 option.value = index;
-                option.textContent = animation.name || `Animation ${index + 1}`;
+                option.textContent = animation.displayName || animation.name || `Animation ${index + 1}`;
                 this.animationSelect.appendChild(option);
                 
                 const previewOption = document.createElement('option');
                 previewOption.value = index;
-                previewOption.textContent = animation.name || `Animation ${index + 1}`;
+                previewOption.textContent = animation.displayName || animation.name || `Animation ${index + 1}`;
                 this.animationPreviewSelect.appendChild(previewOption);
             });
+        } else {
+            console.warn('No animations found for the selected model');
+            
+            // Add a default "No animations" option
+            const noAnimOption = document.createElement('option');
+            noAnimOption.value = "0";
+            noAnimOption.textContent = "No animations available";
+            this.animationSelect.appendChild(noAnimOption);
+            
+            const noAnimPreviewOption = document.createElement('option');
+            noAnimPreviewOption.value = "0";
+            noAnimPreviewOption.textContent = "No animations available";
+            this.animationPreviewSelect.appendChild(noAnimPreviewOption);
         }
         
         // Get the stored selected animation index or default to 0

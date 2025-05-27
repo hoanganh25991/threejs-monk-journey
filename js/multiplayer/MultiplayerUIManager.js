@@ -35,7 +35,6 @@ export class MultiplayerUIManager {
             await this.showJoinUI();
             
             // Show manual code view
-            document.getElementById('join-initial-options').style.display = 'none';
             document.getElementById('scan-qr-view').style.display = 'none';
             document.getElementById('manual-code-view').style.display = 'flex';
             
@@ -81,11 +80,10 @@ export class MultiplayerUIManager {
                 // Show join UI first
                 await this.showJoinUI();
                 
-                // Then immediately start camera scan
-                const startScanBtn = document.getElementById('start-scan-btn');
-                if (startScanBtn && startScanBtn.onclick) {
-                    startScanBtn.onclick();
-                }
+                // Then switch to QR scanner view and start it
+                document.getElementById('scan-qr-view').style.display = 'flex';
+                document.getElementById('manual-code-view').style.display = 'none';
+                await this.startQRScannerWithUI();
             });
         }
         
@@ -103,19 +101,7 @@ export class MultiplayerUIManager {
             });
         }
         
-        // Join option buttons
-        const startScanBtn = document.getElementById('start-scan-btn');
-        const enterCodeBtn = document.getElementById('enter-code-btn');
-        
-        if (startScanBtn) {
-            // We'll use only the onclick handler defined below to avoid duplicate initialization
-            // Removing this event listener to prevent double initialization of QR scanner
-        }
-        
-        if (enterCodeBtn) {
-            // We'll use only the onclick handler defined in showJoinUI() to avoid duplicate initialization
-            // Removing this event listener to prevent double initialization
-        }
+        // No join option buttons anymore - removed
         
         // Start game button (for host)
         const startGameBtn = document.getElementById('start-game-btn');
@@ -286,10 +272,9 @@ export class MultiplayerUIManager {
         document.getElementById('join-game-screen').style.display = 'flex';
         document.getElementById('player-waiting-screen').style.display = 'none';
         
-        // Show initial options, hide scanner and manual code views
-        document.getElementById('join-initial-options').style.display = 'flex';
+        // By default, show manual code view
         document.getElementById('scan-qr-view').style.display = 'none';
-        document.getElementById('manual-code-view').style.display = 'none';
+        document.getElementById('manual-code-view').style.display = 'flex';
         
         // Set up back button
         const backButton = document.getElementById('back-from-join-btn');
@@ -300,83 +285,68 @@ export class MultiplayerUIManager {
             };
         }
         
-        // Set up Start Scan button
-        const startScanBtn = document.getElementById('start-scan-btn');
-        if (startScanBtn) {
-            startScanBtn.onclick = async () => {
-                // Hide initial options, show scanner view
-                document.getElementById('join-initial-options').style.display = 'none';
-                document.getElementById('scan-qr-view').style.display = 'flex';
-                document.getElementById('manual-code-view').style.display = 'none';
-                
-                try {
-                    // Show loading indicator
-                    const qrScannerView = document.getElementById('qr-scanner-view');
-                    if (qrScannerView) {
-                        // Create and add loading overlay if it doesn't exist
-                        let loadingOverlay = document.getElementById('qr-scanner-loading');
-                        if (!loadingOverlay) {
-                            loadingOverlay = document.createElement('div');
-                            loadingOverlay.id = 'qr-scanner-loading';
-                            loadingOverlay.className = 'loading-overlay';
-                            loadingOverlay.innerHTML = `
-                                <div class="loading-spinner"></div>
-                                <div class="loading-text">Initializing camera...</div>
-                            `;
-                            qrScannerView.parentNode.appendChild(loadingOverlay);
-                        } else {
-                            loadingOverlay.style.display = 'flex';
-                        }
-                    }
-                    
-                    this.updateConnectionStatus('Initializing camera...', 'join-connection-status');
-                    
-                    // Load HTML5-QRCode library if not already loaded
-                    if (typeof Html5Qrcode === 'undefined') {
-                        await this.loadQRScannerJS();
-                    }
-                    
-                    // Get available cameras and set up camera selection
-                    await this.getAvailableCameras();
-                    
-                    // Start scanner automatically
-                    await this.startQRScanner();
-                    
-                    // Hide loading overlay
-                    const loadingOverlay = document.getElementById('qr-scanner-loading');
-                    if (loadingOverlay) {
-                        loadingOverlay.style.display = 'none';
-                    }
-                    
-                    this.updateConnectionStatus('Camera active. Point at a QR code to connect.', 'join-connection-status');
-                } catch (error) {
-                    console.error('Error initializing QR scanner:', error);
-                    this.updateConnectionStatus('QR scanner not available. Please enter connection code manually.', 'join-connection-status');
-                    
-                    // Go back to initial options if camera fails
-                    document.getElementById('join-initial-options').style.display = 'flex';
-                    document.getElementById('scan-qr-view').style.display = 'none';
-                }
-            };
+        // Focus on the input field
+        const input = document.getElementById('manual-connection-input');
+        if (input) {
+            input.focus();
         }
         
-        // Set up Enter Code button
-        const enterCodeBtn = document.getElementById('enter-code-btn');
-        if (enterCodeBtn) {
-            enterCodeBtn.onclick = () => {
-                // Hide initial options, show manual code view
-                document.getElementById('join-initial-options').style.display = 'none';
-                document.getElementById('scan-qr-view').style.display = 'none';
-                document.getElementById('manual-code-view').style.display = 'flex';
-                
-                // Focus on the input field
-                const input = document.getElementById('manual-connection-input');
-                if (input) {
-                    input.focus();
+        this.updateConnectionStatus('Enter the connection code to join the game', 'join-connection-status');
+    }
+    
+    /**
+     * Start QR scanner with loading indicator
+     */
+    async startQRScannerWithUI() {
+        try {
+            // Show loading indicator
+            const qrScannerView = document.getElementById('qr-scanner-view');
+            if (qrScannerView) {
+                // Create and add loading overlay if it doesn't exist
+                let loadingOverlay = document.getElementById('qr-scanner-loading');
+                if (!loadingOverlay) {
+                    loadingOverlay = document.createElement('div');
+                    loadingOverlay.id = 'qr-scanner-loading';
+                    loadingOverlay.className = 'loading-overlay';
+                    loadingOverlay.innerHTML = `
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Initializing camera...</div>
+                    `;
+                    qrScannerView.parentNode.appendChild(loadingOverlay);
+                } else {
+                    loadingOverlay.style.display = 'flex';
                 }
-                
-                this.updateConnectionStatus('Enter the connection code to join the game', 'join-connection-status');
-            };
+            }
+            
+            this.updateConnectionStatus('Initializing camera...', 'join-connection-status');
+            
+            // Load HTML5-QRCode library if not already loaded
+            if (typeof Html5Qrcode === 'undefined') {
+                await this.loadQRScannerJS();
+            }
+            
+            // Get available cameras and set up camera selection
+            await this.getAvailableCameras();
+            
+            // Start scanner automatically
+            await this.startQRScanner();
+            
+            // Hide loading overlay
+            const loadingOverlay = document.getElementById('qr-scanner-loading');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+            
+            this.updateConnectionStatus('Camera active. Point at a QR code to connect.', 'join-connection-status');
+            return true;
+        } catch (error) {
+            console.error('Error initializing QR scanner:', error);
+            this.updateConnectionStatus('QR scanner not available. Please enter connection code manually.', 'join-connection-status');
+            
+            // Show manual code view if camera fails
+            document.getElementById('scan-qr-view').style.display = 'none';
+            document.getElementById('manual-code-view').style.display = 'flex';
+            return false;
         }
     }
     
