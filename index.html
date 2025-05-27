@@ -235,23 +235,38 @@
                 <p>Scan this QR code with another device to join the game</p>
                 <div class="manual-connection-info">
                     <p>Or share this connection code:</p>
-                    <div id="connection-code" class="connection-code"></div>
+                    <div class="connection-code-container">
+                        <div id="connection-code" class="connection-code" title="Click to copy"></div>
+                        <button id="copy-code-btn" class="small-btn" title="Copy to clipboard">📋</button>
+                    </div>
                 </div>
-                <div id="host-controls" style="display: none; margin-top: 20px;">
+                <div id="host-controls">
                     <h3>Connected Players</h3>
                     <div id="connected-players-list" class="connected-players-list">
-                        <div class="player-item">You (Host)</div>
+                        <div class="player-item host-player">
+                            <div class="player-color-indicator"></div>
+                            <span>You (Host)</span>
+                        </div>
                         <!-- Connected players will be listed here -->
                     </div>
-                    <button id="start-game-btn" class="menu-button" style="margin-top: 15px; background-color: #4CAF50;" disabled>Start Game</button>
+                    <button id="start-game-btn" class="menu-button start-game-btn" disabled>Start Game</button>
                 </div>
             </div>
             <div id="qr-scanner-container" class="scrollable-container">
-                <div id="qr-scanner"></div>
+                <div id="qr-scanner">
+                    <div id="qr-scanner-view"></div>
+                    <div class="scanner-controls">
+                        <button id="start-scan-btn" class="menu-button">Start Camera</button>
+                        <button id="stop-scan-btn" class="menu-button">Stop Camera</button>
+                    </div>
+                </div>
                 <p>Scan a QR code to join a game</p>
                 <div class="manual-connection-input">
                     <p>Or enter connection code manually:</p>
-                    <input type="text" id="manual-connection-input" placeholder="Paste connection code here">
+                    <div class="input-with-buttons">
+                        <input type="text" id="manual-connection-input" placeholder="Paste connection code here">
+                        <button id="paste-code-btn" class="small-btn" title="Paste from clipboard">📋</button>
+                    </div>
                     <button id="manual-connect-btn" class="menu-button">Connect</button>
                 </div>
             </div>
