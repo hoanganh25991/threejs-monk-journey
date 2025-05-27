@@ -16,6 +16,7 @@ export const STORAGE_KEYS = {
     TARGET_FPS: 'monk_journey_target_fps',
     SHOW_PERFORMANCE_INFO: 'monk_journey_show_performance_info',
     DEBUG_MODE: 'monk_journey_debug_mode',
+    LOG_ENABLED: 'monk_journey_log_enabled',
     
     // Character settings
     CHARACTER_MODEL: 'monk_journey_character_model',

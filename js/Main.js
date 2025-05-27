@@ -16,7 +16,8 @@ class Main {
      */
     constructor() {
         // Default configuration for character model
-        if (!localStorage.getItem(STORAGE_KEYS.DEBUG_MODE)) {
+        // Check if logs are enabled, default to false for better performance
+        if (localStorage.getItem(STORAGE_KEYS.LOG_ENABLED) !== 'true') {
             console.debug = () => {};
             console.warn = () => {};
             console.log = () => {};

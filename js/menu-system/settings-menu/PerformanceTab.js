@@ -22,6 +22,7 @@ export class PerformanceTab extends SettingsTab {
         this.fpsValue = document.getElementById('fps-value');
         this.showPerformanceInfoCheckbox = document.getElementById('show-performance-info-checkbox');
         this.debugModeCheckbox = document.getElementById('debug-mode-checkbox');
+        this.logEnabledCheckbox = document.getElementById('log-enabled-checkbox');
         
         this.init();
     }
@@ -128,6 +129,22 @@ export class PerformanceTab extends SettingsTab {
             });
         }
         
+        if (this.logEnabledCheckbox) {
+            // Set current log enabled state, default to false for better performance
+            const logEnabled = localStorage.getItem(STORAGE_KEYS.LOG_ENABLED) === 'true';
+            this.logEnabledCheckbox.checked = logEnabled;
+            
+            // Add change event listener
+            this.logEnabledCheckbox.addEventListener('change', () => {
+                localStorage.setItem(STORAGE_KEYS.LOG_ENABLED, this.logEnabledCheckbox.checked);
+                
+                // Show a notification that changes will take effect after reload
+                if (this.game && this.game.ui && this.game.ui.notifications) {
+                    this.game.ui.notifications.show('Log settings will take effect after page reload', 'info');
+                }
+            });
+        }
+        
         return true;
     }
     
@@ -154,6 +171,10 @@ export class PerformanceTab extends SettingsTab {
         if (this.debugModeCheckbox) {
             localStorage.setItem(STORAGE_KEYS.DEBUG_MODE, this.debugModeCheckbox.checked);
         }
+        
+        if (this.logEnabledCheckbox) {
+            localStorage.setItem(STORAGE_KEYS.LOG_ENABLED, this.logEnabledCheckbox.checked);
+        }
     }
     
     /**
@@ -179,6 +200,10 @@ export class PerformanceTab extends SettingsTab {
         
         if (this.debugModeCheckbox) {
             this.debugModeCheckbox.checked = false;
+        }
+        
+        if (this.logEnabledCheckbox) {
+            this.logEnabledCheckbox.checked = false;
         }
         
         this.saveSettings();
