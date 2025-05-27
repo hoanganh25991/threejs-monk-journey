@@ -99,51 +99,13 @@ export class MultiplayerUIManager {
         const enterCodeBtn = document.getElementById('enter-code-btn');
         
         if (startScanBtn) {
-            startScanBtn.addEventListener('click', async () => {
-                // Hide initial options, show scanner view
-                document.getElementById('join-initial-options').style.display = 'none';
-                document.getElementById('scan-qr-view').style.display = 'flex';
-                document.getElementById('manual-code-view').style.display = 'none';
-                
-                try {
-                    // Load HTML5-QRCode library if not already loaded
-                    if (typeof Html5Qrcode === 'undefined') {
-                        await this.loadQRScannerJS();
-                    }
-                    
-                    // Get available cameras and set up camera selection
-                    await this.getAvailableCameras();
-                    
-                    // Start scanner automatically
-                    this.startQRScanner();
-                    
-                    this.updateConnectionStatus('Camera active. Point at a QR code to connect.', 'join-connection-status');
-                } catch (error) {
-                    console.error('Error initializing QR scanner:', error);
-                    this.updateConnectionStatus('QR scanner not available. Please enter connection code manually.', 'join-connection-status');
-                    
-                    // Go back to initial options if camera fails
-                    document.getElementById('join-initial-options').style.display = 'flex';
-                    document.getElementById('scan-qr-view').style.display = 'none';
-                }
-            });
+            // We'll use only the onclick handler defined below to avoid duplicate initialization
+            // Removing this event listener to prevent double initialization of QR scanner
         }
         
         if (enterCodeBtn) {
-            enterCodeBtn.addEventListener('click', () => {
-                // Hide initial options, show manual code view
-                document.getElementById('join-initial-options').style.display = 'none';
-                document.getElementById('scan-qr-view').style.display = 'none';
-                document.getElementById('manual-code-view').style.display = 'flex';
-                
-                // Focus on the input field
-                const input = document.getElementById('manual-connection-input');
-                if (input) {
-                    input.focus();
-                }
-                
-                this.updateConnectionStatus('Enter the connection code to join the game', 'join-connection-status');
-            });
+            // We'll use only the onclick handler defined in showJoinUI() to avoid duplicate initialization
+            // Removing this event listener to prevent double initialization
         }
         
         // Start game button (for host)
