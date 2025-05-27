@@ -5,6 +5,7 @@
 
 import { SettingsTab } from './SettingsTab.js';
 import { STORAGE_KEYS } from '../../config/storage-keys.js';
+import { DIFFICULTY_SETTINGS } from '../../config/difficulty-settings.js';
 
 export class GameplayTab extends SettingsTab {
     /**
@@ -37,26 +38,41 @@ export class GameplayTab extends SettingsTab {
                 this.difficultySelect.remove(0);
             }
             
-            // Add difficulty options
-            const difficultyLevels = ['easy', 'normal', 'hard', 'nightmare'];
-            difficultyLevels.forEach(level => {
+            // Add difficulty options from DIFFICULTY_SETTINGS
+            for (const [key, settings] of Object.entries(DIFFICULTY_SETTINGS)) {
                 const option = document.createElement('option');
-                option.value = level;
-                option.textContent = level.charAt(0).toUpperCase() + level.slice(1);
+                option.value = key;
+                option.textContent = settings.name;
                 this.difficultySelect.appendChild(option);
-            });
+            }
             
-            // Set current difficulty
-            const currentDifficulty = localStorage.getItem(STORAGE_KEYS.DIFFICULTY) || 'normal';
+            // Set current difficulty (default to 'medium')
+            const currentDifficulty = localStorage.getItem(STORAGE_KEYS.DIFFICULTY) || 'medium';
+            console.log(`Loading difficulty setting: ${currentDifficulty}`);
             this.difficultySelect.value = currentDifficulty;
+            
+            // If the value wasn't set correctly (e.g., if the stored value is invalid),
+            // explicitly set it to 'medium'
+            if (!this.difficultySelect.value) {
+                console.log('Invalid difficulty setting detected, defaulting to medium');
+                this.difficultySelect.value = 'medium';
+                localStorage.setItem(STORAGE_KEYS.DIFFICULTY, 'medium');
+            }
             
             // Add change event listener
             this.difficultySelect.addEventListener('change', () => {
-                localStorage.setItem(STORAGE_KEYS.DIFFICULTY, this.difficultySelect.value);
+                const selectedDifficulty = this.difficultySelect.value;
+                localStorage.setItem(STORAGE_KEYS.DIFFICULTY, selectedDifficulty);
                 
                 // Apply difficulty settings immediately if game is available
-                if (this.game) {
-                    this.game.difficulty = this.difficultySelect.value;
+                if (this.game && this.game.enemyManager) {
+                    this.game.enemyManager.setDifficulty(selectedDifficulty);
+                    
+                    // Show notification if HUD manager is available
+                    if (this.game.hudManager) {
+                        const difficultyName = DIFFICULTY_SETTINGS[selectedDifficulty].name;
+                        this.game.hudManager.showNotification(`Difficulty changed to ${difficultyName}`);
+                    }
                 }
             });
         }
@@ -125,7 +141,19 @@ export class GameplayTab extends SettingsTab {
      */
     saveSettings() {
         if (this.difficultySelect) {
-            localStorage.setItem(STORAGE_KEYS.DIFFICULTY, this.difficultySelect.value);
+            // Save difficulty, defaulting to 'medium' if no valid selection
+            const difficulty = this.difficultySelect.value || 'medium';
+            localStorage.setItem(STORAGE_KEYS.DIFFICULTY, difficulty);
+            
+            // Update game difficulty if game is available
+            if (this.game) {
+                this.game.difficulty = difficulty;
+                
+                // Apply to enemy manager if available
+                if (this.game.enemyManager) {
+                    this.game.enemyManager.setDifficulty(difficulty);
+                }
+            }
         }
         
         if (this.customSkillsCheckbox) {
@@ -142,7 +170,8 @@ export class GameplayTab extends SettingsTab {
      */
     resetToDefaults() {
         if (this.difficultySelect) {
-            this.difficultySelect.value = 'normal';
+            this.difficultySelect.value = 'medium';
+            console.log('Reset difficulty to medium');
         }
         
         if (this.customSkillsCheckbox) {

@@ -21,8 +21,8 @@ import { MenuManager } from '../menu-system/MenuManager.js';
 import { isDebugMode } from '../utils/FlagUtils.js';
 import { InteractionSystem } from '../interaction/InteractionSystem.js';
 import { MultiplayerManager } from '../multiplayer/MultiplayerManager.js';
-import { DifficultyMenu } from '../menu-system/DifficultyMenu.js';
 import { ItemGenerator } from '../entities/items/ItemGenerator.js';
+import { STORAGE_KEYS } from '../config/storage-keys.js';
 
 /**
  * Main Game class that serves as a facade to the underlying game systems
@@ -69,9 +69,11 @@ export class Game {
         this.state = new GameState();
         this.events = new GameEvents();
         this.loadingManager = new LoadingManager().getManager();
-        this.difficultyMenu = new DifficultyMenu(this);
         this.itemGenerator = new ItemGenerator(this);
-        this.difficulty = 'medium';
+        
+        // Load difficulty from localStorage or use 'medium' as default
+        this.difficulty = localStorage.getItem(STORAGE_KEYS.DIFFICULTY) || 'medium';
+        console.log(`Game initialized with difficulty: ${this.difficulty}`);
     }
     
     /**

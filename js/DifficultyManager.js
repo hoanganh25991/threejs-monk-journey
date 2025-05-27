@@ -1,3 +1,5 @@
+import { DIFFICULTY_SETTINGS } from './config/difficulty-settings.js';
+
 export class DifficultyManager {
     constructor(game) {
         this.game = game;
@@ -137,5 +139,13 @@ export class DifficultyManager {
     
     getCurrentDifficultyIndex() {
         return this.currentDifficultyIndex;
+    }
+    
+    /**
+     * Get the difficulty settings from the config
+     * @returns {Object} The difficulty settings object
+     */
+    getDifficultySettings() {
+        return DIFFICULTY_SETTINGS;
     }
 }
