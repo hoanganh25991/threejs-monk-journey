@@ -34,6 +34,11 @@ export class MultiplayerUIManager {
             this.showMultiplayerModal();
             await this.showJoinUI();
             
+            // Show manual code view
+            document.getElementById('join-initial-options').style.display = 'none';
+            document.getElementById('scan-qr-view').style.display = 'none';
+            document.getElementById('manual-code-view').style.display = 'flex';
+            
             // Auto-fill the connection code
             const input = document.getElementById('manual-connection-input');
             if (input) {
@@ -492,12 +497,6 @@ export class MultiplayerUIManager {
                 await this.getAvailableCameras();
             }
             
-            // Make sure we're on the scan QR tab
-            const scanQrTabBtn = document.getElementById('scan-qr-tab-btn');
-            if (scanQrTabBtn && !scanQrTabBtn.classList.contains('active')) {
-                scanQrTabBtn.click();
-            }
-            
             // Create QR scanner instance
             this.qrCodeScanner = new Html5Qrcode('qr-scanner-view');
             
@@ -515,7 +514,11 @@ export class MultiplayerUIManager {
             // Start the scanner
             this.qrCodeScanner.start(
                 cameraConfig,
-                { fps: 10, qrbox: { width: 250, height: 250 } },
+                { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: window.innerWidth > window.innerHeight ? 1.77 : 0.56 // 16:9 or 9:16 based on orientation
+                },
                 (decodedText) => {
                     // Stop scanning immediately when QR code is detected
                     this.stopQRScanner();
@@ -546,24 +549,20 @@ export class MultiplayerUIManager {
                 }
             ).catch(err => {
                 this.updateConnectionStatus('Error starting camera: ' + err, 'join-connection-status');
+                
+                // Go back to initial options if camera fails
+                document.getElementById('join-initial-options').style.display = 'flex';
+                document.getElementById('scan-qr-view').style.display = 'none';
             });
-            
-            // Hide the toggle button after starting the camera
-            const toggleButton = document.getElementById('toggle-scan-btn');
-            if (toggleButton) {
-                toggleButton.style.display = 'none';
-            }
             
             this.updateConnectionStatus('Camera active. Point at a QR code to connect.', 'join-connection-status');
         } catch (error) {
             console.error('Error starting QR scanner:', error);
             this.updateConnectionStatus('Failed to start camera. Please enter code manually.', 'join-connection-status');
             
-            // Switch to manual tab if camera fails
-            const manualCodeTabBtn = document.getElementById('manual-code-tab-btn');
-            if (manualCodeTabBtn) {
-                manualCodeTabBtn.click();
-            }
+            // Go back to initial options if camera fails
+            document.getElementById('join-initial-options').style.display = 'flex';
+            document.getElementById('scan-qr-view').style.display = 'none';
         }
     }
     
@@ -577,21 +576,11 @@ export class MultiplayerUIManager {
             });
             this.qrCodeScanner = null;
             
-            // Show toggle button again
-            const toggleButton = document.getElementById('toggle-scan-btn');
-            if (toggleButton) {
-                toggleButton.textContent = 'Start Camera';
-                toggleButton.onclick = () => this.startQRScanner();
-                toggleButton.style.display = 'block';
-            }
-            
             // Keep camera select visible if we have multiple cameras
             const cameraSelect = document.getElementById('camera-select');
             if (cameraSelect && this.availableCameras.length > 1) {
                 cameraSelect.style.display = 'block';
             }
-            
-            this.updateConnectionStatus('Camera stopped. Start camera to scan QR code or enter code manually.', 'join-connection-status');
         }
     }
 

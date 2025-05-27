@@ -147,7 +147,7 @@
     background-color: rgba(255, 204, 0, 0.7);
     color: #4a3000;
     border: 2px solid rgba(255, 230, 150, 0.8);
-    padding: calc(var(--padding-small) + 3px) var(--padding-medium);
+    padding: calc(var(--padding-medium) + 3px) var(--padding-medium);
     margin: var(--padding-medium);
     font-size: 14px;
     font-weight: bold;
@@ -692,7 +692,7 @@
     background-position: right 8px center;
     padding-right: 28px;
     transition: all 0.3s ease;
-    max-width: 130px;
+    width: 110px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -800,7 +800,8 @@
     font-weight: bold;
     color: white;
     margin-right: 10px;
-    display: inline-block;
+    display: block;
+    width: 100%;
 }
 
 /* Value display styling */
