@@ -157,8 +157,27 @@ export class MultiplayerManager {
             this.game.menuManager.hideActiveMenu();
         }
         
-        // Start the game
-        this.startGame();
+        // Hide the main background if it exists
+        if (this.game.hudManager && this.game.hudManager.mainBackground) {
+            console.log('[MultiplayerManager] Hiding main background');
+            this.game.hudManager.mainBackground.hide();
+        }
+        
+        // Show all HUD elements
+        if (this.game.hudManager) {
+            console.log('[MultiplayerManager] Showing all HUD elements');
+            this.game.hudManager.showAllUI();
+        }
+        
+        // Make sure home button is visible
+        const homeButton = document.getElementById('home-button');
+        if (homeButton) {
+            homeButton.style.display = 'block';
+        }
+        
+        // Start the game - this will properly initialize the game state
+        console.log('[MultiplayerManager] Starting multiplayer game - calling game.start()');
+        this.game.start();
     }
     
     /**
@@ -167,17 +186,46 @@ export class MultiplayerManager {
     startGame() {
         console.log('[MultiplayerManager] Starting game...');
         
-        // Start the game or transition to gameplay
-        if (this.game.state) {
-            console.log('[MultiplayerManager] Setting game state to running');
-            this.game.state.setRunning();
+        // Close multiplayer modal if it's open
+        this.ui.closeMultiplayerModal();
+        
+        // Hide the Game Menu first if it's visible
+        if (this.game.menuManager) {
+            console.log('[MultiplayerManager] Hiding Game Menu');
+            this.game.menuManager.hideActiveMenu();
+        }
+        
+        // Hide the main background if it exists
+        if (this.game.hudManager && this.game.hudManager.mainBackground) {
+            console.log('[MultiplayerManager] Hiding main background');
+            this.game.hudManager.mainBackground.hide();
+        }
+        
+        // For members, we need to ensure the game is fully started
+        if (!this.connection.isHost) {
+            console.log('[MultiplayerManager] Member starting game - calling game.start()');
             
-            // For members, we need to ensure the game is fully started
-            if (!this.connection.isHost) {
-                console.log('[MultiplayerManager] Member starting game - calling game.start()');
-                this.game.start();
-            } else {
-                console.log('[MultiplayerManager] Host starting game - game already started');
+            // Show all HUD elements
+            if (this.game.hudManager) {
+                console.log('[MultiplayerManager] Showing all HUD elements');
+                this.game.hudManager.showAllUI();
+            }
+            
+            // Make sure home button is visible
+            const homeButton = document.getElementById('home-button');
+            if (homeButton) {
+                homeButton.style.display = 'block';
+            }
+            
+            // Start the game - this will properly initialize the game state
+            this.game.start();
+        } else {
+            // For host, the game should already be started by startMultiplayerGame()
+            console.log('[MultiplayerManager] Host starting game - ensuring game state is running');
+            
+            // Just make sure the game state is set to running
+            if (this.game.state) {
+                this.game.state.setRunning();
             }
         }
     }

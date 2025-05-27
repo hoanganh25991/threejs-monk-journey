@@ -118,6 +118,41 @@ export class Enemy {
             this.model.updateAnimations(delta);
         }
     }
+    
+    /**
+     * Play idle animation
+     */
+    playIdleAnimation() {
+        // Set state to idle
+        if (this.state) {
+            this.state.isMoving = false;
+            this.state.isAttacking = false;
+        }
+        
+        // Update animations will handle the actual animation
+        // based on the state we just set
+    }
+    
+    /**
+     * Play walk animation
+     */
+    playWalkAnimation() {
+        // Set state to moving
+        if (this.state) {
+            this.state.isMoving = true;
+            this.state.isAttacking = false;
+        }
+    }
+    
+    /**
+     * Play attack animation
+     */
+    playAttackAnimation() {
+        // Set state to attacking
+        if (this.state) {
+            this.state.isAttacking = true;
+        }
+    }
 
     update(delta) {
         // Skip update if dead

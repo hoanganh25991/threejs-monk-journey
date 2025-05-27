@@ -158,10 +158,17 @@ export class RemotePlayer {
                         gltf.animations.forEach(animation => {
                             const action = this.mixer.clipAction(animation);
                             this.animations.set(animation.name, action);
+                            console.log(`[RemotePlayer ${this.peerId}] Found animation: ${animation.name}`);
                         });
                         
-                        // Play idle animation by default
-                        this.playAnimation('idle');
+                        // Try to play idle animation by default, with walking as fallback
+                        this.playAnimation('idle', 'walking');
+                        
+                        // If no standard animations found, try to play the first available animation
+                        if (!this.currentAnimation && this.animations.size > 0) {
+                            const firstAnimName = Array.from(this.animations.keys())[0];
+                            this.playAnimation(firstAnimName);
+                        }
                     }
                     
                     resolve(this.model);
@@ -317,13 +324,32 @@ export class RemotePlayer {
         }
         
         if (animation === this.currentAnimation) {
-            console.log(`[RemotePlayer ${this.peerId}] Animation unchanged: ${animation}`);
+            // Animation unchanged, no need to update
             return;
         }
         
-        // Play the new animation
-        console.log(`[RemotePlayer ${this.peerId}] Playing new animation: ${animation}`);
-        this.playAnimation(animation);
+        // Map common animation names to standard ones if needed
+        let animationToPlay = animation;
+        
+        // Handle common animation mappings
+        if (animation === 'run' || animation === 'running') {
+            animationToPlay = 'walking';
+        } else if (animation === 'stand' || animation === 'standing') {
+            animationToPlay = 'idle';
+        }
+        
+        // Try to play the animation with fallbacks
+        const success = this.playAnimation(animationToPlay, 'idle');
+        
+        if (!success) {
+            console.log(`[RemotePlayer ${this.peerId}] Failed to play animation: ${animationToPlay}`);
+            
+            // If we couldn't play the requested animation, try to ensure at least some animation is playing
+            if (!this.currentAnimation && this.animations.size > 0) {
+                const firstAnimName = Array.from(this.animations.keys())[0];
+                this.playAnimation(firstAnimName);
+            }
+        }
     }
     
     /**
@@ -378,24 +404,82 @@ export class RemotePlayer {
     /**
      * Play an animation
      * @param {string} name - The name of the animation to play
+     * @param {string} [fallbackName] - Fallback animation name if primary not found
+     * @param {number} [transitionDuration=0.2] - Duration of crossfade transition in seconds
+     * @returns {boolean} True if animation was found and played
      */
-    playAnimation(name) {
-        if (!this.mixer || !this.animations.has(name)) return;
+    playAnimation(name, fallbackName = null, transitionDuration = 0.2) {
+        if (!this.mixer || !this.animations.has(name)) {
+            if (fallbackName && this.animations.has(fallbackName)) {
+                // Try fallback animation
+                return this.playAnimation(fallbackName, null, transitionDuration);
+            }
+            
+            // If no fallback or fallback not found
+            console.log(`[RemotePlayer ${this.peerId}] Animation not found: ${name}`);
+            return false;
+        }
         
-        // Stop current animation
+        // If this is already the current animation, don't restart it
+        if (this.currentAnimation === name) {
+            return true;
+        }
+        
+        // Stop current animation with crossfade
         if (this.currentAnimation && this.animations.has(this.currentAnimation)) {
             const currentAction = this.animations.get(this.currentAnimation);
-            currentAction.fadeOut(0.2);
+            currentAction.fadeOut(transitionDuration);
         }
         
         // Play new animation
         const newAction = this.animations.get(name);
-        newAction.reset().fadeIn(0.2).play();
+        newAction.reset().fadeIn(transitionDuration).play();
         
         // Update current animation
         this.currentAnimation = name;
+        console.log(`[RemotePlayer ${this.peerId}] Playing animation: ${name}`);
+        
+        return true;
     }
     
+    /**
+     * Cast a skill animation
+     * @param {string} skillName - The name of the skill being cast
+     * @returns {boolean} True if the skill animation was played successfully
+     */
+    castSkill(skillName) {
+        // Map skill names to appropriate animations
+        const skillAnimationMap = {
+            // Default mappings - can be expanded for specific skills
+            'Fist of Thunder': 'attack',
+            'Deadly Reach': 'attack',
+            'Crippling Wave': 'attack',
+            'Way of the Hundred Fists': 'attack',
+            'Lashing Tail Kick': 'attack',
+            'Tempest Rush': 'attack',
+            'Wave of Light': 'attack',
+            'Dashing Strike': 'attack',
+            'Exploding Palm': 'attack',
+            'Sweeping Wind': 'attack',
+            'Serenity': 'idle',
+            'Inner Sanctuary': 'idle',
+            'Breath of Heaven': 'idle',
+            'Mystic Ally': 'attack',
+            'Seven-Sided Strike': 'attack',
+            'Mantra of Evasion': 'idle',
+            'Mantra of Retribution': 'idle',
+            'Mantra of Healing': 'idle',
+            'Mantra of Conviction': 'idle'
+        };
+        
+        // Get the animation name for this skill
+        const animationName = skillAnimationMap[skillName] || 'attack';
+        
+        // Play the animation
+        console.log(`[RemotePlayer ${this.peerId}] Casting skill: ${skillName} with animation: ${animationName}`);
+        return this.playAnimation(animationName, 'attack', 0.2);
+    }
+
     /**
      * Update the remote player
      * @param {number} deltaTime - Time elapsed since the last frame

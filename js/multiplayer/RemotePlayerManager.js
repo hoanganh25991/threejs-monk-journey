@@ -152,4 +152,24 @@ export class RemotePlayerManager {
     getPlayerCount() {
         return this.remotePlayers.size;
     }
+    
+    /**
+     * Handle a remote player casting a skill
+     * @param {string} peerId - The ID of the remote player
+     * @param {string} skillName - The name of the skill being cast
+     * @returns {boolean} True if the skill animation was played successfully
+     */
+    handleSkillCast(peerId, skillName) {
+        // Check if player exists
+        if (!this.remotePlayers.has(peerId)) {
+            console.log(`[RemotePlayerManager] Cannot cast skill: Remote player ${peerId} not found`);
+            return false;
+        }
+        
+        // Get remote player
+        const remotePlayer = this.remotePlayers.get(peerId);
+        
+        // Cast the skill
+        return remotePlayer.castSkill(skillName);
+    }
 }
