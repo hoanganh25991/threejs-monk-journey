@@ -479,43 +479,34 @@ export class MultiplayerUIManager {
                 cameraConfig = { facingMode: 'environment' };
             }
             
-            // Add "Enter Code" button overlay if it doesn't exist
-            let enterCodeOverlay = document.getElementById('enter-code-overlay');
-            if (!enterCodeOverlay) {
-                const scannerContainer = document.querySelector('.qr-scanner-container');
-                if (scannerContainer) {
-                    enterCodeOverlay = document.createElement('div');
-                    enterCodeOverlay.id = 'enter-code-overlay';
-                    enterCodeOverlay.className = 'enter-code-overlay';
-                    enterCodeOverlay.innerHTML = `
-                        <button id="overlay-enter-code-btn" class="btn">Enter Code Manually</button>
-                    `;
-                    scannerContainer.appendChild(enterCodeOverlay);
+            // Show the "Enter Code" button overlay
+            const enterCodeOverlay = document.getElementById('enter-code-overlay');
+            if (enterCodeOverlay) {
+                // Make the overlay visible
+                enterCodeOverlay.style.display = 'flex';
+                
+                // Add event listener to the button if not already added
+                if (!enterCodeOverlay.hasAttribute('data-listener-added')) {
+                    enterCodeOverlay.addEventListener('click', () => {
+                        // Stop scanner
+                        this.stopQRScanner();
+                        
+                        // Show manual code view
+                        document.getElementById('scan-qr-view').style.display = 'none';
+                        document.getElementById('manual-code-view').style.display = 'flex';
+                        
+                        // Focus on the input field
+                        const input = document.getElementById('manual-connection-input');
+                        if (input) {
+                            input.focus();
+                        }
+                        
+                        this.updateConnectionStatus('Enter the connection code to join the game', 'join-connection-status');
+                    });
                     
-                    // Add event listener to the button
-                    const overlayEnterCodeBtn = document.getElementById('overlay-enter-code-btn');
-                    if (overlayEnterCodeBtn) {
-                        overlayEnterCodeBtn.addEventListener('click', () => {
-                            // Stop scanner
-                            this.stopQRScanner();
-                            
-                            // Show manual code view
-                            document.getElementById('join-initial-options').style.display = 'none';
-                            document.getElementById('scan-qr-view').style.display = 'none';
-                            document.getElementById('manual-code-view').style.display = 'flex';
-                            
-                            // Focus on the input field
-                            const input = document.getElementById('manual-connection-input');
-                            if (input) {
-                                input.focus();
-                            }
-                            
-                            this.updateConnectionStatus('Enter the connection code to join the game', 'join-connection-status');
-                        });
-                    }
+                    // Mark that we've added the listener
+                    enterCodeOverlay.setAttribute('data-listener-added', 'true');
                 }
-            } else {
-                enterCodeOverlay.style.display = 'block';
             }
             
             // Start the scanner

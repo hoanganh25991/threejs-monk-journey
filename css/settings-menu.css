@@ -160,7 +160,7 @@
     text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
     position: relative;
     overflow: hidden;
-    width: fit-content;
+    min-width: 110px;
     text-align: center;
 }
 
@@ -829,39 +829,4 @@
     line-clamp: 2;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-/* Responsive adjustments for landscape mode */
-@media (orientation: landscape) and (max-height: 600px) {
-    .tab-content {
-        padding: var(--padding-medium);
-    }
-    
-    .setting-item {
-        margin-bottom: 10px;
-    }
-    
-    .settings-section {
-        margin-bottom: 10px;
-    }
-    
-    .tab-content h2 {
-        font-size: 1.2em;
-        margin: 0 0 10px 0;
-    }
-    
-    .settings-button {
-        padding: var(--padding-small) var(--padding-medium);
-        font-size: 12px;
-        min-width: 80px;
-    }
-    
-    .settings-label {
-        font-size: 12px;
-        /* min-width: 100px; */
-    }
-    
-    .settings-value {
-        font-size: 12px;
-    }
 }
