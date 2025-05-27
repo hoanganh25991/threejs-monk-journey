@@ -162,7 +162,6 @@
 
         <!-- Top Right UI (Home Button, Full Screen Button and Mini Map) -->
         <div id="top-right-container">
-            <button id="multiplayer-button" class="circle-btn" title="Multiplayer">👥</button>
             <button id="inventory-button" class="circle-btn" title="Inventory">🎒</button>
             <button id="skill-tree-button" class="circle-btn" title="Skill Tree">🌲</button>
             <button id="skill-selection-button" class="circle-btn" title="Skill Selection">✨</button>
@@ -177,7 +176,7 @@
         <div id="enemy-health-container"></div>
 
         <!-- Notifications Container -->
-        <div id="notifications-container" style="display: none;"></div>
+        <div id="notifications-container"></div>
         
         <!-- Level Up Container -->
         <div id="level-up-container" style="display: none;">
@@ -223,24 +222,35 @@
     
     <!-- Multiplayer Modal -->
     <div id="multiplayer-modal" class="game-menu">
-        <div class="multiplayer-modal-content">
+        <!-- Initial Options Screen -->
+        <div class="multiplayer-modal-content" id="multiplayer-initial-screen">
             <h2>Multiplayer</h2>
             <div class="multiplayer-options">
                 <button id="host-game-btn" class="menu-button">Host Game</button>
                 <button id="join-game-btn" class="menu-button">Join Game</button>
                 <button id="close-multiplayer-btn" class="menu-button">Close</button>
             </div>
-            <div id="qr-container" class="scrollable-container">
-                <div id="qr-code"></div>
-                <p>Scan this QR code with another device to join the game</p>
-                <div class="manual-connection-info">
-                    <p>Or share this connection code:</p>
-                    <div class="connection-code-container">
-                        <div id="connection-code" class="connection-code" title="Click to copy"></div>
-                        <button id="copy-code-btn" class="small-btn" title="Copy to clipboard">📋</button>
+        </div>
+        
+        <!-- Host Game Screen -->
+        <div class="multiplayer-modal-content fullscreen-layout" id="host-game-screen" style="display: none;">
+            <div class="modal-header">
+                <h2>Host Game</h2>
+                <button id="back-from-host-btn" class="circle-btn" title="Back">↩️</button>
+            </div>
+            <div class="host-game-layout">
+                <div class="qr-section">
+                    <div id="qr-code"></div>
+                    <p>Scan this QR code with another device to join the game</p>
+                    <div class="manual-connection-info">
+                        <p>Or share this connection code:</p>
+                        <div class="connection-code-container">
+                            <div id="connection-code" class="connection-code" title="Click to copy"></div>
+                            <button id="copy-code-btn" class="small-btn" title="Copy to clipboard">📋</button>
+                        </div>
                     </div>
                 </div>
-                <div id="host-controls">
+                <div class="players-section">
                     <h3>Connected Players</h3>
                     <div id="connected-players-list" class="connected-players-list">
                         <div class="player-item host-player">
@@ -252,16 +262,25 @@
                     <button id="start-game-btn" class="menu-button start-game-btn" disabled>Start Game</button>
                 </div>
             </div>
-            <div id="qr-scanner-container" class="scrollable-container">
-                <div id="qr-scanner">
-                    <div id="qr-scanner-view"></div>
-                    <div class="scanner-controls">
-                        <button id="start-scan-btn" class="menu-button">Start Camera</button>
-                        <button id="stop-scan-btn" class="menu-button">Stop Camera</button>
+            <div id="host-connection-status" class="connection-status"></div>
+        </div>
+        
+        <!-- Join Game Screen -->
+        <div class="multiplayer-modal-content fullscreen-layout" id="join-game-screen" style="display: none;">
+            <div class="modal-header">
+                <h2>Join Game</h2>
+                <button id="back-from-join-btn" class="circle-btn" title="Back">↩️</button>
+            </div>
+            <div class="join-game-layout">
+                <div class="scanner-section">
+                    <div id="qr-scanner">
+                        <div id="qr-scanner-view"></div>
+                    </div>
+                    <div class="scanner-toggle">
+                        <button id="toggle-scan-btn" class="menu-button">Stop Camera</button>
                     </div>
                 </div>
-                <p>Scan a QR code to join a game</p>
-                <div class="manual-connection-input">
+                <div class="manual-input-section">
                     <p>Or enter connection code manually:</p>
                     <div class="input-with-buttons">
                         <input type="text" id="manual-connection-input" placeholder="Paste connection code here">
@@ -270,7 +289,28 @@
                     <button id="manual-connect-btn" class="menu-button">Connect</button>
                 </div>
             </div>
-            <div id="connection-status"></div>
+            <div id="join-connection-status" class="connection-status"></div>
+        </div>
+        
+        <!-- Player Waiting Screen (for joined players) -->
+        <div class="multiplayer-modal-content fullscreen-layout" id="player-waiting-screen" style="display: none;">
+            <div class="modal-header">
+                <h2>Waiting for Host</h2>
+                <button id="leave-game-btn" class="circle-btn" title="Leave Game">↩️</button>
+            </div>
+            <div class="waiting-screen-content">
+                <div class="waiting-message">
+                    <p>You have successfully joined the game!</p>
+                    <p>Waiting for the host to start the game...</p>
+                </div>
+                <div class="player-info">
+                    <div class="player-color-display">
+                        <div id="player-color-indicator" class="player-color-indicator large"></div>
+                        <p>Your assigned color</p>
+                    </div>
+                </div>
+            </div>
+            <div id="player-connection-status" class="connection-status"></div>
         </div>
     </div>
 
@@ -360,6 +400,7 @@
             <button id="new-game-button" class="menu-button">New Game</button>
             <button id="load-game-button" class="menu-button">Continue Game</button>
             <button id="save-game-button" class="menu-button">Save Game</button>
+            <button id="multiplayer-button" class="menu-button">Multiplayer</button>
             <button id="settings-menu-button" class="menu-button">Settings</button>
         </div>
     </div>

@@ -436,113 +436,55 @@ export class PlayerSkills {
         // Pass game reference to the new skill instance
         newSkillInstance.game = this.game;
         
-        // Special handling for teleport skills
-        if (skillTemplate.type === 'teleport' && skillTemplate.name === 'Fist of Thunder') {
-            if (targetEnemy) {
-                const enemyPosition = targetEnemy.getPosition();
-                
-                // Calculate teleport position (slightly before the enemy)
-                const teleportDistance = Math.min(this.playerPosition.distanceTo(enemyPosition) - 1.5, skillTemplate.range);
-                const teleportPosition = new THREE.Vector3(
-                    this.playerPosition.x + targetDirection.x * teleportDistance,
-                    enemyPosition.y, // Match enemy height
-                    this.playerPosition.z + targetDirection.z * teleportDistance
-                );
-                
-                // Teleport player
-                this.playerPosition.copy(teleportPosition);
-                
-                // Create skill effect at the new position
-                const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
-                
-                // Add skill effect to scene
-                if (skillEffect) {
-                    console.debug(`Adding ${skillTemplate.name} teleport effect to scene`);
-                    this.scene.add(skillEffect);
-                } else {
-                    console.error(`Failed to create teleport effect for ${skillTemplate.name}`);
-                }
-                
-                // Play teleport sound
-                if (this.game && this.game.audioManager) {
-                    this.game.audioManager.playSound('playerAttack');
-                }
-                
-                // Add to active skills
-                this.activeSkills.push(newSkillInstance);
-                
-                return true;
+        // First priority: If there's a target enemy, face that direction (already handled above)
+        if (targetEnemy) {
+            // Direction already set in the code above
+            console.debug("Using enemy direction for skill cast");
+            
+            // For skills with stationaryAttack flag, we don't move the player
+            // This is specifically for ranged skills like "Deadly Reach"
+            if (!skillTemplate.stationaryAttack && skillTemplate.name !== "Deadly Reach") {
+                console.debug(`Skill ${skillTemplate.name} does not have stationaryAttack flag, player may move`);
             } else {
-                // No enemy found, show notification
-                if (this.game && this.game.hudManager) {
-                    this.game.hudManager.showNotification('No enemy in range');
-                }
-                
-                // Refund mana
-                this.playerStats.setMana(this.playerStats.getMana() + skillTemplate.manaCost);
-                
-                // Reset cooldown
-                skillTemplate.currentCooldown = 0;
-                
-                return false;
+                console.debug(`Skill ${skillTemplate.name} has stationaryAttack flag or is Deadly Reach, player will not move`);
             }
+        } 
+        // Second priority: If player is moving, use movement direction
+        else if (this.game && this.game.inputHandler) {
+            const moveDir = this.game.inputHandler.getMovementDirection();
+            
+            if (moveDir.length() > 0) {
+                // Player is actively moving - use that direction
+                this.playerRotation.y = Math.atan2(moveDir.x, moveDir.z);
+                console.debug(`Using movement direction for skill: ${moveDir.x.toFixed(2)}, ${moveDir.z.toFixed(2)}`);
+            } else {
+                // Player is not moving - use current facing direction
+                console.debug(`Using current facing direction: ${Math.sin(this.playerRotation.y).toFixed(2)}, ${Math.cos(this.playerRotation.y).toFixed(2)}`);
+            }
+        }
+        
+        // Log the final direction that will be used
+        console.debug(`Final rotation for skill cast: ${this.playerRotation.y.toFixed(2)} radians`);
+        
+        // Create the skill effect with the player's position and rotation
+        const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
+        
+        // Add skill effect to scene
+        if (skillEffect) {
+            console.debug(`Adding ${skillTemplate.name} effect to scene`);
+            this.scene.add(skillEffect);
         } else {
-            // For non-teleport skills, create the effect in the direction of the enemy if found
-            // or in the current player direction if no enemy is found
-            
-            // COMPLETELY REVISED DIRECTION HANDLING
-            
-            // First priority: If there's a target enemy, face that direction (already handled above)
-            if (targetEnemy) {
-                // Direction already set in the code above
-                console.debug("Using enemy direction for skill cast");
-                
-                // For skills with stationaryAttack flag, we don't move the player
-                // This is specifically for ranged skills like "Deadly Reach"
-                if (!skillTemplate.stationaryAttack && skillTemplate.name !== "Deadly Reach") {
-                    console.debug(`Skill ${skillTemplate.name} does not have stationaryAttack flag, player may move`);
-                } else {
-                    console.debug(`Skill ${skillTemplate.name} has stationaryAttack flag or is Deadly Reach, player will not move`);
-                }
-            } 
-            // Second priority: If player is moving, use movement direction
-            else if (this.game && this.game.inputHandler) {
-                const moveDir = this.game.inputHandler.getMovementDirection();
-                
-                if (moveDir.length() > 0) {
-                    // Player is actively moving - use that direction
-                    this.playerRotation.y = Math.atan2(moveDir.x, moveDir.z);
-                    console.debug(`Using movement direction for skill: ${moveDir.x.toFixed(2)}, ${moveDir.z.toFixed(2)}`);
-                } else {
-                    // Player is not moving - use current facing direction
-                    console.debug(`Using current facing direction: ${Math.sin(this.playerRotation.y).toFixed(2)}, ${Math.cos(this.playerRotation.y).toFixed(2)}`);
-                }
-            }
-            
-            // Log the final direction that will be used
-            console.debug(`Final rotation for skill cast: ${this.playerRotation.y.toFixed(2)} radians`);
-            
-            // Create the skill effect with the player's position and rotation
-            const skillEffect = newSkillInstance.createEffect(this.playerPosition, this.playerRotation);
-            
-            // Add skill effect to scene
-            if (skillEffect) {
-                console.debug(`Adding ${skillTemplate.name} effect to scene`);
-                this.scene.add(skillEffect);
-            } else {
-                console.error(`Failed to create effect for ${skillTemplate.name}`);
-            }
-            
-            // Log enemy was auto-targeted (only if an enemy was found)
-            if (targetEnemy) {
-                console.debug(`Auto-targeting ${targetEnemy.type} with ${skillTemplate.name}`);
-            } else {
-                console.debug(`Using ${skillTemplate.name} without a target`);
-            }
+            console.error(`Failed to create effect for ${skillTemplate.name}`);
+        }
+        
+        // Log enemy was auto-targeted (only if an enemy was found)
+        if (targetEnemy) {
+            console.debug(`Auto-targeting ${targetEnemy.type} with ${skillTemplate.name}`);
+        } else {
+            console.debug(`Using ${skillTemplate.name} without a target`);
         }
 
         // Sound is now handled by the skill itself in createEffect method
-        
         // Add to active skills
         this.activeSkills.push(newSkillInstance);
         
@@ -588,6 +530,7 @@ export class PlayerSkills {
             if (meleeEnemy) {
                 // Enemy is in melee range, use normal attack (no teleport)
                 console.debug('Enemy in melee range, using normal attack without teleport');
+                console.debug({meleeEnemy})
                 
                 // Use mana
                 this.playerStats.setMana(this.playerStats.getMana() - skillTemplate.manaCost);
@@ -635,6 +578,7 @@ export class PlayerSkills {
                 const teleportRangeEnemy = this.game.enemyManager.findNearestEnemy(this.playerPosition, maxTeleportRange);
                 
                 if (teleportRangeEnemy) {
+                    console.debug({teleportRangeEnemy})
                     // Get enemy position
                     const enemyPosition = teleportRangeEnemy.getPosition();
                     

@@ -28,6 +28,136 @@
     -webkit-overflow-scrolling: touch;
 }
 
+/* Fullscreen layout for host and join screens */
+.multiplayer-modal-content.fullscreen-layout {
+    width: 95%;
+    max-width: 1200px;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Modal header with back button */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+}
+
+/* Host game layout */
+.host-game-layout {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    gap: 20px;
+    overflow: hidden;
+}
+
+.qr-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #333;
+    border-radius: 10px;
+    overflow-y: auto;
+}
+
+.players-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background-color: #333;
+    border-radius: 10px;
+    overflow-y: auto;
+}
+
+/* Join game layout */
+.join-game-layout {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    gap: 20px;
+    overflow: hidden;
+}
+
+.scanner-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #333;
+    border-radius: 10px;
+}
+
+.manual-input-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background-color: #333;
+    border-radius: 10px;
+}
+
+/* Waiting screen */
+.waiting-screen-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 30px;
+}
+
+.waiting-message {
+    font-size: 1.2em;
+    text-align: center;
+}
+
+.player-color-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Connection status for different screens */
+.connection-status {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #333;
+    text-align: center;
+}
+
+/* Scanner toggle button */
+.scanner-toggle {
+    margin-top: 15px;
+    width: 100%;
+    text-align: center;
+}
+
+/* Large player color indicator */
+.player-color-indicator.large {
+    width: 50px;
+    height: 50px;
+    margin: 0;
+}
+
+/* Responsive layouts for mobile */
+@media screen and (max-width: 768px) {
+    .host-game-layout, .join-game-layout {
+        flex-direction: column;
+    }
+}
+
+/* Legacy containers - keeping for compatibility */
 #qr-container, #qr-scanner-container {
     margin-top: 20px;
     display: flex;

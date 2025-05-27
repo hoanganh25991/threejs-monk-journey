@@ -27,7 +27,7 @@ export class MultiplayerUIManager {
      * Set up UI event listeners for multiplayer buttons
      */
     setupUIListeners() {
-        // Multiplayer button (in top right UI)
+        // Multiplayer button (in game menu)
         const multiplayerButton = document.getElementById('multiplayer-button');
         if (multiplayerButton) {
             multiplayerButton.addEventListener('click', () => this.showMultiplayerModal());
@@ -36,7 +36,10 @@ export class MultiplayerUIManager {
         // Host game button
         const hostGameBtn = document.getElementById('host-game-btn');
         if (hostGameBtn) {
-            hostGameBtn.addEventListener('click', () => this.multiplayerManager.hostGame());
+            hostGameBtn.addEventListener('click', () => {
+                this.showHostUI();
+                this.multiplayerManager.hostGame();
+            });
         }
         
         // Join game button
@@ -50,7 +53,12 @@ export class MultiplayerUIManager {
         if (manualConnectBtn) {
             manualConnectBtn.addEventListener('click', () => {
                 const code = document.getElementById('manual-connection-input').value;
-                if (code) this.multiplayerManager.joinGame(code);
+                if (code) {
+                    this.updateConnectionStatus('Connecting...', 'join-connection-status');
+                    this.multiplayerManager.joinGame(code);
+                } else {
+                    this.updateConnectionStatus('Please enter a connection code', 'join-connection-status');
+                }
             });
         }
         
@@ -90,21 +98,43 @@ export class MultiplayerUIManager {
                     }
                 } catch (err) {
                     console.error('Failed to read clipboard contents: ', err);
-                    this.updateConnectionStatus('Failed to paste from clipboard. Please enter code manually.');
+                    this.updateConnectionStatus('Failed to paste from clipboard. Please enter code manually.', 'join-connection-status');
                 }
             });
         }
         
-        // QR Scanner start button
-        const startScanBtn = document.getElementById('start-scan-btn');
-        if (startScanBtn) {
-            startScanBtn.addEventListener('click', () => this.startQRScanner());
+        // QR Scanner toggle button
+        const toggleScanBtn = document.getElementById('toggle-scan-btn');
+        if (toggleScanBtn) {
+            toggleScanBtn.addEventListener('click', () => {
+                if (this.qrCodeScanner) {
+                    this.stopQRScanner();
+                } else {
+                    this.startQRScanner();
+                }
+            });
         }
         
-        // QR Scanner stop button
-        const stopScanBtn = document.getElementById('stop-scan-btn');
-        if (stopScanBtn) {
-            stopScanBtn.addEventListener('click', () => this.stopQRScanner());
+        // Back buttons
+        const backFromHostBtn = document.getElementById('back-from-host-btn');
+        if (backFromHostBtn) {
+            backFromHostBtn.addEventListener('click', () => this.showMultiplayerModal());
+        }
+        
+        const backFromJoinBtn = document.getElementById('back-from-join-btn');
+        if (backFromJoinBtn) {
+            backFromJoinBtn.addEventListener('click', () => {
+                this.stopQRScanner();
+                this.showMultiplayerModal();
+            });
+        }
+        
+        const leaveGameBtn = document.getElementById('leave-game-btn');
+        if (leaveGameBtn) {
+            leaveGameBtn.addEventListener('click', () => {
+                this.multiplayerManager.leaveGame();
+                this.showMultiplayerModal();
+            });
         }
     }
 
@@ -116,11 +146,15 @@ export class MultiplayerUIManager {
         if (modal) {
             modal.style.display = 'flex';
             
-            // Reset UI
-            document.getElementById('qr-container').style.display = 'none';
-            document.getElementById('qr-scanner-container').style.display = 'none';
-            document.getElementById('host-controls').style.display = 'none';
-            document.getElementById('connection-status').textContent = '';
+            // Show initial screen, hide others
+            document.getElementById('multiplayer-initial-screen').style.display = 'block';
+            document.getElementById('host-game-screen').style.display = 'none';
+            document.getElementById('join-game-screen').style.display = 'none';
+            document.getElementById('player-waiting-screen').style.display = 'none';
+            
+            // Reset connection status
+            const statusElements = document.querySelectorAll('.connection-status');
+            statusElements.forEach(el => el.textContent = '');
         }
     }
 
@@ -141,19 +175,39 @@ export class MultiplayerUIManager {
      * Show the host UI
      */
     showHostUI() {
-        document.getElementById('qr-container').style.display = 'flex';
-        document.getElementById('qr-scanner-container').style.display = 'none';
-        document.getElementById('host-controls').style.display = 'block';
+        // Hide initial screen, show host screen
+        document.getElementById('multiplayer-initial-screen').style.display = 'none';
+        document.getElementById('host-game-screen').style.display = 'flex';
+        document.getElementById('join-game-screen').style.display = 'none';
+        document.getElementById('player-waiting-screen').style.display = 'none';
+        
+        // Set up back button
+        const backButton = document.getElementById('back-from-host-btn');
+        if (backButton) {
+            backButton.onclick = () => {
+                this.showMultiplayerModal();
+            };
+        }
     }
 
     /**
      * Show the join UI
      */
     async showJoinUI() {
-        // Show join UI
-        document.getElementById('qr-container').style.display = 'none';
-        document.getElementById('qr-scanner-container').style.display = 'flex';
-        document.getElementById('host-controls').style.display = 'none';
+        // Hide initial screen, show join screen
+        document.getElementById('multiplayer-initial-screen').style.display = 'none';
+        document.getElementById('host-game-screen').style.display = 'none';
+        document.getElementById('join-game-screen').style.display = 'flex';
+        document.getElementById('player-waiting-screen').style.display = 'none';
+        
+        // Set up back button
+        const backButton = document.getElementById('back-from-join-btn');
+        if (backButton) {
+            backButton.onclick = () => {
+                this.stopQRScanner();
+                this.showMultiplayerModal();
+            };
+        }
         
         // Initialize QR scanner
         try {
@@ -162,11 +216,37 @@ export class MultiplayerUIManager {
                 await this.loadQRScannerJS();
             }
             
-            this.updateConnectionStatus('Click "Start Camera" to scan a QR code or enter code manually');
+            // Start scanner automatically
+            this.startQRScanner();
+            
+            this.updateConnectionStatus('Scan a QR code or enter connection code manually', 'join-connection-status');
         } catch (error) {
             console.error('Error initializing QR scanner:', error);
-            this.updateConnectionStatus('QR scanner not available. Please enter connection code manually.');
+            this.updateConnectionStatus('QR scanner not available. Please enter connection code manually.', 'join-connection-status');
         }
+    }
+    
+    /**
+     * Show the player waiting screen (after joining a game)
+     */
+    showPlayerWaitingScreen() {
+        // Hide other screens, show waiting screen
+        document.getElementById('multiplayer-initial-screen').style.display = 'none';
+        document.getElementById('host-game-screen').style.display = 'none';
+        document.getElementById('join-game-screen').style.display = 'none';
+        document.getElementById('player-waiting-screen').style.display = 'flex';
+        
+        // Set up leave button
+        const leaveButton = document.getElementById('leave-game-btn');
+        if (leaveButton) {
+            leaveButton.onclick = () => {
+                // Disconnect from game
+                this.multiplayerManager.leaveGame();
+                this.showMultiplayerModal();
+            };
+        }
+        
+        this.updateConnectionStatus('Connected to host. Waiting for game to start...', 'player-connection-status');
     }
     
     /**
@@ -174,7 +254,7 @@ export class MultiplayerUIManager {
      */
     startQRScanner() {
         if (typeof Html5Qrcode === 'undefined') {
-            this.updateConnectionStatus('QR scanner library not loaded. Please enter code manually.');
+            this.updateConnectionStatus('QR scanner library not loaded. Please enter code manually.', 'join-connection-status');
             return;
         }
         
@@ -192,11 +272,18 @@ export class MultiplayerUIManager {
                     // Handle scan errors silently
                 }
             ).catch(err => {
-                this.updateConnectionStatus('Error starting camera: ' + err);
+                this.updateConnectionStatus('Error starting camera: ' + err, 'join-connection-status');
             });
+            
+            // Update toggle button text
+            const toggleButton = document.getElementById('toggle-scan-btn');
+            if (toggleButton) {
+                toggleButton.textContent = 'Stop Camera';
+                toggleButton.onclick = () => this.stopQRScanner();
+            }
         } catch (error) {
             console.error('Error starting QR scanner:', error);
-            this.updateConnectionStatus('Failed to start camera. Please enter code manually.');
+            this.updateConnectionStatus('Failed to start camera. Please enter code manually.', 'join-connection-status');
         }
     }
     
@@ -209,15 +296,23 @@ export class MultiplayerUIManager {
                 console.error('Error stopping camera:', err);
             });
             this.qrCodeScanner = null;
+            
+            // Update toggle button text
+            const toggleButton = document.getElementById('toggle-scan-btn');
+            if (toggleButton) {
+                toggleButton.textContent = 'Start Camera';
+                toggleButton.onclick = () => this.startQRScanner();
+            }
         }
     }
 
     /**
      * Update connection status
      * @param {string} message - The status message
+     * @param {string} [elementId='host-connection-status'] - The ID of the status element to update
      */
-    updateConnectionStatus(message) {
-        const statusElement = document.getElementById('connection-status');
+    updateConnectionStatus(message, elementId = 'host-connection-status') {
+        const statusElement = document.getElementById(elementId);
         if (statusElement) {
             statusElement.textContent = message;
         }
@@ -265,7 +360,7 @@ export class MultiplayerUIManager {
         try {
             navigator.clipboard.writeText(this.multiplayerManager.roomId).then(() => {
                 // Show success message
-                this.updateConnectionStatus('Connection code copied to clipboard!');
+                this.updateConnectionStatus('Connection code copied to clipboard!', 'host-connection-status');
                 
                 // Highlight the code element briefly
                 codeElement.classList.add('copied');
@@ -275,7 +370,18 @@ export class MultiplayerUIManager {
             });
         } catch (error) {
             console.error('Failed to copy code:', error);
-            this.updateConnectionStatus('Failed to copy code. Please copy it manually.');
+            this.updateConnectionStatus('Failed to copy code. Please copy it manually.', 'host-connection-status');
+        }
+    }
+    
+    /**
+     * Set player color in the waiting screen
+     * @param {string} color - The color assigned to the player
+     */
+    setPlayerColor(color) {
+        const colorIndicator = document.getElementById('player-color-indicator');
+        if (colorIndicator) {
+            colorIndicator.style.backgroundColor = color;
         }
     }
 

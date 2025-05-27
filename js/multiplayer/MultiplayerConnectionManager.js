@@ -459,12 +459,19 @@ export class MultiplayerConnectionManager {
                             'Animation:', animation);
             }
             
+            // Get the player's model ID
+            let modelId = DEFAULT_CHARACTER_MODEL;
+            if (this.multiplayerManager.game.player.model && this.multiplayerManager.game.player.model.currentModelId) {
+                modelId = this.multiplayerManager.game.player.model.currentModelId;
+            }
+            
             // Send to host - minimal data to save bandwidth
             hostConn.send({
                 type: 'playerPosition',
                 position,
                 rotation,
-                animation
+                animation,
+                modelId // Include model ID
             });
         } catch (error) {
             console.error('[MultiplayerConnectionManager] Error sending player data:', error);
