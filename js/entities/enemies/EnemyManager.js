@@ -490,13 +490,13 @@ export class EnemyManager {
         this.isMultiplayer = isMultiplayer;
         this.isHost = isHost;
         
-        console.log(`EnemyManager: Multiplayer mode ${isMultiplayer ? 'enabled' : 'disabled'}, isHost: ${isHost}`);
+        console.debug(`EnemyManager: Multiplayer mode ${isMultiplayer ? 'enabled' : 'disabled'}, isHost: ${isHost}`);
     }
 
     setDifficulty(difficulty) {
         if (DIFFICULTY_SETTINGS[difficulty]) {
             this.currentDifficulty = difficulty;
-            console.log(`Difficulty set to ${DIFFICULTY_SETTINGS[difficulty].name}`);
+            console.debug(`Difficulty set to ${DIFFICULTY_SETTINGS[difficulty].name}`);
         } else {
             console.warn(`Unknown difficulty: ${difficulty}, defaulting to medium`);
             this.currentDifficulty = 'medium';

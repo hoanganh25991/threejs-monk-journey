@@ -86,7 +86,7 @@ export class RemotePlayer {
      */
     async clonePlayerModel() {
         try {
-            console.log(`[RemotePlayer ${this.peerId}] Loading model with ID: ${this.modelId}`);
+            console.debug(`[RemotePlayer ${this.peerId}] Loading model with ID: ${this.modelId}`);
             
             // Get the model configuration
             const modelConfig = this.getModelConfig(this.modelId);
@@ -158,7 +158,7 @@ export class RemotePlayer {
                         gltf.animations.forEach(animation => {
                             const action = this.mixer.clipAction(animation);
                             this.animations.set(animation.name, action);
-                            console.log(`[RemotePlayer ${this.peerId}] Found animation: ${animation.name}`);
+                            console.debug(`[RemotePlayer ${this.peerId}] Found animation: ${animation.name}`);
                         });
                         
                         // Try to play idle animation by default, with walking as fallback
@@ -174,7 +174,7 @@ export class RemotePlayer {
                     resolve(this.model);
                 },
                 (xhr) => {
-                    console.log(`[RemotePlayer ${this.peerId}] Loading model: ${(xhr.loaded / xhr.total * 100)}% loaded`);
+                    console.debug(`[RemotePlayer ${this.peerId}] Loading model: ${(xhr.loaded / xhr.total * 100)}% loaded`);
                 },
                 (error) => {
                     console.error(`[RemotePlayer ${this.peerId}] Error loading model:`, error);
@@ -266,18 +266,18 @@ export class RemotePlayer {
      */
     updatePosition(position) {
         if (!position) {
-            console.log(`[RemotePlayer ${this.peerId}] Received null position`);
+            console.debug(`[RemotePlayer ${this.peerId}] Received null position`);
             return;
         }
         
         // Validate position values
         if (isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
-            console.log(`[RemotePlayer ${this.peerId}] Received invalid position with NaN values:`, position);
+            console.debug(`[RemotePlayer ${this.peerId}] Received invalid position with NaN values:`, position);
             return;
         }
         
         // Set target position
-        console.log(`[RemotePlayer ${this.peerId}] Setting target position:`, position);
+        console.debug(`[RemotePlayer ${this.peerId}] Setting target position:`, position);
         this.targetPosition.set(position.x, position.y, position.z);
     }
     
@@ -292,7 +292,7 @@ export class RemotePlayer {
         if (typeof rotation === 'number') {
             // Just y rotation provided as a number
             if (isNaN(rotation)) {
-                console.log(`[RemotePlayer ${this.peerId}] Received invalid rotation number:`, rotation);
+                console.debug(`[RemotePlayer ${this.peerId}] Received invalid rotation number:`, rotation);
                 return;
             }
             this.targetRotation.set(0, rotation, 0);
@@ -304,11 +304,11 @@ export class RemotePlayer {
                 const z = (rotation.z !== undefined && !isNaN(rotation.z)) ? rotation.z : 0;
                 this.targetRotation.set(x, rotation.y, z);
             } else {
-                console.log(`[RemotePlayer ${this.peerId}] Received invalid rotation object:`, rotation);
+                console.debug(`[RemotePlayer ${this.peerId}] Received invalid rotation object:`, rotation);
                 return;
             }
         } else {
-            console.log(`[RemotePlayer ${this.peerId}] Received invalid rotation type:`, typeof rotation);
+            console.debug(`[RemotePlayer ${this.peerId}] Received invalid rotation type:`, typeof rotation);
             return;
         }
     }
@@ -319,7 +319,7 @@ export class RemotePlayer {
      */
     updateAnimation(animation) {
         if (!animation) {
-            console.log(`[RemotePlayer ${this.peerId}] Received null animation`);
+            console.debug(`[RemotePlayer ${this.peerId}] Received null animation`);
             return;
         }
         
@@ -342,7 +342,7 @@ export class RemotePlayer {
         const success = this.playAnimation(animationToPlay, 'idle');
         
         if (!success) {
-            console.log(`[RemotePlayer ${this.peerId}] Failed to play animation: ${animationToPlay}`);
+            console.debug(`[RemotePlayer ${this.peerId}] Failed to play animation: ${animationToPlay}`);
             
             // If we couldn't play the requested animation, try to ensure at least some animation is playing
             if (!this.currentAnimation && this.animations.size > 0) {
@@ -416,7 +416,7 @@ export class RemotePlayer {
             }
             
             // If no fallback or fallback not found
-            console.log(`[RemotePlayer ${this.peerId}] Animation not found: ${name}`);
+            console.debug(`[RemotePlayer ${this.peerId}] Animation not found: ${name}`);
             return false;
         }
         
@@ -437,7 +437,7 @@ export class RemotePlayer {
         
         // Update current animation
         this.currentAnimation = name;
-        console.log(`[RemotePlayer ${this.peerId}] Playing animation: ${name}`);
+        console.debug(`[RemotePlayer ${this.peerId}] Playing animation: ${name}`);
         
         return true;
     }
@@ -481,7 +481,7 @@ export class RemotePlayer {
         const animationName = skillAnimationMap[skillName] || 'attack';
         
         // Play the animation
-        console.log(`[RemotePlayer ${this.peerId}] Casting skill: ${skillName} with animation: ${animationName}`);
+        console.debug(`[RemotePlayer ${this.peerId}] Casting skill: ${skillName} with animation: ${animationName}`);
         const animationPlayed = this.playAnimation(animationName, 'attack', 0.2);
         
         // Create the skill visual effect
@@ -523,7 +523,7 @@ export class RemotePlayer {
                     const rotation = { y: this.model ? this.model.rotation.y : 0 };
                     
                     // Create the skill effect
-                    console.log(`[RemotePlayer ${this.peerId}] Creating skill effect for: ${skillName}`);
+                    console.debug(`[RemotePlayer ${this.peerId}] Creating skill effect for: ${skillName}`);
                     const skillEffect = skill.createEffect(position, rotation);
                     
                     // Add the effect to the scene

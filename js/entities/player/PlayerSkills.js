@@ -716,7 +716,7 @@ export class PlayerSkills {
             return;
         }
         
-        console.debug(`[PlayerSkills] Broadcasting skill cast: ${skillName}`);
+        console.error(`[PlayerSkills] Broadcasting skill cast: ${skillName}`);
         
         // Get player position and rotation for accurate skill placement
         const position = this.playerPosition ? {

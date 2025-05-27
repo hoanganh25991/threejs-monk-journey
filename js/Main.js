@@ -5,6 +5,7 @@
 
 import { Game } from './game/Game.js';
 import { DEFAULT_CHARACTER_MODEL } from './config/player-models.js';
+import { STORAGE_KEYS } from './config/storage-keys.js';
 
 /**
  * Main class responsible for initializing and managing the game startup process
@@ -15,6 +16,11 @@ class Main {
      */
     constructor() {
         // Default configuration for character model
+        if (!localStorage.getItem(STORAGE_KEYS.DEBUG_MODE)) {
+            console.debug = () => {};
+            console.warn = () => {};
+            console.log = () => {};
+        }
         window.selectedModelId = DEFAULT_CHARACTER_MODEL;
         window.selectedSizeMultiplier = 1.0;
         

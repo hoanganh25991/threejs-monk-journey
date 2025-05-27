@@ -64,10 +64,11 @@ export class MultiplayerConnectionManager {
             
             // Set up connection handler
             this.peer.on('connection', conn => this.handleNewConnection(conn));
-            
+
             // Set host flag
             this.isHost = true;
-            
+            this.isConnected = true;
+
             // Assign a color to the host
             const hostColor = this.multiplayerManager.playerColors[0]; // First color for host
             this.multiplayerManager.assignedColors.set(this.roomId, hostColor);
@@ -232,7 +233,7 @@ export class MultiplayerConnectionManager {
         
         switch (data.type) {
             case 'welcome':
-                console.log('Received welcome message:', data.message);
+                console.error('Received welcome message:', data.message);
                 break;
             case 'gameState':
                 this.multiplayerManager.updateGameState(data);
@@ -272,14 +273,14 @@ export class MultiplayerConnectionManager {
             case 'skillCast':
                 // Handle skill cast from host or forwarded from another member
                 if (!data.skillName) {
-                    console.warn('Received incomplete skill cast data from host');
+                    console.error('Received incomplete skill cast data from host');
                     return;
                 }
                 
                 // Get the player ID who cast the skill
                 const casterId = data.playerId || this.hostId;
                 
-                console.log(`[MultiplayerConnectionManager] Player ${casterId} cast skill: ${data.skillName}`);
+                console.error(`[MultiplayerConnectionManager] Player ${casterId} cast skill: ${data.skillName}`);
                 
                 // Get the remote player
                 const remotePlayer = this.multiplayerManager.remotePlayerManager.getPlayer(casterId);
@@ -297,7 +298,7 @@ export class MultiplayerConnectionManager {
                 this.multiplayerManager.remotePlayerManager.handleSkillCast(casterId, data.skillName);
                 break;
             default:
-                console.warn('Unknown data type from host:', data.type);
+                console.error('Unknown data type from host:', data.type);
         }
     }
 
@@ -308,7 +309,7 @@ export class MultiplayerConnectionManager {
      */
     handleDataFromMember(peerId, data) {
         if (!data || !data.type) {
-            console.warn('[MultiplayerConnectionManager] Received invalid data from member:', peerId);
+            console.error('[MultiplayerConnectionManager] Received invalid data from member:', peerId);
             return;
         }
         
@@ -321,7 +322,7 @@ export class MultiplayerConnectionManager {
                 case 'playerPosition':
                     // Validate position data before updating
                     if (!data.position || !data.rotation) {
-                        console.warn('[MultiplayerConnectionManager] Received incomplete position data from member:', peerId);
+                        console.error('[MultiplayerConnectionManager] Received incomplete position data from member:', peerId);
                         return;
                     }
                     
@@ -336,11 +337,11 @@ export class MultiplayerConnectionManager {
                 case 'skillCast':
                     // Handle skill cast from member
                     if (!data.skillName) {
-                        console.warn('[MultiplayerConnectionManager] Received incomplete skill cast data from member:', peerId);
+                        console.error('[MultiplayerConnectionManager] Received incomplete skill cast data from member:', peerId);
                         return;
                     }
                     
-                    console.log(`[MultiplayerConnectionManager] Member ${peerId} cast skill: ${data.skillName}`);
+                    console.error(`[MultiplayerConnectionManager] Member ${peerId} cast skill: ${data.skillName}`);
                     
                     // Get the remote player
                     const remotePlayer = this.multiplayerManager.remotePlayerManager.getPlayer(peerId);
@@ -371,7 +372,7 @@ export class MultiplayerConnectionManager {
                     });
                     break;
                 default:
-                    console.warn('[MultiplayerConnectionManager] Unknown data type from member:', data.type);
+                    console.error('[MultiplayerConnectionManager] Unknown data type from member:', data.type);
             }
         } catch (error) {
             console.error('[MultiplayerConnectionManager] Error handling data from member:', error);
@@ -460,13 +461,13 @@ export class MultiplayerConnectionManager {
         }
         
         if (!this.multiplayerManager.game.player) {
-            console.log('[MultiplayerConnectionManager] Cannot send player data: game.player is null');
+            console.error('[MultiplayerConnectionManager] Cannot send player data: game.player is null');
             return;
         }
         
         const hostConn = this.peers.get(this.hostId);
         if (!hostConn) {
-            console.log('[MultiplayerConnectionManager] Cannot send player data: no connection to host');
+            console.error('[MultiplayerConnectionManager] Cannot send player data: no connection to host');
             return;
         }
         
@@ -520,7 +521,7 @@ export class MultiplayerConnectionManager {
             
             // If we still don't have valid position or rotation, don't send anything
             if (!position || !rotation) {
-                console.log('[MultiplayerConnectionManager] Cannot send player data: unable to get valid position or rotation');
+                console.error('[MultiplayerConnectionManager] Cannot send player data: unable to get valid position or rotation');
                 return;
             }
             
@@ -529,7 +530,7 @@ export class MultiplayerConnectionManager {
             
             // Only log position updates occasionally to reduce console spam
             if (Math.random() < 0.05) { // ~5% of updates
-                console.log('[MultiplayerConnectionManager] Member sending player data to host:', 
+                console.error('[MultiplayerConnectionManager] Member sending player data to host:', 
                             'Position:', position, 
                             'Animation:', animation);
             }
@@ -564,7 +565,7 @@ export class MultiplayerConnectionManager {
         
         // Only log occasionally to reduce console spam
         if (Math.random() < 0.05) { // ~5% of broadcasts
-            console.log('[MultiplayerConnectionManager] Broadcasting game state to', this.peers.size, 'peers');
+            console.error('[MultiplayerConnectionManager] Broadcasting game state to', this.peers.size, 'peers');
         }
         
         // Collect player data - simplified to save bandwidth

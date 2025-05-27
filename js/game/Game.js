@@ -73,7 +73,7 @@ export class Game {
         
         // Load difficulty from localStorage or use 'medium' as default
         this.difficulty = localStorage.getItem(STORAGE_KEYS.DIFFICULTY) || 'medium';
-        console.log(`Game initialized with difficulty: ${this.difficulty}`);
+        console.debug(`Game initialized with difficulty: ${this.difficulty}`);
     }
     
     /**

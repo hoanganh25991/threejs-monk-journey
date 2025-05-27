@@ -51,7 +51,7 @@ export class MultiplayerManager {
             // Initialize connection manager
             await this.connection.init();
             
-            console.log('Multiplayer manager initialized');
+            console.debug('Multiplayer manager initialized');
             return true;
         } catch (error) {
             console.error('Error initializing multiplayer manager:', error);
@@ -83,7 +83,7 @@ export class MultiplayerManager {
     processPlayerInput(peerId, data) {
         // Update player state based on input
         // This will depend on your game's input system
-        console.log('Processing input from player', peerId, data);
+        console.debug('Processing input from player', peerId, data);
     }
     
     /**
@@ -95,13 +95,13 @@ export class MultiplayerManager {
         const shouldLog = Math.random() < 0.01; // ~1% of updates
         
         if (shouldLog) {
-            console.log('[MultiplayerManager] Received game state update from host');
+            console.debug('[MultiplayerManager] Received game state update from host');
         }
         
         // Update player positions (with reduced logging)
         if (data.players) {
             if (shouldLog) {
-                console.log('[MultiplayerManager] Updating', Object.keys(data.players).length, 'players');
+                console.debug('[MultiplayerManager] Updating', Object.keys(data.players).length, 'players');
             }
             
             Object.entries(data.players).forEach(([playerId, playerData]) => {
@@ -129,7 +129,7 @@ export class MultiplayerManager {
         // Update enemies - this is the primary focus
         if (data.enemies && this.game.enemyManager) {
             if (shouldLog) {
-                console.log('[MultiplayerManager] Updating enemies from host data');
+                console.debug('[MultiplayerManager] Updating enemies from host data');
             }
             
             // Update enemy positions and states
@@ -153,19 +153,19 @@ export class MultiplayerManager {
         
         // Hide the Game Menu first if it's visible
         if (this.game.menuManager) {
-            console.log('[MultiplayerManager] Hiding Game Menu before starting multiplayer game');
+            console.debug('[MultiplayerManager] Hiding Game Menu before starting multiplayer game');
             this.game.menuManager.hideActiveMenu();
         }
         
         // Hide the main background if it exists
         if (this.game.hudManager && this.game.hudManager.mainBackground) {
-            console.log('[MultiplayerManager] Hiding main background');
+            console.debug('[MultiplayerManager] Hiding main background');
             this.game.hudManager.mainBackground.hide();
         }
         
         // Show all HUD elements
         if (this.game.hudManager) {
-            console.log('[MultiplayerManager] Showing all HUD elements');
+            console.debug('[MultiplayerManager] Showing all HUD elements');
             this.game.hudManager.showAllUI();
         }
         
@@ -176,7 +176,7 @@ export class MultiplayerManager {
         }
         
         // Start the game - this will properly initialize the game state
-        console.log('[MultiplayerManager] Starting multiplayer game - calling game.start()');
+        console.debug('[MultiplayerManager] Starting multiplayer game - calling game.start()');
         this.game.start();
     }
     
@@ -184,30 +184,30 @@ export class MultiplayerManager {
      * Start the game (both host and member)
      */
     startGame() {
-        console.log('[MultiplayerManager] Starting game...');
+        console.debug('[MultiplayerManager] Starting game...');
         
         // Close multiplayer modal if it's open
         this.ui.closeMultiplayerModal();
         
         // Hide the Game Menu first if it's visible
         if (this.game.menuManager) {
-            console.log('[MultiplayerManager] Hiding Game Menu');
+            console.debug('[MultiplayerManager] Hiding Game Menu');
             this.game.menuManager.hideActiveMenu();
         }
         
         // Hide the main background if it exists
         if (this.game.hudManager && this.game.hudManager.mainBackground) {
-            console.log('[MultiplayerManager] Hiding main background');
+            console.debug('[MultiplayerManager] Hiding main background');
             this.game.hudManager.mainBackground.hide();
         }
         
         // For members, we need to ensure the game is fully started
         if (!this.connection.isHost) {
-            console.log('[MultiplayerManager] Member starting game - calling game.start()');
+            console.debug('[MultiplayerManager] Member starting game - calling game.start()');
             
             // Show all HUD elements
             if (this.game.hudManager) {
-                console.log('[MultiplayerManager] Showing all HUD elements');
+                console.debug('[MultiplayerManager] Showing all HUD elements');
                 this.game.hudManager.showAllUI();
             }
             
@@ -221,7 +221,7 @@ export class MultiplayerManager {
             this.game.start();
         } else {
             // For host, the game should already be started by startMultiplayerGame()
-            console.log('[MultiplayerManager] Host starting game - ensuring game state is running');
+            console.debug('[MultiplayerManager] Host starting game - ensuring game state is running');
             
             // Just make sure the game state is set to running
             if (this.game.state) {
@@ -238,7 +238,7 @@ export class MultiplayerManager {
         // Log update status occasionally (every 3 seconds)
         const now = Date.now();
         if (!this._lastUpdateLog || now - this._lastUpdateLog > 3000) {
-            console.log('[MultiplayerManager] Update called - isHost:', this.connection.isHost, 
+            console.debug('[MultiplayerManager] Update called - isHost:', this.connection.isHost, 
                         'isConnected:', this.connection.isConnected, 
                         'peers:', this.connection.peers.size,
                         'game state:', this.game.state ? (this.game.state.isRunning() ? 'running' : 'not running') : 'unknown');
@@ -258,7 +258,7 @@ export class MultiplayerManager {
             } else {
                 // Log this issue occasionally
                 if (!this._lastGameStateLog || now - this._lastGameStateLog > 3000) {
-                    console.log('[MultiplayerManager] Member not sending data because game is not running');
+                    console.debug('[MultiplayerManager] Member not sending data because game is not running');
                     this._lastGameStateLog = now;
                 }
             }

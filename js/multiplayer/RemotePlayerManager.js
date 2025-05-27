@@ -29,13 +29,13 @@ export class RemotePlayerManager {
         // Check if player exists
         if (!this.remotePlayers.has(peerId)) {
             // Create new remote player with model ID and color
-            console.log(`[RemotePlayerManager] Creating new remote player for peer ${peerId} with model ${modelId}`);
+            console.debug(`[RemotePlayerManager] Creating new remote player for peer ${peerId} with model ${modelId}`);
             this.createRemotePlayer(peerId, playerColor, modelId);
         } else if (modelId) {
             // If player exists but model ID is provided and different from current, update it
             const remotePlayer = this.remotePlayers.get(peerId);
             if (remotePlayer.modelId !== modelId) {
-                console.log(`[RemotePlayerManager] Updating model for player ${peerId} from ${remotePlayer.modelId} to ${modelId}`);
+                console.debug(`[RemotePlayerManager] Updating model for player ${peerId} from ${remotePlayer.modelId} to ${modelId}`);
                 remotePlayer.modelId = modelId;
                 // Re-initialize the player with the new model
                 remotePlayer.init();
@@ -50,7 +50,7 @@ export class RemotePlayerManager {
         const validRotation = this.validateVector(rotation);
         
         // Update position, rotation, and animation
-        console.log(`[RemotePlayerManager] Updating player ${peerId} - Position:`, validPosition, 
+        console.debug(`[RemotePlayerManager] Updating player ${peerId} - Position:`, validPosition, 
                     "Rotation:", validRotation, "Animation:", animation);
         remotePlayer.updatePosition(validPosition);
         remotePlayer.updateRotation(validRotation);
@@ -162,7 +162,7 @@ export class RemotePlayerManager {
     handleSkillCast(peerId, skillName) {
         // Check if player exists
         if (!this.remotePlayers.has(peerId)) {
-            console.log(`[RemotePlayerManager] Cannot cast skill: Remote player ${peerId} not found`);
+            console.debug(`[RemotePlayerManager] Cannot cast skill: Remote player ${peerId} not found`);
             return false;
         }
         

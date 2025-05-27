@@ -48,13 +48,13 @@ export class GameplayTab extends SettingsTab {
             
             // Set current difficulty (default to 'medium')
             const currentDifficulty = localStorage.getItem(STORAGE_KEYS.DIFFICULTY) || 'medium';
-            console.log(`Loading difficulty setting: ${currentDifficulty}`);
+            console.debug(`Loading difficulty setting: ${currentDifficulty}`);
             this.difficultySelect.value = currentDifficulty;
             
             // If the value wasn't set correctly (e.g., if the stored value is invalid),
             // explicitly set it to 'medium'
             if (!this.difficultySelect.value) {
-                console.log('Invalid difficulty setting detected, defaulting to medium');
+                console.debug('Invalid difficulty setting detected, defaulting to medium');
                 this.difficultySelect.value = 'medium';
                 localStorage.setItem(STORAGE_KEYS.DIFFICULTY, 'medium');
             }
@@ -171,7 +171,7 @@ export class GameplayTab extends SettingsTab {
     resetToDefaults() {
         if (this.difficultySelect) {
             this.difficultySelect.value = 'medium';
-            console.log('Reset difficulty to medium');
+            console.debug('Reset difficulty to medium');
         }
         
         if (this.customSkillsCheckbox) {

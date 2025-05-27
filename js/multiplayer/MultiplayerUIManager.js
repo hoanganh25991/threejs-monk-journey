@@ -28,7 +28,7 @@ export class MultiplayerUIManager {
         if (urlParams.get('join') === 'true' && urlParams.get('connect-id')) {
             // Get the connection ID from URL
             const connectId = urlParams.get('connect-id');
-            console.log('Direct join detected with connection ID:', connectId);
+            console.debug('Direct join detected with connection ID:', connectId);
             
             // Show multiplayer modal and join UI
             this.showMultiplayerModal();
@@ -291,7 +291,7 @@ export class MultiplayerUIManager {
         try {
             // Get available cameras using the Html5Qrcode API
             this.availableCameras = await Html5Qrcode.getCameras();
-            console.log('Available cameras:', this.availableCameras);
+            console.debug('Available cameras:', this.availableCameras);
             
             // Populate the camera select dropdown
             const cameraSelect = document.getElementById('camera-select');
@@ -401,11 +401,11 @@ export class MultiplayerUIManager {
                             const params = new URLSearchParams(url.search);
                             if (params.get('connect-id')) {
                                 connectId = params.get('connect-id');
-                                console.log('Extracted connection ID from URL:', connectId);
+                                console.debug('Extracted connection ID from URL:', connectId);
                             }
                         }
                     } catch (e) {
-                        console.log('Not a URL, using as direct connection ID');
+                        console.debug('Not a URL, using as direct connection ID');
                     }
                     
                     // Join game with the connection ID
