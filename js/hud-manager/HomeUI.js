@@ -52,6 +52,27 @@ export class HomeButton extends UIComponent {
         if (this.container) {
             // Add click event to show game menu
             this.container.addEventListener('click', () => {
+                if (this.game.saveManager) {
+                    // Force save the game
+                    if (this.game.saveManager.saveGame(true, true)) {
+                        console.debug("Game data saved successfully");
+                        
+                        // Show notification
+                        if (this.game.hudManager) {
+                            this.game.hudManager.showNotification('Game saved successfully', 2000, 'success');
+                        }
+                    } else {
+                        console.error("Failed to save game data");
+                        
+                        // Show error notification
+                        if (this.game.hudManager) {
+                            this.game.hudManager.showNotification('Failed to save game', 3000, 'error');
+                        }
+                    }
+                } else {
+                    console.error("Save manager not available");
+                    alert('Save functionality is not available.');
+                }
                 // Pause the game
                 this.game.pause();
                 

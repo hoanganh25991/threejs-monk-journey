@@ -315,7 +315,19 @@ export class FrozenWaveEffect extends WaveStrikeEffect {
             // Skip if already hit
             if (this.hitEnemies.has(enemy.id)) continue;
             
-            const enemyPosition = enemy.getPosition();
+            // Safely get enemy position - handle both direct position property and getPosition method
+            let enemyPosition;
+            if (typeof enemy.getPosition === 'function') {
+                enemyPosition = enemy.getPosition();
+            } else if (enemy.position && enemy.position instanceof THREE.Vector3) {
+                enemyPosition = enemy.position;
+            } else if (enemy.group && enemy.group.position) {
+                enemyPosition = enemy.group.position;
+            } else {
+                // Skip this enemy if we can't determine its position
+                console.warn('Could not determine position for enemy:', enemy);
+                continue;
+            }
             
             // Transform enemy position to local space of the wave
             const localEnemyPosition = enemyPosition.clone().sub(boxPosition);

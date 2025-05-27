@@ -13,9 +13,7 @@ export class GameMenu extends IMenu {
      */
     constructor(game) {
         super('game-menu', game);
-        this.newGameButton = document.getElementById('new-game-button');
         this.loadGameButton = document.getElementById('load-game-button');
-        this.saveGameButton = document.getElementById('save-game-button');
         this.settingsMenuButton = document.getElementById('settings-menu-button');
         this.settingsMenu = null;
         this.setupEventListeners();
@@ -26,10 +24,42 @@ export class GameMenu extends IMenu {
      * @private
      */
     setupEventListeners() {
-        // New Game/Resume Game button
-        if (this.newGameButton) {
-            this.newGameButton.addEventListener('click', () => {
-                if (this.game.hasStarted && !this.game.isRunning) {
+        // Play Game button - show only if save data exists
+        if (this.loadGameButton) {
+            this.loadGameButton.addEventListener('click', () => {
+                console.debug("Continue Game button clicked - attempting to load saved game...");
+                if (this.game.saveManager && this.game.saveManager.hasSaveData()) {
+                    this.loadGameButton.style.display = 'block';
+                    if (this.game.saveManager.loadGame()) {
+                            console.debug("Game data loaded successfully");
+                            this.hide();
+                            
+                            // Hide the main background when loading a game
+                            if (this.game.hudManager && this.game.hudManager.mainBackground) {
+                                this.game.hudManager.mainBackground.hide();
+                            }
+                            
+                            // Start the game with loaded data - this will set isPaused to false and start the game loop
+                            this.game.start();
+                            
+                            // Make sure settings button is visible
+                            const homeButton = document.getElementById('home-button');
+                            if (homeButton) {
+                                homeButton.style.display = 'block';
+                            }
+                            
+                            // Show all HUD elements
+                            if (this.game.hudManager) {
+                                this.game.hudManager.showAllUI();
+                            }
+                            
+                            console.debug("Game started with loaded data - enemies and player are now active");
+                        } else {
+                            console.error("Failed to Continue Game data");
+                            alert('Failed to Continue Game data.');
+                        }
+                    ;
+                } else if (this.game.hasStarted && !this.game.isRunning) {
                     // Game has been started but is currently paused
                     console.debug("Resume Game button clicked - resuming game...");
                     this.hide();
@@ -74,9 +104,10 @@ export class GameMenu extends IMenu {
                     
                     console.debug("New game started - enemies and player are now active");
                 }
-            });
+                    
+            })
         }
-        
+
         // Settings button
         if (this.settingsMenuButton) {
             this.settingsMenuButton.addEventListener('click', () => {
@@ -102,78 +133,6 @@ export class GameMenu extends IMenu {
                 }
             });
         }
-        
-        // Continue Game button - show only if save data exists
-        if (this.loadGameButton) {
-            if (this.game.saveManager && this.game.saveManager.hasSaveData()) {
-                this.loadGameButton.style.display = 'block';
-                
-                this.loadGameButton.addEventListener('click', () => {
-                    console.debug("Continue Game button clicked - attempting to load saved game...");
-                    if (this.game.saveManager.loadGame()) {
-                        console.debug("Game data loaded successfully");
-                        this.hide();
-                        
-                        // Hide the main background when loading a game
-                        if (this.game.hudManager && this.game.hudManager.mainBackground) {
-                            this.game.hudManager.mainBackground.hide();
-                        }
-                        
-                        // Start the game with loaded data - this will set isPaused to false and start the game loop
-                        this.game.start();
-                        
-                        // Make sure settings button is visible
-                        const homeButton = document.getElementById('home-button');
-                        if (homeButton) {
-                            homeButton.style.display = 'block';
-                        }
-                        
-                        // Show all HUD elements
-                        if (this.game.hudManager) {
-                            this.game.hudManager.showAllUI();
-                        }
-                        
-                        console.debug("Game started with loaded data - enemies and player are now active");
-                    } else {
-                        console.error("Failed to Continue Game data");
-                        alert('Failed to Continue Game data.');
-                    }
-                });
-            } else {
-                // Hide the load button if no save data exists
-                this.loadGameButton.style.display = 'none';
-            }
-        }
-        
-        // Save Game button - show only if game is running
-        if (this.saveGameButton) {
-            this.saveGameButton.addEventListener('click', () => {
-                console.debug("Save Game button clicked - attempting to save game...");
-                if (this.game.saveManager) {
-                    // Force save the game
-                    if (this.game.saveManager.saveGame(true, false)) {
-                        console.debug("Game data saved successfully");
-                        
-                        // Show notification
-                        if (this.game.hudManager) {
-                            this.game.hudManager.showNotification('Game saved successfully', 2000, 'success');
-                        }
-                    } else {
-                        console.error("Failed to save game data");
-                        
-                        // Show error notification
-                        if (this.game.hudManager) {
-                            this.game.hudManager.showNotification('Failed to save game', 3000, 'error');
-                        }
-                    }
-                } else {
-                    console.error("Save manager not available");
-                    alert('Save functionality is not available.');
-                }
-            });
-        }
-        
-        // Force Reload button has been moved to Settings > Release tab
     }
 
     /**
@@ -189,22 +148,6 @@ export class GameMenu extends IMenu {
      */
     show() {
         if (this.element) {
-            // Update New Game button text based on game state
-            if (this.newGameButton && this.saveGameButton) {
-                if (this.game.hasStarted) {
-                    this.newGameButton.textContent = 'Resume Game';
-                    this.saveGameButton.style.display = 'block';
-                    this.loadGameButton.style.display = 'none';
-                } else {
-                    this.newGameButton.textContent = 'New Game';
-                    this.saveGameButton.style.display = 'none';
-                    // Update Continue Game button visibility based on save data
-                    if (this.loadGameButton && this.game.saveManager) {
-                        this.loadGameButton.style.display = this.game.saveManager.hasSaveData() ? 'block' : 'none';
-                    }
-                }
-            }
-            
             // Hide all HUD UI elements using the HUDManager
             if (this.game.hudManager) {
                 this.game.hudManager.hideAllUI();
