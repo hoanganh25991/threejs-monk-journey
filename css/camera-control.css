@@ -8,7 +8,7 @@
 #camera-control-indicator {
     position: absolute;
     pointer-events: auto;
-    z-index: 1000;
+    z-index: 200;
     display: none; /* Initially hidden */
 }
 
