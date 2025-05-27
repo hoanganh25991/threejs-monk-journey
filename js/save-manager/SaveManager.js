@@ -127,7 +127,7 @@ export class SaveManager extends ISaveSystem {
             };
             
             !autoSave && this.saveProgress.update('Writing hero data to storage...', 80);
-            await this.delay(100); // Small delay for UI update
+            await this.delay(10); // Small delay for UI update
         
             // Save to storage
             const success = this.storage.saveData(this.saveKey, saveData);
@@ -140,7 +140,7 @@ export class SaveManager extends ISaveSystem {
             this.lastSaveLevel = playerLevel;
             
             !autoSave && this.saveProgress.update('Save complete!', 100);
-            await this.delay(500); // Show completion for a moment
+            await this.delay(10); // Show completion for a moment
             
             console.debug('Hero data saved successfully');
             
@@ -179,7 +179,7 @@ export class SaveManager extends ISaveSystem {
             
             // Get save data from storage
             this.loadProgress.update('Reading save data...', 20);
-            await this.delay(100); // Small delay for UI update
+            await this.delay(10); // Small delay for UI update
             
             const saveData = this.storage.loadData(this.saveKey);
             
@@ -191,7 +191,7 @@ export class SaveManager extends ISaveSystem {
             }
             
             this.loadProgress.update('Validating save data...', 30);
-            await this.delay(100); // Small delay for UI update
+            await this.delay(10); // Small delay for UI update
             
             console.debug('Save data parsed successfully: ' + Object.keys(saveData).join(', '));
             
@@ -203,7 +203,7 @@ export class SaveManager extends ISaveSystem {
             
             // Clear existing enemies
             this.loadProgress.update('Clearing enemies...', 40);
-            await this.delay(100); // Small delay for UI update
+            await this.delay(10); // Small delay for UI update
             
             if (this.game.enemyManager) {
                 this.game.enemyManager.removeAllEnemies();
@@ -237,7 +237,7 @@ export class SaveManager extends ISaveSystem {
             
             // Continue Game settings - handle errors separately to prevent blocking game load
             this.loadProgress.update('Loading game settings...', 85);
-            await this.delay(100); // Small delay for UI update
+            await this.delay(10); // Small delay for UI update
             
             if (saveData.settings) {
                 console.debug('Loading game settings...');
@@ -263,7 +263,7 @@ export class SaveManager extends ISaveSystem {
             this.lastSaveTime = Date.now();
             
             this.loadProgress.update('Load complete!', 100);
-            await this.delay(500); // Show completion for a moment
+            await this.delay(10); // Show completion for a moment
             
             console.debug('Hero data loaded successfully');
             
@@ -301,7 +301,7 @@ export class SaveManager extends ISaveSystem {
         
         // Mark discovered zones
         this.loadProgress.update('Loading discovered zones...', 65);
-        await this.delay(100);
+        await this.delay(10);
         
         if (worldData.discoveredZones && Array.isArray(worldData.discoveredZones)) {
             console.debug(`Loading ${worldData.discoveredZones.length} discovered zones`);
@@ -318,7 +318,7 @@ export class SaveManager extends ISaveSystem {
         
         // Restore interactive objects state
         this.loadProgress.update('Loading interactive objects...', 70);
-        await this.delay(100);
+        await this.delay(10);
         
         if (worldData.interactiveObjects && Array.isArray(worldData.interactiveObjects)) {
             console.debug(`Loading ${worldData.interactiveObjects.length} interactive objects`);
@@ -345,7 +345,7 @@ export class SaveManager extends ISaveSystem {
         
         // Restore current chunk
         this.loadProgress.update('Setting current chunk...', 75);
-        await this.delay(100);
+        await this.delay(10);
         
         if (worldData.currentChunk) {
             console.debug(`Setting current chunk to: ${worldData.currentChunk}`);
@@ -358,7 +358,7 @@ export class SaveManager extends ISaveSystem {
         
         // Clear existing terrain and environment objects
         this.loadProgress.update('Clearing existing world objects...', 80);
-        await this.delay(100);
+        await this.delay(10);
         
         if (world.clearWorldObjects) {
             world.clearWorldObjects();
@@ -366,14 +366,14 @@ export class SaveManager extends ISaveSystem {
         
         // Chunk loading has been removed
         this.loadProgress.update('Skipping chunk loading (feature removed)...', 82);
-        await this.delay(100);
+        await this.delay(10);
         
         // No chunk loading anymore
         console.debug('Chunk loading has been removed from the game');
         
         // Process legacy world data
         this.loadProgress.update('Processing world data...', 85);
-        await this.delay(100);
+        await this.delay(10);
         
         if (worldData.environmentObjects) {
             if (world.environmentManager) {
@@ -393,7 +393,7 @@ export class SaveManager extends ISaveSystem {
         
         // Restore visible chunks
         this.loadProgress.update('Restoring visible chunks...', 95);
-        await this.delay(100);
+        await this.delay(10);
         
         if (worldData.visibleChunks && Array.isArray(worldData.visibleChunks)) {
             if (world.terrainManager) {
