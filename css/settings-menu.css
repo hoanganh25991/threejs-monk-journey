@@ -83,7 +83,7 @@
 
 .tab-content {
     display: none;
-    padding: var(--padding-large);
+    /* padding: var(--padding-large); */
     height: 100%;
     width: 100%;
     overflow-y: auto;
@@ -209,7 +209,7 @@
 
 .model-preview-section {
     flex: 1;
-    padding-right: 20px;
+    padding-right: var(--padding-medium);
 }
 
 #model-preview-container {
@@ -220,7 +220,7 @@
 
 .model-controls-section {
     flex: 1;
-    padding-left: 20px;
+    padding-left: var(--padding-medium);
     border-left: 1px solid rgba(255, 255, 255, 0.1);
     overflow-y: auto;
 }
@@ -246,7 +246,7 @@
 
 .model-preview-fullscreen-section {
     flex: 2;
-    padding-right: 20px;
+    padding-right: var(--padding-medium);
 }
 
 #model-preview-fullscreen-container {
@@ -271,7 +271,7 @@
 
 .model-preview-controls-section {
     flex: 1;
-    padding-left: 20px;
+    padding-left: var(--padding-medium);
     border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -336,7 +336,7 @@
 
 .skills-preview-section {
     flex: 2;
-    padding-right: 20px;
+    padding-right: var(--padding-medium);
 }
 
 #skills-preview-container {
@@ -361,7 +361,7 @@
 
 .skills-preview-controls-section {
     flex: 1;
-    padding-left: 20px;
+    padding-left: var(--padding-medium);
     border-left: 1px solid rgba(255, 255, 255, 0.1);
     overflow-y: auto;
 }
@@ -374,7 +374,7 @@
 
 .enemy-preview-section {
     flex: 2;
-    padding-right: 20px;
+    padding-right: var(--padding-medium);
 }
 
 #enemy-preview-container {
@@ -399,7 +399,7 @@
 
 .enemy-preview-controls-section {
     flex: 1;
-    padding-left: 20px;
+    padding-left: var(--padding-medium);
     border-left: 1px solid rgba(255, 255, 255, 0.1);
     overflow-y: auto;
 }
@@ -645,11 +645,15 @@
     width: 40px; /* Set a fixed width to ensure proper centering */
 }
 
-.top-tabs-layout .settings-content {
-    height: calc(100% - 50px);
-    width: calc(100% - 60px); /* Account for right actions column */
+.top-tabs-layout
+.settings-content {
+    /* height: calc(100% - 50px); */
+    /* width: calc(100% - 60px); */
     /* margin: 0 auto; */
     /* padding-top: 10px; */
+    height: 100%;
+    width: 100%;
+    padding: var(--padding-large);
 }
 
 /* Tooltips for icon buttons */
@@ -692,7 +696,7 @@
     background-position: right 8px center;
     padding-right: 28px;
     transition: all 0.3s ease;
-    width: 110px;
+    min-width: 110px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

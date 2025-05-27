@@ -66,12 +66,12 @@ export class AudioTab extends SettingsTab {
             // Set current music volume
             const musicVolume = parseFloat(localStorage.getItem(STORAGE_KEYS.MUSIC_VOLUME)) || 0.5;
             this.musicVolumeSlider.value = musicVolume;
-            this.musicVolumeValue.textContent = Math.round(musicVolume * 100);
+            this.musicVolumeValue.textContent = Math.round(musicVolume * 1);
             
             // Add input event listener
             this.musicVolumeSlider.addEventListener('input', () => {
                 const value = parseFloat(this.musicVolumeSlider.value);
-                this.musicVolumeValue.textContent = Math.round(value * 100);
+                this.musicVolumeValue.textContent = Math.round(value * 1);
                 localStorage.setItem(STORAGE_KEYS.MUSIC_VOLUME, value);
                 
                 // Apply music volume settings immediately if game is available
@@ -85,12 +85,12 @@ export class AudioTab extends SettingsTab {
             // Set current SFX volume
             const sfxVolume = parseFloat(localStorage.getItem(STORAGE_KEYS.SFX_VOLUME)) || 0.5;
             this.sfxVolumeSlider.value = sfxVolume;
-            this.sfxVolumeValue.textContent = Math.round(sfxVolume * 100);
+            this.sfxVolumeValue.textContent = Math.round(sfxVolume * 1);
             
             // Add input event listener
             this.sfxVolumeSlider.addEventListener('input', () => {
                 const value = parseFloat(this.sfxVolumeSlider.value);
-                this.sfxVolumeValue.textContent = Math.round(value * 100);
+                this.sfxVolumeValue.textContent = Math.round(value * 1);
                 localStorage.setItem(STORAGE_KEYS.SFX_VOLUME, value);
                 
                 // Apply SFX volume settings immediately if game is available
