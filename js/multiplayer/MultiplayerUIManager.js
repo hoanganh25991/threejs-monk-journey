@@ -17,9 +17,34 @@ export class MultiplayerUIManager {
     /**
      * Initialize the UI manager
      */
-    init() {
+    async init() {
         // Set up UI event listeners
         this.setupUIListeners();
+        
+        // Check URL parameters for direct join
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('join') === 'true' && urlParams.get('connect-id')) {
+            // Get the connection ID from URL
+            const connectId = urlParams.get('connect-id');
+            console.log('Direct join detected with connection ID:', connectId);
+            
+            // Show multiplayer modal and join UI
+            this.showMultiplayerModal();
+            await this.showJoinUI();
+            
+            // Auto-fill the connection code
+            const input = document.getElementById('manual-connection-input');
+            if (input) {
+                input.value = connectId;
+            }
+            
+            // Auto-connect after a short delay
+            setTimeout(() => {
+                this.updateConnectionStatus('Connecting...', 'join-connection-status');
+                this.multiplayerManager.joinGame(connectId);
+            }, 500);
+        }
+        
         return true;
     }
 
@@ -264,10 +289,29 @@ export class MultiplayerUIManager {
                 { facingMode: 'environment' },
                 { fps: 10, qrbox: 250 },
                 (decodedText) => {
-                    // Stop scanning and join game with the decoded text
+                    // Stop scanning
                     this.stopQRScanner();
                     this.updateConnectionStatus('Connecting...', 'join-connection-status');
-                    this.multiplayerManager.joinGame(decodedText);
+                    
+                    // Check if the decoded text is a URL with our parameters
+                    let connectId = decodedText;
+                    
+                    try {
+                        // Try to parse as URL
+                        if (decodedText.includes('?join=true&connect-id=')) {
+                            const url = new URL(decodedText);
+                            const params = new URLSearchParams(url.search);
+                            if (params.get('connect-id')) {
+                                connectId = params.get('connect-id');
+                                console.log('Extracted connection ID from URL:', connectId);
+                            }
+                        }
+                    } catch (e) {
+                        console.log('Not a URL, using as direct connection ID');
+                    }
+                    
+                    // Join game with the connection ID
+                    this.multiplayerManager.joinGame(connectId);
                 },
                 (errorMessage) => {
                     // Handle scan errors silently
@@ -336,15 +380,21 @@ export class MultiplayerUIManager {
             // Clear previous QR code
             qrContainer.innerHTML = '';
             
-            // Generate new QR code
+            // Create a complete URL with the connection ID
+            const fullUrl = `${window.location.href.split('?')[0]}?join=true&connect-id=${data}`;
+            
+            // Generate new QR code with the full URL
             new QRCode(qrContainer, {
-                text: data,
+                text: fullUrl,
                 width: 256,
                 height: 256,
                 colorDark: '#000000',
                 colorLight: '#ffffff',
                 correctLevel: QRCode.CorrectLevel.H
             });
+            
+            // Store the full URL for copying
+            qrContainer.dataset.fullUrl = fullUrl;
         } catch (error) {
             console.error('Error generating QR code:', error);
             qrContainer.textContent = `Connection code: ${data}`;
@@ -374,12 +424,23 @@ export class MultiplayerUIManager {
             codeElement.textContent = roomId;
         }
         
+        // Get the full URL from the QR code container or generate it
+        const qrContainer = document.getElementById('qr-code');
+        let textToCopy = roomId;
+        
+        if (qrContainer && qrContainer.dataset.fullUrl) {
+            textToCopy = qrContainer.dataset.fullUrl;
+        } else {
+            // Create the full URL if not available from QR code
+            textToCopy = `${window.location.href.split('?')[0]}?join=true&connect-id=${roomId}`;
+        }
+        
         try {
             // Use the Clipboard API with proper error handling
-            navigator.clipboard.writeText(roomId)
+            navigator.clipboard.writeText(textToCopy)
                 .then(() => {
                     // Show success message
-                    this.updateConnectionStatus('Connection code copied to clipboard!', 'host-connection-status');
+                    this.updateConnectionStatus('Full join link copied to clipboard!', 'host-connection-status');
                     
                     // Highlight the code element briefly
                     codeElement.classList.add('copied');
@@ -389,11 +450,11 @@ export class MultiplayerUIManager {
                 })
                 .catch(err => {
                     console.error('Clipboard write failed:', err);
-                    this.updateConnectionStatus('Failed to copy code. Please copy it manually.', 'host-connection-status');
+                    this.updateConnectionStatus('Failed to copy link. Please copy it manually.', 'host-connection-status');
                 });
         } catch (error) {
-            console.error('Failed to copy code:', error);
-            this.updateConnectionStatus('Failed to copy code. Please copy it manually.', 'host-connection-status');
+            console.error('Failed to copy link:', error);
+            this.updateConnectionStatus('Failed to copy link. Please copy it manually.', 'host-connection-status');
         }
     }
     

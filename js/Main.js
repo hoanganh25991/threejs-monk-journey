@@ -53,10 +53,38 @@ class Main {
      * @param {Game} game - The game instance
      */
     showMainMenu(game) {
-        console.debug("Displaying game menu...");
-
+        console.debug("Checking if we should show game menu or go directly to multiplayer...");
+        
         this.hideLoadingScreen();
-
+        
+        // Check URL parameters for direct multiplayer join
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('join') === 'true') {
+            console.debug("Direct multiplayer join detected, skipping main menu");
+            
+            // Simulate clicking the multiplayer button
+            const multiplayerButton = document.getElementById('multiplayer-button');
+            if (multiplayerButton) {
+                console.debug("Automatically opening multiplayer UI");
+                // The MultiplayerUIManager will handle the rest based on URL parameters
+                multiplayerButton.click();
+            } else {
+                console.error("Multiplayer button not found, falling back to main menu");
+                this.showRegularMainMenu(game);
+            }
+        } else {
+            // Show regular main menu
+            this.showRegularMainMenu(game);
+        }
+    }
+    
+    /**
+     * Display the regular main menu
+     * @param {Game} game - The game instance
+     */
+    showRegularMainMenu(game) {
+        console.debug("Displaying regular game menu...");
+        
         // Use the menu manager if available
         if (game.menuManager) {
             game.menuManager.showMenu('gameMenu');
@@ -67,8 +95,6 @@ class Main {
 
         // Use a small delay to ensure DOM updates have completed
         setTimeout(() => {
-            // Hide loading screen
-            
             // Ensure menu is visible
             this.ensureMenuVisibility();
             
