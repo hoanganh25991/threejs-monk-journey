@@ -250,4 +250,60 @@ export class InteractionSystem {
     getHighlightedObject() {
         return this.highlightedObject;
     }
+    
+    /**
+     * Get the nearest interactive object to the player
+     * @returns {Object|null} - The nearest interactive object or null
+     */
+    getNearestInteractiveObject() {
+        // If we already have a highlighted object (which is the closest), return it
+        if (this.highlightedObject) {
+            return this.highlightedObject;
+        }
+        
+        // Otherwise, find the closest object
+        if (!this.nearbyInteractiveObjects || this.nearbyInteractiveObjects.length === 0) {
+            // Force an update of nearby objects
+            this.updateNearbyObjects();
+            
+            // If still no objects, return null
+            if (!this.nearbyInteractiveObjects || this.nearbyInteractiveObjects.length === 0) {
+                return null;
+            }
+        }
+        
+        // Get player position
+        const playerPosition = this.player.getPosition();
+        
+        // Find the closest object
+        let closestObject = this.nearbyInteractiveObjects[0];
+        let closestDistance = playerPosition.distanceTo(closestObject.position);
+        
+        for (let i = 1; i < this.nearbyInteractiveObjects.length; i++) {
+            const obj = this.nearbyInteractiveObjects[i];
+            const distance = playerPosition.distanceTo(obj.position);
+            
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestObject = obj;
+            }
+        }
+        
+        return closestObject;
+    }
+    
+    /**
+     * Get all interactive objects
+     * @returns {Array} - Array of all interactive objects
+     */
+    getInteractiveObjects() {
+        // If we have a world with an interactive manager, use it
+        if (this.world && this.world.interactiveManager && 
+            this.world.interactiveManager.getInteractiveObjects) {
+            return this.world.interactiveManager.getInteractiveObjects();
+        }
+        
+        // Otherwise, return an empty array
+        return [];
+    }
 }

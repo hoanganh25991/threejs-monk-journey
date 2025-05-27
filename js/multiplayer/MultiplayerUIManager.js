@@ -89,6 +89,30 @@ export class MultiplayerUIManager {
             });
         }
         
+        // Tab buttons for join screen
+        const scanQrTabBtn = document.getElementById('scan-qr-tab-btn');
+        const manualCodeTabBtn = document.getElementById('manual-code-tab-btn');
+        
+        if (scanQrTabBtn && manualCodeTabBtn) {
+            // These are set up in showJoinUI() but adding here for completeness
+            scanQrTabBtn.addEventListener('click', () => {
+                scanQrTabBtn.classList.add('active');
+                manualCodeTabBtn.classList.remove('active');
+                document.getElementById('scan-qr-tab').classList.add('active');
+                document.getElementById('manual-code-tab').classList.remove('active');
+            });
+            
+            manualCodeTabBtn.addEventListener('click', () => {
+                manualCodeTabBtn.classList.add('active');
+                scanQrTabBtn.classList.remove('active');
+                document.getElementById('manual-code-tab').classList.add('active');
+                document.getElementById('scan-qr-tab').classList.remove('active');
+                
+                // Stop scanner when switching to manual tab
+                this.stopQRScanner();
+            });
+        }
+        
         // Start game button (for host)
         const startGameBtn = document.getElementById('start-game-btn');
         if (startGameBtn) {
@@ -138,6 +162,37 @@ export class MultiplayerUIManager {
                     this.stopQRScanner();
                 } else {
                     this.startQRScanner();
+                }
+            });
+        }
+        
+        // Quick connect button in QR scanner tab
+        const quickConnectBtn = document.getElementById('quick-connect-btn');
+        if (quickConnectBtn) {
+            quickConnectBtn.addEventListener('click', () => {
+                const code = document.getElementById('quick-connection-input').value;
+                if (code) {
+                    this.updateConnectionStatus('Connecting...', 'join-connection-status');
+                    this.multiplayerManager.joinGame(code);
+                } else {
+                    this.updateConnectionStatus('Please enter a connection code', 'join-connection-status');
+                }
+            });
+        }
+        
+        // Quick connection input field - allow Enter key to connect
+        const quickConnectionInput = document.getElementById('quick-connection-input');
+        if (quickConnectionInput) {
+            quickConnectionInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const code = quickConnectionInput.value;
+                    if (code) {
+                        this.updateConnectionStatus('Connecting...', 'join-connection-status');
+                        this.multiplayerManager.joinGame(code);
+                    } else {
+                        this.updateConnectionStatus('Please enter a connection code', 'join-connection-status');
+                    }
                 }
             });
         }
@@ -236,7 +291,32 @@ export class MultiplayerUIManager {
             };
         }
         
-        // Initialize QR scanner
+        // Set up tab switching
+        const scanQrTabBtn = document.getElementById('scan-qr-tab-btn');
+        const manualCodeTabBtn = document.getElementById('manual-code-tab-btn');
+        const scanQrTab = document.getElementById('scan-qr-tab');
+        const manualCodeTab = document.getElementById('manual-code-tab');
+        
+        if (scanQrTabBtn && manualCodeTabBtn) {
+            scanQrTabBtn.addEventListener('click', () => {
+                scanQrTabBtn.classList.add('active');
+                manualCodeTabBtn.classList.remove('active');
+                scanQrTab.classList.add('active');
+                manualCodeTab.classList.remove('active');
+            });
+            
+            manualCodeTabBtn.addEventListener('click', () => {
+                manualCodeTabBtn.classList.add('active');
+                scanQrTabBtn.classList.remove('active');
+                manualCodeTab.classList.add('active');
+                scanQrTab.classList.remove('active');
+                
+                // Stop scanner when switching to manual tab
+                this.stopQRScanner();
+            });
+        }
+        
+        // Initialize QR scanner libraries but don't start automatically
         try {
             // Load HTML5-QRCode library if not already loaded
             if (typeof Html5Qrcode === 'undefined') {
@@ -246,13 +326,22 @@ export class MultiplayerUIManager {
             // Get available cameras and set up camera selection
             await this.getAvailableCameras();
             
-            // Start scanner automatically
-            await this.startQRScanner();
+            // Update toggle button text to reflect current state
+            const toggleButton = document.getElementById('toggle-scan-btn');
+            if (toggleButton) {
+                toggleButton.textContent = 'Start Camera';
+                toggleButton.onclick = () => this.startQRScanner();
+            }
             
-            this.updateConnectionStatus('Scan a QR code or enter connection code manually', 'join-connection-status');
+            this.updateConnectionStatus('Select "Scan QR Code" and start camera, or enter code manually', 'join-connection-status');
         } catch (error) {
             console.error('Error initializing QR scanner:', error);
             this.updateConnectionStatus('QR scanner not available. Please enter connection code manually.', 'join-connection-status');
+            
+            // Switch to manual tab if camera is not available
+            if (manualCodeTabBtn) {
+                manualCodeTabBtn.click();
+            }
         }
     }
     
@@ -368,6 +457,12 @@ export class MultiplayerUIManager {
                 await this.getAvailableCameras();
             }
             
+            // Make sure we're on the scan QR tab
+            const scanQrTabBtn = document.getElementById('scan-qr-tab-btn');
+            if (scanQrTabBtn && !scanQrTabBtn.classList.contains('active')) {
+                scanQrTabBtn.click();
+            }
+            
             // Create QR scanner instance
             this.qrCodeScanner = new Html5Qrcode('qr-scanner-view');
             
@@ -385,7 +480,7 @@ export class MultiplayerUIManager {
             // Start the scanner
             this.qrCodeScanner.start(
                 cameraConfig,
-                { fps: 10, qrbox: 250 },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
                 (decodedText) => {
                     // Stop scanning
                     this.stopQRScanner();
@@ -424,9 +519,17 @@ export class MultiplayerUIManager {
                 toggleButton.textContent = 'Stop Camera';
                 toggleButton.onclick = () => this.stopQRScanner();
             }
+            
+            this.updateConnectionStatus('Camera active. Point at a QR code to connect.', 'join-connection-status');
         } catch (error) {
             console.error('Error starting QR scanner:', error);
             this.updateConnectionStatus('Failed to start camera. Please enter code manually.', 'join-connection-status');
+            
+            // Switch to manual tab if camera fails
+            const manualCodeTabBtn = document.getElementById('manual-code-tab-btn');
+            if (manualCodeTabBtn) {
+                manualCodeTabBtn.click();
+            }
         }
     }
     
@@ -452,6 +555,8 @@ export class MultiplayerUIManager {
             if (cameraSelect && this.availableCameras.length > 1) {
                 cameraSelect.style.display = 'block';
             }
+            
+            this.updateConnectionStatus('Camera stopped. Start camera to scan QR code or enter code manually.', 'join-connection-status');
         }
     }
 

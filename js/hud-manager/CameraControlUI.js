@@ -17,6 +17,7 @@ export class CameraControlUI extends UIComponent {
         // Initialize camera control state
         this.cameraState = {
             active: false,
+            potentialDrag: false, // Track if we're in a potential drag state
             startX: 0,
             startY: 0,
             currentX: 0,
@@ -142,7 +143,18 @@ export class CameraControlUI extends UIComponent {
                 return;
             }
             
-            this.handleCameraControlStart(touch.clientX, touch.clientY);
+            // Store touch start position but don't activate camera control yet
+            // We'll wait for movement to confirm it's a drag and not a tap
+            this.cameraState.startX = touch.clientX;
+            this.cameraState.startY = touch.clientY;
+            this.cameraState.currentX = touch.clientX;
+            this.cameraState.currentY = touch.clientY;
+            this.cameraState.potentialDrag = true; // Mark as potential drag
+            this.cameraState.active = false; // Not active until we confirm it's a drag
+            
+            // Store initial camera rotation for potential drag
+            this.storeInitialCameraRotation();
+            
             // Prevent default to avoid scrolling
             event.preventDefault();
         }, { passive: false });
@@ -154,7 +166,17 @@ export class CameraControlUI extends UIComponent {
                 return;
             }
             
-            this.handleCameraControlStart(event.clientX, event.clientY);
+            // Store mouse start position but don't activate camera control yet
+            // We'll wait for movement to confirm it's a drag and not a click
+            this.cameraState.startX = event.clientX;
+            this.cameraState.startY = event.clientY;
+            this.cameraState.currentX = event.clientX;
+            this.cameraState.currentY = event.clientY;
+            this.cameraState.potentialDrag = true; // Mark as potential drag
+            this.cameraState.active = false; // Not active until we confirm it's a drag
+            
+            // Store initial camera rotation for potential drag
+            this.storeInitialCameraRotation();
             
             // Add global mouse move and up events
             document.addEventListener('mousemove', this.handleMouseMove);
@@ -163,8 +185,25 @@ export class CameraControlUI extends UIComponent {
         
         // Touch move event
         canvas.addEventListener('touchmove', (event) => {
+            const touch = event.touches[0];
+            
+            // If we have a potential drag, check if it's moved enough to be considered a drag
+            if (this.cameraState.potentialDrag && !this.cameraState.active) {
+                const dragDistanceX = Math.abs(touch.clientX - this.cameraState.startX);
+                const dragDistanceY = Math.abs(touch.clientY - this.cameraState.startY);
+                const minDragDistance = 10; // Increased threshold to better distinguish drag from tap
+                
+                // If moved enough, activate camera control
+                if (dragDistanceX > minDragDistance || dragDistanceY > minDragDistance) {
+                    this.cameraState.active = true;
+                    // Now show the visual indicator since we confirmed it's a drag
+                    this.showVisualIndicator(this.cameraState.startX, this.cameraState.startY);
+                    console.debug("Camera drag activated after movement threshold");
+                }
+            }
+            
+            // Only handle move if camera control is active
             if (this.cameraState.active) {
-                const touch = event.touches[0];
                 this.handleCameraControlMove(touch.clientX, touch.clientY);
                 // Prevent default to avoid scrolling
                 event.preventDefault();
@@ -172,25 +211,60 @@ export class CameraControlUI extends UIComponent {
         }, { passive: false });
         
         // Touch end event
-        canvas.addEventListener('touchend', () => {
-            this.handleCameraControlEnd();
+        canvas.addEventListener('touchend', (event) => {
+            // If it was just a tap (not a drag), handle it as an interaction
+            if (this.cameraState.potentialDrag && !this.cameraState.active) {
+                this.handleTapInteraction(this.cameraState.startX, this.cameraState.startY);
+            } else {
+                // Otherwise handle as camera control end
+                this.handleCameraControlEnd();
+            }
+            
+            // Reset potential drag state
+            this.cameraState.potentialDrag = false;
         });
         
         // Touch cancel event
         canvas.addEventListener('touchcancel', () => {
             this.handleCameraControlEnd();
+            this.cameraState.potentialDrag = false;
         });
         
         // Mouse move handler (defined as property to allow removal)
         this.handleMouseMove = (event) => {
+            // If we have a potential drag, check if it's moved enough to be considered a drag
+            if (this.cameraState.potentialDrag && !this.cameraState.active) {
+                const dragDistanceX = Math.abs(event.clientX - this.cameraState.startX);
+                const dragDistanceY = Math.abs(event.clientY - this.cameraState.startY);
+                const minDragDistance = 10; // Increased threshold to better distinguish drag from click
+                
+                // If moved enough, activate camera control
+                if (dragDistanceX > minDragDistance || dragDistanceY > minDragDistance) {
+                    this.cameraState.active = true;
+                    // Now show the visual indicator since we confirmed it's a drag
+                    this.showVisualIndicator(this.cameraState.startX, this.cameraState.startY);
+                    console.debug("Camera drag activated after movement threshold");
+                }
+            }
+            
+            // Only handle move if camera control is active
             if (this.cameraState.active) {
                 this.handleCameraControlMove(event.clientX, event.clientY);
             }
         };
         
         // Mouse up handler (defined as property to allow removal)
-        this.handleMouseUp = () => {
-            this.handleCameraControlEnd();
+        this.handleMouseUp = (event) => {
+            // If it was just a click (not a drag), handle it as an interaction
+            if (this.cameraState.potentialDrag && !this.cameraState.active) {
+                this.handleTapInteraction(this.cameraState.startX, this.cameraState.startY);
+            } else {
+                // Otherwise handle as camera control end
+                this.handleCameraControlEnd();
+            }
+            
+            // Reset potential drag state
+            this.cameraState.potentialDrag = false;
             
             // Remove global mouse move and up events
             document.removeEventListener('mousemove', this.handleMouseMove);
@@ -203,16 +277,10 @@ export class CameraControlUI extends UIComponent {
      * @param {number} clientX - X position of touch/mouse
      * @param {number} clientY - Y position of touch/mouse
      */
-    handleCameraControlStart(clientX, clientY) {
-        console.debug("Camera control start:", {clientX, clientY});
-        
-        // Set camera control state
-        this.cameraState.active = true;
-        this.cameraState.startX = clientX;
-        this.cameraState.startY = clientY;
-        this.cameraState.currentX = clientX;
-        this.cameraState.currentY = clientY;
-        
+    /**
+     * Store the initial camera rotation for potential drag
+     */
+    storeInitialCameraRotation() {
         // Calculate the current camera rotation based on its position relative to the player
         if (this.game && this.game.camera && this.game.player) {
             const playerPosition = this.game.player.getPosition();
@@ -269,6 +337,118 @@ export class CameraControlUI extends UIComponent {
                 });
             }
         }
+    }
+    
+    /**
+     * Handle a tap interaction (when user taps but doesn't drag)
+     * @param {number} clientX - X position of touch/mouse
+     * @param {number} clientY - Y position of touch/mouse
+     */
+    handleTapInteraction(clientX, clientY) {
+        console.debug("Tap detected - checking for interaction:", {clientX, clientY});
+        
+        // Check if we should handle it as an interaction
+        if (this.game && this.game.interactionSystem) {
+            // Get the object at the tap position using raycasting
+            const canvas = document.getElementById('game-canvas');
+            if (canvas) {
+                // Calculate normalized device coordinates (-1 to +1)
+                const rect = canvas.getBoundingClientRect();
+                const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+                const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+                
+                console.debug("Tap detected at normalized coordinates:", {x, y});
+                
+                // Create a raycaster directly here instead of relying on WorldManager
+                const raycaster = new THREE.Raycaster();
+                raycaster.setFromCamera(new THREE.Vector2(x, y), this.game.camera);
+                
+                // Get all interactive objects from the interaction system
+                let interactiveObjects = [];
+                if (this.game.interactionSystem && this.game.interactionSystem.getInteractiveObjects) {
+                    interactiveObjects = this.game.interactionSystem.getInteractiveObjects();
+                } else if (this.game.world && this.game.world.interactiveManager) {
+                    // Fallback to world's interactive manager
+                    interactiveObjects = this.game.world.interactiveManager.getInteractiveObjects();
+                }
+                
+                // Filter objects that have meshes
+                const meshes = [];
+                const objectMap = new Map(); // Map to track which mesh belongs to which interactive object
+                
+                interactiveObjects.forEach(obj => {
+                    if (obj.mesh) {
+                        meshes.push(obj.mesh);
+                        objectMap.set(obj.mesh.id, obj);
+                        
+                        // Also check children if they exist
+                        if (obj.mesh.children && obj.mesh.children.length > 0) {
+                            obj.mesh.children.forEach(child => {
+                                meshes.push(child);
+                                objectMap.set(child.id, obj);
+                            });
+                        }
+                    }
+                });
+                
+                // Perform raycast
+                const intersects = raycaster.intersectObjects(meshes, true);
+                
+                if (intersects && intersects.length > 0) {
+                    // Find the interactive object for the intersected mesh
+                    let currentObject = intersects[0].object;
+                    let interactiveObject = null;
+                    
+                    // Traverse up the parent chain to find a match in our map
+                    while (currentObject && !interactiveObject) {
+                        interactiveObject = objectMap.get(currentObject.id);
+                        if (!interactiveObject && currentObject.parent) {
+                            currentObject = currentObject.parent;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    if (interactiveObject) {
+                        console.debug("Found interactive object at tap position:", interactiveObject);
+                        // Handle the interaction
+                        this.game.interactionSystem.handleTouchInteraction(interactiveObject);
+                        return; // Exit early after handling interaction
+                    }
+                }
+                
+                // If we get here, we didn't find an interactive object
+                console.debug("No interactive object found at tap position");
+                
+                // Try a simpler approach - check if there's an object near the player
+                if (this.game.player && this.game.interactionSystem) {
+                    const nearbyObject = this.game.interactionSystem.getNearestInteractiveObject();
+                    if (nearbyObject) {
+                        console.debug("Found nearby interactive object:", nearbyObject);
+                        this.game.interactionSystem.handleTouchInteraction(nearbyObject);
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Handle camera control start event - now only used when we confirm it's a drag
+     * @param {number} clientX - X position of touch/mouse
+     * @param {number} clientY - Y position of touch/mouse
+     */
+    handleCameraControlStart(clientX, clientY) {
+        console.debug("Camera control start:", {clientX, clientY});
+        
+        // Set camera control state
+        this.cameraState.active = true;
+        this.cameraState.startX = clientX;
+        this.cameraState.startY = clientY;
+        this.cameraState.currentX = clientX;
+        this.cameraState.currentY = clientY;
+        
+        // Store initial camera rotation
+        this.storeInitialCameraRotation();
         
         // Show and position the visual indicator
         this.showVisualIndicator(clientX, clientY);
@@ -543,6 +723,11 @@ export class CameraControlUI extends UIComponent {
      * Handle camera control end event
      */
     handleCameraControlEnd() {
+        // Only process if camera control was active
+        if (!this.cameraState.active) {
+            return;
+        }
+        
         // Reset camera control state
         this.cameraState.active = false;
         
@@ -551,43 +736,12 @@ export class CameraControlUI extends UIComponent {
             this.indicatorContainer.style.display = 'none';
         }
         
-        // Check if the drag was minimal (user just tapped or made a very small movement)
-        const dragDistanceX = Math.abs(this.cameraState.currentX - this.cameraState.startX);
-        const dragDistanceY = Math.abs(this.cameraState.currentY - this.cameraState.startY);
-        const minDragDistance = 5; // Threshold in pixels
-        
-        if (dragDistanceX < minDragDistance && dragDistanceY < minDragDistance) {
-            // If it was just a tap or minimal movement, reset to the initial camera position
-            // This allows users to quickly return to the default view
-            if (this.initialCameraPosition && this.initialCameraRotation && this.game && this.game.camera) {
-                // Calculate the initial rotation values based on the initial position
-                if (this.game.player) {
-                    const playerPosition = this.game.player.getPosition();
-                    const initialPos = this.initialCameraPosition;
-                    
-                    // Calculate the horizontal angle (around Y axis)
-                    const dx = initialPos.x - playerPosition.x;
-                    const dz = initialPos.z - playerPosition.z;
-                    const horizontalAngle = Math.atan2(dx, dz);
-                    
-                    // Calculate the vertical angle (around X axis)
-                    const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
-                    const dy = initialPos.y - (playerPosition.y + 20);
-                    const verticalAngle = Math.atan2(dy, horizontalDistance);
-                    
-                    // Store the calculated angles
-                    this.cameraState.rotationY = horizontalAngle;
-                    this.cameraState.rotationX = verticalAngle;
-                    
-                    // Update camera to the initial position
-                    this.updateCameraOrbit(verticalAngle, horizontalAngle);
-                }
-            }
-        }
+        console.debug("Camera control ended");
         
         // Keep the camera update pending flag true
         // This ensures the camera position is maintained even after the control is released
         // The player should be able to look around and maintain that view
+        this.cameraUpdatePending = true;
     }
     
     /**

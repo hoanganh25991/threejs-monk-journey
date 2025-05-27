@@ -659,4 +659,42 @@ export class WorldManager {
         }
         return [];
     }
+    
+    /**
+     * Get interactive objects near a position
+     * @param {THREE.Vector3} position - The position to check
+     * @param {number} range - The range to check
+     * @returns {Array} - Array of interactive objects within range
+     */
+    getInteractiveObjectsNear(position, range) {
+        // Default to empty array
+        let nearbyObjects = [];
+        
+        // Get interactive objects from the interactive manager
+        if (this.interactiveManager && this.interactiveManager.getObjectsNear) {
+            nearbyObjects = this.interactiveManager.getObjectsNear(position, range);
+        }
+        
+        // Add teleport portals if they exist
+        if (this.teleportManager && this.teleportManager.getPortals) {
+            const portals = this.teleportManager.getPortals();
+            
+            // Filter portals by distance
+            const nearbyPortals = portals.filter(portal => {
+                // Skip portals without a position
+                if (!portal.position) return false;
+                
+                // Calculate distance
+                const distance = position.distanceTo(portal.position);
+                
+                // Return true if within range
+                return distance <= range;
+            });
+            
+            // Add nearby portals to the result
+            nearbyObjects = nearbyObjects.concat(nearbyPortals);
+        }
+        
+        return nearbyObjects;
+    }
 }

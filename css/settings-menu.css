@@ -163,6 +163,7 @@
     /* Smaller width for settings buttons */
     width: auto;
     min-width: 100px;
+    max-width: fit-content;
     text-align: center;
 }
 
