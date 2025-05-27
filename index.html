@@ -296,7 +296,17 @@
             <div id="save-operation-bar" class="progress-bar"></div>
         </div>
     </div>
-    
+
+    <!-- Game Menu -->
+    <div id="game-menu" class="game-menu" style="display: none;">
+        <h1>Monk Journey</h1>
+        <div class="menu-button-container">
+            <button id="load-game-button" class="menu-button">Play Game</button>
+            <button id="multiplayer-button" class="menu-button">Multiplayer</button>
+            <button id="settings-menu-button" class="menu-button">Settings</button>
+        </div>
+    </div>
+
     <!-- Multiplayer Menu -->
     <div id="multiplayer-menu" class="game-menu">
         <!-- Initial Options Screen -->
@@ -346,33 +356,30 @@
         <div class="multiplayer-menu-content fullscreen-layout" id="join-game-screen" style="display: none;">
             <div class="modal-header">
                 <h2>Join Game</h2>
-                <button id="back-from-join-btn" class="circle-btn" title="Close">✕</button>
+                <button id="back-from-join-btn" class="circle-btn" title="Close">↩️</button>
             </div>
             <div class="join-game-layout">
                 <div class="join-options-container">
-                    <div class="join-tabs-container">
-                        <div class="join-option-tabs">
-                            <button id="scan-qr-tab-btn" class="join-tab-button active">Scan QR</button>
-                            <button id="manual-code-tab-btn" class="join-tab-button">Enter Code</button>
-                        </div>
-                        
-                        <select id="camera-select" class="camera-select" style="display: none;">
-                            <option value="">Loading cameras...</option>
-                        </select>
+                    <!-- Initial Join Options -->
+                    <div id="join-initial-options" class="join-initial-options">
+                        <button id="start-scan-btn" class="menu-button">Start Scan</button>
+                        <button id="enter-code-btn" class="menu-button">Enter Code</button>
                     </div>
                     
-                    <div id="scan-qr-tab" class="join-tab-content active">
+                    <!-- QR Scanner View (hidden initially) -->
+                    <div id="scan-qr-view" class="scan-qr-view" style="display: none;">
                         <div class="scanner-section">
                             <div id="qr-scanner">
                                 <div id="qr-scanner-view"></div>
                             </div>
-                            <div class="scanner-controls">
-                                <button id="toggle-scan-btn" class="settings-button">Start Camera</button>
-                            </div>
+                            <select id="camera-select" class="camera-select" style="display: none;">
+                                <option value="">Loading cameras...</option>
+                            </select>
                         </div>
                     </div>
                     
-                    <div id="manual-code-tab" class="join-tab-content">
+                    <!-- Manual Code Entry (hidden initially) -->
+                    <div id="manual-code-view" class="manual-code-view" style="display: none;">
                         <div class="manual-input-section">
                             <div class="input-with-buttons">
                                 <input type="text" id="manual-connection-input" placeholder="Enter connection code">
@@ -407,16 +414,6 @@
                 </div>
             </div>
             <div id="player-connection-status" class="connection-status"></div>
-        </div>
-    </div>
-
-    <!-- Game Menu -->
-    <div id="game-menu" class="game-menu" style="display: none;">
-        <h1>Monk Journey</h1>
-        <div class="menu-button-container">
-            <button id="load-game-button" class="menu-button">Play Game</button>
-            <button id="multiplayer-button" class="menu-button">Multiplayer</button>
-            <button id="settings-menu-button" class="menu-button">Settings</button>
         </div>
     </div>
 
