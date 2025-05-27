@@ -171,8 +171,37 @@ export class BinarySerializer {
         }
 
         try {
-            // Decode binary data
-            const decoded = this.msgpack.decode(binaryData);
+            // Handle the case where the buffer might contain extra data
+            // This is a common issue with WebRTC data channels
+            let decoded;
+            try {
+                // First try to decode the entire buffer
+                decoded = this.msgpack.decode(binaryData);
+            } catch (decodeError) {
+                if (decodeError.message && decodeError.message.includes('Extra')) {
+                    // If there are extra bytes, try to find the actual message length
+                    // and only decode that portion
+                    console.debug('[BinarySerializer] Handling extra bytes in buffer');
+                    
+                    // Create a view with only the valid portion of the data
+                    // The MessagePack library will throw an error with the position of the extra bytes
+                    const match = decodeError.message.match(/Extra \d+ of \d+ byte\(s\) found at buffer\[(\d+)\]/);
+                    if (match && match[1]) {
+                        const validLength = parseInt(match[1], 10);
+                        if (validLength > 0 && validLength < binaryData.length) {
+                            // Create a new buffer with just the valid portion
+                            const validData = binaryData.slice(0, validLength);
+                            decoded = this.msgpack.decode(validData);
+                        } else {
+                            throw decodeError; // Re-throw if we can't extract a valid length
+                        }
+                    } else {
+                        throw decodeError; // Re-throw if we can't parse the error message
+                    }
+                } else {
+                    throw decodeError; // Re-throw for other types of errors
+                }
+            }
             
             // Extract message type and data
             const messageType = decoded[0];

@@ -496,6 +496,9 @@ export class MultiplayerConnectionManager {
                 // Convert ArrayBuffer to Uint8Array if needed
                 const binaryData = data instanceof ArrayBuffer ? new Uint8Array(data) : data;
                 
+                // Log data size for debugging
+                console.debug(`[MultiplayerConnectionManager] Processing binary data of size: ${binaryData.length} bytes`);
+                
                 // Deserialize binary data
                 const result = this.serializer.deserialize(binaryData);
                 
@@ -512,6 +515,16 @@ export class MultiplayerConnectionManager {
             return data;
         } catch (error) {
             console.error('[MultiplayerConnectionManager] Error processing received data:', error);
+            
+            // Add more detailed error information
+            if (data instanceof Uint8Array || data instanceof ArrayBuffer) {
+                const dataSize = data instanceof ArrayBuffer ? data.byteLength : data.length;
+                console.error(`[MultiplayerConnectionManager] Failed to process binary data of size: ${dataSize} bytes`);
+            } else if (typeof data === 'object') {
+                console.error('[MultiplayerConnectionManager] Failed to process object data with keys:', Object.keys(data));
+            } else {
+                console.error(`[MultiplayerConnectionManager] Failed to process data of type: ${typeof data}`);
+            }
             
             // Return original data as fallback
             return data;

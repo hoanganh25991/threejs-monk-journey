@@ -715,9 +715,11 @@ export class PlayerSkills {
         if (!this.game.multiplayerManager.connection.isConnected) {
             return;
         }
-        
-        console.error(`[PlayerSkills] Broadcasting skill cast: ${skillName}`);
-        
+
+        if (Math.random() < 0.05) {
+            console.debug(`[PlayerSkills] Broadcasting skill cast: ${skillName}`);
+        }
+
         // Get player position and rotation for accurate skill placement
         const position = this.playerPosition ? {
             x: this.playerPosition.x,
