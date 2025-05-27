@@ -1,6 +1,7 @@
 import { RemotePlayerManager } from './RemotePlayerManager.js';
 import { MultiplayerUIManager } from './MultiplayerUIManager.js';
 import { MultiplayerConnectionManager } from './MultiplayerConnectionManager.js';
+import { BinarySerializer } from './BinarySerializer.js';
 
 /**
  * Manages multiplayer functionality using WebRTC
@@ -108,17 +109,29 @@ export class MultiplayerManager {
                 if (playerId !== this.connection.peer.id) {
                     // Only update remote players if we have valid position data
                     if (playerData.position && playerData.rotation) {
-                        // Create a complete rotation object (we only send y rotation to save bandwidth)
-                        const fullRotation = {
-                            x: 0,
-                            y: playerData.rotation.y || 0,
-                            z: 0
-                        };
+                        // Process position data - could be array [x,y,z] or object {x,y,z}
+                        let position = playerData.position;
+                        if (Array.isArray(position)) {
+                            position = BinarySerializer.restoreVector(position);
+                        }
+                        
+                        // Process rotation data - could be number (y) or object {y}
+                        let rotation;
+                        if (typeof playerData.rotation === 'number') {
+                            rotation = BinarySerializer.restoreRotation(playerData.rotation);
+                        } else {
+                            // Create a complete rotation object (we only send y rotation to save bandwidth)
+                            rotation = {
+                                x: 0,
+                                y: playerData.rotation.y || 0,
+                                z: 0
+                            };
+                        }
                         
                         this.remotePlayerManager.updatePlayer(
                             playerId,
-                            playerData.position,
-                            fullRotation,
+                            position,
+                            rotation,
                             playerData.animation
                         );
                     }

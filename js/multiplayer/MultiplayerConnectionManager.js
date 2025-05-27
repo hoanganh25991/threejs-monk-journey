@@ -4,6 +4,7 @@
  */
 
 import { DEFAULT_CHARACTER_MODEL } from '../config/player-models.js';
+import { BinarySerializer } from './BinarySerializer.js';
 
 export class MultiplayerConnectionManager {
     /**
@@ -18,13 +19,30 @@ export class MultiplayerConnectionManager {
         this.isConnected = false;
         this.hostId = null; // ID of the host (if member)
         this.roomId = null; // Room ID (if host)
+        this.serializer = new BinarySerializer(); // Binary serializer for efficient data transfer
+        this.useBinaryFormat = false; // Flag to indicate if binary format is enabled
     }
 
     /**
      * Initialize the connection manager
      */
     async init() {
-        return true;
+        try {
+            // Initialize binary serializer
+            const serializerInitialized = await this.serializer.init();
+            if (serializerInitialized) {
+                this.useBinaryFormat = true;
+                console.debug('[MultiplayerConnectionManager] Binary serialization enabled');
+            } else {
+                console.warn('[MultiplayerConnectionManager] Binary serialization failed to initialize, falling back to JSON');
+                this.useBinaryFormat = false;
+            }
+            return true;
+        } catch (error) {
+            console.error('[MultiplayerConnectionManager] Initialization error:', error);
+            this.useBinaryFormat = false;
+            return true; // Still return true to allow connection without binary format
+        }
     }
 
     /**
@@ -37,12 +55,6 @@ export class MultiplayerConnectionManager {
             
             // Show host UI
             this.multiplayerManager.ui.showHostUI();
-            
-            // Check if PeerJS is available
-            if (typeof Peer === 'undefined') {
-                // Load PeerJS dynamically if not available
-                await this.loadPeerJS();
-            }
             
             // Initialize PeerJS
             this.peer = new Peer();
@@ -98,12 +110,6 @@ export class MultiplayerConnectionManager {
         try {
             this.multiplayerManager.ui.updateConnectionStatus('Connecting to host...');
             
-            // Check if PeerJS is available
-            if (typeof Peer === 'undefined') {
-                // Load PeerJS dynamically if not available
-                await this.loadPeerJS();
-            }
-            
             // Initialize PeerJS
             this.peer = new Peer();
             
@@ -140,7 +146,7 @@ export class MultiplayerConnectionManager {
                 }
                 
                 // Set up data handler
-                conn.on('data', data => this.handleDataFromHost(data));
+                conn.on('data', data => this.handleDataFromHost(this.processReceivedData(data)));
                 
                 // Set up close handler
                 conn.on('close', () => this.handleDisconnect(roomId));
@@ -187,7 +193,7 @@ export class MultiplayerConnectionManager {
         this.multiplayerManager.ui.setStartButtonEnabled(true);
         
         // Set up data handler
-        conn.on('data', data => this.handleDataFromMember(conn.peer, data));
+        conn.on('data', data => this.handleDataFromMember(conn.peer, this.processReceivedData(data)));
         
         // Set up close handler
         conn.on('close', () => this.handleDisconnect(conn.peer));
@@ -280,7 +286,7 @@ export class MultiplayerConnectionManager {
                 // Get the player ID who cast the skill
                 const casterId = data.playerId || this.hostId;
                 
-                console.error(`[MultiplayerConnectionManager] Player ${casterId} cast skill: ${data.skillName}`);
+                console.debug(`[MultiplayerConnectionManager] Player ${casterId} cast skill: ${data.skillName}`);
                 
                 // Get the remote player
                 const remotePlayer = this.multiplayerManager.remotePlayerManager.getPlayer(casterId);
@@ -341,7 +347,7 @@ export class MultiplayerConnectionManager {
                         return;
                     }
                     
-                    console.error(`[MultiplayerConnectionManager] Member ${peerId} cast skill: ${data.skillName}`);
+                    console.debug(`[MultiplayerConnectionManager] Member ${peerId} cast skill: ${data.skillName}`);
                     
                     // Get the remote player
                     const remotePlayer = this.multiplayerManager.remotePlayerManager.getPlayer(peerId);
@@ -436,7 +442,19 @@ export class MultiplayerConnectionManager {
     sendToPeer(peerId, data) {
         const conn = this.peers.get(peerId);
         if (conn) {
-            conn.send(data);
+            if (this.useBinaryFormat) {
+                // Serialize to binary format
+                const binaryData = this.serializer.serialize(data);
+                if (binaryData) {
+                    conn.send(binaryData);
+                } else {
+                    // Fallback to JSON if serialization fails
+                    conn.send(data);
+                }
+            } else {
+                // Use JSON format
+                conn.send(data);
+            }
         }
     }
 
@@ -445,9 +463,59 @@ export class MultiplayerConnectionManager {
      * @param {Object} data - The data to broadcast
      */
     broadcast(data) {
-        this.peers.forEach(conn => {
-            conn.send(data);
-        });
+        if (this.useBinaryFormat) {
+            // Serialize once for all peers
+            const binaryData = this.serializer.serialize(data);
+            if (binaryData) {
+                this.peers.forEach(conn => {
+                    conn.send(binaryData);
+                });
+            } else {
+                // Fallback to JSON if serialization fails
+                this.peers.forEach(conn => {
+                    conn.send(data);
+                });
+            }
+        } else {
+            // Use JSON format
+            this.peers.forEach(conn => {
+                conn.send(data);
+            });
+        }
+    }
+    
+    /**
+     * Process received data - handles both binary and JSON formats
+     * @param {*} data - The received data
+     * @returns {Object} The processed data object
+     */
+    processReceivedData(data) {
+        try {
+            // Check if data is binary (Uint8Array or ArrayBuffer)
+            if (this.useBinaryFormat && (data instanceof Uint8Array || data instanceof ArrayBuffer)) {
+                // Convert ArrayBuffer to Uint8Array if needed
+                const binaryData = data instanceof ArrayBuffer ? new Uint8Array(data) : data;
+                
+                // Deserialize binary data
+                const result = this.serializer.deserialize(binaryData);
+                
+                // Validate the result has a type property
+                if (result && result.type) {
+                    return result;
+                } else {
+                    console.warn('[MultiplayerConnectionManager] Deserialized data is missing type property, using original data');
+                    return data;
+                }
+            }
+            
+            // Already in JSON format
+            return data;
+        } catch (error) {
+            console.error('[MultiplayerConnectionManager] Error processing received data:', error);
+            
+            // Return original data as fallback
+            return data;
+        }
     }
 
     /**
@@ -528,27 +596,39 @@ export class MultiplayerConnectionManager {
             // Get current animation (only if it changed to save bandwidth)
             const animation = this.multiplayerManager.game.player.currentAnimation || 'idle';
             
-            // Only log position updates occasionally to reduce console spam
-            if (Math.random() < 0.05) { // ~5% of updates
-                console.error('[MultiplayerConnectionManager] Member sending player data to host:', 
-                            'Position:', position, 
-                            'Animation:', animation);
+            // Only log occasionally to reduce console spam
+            if (Math.random() < 0.05) { // ~5% of broadcasts
+                console.debug('[MultiplayerConnectionManager] Member sending player data to host:', 
+                        'Position:', position, 
+                        'Animation:', animation);
             }
-            
+
             // Get the player's model ID
             let modelId = DEFAULT_CHARACTER_MODEL;
             if (this.multiplayerManager.game.player.model && this.multiplayerManager.game.player.model.currentModelId) {
                 modelId = this.multiplayerManager.game.player.model.currentModelId;
             }
             
-            // Send to host - minimal data to save bandwidth
-            hostConn.send({
+            // Create player position data object
+            const playerData = {
                 type: 'playerPosition',
                 position,
                 rotation,
                 animation,
                 modelId // Include model ID
-            });
+            };
+            
+            // Send to host using binary format if enabled
+            if (this.useBinaryFormat) {
+                const binaryData = this.serializer.serialize(playerData);
+                if (binaryData) {
+                    hostConn.send(binaryData);
+                } else {
+                    hostConn.send(playerData);
+                }
+            } else {
+                hostConn.send(playerData);
+            }
         } catch (error) {
             console.error('[MultiplayerConnectionManager] Error sending player data:', error);
         }
@@ -565,7 +645,7 @@ export class MultiplayerConnectionManager {
         
         // Only log occasionally to reduce console spam
         if (Math.random() < 0.05) { // ~5% of broadcasts
-            console.error('[MultiplayerConnectionManager] Broadcasting game state to', this.peers.size, 'peers');
+            console.debug('[MultiplayerConnectionManager] Broadcasting game state to', this.peers.size, 'peers');
         }
         
         // Collect player data - simplified to save bandwidth
@@ -580,20 +660,24 @@ export class MultiplayerConnectionManager {
             if (this.multiplayerManager.game.player.movement && this.multiplayerManager.game.player.movement.getPosition) {
                 const validPos = this.multiplayerManager.game.player.movement.getPosition();
                 if (validPos && !isNaN(validPos.x) && !isNaN(validPos.y) && !isNaN(validPos.z)) {
-                    hostPosition = {
-                        x: validPos.x,
-                        y: validPos.y,
-                        z: validPos.z
-                    };
+                    // Use optimized vector format if binary serialization is enabled
+                    hostPosition = this.useBinaryFormat 
+                        ? BinarySerializer.optimizeVector(validPos)
+                        : {
+                            x: validPos.x,
+                            y: validPos.y,
+                            z: validPos.z
+                          };
                 }
                 
                 // Get rotation if available
                 if (this.multiplayerManager.game.player.movement.getRotation) {
                     const validRot = this.multiplayerManager.game.player.movement.getRotation();
                     if (validRot && !isNaN(validRot.y)) {
-                        hostRotation = {
-                            y: validRot.y // Only send y rotation (yaw) to save bandwidth
-                        };
+                        // Use optimized rotation format if binary serialization is enabled
+                        hostRotation = this.useBinaryFormat 
+                            ? BinarySerializer.optimizeRotation(validRot)
+                            : { y: validRot.y }; // Only send y rotation (yaw) to save bandwidth
                     }
                 }
             }
@@ -667,19 +751,6 @@ export class MultiplayerConnectionManager {
         this.broadcast(gameState);
     }
 
-    /**
-     * Load PeerJS dynamically
-     * @returns {Promise} A promise that resolves when PeerJS is loaded
-     */
-    loadPeerJS() {
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js';
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error('Failed to load PeerJS'));
-            document.head.appendChild(script);
-        });
-    }
 
     /**
      * Clean up resources
