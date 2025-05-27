@@ -833,17 +833,37 @@ export class MultiplayerManager {
         }
         
         try {
-            // Get player position and rotation
+            // Get player position and validate it
+            const playerPos = this.game.player.model.position;
+            const playerRot = this.game.player.model.rotation;
+            
+            // Check for NaN values in position and rotation
+            if (isNaN(playerPos.x) || isNaN(playerPos.y) || isNaN(playerPos.z) ||
+                isNaN(playerRot.x) || isNaN(playerRot.y) || isNaN(playerRot.z)) {
+                console.log('[MultiplayerManager] Cannot send player data: position or rotation contains NaN values');
+                
+                // Try to get position from player movement if available
+                if (this.game.player.movement && this.game.player.movement.getPosition) {
+                    const validPos = this.game.player.movement.getPosition();
+                    if (!isNaN(validPos.x) && !isNaN(validPos.y) && !isNaN(validPos.z)) {
+                        // Update the model position with valid values
+                        this.game.player.model.position.set(validPos.x, validPos.y, validPos.z);
+                    }
+                }
+                return;
+            }
+            
+            // Create position and rotation objects with validated values
             const position = {
-                x: this.game.player.model.position.x || 0,
-                y: this.game.player.model.position.y || 0,
-                z: this.game.player.model.position.z || 0
+                x: playerPos.x,
+                y: playerPos.y,
+                z: playerPos.z
             };
             
             const rotation = {
-                x: this.game.player.model.rotation.x || 0,
-                y: this.game.player.model.rotation.y || 0,
-                z: this.game.player.model.rotation.z || 0
+                x: playerRot.x,
+                y: playerRot.y,
+                z: playerRot.z
             };
             
             const animation = this.game.player.currentAnimation || 'idle';
@@ -881,16 +901,37 @@ export class MultiplayerManager {
         
         // Add host player - check if model exists before accessing its properties
         if (this.game.player.model && this.game.player.model.position && this.game.player.model.rotation) {
+            // Get player position and validate it
+            const playerPos = this.game.player.model.position;
+            const playerRot = this.game.player.model.rotation;
+            
+            // Check for NaN values in position and rotation
+            if (isNaN(playerPos.x) || isNaN(playerPos.y) || isNaN(playerPos.z) ||
+                isNaN(playerRot.x) || isNaN(playerRot.y) || isNaN(playerRot.z)) {
+                console.log('[MultiplayerManager] Host player has invalid position or rotation with NaN values');
+                
+                // Try to get position from player movement if available
+                if (this.game.player.movement && this.game.player.movement.getPosition) {
+                    const validPos = this.game.player.movement.getPosition();
+                    if (!isNaN(validPos.x) && !isNaN(validPos.y) && !isNaN(validPos.z)) {
+                        // Update the model position with valid values
+                        this.game.player.model.position.set(validPos.x, validPos.y, validPos.z);
+                        playerPos.copy(validPos);
+                    }
+                }
+            }
+            
+            // Use validated or corrected values
             players[this.peer.id] = {
                 position: {
-                    x: this.game.player.model.position.x,
-                    y: this.game.player.model.position.y,
-                    z: this.game.player.model.position.z
+                    x: isNaN(playerPos.x) ? 0 : playerPos.x,
+                    y: isNaN(playerPos.y) ? 0 : playerPos.y,
+                    z: isNaN(playerPos.z) ? 0 : playerPos.z
                 },
                 rotation: {
-                    x: this.game.player.model.rotation.x,
-                    y: this.game.player.model.rotation.y,
-                    z: this.game.player.model.rotation.z
+                    x: isNaN(playerRot.x) ? 0 : playerRot.x,
+                    y: isNaN(playerRot.y) ? 0 : playerRot.y,
+                    z: isNaN(playerRot.z) ? 0 : playerRot.z
                 },
                 animation: this.game.player.currentAnimation
             };

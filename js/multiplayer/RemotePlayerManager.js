@@ -34,12 +34,33 @@ export class RemotePlayerManager {
         // Get remote player
         const remotePlayer = this.remotePlayers.get(peerId);
         
+        // Validate position and rotation data
+        const validPosition = this.validateVector(position);
+        const validRotation = this.validateVector(rotation);
+        
         // Update position, rotation, and animation
-        console.log(`[RemotePlayerManager] Updating player ${peerId} - Position:`, position, 
-                    "Rotation:", rotation, "Animation:", animation);
-        remotePlayer.updatePosition(position);
-        remotePlayer.updateRotation(rotation);
+        console.log(`[RemotePlayerManager] Updating player ${peerId} - Position:`, validPosition, 
+                    "Rotation:", validRotation, "Animation:", animation);
+        remotePlayer.updatePosition(validPosition);
+        remotePlayer.updateRotation(validRotation);
         remotePlayer.updateAnimation(animation);
+    }
+    
+    /**
+     * Validate a vector object to ensure it has no NaN values
+     * @param {Object} vector - The vector to validate
+     * @returns {Object} A validated vector with no NaN values
+     */
+    validateVector(vector) {
+        if (!vector) {
+            return { x: 0, y: 0, z: 0 };
+        }
+        
+        return {
+            x: isNaN(vector.x) ? 0 : vector.x,
+            y: isNaN(vector.y) ? 0 : vector.y,
+            z: isNaN(vector.z) ? 0 : vector.z
+        };
     }
     
     /**

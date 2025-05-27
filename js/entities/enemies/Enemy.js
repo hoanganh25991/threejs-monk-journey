@@ -35,6 +35,9 @@ export class Enemy {
         // Flag for minimap identification
         this.isEnemy = true;
         
+        // For multiplayer targeting
+        this.targetPlayer = player; // Default target is the local player
+        
         // Enemy state
         this.state = {
             isMoving: false,
@@ -160,8 +163,11 @@ export class Enemy {
         // Reset movement state
         this.state.isMoving = false;
         
-        // Get distance to player
-        const playerPosition = this.player.getPosition();
+        // Find the closest player (local or remote)
+        this.findClosestPlayer();
+        
+        // Get distance to target player
+        const playerPosition = this.targetPlayer.getPosition();
         const distanceToPlayer = Math.sqrt(
             Math.pow(playerPosition.x - this.position.x, 2) +
             Math.pow(playerPosition.z - this.position.z, 2)
@@ -259,6 +265,66 @@ export class Enemy {
         this.updateAnimations(delta);
     }
 
+    /**
+     * Find the closest player (local or remote) to target
+     */
+    findClosestPlayer() {
+        // Start with the local player as the default target
+        this.targetPlayer = this.player;
+        let closestDistance = Number.MAX_VALUE;
+        
+        // Get local player position
+        const localPlayerPos = this.player.getPosition();
+        closestDistance = Math.sqrt(
+            Math.pow(localPlayerPos.x - this.position.x, 2) +
+            Math.pow(localPlayerPos.z - this.position.z, 2)
+        );
+        
+        // Check if we have access to the game and multiplayer manager
+        if (this.player.game && 
+            this.player.game.multiplayerManager && 
+            this.player.game.multiplayerManager.remotePlayerManager) {
+            
+            // Get all remote players
+            const remotePlayers = this.player.game.multiplayerManager.remotePlayerManager.getPlayers();
+            
+            // Check each remote player
+            remotePlayers.forEach((remotePlayer, peerId) => {
+                if (remotePlayer && remotePlayer.group) {
+                    const remotePos = remotePlayer.group.position;
+                    const distance = Math.sqrt(
+                        Math.pow(remotePos.x - this.position.x, 2) +
+                        Math.pow(remotePos.z - this.position.z, 2)
+                    );
+                    
+                    // If this remote player is closer, target them instead
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        // Create a wrapper object that mimics the player interface
+                        this.targetPlayer = {
+                            getPosition: () => remotePos,
+                            takeDamage: (amount) => {
+                                // For remote players, we'll notify the host about the damage
+                                // The actual damage will be applied by the host
+                                if (this.player.game.multiplayerManager.isHost) {
+                                    // If we're the host, broadcast damage to the specific player
+                                    const conn = this.player.game.multiplayerManager.peers.get(peerId);
+                                    if (conn) {
+                                        conn.send({
+                                            type: 'playerDamage',
+                                            amount: amount,
+                                            enemyId: this.id
+                                        });
+                                    }
+                                }
+                            }
+                        };
+                    }
+                }
+            });
+        }
+    }
+    
     attackPlayer() {
         // Set attack state
         this.state.isAttacking = true;
@@ -266,8 +332,8 @@ export class Enemy {
         // Create attack effect
         // (This could be expanded with different attack types based on enemy type)
         
-        // Deal damage to player
-        this.player.takeDamage(this.damage);
+        // Deal damage to target player (local or remote)
+        this.targetPlayer.takeDamage(this.damage);
         
         // Reset attack state after a short delay
         setTimeout(() => {

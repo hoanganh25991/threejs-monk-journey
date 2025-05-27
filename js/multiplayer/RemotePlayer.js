@@ -189,6 +189,12 @@ export class RemotePlayer {
             return;
         }
         
+        // Validate position values
+        if (isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
+            console.log(`[RemotePlayer ${this.peerId}] Received invalid position with NaN values:`, position);
+            return;
+        }
+        
         // Set target position
         console.log(`[RemotePlayer ${this.peerId}] Setting target position:`, position);
         this.targetPosition.set(position.x, position.y, position.z);
@@ -200,6 +206,12 @@ export class RemotePlayer {
      */
     updateRotation(rotation) {
         if (!rotation) return;
+        
+        // Validate rotation values
+        if (isNaN(rotation.x) || isNaN(rotation.y) || isNaN(rotation.z)) {
+            console.log(`[RemotePlayer ${this.peerId}] Received invalid rotation with NaN values:`, rotation);
+            return;
+        }
         
         // Set target rotation
         this.targetRotation.set(rotation.x, rotation.y, rotation.z);
