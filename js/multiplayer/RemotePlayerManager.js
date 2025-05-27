@@ -22,13 +22,24 @@ export class RemotePlayerManager {
      * @param {Object} position - The position of the remote player
      * @param {Object} rotation - The rotation of the remote player
      * @param {string} animation - The current animation of the remote player
+     * @param {string} [modelId] - The ID of the model to use for this player
+     * @param {string} [playerColor] - The color assigned to the player
      */
-    updatePlayer(peerId, position, rotation, animation) {
+    updatePlayer(peerId, position, rotation, animation, modelId, playerColor) {
         // Check if player exists
         if (!this.remotePlayers.has(peerId)) {
-            // Create new remote player
-            console.log(`[RemotePlayerManager] Creating new remote player for peer ${peerId}`);
-            this.createRemotePlayer(peerId);
+            // Create new remote player with model ID and color
+            console.log(`[RemotePlayerManager] Creating new remote player for peer ${peerId} with model ${modelId}`);
+            this.createRemotePlayer(peerId, playerColor, modelId);
+        } else if (modelId) {
+            // If player exists but model ID is provided and different from current, update it
+            const remotePlayer = this.remotePlayers.get(peerId);
+            if (remotePlayer.modelId !== modelId) {
+                console.log(`[RemotePlayerManager] Updating model for player ${peerId} from ${remotePlayer.modelId} to ${modelId}`);
+                remotePlayer.modelId = modelId;
+                // Re-initialize the player with the new model
+                remotePlayer.init();
+            }
         }
         
         // Get remote player
@@ -44,6 +55,11 @@ export class RemotePlayerManager {
         remotePlayer.updatePosition(validPosition);
         remotePlayer.updateRotation(validRotation);
         remotePlayer.updateAnimation(animation);
+        
+        // Update color if provided
+        if (playerColor && remotePlayer.playerColor !== playerColor) {
+            remotePlayer.setPlayerColor(playerColor);
+        }
     }
     
     /**
@@ -67,11 +83,12 @@ export class RemotePlayerManager {
      * Create a new remote player
      * @param {string} peerId - The ID of the remote player
      * @param {string} [playerColor] - The color assigned to the player
+     * @param {string} [modelId] - The ID of the model to use for this player
      * @returns {RemotePlayer} The created remote player
      */
-    createRemotePlayer(peerId, playerColor) {
-        // Create new remote player
-        const remotePlayer = new RemotePlayer(this.game, peerId, playerColor);
+    createRemotePlayer(peerId, playerColor, modelId) {
+        // Create new remote player with model ID
+        const remotePlayer = new RemotePlayer(this.game, peerId, playerColor, modelId);
         
         // Add to map
         this.remotePlayers.set(peerId, remotePlayer);

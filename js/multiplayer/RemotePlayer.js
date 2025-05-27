@@ -4,7 +4,8 @@
  */
 
 import * as THREE from 'three';
-import { DEFAULT_CHARACTER_MODEL } from '../config/player-models.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DEFAULT_CHARACTER_MODEL, CHARACTER_MODELS } from '../config/player-models.js';
 
 export class RemotePlayer {
     /**
@@ -12,8 +13,9 @@ export class RemotePlayer {
      * @param {Game} game - The main game instance
      * @param {string} peerId - The ID of the remote player
      * @param {string} [playerColor] - The color assigned to the player
+     * @param {string} [modelId] - The ID of the model to use for this player
      */
-    constructor(game, peerId, playerColor) {
+    constructor(game, peerId, playerColor, modelId) {
         this.game = game;
         this.peerId = peerId;
         this.model = null;
@@ -26,6 +28,7 @@ export class RemotePlayer {
         this.nameTag = null;
         this.playerColor = playerColor || '#FFFFFF'; // Default to white if no color provided
         this.colorIndicator = null;
+        this.modelId = modelId || DEFAULT_CHARACTER_MODEL; // Use default model if none provided
         
         // Create a group to hold the player model and name tag
         this.group = new THREE.Group();
@@ -79,39 +82,110 @@ export class RemotePlayer {
     }
     
     /**
-     * Clone the player model from the main player
+     * Load the player model based on modelId
      */
     async clonePlayerModel() {
         try {
-            // Use the same model as the local player
-            const modelId = window.selectedModelId || DEFAULT_CHARACTER_MODEL;
+            console.log(`[RemotePlayer ${this.peerId}] Loading model with ID: ${this.modelId}`);
             
-            // If the game has a player model, clone it
-            if (this.game.player && this.game.player.model) {
-                // Clone the model
-                this.model = this.game.player.model.clone();
-                
-                // Add to group
-                this.group.add(this.model);
-                
-                // Set up animations
-                this.setupAnimations();
+            // Get the model configuration
+            const modelConfig = this.getModelConfig(this.modelId);
+            
+            if (modelConfig && modelConfig.path) {
+                // Load the model from the path
+                await this.loadModelFromPath(modelConfig.path, modelConfig.baseScale || 1.0);
             } else {
+                console.warn(`[RemotePlayer ${this.peerId}] Model config not found for ID: ${this.modelId}`);
                 // Create a simple placeholder model
-                const geometry = new THREE.BoxGeometry(1, 2, 1);
-                const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-                this.model = new THREE.Mesh(geometry, material);
-                this.group.add(this.model);
+                this.createPlaceholderModel(0x00ff00); // Green placeholder
             }
         } catch (error) {
-            console.error(`Error cloning player model for remote player ${this.peerId}:`, error);
+            console.error(`[RemotePlayer ${this.peerId}] Error loading model:`, error);
             
             // Create a simple placeholder model as fallback
-            const geometry = new THREE.BoxGeometry(1, 2, 1);
-            const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            this.model = new THREE.Mesh(geometry, material);
-            this.group.add(this.model);
+            this.createPlaceholderModel(0xff0000); // Red placeholder for error
         }
+    }
+    
+    /**
+     * Get model configuration by ID
+     * @param {string} modelId - The ID of the model to get
+     * @returns {Object} The model configuration
+     */
+    getModelConfig(modelId) {
+        // CHARACTER_MODELS is imported at the top of the file
+        const model = CHARACTER_MODELS.find(m => m.id === modelId);
+        return model || CHARACTER_MODELS.find(m => m.id === DEFAULT_CHARACTER_MODEL);
+    }
+    
+    /**
+     * Load a model from a file path
+     * @param {string} path - Path to the model file
+     * @param {number} scale - Scale factor for the model
+     */
+    async loadModelFromPath(path, scale = 1.0) {
+        return new Promise((resolve, reject) => {
+            // Use GLTFLoader to load the model
+            const loader = new GLTFLoader();
+            
+            loader.load(
+                path,
+                (gltf) => {
+                    this.model = gltf.scene;
+                    
+                    // Apply shadows to all meshes
+                    this.model.traverse((node) => {
+                        if (node.isMesh) {
+                            node.castShadow = true;
+                            node.receiveShadow = true;
+                        }
+                    });
+                    
+                    // Scale the model
+                    this.model.scale.set(scale, scale, scale);
+                    
+                    // Position adjustments if needed
+                    this.model.position.y = -1.0;
+                    
+                    // Add to group
+                    this.group.add(this.model);
+                    
+                    // Set up animations if they exist
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        this.mixer = new THREE.AnimationMixer(this.model);
+                        
+                        // Store animations
+                        gltf.animations.forEach(animation => {
+                            const action = this.mixer.clipAction(animation);
+                            this.animations.set(animation.name, action);
+                        });
+                        
+                        // Play idle animation by default
+                        this.playAnimation('idle');
+                    }
+                    
+                    resolve(this.model);
+                },
+                (xhr) => {
+                    console.log(`[RemotePlayer ${this.peerId}] Loading model: ${(xhr.loaded / xhr.total * 100)}% loaded`);
+                },
+                (error) => {
+                    console.error(`[RemotePlayer ${this.peerId}] Error loading model:`, error);
+                    reject(error);
+                }
+            );
+        });
+    }
+    
+    /**
+     * Create a placeholder model with the specified color
+     * @param {number} color - The color for the placeholder
+     */
+    createPlaceholderModel(color) {
+        const geometry = new THREE.BoxGeometry(1, 2, 1);
+        const material = new THREE.MeshBasicMaterial({ color: color });
+        this.model = new THREE.Mesh(geometry, material);
+        this.group.add(this.model);
     }
     
     /**
