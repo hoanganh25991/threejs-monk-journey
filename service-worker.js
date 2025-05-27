@@ -4,13 +4,13 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '37';
+const CACHE_VERSION = '38';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 6413218;
-const TOTAL_CACHE_SIZE_MB = 6.12;
+const TOTAL_CACHE_SIZE_BYTES = 6595307;
+const TOTAL_CACHE_SIZE_MB = 6.29;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
@@ -20,9 +20,11 @@ const ASSETS_TO_CACHE = [
   'css/camera-control.css',
   'css/death-screen.css',
   'css/dialog.css',
+  'css/difficulty-menu.css',
   'css/game-menu.css',
   'css/game.css',
   'css/hud-common.css',
+  'css/hud-effects-container.css',
   'css/hud-enemy-health.css',
   'css/hud-joystick.css',
   'css/hud-layout.css',
@@ -36,6 +38,7 @@ const ASSETS_TO_CACHE = [
   'css/inventory.css',
   'css/loading-screen.css',
   'css/main.css',
+  'css/multiplayer.css',
   'css/notifications.css',
   'css/orientation-message.css',
   'css/performance-manager.css',
@@ -79,6 +82,8 @@ const ASSETS_TO_CACHE = [
   'js/entities/enemies/models/VoidWraithModel.js',
   'js/entities/enemies/models/ZombieBruteModel.js',
   'js/entities/enemies/models/ZombieModel.js',
+  'js/entities/items/Item.js',
+  'js/entities/items/ItemGenerator.js',
   'js/entities/player/Player.js',
   'js/entities/player/PlayerAttackEffect.js',
   'js/entities/player/PlayerCombat.js',
@@ -223,6 +228,12 @@ const ASSETS_TO_CACHE = [
   'js/menu-system/settings-menu/SettingsTab.js',
   'js/menu-system/settings-menu/SkillPreview.js',
   'js/menu-system/settings-menu/SkillsPreviewTab.js',
+  'js/multiplayer/BinarySerializer.js',
+  'js/multiplayer/MultiplayerConnectionManager.js',
+  'js/multiplayer/MultiplayerManager.js',
+  'js/multiplayer/MultiplayerUIManager.js',
+  'js/multiplayer/RemotePlayer.js',
+  'js/multiplayer/RemotePlayerManager.js',
   'js/save-manager/ISaveSystem.js',
   'js/save-manager/IStorageAdapter.js',
   'js/save-manager/LocalStorageAdapter.js',
