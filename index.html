@@ -160,6 +160,91 @@
             </div>
         </div>
 
+        <!-- Inventory -->
+        <div id="inventory" style="display: none;">
+            <div id="inventory-header">
+                <div id="inventory-title">Character Inventory</div>
+                <div id="inventory-gold">Gold: <span id="gold-value">0</span></div>
+                <button id="inventory-save" class="circle-btn" title="Save Inventory">💾</button>
+            </div>
+            <div id="inventory-container">
+                <div id="character-equipment">
+                    <div id="character-model-container">👤</div>
+                    <div id="equipment-slots">
+                        <div class="equipment-slot" data-slot="head">
+                            <div class="slot-icon">🧢</div>
+                        </div>
+                        <div class="equipment-slot" data-slot="shoulders">
+                            <div class="slot-icon">👔</div>
+                        </div>
+                        <div class="equipment-slot" data-slot="chest">
+                            <div class="slot-icon">👕</div>
+                        </div>
+                        <div class="equipment-slot" data-slot="hands">
+                            <div class="slot-icon">🧤</div>
+                        </div>
+                        <div class="equipment-slot" data-slot="weapon">
+                            <div class="slot-icon">⚔️</div>
+                        </div>
+                        <div class="equipment-slot" data-slot="legs">
+                            <div class="slot-icon">👖</div>
+                        </div>
+                        <div class="equipment-slot" data-slot="feet">
+                            <div class="slot-icon">👟</div>
+                        </div>
+                        <div class="equipment-slot" data-slot="accessory">
+                            <div class="slot-icon">💍</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="inventory-items">
+                    <h3>Items</h3>
+                    <div id="inventory-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skill Selection -->
+        <div id="skill-selection" style="display: none;">
+            <div id="skill-selection-container">
+                <div id="skill-selection-header">
+                    <h2>Select Your Skills</h2>
+                    <div id="skill-selection-counter">
+                        <span id="normal-skills-counter">0/7</span> Normal Skills Selected
+                    </div>
+                    <button id="skill-selection-save" class="circle-btn" disabled>💾</button>
+                </div>
+                
+                <div id="skill-selection-layout">
+                    <div id="skill-selection-content">
+                        <div id="primary-attack-section">
+                            <h3>Primary Attack (Select 1)</h3>
+                            <div id="primary-attack-list" class="skill-list single-column"></div>
+                        </div>
+                        
+                        <div id="normal-skills-section">
+                            <h3>Normal Skills (Select up to 7)</h3>
+                            <div id="normal-skills-list" class="skill-list"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="skill-selection-preview">
+                        <h3>Battle Skills Layout</h3>
+                        <div id="selected-skills-preview" class="battle-layout"></div>
+                        <div class="preview-description">
+                            <p>This is how your skills will appear in battle</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dialog Box -->
+        <div id="dialog-box" style="display: none;">
+            <div id="dialog-text"></div>
+            <div id="dialog-continue">Click to continue...</div>
+        </div>
+
         <!-- Top Right UI (Home Button, Full Screen Button and Mini Map) -->
         <div id="top-right-container">
             <button id="inventory-button" class="circle-btn" title="Inventory">🎒</button>
@@ -203,12 +288,6 @@
         </div>
     </div>
 
-    <!-- Dialog Box -->
-    <div id="dialog-box" style="display: none;">
-        <div id="dialog-text"></div>
-        <div id="dialog-continue">Click to continue...</div>
-    </div>
-
     <!-- Save Operation Progress -->
     <div id="save-operation-progress" class="save-operation-progress" style="display: none;">
         <h3 id="save-operation-title">Saving Game</h3>
@@ -218,10 +297,10 @@
         </div>
     </div>
     
-    <!-- Multiplayer Modal -->
-    <div id="multiplayer-modal" class="game-menu">
+    <!-- Multiplayer Menu -->
+    <div id="multiplayer-menu" class="game-menu">
         <!-- Initial Options Screen -->
-        <div class="multiplayer-modal-content" id="multiplayer-initial-screen">
+        <div class="multiplayer-menu-content" id="multiplayer-initial-screen">
             <h2>Multiplayer</h2>
             <div class="multiplayer-options">
                 <button id="host-game-btn" class="menu-button">Host Game</button>
@@ -231,7 +310,7 @@
         </div>
         
         <!-- Host Game Screen -->
-        <div class="multiplayer-modal-content fullscreen-layout" id="host-game-screen" style="display: none;">
+        <div class="multiplayer-menu-content fullscreen-layout" id="host-game-screen" style="display: none;">
             <div class="modal-header">
                 <h2>Host Game</h2>
                 <button id="back-from-host-btn" class="circle-btn" title="Back">↩️</button>
@@ -264,7 +343,7 @@
         </div>
         
         <!-- Join Game Screen -->
-        <div class="multiplayer-modal-content fullscreen-layout" id="join-game-screen" style="display: none;">
+        <div class="multiplayer-menu-content fullscreen-layout" id="join-game-screen" style="display: none;">
             <div class="modal-header">
                 <h2>Join Game</h2>
                 <button id="back-from-join-btn" class="circle-btn" title="Back">↩️</button>
@@ -294,7 +373,7 @@
         </div>
         
         <!-- Player Waiting Screen (for joined players) -->
-        <div class="multiplayer-modal-content fullscreen-layout" id="player-waiting-screen" style="display: none;">
+        <div class="multiplayer-menu-content fullscreen-layout" id="player-waiting-screen" style="display: none;">
             <div class="modal-header">
                 <h2>Waiting for Host</h2>
                 <button id="leave-game-btn" class="circle-btn" title="Leave Game">↩️</button>
@@ -312,85 +391,6 @@
                 </div>
             </div>
             <div id="player-connection-status" class="connection-status"></div>
-        </div>
-    </div>
-
-    <!-- Inventory -->
-    <div id="inventory" style="display: none;">
-        <div id="inventory-header">
-            <div id="inventory-title">Character Inventory</div>
-            <div id="inventory-gold">Gold: <span id="gold-value">0</span></div>
-            <button id="inventory-save" class="circle-btn" title="Save Inventory">💾</button>
-        </div>
-        <div id="inventory-container">
-            <div id="character-equipment">
-                <div id="character-model-container">👤</div>
-                <div id="equipment-slots">
-                    <div class="equipment-slot" data-slot="head">
-                        <div class="slot-icon">🧢</div>
-                    </div>
-                    <div class="equipment-slot" data-slot="shoulders">
-                        <div class="slot-icon">👔</div>
-                    </div>
-                    <div class="equipment-slot" data-slot="chest">
-                        <div class="slot-icon">👕</div>
-                    </div>
-                    <div class="equipment-slot" data-slot="hands">
-                        <div class="slot-icon">🧤</div>
-                    </div>
-                    <div class="equipment-slot" data-slot="weapon">
-                        <div class="slot-icon">⚔️</div>
-                    </div>
-                    <div class="equipment-slot" data-slot="legs">
-                        <div class="slot-icon">👖</div>
-                    </div>
-                    <div class="equipment-slot" data-slot="feet">
-                        <div class="slot-icon">👟</div>
-                    </div>
-                    <div class="equipment-slot" data-slot="accessory">
-                        <div class="slot-icon">💍</div>
-                    </div>
-                </div>
-            </div>
-            <div id="inventory-items">
-                <h3>Items</h3>
-                <div id="inventory-grid"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Skill Selection -->
-    <div id="skill-selection" style="display: none;">
-        <div id="skill-selection-container">
-            <div id="skill-selection-header">
-                <h2>Select Your Skills</h2>
-                <div id="skill-selection-counter">
-                    <span id="normal-skills-counter">0/7</span> Normal Skills Selected
-                </div>
-                <button id="skill-selection-save" class="circle-btn" disabled>💾</button>
-            </div>
-            
-            <div id="skill-selection-layout">
-                <div id="skill-selection-content">
-                    <div id="primary-attack-section">
-                        <h3>Primary Attack (Select 1)</h3>
-                        <div id="primary-attack-list" class="skill-list single-column"></div>
-                    </div>
-                    
-                    <div id="normal-skills-section">
-                        <h3>Normal Skills (Select up to 7)</h3>
-                        <div id="normal-skills-list" class="skill-list"></div>
-                    </div>
-                </div>
-                
-                <div id="skill-selection-preview">
-                    <h3>Battle Skills Layout</h3>
-                    <div id="selected-skills-preview" class="battle-layout"></div>
-                    <div class="preview-description">
-                        <p>This is how your skills will appear in battle</p>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 

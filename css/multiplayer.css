@@ -3,7 +3,7 @@
  * Updated to match settings-menu.css style and improve landscape mode scrolling
  */
 
-#multiplayer-modal {
+#multiplayer-menu {
     position: fixed;
     top: 0;
     left: 0;
@@ -23,7 +23,7 @@
     background-repeat: no-repeat;
 }
 
-.multiplayer-modal-content {
+.multiplayer-menu-content {
     border-radius: 10px;
     padding: var(--padding-large);
     width: 100%;
@@ -35,7 +35,7 @@
 }
 
 /* Fullscreen layout for host and join screens */
-.multiplayer-modal-content.fullscreen-layout {
+.multiplayer-menu-content.fullscreen-layout {
     width: 100%;
     height: 100%;
     display: flex;
@@ -218,7 +218,7 @@
 
 /* Landscape mode optimizations */
 @media screen and (max-height: 500px) {
-    .multiplayer-modal-content {
+    .multiplayer-menu-content {
         padding: var(--padding-medium);
     }
     

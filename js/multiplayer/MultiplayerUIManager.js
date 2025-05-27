@@ -169,7 +169,7 @@ export class MultiplayerUIManager {
      * Show the multiplayer modal
      */
     showMultiplayerModal() {
-        const modal = document.getElementById('multiplayer-modal');
+        const modal = document.getElementById('multiplayer-menu');
         if (modal) {
             modal.style.display = 'flex';
             
@@ -189,7 +189,7 @@ export class MultiplayerUIManager {
      * Close the multiplayer modal
      */
     closeMultiplayerModal() {
-        const modal = document.getElementById('multiplayer-modal');
+        const modal = document.getElementById('multiplayer-menu');
         if (modal) {
             modal.style.display = 'none';
             

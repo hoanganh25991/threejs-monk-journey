@@ -803,7 +803,8 @@ export class EnemyManager {
             enemy.remove();
         });
         
-        this.enemies = [];
+        // Clear the Map instead of redefining it as an array
+        this.enemies.clear();
     }
     
     onPlayerMovedScreenDistance(playerPosition) {
