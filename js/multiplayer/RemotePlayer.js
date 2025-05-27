@@ -447,6 +447,11 @@ export class RemotePlayer {
      * @param {string} skillName - The name of the skill being cast
      * @returns {boolean} True if the skill animation was played successfully
      */
+    /**
+     * Cast a skill with visual effects
+     * @param {string} skillName - The name of the skill to cast
+     * @returns {boolean} - Whether the skill was cast successfully
+     */
     castSkill(skillName) {
         // Map skill names to appropriate animations
         const skillAnimationMap = {
@@ -477,7 +482,64 @@ export class RemotePlayer {
         
         // Play the animation
         console.log(`[RemotePlayer ${this.peerId}] Casting skill: ${skillName} with animation: ${animationName}`);
-        return this.playAnimation(animationName, 'attack', 0.2);
+        const animationPlayed = this.playAnimation(animationName, 'attack', 0.2);
+        
+        // Create the skill visual effect
+        this.createSkillEffect(skillName);
+        
+        return animationPlayed;
+    }
+    
+    /**
+     * Create a visual effect for a skill
+     * @param {string} skillName - The name of the skill
+     */
+    createSkillEffect(skillName) {
+        if (!this.game || !this.game.scene) {
+            console.warn(`[RemotePlayer ${this.peerId}] Cannot create skill effect: no game or scene reference`);
+            return;
+        }
+        
+        try {
+            // Import necessary modules
+            import('../entities/skills/Skill.js').then(({ Skill }) => {
+                import('../config/skills.js').then(({ SKILLS }) => {
+                    // Find the skill configuration
+                    const skillConfig = SKILLS.find(config => config.name === skillName);
+                    
+                    if (!skillConfig) {
+                        console.warn(`[RemotePlayer ${this.peerId}] Skill configuration not found for: ${skillName}`);
+                        return;
+                    }
+                    
+                    // Create a new skill instance
+                    const skill = new Skill(skillConfig);
+                    
+                    // Set the game reference
+                    skill.setGame(this.game);
+                    
+                    // Get the player's position and rotation
+                    const position = this.group.position.clone();
+                    const rotation = { y: this.model ? this.model.rotation.y : 0 };
+                    
+                    // Create the skill effect
+                    console.log(`[RemotePlayer ${this.peerId}] Creating skill effect for: ${skillName}`);
+                    const skillEffect = skill.createEffect(position, rotation);
+                    
+                    // Add the effect to the scene
+                    if (skillEffect) {
+                        this.game.scene.add(skillEffect);
+                        
+                        // Store the skill in the game's active skills if possible
+                        if (this.game.player && this.game.player.skills) {
+                            this.game.player.skills.addRemotePlayerSkill(skill);
+                        }
+                    }
+                });
+            });
+        } catch (error) {
+            console.error(`[RemotePlayer ${this.peerId}] Error creating skill effect:`, error);
+        }
     }
 
     /**

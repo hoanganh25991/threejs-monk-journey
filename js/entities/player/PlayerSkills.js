@@ -691,6 +691,17 @@ export class PlayerSkills {
     }
     
     /**
+     * Adds a skill from a remote player to the active skills list
+     * @param {Skill} skill - The skill instance to add
+     */
+    addRemotePlayerSkill(skill) {
+        if (!skill) return;
+        
+        console.debug(`[PlayerSkills] Adding remote player skill: ${skill.name}`);
+        this.activeSkills.push(skill);
+    }
+    
+    /**
      * Broadcasts a skill cast to other players in multiplayer mode
      * @param {string} skillName - The name of the skill being cast
      */
@@ -707,12 +718,25 @@ export class PlayerSkills {
         
         console.debug(`[PlayerSkills] Broadcasting skill cast: ${skillName}`);
         
+        // Get player position and rotation for accurate skill placement
+        const position = this.playerPosition ? {
+            x: this.playerPosition.x,
+            y: this.playerPosition.y,
+            z: this.playerPosition.z
+        } : null;
+        
+        const rotation = this.playerRotation ? {
+            y: this.playerRotation.y
+        } : null;
+        
         // If player is host, broadcast to all members
         if (this.game.multiplayerManager.connection.isHost) {
             this.game.multiplayerManager.connection.broadcast({
                 type: 'skillCast',
                 skillName: skillName,
-                playerId: this.game.multiplayerManager.connection.peer.id
+                playerId: this.game.multiplayerManager.connection.peer.id,
+                position: position,
+                rotation: rotation
             });
         } 
         // If player is member, send to host
@@ -724,7 +748,9 @@ export class PlayerSkills {
             if (hostConn) {
                 hostConn.send({
                     type: 'skillCast',
-                    skillName: skillName
+                    skillName: skillName,
+                    position: position,
+                    rotation: rotation
                 });
             }
         }

@@ -281,6 +281,18 @@ export class MultiplayerConnectionManager {
                 
                 console.log(`[MultiplayerConnectionManager] Player ${casterId} cast skill: ${data.skillName}`);
                 
+                // Get the remote player
+                const remotePlayer = this.multiplayerManager.remotePlayerManager.getPlayer(casterId);
+                
+                // If position and rotation are provided, update the remote player first
+                if (data.position && remotePlayer) {
+                    remotePlayer.updatePosition(data.position);
+                }
+                
+                if (data.rotation && remotePlayer) {
+                    remotePlayer.updateRotation(data.rotation);
+                }
+                
                 // Trigger skill cast animation on remote player
                 this.multiplayerManager.remotePlayerManager.handleSkillCast(casterId, data.skillName);
                 break;
@@ -330,6 +342,18 @@ export class MultiplayerConnectionManager {
                     
                     console.log(`[MultiplayerConnectionManager] Member ${peerId} cast skill: ${data.skillName}`);
                     
+                    // Get the remote player
+                    const remotePlayer = this.multiplayerManager.remotePlayerManager.getPlayer(peerId);
+                    
+                    // If position and rotation are provided, update the remote player first
+                    if (data.position && remotePlayer) {
+                        remotePlayer.updatePosition(data.position);
+                    }
+                    
+                    if (data.rotation && remotePlayer) {
+                        remotePlayer.updateRotation(data.rotation);
+                    }
+                    
                     // Trigger skill cast animation on remote player
                     this.multiplayerManager.remotePlayerManager.handleSkillCast(peerId, data.skillName);
                     
@@ -339,7 +363,9 @@ export class MultiplayerConnectionManager {
                             conn.send({
                                 type: 'skillCast',
                                 skillName: data.skillName,
-                                playerId: peerId
+                                playerId: peerId,
+                                position: data.position,
+                                rotation: data.rotation
                             });
                         }
                     });
