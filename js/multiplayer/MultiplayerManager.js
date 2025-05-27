@@ -521,30 +521,47 @@ export class MultiplayerManager {
      * @param {Object} data - The game state data
      */
     updateGameState(data) {
-        console.log('[MultiplayerManager] Received game state update from host');
+        // Only log occasionally to reduce console spam
+        const shouldLog = Math.random() < 0.01; // ~1% of updates
         
-        // Update player positions
+        if (shouldLog) {
+            console.log('[MultiplayerManager] Received game state update from host');
+        }
+        
+        // Update player positions (with reduced logging)
         if (data.players) {
-            console.log('[MultiplayerManager] Updating', Object.keys(data.players).length, 'players');
+            if (shouldLog) {
+                console.log('[MultiplayerManager] Updating', Object.keys(data.players).length, 'players');
+            }
             
             Object.entries(data.players).forEach(([playerId, playerData]) => {
                 if (playerId !== this.peer.id) {
-                    console.log('[MultiplayerManager] Updating remote player', playerId);
-                    this.remotePlayerManager.updatePlayer(
-                        playerId,
-                        playerData.position,
-                        playerData.rotation,
-                        playerData.animation
-                    );
+                    // Only update remote players if we have valid position data
+                    if (playerData.position && playerData.rotation) {
+                        // Create a complete rotation object (we only send y rotation to save bandwidth)
+                        const fullRotation = {
+                            x: 0,
+                            y: playerData.rotation.y || 0,
+                            z: 0
+                        };
+                        
+                        this.remotePlayerManager.updatePlayer(
+                            playerId,
+                            playerData.position,
+                            fullRotation,
+                            playerData.animation
+                        );
+                    }
                 }
             });
-        } else {
-            console.log('[MultiplayerManager] No player data in game state update');
         }
         
-        // Update enemies
+        // Update enemies - this is the primary focus
         if (data.enemies && this.game.enemyManager) {
-            console.log('[MultiplayerManager] Updating enemies from host data');
+            if (shouldLog) {
+                console.log('[MultiplayerManager] Updating enemies from host data');
+            }
+            
             // Update enemy positions and states
             this.game.enemyManager.updateEnemiesFromHost(data.enemies);
         }
@@ -803,6 +820,7 @@ export class MultiplayerManager {
     
     /**
      * Send player data to host (member only)
+     * Optimized to send minimal data
      */
     sendPlayerData() {
         if (this.isHost || !this.isConnected) {
@@ -815,64 +833,77 @@ export class MultiplayerManager {
             return;
         }
         
-        if (!this.game.player.model) {
-            console.log('[MultiplayerManager] Cannot send player data: game.player.model is null');
-            return;
-        }
-        
         const hostConn = this.peers.get(this.hostId);
         if (!hostConn) {
             console.log('[MultiplayerManager] Cannot send player data: no connection to host');
             return;
         }
         
-        // Check if position and rotation exist
-        if (!this.game.player.model.position || !this.game.player.model.rotation) {
-            console.log('[MultiplayerManager] Cannot send player data: position or rotation is undefined');
-            return;
-        }
-        
         try {
-            // Get player position and validate it
-            const playerPos = this.game.player.model.position;
-            const playerRot = this.game.player.model.rotation;
+            // Get player position from movement component if available (more reliable)
+            let position = null;
+            let rotation = null;
             
-            // Check for NaN values in position and rotation
-            if (isNaN(playerPos.x) || isNaN(playerPos.y) || isNaN(playerPos.z) ||
-                isNaN(playerRot.x) || isNaN(playerRot.y) || isNaN(playerRot.z)) {
-                console.log('[MultiplayerManager] Cannot send player data: position or rotation contains NaN values');
+            if (this.game.player.movement && this.game.player.movement.getPosition) {
+                const validPos = this.game.player.movement.getPosition();
+                if (validPos && !isNaN(validPos.x) && !isNaN(validPos.y) && !isNaN(validPos.z)) {
+                    position = {
+                        x: validPos.x,
+                        y: validPos.y,
+                        z: validPos.z
+                    };
+                }
                 
-                // Try to get position from player movement if available
-                if (this.game.player.movement && this.game.player.movement.getPosition) {
-                    const validPos = this.game.player.movement.getPosition();
-                    if (!isNaN(validPos.x) && !isNaN(validPos.y) && !isNaN(validPos.z)) {
-                        // Update the model position with valid values
-                        this.game.player.model.position.set(validPos.x, validPos.y, validPos.z);
+                // Get rotation if available
+                if (this.game.player.movement.getRotation) {
+                    const validRot = this.game.player.movement.getRotation();
+                    if (validRot && !isNaN(validRot.y)) {
+                        rotation = {
+                            y: validRot.y // Only send y rotation (yaw) to save bandwidth
+                        };
                     }
                 }
+            }
+            
+            // Fallback to model position if movement position is not available
+            if (!position && this.game.player.model && this.game.player.model.position) {
+                const playerPos = this.game.player.model.position;
+                if (!isNaN(playerPos.x) && !isNaN(playerPos.y) && !isNaN(playerPos.z)) {
+                    position = {
+                        x: playerPos.x,
+                        y: playerPos.y,
+                        z: playerPos.z
+                    };
+                }
+            }
+            
+            // Fallback to model rotation if movement rotation is not available
+            if (!rotation && this.game.player.model && this.game.player.model.rotation) {
+                const playerRot = this.game.player.model.rotation;
+                if (!isNaN(playerRot.y)) {
+                    rotation = {
+                        y: playerRot.y // Only send y rotation (yaw) to save bandwidth
+                    };
+                }
+            }
+            
+            // If we still don't have valid position or rotation, don't send anything
+            if (!position || !rotation) {
+                console.log('[MultiplayerManager] Cannot send player data: unable to get valid position or rotation');
                 return;
             }
             
-            // Create position and rotation objects with validated values
-            const position = {
-                x: playerPos.x,
-                y: playerPos.y,
-                z: playerPos.z
-            };
-            
-            const rotation = {
-                x: playerRot.x,
-                y: playerRot.y,
-                z: playerRot.z
-            };
-            
+            // Get current animation (only if it changed to save bandwidth)
             const animation = this.game.player.currentAnimation || 'idle';
             
-            console.log('[MultiplayerManager] Member sending player data to host:', 
-                        'Position:', position, 
-                        'Animation:', animation);
+            // Only log position updates occasionally to reduce console spam
+            if (Math.random() < 0.05) { // ~5% of updates
+                console.log('[MultiplayerManager] Member sending player data to host:', 
+                            'Position:', position, 
+                            'Animation:', animation);
+            }
             
-            // Send to host
+            // Send to host - minimal data to save bandwidth
             hostConn.send({
                 type: 'playerPosition',
                 position,
@@ -886,96 +917,111 @@ export class MultiplayerManager {
     
     /**
      * Broadcast game state to all members (host only)
+     * Optimized to focus on enemy data and minimize bandwidth
      */
     broadcastGameState() {
-        if (!this.isHost || !this.game.player) {
-            console.log('[MultiplayerManager] Not broadcasting: isHost=', this.isHost, 
-                        'game.player exists=', !!this.game.player);
+        if (!this.isHost) {
             return;
         }
         
-        console.log('[MultiplayerManager] Broadcasting game state to', this.peers.size, 'peers');
+        // Only log occasionally to reduce console spam
+        if (Math.random() < 0.05) { // ~5% of broadcasts
+            console.log('[MultiplayerManager] Broadcasting game state to', this.peers.size, 'peers');
+        }
         
-        // Collect player data
+        // Collect player data - simplified to save bandwidth
         const players = {};
         
-        // Add host player - check if model exists before accessing its properties
-        if (this.game.player.model && this.game.player.model.position && this.game.player.model.rotation) {
-            // Get player position and validate it
-            const playerPos = this.game.player.model.position;
-            const playerRot = this.game.player.model.rotation;
+        // Add host player with minimal data
+        if (this.game.player) {
+            let hostPosition = null;
+            let hostRotation = null;
             
-            // Check for NaN values in position and rotation
-            if (isNaN(playerPos.x) || isNaN(playerPos.y) || isNaN(playerPos.z) ||
-                isNaN(playerRot.x) || isNaN(playerRot.y) || isNaN(playerRot.z)) {
-                console.log('[MultiplayerManager] Host player has invalid position or rotation with NaN values');
+            // Try to get position from movement component first (more reliable)
+            if (this.game.player.movement && this.game.player.movement.getPosition) {
+                const validPos = this.game.player.movement.getPosition();
+                if (validPos && !isNaN(validPos.x) && !isNaN(validPos.y) && !isNaN(validPos.z)) {
+                    hostPosition = {
+                        x: validPos.x,
+                        y: validPos.y,
+                        z: validPos.z
+                    };
+                }
                 
-                // Try to get position from player movement if available
-                if (this.game.player.movement && this.game.player.movement.getPosition) {
-                    const validPos = this.game.player.movement.getPosition();
-                    if (!isNaN(validPos.x) && !isNaN(validPos.y) && !isNaN(validPos.z)) {
-                        // Update the model position with valid values
-                        this.game.player.model.position.set(validPos.x, validPos.y, validPos.z);
-                        playerPos.copy(validPos);
+                // Get rotation if available
+                if (this.game.player.movement.getRotation) {
+                    const validRot = this.game.player.movement.getRotation();
+                    if (validRot && !isNaN(validRot.y)) {
+                        hostRotation = {
+                            y: validRot.y // Only send y rotation (yaw) to save bandwidth
+                        };
                     }
                 }
             }
             
-            // Use validated or corrected values
-            players[this.peer.id] = {
-                position: {
-                    x: isNaN(playerPos.x) ? 0 : playerPos.x,
-                    y: isNaN(playerPos.y) ? 0 : playerPos.y,
-                    z: isNaN(playerPos.z) ? 0 : playerPos.z
-                },
-                rotation: {
-                    x: isNaN(playerRot.x) ? 0 : playerRot.x,
-                    y: isNaN(playerRot.y) ? 0 : playerRot.y,
-                    z: isNaN(playerRot.z) ? 0 : playerRot.z
-                },
-                animation: this.game.player.currentAnimation
-            };
-            console.log('[MultiplayerManager] Host player data:', 
-                        'Position:', players[this.peer.id].position,
-                        'Animation:', this.game.player.currentAnimation);
-        } else {
-            // Provide default values if model is not available
-            players[this.peer.id] = {
-                position: { x: 0, y: 0, z: 0 },
-                rotation: { x: 0, y: 0, z: 0 },
-                animation: 'idle'
-            };
-            console.warn('[MultiplayerManager] Player model not fully initialized when broadcasting game state');
+            // Fallback to model position if needed
+            if (!hostPosition && this.game.player.model && this.game.player.model.position) {
+                const playerPos = this.game.player.model.position;
+                if (!isNaN(playerPos.x) && !isNaN(playerPos.y) && !isNaN(playerPos.z)) {
+                    hostPosition = {
+                        x: playerPos.x,
+                        y: playerPos.y,
+                        z: playerPos.z
+                    };
+                }
+            }
+            
+            // Fallback to model rotation if needed
+            if (!hostRotation && this.game.player.model && this.game.player.model.rotation) {
+                const playerRot = this.game.player.model.rotation;
+                if (!isNaN(playerRot.y)) {
+                    hostRotation = {
+                        y: playerRot.y
+                    };
+                }
+            }
+            
+            // Only add host player if we have valid position and rotation
+            if (hostPosition && hostRotation) {
+                players[this.peer.id] = {
+                    position: hostPosition,
+                    rotation: hostRotation,
+                    animation: this.game.player.currentAnimation || 'idle'
+                };
+            }
         }
         
-        // Add remote players
+        // Add remote players with minimal data
         this.remotePlayerManager.getPlayers().forEach((player, peerId) => {
-            players[peerId] = {
-                position: {
-                    x: player.group.position.x,
-                    y: player.group.position.y,
-                    z: player.group.position.z
-                },
-                rotation: player.model ? {
-                    x: player.model.rotation.x,
-                    y: player.model.rotation.y,
-                    z: player.model.rotation.z
-                } : { x: 0, y: 0, z: 0 },
-                animation: player.currentAnimation
-            };
+            if (player && player.group) {
+                const position = player.group.position;
+                if (!isNaN(position.x) && !isNaN(position.y) && !isNaN(position.z)) {
+                    players[peerId] = {
+                        position: {
+                            x: position.x,
+                            y: position.y,
+                            z: position.z
+                        },
+                        rotation: player.model ? {
+                            y: player.model.rotation.y // Only send y rotation to save bandwidth
+                        } : { y: 0 },
+                        animation: player.currentAnimation || 'idle'
+                    };
+                }
+            }
         });
         
-        // Collect enemy data (if enemy manager has the method)
+        // Collect enemy data - this is the primary focus
         let enemies = {};
         if (this.game.enemyManager && typeof this.game.enemyManager.getSerializableEnemyData === 'function') {
             enemies = this.game.enemyManager.getSerializableEnemyData();
         }
         
-        // Create game state packet
+        // Create optimized game state packet
         const gameState = {
             type: 'gameState',
-            players,
-            enemies
+            players, // Still include players but with minimal data
+            enemies  // Primary focus - enemy data
         };
         
         // Send to all peers

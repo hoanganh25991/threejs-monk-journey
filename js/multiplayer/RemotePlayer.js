@@ -202,19 +202,34 @@ export class RemotePlayer {
     
     /**
      * Update the remote player's rotation
-     * @param {Object} rotation - The new rotation
+     * @param {Object|number} rotation - The new rotation (either an object with x,y,z or just the y value)
      */
     updateRotation(rotation) {
-        if (!rotation) return;
+        if (rotation === undefined || rotation === null) return;
         
-        // Validate rotation values
-        if (isNaN(rotation.x) || isNaN(rotation.y) || isNaN(rotation.z)) {
-            console.log(`[RemotePlayer ${this.peerId}] Received invalid rotation with NaN values:`, rotation);
+        // Handle different rotation formats
+        if (typeof rotation === 'number') {
+            // Just y rotation provided as a number
+            if (isNaN(rotation)) {
+                console.log(`[RemotePlayer ${this.peerId}] Received invalid rotation number:`, rotation);
+                return;
+            }
+            this.targetRotation.set(0, rotation, 0);
+        } else if (typeof rotation === 'object') {
+            // Full rotation object or y-only object
+            if (rotation.y !== undefined && !isNaN(rotation.y)) {
+                // If we have at least a valid y rotation, use it
+                const x = (rotation.x !== undefined && !isNaN(rotation.x)) ? rotation.x : 0;
+                const z = (rotation.z !== undefined && !isNaN(rotation.z)) ? rotation.z : 0;
+                this.targetRotation.set(x, rotation.y, z);
+            } else {
+                console.log(`[RemotePlayer ${this.peerId}] Received invalid rotation object:`, rotation);
+                return;
+            }
+        } else {
+            console.log(`[RemotePlayer ${this.peerId}] Received invalid rotation type:`, typeof rotation);
             return;
         }
-        
-        // Set target rotation
-        this.targetRotation.set(rotation.x, rotation.y, rotation.z);
     }
     
     /**

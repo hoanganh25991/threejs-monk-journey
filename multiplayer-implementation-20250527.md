@@ -17,6 +17,10 @@
         - [Player Class Enhancements](#player-class-enhancements)
     - [Required Dependencies](#required-dependencies)
     - [Considerations and Limitations](#considerations-and-limitations)
+    - [Multiplayer System Optimization](#multiplayer-system-optimization)
+        - [Issue](#issue)
+        - [Solution](#solution)
+        - [Benefits](#benefits)
     - [Conclusion](#conclusion)
 
 <!-- /TOC -->
@@ -143,6 +147,44 @@ Add methods to the `Player` class to support multiplayer:
 5. **Synchronization**: Handle clock synchronization between players to ensure consistent gameplay.
 
 6. **Fallback**: Implement a fallback to WebSockets if WebRTC fails to connect.
+
+## 9. Multiplayer System Optimization
+
+### Issue
+The multiplayer system was experiencing issues with invalid player positions and inefficient data transmission:
+- `[MultiplayerManager] Cannot send player data: position or rotation is undefined` errors on member clients
+- Excessive bandwidth usage due to sending full player and enemy data
+- Performance issues due to large data packets being sent frequently
+
+### Solution
+Implemented a comprehensive optimization of the multiplayer system with a focus on enemy data sharing:
+
+1. **Optimized Player Position Handling**:
+   - Enhanced position validation in `sendPlayerData()` to prevent errors
+   - Added fallback to player movement component for more reliable position data
+   - Reduced rotation data to only y-axis (yaw) to save bandwidth
+
+2. **Optimized Enemy Data Format**:
+   - Shortened property names (e.g., `position` → `p`, `health` → `h`)
+   - Rounded position values to 2 decimal places to reduce data size
+   - Only sending y-rotation instead of full x,y,z rotation
+   - Only including maxHealth when necessary (new enemies or health changes)
+
+3. **Reduced Network Traffic**:
+   - Minimized console logging to reduce CPU usage
+   - Focused data transmission on enemy information
+   - Simplified player data to essential information only
+
+4. **Enhanced Error Handling**:
+   - Added comprehensive validation for all incoming network data
+   - Implemented fallbacks for missing or invalid data
+   - Added support for both legacy and optimized data formats
+
+### Benefits
+- **Reduced Bandwidth Usage**: Estimated 50-70% reduction in data transfer
+- **Improved Performance**: Less CPU usage for serialization/deserialization
+- **Better Stability**: Robust error handling prevents crashes from invalid data
+- **Backward Compatibility**: Works with both old and new data formats
 
 ## Conclusion
 

@@ -91,9 +91,9 @@ export class EnemyManager {
      * Stops animations and movement
      */
     pause() {
-        console.debug(`Pausing ${this.enemies.length} enemies`);
+        console.debug(`Pausing ${this.enemies.size} enemies`);
         
-        for (const enemy of this.enemies) {
+        for (const [id, enemy] of this.enemies.entries()) {
             // Pause animation mixer if it exists
             if (enemy.model && enemy.model.mixer) {
                 enemy.model.mixer.timeScale = 0;
@@ -109,9 +109,9 @@ export class EnemyManager {
      * Restarts animations and movement
      */
     resume() {
-        console.debug(`Resuming ${this.enemies.length} enemies`);
+        console.debug(`Resuming ${this.enemies.size} enemies`);
         
-        for (const enemy of this.enemies) {
+        for (const [id, enemy] of this.enemies.entries()) {
             // Resume animation mixer if it exists
             if (enemy.model && enemy.model.mixer) {
                 enemy.model.mixer.timeScale = 1;
@@ -250,6 +250,7 @@ export class EnemyManager {
     
     /**
      * Get serializable enemy data for network transmission
+     * Optimized to reduce bandwidth usage
      * @returns {Object} Object containing serialized enemy data
      */
     getSerializableEnemyData() {
@@ -257,26 +258,36 @@ export class EnemyManager {
         
         this.enemies.forEach((enemy, id) => {
             const position = enemy.getPosition();
-            const rotation = enemy.mesh ? enemy.mesh.rotation : { x: 0, y: 0, z: 0 };
             
+            // Skip enemies with invalid positions
+            if (isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
+                return;
+            }
+            
+            // Only get y rotation (yaw) to save bandwidth
+            const yRotation = enemy.mesh ? enemy.mesh.rotation.y : 0;
+            
+            // Create minimal enemy data object
             enemyData[id] = {
                 id: id,
-                position: {
-                    x: position.x,
-                    y: position.y,
-                    z: position.z
+                p: { // Shortened property name to save bandwidth
+                    x: Math.round(position.x * 100) / 100, // Round to 2 decimal places to save bandwidth
+                    y: Math.round(position.y * 100) / 100,
+                    z: Math.round(position.z * 100) / 100
                 },
-                rotation: {
-                    x: rotation.x,
-                    y: rotation.y,
-                    z: rotation.z
-                },
-                health: enemy.health,
-                maxHealth: enemy.maxHealth,
-                type: enemy.type,
-                state: enemy.state || 'idle',
-                isBoss: enemy.isBoss || false
+                r: Math.round(yRotation * 100) / 100, // Only send y rotation as a number
+                h: enemy.health, // Shortened property name
+                t: enemy.type, // Shortened property name
+                s: typeof enemy.state === 'string' ? enemy.state : 
+                   (enemy.state && enemy.state.isAttacking ? 'attacking' : 
+                    enemy.state && enemy.state.isMoving ? 'moving' : 'idle'),
+                b: enemy.isBoss || false // Shortened property name
             };
+            
+            // Only include maxHealth for new enemies or when health changes
+            if (enemy.health === enemy.maxHealth) {
+                enemyData[id].mh = enemy.maxHealth; // Include maxHealth when it's needed
+            }
         });
         
         return enemyData;
@@ -293,46 +304,86 @@ export class EnemyManager {
         Object.values(enemiesData).forEach(enemyData => {
             const id = enemyData.id;
             
+            // Handle optimized property names
+            const position = enemyData.p || enemyData.position;
+            const health = enemyData.h !== undefined ? enemyData.h : enemyData.health;
+            const maxHealth = enemyData.mh !== undefined ? enemyData.mh : enemyData.maxHealth;
+            const type = enemyData.t || enemyData.type;
+            const state = enemyData.s || enemyData.state;
+            const isBoss = enemyData.b !== undefined ? enemyData.b : enemyData.isBoss;
+            
+            // Skip if we don't have valid position data
+            if (!position || isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
+                return;
+            }
+            
             // Check if enemy exists
             if (this.enemies.has(id)) {
                 // Update existing enemy
                 const enemy = this.enemies.get(id);
                 
                 // Update position
-                enemy.setPosition(
-                    enemyData.position.x,
-                    enemyData.position.y,
-                    enemyData.position.z
-                );
+                enemy.setPosition(position.x, position.y, position.z);
                 
-                // Update rotation
+                // Update rotation - handle both full rotation object and optimized y-only rotation
                 if (enemy.mesh) {
-                    enemy.mesh.rotation.set(
-                        enemyData.rotation.x,
-                        enemyData.rotation.y,
-                        enemyData.rotation.z
-                    );
+                    if (enemyData.r !== undefined) {
+                        // Optimized format - just y rotation
+                        enemy.mesh.rotation.y = enemyData.r;
+                    } else if (enemyData.rotation) {
+                        // Full rotation object
+                        enemy.mesh.rotation.set(
+                            enemyData.rotation.x,
+                            enemyData.rotation.y,
+                            enemyData.rotation.z
+                        );
+                    }
                 }
                 
                 // Update health
-                enemy.health = enemyData.health;
-                enemy.updateHealthBar();
+                if (health !== undefined) {
+                    enemy.health = health;
+                    
+                    // Update maxHealth if provided
+                    if (maxHealth !== undefined) {
+                        enemy.maxHealth = maxHealth;
+                    }
+                    
+                    enemy.updateHealthBar();
+                }
                 
                 // Update state
-                if (enemy.state !== enemyData.state) {
-                    enemy.state = enemyData.state;
-                    // Update animation based on state if needed
-                    if (enemy.state === 'attacking') {
+                if (state && enemy.state !== state) {
+                    // Handle string state or object state
+                    if (typeof enemy.state === 'string') {
+                        enemy.state = state;
+                    } else {
+                        // Convert string state to object state
+                        enemy.state.isAttacking = state === 'attacking';
+                        enemy.state.isMoving = state === 'moving';
+                    }
+                    
+                    // Update animation based on state
+                    if (state === 'attacking' || (typeof enemy.state !== 'string' && enemy.state.isAttacking)) {
                         enemy.playAttackAnimation();
-                    } else if (enemy.state === 'idle') {
+                    } else if (state === 'idle') {
                         enemy.playIdleAnimation();
-                    } else if (enemy.state === 'moving') {
+                    } else if (state === 'moving' || (typeof enemy.state !== 'string' && enemy.state.isMoving)) {
                         enemy.playWalkAnimation();
                     }
                 }
             } else {
-                // Create new enemy
-                this.createEnemyFromData(enemyData);
+                // Create new enemy with the optimized data
+                const fullEnemyData = {
+                    id: id,
+                    position: position,
+                    health: health,
+                    maxHealth: maxHealth || health, // Use health as maxHealth if not provided
+                    type: type,
+                    state: state,
+                    isBoss: isBoss
+                };
+                this.createEnemyFromData(fullEnemyData);
             }
         });
         
@@ -353,33 +404,79 @@ export class EnemyManager {
      * @returns {Enemy} The created enemy
      */
     createEnemyFromData(enemyData) {
+        // Handle optimized property names
+        const position = enemyData.p || enemyData.position;
+        const health = enemyData.h !== undefined ? enemyData.h : enemyData.health;
+        const maxHealth = enemyData.mh !== undefined ? enemyData.mh : enemyData.maxHealth;
+        const type = enemyData.t || enemyData.type;
+        const state = enemyData.s || enemyData.state;
+        const isBoss = enemyData.b !== undefined ? enemyData.b : enemyData.isBoss;
+        
         // Find enemy type
-        let enemyType = this.enemyTypes.find(type => type.type === enemyData.type);
+        let enemyType = this.enemyTypes.find(t => t.type === type);
         
         // If not found, use a default type
         if (!enemyType) {
-            console.warn(`Enemy type ${enemyData.type} not found, using default`);
+            console.warn(`Enemy type ${type} not found, using default`);
             enemyType = this.enemyTypes[0];
         }
         
+        // Validate position data
+        if (!position || isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
+            console.warn(`Invalid position data for enemy ${enemyData.id}, using default position`);
+            position = { x: 0, y: 0, z: 0 };
+        }
+        
         // Create position vector
-        const position = new THREE.Vector3(
-            enemyData.position.x,
-            enemyData.position.y,
-            enemyData.position.z
+        const positionVector = new THREE.Vector3(
+            position.x,
+            position.y,
+            position.z
         );
         
         // Spawn enemy with the specified ID
-        const enemy = this.spawnEnemy(enemyType.type, position, enemyData.id);
+        const enemy = this.spawnEnemy(enemyType.type, positionVector, enemyData.id);
         
         // Update enemy properties
-        enemy.health = enemyData.health;
-        enemy.maxHealth = enemyData.maxHealth;
-        enemy.state = enemyData.state;
-        enemy.isBoss = enemyData.isBoss;
+        if (health !== undefined) {
+            enemy.health = health;
+        }
+        
+        if (maxHealth !== undefined) {
+            enemy.maxHealth = maxHealth;
+        } else if (health !== undefined) {
+            enemy.maxHealth = health; // Use health as maxHealth if not provided
+        }
+        
+        // Handle state (string or object)
+        if (state) {
+            if (typeof enemy.state === 'string') {
+                enemy.state = state;
+            } else {
+                // Convert string state to object state
+                enemy.state.isAttacking = state === 'attacking';
+                enemy.state.isMoving = state === 'moving';
+                enemy.state.isDead = false;
+            }
+        }
+        
+        if (isBoss !== undefined) {
+            enemy.isBoss = isBoss;
+        }
         
         // Update health bar
         enemy.updateHealthBar();
+        
+        // Set rotation if provided
+        if (enemyData.r !== undefined && enemy.mesh) {
+            enemy.mesh.rotation.y = enemyData.r;
+        } else if (enemyData.rotation && enemy.mesh) {
+            enemy.mesh.rotation.set(
+                enemyData.rotation.x || 0,
+                enemyData.rotation.y || 0,
+                enemyData.rotation.z || 0
+            );
+        }
         
         return enemy;
     }
@@ -539,7 +636,7 @@ export class EnemyManager {
         let nearestEnemy = null;
         let nearestDistance = maxDistance;
         
-        for (const enemy of this.enemies) {
+        for (const [id, enemy] of this.enemies.entries()) {
             // Skip dead enemies
             if (enemy.isDead()) continue;
             
@@ -630,10 +727,16 @@ export class EnemyManager {
     }
     
     getEnemiesNearPosition(position, radius) {
-        return this.enemies.filter(enemy => {
+        const nearbyEnemies = [];
+        
+        for (const [id, enemy] of this.enemies.entries()) {
             const distance = position.distanceTo(enemy.getPosition());
-            return distance <= radius;
-        });
+            if (distance <= radius) {
+                nearbyEnemies.push(enemy);
+            }
+        }
+        
+        return nearbyEnemies;
     }
     
     spawnBoss(bossType, position) {
@@ -661,8 +764,10 @@ export class EnemyManager {
             boss.setPosition(playerPos.x, playerPos.y + 1, playerPos.z + 5); // 5 units in front of player
         }
         
-        // Add to enemies array
-        this.enemies.push(boss);
+        // Add to enemies map
+        const id = `boss_${this.nextEnemyId++}`;
+        boss.id = id;
+        this.enemies.set(id, boss);
         
         // Play boss spawn effect
         if (this.game && this.game.audioManager) {
@@ -733,8 +838,9 @@ export class EnemyManager {
         let removedCount = 0;
         
         // Remove enemies that are too far away
-        for (let i = this.enemies.length - 1; i >= 0; i--) {
-            const enemy = this.enemies[i];
+        const enemiesToRemove = [];
+        
+        for (const [id, enemy] of this.enemies.entries()) {
             const position = enemy.getPosition();
             
             // Calculate distance to player
@@ -743,7 +849,7 @@ export class EnemyManager {
             // Different distance thresholds for bosses and regular enemies
             const distanceThreshold = enemy.isBoss ? adjustedBossMaxDistance : adjustedMaxDistance;
             
-            // If enemy is too far away, remove it
+            // If enemy is too far away, mark it for removal
             if (distance > distanceThreshold) {
                 // In multiplier zones, don't remove all enemies at once - stagger removal
                 // This creates a more gradual transition as player moves
@@ -752,15 +858,23 @@ export class EnemyManager {
                     continue;
                 }
                 
+                enemiesToRemove.push(id);
+            }
+        }
+        
+        // Remove marked enemies
+        for (const id of enemiesToRemove) {
+            const enemy = this.enemies.get(id);
+            if (enemy) {
                 enemy.remove();
-                this.enemies.splice(i, 1);
+                this.enemies.delete(id);
                 removedCount++;
             }
         }
         
         // Log cleanup information if enemies were removed
         if (removedCount > 0) {
-            console.debug(`Cleaned up ${removedCount} distant enemies. Remaining: ${this.enemies.length}`);
+            console.debug(`Cleaned up ${removedCount} distant enemies. Remaining: ${this.enemies.size}`);
             
             // Force garbage collection hint if significant cleanup occurred
             if (removedCount > 5 && this.game && this.game.world) {
@@ -788,7 +902,7 @@ export class EnemyManager {
         }
         
         // Skip if we're at max enemies
-        if (this.enemies.length >= this.maxEnemies) {
+        if (this.enemies.size >= this.maxEnemies) {
             // Restore original max enemies
             this.maxEnemies = originalMaxEnemies;
             return;
@@ -808,7 +922,7 @@ export class EnemyManager {
         
         const enemiesToSpawn = Math.min(
             baseEnemyCount,
-            this.maxEnemies - this.enemies.length // Don't exceed max enemies
+            this.maxEnemies - this.enemies.size // Don't exceed max enemies
         );
         
         // Get a random zone instead of using player's current zone
@@ -856,7 +970,7 @@ export class EnemyManager {
             // Spawn the group of enemies
             for (let i = 0; i < enemiesPerGroup; i++) {
                 // Skip if we've reached max enemies
-                if (this.enemies.length >= this.maxEnemies) {
+                if (this.enemies.size >= this.maxEnemies) {
                     break;
                 }
                 
