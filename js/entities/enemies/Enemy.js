@@ -342,7 +342,20 @@ export class Enemy {
             this.applyKnockback(knockbackDirection);
         }
         
+        // Update health bar
+        this.updateHealthBar();
+        
         return amount;
+    }
+    
+    /**
+     * Updates the enemy's health bar (if any)
+     * This method is called when health changes
+     */
+    updateHealthBar() {
+        // Implementation for health bar update
+        // This can be empty for now as it's just to prevent the error
+        // In a future update, this could be implemented to show visual health bars
     }
     
     applyKnockback(direction) {

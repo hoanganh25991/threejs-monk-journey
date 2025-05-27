@@ -469,24 +469,39 @@ export class MultiplayerManager {
      * @param {Object} data - The data received from the member
      */
     handleDataFromMember(peerId, data) {
-        if (!data || !data.type) return;
+        if (!data || !data.type) {
+            console.warn('[MultiplayerManager] Received invalid data from member:', peerId);
+            return;
+        }
         
-        switch (data.type) {
-            case 'playerInput':
-                // Process player input
-                this.processPlayerInput(peerId, data);
-                break;
-            case 'playerPosition':
-                // Update remote player position
-                this.remotePlayerManager.updatePlayer(
-                    peerId, 
-                    data.position, 
-                    data.rotation, 
-                    data.animation
-                );
-                break;
-            default:
-                console.warn('Unknown data type from member:', data.type);
+        try {
+            switch (data.type) {
+                case 'playerInput':
+                    // Process player input
+                    this.processPlayerInput(peerId, data);
+                    break;
+                case 'playerPosition':
+                    // Validate position data before updating
+                    if (!data.position || !data.rotation) {
+                        console.warn('[MultiplayerManager] Received incomplete position data from member:', peerId);
+                        return;
+                    }
+                    
+                    console.log('[MultiplayerManager] Received position update from member:', peerId);
+                    
+                    // Update remote player position
+                    this.remotePlayerManager.updatePlayer(
+                        peerId, 
+                        data.position, 
+                        data.rotation, 
+                        data.animation || 'idle'
+                    );
+                    break;
+                default:
+                    console.warn('[MultiplayerManager] Unknown data type from member:', data.type);
+            }
+        } catch (error) {
+            console.error('[MultiplayerManager] Error handling data from member:', error);
         }
     }
     
@@ -811,32 +826,42 @@ export class MultiplayerManager {
             return;
         }
         
-        // Get player position and rotation
-        const position = {
-            x: this.game.player.model.position.x,
-            y: this.game.player.model.position.y,
-            z: this.game.player.model.position.z
-        };
+        // Check if position and rotation exist
+        if (!this.game.player.model.position || !this.game.player.model.rotation) {
+            console.log('[MultiplayerManager] Cannot send player data: position or rotation is undefined');
+            return;
+        }
         
-        const rotation = {
-            x: this.game.player.model.rotation.x,
-            y: this.game.player.model.rotation.y,
-            z: this.game.player.model.rotation.z
-        };
-        
-        const animation = this.game.player.currentAnimation;
-        
-        console.log('[MultiplayerManager] Member sending player data to host:', 
-                    'Position:', position, 
-                    'Animation:', animation);
-        
-        // Send to host
-        hostConn.send({
-            type: 'playerPosition',
-            position,
-            rotation,
-            animation
-        });
+        try {
+            // Get player position and rotation
+            const position = {
+                x: this.game.player.model.position.x || 0,
+                y: this.game.player.model.position.y || 0,
+                z: this.game.player.model.position.z || 0
+            };
+            
+            const rotation = {
+                x: this.game.player.model.rotation.x || 0,
+                y: this.game.player.model.rotation.y || 0,
+                z: this.game.player.model.rotation.z || 0
+            };
+            
+            const animation = this.game.player.currentAnimation || 'idle';
+            
+            console.log('[MultiplayerManager] Member sending player data to host:', 
+                        'Position:', position, 
+                        'Animation:', animation);
+            
+            // Send to host
+            hostConn.send({
+                type: 'playerPosition',
+                position,
+                rotation,
+                animation
+            });
+        } catch (error) {
+            console.error('[MultiplayerManager] Error sending player data:', error);
+        }
     }
     
     /**
