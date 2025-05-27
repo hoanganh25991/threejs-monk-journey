@@ -24,6 +24,9 @@ export class GameplayTab extends SettingsTab {
         this.cameraZoomSlider = document.getElementById('camera-zoom-slider');
         this.cameraZoomValue = document.getElementById('camera-zoom-value');
         
+        // New Game button
+        this.newGameButton = document.getElementById('new-game-button');
+        
         this.init();
     }
     
@@ -129,6 +132,30 @@ export class GameplayTab extends SettingsTab {
                 if (this.game && this.game.hudManager && this.game.hudManager.components && this.game.hudManager.components.cameraControlUI) {
                     // Use the new setCameraDistance method
                     this.game.hudManager.components.cameraControlUI.setCameraDistance(zoomValue);
+                }
+            });
+        }
+        
+        // Initialize New Game button if it exists
+        if (this.newGameButton) {
+            this.newGameButton.addEventListener('click', () => {
+                // Confirm before starting a new game
+                if (confirm('Are you sure you want to start a new game? Your current progress will be lost.')) {
+                    // Close the settings menu
+                    if (this.settingsMenu) {
+                        this.settingsMenu.hide();
+                    }
+                    
+                    // Start a new game
+                    if (this.game) {
+                        console.debug('Starting a new game...');
+                        this.game.start();
+                        
+                        // Show notification if HUD manager is available
+                        if (this.game.hudManager) {
+                            this.game.hudManager.showNotification('New game started');
+                        }
+                    }
                 }
             });
         }

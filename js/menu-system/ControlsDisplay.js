@@ -28,57 +28,74 @@ export class ControlsDisplay {
         let controlsInfo = keyboardControlsContainer.querySelector('.controls-info');
         if (!controlsInfo) {
             controlsInfo = document.createElement('div');
-            controlsInfo.className = 'controls-info';
+            controlsInfo.className = 'controls-info controls-info-two-columns';
             keyboardControlsContainer.appendChild(controlsInfo);
         } else {
             // Clear existing controls
             controlsInfo.innerHTML = '';
+            // Add two-column class
+            controlsInfo.classList.add('controls-info-two-columns');
         }
         
-        // Add movement section title
+        // Create left and right columns
+        const leftColumn = document.createElement('div');
+        leftColumn.className = 'controls-column';
+        
+        const rightColumn = document.createElement('div');
+        rightColumn.className = 'controls-column';
+        
+        // Add columns to the controls info container
+        controlsInfo.appendChild(leftColumn);
+        controlsInfo.appendChild(rightColumn);
+        
+        // LEFT COLUMN
+        
+        // Add movement section title to left column
         const movementTitle = document.createElement('h4');
         movementTitle.textContent = 'Movement';
-        controlsInfo.appendChild(movementTitle);
+        leftColumn.appendChild(movementTitle);
         
-        // Add movement controls
-        this.addControlRow(controlsInfo, this.formatKeys(MOVEMENT_KEYS.FORWARD.concat(MOVEMENT_KEYS.BACKWARD, MOVEMENT_KEYS.LEFT, MOVEMENT_KEYS.RIGHT)), 'Movement');
+        // Add movement controls to left column
+        this.addControlRow(leftColumn, this.formatKeys(MOVEMENT_KEYS.FORWARD.concat(MOVEMENT_KEYS.BACKWARD, MOVEMENT_KEYS.LEFT, MOVEMENT_KEYS.RIGHT)), 'Movement');
         
-        // Add combat section title
+        // Add combat section title to left column
         const combatTitle = document.createElement('h4');
         combatTitle.textContent = 'Combat';
-        controlsInfo.appendChild(combatTitle);
+        leftColumn.appendChild(combatTitle);
         
-        // Add primary attack
-        this.addControlRow(controlsInfo, this.formatKey(SKILL_KEYS.PRIMARY_ATTACK), 'Primary Attack');
+        // Add primary attack to left column
+        this.addControlRow(leftColumn, this.formatKey(SKILL_KEYS.PRIMARY_ATTACK), 'Primary Attack');
         
-        // Add skill keys
+        // Add skill keys to left column
         const skillKeys = [];
         for (let i = 1; i <= 9; i++) {
             const key = SKILL_KEYS[`SKILL_${i}`];
             if (key) skillKeys.push(key);
         }
-        this.addControlRow(controlsInfo, this.formatKeys(skillKeys), 'Skills');
+        this.addControlRow(leftColumn, this.formatKeys(skillKeys), 'Skills');
         
-        // Add actions section title
+        // RIGHT COLUMN
+        
+        // Add actions section title to right column
         const actionsTitle = document.createElement('h4');
         actionsTitle.textContent = 'Actions';
-        controlsInfo.appendChild(actionsTitle);
+        rightColumn.appendChild(actionsTitle);
         
-        // Add action keys
+        // Add action keys to right column
         for (const [action, key] of Object.entries(ACTION_KEYS)) {
             const description = this.formatActionDescription(action);
-            this.addControlRow(controlsInfo, this.formatKey(key), description);
+            this.addControlRow(rightColumn, this.formatKey(key), description);
         }
         
-        // Add UI section title
+        // Add UI section title to right column
         const uiTitle = document.createElement('h4');
         uiTitle.textContent = 'UI Controls';
-        controlsInfo.appendChild(uiTitle);
+        rightColumn.appendChild(uiTitle);
         
-        // Add UI keys
+        // Add UI keys to right column
         for (const [action, key] of Object.entries(UI_KEYS)) {
             const description = this.formatActionDescription(action);
-            this.addControlRow(controlsInfo, this.formatKey(key), description);
+            this.addControlRow(rightColumn, this.formatKey(key), description);
         }
     }
     
@@ -93,34 +110,51 @@ export class ControlsDisplay {
         let controlsInfo = mobileControlsContainer.querySelector('.controls-info');
         if (!controlsInfo) {
             controlsInfo = document.createElement('div');
-            controlsInfo.className = 'controls-info';
+            controlsInfo.className = 'controls-info controls-info-two-columns';
             mobileControlsContainer.appendChild(controlsInfo);
         } else {
             // Clear existing controls
             controlsInfo.innerHTML = '';
+            // Add two-column class
+            controlsInfo.classList.add('controls-info-two-columns');
         }
         
-        // Add mobile controls section title
+        // Create left and right columns
+        const leftColumn = document.createElement('div');
+        leftColumn.className = 'controls-column';
+        
+        const rightColumn = document.createElement('div');
+        rightColumn.className = 'controls-column';
+        
+        // Add columns to the controls info container
+        controlsInfo.appendChild(leftColumn);
+        controlsInfo.appendChild(rightColumn);
+        
+        // LEFT COLUMN
+        
+        // Add mobile controls section title to left column
         const touchControlsTitle = document.createElement('h4');
         touchControlsTitle.textContent = 'Touch Controls';
-        controlsInfo.appendChild(touchControlsTitle);
+        leftColumn.appendChild(touchControlsTitle);
         
-        // Add mobile controls
-        this.addControlRow(controlsInfo, 'Left Joystick', 'Movement');
-        this.addControlRow(controlsInfo, 'Skill Buttons', 'Activate Skills');
-        this.addControlRow(controlsInfo, 'Tap Enemy', 'Attack Target');
-        this.addControlRow(controlsInfo, 'Tap Object', 'Interact');
+        // Add mobile controls to left column
+        this.addControlRow(leftColumn, 'Left Joystick', 'Movement');
+        this.addControlRow(leftColumn, 'Skill Buttons', 'Activate Skills');
+        this.addControlRow(leftColumn, 'Tap Enemy', 'Attack Target');
+        this.addControlRow(leftColumn, 'Tap Object', 'Interact');
         
-        // Add UI buttons section title
+        // RIGHT COLUMN
+        
+        // Add UI buttons section title to right column
         const uiButtonsTitle = document.createElement('h4');
         uiButtonsTitle.textContent = 'UI Buttons';
-        controlsInfo.appendChild(uiButtonsTitle);
+        rightColumn.appendChild(uiButtonsTitle);
         
-        // Add UI buttons
-        this.addControlRow(controlsInfo, '🌲 Button', 'Open Skill Tree');
-        this.addControlRow(controlsInfo, '✨ Button', 'Open Skill Selection');
-        this.addControlRow(controlsInfo, 'Map Button', 'Toggle Mini Map');
-        this.addControlRow(controlsInfo, '⛩️ Button', 'Open Game Menu');
+        // Add UI buttons to right column
+        this.addControlRow(rightColumn, '🌲 Button', 'Open Skill Tree');
+        this.addControlRow(rightColumn, '✨ Button', 'Open Skill Selection');
+        this.addControlRow(rightColumn, 'Map Button', 'Toggle Mini Map');
+        this.addControlRow(rightColumn, '⛩️ Button', 'Open Game Menu');
     }
     
     /**

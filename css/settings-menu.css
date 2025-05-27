@@ -283,6 +283,19 @@
     margin-top: 10px;
 }
 
+/* Two-column layout for controls */
+.controls-info-two-columns {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.controls-column {
+    flex: 1;
+    min-width: 250px;
+}
+
 .control-row {
     display: flex;
     margin-bottom: 10px;
