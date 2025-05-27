@@ -27,6 +27,7 @@ export class RemotePlayerManager {
         // Check if player exists
         if (!this.remotePlayers.has(peerId)) {
             // Create new remote player
+            console.log(`[RemotePlayerManager] Creating new remote player for peer ${peerId}`);
             this.createRemotePlayer(peerId);
         }
         
@@ -34,6 +35,8 @@ export class RemotePlayerManager {
         const remotePlayer = this.remotePlayers.get(peerId);
         
         // Update position, rotation, and animation
+        console.log(`[RemotePlayerManager] Updating player ${peerId} - Position:`, position, 
+                    "Rotation:", rotation, "Animation:", animation);
         remotePlayer.updatePosition(position);
         remotePlayer.updateRotation(rotation);
         remotePlayer.updateAnimation(animation);

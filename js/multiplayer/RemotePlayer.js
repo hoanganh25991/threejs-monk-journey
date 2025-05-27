@@ -184,9 +184,13 @@ export class RemotePlayer {
      * @param {Object} position - The new position
      */
     updatePosition(position) {
-        if (!position) return;
+        if (!position) {
+            console.log(`[RemotePlayer ${this.peerId}] Received null position`);
+            return;
+        }
         
         // Set target position
+        console.log(`[RemotePlayer ${this.peerId}] Setting target position:`, position);
         this.targetPosition.set(position.x, position.y, position.z);
     }
     
@@ -206,9 +210,18 @@ export class RemotePlayer {
      * @param {string} animation - The new animation name
      */
     updateAnimation(animation) {
-        if (!animation || animation === this.currentAnimation) return;
+        if (!animation) {
+            console.log(`[RemotePlayer ${this.peerId}] Received null animation`);
+            return;
+        }
+        
+        if (animation === this.currentAnimation) {
+            console.log(`[RemotePlayer ${this.peerId}] Animation unchanged: ${animation}`);
+            return;
+        }
         
         // Play the new animation
+        console.log(`[RemotePlayer ${this.peerId}] Playing new animation: ${animation}`);
         this.playAnimation(animation);
     }
     

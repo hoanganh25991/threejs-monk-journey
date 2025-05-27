@@ -506,10 +506,15 @@ export class MultiplayerManager {
      * @param {Object} data - The game state data
      */
     updateGameState(data) {
+        console.log('[MultiplayerManager] Received game state update from host');
+        
         // Update player positions
         if (data.players) {
+            console.log('[MultiplayerManager] Updating', Object.keys(data.players).length, 'players');
+            
             Object.entries(data.players).forEach(([playerId, playerData]) => {
                 if (playerId !== this.peer.id) {
+                    console.log('[MultiplayerManager] Updating remote player', playerId);
                     this.remotePlayerManager.updatePlayer(
                         playerId,
                         playerData.position,
@@ -518,10 +523,13 @@ export class MultiplayerManager {
                     );
                 }
             });
+        } else {
+            console.log('[MultiplayerManager] No player data in game state update');
         }
         
         // Update enemies
         if (data.enemies && this.game.enemyManager) {
+            console.log('[MultiplayerManager] Updating enemies from host data');
             // Update enemy positions and states
             this.game.enemyManager.updateEnemiesFromHost(data.enemies);
         }
@@ -551,12 +559,23 @@ export class MultiplayerManager {
      * Start the game (both host and member)
      */
     startGame() {
+        console.log('[MultiplayerManager] Starting game...');
+        
         // Close multiplayer modal
         this.closeMultiplayerModal();
         
         // Start the game or transition to gameplay
         if (this.game.state) {
+            console.log('[MultiplayerManager] Setting game state to running');
             this.game.state.setRunning();
+            
+            // For members, we need to ensure the game is fully started
+            if (!this.isHost) {
+                console.log('[MultiplayerManager] Member starting game - calling game.start()');
+                this.game.start();
+            } else {
+                console.log('[MultiplayerManager] Host starting game - game already started');
+            }
         }
     }
     
@@ -771,10 +790,26 @@ export class MultiplayerManager {
      * Send player data to host (member only)
      */
     sendPlayerData() {
-        if (this.isHost || !this.isConnected || !this.game.player) return;
+        if (this.isHost || !this.isConnected) {
+            // Silent return for host or not connected
+            return;
+        }
+        
+        if (!this.game.player) {
+            console.log('[MultiplayerManager] Cannot send player data: game.player is null');
+            return;
+        }
+        
+        if (!this.game.player.model) {
+            console.log('[MultiplayerManager] Cannot send player data: game.player.model is null');
+            return;
+        }
         
         const hostConn = this.peers.get(this.hostId);
-        if (!hostConn) return;
+        if (!hostConn) {
+            console.log('[MultiplayerManager] Cannot send player data: no connection to host');
+            return;
+        }
         
         // Get player position and rotation
         const position = {
@@ -791,6 +826,10 @@ export class MultiplayerManager {
         
         const animation = this.game.player.currentAnimation;
         
+        console.log('[MultiplayerManager] Member sending player data to host:', 
+                    'Position:', position, 
+                    'Animation:', animation);
+        
         // Send to host
         hostConn.send({
             type: 'playerPosition',
@@ -804,7 +843,13 @@ export class MultiplayerManager {
      * Broadcast game state to all members (host only)
      */
     broadcastGameState() {
-        if (!this.isHost || !this.game.player) return;
+        if (!this.isHost || !this.game.player) {
+            console.log('[MultiplayerManager] Not broadcasting: isHost=', this.isHost, 
+                        'game.player exists=', !!this.game.player);
+            return;
+        }
+        
+        console.log('[MultiplayerManager] Broadcasting game state to', this.peers.size, 'peers');
         
         // Collect player data
         const players = {};
@@ -824,6 +869,9 @@ export class MultiplayerManager {
                 },
                 animation: this.game.player.currentAnimation
             };
+            console.log('[MultiplayerManager] Host player data:', 
+                        'Position:', players[this.peer.id].position,
+                        'Animation:', this.game.player.currentAnimation);
         } else {
             // Provide default values if model is not available
             players[this.peer.id] = {
@@ -831,7 +879,7 @@ export class MultiplayerManager {
                 rotation: { x: 0, y: 0, z: 0 },
                 animation: 'idle'
             };
-            console.warn('Player model not fully initialized when broadcasting game state');
+            console.warn('[MultiplayerManager] Player model not fully initialized when broadcasting game state');
         }
         
         // Add remote players
@@ -875,6 +923,16 @@ export class MultiplayerManager {
      * @param {number} deltaTime - Time elapsed since the last frame
      */
     update(deltaTime) {
+        // Log update status occasionally (every 3 seconds)
+        const now = Date.now();
+        if (!this._lastUpdateLog || now - this._lastUpdateLog > 3000) {
+            console.log('[MultiplayerManager] Update called - isHost:', this.isHost, 
+                        'isConnected:', this.isConnected, 
+                        'peers:', this.peers.size,
+                        'game state:', this.game.state ? (this.game.state.isRunning() ? 'running' : 'not running') : 'unknown');
+            this._lastUpdateLog = now;
+        }
+        
         // Update remote players
         if (this.remotePlayerManager) {
             this.remotePlayerManager.update(deltaTime);
@@ -882,7 +940,16 @@ export class MultiplayerManager {
         
         // If connected as member, send player data to host
         if (!this.isHost && this.isConnected) {
-            this.sendPlayerData();
+            // Check if game is running
+            if (this.game.state && this.game.state.isRunning()) {
+                this.sendPlayerData();
+            } else {
+                // Log this issue occasionally
+                if (!this._lastGameStateLog || now - this._lastGameStateLog > 3000) {
+                    console.log('[MultiplayerManager] Member not sending data because game is not running');
+                    this._lastGameStateLog = now;
+                }
+            }
         }
         
         // If host, broadcast game state to members
