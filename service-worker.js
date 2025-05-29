@@ -4,13 +4,13 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '38';
+const CACHE_VERSION = '39';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 6595307;
-const TOTAL_CACHE_SIZE_MB = 6.29;
+const TOTAL_CACHE_SIZE_BYTES = 6739452;
+const TOTAL_CACHE_SIZE_MB = 6.43;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
@@ -36,6 +36,7 @@ const ASSETS_TO_CACHE = [
   'css/icons.css',
   'css/initial-loading.css',
   'css/inventory.css',
+  'css/item-popup.css',
   'css/loading-screen.css',
   'css/main.css',
   'css/multiplayer.css',
@@ -95,7 +96,7 @@ const ASSETS_TO_CACHE = [
   'js/entities/player/PlayerStats.js',
   'js/entities/skills/BleedingEffect.js',
   'js/entities/skills/BreathOfHeavenEffect.js',
-  'js/entities/skills/BulBreathOfHeavnEffect.js',
+  'js/entities/skills/BulBreathOfHeavenEffect.js',
   'js/entities/skills/BulPalmEffect.js',
   'js/entities/skills/CycloneStrikeEffect.js',
   'js/entities/skills/DeadlyReachEffect.js',
@@ -214,6 +215,7 @@ const ASSETS_TO_CACHE = [
   'js/menu-system/EnemyPreview.js',
   'js/menu-system/GameMenu.js',
   'js/menu-system/IMenu.js',
+  'js/menu-system/ItemPreview.js',
   'js/menu-system/MainBackground.js',
   'js/menu-system/MenuManager.js',
   'js/menu-system/ModelPreview.js',
@@ -223,6 +225,7 @@ const ASSETS_TO_CACHE = [
   'js/menu-system/settings-menu/ControlsTab.js',
   'js/menu-system/settings-menu/EnemyPreviewTab.js',
   'js/menu-system/settings-menu/GameplayTab.js',
+  'js/menu-system/settings-menu/ItemPreviewTab.js',
   'js/menu-system/settings-menu/PerformanceTab.js',
   'js/menu-system/settings-menu/ReleaseTab.js',
   'js/menu-system/settings-menu/SettingsTab.js',
@@ -338,6 +341,18 @@ const ASSETS_TO_CACHE = [
   'assets/effects/buddha.glb',
   'assets/effects/flying-dragon.glb',
   'assets/images/background.jpg',
+  'assets/models/items/accessory/basic_accessory.glb',
+  'assets/models/items/accessory/basic_ring.glb',
+  'assets/models/items/armor/basic_armor.glb',
+  'assets/models/items/armor/helmet/basic_helmet.glb',
+  'assets/models/items/armor/robe/basic_robe.glb',
+  'assets/models/items/basic_item.glb',
+  'assets/models/items/consumable/basic_consumable.glb',
+  'assets/models/items/consumable/basic_potion.glb',
+  'assets/models/items/weapons/basic_weapon.glb',
+  'assets/models/items/weapons/dagger/basic_dagger.glb',
+  'assets/models/items/weapons/fist/basic_fist.glb',
+  'assets/models/items/weapons/staff/basic_staff.glb',
   'assets/models/monk-v3.glb',
   'assets/models/monk.glb'
 ];

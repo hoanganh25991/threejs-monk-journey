@@ -3,9 +3,6 @@
  * Contains templates for generating different types of items
  */
 
-// Import game balance settings
-import { COMBAT_BALANCE } from './game-balance.js';
-
 // Item templates for item generation
 export const ITEM_TEMPLATES = [
     // ==================== WEAPONS ====================

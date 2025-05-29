@@ -22,6 +22,7 @@ import { isDebugMode } from '../utils/FlagUtils.js';
 import { InteractionSystem } from '../interaction/InteractionSystem.js';
 import { MultiplayerManager } from '../multiplayer/MultiplayerManager.js';
 import { ItemGenerator } from '../entities/items/ItemGenerator.js';
+import { ItemDropManager } from '../entities/items/ItemDropManager.js';
 import { STORAGE_KEYS } from '../config/storage-keys.js';
 
 /**

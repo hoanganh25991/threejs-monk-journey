@@ -1,6 +1,6 @@
 /**
  * Game Balance Configuration
- * Contains settings for game balance, difficulty scaling, and combat mechanics
+ * Contains settings for game balance, difficulty scaling, combat mechanics, and enemy configuration
  */
 
 // Player progression and stats configuration
@@ -47,6 +47,762 @@ export const PLAYER_PROGRESSION = {
     },
 };
 
+// Enemy configuration
+export const ENEMY_CONFIG = {
+    // Zone difficulty multipliers
+    ZONE_DIFFICULTY_MULTIPLIERS: {
+        'forest': 1.0,
+        'ruins': 1.2,
+        'swamp': 1.4,
+        'mountains': 1.6,
+        'dark_sanctum': 1.8,
+        'hellfire_peaks': 2.0,
+        'frozen_wastes': 2.2
+    },
+
+    // Zone-based enemy spawning
+    ZONE_ENEMIES: {
+        'forest': ['skeleton', 'zombie', 'shadow_beast', 'forest_spider', 'corrupted_treant', 'feral_wolf'],
+        'ruins': ['skeleton', 'skeleton_archer', 'necromancer', 'ancient_guardian', 'cursed_spirit', 'ruin_crawler'],
+        'swamp': ['zombie', 'zombie_brute', 'shadow_beast', 'poison_toad', 'bog_lurker', 'swamp_witch'],
+        'mountains': ['demon', 'demon_scout', 'infernal_golem', 'frost_elemental', 'mountain_troll', 'harpy'],
+        'dark_sanctum': ['necromancer', 'shadow_beast', 'infernal_golem', 'void_wraith', 'blood_cultist', 'shadow_stalker'],
+        'hellfire_peaks': ['fire_elemental', 'lava_golem', 'ash_demon', 'flame_imp', 'hellhound'],
+        'frozen_wastes': ['frost_elemental', 'ice_golem', 'snow_troll', 'frozen_revenant', 'winter_wolf']
+    },
+    
+    // Zone-based boss spawning - this provides a clear mapping between zones and their bosses
+    ZONE_BOSSES: {
+        'forest': ['skeleton_king'],
+        'ruins': ['necromancer_lord'],
+        'swamp': ['swamp_horror'],
+        'mountains': ['demon_lord'],
+        'dark_sanctum': ['necromancer_lord', 'void_wraith'],
+        'hellfire_peaks': ['demon_lord', 'lava_golem'],
+        'frozen_wastes': ['frost_titan', 'ice_golem']
+    },
+
+    // Enemy types
+    ENEMY_TYPES: [
+        // Original enemies - scaled to better match player stats
+        {
+            type: 'skeleton',
+            name: 'Skeleton',
+            health: 120,
+            damage: 15,
+            speed: 3,
+            attackRange: 1.5,
+            attackSpeed: 1.5,
+            experienceValue: 25,
+            color: 0xcccccc,
+            behavior: 'aggressive',
+            zone: 'ruins'
+        },
+        {
+            type: 'skeleton_archer',
+            name: 'Skeleton Archer',
+            health: 100,
+            damage: 18,
+            speed: 2.5,
+            attackRange: 8,
+            attackSpeed: 2,
+            experienceValue: 30,
+            color: 0xddccbb,
+            behavior: 'ranged',
+            zone: 'ruins'
+        },
+        {
+            type: 'zombie',
+            name: 'Zombie',
+            health: 160,
+            damage: 20,
+            speed: 2,
+            attackRange: 1.2,
+            attackSpeed: 1,
+            experienceValue: 35,
+            color: 0x88aa88,
+            behavior: 'slow',
+            zone: 'swamp'
+        },
+        {
+            type: 'zombie_brute',
+            name: 'Zombie Brute',
+            health: 220,
+            damage: 30,
+            speed: 1.5,
+            attackRange: 1.8,
+            attackSpeed: 0.8,
+            experienceValue: 50,
+            color: 0x668866,
+            behavior: 'tank',
+            zone: 'swamp'
+        },
+        {
+            type: 'demon',
+            name: 'Demon',
+            health: 180,
+            damage: 25,
+            speed: 4,
+            attackRange: 1.8,
+            attackSpeed: 2,
+            experienceValue: 55,
+            color: 0xaa3333,
+            behavior: 'aggressive',
+            zone: 'mountains'
+        },
+        {
+            type: 'demon_scout',
+            name: 'Demon Scout',
+            health: 140,
+            damage: 20,
+            speed: 5,
+            attackRange: 1.5,
+            attackSpeed: 2.5,
+            experienceValue: 45,
+            color: 0xcc5555,
+            behavior: 'flanker',
+            zone: 'mountains'
+        },
+        {
+            type: 'necromancer',
+            name: 'Necromancer',
+            health: 150,
+            damage: 22,
+            speed: 2.5,
+            attackRange: 6,
+            attackSpeed: 1.8,
+            experienceValue: 50,
+            color: 0x330033,
+            behavior: 'caster',
+            zone: 'ruins'
+        },
+        {
+            type: 'shadow_beast',
+            name: 'Shadow Beast',
+            health: 170,
+            damage: 28,
+            speed: 3.5,
+            attackRange: 1.5,
+            attackSpeed: 2.2,
+            experienceValue: 60,
+            color: 0x000000,
+            behavior: 'ambusher',
+            zone: 'forest'
+        },
+        {
+            type: 'infernal_golem',
+            name: 'Infernal Golem',
+            health: 250,
+            damage: 35,
+            speed: 1.8,
+            attackRange: 2.0,
+            attackSpeed: 1.0,
+            experienceValue: 75,
+            color: 0x333333,
+            behavior: 'tank',
+            zone: 'mountains'
+        },
+        
+        // Forest enemies - scaled to better match player stats
+        {
+            type: 'forest_spider',
+            name: 'Forest Spider',
+            health: 130,
+            damage: 18,
+            speed: 4.5,
+            attackRange: 1.2,
+            attackSpeed: 2.0,
+            experienceValue: 30,
+            color: 0x553300,
+            behavior: 'ambusher',
+            zone: 'forest',
+            abilities: ['web_trap', 'poison_bite']
+        },
+        {
+            type: 'corrupted_treant',
+            name: 'Corrupted Treant',
+            health: 240,
+            damage: 24,
+            speed: 1.5,
+            attackRange: 2.5,
+            attackSpeed: 0.8,
+            experienceValue: 45,
+            color: 0x336633,
+            behavior: 'tank',
+            zone: 'forest',
+            abilities: ['root_grasp', 'thorn_spray']
+        },
+        {
+            type: 'feral_wolf',
+            name: 'Feral Wolf',
+            health: 140,
+            damage: 20,
+            speed: 5.0,
+            attackRange: 1.3,
+            attackSpeed: 2.2,
+            experienceValue: 35,
+            color: 0x777777,
+            behavior: 'pack',
+            zone: 'forest',
+            abilities: ['howl', 'pounce']
+        },
+        
+        // Ruins enemies - scaled to better match player stats
+        {
+            type: 'ancient_guardian',
+            name: 'Ancient Guardian',
+            health: 260,
+            damage: 28,
+            speed: 1.8,
+            attackRange: 2.0,
+            attackSpeed: 1.0,
+            experienceValue: 65,
+            color: 0x888866,
+            behavior: 'defensive',
+            zone: 'ruins',
+            abilities: ['stone_throw', 'ground_pound']
+        },
+        {
+            type: 'cursed_spirit',
+            name: 'Cursed Spirit',
+            health: 135,
+            damage: 22,
+            speed: 3.0,
+            attackRange: 4.0,
+            attackSpeed: 1.5,
+            experienceValue: 40,
+            color: 0xaaaaff,
+            behavior: 'caster',
+            zone: 'ruins',
+            abilities: ['spirit_drain', 'haunt']
+        },
+        {
+            type: 'ruin_crawler',
+            name: 'Ruin Crawler',
+            health: 155,
+            damage: 19,
+            speed: 3.2,
+            attackRange: 1.0,
+            attackSpeed: 1.8,
+            experienceValue: 35,
+            color: 0x996633,
+            behavior: 'swarm',
+            zone: 'ruins',
+            abilities: ['burrow', 'surprise_attack']
+        },
+        
+        // Swamp enemies - scaled to better match player stats
+        {
+            type: 'poison_toad',
+            name: 'Poison Toad',
+            health: 145,
+            damage: 18,
+            speed: 2.5,
+            attackRange: 5.0,
+            attackSpeed: 1.2,
+            experienceValue: 40,
+            color: 0x66aa66,
+            behavior: 'ranged',
+            zone: 'swamp',
+            abilities: ['poison_spit', 'toxic_cloud']
+        },
+        {
+            type: 'bog_lurker',
+            name: 'Bog Lurker',
+            health: 190,
+            damage: 26,
+            speed: 1.8,
+            attackRange: 2.2,
+            attackSpeed: 1.0,
+            experienceValue: 50,
+            color: 0x445544,
+            behavior: 'ambusher',
+            zone: 'swamp',
+            abilities: ['swamp_grab', 'mud_throw']
+        },
+        {
+            type: 'swamp_witch',
+            name: 'Swamp Witch',
+            health: 140,
+            damage: 24,
+            speed: 2.2,
+            attackRange: 7.0,
+            attackSpeed: 1.5,
+            experienceValue: 55,
+            color: 0x559955,
+            behavior: 'caster',
+            zone: 'swamp',
+            abilities: ['hex', 'summon_toad']
+        },
+        
+        // Mountains enemies
+        {
+            type: 'frost_elemental',
+            name: 'Frost Elemental',
+            health: 90,
+            damage: 22,
+            speed: 2.5,
+            attackRange: 5.0,
+            attackSpeed: 1.5,
+            experienceValue: 45,
+            color: 0x88ccff,
+            behavior: 'caster',
+            zone: 'mountains',
+            abilities: ['ice_shard', 'frost_armor']
+        },
+        {
+            type: 'mountain_troll',
+            name: 'Mountain Troll',
+            health: 180,
+            damage: 28,
+            speed: 1.5,
+            attackRange: 2.5,
+            attackSpeed: 0.8,
+            experienceValue: 65,
+            color: 0x778877,
+            behavior: 'tank',
+            zone: 'mountains',
+            abilities: ['boulder_throw', 'regeneration']
+        },
+        {
+            type: 'harpy',
+            name: 'Harpy',
+            health: 75,
+            damage: 16,
+            speed: 4.5,
+            attackRange: 1.5,
+            attackSpeed: 2.0,
+            experienceValue: 40,
+            color: 0xddbb88,
+            behavior: 'flanker',
+            zone: 'mountains',
+            abilities: ['dive_attack', 'screech']
+        },
+        
+        // Dark Sanctum enemies
+        {
+            type: 'void_wraith',
+            name: 'Void Wraith',
+            health: 85,
+            damage: 24,
+            speed: 3.0,
+            attackRange: 3.0,
+            attackSpeed: 1.8,
+            experienceValue: 55,
+            color: 0x440088,
+            behavior: 'caster',
+            zone: 'dark_sanctum',
+            abilities: ['void_bolt', 'phase_shift']
+        },
+        {
+            type: 'blood_cultist',
+            name: 'Blood Cultist',
+            health: 70,
+            damage: 18,
+            speed: 2.8,
+            attackRange: 1.8,
+            attackSpeed: 1.6,
+            experienceValue: 45,
+            color: 0x880000,
+            behavior: 'aggressive',
+            zone: 'dark_sanctum',
+            abilities: ['blood_ritual', 'life_drain']
+        },
+        {
+            type: 'shadow_stalker',
+            name: 'Shadow Stalker',
+            health: 95,
+            damage: 26,
+            speed: 3.8,
+            attackRange: 1.5,
+            attackSpeed: 2.2,
+            experienceValue: 60,
+            color: 0x222222,
+            behavior: 'ambusher',
+            zone: 'dark_sanctum',
+            abilities: ['shadow_step', 'darkness_cloud']
+        },
+        
+        // Hellfire Peaks enemies
+        {
+            type: 'fire_elemental',
+            name: 'Fire Elemental',
+            health: 100,
+            damage: 25,
+            speed: 2.8,
+            attackRange: 4.5,
+            attackSpeed: 1.6,
+            experienceValue: 50,
+            color: 0xff6600,
+            behavior: 'caster',
+            zone: 'hellfire_peaks',
+            abilities: ['fireball', 'flame_wave']
+        },
+        {
+            type: 'lava_golem',
+            name: 'Lava Golem',
+            health: 190,
+            damage: 30,
+            speed: 1.5,
+            attackRange: 2.2,
+            attackSpeed: 0.9,
+            experienceValue: 70,
+            color: 0xcc3300,
+            behavior: 'tank',
+            zone: 'hellfire_peaks',
+            abilities: ['magma_slam', 'heat_aura']
+        },
+        {
+            type: 'ash_demon',
+            name: 'Ash Demon',
+            health: 120,
+            damage: 22,
+            speed: 3.2,
+            attackRange: 2.0,
+            attackSpeed: 1.8,
+            experienceValue: 55,
+            color: 0x666666,
+            behavior: 'aggressive',
+            zone: 'hellfire_peaks',
+            abilities: ['ash_cloud', 'burning_touch']
+        },
+        {
+            type: 'flame_imp',
+            name: 'Flame Imp',
+            health: 60,
+            damage: 15,
+            speed: 4.5,
+            attackRange: 1.2,
+            attackSpeed: 2.5,
+            experienceValue: 30,
+            color: 0xff9900,
+            behavior: 'swarm',
+            zone: 'hellfire_peaks',
+            abilities: ['fire_dart', 'self_destruct']
+        },
+        {
+            type: 'hellhound',
+            name: 'Hellhound',
+            health: 85,
+            damage: 20,
+            speed: 4.8,
+            attackRange: 1.5,
+            attackSpeed: 2.2,
+            experienceValue: 45,
+            color: 0x993300,
+            behavior: 'pack',
+            zone: 'hellfire_peaks',
+            abilities: ['fire_breath', 'pounce']
+        },
+        
+        // Frozen Wastes enemies
+        {
+            type: 'ice_golem',
+            name: 'Ice Golem',
+            health: 170,
+            damage: 26,
+            speed: 1.6,
+            attackRange: 2.2,
+            attackSpeed: 0.9,
+            experienceValue: 65,
+            color: 0xaaddff,
+            behavior: 'tank',
+            zone: 'frozen_wastes',
+            abilities: ['ice_slam', 'frost_armor']
+        },
+        {
+            type: 'snow_troll',
+            name: 'Snow Troll',
+            health: 150,
+            damage: 24,
+            speed: 2.0,
+            attackRange: 2.0,
+            attackSpeed: 1.0,
+            experienceValue: 60,
+            color: 0xddddee,
+            behavior: 'aggressive',
+            zone: 'frozen_wastes',
+            abilities: ['snowball', 'frost_bite']
+        },
+        {
+            type: 'frozen_revenant',
+            name: 'Frozen Revenant',
+            health: 90,
+            damage: 22,
+            speed: 2.5,
+            attackRange: 1.8,
+            attackSpeed: 1.5,
+            experienceValue: 50,
+            color: 0x8888ff,
+            behavior: 'caster',
+            zone: 'frozen_wastes',
+            abilities: ['ice_lance', 'freezing_touch']
+        },
+        {
+            type: 'winter_wolf',
+            name: 'Winter Wolf',
+            health: 80,
+            damage: 18,
+            speed: 4.5,
+            attackRange: 1.5,
+            attackSpeed: 2.0,
+            experienceValue: 40,
+            color: 0xeeeeff,
+            behavior: 'pack',
+            zone: 'frozen_wastes',
+            abilities: ['frost_howl', 'snow_dash']
+        }
+    ],
+
+    // Boss types
+    BOSS_TYPES: [
+        // Original bosses
+        {
+            type: 'skeleton_king',
+            name: 'Skeleton King',
+            health: 300,
+            damage: 25,
+            speed: 2.5,
+            attackRange: 2,
+            attackSpeed: 1.2,
+            experienceValue: 200,
+            color: 0xcccccc,
+            scale: 2,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'ruins',
+            abilities: ['summon_minions', 'ground_slam']
+        },
+        {
+            type: 'swamp_horror',
+            name: 'Swamp Horror',
+            health: 400,
+            damage: 30,
+            speed: 1.8,
+            attackRange: 2.2,
+            attackSpeed: 1,
+            experienceValue: 250,
+            color: 0x446644,
+            scale: 2.2,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'swamp',
+            abilities: ['poison_cloud', 'tentacle_grab']
+        },
+        {
+            type: 'demon_lord',
+            name: 'Demon Lord',
+            health: 500,
+            damage: 35,
+            speed: 3,
+            attackRange: 2.5,
+            attackSpeed: 1.5,
+            experienceValue: 300,
+            color: 0xaa3333,
+            scale: 2.5,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'mountains',
+            abilities: ['fire_nova', 'teleport']
+        },
+        {
+            type: 'frost_titan',
+            name: 'Frost Titan',
+            health: 600,
+            damage: 40,
+            speed: 2.0,
+            attackRange: 3,
+            attackSpeed: 1.0,
+            experienceValue: 350,
+            color: 0x88ccff,
+            scale: 3,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'mountains',
+            abilities: ['ice_storm', 'frost_nova', 'ice_barrier']
+        },
+        {
+            type: 'necromancer_lord',
+            name: 'Necromancer Lord',
+            health: 550,
+            damage: 35,
+            speed: 2.2,
+            attackRange: 8,
+            attackSpeed: 1.5,
+            experienceValue: 320,
+            color: 0x330033,
+            scale: 2.2,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'dark_sanctum',
+            abilities: ['summon_undead', 'death_nova', 'life_drain']
+        },
+        
+        // Forest bosses
+        {
+            type: 'ancient_treant',
+            name: 'Ancient Treant',
+            health: 450,
+            damage: 30,
+            speed: 1.5,
+            attackRange: 3,
+            attackSpeed: 0.8,
+            experienceValue: 280,
+            color: 0x225522,
+            scale: 2.8,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'forest',
+            abilities: ['root_prison', 'nature_wrath', 'healing_sap']
+        },
+        {
+            type: 'spider_queen',
+            name: 'Spider Queen',
+            health: 380,
+            damage: 28,
+            speed: 3.2,
+            attackRange: 2.5,
+            attackSpeed: 1.8,
+            experienceValue: 260,
+            color: 0x663300,
+            scale: 2.3,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'forest',
+            abilities: ['web_prison', 'summon_spiderlings', 'venom_spray']
+        },
+        
+        // Ruins bosses
+        {
+            type: 'ancient_construct',
+            name: 'Ancient Construct',
+            health: 520,
+            damage: 38,
+            speed: 1.8,
+            attackRange: 2.5,
+            attackSpeed: 1.0,
+            experienceValue: 310,
+            color: 0xbbaa88,
+            scale: 2.6,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'ruins',
+            abilities: ['stone_barrage', 'earthquake', 'ancient_curse']
+        },
+        
+        // Swamp bosses
+        {
+            type: 'plague_lord',
+            name: 'Plague Lord',
+            health: 480,
+            damage: 32,
+            speed: 2.0,
+            attackRange: 4,
+            attackSpeed: 1.2,
+            experienceValue: 290,
+            color: 0x557755,
+            scale: 2.4,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'swamp',
+            abilities: ['plague_cloud', 'summon_flies', 'toxic_explosion']
+        },
+        
+        // Dark Sanctum bosses
+        {
+            type: 'void_harbinger',
+            name: 'Void Harbinger',
+            health: 580,
+            damage: 42,
+            speed: 2.5,
+            attackRange: 5,
+            attackSpeed: 1.5,
+            experienceValue: 340,
+            color: 0x330066,
+            scale: 2.7,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'dark_sanctum',
+            abilities: ['void_rift', 'shadow_tendrils', 'mind_shatter']
+        },
+        
+        // Hellfire Peaks bosses
+        {
+            type: 'inferno_lord',
+            name: 'Inferno Lord',
+            health: 650,
+            damage: 45,
+            speed: 2.2,
+            attackRange: 3.5,
+            attackSpeed: 1.3,
+            experienceValue: 380,
+            color: 0xff3300,
+            scale: 3.0,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'hellfire_peaks',
+            abilities: ['meteor_strike', 'flame_pillar', 'inferno_aura']
+        },
+        {
+            type: 'molten_behemoth',
+            name: 'Molten Behemoth',
+            health: 700,
+            damage: 48,
+            speed: 1.5,
+            attackRange: 2.8,
+            attackSpeed: 0.9,
+            experienceValue: 400,
+            color: 0xcc5500,
+            scale: 3.2,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'hellfire_peaks',
+            abilities: ['lava_wave', 'molten_smash', 'eruption']
+        },
+        
+        // Frozen Wastes bosses
+        {
+            type: 'frost_monarch',
+            name: 'Frost Monarch',
+            health: 620,
+            damage: 43,
+            speed: 2.0,
+            attackRange: 4.0,
+            attackSpeed: 1.2,
+            experienceValue: 370,
+            color: 0x66ccff,
+            scale: 2.8,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'frozen_wastes',
+            abilities: ['blizzard', 'ice_prison', 'freezing_touch']
+        },
+        {
+            type: 'ancient_yeti',
+            name: 'Ancient Yeti',
+            health: 680,
+            damage: 46,
+            speed: 1.8,
+            attackRange: 2.5,
+            attackSpeed: 1.0,
+            experienceValue: 390,
+            color: 0xeeeeff,
+            scale: 3.1,
+            isBoss: true,
+            behavior: 'boss',
+            zone: 'frozen_wastes',
+            abilities: ['avalanche', 'frost_breath', 'ice_shards']
+        }
+    ]
+};
+
+// For backward compatibility, export the individual constants
+export const ZONE_DIFFICULTY_MULTIPLIERS = ENEMY_CONFIG.ZONE_DIFFICULTY_MULTIPLIERS;
+export const ZONE_ENEMIES = ENEMY_CONFIG.ZONE_ENEMIES;
+export const ZONE_BOSSES = ENEMY_CONFIG.ZONE_BOSSES;
+export const ENEMY_TYPES = ENEMY_CONFIG.ENEMY_TYPES;
+export const BOSS_TYPES = ENEMY_CONFIG.BOSS_TYPES;
+
 // Combat balance settings
 export const COMBAT_BALANCE = {
     // Player combat settings
@@ -79,42 +835,42 @@ export const COMBAT_BALANCE = {
     
     // Enemy combat settings
     enemy: {
-        // Base damage multiplier
-        damageMultiplier: 1.0,
-        // Health multiplier - increased to require 4-5 punches
-        healthMultiplier: 2.5,
+        // Base damage multiplier - increased to make enemies more threatening
+        damageMultiplier: 1.5,
+        // Health multiplier - significantly increased to better match player health
+        healthMultiplier: 4.0,
         // Experience multiplier
         experienceMultiplier: 1.0,
         // Level scaling factor (how much stronger enemies get per player level)
-        levelScalingFactor: 0.1,
+        levelScalingFactor: 0.12, // Increased to 12% per level
         // Boss health multiplier
-        bossHealthMultiplier: 3.0,
+        bossHealthMultiplier: 4.0, // Increased to make bosses more challenging
         // Boss damage multiplier
-        bossDamageMultiplier: 1.5,
+        bossDamageMultiplier: 1.8, // Increased to make bosses more threatening
         // Elite enemy health multiplier
-        eliteHealthMultiplier: 1.8,
+        eliteHealthMultiplier: 2.2, // Increased for better scaling
         // Elite enemy damage multiplier
-        eliteDamageMultiplier: 1.3,
+        eliteDamageMultiplier: 1.5, // Increased for better scaling
         // Champion enemy health multiplier
-        championHealthMultiplier: 2.2,
+        championHealthMultiplier: 2.8, // Increased for better scaling
         // Champion enemy damage multiplier
-        championDamageMultiplier: 1.4,
+        championDamageMultiplier: 1.6, // Increased for better scaling
         // Enemy health scaling formula parameters
         healthScaling: {
             base: 1.0,
-            levelFactor: 0.1, // 10% per level
+            levelFactor: 0.15, // Increased to 15% per level
             difficultyFactor: 1.0 // Multiplied by difficulty setting
         },
         // Enemy damage scaling formula parameters
         damageScaling: {
             base: 1.0,
-            levelFactor: 0.08, // 8% per level
+            levelFactor: 0.12, // Increased to 12% per level
             difficultyFactor: 1.0 // Multiplied by difficulty setting
         },
         // Enemy defense scaling formula parameters
         defenseScaling: {
             base: 1.0,
-            levelFactor: 0.05, // 5% per level
+            levelFactor: 0.08, // Increased to 8% per level
             difficultyFactor: 1.0 // Multiplied by difficulty setting
         }
     },
@@ -507,338 +1263,5 @@ export const DIFFICULTY_SCALING = {
                 guaranteedLegendary: true
             }
         ]
-    }
-};
-
-// Level up rewards
-// Item set definitions
-export const ITEM_SETS = {
-    // Monk-specific sets
-    monkSets: {
-        // The Enlightened One set
-        enlightenedOne: {
-            id: "enlightenedOne",
-            name: "The Enlightened One",
-            description: "Ancient garments worn by the first monks to achieve enlightenment.",
-            pieces: [
-                { type: "armor", subType: "helmet", name: "Crown of Wisdom" },
-                { type: "armor", subType: "robe", name: "Vestments of Clarity" },
-                { type: "armor", subType: "gloves", name: "Fists of Serenity" },
-                { type: "armor", subType: "belt", name: "Sash of Balance" },
-                { type: "armor", subType: "boots", name: "Steps of Tranquility" },
-                { type: "accessory", subType: "amulet", name: "Pendant of Enlightenment" }
-            ],
-            bonuses: [
-                { 
-                    count: 2, 
-                    description: "+20% Meditation effectiveness",
-                    effects: [{ type: "meditationEffectiveness", value: 20 }]
-                },
-                { 
-                    count: 4, 
-                    description: "+30% Spirit regeneration and +15% cooldown reduction",
-                    effects: [
-                        { type: "spiritRegen", value: 30 },
-                        { type: "cooldownReduction", value: 15 }
-                    ]
-                },
-                { 
-                    count: 6, 
-                    description: "Wave of Light creates 3 smaller waves that each deal 40% damage",
-                    effects: [{ type: "skillModifier", skill: "waveOfLight", modifier: "tripleWave" }]
-                }
-            ]
-        },
-        
-        // Thunderfist set
-        thunderfist: {
-            id: "thunderfist",
-            name: "Thunderfist",
-            description: "Harness the power of lightning with every strike.",
-            pieces: [
-                { type: "weapon", subType: "fist", name: "Fist of Thunder" },
-                { type: "armor", subType: "gloves", name: "Storm Grips" },
-                { type: "armor", subType: "belt", name: "Lightning Coil" },
-                { type: "accessory", subType: "ring", name: "Thundergod's Vigor" }
-            ],
-            bonuses: [
-                { 
-                    count: 2, 
-                    description: "+50% Lightning damage",
-                    effects: [{ type: "elementalDamage", element: "lightning", value: 50 }]
-                },
-                { 
-                    count: 4, 
-                    description: "Your attacks have a 20% chance to call down lightning, dealing 150% weapon damage",
-                    effects: [{ type: "proc", procType: "lightning", chance: 20, damage: 150 }]
-                }
-            ]
-        },
-        
-        // Jade Harmony set
-        jadeHarmony: {
-            id: "jadeHarmony",
-            name: "Jade Harmony",
-            description: "Find inner peace and outward strength through perfect balance.",
-            pieces: [
-                { type: "weapon", subType: "staff", name: "Staff of Harmony" },
-                { type: "armor", subType: "helmet", name: "Jade Crown" },
-                { type: "armor", subType: "robe", name: "Jade Vestments" },
-                { type: "armor", subType: "boots", name: "Jade Footwraps" },
-                { type: "accessory", subType: "amulet", name: "Jade Pendant" }
-            ],
-            bonuses: [
-                { 
-                    count: 2, 
-                    description: "+25% Healing effectiveness",
-                    effects: [{ type: "healingEffectiveness", value: 25 }]
-                },
-                { 
-                    count: 3, 
-                    description: "+15% Damage reduction and +10% Movement speed",
-                    effects: [
-                        { type: "damageReduction", value: 15 },
-                        { type: "movementSpeed", value: 10 }
-                    ]
-                },
-                { 
-                    count: 5, 
-                    description: "Exploding Palm affects 2 additional enemies and its damage is increased by 100%",
-                    effects: [
-                        { type: "skillModifier", skill: "explodingPalm", modifier: "additionalTargets", value: 2 },
-                        { type: "skillDamage", skill: "explodingPalm", value: 100 }
-                    ]
-                }
-            ]
-        }
-    },
-    
-    // Generic sets that any class can use
-    genericSets: {
-        // Ancient Wisdom set
-        ancientWisdom: {
-            id: "ancientWisdom",
-            name: "Ancient Wisdom",
-            description: "Knowledge from the ancients flows through these artifacts.",
-            pieces: [
-                { type: "accessory", subType: "amulet", name: "Pendant of Knowledge" },
-                { type: "accessory", subType: "ring", name: "Band of Secrets" },
-                { type: "accessory", subType: "ring", name: "Circle of Truth" }
-            ],
-            bonuses: [
-                { 
-                    count: 2, 
-                    description: "+20% Experience gained",
-                    effects: [{ type: "experienceBonus", value: 20 }]
-                },
-                { 
-                    count: 3, 
-                    description: "+15% Cooldown reduction and +10% Resource cost reduction",
-                    effects: [
-                        { type: "cooldownReduction", value: 15 },
-                        { type: "resourceCostReduction", value: 10 }
-                    ]
-                }
-            ]
-        },
-        
-        // Celestial Guardian set
-        celestialGuardian: {
-            id: "celestialGuardian",
-            name: "Celestial Guardian",
-            description: "Protected by the spirits of ancient guardians.",
-            pieces: [
-                { type: "armor", subType: "helmet", name: "Celestial Crown" },
-                { type: "armor", subType: "robe", name: "Celestial Vestments" },
-                { type: "armor", subType: "gloves", name: "Celestial Grips" },
-                { type: "armor", subType: "boots", name: "Celestial Treads" }
-            ],
-            bonuses: [
-                { 
-                    count: 2, 
-                    description: "+20% Health and +10% All resistances",
-                    effects: [
-                        { type: "healthBonus", value: 20 },
-                        { type: "allResistance", value: 10 }
-                    ]
-                },
-                { 
-                    count: 4, 
-                    description: "When you take damage, you have a 15% chance to become invulnerable for 2 seconds",
-                    effects: [{ type: "proc", procType: "invulnerability", chance: 15, duration: 2 }]
-                }
-            ]
-        }
-    }
-};
-
-// Skill modification system
-export const SKILL_MODIFICATIONS = {
-    // Modifications for Wave of Light skill
-    waveOfLight: {
-        tripleWave: {
-            name: "Triple Wave",
-            description: "Wave of Light creates 3 smaller waves that each deal 40% damage",
-            damageMultiplier: 0.4,
-            waveCount: 3,
-            visualEffect: "tripleWaveEffect"
-        },
-        fireWave: {
-            name: "Fire Wave",
-            description: "Wave of Light becomes a wave of fire that burns enemies for 3 seconds",
-            elementType: "fire",
-            burnDuration: 3,
-            burnDamagePercent: 50,
-            visualEffect: "fireWaveEffect"
-        },
-        wideWave: {
-            name: "Wide Wave",
-            description: "Wave of Light is 50% wider and pushes enemies back",
-            widthMultiplier: 1.5,
-            knockbackDistance: 5,
-            visualEffect: "wideWaveEffect"
-        }
-    },
-    
-    // Modifications for Flying Kick skill
-    flyingKick: {
-        lightningKick: {
-            name: "Lightning Kick",
-            description: "Flying Kick charges you with lightning, dealing damage to nearby enemies",
-            elementType: "lightning",
-            aoeRadius: 3,
-            aoeDamagePercent: 60,
-            visualEffect: "lightningKickEffect"
-        },
-        teleportKick: {
-            name: "Teleport Kick",
-            description: "Flying Kick can be used again within 2 seconds at no spirit cost",
-            cooldownReset: true,
-            resetWindow: 2,
-            noResourceCost: true,
-            visualEffect: "teleportKickEffect"
-        },
-        explosiveKick: {
-            name: "Explosive Kick",
-            description: "Flying Kick creates an explosion on impact, dealing 80% weapon damage",
-            explosionRadius: 4,
-            explosionDamagePercent: 80,
-            visualEffect: "explosiveKickEffect"
-        }
-    },
-    
-    // Modifications for Exploding Palm skill
-    explodingPalm: {
-        essenceBleed: {
-            name: "Essence Bleed",
-            description: "Exploding Palm's bleed effect lasts twice as long and deals 50% more damage",
-            durationMultiplier: 2.0,
-            damageMultiplier: 1.5,
-            visualEffect: "essenceBleedEffect"
-        },
-        chainExplosion: {
-            name: "Chain Explosion",
-            description: "When an enemy affected by Exploding Palm dies, the explosion has a 40% chance to apply Exploding Palm to nearby enemies",
-            chainChance: 0.4,
-            chainRadius: 5,
-            visualEffect: "chainExplosionEffect"
-        },
-        frostPalm: {
-            name: "Frost Palm",
-            description: "Exploding Palm becomes cold damage and freezes enemies for 2 seconds when they die",
-            elementType: "ice",
-            freezeDuration: 2,
-            visualEffect: "frostPalmEffect"
-        }
-    }
-};
-
-export const LEVEL_UP_REWARDS = {
-    // Health increase per level
-    healthPerLevel: 10,
-    // Mana increase per level
-    manaPerLevel: 5,
-    // Attack power increase per level
-    attackPowerPerLevel: 2,
-    // Stat points awarded per level
-    statPointsPerLevel: 3,
-    // Skill points awarded per level
-    skillPointsPerLevel: 1,
-    // Gold awarded per level
-    goldPerLevel: 100,
-    // Special rewards at milestone levels
-    milestones: {
-        5: {
-            description: "First Skill Variant Unlocked",
-            skillPoints: 2,
-            gold: 250
-        },
-        10: {
-            description: "Second Skill Variant Unlocked",
-            skillPoints: 3,
-            gold: 500,
-            item: {
-                type: "accessory",
-                minRarity: "rare"
-            }
-        },
-        15: {
-            description: "Third Skill Variant Unlocked",
-            skillPoints: 3,
-            statPoints: 5,
-            gold: 750
-        },
-        20: {
-            description: "Special Ability Unlocked",
-            skillPoints: 4,
-            gold: 1000,
-            item: {
-                type: "weapon",
-                minRarity: "epic"
-            }
-        },
-        30: {
-            description: "World Tier System Unlocked",
-            skillPoints: 5,
-            statPoints: 10,
-            gold: 2000,
-            item: {
-                type: "any",
-                minRarity: "legendary"
-            }
-        }
-    },
-    // Stat scaling with level
-    statScaling: {
-        // Base stats at level 1
-        baseStats: {
-            strength: 10,
-            dexterity: 10,
-            intelligence: 10,
-            vitality: 10
-        },
-        // How much each stat contributes to derived attributes
-        statContributions: {
-            // Strength increases attack power and physical resistance
-            strength: {
-                attackPower: 1.0, // 1 attack power per point
-                physicalResistance: 0.1 // 0.1% physical resistance per point
-            },
-            // Dexterity increases critical hit chance and dodge
-            dexterity: {
-                critChance: 0.1, // 0.1% crit chance per point
-                dodge: 0.1 // 0.1% dodge chance per point
-            },
-            // Intelligence increases mana and skill effectiveness
-            intelligence: {
-                manaBonus: 1.0, // 1 mana per point
-                skillEffectiveness: 0.5 // 0.5% skill effectiveness per point
-            },
-            // Vitality increases health and all resistances
-            vitality: {
-                healthBonus: 2.0, // 2 health per point
-                allResistance: 0.05 // 0.05% all resistance per point
-            }
-        }
     }
 };

@@ -5,7 +5,7 @@
 
 import { SettingsTab } from './SettingsTab.js';
 import { EnemyPreview } from '../EnemyPreview.js';
-import { ENEMY_TYPES, BOSS_TYPES } from '../../config/enemies.js';
+import { ENEMY_TYPES, BOSS_TYPES } from '../../config/game-balance.js';
 import { STORAGE_KEYS } from '../../config/storage-keys.js';
 
 export class EnemyPreviewTab extends SettingsTab {

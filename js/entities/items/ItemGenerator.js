@@ -128,69 +128,12 @@ export class ItemGenerator {
         // Get a random template
         const template = this.randomElement(matchingTemplates);
         
-        // Ensure the template has a visual property with a model
+        // Ensure the template has a visual property
         if (!template.visual) {
             template.visual = {};
         }
         
-        // If no model is specified, set the default model path
-        template.visual.model = this.getDefaultModelPath(type, subType);
-        
         return template;
-    }
-    
-    /**
-     * Get default model path based on item type and subType
-     * @param {string} type - Item type
-     * @param {string} subType - Item subType
-     * @returns {string} Path to the default model
-     * @private
-     */
-    getDefaultModelPath(type, subType) {
-        console.log("getDefaultModelPath", {type, subType})
-        // Base path for item models
-        const basePath = 'assets/models/items';
-        
-        // Default models by type and subType
-        const defaultModels = {
-            weapon: {
-                fist: `${basePath}/weapons/fist/basic_fist.glb`,
-                staff: `${basePath}/weapons/staff/basic_staff.glb`,
-                dagger: `${basePath}/weapons/dagger/basic_dagger.glb`,
-                default: `${basePath}/weapons/basic_weapon.glb`
-            },
-            armor: {
-                robe: `${basePath}/armor/robe/basic_robe.glb`,
-                helmet: `${basePath}/armor/helmet/basic_helmet.glb`,
-                gloves: `${basePath}/armor/gloves/basic_gloves.glb`,
-                belt: `${basePath}/armor/belt/basic_belt.glb`,
-                boots: `${basePath}/armor/boots/basic_boots.glb`,
-                default: `${basePath}/armor/basic_armor.glb`
-            },
-            accessory: {
-                amulet: `${basePath}/accessory/basic_amulet.glb`,
-                ring: `${basePath}/accessory/basic_ring.glb`,
-                talisman: `${basePath}/accessory/basic_talisman.glb`,
-                default: `${basePath}/accessory/basic_accessory.glb`
-            },
-            consumable: {
-                potion: `${basePath}/consumable/basic_potion.glb`,
-                scroll: `${basePath}/consumable/basic_scroll.glb`,
-                food: `${basePath}/consumable/basic_food.glb`,
-                default: `${basePath}/consumable/basic_consumable.glb`
-            },
-            default: `${basePath}/basic_item.glb`
-        };
-        
-        // Get the model path based on type and subType
-        if (defaultModels[type]) {
-            if (subType && defaultModels[type][subType]) {
-                return defaultModels[type][subType];
-            }
-            return defaultModels[type].default;
-        }
-        
-        return defaultModels.default;
     }
     
     generateBaseStats(template, level) {

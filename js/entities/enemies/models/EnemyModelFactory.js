@@ -46,6 +46,9 @@ export class EnemyModelFactory {
             // Demon types
             case 'demon':
             case 'demon_lord':
+            case 'demon_scout':      // Added demon scout
+            case 'ash_demon':        // Added ash demon
+            case 'flame_imp':        // Added flame imp (smaller demon)
                 return new DemonModel(enemy, modelGroup);
                 
             // Boss types
@@ -58,10 +61,12 @@ export class EnemyModelFactory {
                 return new NecromancerModel(enemy, modelGroup);
                 
             case 'swamp_witch':
+            case 'blood_cultist':    // Added blood cultist (similar to witch)
                 return new SwampWitchModel(enemy, modelGroup);
                 
             // Beast types
             case 'shadow_beast':
+            case 'shadow_stalker':   // Added shadow stalker
                 return new ShadowBeastModel(enemy, modelGroup);
                 
             // Elemental types
@@ -73,6 +78,8 @@ export class EnemyModelFactory {
                 
             // Golem types
             case 'infernal_golem':
+            case 'lava_golem':       // Added lava golem
+            case 'ice_golem':        // Added ice golem
                 return new InfernalGolemModel(enemy, modelGroup);
                 
             // Plant types
@@ -81,10 +88,13 @@ export class EnemyModelFactory {
                 
             // Mountain creatures
             case 'mountain_troll':
+            case 'snow_troll':       // Added snow troll
                 return new MountainTrollModel(enemy, modelGroup);
                 
             // Dark Sanctum creatures
             case 'void_wraith':
+            case 'frozen_revenant':  // Added frozen revenant
+            case 'cursed_spirit':    // Added cursed spirit
                 return new VoidWraithModel(enemy, modelGroup);
                 
             // Use SimpleEnemyModel for these animal-like enemy types
@@ -95,6 +105,8 @@ export class EnemyModelFactory {
             case 'poison_toad':
             case 'bog_lurker':
             case 'ruin_crawler':
+            case 'harpy':            // Added harpy
+            case 'ancient_guardian': // Added ancient guardian
                 return new SimpleEnemyModel(enemy, modelGroup);
                 
             // Default fallback

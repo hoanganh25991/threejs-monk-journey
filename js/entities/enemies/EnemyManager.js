@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { Enemy } from './Enemy.js';
-import { ZONE_ENEMIES, ENEMY_TYPES, BOSS_TYPES, ZONE_DIFFICULTY_MULTIPLIERS } from '../../config/enemies.js';
+import { ZONE_ENEMIES, ZONE_BOSSES, ENEMY_TYPES, BOSS_TYPES, ZONE_DIFFICULTY_MULTIPLIERS } from '../../config/game-balance.js';
 import { DROP_CHANCES, REGULAR_DROP_TABLE, BOSS_DROP_TABLE } from '../../config/drops.js';
 import { DIFFICULTY_SETTINGS } from '../../config/difficulty-settings.js';
 import { COMBAT_BALANCE, DIFFICULTY_SCALING } from '../../config/game-balance.js';
+import { ItemGenerator } from '../items/ItemGenerator.js';
 
 /**
  * @typedef {Object} EnemyType
@@ -69,6 +70,7 @@ export class EnemyManager {
         
         // Import enemy configuration from config/enemies.js
         this.zoneEnemies = ZONE_ENEMIES;
+        this.zoneBosses = ZONE_BOSSES;
         this.enemyTypes = ENEMY_TYPES;
         this.bossTypes = BOSS_TYPES;
         
@@ -88,6 +90,12 @@ export class EnemyManager {
         this.bossSpawnTimer = 0;
         this.bossSpawnInterval = 120; // Spawn boss every 120 seconds (2 minutes)
         this.bossSpawnChance = 0.2; // 20% chance to spawn a boss when timer is up
+        
+        // Item generation
+        this.itemGenerator = new ItemGenerator(game);
+        
+        // Reference to the item drop manager (will be set by the game)
+        this.itemDropManager = null;
     }
     
     // setGame method removed - game is now passed in constructor
@@ -646,16 +654,42 @@ export class EnemyManager {
     
     /**
      * Get a random boss type from the available boss types
+     * @param {string} [zone=null] - Optional zone to get a boss from
      * @returns {Object} A random boss type configuration
      */
-    getRandomBossType() {
+    getRandomBossType(zone = null) {
         // If no boss types are available, return null
         if (!this.bossTypes || this.bossTypes.length === 0) {
             console.warn('No boss types available');
             return null;
         }
         
-        // Select a random boss type
+        // If we have zone bosses configuration and a zone is specified or we can get a random zone
+        if (this.zoneBosses) {
+            let bossZone = zone;
+            
+            // If no zone specified, get a random zone that has bosses
+            if (!bossZone) {
+                const availableZones = Object.keys(this.zoneBosses);
+                if (availableZones.length > 0) {
+                    bossZone = availableZones[Math.floor(Math.random() * availableZones.length)];
+                }
+            }
+            
+            // If we have a valid zone with bosses, select a random boss from that zone
+            if (bossZone && this.zoneBosses[bossZone] && this.zoneBosses[bossZone].length > 0) {
+                const zoneBossTypes = this.zoneBosses[bossZone];
+                const randomBossTypeId = zoneBossTypes[Math.floor(Math.random() * zoneBossTypes.length)];
+                
+                // Find the boss type object
+                const bossType = this.bossTypes.find(type => type.type === randomBossTypeId);
+                if (bossType) {
+                    return bossType;
+                }
+            }
+        }
+        
+        // Fallback to random selection from all boss types
         const randomIndex = Math.floor(Math.random() * this.bossTypes.length);
         return this.bossTypes[randomIndex];
     }
@@ -753,34 +787,85 @@ export class EnemyManager {
         const dropChance = enemy.isBoss ? DROP_CHANCES.bossDropChance : DROP_CHANCES.normalDropChance;
         
         if (Math.random() < dropChance) {
-            // Determine item type
+            // Generate an item using the ItemGenerator
             let item;
             
             if (enemy.isBoss) {
-                // Boss drops are better
-                item = this.generateBossDrop(enemy);
+                // Generate a higher quality item for bosses
+                const bossLevel = Math.max(1, this.player.stats.getLevel());
+                item = this.itemGenerator.generateItem({
+                    level: bossLevel,
+                    rarity: this.getRandomBossRarity()
+                });
             } else {
-                // Regular enemy drops
-                item = this.generateRegularDrop(enemy);
+                // Generate a regular item for normal enemies
+                const enemyLevel = Math.max(1, this.player.stats.getLevel() - 1);
+                item = this.itemGenerator.generateItem({
+                    level: enemyLevel,
+                    rarity: this.getRandomEnemyRarity()
+                });
             }
             
-            // Add item to player inventory
-            if (this.game && this.game.player && item) {
+            // If we have an item drop manager, use it to create a visual drop
+            if (this.itemDropManager && item) {
+                const enemyPosition = enemy.getPosition();
+                this.itemDropManager.dropItem(item, enemyPosition);
+            } else if (this.game && this.game.player && item) {
+                // Fallback: Add directly to player inventory if no drop manager
                 this.game.player.addToInventory(item);
                 
                 // Show notification
                 if (this.game.hudManager) {
-                    // this.game.hudManager.showNotification(`Found ${item.name}`);
+                    this.game.hudManager.showNotification(`Found ${item.name}`);
                 }
             }
         }
     }
     
+    /**
+     * Get a random rarity for boss drops
+     * Bosses have higher chance for rare+ items
+     * @returns {string} The rarity
+     */
+    getRandomBossRarity() {
+        const rand = Math.random();
+        
+        if (rand < 0.05) return 'mythic';
+        if (rand < 0.20) return 'legendary';
+        if (rand < 0.40) return 'epic';
+        if (rand < 0.70) return 'rare';
+        if (rand < 0.90) return 'uncommon';
+        return 'common';
+    }
+    
+    /**
+     * Get a random rarity for normal enemy drops
+     * @returns {string} The rarity
+     */
+    getRandomEnemyRarity() {
+        const rand = Math.random();
+        
+        if (rand < 0.01) return 'mythic';
+        if (rand < 0.05) return 'legendary';
+        if (rand < 0.15) return 'epic';
+        if (rand < 0.30) return 'rare';
+        if (rand < 0.60) return 'uncommon';
+        return 'common';
+    }
+    
+    /**
+     * Legacy method for backward compatibility
+     * @deprecated Use ItemGenerator instead
+     */
     generateRegularDrop(enemy) {
         // Use drop table from config
         return this.selectWeightedItem(REGULAR_DROP_TABLE);
     }
     
+    /**
+     * Legacy method for backward compatibility
+     * @deprecated Use ItemGenerator instead
+     */
     generateBossDrop(enemy) {
         // Use boss drop table from config
         return this.selectWeightedItem(BOSS_DROP_TABLE);
@@ -881,11 +966,18 @@ export class EnemyManager {
     /**
      * Spawn a random boss at a random position
      * @param {THREE.Vector3} [position=null] - Optional specific position to spawn the boss
+     * @param {string} [zone=null] - Optional zone to spawn a boss from
      * @returns {Enemy} The spawned boss instance
      */
-    spawnRandomBoss(position = null) {
-        // Get a random boss type
-        const randomBossType = this.getRandomBossType();
+    spawnRandomBoss(position = null, zone = null) {
+        // Try to get the current zone if not specified
+        let currentZone = zone;
+        if (!currentZone && position && this.game && this.game.world) {
+            currentZone = this.game.world.getZoneAt(position)?.name?.toLowerCase()?.replace(' ', '_');
+        }
+        
+        // Get a random boss type for the current zone
+        const randomBossType = this.getRandomBossType(currentZone);
         
         if (!randomBossType) {
             console.warn('No boss types available for random spawning');

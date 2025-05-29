@@ -4,10 +4,10 @@
  */
 
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { updateAnimation } from '../utils/AnimationUtils.js';
 import { ItemGenerator } from '../entities/items/ItemGenerator.js';
+import { ItemModelFactory } from '../entities/items/models/ItemModelFactory.js';
 
 export class ItemPreview {
     /**
@@ -38,7 +38,7 @@ export class ItemPreview {
         this.animations = {};
         this.currentAnimation = null;
         this.currentItem = null;
-        this.loader = new GLTFLoader(); // Create a single loader instance
+        this.itemModels = new Map(); // Map to store item models
         
         // Create a wrapper to handle visibility
         this.wrapper = document.createElement('div');
@@ -196,11 +196,21 @@ export class ItemPreview {
      * @param {Object} item - The item to load
      */
     loadItemModel(item) {
-        console.log({item})
+        console.log('ItemPreview: Loading model for item', item ? item.name : 'unknown');
+        
         // Remove existing model if any
         if (this.model) {
             this.scene.remove(this.model);
             this.model = null;
+        }
+        
+        // Clear any existing item models
+        if (this.itemModels.size > 0) {
+            for (const model of this.itemModels.values()) {
+                const modelGroup = model.getModelGroup();
+                this.scene.remove(modelGroup);
+            }
+            this.itemModels.clear();
         }
         
         // Reset mixer and animations
@@ -211,138 +221,48 @@ export class ItemPreview {
         // Store the current item
         this.currentItem = item;
         
-        // Check if item has a visual model
-        if (!item || !item.visual || !item.visual.model) {
-            console.warn('ItemPreview: No model available for item', item ? item.name : 'unknown');
-            this.createDefaultModel(item);
+        // Check if item exists
+        if (!item) {
+            console.warn('ItemPreview: No item provided');
+            this.createDefaultModel(null);
             return;
         }
         
-        // The model path is already set by ItemGenerator in item.visual.model
-        const modelPath = item.visual.model;
+        // Create a group for this item
+        const modelGroup = new THREE.Group();
+        modelGroup.name = `item-preview-${item.id || 'unknown'}`;
         
-        // Load new model
-        this.loader.load(
-            modelPath,
-            (gltf) => {
-                this.model = gltf.scene;
-                
-                // Apply shadows to all meshes
-                this.model.traverse((node) => {
-                    if (node.isMesh) {
-                        node.castShadow = true;
-                        node.receiveShadow = true;
-                    }
-                });
-                
-                // Set up animations if they exist
-                if (gltf.animations && gltf.animations.length > 0) {
-                    this.mixer = new THREE.AnimationMixer(this.model);
-                    
-                    // Store all animations
-                    this.animations = {};
-                    gltf.animations.forEach(animation => {
-                        // Make sure animation has a name
-                        if (!animation.name || animation.name === '') {
-                            animation.name = `animation_${gltf.animations.indexOf(animation)}`;
-                        }
-                        
-                        const action = this.mixer.clipAction(animation);
-                        this.animations[animation.name] = action;
-                    });
-                    
-                    // Play the first animation if we have any
-                    const animationNames = Object.keys(this.animations);
-                    if (animationNames.length > 0) {
-                        const firstAnimName = animationNames[0];
-                        this.animations[firstAnimName].play();
-                        this.currentAnimation = firstAnimName;
-                    }
-                }
-                
-                // Scale the model
-                const scale = 1.0;
-                this.model.scale.set(scale, scale, scale);
-                
-                // Center the model
-                this.centerModel();
-                
-                // Add to scene
-                this.scene.add(this.model);
-            },
-            (xhr) => {
-                console.debug(`Loading model: ${(xhr.loaded / xhr.total * 100)}% loaded`);
-            },
-            (error) => {
-                console.error('Error loading model:', error);
-                this.createDefaultModel(item);
-            }
-        );
+        // Create the appropriate model based on item type
+        const itemModel = ItemModelFactory.createModel(item, modelGroup);
+        
+        // Apply rarity effects
+        ItemModelFactory.applyRarityEffects(itemModel, item.rarity);
+        
+        // Add to scene
+        this.scene.add(modelGroup);
+        
+        // Store reference
+        this.itemModels.set(item.id || 'preview', itemModel);
+        
+        // Set as the current model
+        this.model = modelGroup;
+        
+        // Center the model
+        this.centerModel();
     }
     
     /**
-     * Create a default model for items without a 3D model
-     * @param {Object} item - The item to create a default model for
+     * Create a default model for when no item is provided
+     * @param {Object} item - The item to create a default model for (can be null)
      * @private
      */
     createDefaultModel(item) {
-        // Create a simple geometry based on item type
-        let geometry;
+        // Create a simple cube as a placeholder
+        const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
         
-        if (!item) {
-            // Default cube if no item
-            geometry = new THREE.BoxGeometry(1, 1, 1);
-        } else if (item.type === 'weapon') {
-            if (item.subType === 'staff') {
-                geometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 8);
-            } else if (item.subType === 'dagger') {
-                geometry = new THREE.BoxGeometry(0.15, 0.8, 0.05);
-            } else if (item.subType === 'fist') {
-                geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-            } else {
-                geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-            }
-        } else if (item.type === 'armor') {
-            if (item.subType === 'robe') {
-                geometry = new THREE.CylinderGeometry(0.3, 0.5, 1.2, 8);
-            } else if (item.subType === 'helmet') {
-                geometry = new THREE.SphereGeometry(0.3, 16, 16);
-            } else if (item.subType === 'gloves') {
-                geometry = new THREE.BoxGeometry(0.4, 0.2, 0.2);
-            } else if (item.subType === 'belt') {
-                geometry = new THREE.BoxGeometry(0.6, 0.1, 0.1);
-            } else if (item.subType === 'boots') {
-                geometry = new THREE.BoxGeometry(0.3, 0.3, 0.5);
-            } else {
-                geometry = new THREE.SphereGeometry(0.5, 16, 16);
-            }
-        } else if (item.type === 'accessory') {
-            if (item.subType === 'amulet') {
-                geometry = new THREE.CylinderGeometry(0.2, 0.2, 0.05, 16);
-            } else if (item.subType === 'ring') {
-                geometry = new THREE.TorusGeometry(0.2, 0.05, 16, 32);
-            } else if (item.subType === 'talisman') {
-                geometry = new THREE.TetrahedronGeometry(0.3);
-            } else {
-                geometry = new THREE.TorusGeometry(0.3, 0.1, 16, 32);
-            }
-        } else if (item.type === 'consumable') {
-            if (item.subType === 'potion') {
-                geometry = new THREE.CylinderGeometry(0.15, 0.15, 0.4, 16);
-            } else if (item.subType === 'scroll') {
-                geometry = new THREE.CylinderGeometry(0.1, 0.1, 0.4, 16);
-            } else if (item.subType === 'food') {
-                geometry = new THREE.SphereGeometry(0.2, 16, 16);
-            } else {
-                geometry = new THREE.CylinderGeometry(0.2, 0.2, 0.5, 16);
-            }
-        } else {
-            geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-        }
-        
-        // Create material based on item rarity
-        let color = 0xffffff;
-        if (item) {
+        // Create material based on item rarity or default to white
+        let color = 0xCCCCCC; // Default gray
+        if (item && item.rarity) {
             switch (item.rarity) {
                 case 'common': color = 0xffffff; break;
                 case 'uncommon': color = 0x1eff00; break;
@@ -413,8 +333,10 @@ export class ItemPreview {
             
             // Update animations
             const delta = this.clock.getDelta();
-            if (this.mixer) {
-                updateAnimation(this.mixer, delta);
+            
+            // Update item model animations
+            for (const model of this.itemModels.values()) {
+                model.updateAnimations(delta);
             }
             
             // Render scene
