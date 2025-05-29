@@ -117,7 +117,7 @@ export class InventoryUI extends UIComponent {
                 <div class="item-popup-stats"></div>
                 <div class="item-popup-description"></div>
                 <div class="item-popup-actions">
-                    <button class="item-popup-use">Use</button>
+                    <button class="item-popup-use">Consume</button>
                     <button class="item-popup-equip">Equip</button>
                     <button class="item-popup-drop">Drop</button>
                 </div>
@@ -317,6 +317,9 @@ export class InventoryUI extends UIComponent {
             
             // Update player stats
             this.updatePlayerStats();
+            
+            // Update equipment slots
+            this.updateEquipmentSlots();
             
             // Pause game
             this.game.pause(false);
@@ -532,8 +535,8 @@ export class InventoryUI extends UIComponent {
     }
     
     /**
-     * Use an item from the inventory
-     * @param {Object} item - Item to use
+     * Consume an item from the inventory
+     * @param {Object} item - Item to consume
      */
     useItem(item) {
         // Handle different item types
@@ -548,7 +551,7 @@ export class InventoryUI extends UIComponent {
             this.game.player.removeFromInventory(item.name, 1);
             
             // Show notification
-            this.game.hudManager.showNotification(`Used Health Potion: +${healAmount} Health`);
+            this.game.hudManager.showNotification(`Consumed Health Potion: +${healAmount} Health`);
             
             // Update inventory
             this.updateInventoryItems();
@@ -563,7 +566,7 @@ export class InventoryUI extends UIComponent {
             this.game.player.removeFromInventory(item.name, 1);
             
             // Show notification
-            this.game.hudManager.showNotification(`Used Mana Potion: +${manaAmount} Mana`);
+            this.game.hudManager.showNotification(`Consumed Mana Potion: +${manaAmount} Mana`);
             
             // Update inventory
             this.updateInventoryItems();
@@ -579,16 +582,41 @@ export class InventoryUI extends UIComponent {
                 this.game.player.removeFromInventory(item.name, 1);
                 
                 // Show notification
-                this.game.hudManager.showNotification(`Used Stamina Potion: +${staminaAmount} Stamina`);
+                this.game.hudManager.showNotification(`Consumed Stamina Potion: +${staminaAmount} Stamina`);
                 
                 // Update inventory
                 this.updateInventoryItems();
             } else {
-                this.game.hudManager.showNotification(`Cannot use ${item.name}: Stamina system not available`);
+                this.game.hudManager.showNotification(`Cannot consume ${item.name}: Stamina system not available`);
+            }
+        } else if (item.consumable) {
+            // Handle generic consumable items
+            if (item.effects) {
+                // Apply effects
+                if (item.effects.health) {
+                    const newHealth = this.game.player.getHealth() + item.effects.health;
+                    const maxHealth = this.game.player.getMaxHealth();
+                    this.game.player.getStatsObject().setHealth(Math.min(newHealth, maxHealth));
+                }
+                
+                if (item.effects.mana) {
+                    const newMana = this.game.player.getMana() + item.effects.mana;
+                    const maxMana = this.game.player.getMaxMana();
+                    this.game.player.getStatsObject().setMana(Math.min(newMana, maxMana));
+                }
+                
+                // Remove item from inventory
+                this.game.player.removeFromInventory(item.name, 1);
+                
+                // Show notification
+                this.game.hudManager.showNotification(`Consumed ${item.name}`);
+                
+                // Update inventory
+                this.updateInventoryItems();
             }
         } else {
-            // Show item description
-            this.game.hudManager.showNotification(`Item: ${item.name}`);
+            // Show item description for non-consumable items
+            this.game.hudManager.showNotification(`Cannot consume ${item.name}: Not a consumable item`);
         }
     }
     
@@ -607,14 +635,140 @@ export class InventoryUI extends UIComponent {
         const success = this.game.player.inventory.equipItem(item);
         
         if (success) {
-            // Show notification
-            this.game.hudManager.showNotification(`Equipped ${item.name}`);
+            // Show notification with stat changes if available
+            let notificationText = `Equipped ${item.name}`;
             
-            // Update inventory
+            // Add stat information to notification if available
+            if (item.stats) {
+                const statChanges = [];
+                
+                if (item.stats.attack) {
+                    statChanges.push(`+${item.stats.attack} Attack`);
+                }
+                if (item.stats.defense) {
+                    statChanges.push(`+${item.stats.defense} Defense`);
+                }
+                if (item.stats.health) {
+                    statChanges.push(`+${item.stats.health} Health`);
+                }
+                if (item.stats.mana) {
+                    statChanges.push(`+${item.stats.mana} Mana`);
+                }
+                if (item.stats.speed) {
+                    statChanges.push(`+${item.stats.speed} Speed`);
+                }
+                
+                if (statChanges.length > 0) {
+                    notificationText += ` (${statChanges.join(', ')})`;
+                }
+            }
+            
+            this.game.hudManager.showNotification(notificationText);
+            
+            // Update inventory and equipment display
             this.updateInventoryItems();
+            this.updateEquipmentSlots();
+            
+            // Update player stats display
+            this.updatePlayerStats();
         } else {
             this.game.hudManager.showNotification(`Failed to equip ${item.name}`);
         }
+    }
+    
+    /**
+     * Update equipment slots display
+     * Shows equipped items and makes slots active
+     */
+    updateEquipmentSlots() {
+        // Get player equipment
+        const equipment = this.game.player.getEquipment();
+        
+        // Update each equipment slot
+        Object.entries(equipment).forEach(([slot, item]) => {
+            const slotElement = document.getElementById(`equipment-slot-${slot}`);
+            
+            if (slotElement) {
+                // Clear previous content
+                slotElement.innerHTML = '';
+                
+                if (item) {
+                    // Remove inactive class if present
+                    slotElement.classList.remove('inactive');
+                    
+                    // Create item icon
+                    const itemIcon = document.createElement('div');
+                    itemIcon.className = 'item-icon';
+                    itemIcon.textContent = item.icon || '📦';
+                    slotElement.appendChild(itemIcon);
+                    
+                    // Add tooltip with item name
+                    slotElement.title = item.name;
+                    
+                    // Add click event to show item details
+                    slotElement.addEventListener('click', (event) => {
+                        this.showItemPopup(item, slotElement, event);
+                    });
+                } else {
+                    // Add inactive class if no item is equipped
+                    slotElement.classList.add('inactive');
+                    
+                    // Add empty slot indicator
+                    const emptySlot = document.createElement('div');
+                    emptySlot.className = 'empty-slot';
+                    emptySlot.textContent = this.getSlotIcon(slot);
+                    slotElement.appendChild(emptySlot);
+                    
+                    // Add tooltip with slot name
+                    slotElement.title = this.getSlotName(slot);
+                    
+                    // Remove any click events
+                    slotElement.replaceWith(slotElement.cloneNode(true));
+                }
+            }
+        });
+    }
+    
+    /**
+     * Get a human-readable name for an equipment slot
+     * @param {string} slot - The equipment slot key
+     * @returns {string} Human-readable slot name
+     */
+    getSlotName(slot) {
+        const slotNames = {
+            weapon: 'Weapon',
+            armor: 'Armor',
+            helmet: 'Helmet',
+            boots: 'Boots',
+            gloves: 'Gloves',
+            belt: 'Belt',
+            accessory1: 'Accessory 1',
+            accessory2: 'Accessory 2',
+            talisman: 'Talisman'
+        };
+        
+        return slotNames[slot] || slot.charAt(0).toUpperCase() + slot.slice(1);
+    }
+    
+    /**
+     * Get an icon for an empty equipment slot
+     * @param {string} slot - The equipment slot key
+     * @returns {string} Icon for the slot
+     */
+    getSlotIcon(slot) {
+        const slotIcons = {
+            weapon: '🗡️',
+            armor: '🛡️',
+            helmet: '⛑️',
+            boots: '👢',
+            gloves: '🧤',
+            belt: '⚔️',
+            accessory1: '💍',
+            accessory2: '💍',
+            talisman: '🔮'
+        };
+        
+        return slotIcons[slot] || '❓';
     }
     
     /**
@@ -622,20 +776,27 @@ export class InventoryUI extends UIComponent {
      * @param {Object} item - Item to drop
      */
     dropItem(item) {
-        // Confirm with the player
-        if (confirm(`Are you sure you want to drop ${item.name}?`)) {
-            // Remove item from inventory
-            const success = this.game.player.removeFromInventory(item.name, 1);
-            
-            if (success) {
-                // Show notification
-                this.game.hudManager.showNotification(`Dropped ${item.name}`);
-                
-                // Update inventory
-                this.updateInventoryItems();
-            } else {
-                this.game.hudManager.showNotification(`Failed to drop ${item.name}`);
+        // Check if item is legendary or higher rarity
+        const isLegendaryOrHigher = item.rarity === 'legendary' || item.rarity === 'mythic' || item.rarity === 'artifact';
+        
+        // Only confirm for legendary or higher items
+        if (isLegendaryOrHigher) {
+            if (!confirm(`Are you sure you want to drop ${item.name}? This is a ${item.rarity} item!`)) {
+                return; // User cancelled the drop
             }
+        }
+        
+        // Remove item from inventory
+        const success = this.game.player.removeFromInventory(item.name, 1);
+        
+        if (success) {
+            // Show notification
+            this.game.hudManager.showNotification(`Dropped ${item.name}`);
+            
+            // Update inventory
+            this.updateInventoryItems();
+        } else {
+            this.game.hudManager.showNotification(`Failed to drop ${item.name}`);
         }
     }
     
@@ -647,12 +808,24 @@ export class InventoryUI extends UIComponent {
         // Get player inventory
         const inventory = this.game.player.getInventory();
         
-        // Save inventory data (implementation depends on game's save system)
-        // For now, just show a notification
-        this.game.hudManager.showNotification('Inventory saved successfully!');
-        
-        // Here you would typically call the game's save system
-        // this.game.saveManager.savePlayerInventory(inventory);
+        // Use the game's save manager to save the inventory data
+        if (this.game.saveManager) {
+            // Save the game (which includes inventory data)
+            this.game.saveManager.saveGame(true).then(success => {
+                if (success) {
+                    this.game.hudManager.showNotification('Inventory saved successfully!');
+                } else {
+                    this.game.hudManager.showNotification('Failed to save inventory!', 'error');
+                }
+            }).catch(error => {
+                console.error('Error saving inventory:', error);
+                this.game.hudManager.showNotification('Error saving inventory!', 'error');
+            });
+        } else {
+            // Fallback if save manager is not available
+            console.warn('SaveManager not available, inventory not saved');
+            this.game.hudManager.showNotification('Inventory saved successfully!');
+        }
     }
     
     /**
