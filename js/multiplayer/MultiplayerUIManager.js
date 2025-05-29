@@ -119,7 +119,13 @@ export class MultiplayerUIManager {
         // Start game button (for host)
         const startGameBtn = document.getElementById('start-game-btn');
         if (startGameBtn) {
+            // Add click event listener
             startGameBtn.addEventListener('click', () => this.multiplayerManager.startMultiplayerGame());
+            
+            // Hide the button if player is not the host
+            if (this.multiplayerManager.connection && !this.multiplayerManager.connection.isHost) {
+                startGameBtn.style.display = 'none';
+            }
         }
         
         // Close multiplayer modal
@@ -337,6 +343,16 @@ export class MultiplayerUIManager {
                 }
             } else {
                 roleElement.textContent = '';
+            }
+        }
+        
+        // Update start game button visibility based on host status
+        const startGameBtn = document.getElementById('start-game-btn');
+        if (startGameBtn) {
+            if (this.multiplayerManager.connection && this.multiplayerManager.connection.isHost) {
+                startGameBtn.style.display = 'block';
+            } else {
+                startGameBtn.style.display = 'none';
             }
         }
         
