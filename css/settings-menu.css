@@ -195,6 +195,18 @@
     box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.5), 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 
+.settings-button:disabled {
+    border-color: #3D3D3D;
+    color: #666;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.settings-button:disabled::before {
+    display: none;
+}
+
 /* Existing test sound button - now using settings-button class */
 #test-sound-button {
     width: auto;

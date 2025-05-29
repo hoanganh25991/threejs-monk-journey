@@ -496,7 +496,7 @@
 /* Button container in players section */
 .players-section .button-container {
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     margin-top: var(--margin-medium);
 }
 

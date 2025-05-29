@@ -140,16 +140,12 @@ export class MultiplayerConnectionManager {
                 this.multiplayerManager.ui.updateMultiplayerButton(true);
                 
                 // Update connection status
-                this.multiplayerManager.ui.updateConnectionStatus('Connected to host! Waiting for game to start...', 'join-connection-status');
+                this.multiplayerManager.ui.updateConnectionStatus('Connected to host! Waiting for game to start...', 'connection-info-status-bar');
                 
-                // Show the waiting screen to indicate successful connection
-                this.multiplayerManager.ui.showPlayerWaitingScreen();
+                // Show the connection info screen instead of waiting screen
+                this.multiplayerManager.ui.showConnectionInfoScreen();
                 
-                // Disable the connect button to prevent multiple connections
-                const manualConnectBtn = document.getElementById('manual-connect-btn');
-                if (manualConnectBtn) {
-                    manualConnectBtn.disabled = true;
-                }
+                // The connect button is already disabled in the UI handler
                 
                 // Set up data handler
                 conn.on('data', data => this.handleDataFromHost(this.processReceivedData(data)));

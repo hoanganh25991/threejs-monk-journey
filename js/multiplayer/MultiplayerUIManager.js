@@ -103,6 +103,10 @@ export class MultiplayerUIManager {
             manualConnectBtn.addEventListener('click', () => {
                 const code = document.getElementById('manual-connection-input').value;
                 if (code) {
+                    // Update button text and disable it
+                    manualConnectBtn.textContent = 'Connecting...';
+                    manualConnectBtn.disabled = true;
+                    
                     this.updateConnectionStatus('Connecting...', 'join-connection-status');
                     this.multiplayerManager.joinGame(code);
                 } else {
@@ -232,7 +236,11 @@ export class MultiplayerUIManager {
             document.getElementById('multiplayer-initial-screen').style.display = 'flex';
             document.getElementById('host-game-screen').style.display = 'none';
             document.getElementById('join-game-screen').style.display = 'none';
-            document.getElementById('player-waiting-screen').style.display = 'none';
+            // Player waiting screen has been removed and merged into connection-info-screen
+            const playerWaitingScreen = document.getElementById('player-waiting-screen');
+            if (playerWaitingScreen) {
+                playerWaitingScreen.style.display = 'none';
+            }
             document.getElementById('connection-info-screen').style.display = 'none';
             
             // Reset connection status
@@ -277,7 +285,11 @@ export class MultiplayerUIManager {
             document.getElementById('multiplayer-initial-screen').style.display = 'none';
             document.getElementById('host-game-screen').style.display = 'none';
             document.getElementById('join-game-screen').style.display = 'none';
-            document.getElementById('player-waiting-screen').style.display = 'none';
+            // Player waiting screen has been removed and merged into connection-info-screen
+            const playerWaitingScreen = document.getElementById('player-waiting-screen');
+            if (playerWaitingScreen) {
+                playerWaitingScreen.style.display = 'none';
+            }
             connectionInfoScreen.style.display = 'flex';
             
             // Update connection info
@@ -331,6 +343,26 @@ export class MultiplayerUIManager {
                 }
             } else {
                 roleElement.textContent = '';
+            }
+        }
+        
+        // Update host controls
+        const hostControls = document.getElementById('host-controls');
+        if (hostControls) {
+            hostControls.innerHTML = ''; // Clear existing controls
+            
+            if (this.multiplayerManager.connection && this.multiplayerManager.connection.isConnected) {
+                if (this.multiplayerManager.connection.isHost) {
+                    // Host controls - Start Game button
+                    const startGameBtn = document.createElement('button');
+                    startGameBtn.id = 'start-game-btn';
+                    startGameBtn.className = 'settings-button';
+                    startGameBtn.textContent = 'Start Game';
+                    startGameBtn.addEventListener('click', () => {
+                        this.multiplayerManager.startGame();
+                    });
+                    hostControls.appendChild(startGameBtn);
+                }
             }
         }
         
@@ -464,7 +496,11 @@ export class MultiplayerUIManager {
         document.getElementById('multiplayer-initial-screen').style.display = 'none';
         document.getElementById('host-game-screen').style.display = 'flex';
         document.getElementById('join-game-screen').style.display = 'none';
-        document.getElementById('player-waiting-screen').style.display = 'none';
+        // Player waiting screen has been removed and merged into connection-info-screen
+        const playerWaitingScreen = document.getElementById('player-waiting-screen');
+        if (playerWaitingScreen) {
+            playerWaitingScreen.style.display = 'none';
+        }
         
         // Set up back button
         const backButton = document.getElementById('back-from-host-btn');
@@ -483,7 +519,11 @@ export class MultiplayerUIManager {
         document.getElementById('multiplayer-initial-screen').style.display = 'none';
         document.getElementById('host-game-screen').style.display = 'none';
         document.getElementById('join-game-screen').style.display = 'flex';
-        document.getElementById('player-waiting-screen').style.display = 'none';
+        // Player waiting screen has been removed and merged into connection-info-screen
+        const playerWaitingScreen = document.getElementById('player-waiting-screen');
+        if (playerWaitingScreen) {
+            playerWaitingScreen.style.display = 'none';
+        }
         
         // By default, show manual code view
         document.getElementById('scan-qr-view').style.display = 'none';
@@ -594,29 +634,12 @@ export class MultiplayerUIManager {
     }
     
     /**
-     * Show the player waiting screen (after joining a game)
+     * Show the connection info screen (after joining a game)
+     * This replaces the old showPlayerWaitingScreen function
      */
     showPlayerWaitingScreen() {
-        // Make sure QR scanner is stopped
-        this.stopQRScanner();
-        
-        // Hide other screens, show waiting screen
-        document.getElementById('multiplayer-initial-screen').style.display = 'none';
-        document.getElementById('host-game-screen').style.display = 'none';
-        document.getElementById('join-game-screen').style.display = 'none';
-        document.getElementById('player-waiting-screen').style.display = 'flex';
-        
-        // Set up leave button
-        const leaveButton = document.getElementById('leave-game-btn');
-        if (leaveButton) {
-            leaveButton.onclick = () => {
-                // Disconnect from game
-                this.multiplayerManager.leaveGame();
-                this.showMultiplayerModal();
-            };
-        }
-        
-        this.updateConnectionStatus('Connected to host. Waiting for game to start...', 'player-connection-status');
+        // For backward compatibility, redirect to the connection info screen
+        this.showConnectionInfoScreen();
     }
     
     /**
