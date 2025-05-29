@@ -178,7 +178,7 @@ export class InventoryUI extends UIComponent {
         this.itemPreviewContainer.innerHTML = '';
         
         // Set dimensions for the preview
-        const previewWidth = 216;  // Smaller width for the popup
+        const previewWidth = 236;  // Smaller width for the popup
         const previewHeight = 150; // Square aspect ratio
         
         // Create a new ItemPreview instance
@@ -513,7 +513,8 @@ export class InventoryUI extends UIComponent {
         // Position popup near the clicked item
         const rect = slotElement.getBoundingClientRect();
         this.itemPopup.style.left = `${rect.right + 10}px`;
-        this.itemPopup.style.top = `${rect.top}px`;
+        // this.itemPopup.style.top = `${rect.top}px`;
+        this.itemPopup.style.top = `10px`;
         
         // Show popup
         this.itemPopup.style.display = 'block';
