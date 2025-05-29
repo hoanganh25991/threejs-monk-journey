@@ -1,5 +1,6 @@
 import { Item } from './Item.js';
 import { ITEM_TEMPLATES } from '../../config/item-templates.js';
+import { COMBAT_BALANCE } from '../../config/game-balance.js';
 
 export class ItemGenerator {
     constructor(game) {
@@ -65,7 +66,13 @@ export class ItemGenerator {
     // Helper methods for item generation
     selectRandomItemType() {
         const types = ['weapon', 'armor', 'accessory', 'consumable'];
-        const weights = [40, 30, 20, 10]; // Percentage chances
+        // Use item type weights from game-balance config
+        const weights = [
+            COMBAT_BALANCE.items.itemTypeWeights.weapon,
+            COMBAT_BALANCE.items.itemTypeWeights.armor,
+            COMBAT_BALANCE.items.itemTypeWeights.accessory,
+            COMBAT_BALANCE.items.itemTypeWeights.consumable
+        ];
         
         return this.weightedRandom(types, weights);
     }
@@ -128,7 +135,24 @@ export class ItemGenerator {
         for (const [key, value] of Object.entries(template.baseStats || {})) {
             // Add some randomness (±10%)
             const randomFactor = 0.9 + (Math.random() * 0.2);
-            baseStats[key] = Math.round(value * randomFactor);
+            
+            // Apply level scaling from game-balance
+            const levelScalingFactor = 1 + (level * COMBAT_BALANCE.items.levelScalingFactor);
+            
+            // Apply weapon damage scaling for weapon items
+            if (key === 'damage' && template.type === 'weapon') {
+                baseStats[key] = Math.round(value * randomFactor * levelScalingFactor * 
+                                (1 + COMBAT_BALANCE.player.weaponDamageIncrease * level));
+            } 
+            // Apply armor damage reduction for armor items
+            else if (key === 'armor' && template.type === 'armor') {
+                baseStats[key] = Math.round(value * randomFactor * levelScalingFactor * 
+                                (1 + COMBAT_BALANCE.player.armorDamageReduction * level));
+            }
+            // Apply regular level scaling for other stats
+            else {
+                baseStats[key] = Math.round(value * randomFactor * levelScalingFactor);
+            }
         }
         
         return baseStats;
@@ -181,37 +205,17 @@ export class ItemGenerator {
     }
     
     generateStatValue(statType, level, rarity) {
-        // Base values for different stat types
-        const baseValues = {
-            critChance: 2,
-            critDamage: 10,
-            attackSpeed: 5,
-            cooldownReduction: 3,
-            healthBonus: 5,
-            manaBonus: 5,
-            elementalDamage: 10,
-            damageReduction: 2,
-            movementSpeed: 3,
-            goldFind: 10,
-            magicFind: 5,
-            experienceBonus: 5
-        };
+        // Use base values from game-balance config
+        const baseValues = COMBAT_BALANCE.items.secondaryStatBaseValues;
         
-        // Rarity multipliers
-        const rarityMultipliers = {
-            common: 1.0,
-            uncommon: 1.2,
-            rare: 1.5,
-            epic: 2.0,
-            legendary: 2.5,
-            mythic: 3.0
-        };
+        // Use rarity multipliers from game-balance config
+        const rarityMultipliers = COMBAT_BALANCE.items.rarityMultipliers;
         
         // Calculate base value
         let value = baseValues[statType] || 5;
         
-        // Scale with level
-        value *= (1 + (level * 0.03));
+        // Scale with level using game-balance level scaling factor
+        value *= (1 + (level * COMBAT_BALANCE.items.levelScalingFactor));
         
         // Apply rarity multiplier
         value *= rarityMultipliers[rarity];
@@ -219,6 +223,18 @@ export class ItemGenerator {
         // Add some randomness (±15%)
         const randomFactor = 0.85 + (Math.random() * 0.3);
         value *= randomFactor;
+        
+        // Apply special multipliers for certain stat types
+        if (statType === 'critChance') {
+            // Apply base crit chance from combat balance
+            value += COMBAT_BALANCE.player.baseCritChance * 100; // Convert from decimal to percentage
+        } else if (statType === 'critDamage') {
+            // Apply crit damage multiplier from combat balance
+            value *= COMBAT_BALANCE.player.critDamageMultiplier;
+        } else if (statType === 'elementalDamage') {
+            // Apply elemental damage multiplier from combat balance
+            value *= COMBAT_BALANCE.player.elementalDamageMultiplier;
+        }
         
         // Round to appropriate precision
         if (['critChance', 'attackSpeed', 'cooldownReduction', 'damageReduction', 'movementSpeed'].includes(statType)) {
@@ -267,12 +283,8 @@ export class ItemGenerator {
             return null;
         }
         
-        // 20% chance for epic, 30% for legendary, 50% for mythic
-        const setChances = {
-            epic: 0.2,
-            legendary: 0.3,
-            mythic: 0.5
-        };
+        // Use set item chances from game-balance config
+        const setChances = COMBAT_BALANCE.items.setItemChances;
         
         if (Math.random() < setChances[rarity]) {
             // Get possible sets for this item type/subtype

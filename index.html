@@ -421,7 +421,6 @@
                     <button id="tab-skills-preview" class="tab-icon" title="Skills Preview">✨</button>
                     <button id="tab-enemy-preview" class="tab-icon" title="Enemy Preview">👹</button>
                     <button id="tab-performance" class="tab-icon active" title="Performance">⚡</button>
-                    <button id="tab-release" class="tab-icon" title="Release">🚀</button>
                 </div>
             </div>
             
@@ -456,6 +455,13 @@
                             <h3>Game Control</h3>
                             <button id="new-game-button" class="settings-button">New Game</button>
                             <span class="settings-description">Start a new game (current progress will be lost)</span>
+                        </div>
+                        <!-- Release settings moved here from release tab -->
+                        <div id="version-container" class="setting-item">
+                            <h3>Version Control</h3>
+                            <p>Current version: <span id="current-version">Current Version</span></p>
+                            <button id="update-to-latest-button" class="settings-button">Update to Latest</button>
+                            <span class="settings-description">Clear cache and reload the latest version</span>
                         </div>
                     </div>
                 </div>
@@ -714,14 +720,6 @@
                     </div>
                 </div>
 
-                <!-- Release Tab -->
-                <div id="release-tab" class="tab-content">
-                    <h2 id="release-title">Release Settings</h2>
-                    <div class="settings-section">
-                        <p>Current version: <span id="current-version">1.0.0</span></p>
-                        <button id="update-to-latest-button" class="settings-button">Update to latest</button>
-                    </div>
-                </div>
                 <!-- Model Settings Tab removed -->
             </div>
         </div>

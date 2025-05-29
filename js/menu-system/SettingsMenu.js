@@ -11,7 +11,6 @@ import { SkillsPreviewTab } from './settings-menu/SkillsPreviewTab.js';
 import { AudioTab } from './settings-menu/AudioTab.js';
 import { ControlsTab } from './settings-menu/ControlsTab.js';
 import { EnemyPreviewTab } from './settings-menu/EnemyPreviewTab.js';
-import { ReleaseTab } from './settings-menu/ReleaseTab.js';
 import { SaveOperationProgress } from '../save-manager/utils/SaveOperationProgress.js';
 
 export class SettingsMenu extends UIComponent {
@@ -101,7 +100,6 @@ export class SettingsMenu extends UIComponent {
         this.tabs.audio = new AudioTab(this.game, this);
         this.tabs.controls = new ControlsTab(this.game, this);
         this.tabs['enemy-preview'] = new EnemyPreviewTab(this.game, this);
-        this.tabs.release = new ReleaseTab(this.game, this);
     }
     
     /**

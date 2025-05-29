@@ -3,6 +3,7 @@ import { Enemy } from './Enemy.js';
 import { ZONE_ENEMIES, ENEMY_TYPES, BOSS_TYPES, ZONE_DIFFICULTY_MULTIPLIERS } from '../../config/enemies.js';
 import { DROP_CHANCES, REGULAR_DROP_TABLE, BOSS_DROP_TABLE } from '../../config/drops.js';
 import { DIFFICULTY_SETTINGS } from '../../config/difficulty-settings.js';
+import { COMBAT_BALANCE, DIFFICULTY_SCALING } from '../../config/game-balance.js';
 
 /**
  * @typedef {Object} EnemyType
@@ -638,16 +639,46 @@ export class EnemyManager {
         // Get zone difficulty multiplier
         zoneDifficultyMultiplier = this.zoneDifficultyMultipliers[randomZone] || 1.0;
         
-        // Calculate level scaling factor (increases by 10% per player level)
-        const levelScalingFactor = 1.0 + (playerLevel * 0.1);
+        // Use game-balance settings for level scaling
+        const levelScalingFactor = 1.0 + (playerLevel * COMBAT_BALANCE.enemy.levelScalingFactor);
+        
+        // Apply difficulty settings from game-balance
+        let difficultySettings = DIFFICULTY_SCALING.difficultyLevels[this.currentDifficulty] || 
+                                DIFFICULTY_SCALING.difficultyLevels.medium;
         
         // Calculate combined scaling factor
-        const combinedScalingFactor = this.difficultyMultiplier * levelScalingFactor * zoneDifficultyMultiplier;
+        const combinedScalingFactor = this.difficultyMultiplier * 
+                                     levelScalingFactor * 
+                                     zoneDifficultyMultiplier * 
+                                     difficultySettings.healthMultiplier;
         
-        // Apply scaling to enemy stats
-        scaledType.health = Math.round(scaledType.health * combinedScalingFactor);
-        scaledType.damage = Math.round(scaledType.damage * combinedScalingFactor);
-        scaledType.experienceValue = Math.round(scaledType.experienceValue * combinedScalingFactor);
+        // Apply scaling to enemy stats using game-balance settings
+        // Apply base health multiplier from combat balance
+        scaledType.baseHealth = scaledType.health; // Store original health for reference
+        scaledType.health = Math.round(scaledType.health * COMBAT_BALANCE.enemy.healthMultiplier * combinedScalingFactor);
+        
+        // Apply damage scaling
+        scaledType.damage = Math.round(scaledType.damage * 
+                           COMBAT_BALANCE.enemy.damageMultiplier * 
+                           difficultySettings.damageMultiplier * 
+                           levelScalingFactor);
+        
+        // Apply experience scaling
+        scaledType.experienceValue = Math.round(scaledType.experienceValue * 
+                                   COMBAT_BALANCE.enemy.experienceMultiplier * 
+                                   difficultySettings.experienceMultiplier);
+        
+        // Apply special multipliers for boss/elite/champion enemies
+        if (scaledType.isBoss) {
+            scaledType.health = Math.round(scaledType.health * COMBAT_BALANCE.enemy.bossHealthMultiplier);
+            scaledType.damage = Math.round(scaledType.damage * COMBAT_BALANCE.enemy.bossDamageMultiplier);
+        } else if (scaledType.isElite) {
+            scaledType.health = Math.round(scaledType.health * COMBAT_BALANCE.enemy.eliteHealthMultiplier);
+            scaledType.damage = Math.round(scaledType.damage * COMBAT_BALANCE.enemy.eliteDamageMultiplier);
+        } else if (scaledType.isChampion) {
+            scaledType.health = Math.round(scaledType.health * COMBAT_BALANCE.enemy.championHealthMultiplier);
+            scaledType.damage = Math.round(scaledType.damage * COMBAT_BALANCE.enemy.championDamageMultiplier);
+        }
         
         // Store the original health for reference
         scaledType.baseHealth = enemyType.health;

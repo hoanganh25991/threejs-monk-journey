@@ -4,7 +4,8 @@
  * @module entities/player/PlayerStats
  */
 
-import { DEFAULT_PLAYER_STATS, LEVEL_UP_EXPERIENCE_MULTIPLIER, RESOURCE_REGENERATION, LEVEL_UP_STAT_INCREASES } from '../../../config/player.js';
+import { DEFAULT_PLAYER_STATS, LEVEL_UP_EXPERIENCE_MULTIPLIER, LEVEL_UP_STAT_INCREASES } from '../../../config/player.js';
+import { COMBAT_BALANCE } from '../../config/game-balance.js';
 
 /**
  * @typedef {Object} TemporaryBoost
@@ -326,17 +327,17 @@ export class PlayerStats {
         // Update temporary boosts
         this.updateTemporaryBoosts(delta);
         
-        // Regenerate health
+        // Regenerate health using game balance settings
         if (this.health < this.maxHealth) {
-            this.health += delta * RESOURCE_REGENERATION.health;
+            this.health += delta * COMBAT_BALANCE.player.healthRegenPerSecond;
             if (this.health > this.maxHealth) {
                 this.health = this.maxHealth;
             }
         }
         
-        // Regenerate mana
+        // Regenerate mana using game balance settings
         if (this.mana < this.maxMana) {
-            this.mana += delta * RESOURCE_REGENERATION.mana;
+            this.mana += delta * COMBAT_BALANCE.player.manaRegenPerSecond;
             if (this.mana > this.maxMana) {
                 this.mana = this.maxMana;
             }
