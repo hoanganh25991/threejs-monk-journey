@@ -78,7 +78,6 @@ export class MultiplayerUIManager {
         const hostGameBtn = document.getElementById('host-game-btn');
         if (hostGameBtn) {
             hostGameBtn.addEventListener('click', () => {
-                this.showHostUI();
                 this.multiplayerManager.hostGame();
             });
         }
@@ -202,10 +201,6 @@ export class MultiplayerUIManager {
         }
         
         // Back buttons
-        const backFromHostBtn = document.getElementById('back-from-host-btn');
-        if (backFromHostBtn) {
-            backFromHostBtn.addEventListener('click', () => this.showMultiplayerModal());
-        }
         
         const backFromJoinBtn = document.getElementById('back-from-join-btn');
         if (backFromJoinBtn) {
@@ -234,7 +229,6 @@ export class MultiplayerUIManager {
             
             // Show initial screen, hide others
             document.getElementById('multiplayer-initial-screen').style.display = 'flex';
-            document.getElementById('host-game-screen').style.display = 'none';
             document.getElementById('join-game-screen').style.display = 'none';
             // Player waiting screen has been removed and merged into connection-info-screen
             const playerWaitingScreen = document.getElementById('player-waiting-screen');
@@ -269,7 +263,8 @@ export class MultiplayerUIManager {
                         console.debug('[MultiplayerUIManager] Disconnecting from multiplayer game');
                         this.multiplayerManager.leaveGame();
                         this.updateMultiplayerButton(false);
-                        this.closeMultiplayerModal();
+                        // Show connection info screen instead of closing the modal
+                        this.showConnectionInfoScreen();
                     });
                 }
                 
@@ -283,7 +278,6 @@ export class MultiplayerUIManager {
             
             // Hide other screens, show connection info screen
             document.getElementById('multiplayer-initial-screen').style.display = 'none';
-            document.getElementById('host-game-screen').style.display = 'none';
             document.getElementById('join-game-screen').style.display = 'none';
             // Player waiting screen has been removed and merged into connection-info-screen
             const playerWaitingScreen = document.getElementById('player-waiting-screen');
@@ -359,15 +353,40 @@ export class MultiplayerUIManager {
                     startGameBtn.className = 'settings-button';
                     startGameBtn.textContent = 'Start Game';
                     startGameBtn.addEventListener('click', () => {
-                        this.multiplayerManager.startGame();
+                        this.multiplayerManager.startMultiplayerGame();
                     });
                     hostControls.appendChild(startGameBtn);
+                    
+                    // Generate QR code for the connection if we're the host
+                    const roomId = this.multiplayerManager.connection.roomId;
+                    if (roomId) {
+                        // Find the QR code container in the connection info screen
+                        const qrContainer = document.getElementById('connection-info-qr');
+                        if (qrContainer) {
+                            // Generate QR code
+                            this.generateQRCode(roomId);
+                        }
+                    }
                 }
             }
         }
         
         // Update player list
         this.updateConnectionInfoPlayerList();
+        
+        // Update connection code display and QR code
+        if (this.multiplayerManager.connection && this.multiplayerManager.connection.isConnected) {
+            const roomId = this.multiplayerManager.connection.roomId;
+            if (roomId) {
+                this.displayConnectionCode(roomId);
+                
+                // Generate QR code for the connection info screen
+                const qrContainer = document.getElementById('connection-info-qr');
+                if (qrContainer) {
+                    this.generateQRCode(roomId);
+                }
+            }
+        }
     }
     
     /**
@@ -488,28 +507,7 @@ export class MultiplayerUIManager {
         }
     }
 
-    /**
-     * Show the host UI
-     */
-    showHostUI() {
-        // Hide initial screen, show host screen
-        document.getElementById('multiplayer-initial-screen').style.display = 'none';
-        document.getElementById('host-game-screen').style.display = 'flex';
-        document.getElementById('join-game-screen').style.display = 'none';
-        // Player waiting screen has been removed and merged into connection-info-screen
-        const playerWaitingScreen = document.getElementById('player-waiting-screen');
-        if (playerWaitingScreen) {
-            playerWaitingScreen.style.display = 'none';
-        }
-        
-        // Set up back button
-        const backButton = document.getElementById('back-from-host-btn');
-        if (backButton) {
-            backButton.onclick = () => {
-                this.showMultiplayerModal();
-            };
-        }
-    }
+    // showHostUI method has been removed as it's no longer needed
 
     /**
      * Show the join UI
@@ -517,7 +515,6 @@ export class MultiplayerUIManager {
     async showJoinUI() {
         // Hide initial screen, show join screen
         document.getElementById('multiplayer-initial-screen').style.display = 'none';
-        document.getElementById('host-game-screen').style.display = 'none';
         document.getElementById('join-game-screen').style.display = 'flex';
         // Player waiting screen has been removed and merged into connection-info-screen
         const playerWaitingScreen = document.getElementById('player-waiting-screen');
@@ -893,8 +890,17 @@ export class MultiplayerUIManager {
      * Generate QR code for connection
      * @param {string} data - The data to encode in the QR code
      */
+    /**
+     * Build a connection URL with the given connection ID
+     * @param {string} connectionId - The connection ID to include in the URL
+     * @returns {string} The full URL for joining the game
+     */
+    buildConnectionURL(connectionId) {
+        return `${window.location.href.split('?')[0]}?join=true&connect-id=${connectionId}`;
+    }
+    
     async generateQRCode(data) {
-        const qrContainer = document.getElementById('qr-code');
+        const qrContainer = document.getElementById('connection-info-qr');
         if (!qrContainer) return;
         
         try {
@@ -906,8 +912,8 @@ export class MultiplayerUIManager {
             // Clear previous QR code
             qrContainer.innerHTML = '';
             
-            // Create a complete URL with the connection ID
-            const fullUrl = `${window.location.href.split('?')[0]}?join=true&connect-id=${data}`;
+            // Create a complete URL with the connection ID using the helper function
+            const fullUrl = this.buildConnectionURL(data);
             
             // Generate new QR code with the full URL
             new QRCode(qrContainer, {
@@ -931,12 +937,6 @@ export class MultiplayerUIManager {
      * Copy connection code to clipboard
      */
     copyConnectionCode() {
-        const codeElement = document.getElementById('connection-code');
-        if (!codeElement) {
-            console.error('Connection code element not found');
-            return;
-        }
-        
         // Get the room ID from the connection manager
         const roomId = this.multiplayerManager.connection && this.multiplayerManager.connection.roomId;
         if (!roomId) {
@@ -945,9 +945,17 @@ export class MultiplayerUIManager {
             return;
         }
         
-        // Make sure the connection code element has the roomId text
-        if (codeElement.textContent !== roomId) {
-            codeElement.textContent = roomId;
+        // Find the active code element (either in host UI or connection info screen)
+        const hostCodeElement = document.getElementById('connection-code');
+        const infoCodeElement = document.getElementById('connection-info-code');
+        
+        // Make sure both elements have the roomId text if they exist
+        if (hostCodeElement && hostCodeElement.textContent !== roomId) {
+            hostCodeElement.textContent = roomId;
+        }
+        
+        if (infoCodeElement && infoCodeElement.textContent !== roomId) {
+            infoCodeElement.textContent = roomId;
         }
         
         // Copy only the connection ID (roomId) to clipboard
@@ -958,11 +966,27 @@ export class MultiplayerUIManager {
                     // Show success message
                     this.updateConnectionStatus('Connection ID copied to clipboard!', 'host-connection-status');
                     
-                    // Highlight the code element briefly
-                    codeElement.classList.add('copied');
-                    setTimeout(() => {
-                        codeElement.classList.remove('copied');
-                    }, 1000);
+                    // Also update the connection info status if visible
+                    const connectionInfoStatus = document.getElementById('connection-info-status');
+                    if (connectionInfoStatus && 
+                        document.getElementById('connection-info-screen').style.display === 'flex') {
+                        connectionInfoStatus.textContent = 'Connection ID copied to clipboard!';
+                    }
+                    
+                    // Highlight the code elements briefly
+                    if (hostCodeElement) {
+                        hostCodeElement.classList.add('copied');
+                        setTimeout(() => {
+                            hostCodeElement.classList.remove('copied');
+                        }, 1000);
+                    }
+                    
+                    if (infoCodeElement) {
+                        infoCodeElement.classList.add('copied');
+                        setTimeout(() => {
+                            infoCodeElement.classList.remove('copied');
+                        }, 1000);
+                    }
                 })
                 .catch(err => {
                     console.error('Clipboard write failed:', err);
@@ -1068,6 +1092,7 @@ export class MultiplayerUIManager {
      * @param {string} code - The connection code to display
      */
     displayConnectionCode(code) {
+        // Update code in host UI
         const codeElement = document.getElementById('connection-code');
         if (codeElement) {
             codeElement.textContent = code;
@@ -1082,6 +1107,21 @@ export class MultiplayerUIManager {
             // Also make the connection code element clickable
             codeElement.style.cursor = 'pointer';
             codeElement.onclick = () => this.copyConnectionCode();
+        }
+        
+        // Also update code in connection info screen
+        const connectionInfoCode = document.getElementById('connection-info-code');
+        if (connectionInfoCode) {
+            connectionInfoCode.textContent = code;
+            connectionInfoCode.style.cursor = 'pointer';
+            connectionInfoCode.onclick = () => this.copyConnectionCode();
+            
+            // Make sure the copy button is visible and working
+            const copyBtn = document.getElementById('connection-copy-code-btn');
+            if (copyBtn) {
+                copyBtn.style.display = 'inline-block';
+                copyBtn.onclick = () => this.copyConnectionCode();
+            }
         }
     }
 

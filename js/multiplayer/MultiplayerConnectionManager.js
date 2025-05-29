@@ -53,9 +53,6 @@ export class MultiplayerConnectionManager {
         try {
             this.multiplayerManager.ui.updateConnectionStatus('Initializing host...');
             
-            // Show host UI
-            this.multiplayerManager.ui.showHostUI();
-            
             // Initialize PeerJS
             this.peer = new Peer();
             
@@ -68,15 +65,6 @@ export class MultiplayerConnectionManager {
                 this.peer.on('error', err => reject(err));
             });
             
-            // Generate QR code with room ID
-            await this.multiplayerManager.ui.generateQRCode(this.roomId);
-            
-            // Display connection code
-            this.multiplayerManager.ui.displayConnectionCode(this.roomId);
-            
-            // Set up connection handler
-            this.peer.on('connection', conn => this.handleNewConnection(conn));
-
             // Set host flag
             this.isHost = true;
             this.isConnected = true;
@@ -90,6 +78,16 @@ export class MultiplayerConnectionManager {
             
             // Update host entry in the player list
             this.multiplayerManager.ui.updateHostEntry(this.roomId, hostColor);
+            
+            // Set up connection handler
+            this.peer.on('connection', conn => {
+                this.handleNewConnection(conn);
+                // Show connection info screen when a player joins
+                this.multiplayerManager.ui.showConnectionInfoScreen();
+            });
+            
+            // Show connection info screen immediately
+            this.multiplayerManager.ui.showConnectionInfoScreen();
             
             // Update connection status
             this.multiplayerManager.ui.updateConnectionStatus('Waiting for players to join...');
@@ -303,7 +301,7 @@ export class MultiplayerConnectionManager {
                 }
                 
                 // Trigger skill cast animation on remote player
-                this.multiplayerManager.remotePlayerManager.handleSkillCast(casterId, data.skillName);
+                this.multiplayerManager.remotePlayerManager.handleSkillCast(casterId, data.skillName, data.variant);
                 break;
             case 'kicked':
                 // Handle being kicked by the host
@@ -388,7 +386,7 @@ export class MultiplayerConnectionManager {
                     }
                     
                     // Trigger skill cast animation on remote player
-                    this.multiplayerManager.remotePlayerManager.handleSkillCast(peerId, data.skillName);
+                    this.multiplayerManager.remotePlayerManager.handleSkillCast(peerId, data.skillName, data.variant);
                     
                     // Forward skill cast to other members
                     this.peers.forEach((conn, id) => {
@@ -398,7 +396,8 @@ export class MultiplayerConnectionManager {
                                 skillName: data.skillName,
                                 playerId: peerId,
                                 position: data.position,
-                                rotation: data.rotation
+                                rotation: data.rotation,
+                                variant: data.variant // Include the variant information
                             });
                         }
                     });

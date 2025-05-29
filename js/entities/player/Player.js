@@ -206,11 +206,7 @@ export class Player {
             }
             
             // Log the look direction update
-            console.debug("Player look direction updated:", {
-                direction,
-                horizontalRotation,
-                verticalDirection: direction.y
-            });
+            // console.debug("Player look direction updated:", { direction, horizontalRotation, verticalDirection: direction.y});
         }
     }
     

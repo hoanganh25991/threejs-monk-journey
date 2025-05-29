@@ -311,8 +311,7 @@ export class PlayerSkills {
         // Log only if there are multiple instances of any skill
         const multipleInstances = Object.entries(skillCounts).filter(([_, count]) => count > 1);
         if (multipleInstances.length > 0) {
-            console.debug("Multiple skill instances active:", 
-                multipleInstances.map(([name, count]) => `${name}: ${count}`).join(", "));
+            // console.debug("Multiple skill instances active:", multipleInstances.map(([name, count]) => `${name}: ${count}`).join(", "));
         }
         
         // Perform a final cleanup pass to remove any null or undefined skills
@@ -731,6 +730,13 @@ export class PlayerSkills {
             y: this.playerRotation.y
         } : null;
         
+        // Get the variant information if available
+        let variant = null;
+        if (this.skillTreeData && this.skillTreeData[skillName] && this.skillTreeData[skillName].activeVariant) {
+            variant = this.skillTreeData[skillName].activeVariant;
+            console.debug(`[PlayerSkills] Broadcasting skill variant: ${variant} for skill: ${skillName}`);
+        }
+        
         // If player is host, broadcast to all members
         if (this.game.multiplayerManager.connection.isHost) {
             this.game.multiplayerManager.connection.broadcast({
@@ -738,7 +744,8 @@ export class PlayerSkills {
                 skillName: skillName,
                 playerId: this.game.multiplayerManager.connection.peer.id,
                 position: position,
-                rotation: rotation
+                rotation: rotation,
+                variant: variant // Include the variant information
             });
         } 
         // If player is member, send to host
@@ -750,9 +757,11 @@ export class PlayerSkills {
             if (hostConn) {
                 hostConn.send({
                     type: 'skillCast',
+                    playerId: this.game.multiplayerManager.connection.peer.id,
                     skillName: skillName,
                     position: position,
-                    rotation: rotation
+                    rotation: rotation,
+                    variant: variant // Include the variant information
                 });
             }
         }

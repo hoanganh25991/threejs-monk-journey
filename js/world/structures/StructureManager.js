@@ -598,7 +598,7 @@ export class StructureManager {
             // Remove from structuresPlaced
             delete this.structuresPlaced[chunkKey];
             
-            console.debug(`Removed ${structuresToRemove.length} structures from chunk ${chunkKey}`);
+            // console.debug(`Removed ${structuresToRemove.length} structures from chunk ${chunkKey}`);
         }
     }
     

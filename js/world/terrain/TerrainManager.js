@@ -937,7 +937,7 @@ export class TerrainManager {
                     this.worldManager.interactiveManager.removeObjectsInChunk(chunkKey, true);
                 }
                 
-                console.debug(`Removed terrain chunk ${chunkKey} with associated objects`);
+                // console.debug(`Removed terrain chunk ${chunkKey} with associated objects`);
             }
         }
     }

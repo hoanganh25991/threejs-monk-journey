@@ -14,7 +14,7 @@ import { FlyingKickEffect } from './FlyingKickEffect.js';
 import { DeadlyReachEffect } from './DeadlyReachEffect.js';
 import { ImprisonedFistsEffect } from './ImprisonedFistsEffect.js';
 import { BulPalmEffect } from './BulPalmEffect.js';
-import { BulBreathOfHeavenEffect } from './BulBreathOfHeavnEffect.js';
+import { BulBreathOfHeavenEffect } from './BulBreathOfHeavenEffect.js';
 
 // Import Breath of Heaven variant effects
 import { CircleOfLifeEffect } from './variants/BreathOfHeaven/CircleOfLifeEffect.js';

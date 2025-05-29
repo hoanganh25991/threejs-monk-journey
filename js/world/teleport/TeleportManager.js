@@ -1427,7 +1427,7 @@ export class TeleportManager {
             // Remove from array
             this.portals.splice(portalIndex, 1);
             
-            console.debug(`Removed teleport portal: ${portal.sourceName}`);
+            // console.debug(`Removed teleport portal: ${portal.sourceName}`);
         }
     }
     

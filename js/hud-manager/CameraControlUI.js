@@ -686,7 +686,7 @@ export class CameraControlUI extends UIComponent {
             
             // Update the player's look direction
             this.game.player.setLookDirection(lookDirection);
-            console.debug("Player look direction updated to:", lookDirection);
+            // console.debug("Player look direction updated to:", lookDirection);
         } else {
             console.debug("Player look direction update not available");
         }
@@ -806,7 +806,7 @@ export class CameraControlUI extends UIComponent {
                 this.game.camera.updateMatrixWorld(true);
                 
                 // Log that we're maintaining the camera position
-                console.debug("Maintaining camera position in update loop");
+                // console.debug("Maintaining camera position in update loop");
             }
         }
     }

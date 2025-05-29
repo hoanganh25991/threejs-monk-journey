@@ -310,7 +310,7 @@ export class PlayerModel {
     setPosition(position) {
         if (this.modelGroup) {
             this.modelGroup.position.copy(position);
-            console.debug("PlayerModel: Position updated to:", this.modelGroup.position);
+            // console.debug("PlayerModel: Position updated to:", this.modelGroup.position);
         }
     }
     
@@ -375,9 +375,7 @@ export class PlayerModel {
                 // Apply rotation to head bone
                 headBone.rotation.x = rotationAngle;
                 
-                console.debug("Applied vertical look rotation to head bone:", 
-                    THREE.MathUtils.radToDeg(rotationAngle) + "°", 
-                    "from vertical direction:", verticalDirection);
+                // console.debug("Applied vertical look rotation to head bone:", THREE.MathUtils.radToDeg(rotationAngle) + "°", "from vertical direction:", verticalDirection);
             }
             
             // Apply smaller rotation to neck bone if found and head bone wasn't
@@ -388,8 +386,7 @@ export class PlayerModel {
                 
                 neckBone.rotation.x = neckRotation;
                 
-                console.debug("Applied vertical look rotation to neck bone:", 
-                    THREE.MathUtils.radToDeg(neckRotation) + "°");
+                // console.debug("Applied vertical look rotation to neck bone:", THREE.MathUtils.radToDeg(neckRotation) + "°");
             }
         }
     }

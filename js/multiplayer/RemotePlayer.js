@@ -450,9 +450,10 @@ export class RemotePlayer {
     /**
      * Cast a skill with visual effects
      * @param {string} skillName - The name of the skill to cast
+     * @param {string} [variant] - The variant of the skill (optional)
      * @returns {boolean} - Whether the skill was cast successfully
      */
-    castSkill(skillName) {
+    castSkill(skillName, variant) {
         // Map skill names to appropriate animations
         const skillAnimationMap = {
             // Default mappings - can be expanded for specific skills
@@ -480,12 +481,18 @@ export class RemotePlayer {
         // Get the animation name for this skill
         const animationName = skillAnimationMap[skillName] || 'attack';
         
+        // Log variant information if available
+        if (variant) {
+            console.debug(`[RemotePlayer ${this.peerId}] Casting skill: ${skillName} with variant: ${variant} and animation: ${animationName}`);
+        } else {
+            console.debug(`[RemotePlayer ${this.peerId}] Casting skill: ${skillName} with animation: ${animationName}`);
+        }
+        
         // Play the animation
-        console.debug(`[RemotePlayer ${this.peerId}] Casting skill: ${skillName} with animation: ${animationName}`);
         const animationPlayed = this.playAnimation(animationName, 'attack', 0.2);
         
-        // Create the skill visual effect
-        this.createSkillEffect(skillName);
+        // Create the skill visual effect with variant information
+        this.createSkillEffect(skillName, variant);
         
         return animationPlayed;
     }
@@ -493,8 +500,9 @@ export class RemotePlayer {
     /**
      * Create a visual effect for a skill
      * @param {string} skillName - The name of the skill
+     * @param {string} [variant] - The variant of the skill (optional)
      */
-    createSkillEffect(skillName) {
+    createSkillEffect(skillName, variant) {
         if (!this.game || !this.game.scene) {
             console.warn(`[RemotePlayer ${this.peerId}] Cannot create skill effect: no game or scene reference`);
             return;
@@ -512,8 +520,17 @@ export class RemotePlayer {
                         return;
                     }
                     
-                    // Create a new skill instance
-                    const skill = new Skill(skillConfig);
+                    // Create a deep copy of the skill config
+                    const skillConfigCopy = JSON.parse(JSON.stringify(skillConfig));
+                    
+                    // Apply variant if provided
+                    if (variant) {
+                        console.debug(`[RemotePlayer ${this.peerId}] Applying variant ${variant} to skill ${skillName}`);
+                        skillConfigCopy.variant = variant;
+                    }
+                    
+                    // Create a new skill instance with the possibly modified config
+                    const skill = new Skill(skillConfigCopy);
                     
                     // Set the game reference
                     skill.setGame(this.game);
@@ -523,7 +540,12 @@ export class RemotePlayer {
                     const rotation = { y: this.model ? this.model.rotation.y : 0 };
                     
                     // Create the skill effect
-                    console.debug(`[RemotePlayer ${this.peerId}] Creating skill effect for: ${skillName}`);
+                    if (variant) {
+                        console.debug(`[RemotePlayer ${this.peerId}] Creating skill effect for: ${skillName} with variant: ${variant}`);
+                    } else {
+                        console.debug(`[RemotePlayer ${this.peerId}] Creating skill effect for: ${skillName}`);
+                    }
+                    
                     const skillEffect = skill.createEffect(position, rotation);
                     
                     // Add the effect to the scene

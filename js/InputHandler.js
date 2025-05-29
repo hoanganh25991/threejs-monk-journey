@@ -48,7 +48,7 @@ export class InputHandler {
             this.keys[event.code] = true;
             
             // Debug: Log key press
-            console.debug('Key pressed:', event.code);
+            // console.debug('Key pressed:', event.code);
             
             // Handle special key presses
             switch (event.code) {

@@ -27,7 +27,7 @@ const SCHEMAS = {
     [MessageType.PLAYER_JOINED]: ['playerId', 'playerColor'],
     [MessageType.PLAYER_LEFT]: ['playerId'],
     [MessageType.PLAYER_COLORS]: ['colors'],
-    [MessageType.SKILL_CAST]: ['skillName', 'playerId', 'position', 'rotation'],
+    [MessageType.SKILL_CAST]: ['skillName', 'playerId', 'position', 'rotation', 'variant'],
     [MessageType.PLAYER_INPUT]: ['input'],
     [MessageType.PLAYER_POSITION]: ['position', 'rotation', 'animation', 'modelId'],
     [MessageType.HOST_LEFT]: []

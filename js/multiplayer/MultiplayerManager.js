@@ -251,10 +251,7 @@ export class MultiplayerManager {
         // Log update status occasionally (every 3 seconds)
         const now = Date.now();
         if (!this._lastUpdateLog || now - this._lastUpdateLog > 3000) {
-            console.debug('[MultiplayerManager] Update called - isHost:', this.connection.isHost, 
-                        'isConnected:', this.connection.isConnected, 
-                        'peers:', this.connection.peers.size,
-                        'game state:', this.game.state ? (this.game.state.isRunning() ? 'running' : 'not running') : 'unknown');
+            // console.debug('[MultiplayerManager] Update called - isHost:', this.connection.isHost, 'isConnected:', this.connection.isConnected, 'peers:', this.connection.peers.size, 'game state:', this.game.state ? (this.game.state.isRunning() ? 'running' : 'not running') : 'unknown');
             this._lastUpdateLog = now;
         }
         
