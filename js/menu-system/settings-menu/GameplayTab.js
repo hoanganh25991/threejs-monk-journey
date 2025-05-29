@@ -149,6 +149,19 @@ export class GameplayTab extends SettingsTab {
                     // Start a new game
                     if (this.game) {
                         console.debug('Starting a new game...');
+                        
+                        // First, delete all player state data from localStorage
+                        if (this.game.saveManager) {
+                            console.debug('Removing player state data from localStorage...');
+                            const saveDeleted = this.game.saveManager.deleteSave();
+                            if (saveDeleted) {
+                                console.debug('Player state data successfully removed');
+                            } else {
+                                console.warn('Failed to remove player state data');
+                            }
+                        }
+                        
+                        // Then start a new game
                         this.game.start();
                         
                         // Show notification if HUD manager is available

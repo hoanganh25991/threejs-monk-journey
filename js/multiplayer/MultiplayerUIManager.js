@@ -340,51 +340,37 @@ export class MultiplayerUIManager {
             }
         }
         
-        // Update host controls
-        const hostControls = document.getElementById('host-controls');
-        if (hostControls) {
-            hostControls.innerHTML = ''; // Clear existing controls
-            
-            if (this.multiplayerManager.connection && this.multiplayerManager.connection.isConnected) {
-                if (this.multiplayerManager.connection.isHost) {
-                    // Host controls - Start Game button
-                    const startGameBtn = document.createElement('button');
-                    startGameBtn.id = 'start-game-btn';
-                    startGameBtn.className = 'settings-button';
-                    startGameBtn.textContent = 'Start Game';
-                    startGameBtn.addEventListener('click', () => {
-                        this.multiplayerManager.startMultiplayerGame();
-                    });
-                    hostControls.appendChild(startGameBtn);
-                    
-                    // Generate QR code for the connection if we're the host
-                    const roomId = this.multiplayerManager.connection.roomId;
-                    if (roomId) {
-                        // Find the QR code container in the connection info screen
-                        const qrContainer = document.getElementById('connection-info-qr');
-                        if (qrContainer) {
-                            // Generate QR code
-                            this.generateQRCode(roomId);
-                        }
-                    }
-                }
-            }
-        }
-        
         // Update player list
         this.updateConnectionInfoPlayerList();
         
-        // Update connection code display and QR code
+        // Update connection code display and QR code for both host and members
         if (this.multiplayerManager.connection && this.multiplayerManager.connection.isConnected) {
-            const roomId = this.multiplayerManager.connection.roomId;
+            // For host, use the room ID
+            // For players, use the host's ID which is the room ID
+            const roomId = this.multiplayerManager.connection.isHost ? 
+                this.multiplayerManager.connection.roomId : 
+                this.multiplayerManager.connection.hostId;
+                
             if (roomId) {
                 this.displayConnectionCode(roomId);
                 
-                // Generate QR code for the connection info screen
+                // Generate QR code for the connection info screen for both host and members
                 const qrContainer = document.getElementById('connection-info-qr');
                 if (qrContainer) {
+                    // Make sure QR container is visible
+                    qrContainer.style.display = 'block';
+                    
+                    // Clear any previous QR code
+                    qrContainer.innerHTML = '';
+                    
+                    // Generate QR code
+                    console.debug(`Generating QR code with room ID: ${roomId}`);
                     this.generateQRCode(roomId);
+                } else {
+                    console.warn('QR container element not found');
                 }
+            } else {
+                console.warn('Room ID not available for QR code generation');
             }
         }
     }
