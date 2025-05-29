@@ -326,7 +326,7 @@ export class MultiplayerConnectionManager {
                     this.multiplayerManager.game.state.setPaused();
                 }
                 if (this.multiplayerManager.game.menuManager) {
-                    this.multiplayerManager.game.menuManager.showMainMenu();
+                    this.multiplayerManager.game.menuManager.showMenu('gameMenu');
                 }
                 break;
             case 'hostLeft':
@@ -338,15 +338,30 @@ export class MultiplayerConnectionManager {
                     this.multiplayerManager.game.hudManager.showNotification('The host has left the game', 'error');
                 }
                 
+                // Remove all remote players
+                if (this.multiplayerManager.remotePlayerManager) {
+                    console.debug('[MultiplayerConnectionManager] Removing all remote players after host left');
+                    this.multiplayerManager.remotePlayerManager.removeAllPlayers();
+                }
+                
+                // Take back control of enemy spawning as local mode
+                if (this.multiplayerManager.game.enemyManager) {
+                    console.debug('[MultiplayerConnectionManager] Taking back control of enemy spawning in local mode');
+                    
+                    // Clear existing enemies (which were controlled by host)
+                    this.multiplayerManager.game.enemyManager.removeAllEnemies();
+                    
+                    // Start local enemy spawning
+                    this.multiplayerManager.game.enemyManager.enableLocalSpawning();
+                }
+                
                 // Clean up connection
                 this.dispose();
                 
-                // Return to main menu
+                // Keep the game running but in local mode instead of returning to menu
                 if (this.multiplayerManager.game.state) {
-                    this.multiplayerManager.game.state.setPaused();
-                }
-                if (this.multiplayerManager.game.menuManager) {
-                    this.multiplayerManager.game.menuManager.showMainMenu();
+                    // Don't pause the game, just continue in local mode
+                    console.debug('[MultiplayerConnectionManager] Continuing game in local mode after host left');
                 }
                 break;
             default:
@@ -475,7 +490,7 @@ export class MultiplayerConnectionManager {
                     this.multiplayerManager.game.state.setPaused();
                 }
                 if (this.multiplayerManager.game.menuManager) {
-                    this.multiplayerManager.game.menuManager.showMainMenu();
+                    this.multiplayerManager.game.menuManager.showMenu('gameMenu');
                 }
             }
         }

@@ -492,6 +492,30 @@ export class EnemyManager {
         
         console.debug(`EnemyManager: Multiplayer mode ${isMultiplayer ? 'enabled' : 'disabled'}, isHost: ${isHost}`);
     }
+    
+    /**
+     * Enable local enemy spawning
+     * Used when transitioning from multiplayer (member) to local mode
+     * For example, when the host disconnects
+     */
+    enableLocalSpawning() {
+        console.debug('EnemyManager: Enabling local enemy spawning');
+        
+        // Set multiplayer mode to false to enable local spawning
+        this.isMultiplayer = false;
+        this.isHost = false;
+        
+        // Reset spawn timer to start spawning immediately
+        this.spawnTimer = this.spawnInterval;
+        
+        // Clear the enemies map (actual removal is handled by removeAllEnemies)
+        this.enemies.clear();
+        
+        // Reset any other multiplayer-specific state
+        this.nextEnemyId = 1;
+        
+        console.debug('EnemyManager: Local enemy spawning enabled');
+    }
 
     setDifficulty(difficulty) {
         if (DIFFICULTY_SETTINGS[difficulty]) {
