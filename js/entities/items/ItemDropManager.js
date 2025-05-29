@@ -138,8 +138,7 @@ export class ItemDropManager {
             const itemPosition = itemData.group.position;
             const distance = playerPosition.distanceTo(itemPosition);
             
-            // Remove items that are too far away (300+ units)
-            if (distance > 300) {
+            if (distance > 100) {
                 // Remove from scene
                 if (itemData.group) {
                     this.scene.remove(itemData.group);
