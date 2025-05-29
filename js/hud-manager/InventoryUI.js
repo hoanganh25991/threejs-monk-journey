@@ -3,6 +3,7 @@ import { UIComponent } from '../UIComponent.js';
 import { PlayerModel } from '../entities/player/PlayerModel.js';
 import { PlayerState } from '../entities/player/PlayerState.js';
 import { ModelPreview } from '../menu-system/ModelPreview.js';
+import { ItemPreview } from '../menu-system/ItemPreview.js';
 import { updateAnimation } from '../utils/AnimationUtils.js';
 
 /**
@@ -36,6 +37,8 @@ export class InventoryUI extends UIComponent {
         this.itemPopup = null;
         this.statsContainer = null;
         this.activeItemSlot = null;
+        this.itemPreviewContainer = null;
+        this.itemPreview = null; // ItemPreview instance
     }
     
     /**
@@ -114,6 +117,7 @@ export class InventoryUI extends UIComponent {
                         <div class="item-popup-type"></div>
                     </div>
                 </div>
+                <div id="item-preview-container" class="item-preview-container"></div>
                 <div class="item-popup-stats"></div>
                 <div class="item-popup-description"></div>
                 <div class="item-popup-actions">
@@ -125,6 +129,9 @@ export class InventoryUI extends UIComponent {
             
             // Add to document body
             document.body.appendChild(this.itemPopup);
+            
+            // Store reference to the item preview container
+            this.itemPreviewContainer = this.itemPopup.querySelector('#item-preview-container');
             
             // Add event listeners for buttons
             const useButton = this.itemPopup.querySelector('.item-popup-use');
@@ -150,6 +157,44 @@ export class InventoryUI extends UIComponent {
                     this.hideItemPopup();
                 }
             });
+        }
+    }
+    
+    /**
+     * Initialize the item preview in the popup
+     * @param {Object} item - The item to preview
+     */
+    initItemPreview(item) {
+        // Clear any existing preview
+        if (this.itemPreview) {
+            // If we already have an ItemPreview instance, just update the model
+            this.itemPreview.loadItemModel(item);
+            return;
+        }
+        
+        console.debug('Initializing item preview...');
+        
+        // Clear the container
+        this.itemPreviewContainer.innerHTML = '';
+        
+        // Set dimensions for the preview
+        const previewWidth = 216;  // Smaller width for the popup
+        const previewHeight = 150; // Square aspect ratio
+        
+        // Create a new ItemPreview instance
+        this.itemPreview = new ItemPreview(
+            this.itemPreviewContainer, 
+            previewWidth, 
+            previewHeight, 
+            this.game
+        );
+        
+        // Load the item model
+        if (item) {
+            console.debug(`Loading item model for: ${item.name}`);
+            this.itemPreview.loadItemModel(item);
+        } else {
+            console.warn('No item provided for preview');
         }
     }
     
@@ -459,6 +504,12 @@ export class InventoryUI extends UIComponent {
             equipButton.style.display = 'block';
         }
         
+        // Initialize or update the 3D model preview
+        this.initItemPreview(item);
+        
+        // Make sure the preview container is visible
+        this.itemPreviewContainer.style.display = 'block';
+        
         // Position popup near the clicked item
         const rect = slotElement.getBoundingClientRect();
         this.itemPopup.style.left = `${rect.right + 10}px`;
@@ -479,6 +530,13 @@ export class InventoryUI extends UIComponent {
             this.itemPopup.style.display = 'none';
             this.currentItem = null;
             this.activeItemSlot = null;
+            
+            // Clean up item preview if it exists
+            if (this.itemPreview) {
+                // We don't destroy the preview instance, just hide it
+                // This allows for reuse when another item is selected
+                this.itemPreviewContainer.style.display = 'none';
+            }
         }
     }
     
@@ -832,7 +890,7 @@ export class InventoryUI extends UIComponent {
      */
     saveInventory() {
         // Get player inventory
-        const inventory = this.game.player.getInventory();
+        this.game.player.getInventory();
         
         // Use the game's save manager to save the inventory data
         if (this.game.saveManager) {

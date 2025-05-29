@@ -466,7 +466,6 @@
 #item-preview-container {
     width: 100%;
     flex: 1;
-    min-height: 300px;
     background-color: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
     position: relative;

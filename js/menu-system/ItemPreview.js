@@ -105,7 +105,7 @@ export class ItemPreview {
             
             // Create camera
             this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.1, 1000);
-            this.camera.position.set(0, 0, 5);
+            this.camera.position.set(0, 0, 1.5); // Zoomed in 5x closer (from 5 to 1)
             
             // Create renderer
             this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -372,7 +372,7 @@ export class ItemPreview {
      * Reset camera to default position
      */
     resetCamera() {
-        this.camera.position.set(0, 0, 5);
+        this.camera.position.set(0, 0, 1); // Zoomed in 5x closer (from 5 to 1)
         this.camera.lookAt(0, 0, 0);
         this.controls.reset();
     }
