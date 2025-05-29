@@ -83,6 +83,11 @@ export class EnemyManager {
         // Multiplayer support
         this.isMultiplayer = false;
         this.isHost = false;
+        
+        // Boss spawning configuration
+        this.bossSpawnTimer = 0;
+        this.bossSpawnInterval = 120; // Spawn boss every 120 seconds (2 minutes)
+        this.bossSpawnChance = 0.2; // 20% chance to spawn a boss when timer is up
     }
     
     // setGame method removed - game is now passed in constructor
@@ -140,13 +145,33 @@ export class EnemyManager {
         
         // In multiplayer mode, only the host should spawn enemies
         if (!this.isMultiplayer || (this.isMultiplayer && this.isHost)) {
-            // Update spawn timer
+            // Update regular enemy spawn timer
             this.spawnTimer += delta;
             
             // Spawn new enemies if needed
             if (this.spawnTimer >= this.spawnInterval && this.enemies.size < this.maxEnemies) {
                 this.spawnEnemy();
                 this.spawnTimer = 0;
+            }
+            
+            // Update boss spawn timer
+            this.bossSpawnTimer += delta;
+            
+            // Check if it's time to potentially spawn a boss
+            if (this.bossSpawnTimer >= this.bossSpawnInterval) {
+                // Reset timer regardless of whether a boss is spawned
+                this.bossSpawnTimer = 0;
+                
+                // Random chance to spawn a boss
+                if (Math.random() < this.bossSpawnChance) {
+                    console.log('Spawning random boss...');
+                    this.spawnRandomBoss();
+                    
+                    // Play boss theme if available
+                    if (this.game && this.game.audioManager) {
+                        this.game.audioManager.playMusic('bossTheme');
+                    }
+                }
             }
         }
         
@@ -619,6 +644,22 @@ export class EnemyManager {
         return this.enemyTypes.find(type => type.type === randomTypeId) || this.enemyTypes[0];
     }
     
+    /**
+     * Get a random boss type from the available boss types
+     * @returns {Object} A random boss type configuration
+     */
+    getRandomBossType() {
+        // If no boss types are available, return null
+        if (!this.bossTypes || this.bossTypes.length === 0) {
+            console.warn('No boss types available');
+            return null;
+        }
+        
+        // Select a random boss type
+        const randomIndex = Math.floor(Math.random() * this.bossTypes.length);
+        return this.bossTypes[randomIndex];
+    }
+    
     applyDifficultyScaling(enemyType) {
         // Create a copy of the enemy type to modify
         const scaledType = { ...enemyType };
@@ -835,6 +876,36 @@ export class EnemyManager {
         }
         
         return boss;
+    }
+    
+    /**
+     * Spawn a random boss at a random position
+     * @param {THREE.Vector3} [position=null] - Optional specific position to spawn the boss
+     * @returns {Enemy} The spawned boss instance
+     */
+    spawnRandomBoss(position = null) {
+        // Get a random boss type
+        const randomBossType = this.getRandomBossType();
+        
+        if (!randomBossType) {
+            console.warn('No boss types available for random spawning');
+            return null;
+        }
+        
+        // Get spawn position if not provided
+        let spawnPosition = position;
+        if (!spawnPosition) {
+            spawnPosition = this.getRandomSpawnPosition();
+            
+            // Adjust height if world is available
+            if (this.game && this.game.world) {
+                const terrainHeight = this.game.world.getTerrainHeight(spawnPosition.x, spawnPosition.z);
+                spawnPosition.y = terrainHeight + 1; // Add offset for boss height
+            }
+        }
+        
+        // Spawn the boss using the existing spawnBoss method
+        return this.spawnBoss(randomBossType.type, spawnPosition);
     }
     
     getClosestEnemy(position, maxDistance = Infinity) {
