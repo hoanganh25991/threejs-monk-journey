@@ -451,9 +451,10 @@ export class RemotePlayer {
      * Cast a skill with visual effects
      * @param {string} skillName - The name of the skill to cast
      * @param {string} [variant] - The variant of the skill (optional)
+     * @param {string} [targetEnemyId] - The ID of the target enemy (optional)
      * @returns {boolean} - Whether the skill was cast successfully
      */
-    castSkill(skillName, variant) {
+    castSkill(skillName, variant, targetEnemyId) {
         // Map skill names to appropriate animations
         const skillAnimationMap = {
             // Default mappings - can be expanded for specific skills
@@ -481,9 +482,13 @@ export class RemotePlayer {
         // Get the animation name for this skill
         const animationName = skillAnimationMap[skillName] || 'attack';
         
-        // Log variant information if available
-        if (variant) {
+        // Log variant and target enemy information if available
+        if (variant && targetEnemyId) {
+            console.debug(`[RemotePlayer ${this.peerId}] Casting skill: ${skillName} with variant: ${variant}, targeting enemy: ${targetEnemyId}, and animation: ${animationName}`);
+        } else if (variant) {
             console.debug(`[RemotePlayer ${this.peerId}] Casting skill: ${skillName} with variant: ${variant} and animation: ${animationName}`);
+        } else if (targetEnemyId) {
+            console.debug(`[RemotePlayer ${this.peerId}] Casting skill: ${skillName} targeting enemy: ${targetEnemyId} with animation: ${animationName}`);
         } else {
             console.debug(`[RemotePlayer ${this.peerId}] Casting skill: ${skillName} with animation: ${animationName}`);
         }
@@ -491,8 +496,8 @@ export class RemotePlayer {
         // Play the animation
         const animationPlayed = this.playAnimation(animationName, 'attack', 0.2);
         
-        // Create the skill visual effect with variant information
-        this.createSkillEffect(skillName, variant);
+        // Create the skill visual effect with variant and target enemy information
+        this.createSkillEffect(skillName, variant, targetEnemyId);
         
         return animationPlayed;
     }
@@ -501,8 +506,9 @@ export class RemotePlayer {
      * Create a visual effect for a skill
      * @param {string} skillName - The name of the skill
      * @param {string} [variant] - The variant of the skill (optional)
+     * @param {string} [targetEnemyId] - The ID of the target enemy (optional)
      */
-    createSkillEffect(skillName, variant) {
+    createSkillEffect(skillName, variant, targetEnemyId) {
         if (!this.game || !this.game.scene) {
             console.warn(`[RemotePlayer ${this.peerId}] Cannot create skill effect: no game or scene reference`);
             return;
@@ -539,9 +545,25 @@ export class RemotePlayer {
                     const position = this.group.position.clone();
                     const rotation = { y: this.model ? this.model.rotation.y : 0 };
                     
+                    // Set target enemy if provided
+                    let targetEnemy = null;
+                    if (targetEnemyId && this.game.enemyManager) {
+                        targetEnemy = this.game.enemyManager.getEnemyById(targetEnemyId);
+                        if (targetEnemy) {
+                            console.debug(`[RemotePlayer ${this.peerId}] Found target enemy with ID: ${targetEnemyId}`);
+                            skill.targetEnemy = targetEnemy;
+                        } else {
+                            console.debug(`[RemotePlayer ${this.peerId}] Target enemy with ID: ${targetEnemyId} not found`);
+                        }
+                    }
+                    
                     // Create the skill effect
-                    if (variant) {
+                    if (variant && targetEnemyId) {
+                        console.debug(`[RemotePlayer ${this.peerId}] Creating skill effect for: ${skillName} with variant: ${variant} targeting enemy: ${targetEnemyId}`);
+                    } else if (variant) {
                         console.debug(`[RemotePlayer ${this.peerId}] Creating skill effect for: ${skillName} with variant: ${variant}`);
+                    } else if (targetEnemyId) {
+                        console.debug(`[RemotePlayer ${this.peerId}] Creating skill effect for: ${skillName} targeting enemy: ${targetEnemyId}`);
                     } else {
                         console.debug(`[RemotePlayer ${this.peerId}] Creating skill effect for: ${skillName}`);
                     }

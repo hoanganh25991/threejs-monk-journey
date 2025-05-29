@@ -158,9 +158,10 @@ export class RemotePlayerManager {
      * @param {string} peerId - The ID of the remote player
      * @param {string} skillName - The name of the skill being cast
      * @param {string} [variant] - The variant of the skill being cast (optional)
+     * @param {string} [targetEnemyId] - The ID of the target enemy (optional)
      * @returns {boolean} True if the skill animation was played successfully
      */
-    handleSkillCast(peerId, skillName, variant) {
+    handleSkillCast(peerId, skillName, variant, targetEnemyId) {
         // Check if player exists
         if (!this.remotePlayers.has(peerId)) {
             console.debug(`[RemotePlayerManager] Cannot cast skill: Remote player ${peerId} not found`);
@@ -170,8 +171,8 @@ export class RemotePlayerManager {
         // Get remote player
         const remotePlayer = this.remotePlayers.get(peerId);
         
-        // Cast the skill with variant information
-        return remotePlayer.castSkill(skillName, variant);
+        // Cast the skill with variant and target enemy information
+        return remotePlayer.castSkill(skillName, variant, targetEnemyId);
     }
     
     /**
