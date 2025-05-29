@@ -86,11 +86,27 @@ export class PlayerStats {
     }
     
     /**
-     * Get maximum mana points
+     * Get maximum mana points including equipment bonuses
      * @returns {number} Maximum mana points
      */
     getMaxMana() {
-        return this.maxMana;
+        // Get base max mana
+        let maxMana = this.maxMana;
+        
+        // Add equipment bonus if player has an inventory
+        if (this._player && this._player.inventory) {
+            maxMana += this._player.inventory.getManaBonus();
+        }
+        
+        return maxMana;
+    }
+    
+    /**
+     * Set player reference for accessing equipment bonuses
+     * @param {Player} player - The player object
+     */
+    setPlayer(player) {
+        this._player = player;
     }
     
     /**

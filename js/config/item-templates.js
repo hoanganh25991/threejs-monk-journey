@@ -443,6 +443,39 @@ export const ITEM_TEMPLATES = [
     
     // Amulets
     {
+        id: "manaAmulet",
+        name: "Mana Crystal Amulet",
+        type: "accessory",
+        subType: "amulet",
+        description: "A crystal amulet that significantly increases maximum mana.",
+        icon: "🔮",
+        baseStats: {
+            manaBonus: 50
+        },
+        possibleSecondaryStats: [
+            "manaRegen",
+            "cooldownReduction",
+            "spellPower",
+            "allResistance"
+        ],
+        possibleEffects: [
+            {
+                id: "manaFlow",
+                name: "Mana Flow",
+                description: "Increases mana regeneration by 15% when below 30% mana",
+                trigger: "passive",
+                condition: "lowMana",
+                threshold: 30,
+                effect: "resourceRegen",
+                params: { resource: "mana", value: 15 }
+            }
+        ],
+        visual: {
+            model: "models/accessories/mana_amulet.glb",
+            texture: "textures/accessories/mana_amulet.png"
+        }
+    },
+    {
         id: "basicAmulet",
         name: "Jade Pendant",
         type: "accessory",
@@ -669,6 +702,35 @@ export const ITEM_TEMPLATES = [
             resource: "spirit",
             value: 30,
             duration: 0
+        }
+    },
+    {
+        id: "greaterManaPotion",
+        name: "Greater Mana Potion",
+        type: "consumable",
+        subType: "potion",
+        description: "Restores a significant amount of mana and temporarily increases mana regeneration.",
+        icon: "🧪",
+        baseStats: {
+            manaRestore: 100
+        },
+        possibleSecondaryStats: [],
+        possibleEffects: [],
+        visual: {
+            model: "models/consumables/greater_mana_potion.glb",
+            texture: "textures/consumables/greater_mana_potion.png"
+        },
+        useEffect: {
+            type: "resource",
+            resource: "mana",
+            value: 100,
+            duration: 0,
+            secondaryEffect: {
+                type: "buff",
+                stat: "manaRegen",
+                value: 20,
+                duration: 30
+            }
         }
     },
     

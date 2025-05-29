@@ -242,10 +242,16 @@ export class ItemGenerator {
         } else if (statType === 'elementalDamage') {
             // Apply elemental damage multiplier from combat balance
             value *= COMBAT_BALANCE.player.elementalDamageMultiplier;
+        } else if (statType === 'manaBonus') {
+            // Scale mana bonus with level more aggressively
+            value *= (1 + (level * 0.1));
+        } else if (statType === 'manaRegen') {
+            // Scale mana regen with level
+            value *= (1 + (level * 0.05));
         }
         
         // Round to appropriate precision
-        if (['critChance', 'attackSpeed', 'cooldownReduction', 'damageReduction', 'movementSpeed'].includes(statType)) {
+        if (['critChance', 'attackSpeed', 'cooldownReduction', 'damageReduction', 'movementSpeed', 'manaRegen'].includes(statType)) {
             // These are small percentages, round to 1 decimal place
             return Math.round(value * 10) / 10;
         }
