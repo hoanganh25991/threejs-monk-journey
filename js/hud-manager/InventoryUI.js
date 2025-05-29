@@ -506,11 +506,11 @@ export class InventoryUI extends UIComponent {
         const speedElement = document.getElementById('stat-speed');
         const levelElement = document.getElementById('stat-level');
         
-        if (healthElement) healthElement.textContent = `${health}/${maxHealth}`;
-        if (manaElement) manaElement.textContent = `${mana}/${maxMana}`;
-        if (attackElement) attackElement.textContent = attack;
-        if (defenseElement) defenseElement.textContent = defense;
-        if (speedElement) speedElement.textContent = speed.toFixed(1);
+        if (healthElement) healthElement.textContent = `${Number(health).toFixed()}/${Number(maxHealth).toFixed()}`;
+        if (manaElement) manaElement.textContent = `${Number(mana).toFixed()}/${Number(maxMana).toFixed()}`;
+        if (attackElement) attackElement.textContent = Number(attack).toFixed();
+        if (defenseElement) defenseElement.textContent = Number(defense).toFixed();
+        if (speedElement) speedElement.textContent = Number(speed).toFixed();
         if (levelElement) levelElement.textContent = level;
     }
     
@@ -553,8 +553,9 @@ export class InventoryUI extends UIComponent {
             // Show notification
             this.game.hudManager.showNotification(`Consumed Health Potion: +${healAmount} Health`);
             
-            // Update inventory
+            // Update inventory UI and player stats
             this.updateInventoryItems();
+            this.updatePlayerStats();
         } else if (item.name === 'Mana Potion') {
             // Restore mana
             const manaAmount = item.manaAmount || 50;
@@ -568,8 +569,9 @@ export class InventoryUI extends UIComponent {
             // Show notification
             this.game.hudManager.showNotification(`Consumed Mana Potion: +${manaAmount} Mana`);
             
-            // Update inventory
+            // Update inventory UI and player stats
             this.updateInventoryItems();
+            this.updatePlayerStats();
         } else if (item.name === 'Stamina Potion') {
             // Restore stamina if the game has stamina system
             if (this.game.player.getStamina && this.game.player.getMaxStamina && this.game.player.getStatsObject().setStamina) {
@@ -584,34 +586,58 @@ export class InventoryUI extends UIComponent {
                 // Show notification
                 this.game.hudManager.showNotification(`Consumed Stamina Potion: +${staminaAmount} Stamina`);
                 
-                // Update inventory
+                // Update inventory UI and player stats
                 this.updateInventoryItems();
+                this.updatePlayerStats();
             } else {
                 this.game.hudManager.showNotification(`Cannot consume ${item.name}: Stamina system not available`);
             }
         } else if (item.consumable) {
             // Handle generic consumable items
             if (item.effects) {
+                let effectsApplied = false;
+                let effectsDescription = [];
+                
                 // Apply effects
                 if (item.effects.health) {
                     const newHealth = this.game.player.getHealth() + item.effects.health;
                     const maxHealth = this.game.player.getMaxHealth();
                     this.game.player.getStatsObject().setHealth(Math.min(newHealth, maxHealth));
+                    effectsApplied = true;
+                    effectsDescription.push(`+${item.effects.health} Health`);
                 }
                 
                 if (item.effects.mana) {
                     const newMana = this.game.player.getMana() + item.effects.mana;
                     const maxMana = this.game.player.getMaxMana();
                     this.game.player.getStatsObject().setMana(Math.min(newMana, maxMana));
+                    effectsApplied = true;
+                    effectsDescription.push(`+${item.effects.mana} Mana`);
                 }
                 
+                if (effectsApplied) {
+                    // Remove item from inventory
+                    this.game.player.removeFromInventory(item.name, 1);
+                    
+                    // Show notification with effects details
+                    const effectsText = effectsDescription.length > 0 ? `: ${effectsDescription.join(', ')}` : '';
+                    this.game.hudManager.showNotification(`Consumed ${item.name}${effectsText}`);
+                    
+                    // Update inventory UI and player stats
+                    this.updateInventoryItems();
+                    this.updatePlayerStats();
+                } else {
+                    this.game.hudManager.showNotification(`Consumed ${item.name}, but no effects were applied`);
+                }
+            } else {
+                // Generic consumable with no specific effects
                 // Remove item from inventory
                 this.game.player.removeFromInventory(item.name, 1);
                 
                 // Show notification
                 this.game.hudManager.showNotification(`Consumed ${item.name}`);
                 
-                // Update inventory
+                // Update inventory UI
                 this.updateInventoryItems();
             }
         } else {
