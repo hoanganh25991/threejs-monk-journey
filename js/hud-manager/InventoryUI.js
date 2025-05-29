@@ -444,9 +444,6 @@ export class InventoryUI extends UIComponent {
                 item.slotIndex = slotIndex;
             }
         });
-        
-        // Update player stats
-        this.updatePlayerStats();
     }
     
     /**
