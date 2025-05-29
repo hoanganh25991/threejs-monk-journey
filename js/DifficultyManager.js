@@ -1,4 +1,4 @@
-import { DIFFICULTY_SETTINGS } from './config/difficulty-settings.js';
+import { DIFFICULTY_SCALING } from './config/game-balance.js';
 
 export class DifficultyManager {
     constructor(game) {
@@ -146,6 +146,6 @@ export class DifficultyManager {
      * @returns {Object} The difficulty settings object
      */
     getDifficultySettings() {
-        return DIFFICULTY_SETTINGS;
+        return DIFFICULTY_SCALING.difficultyLevels;
     }
 }

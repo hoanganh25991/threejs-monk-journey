@@ -838,13 +838,13 @@ export const COMBAT_BALANCE = {
         // Base damage multiplier - increased to make enemies more threatening
         damageMultiplier: 1.5,
         // Health multiplier - significantly increased to better match player health
-        healthMultiplier: 4.0,
+        healthMultiplier: 1.0,
         // Experience multiplier
         experienceMultiplier: 1.0,
         // Level scaling factor (how much stronger enemies get per player level)
         levelScalingFactor: 0.12, // Increased to 12% per level
         // Boss health multiplier
-        bossHealthMultiplier: 4.0, // Increased to make bosses more challenging
+        bossHealthMultiplier: 1.0, // Increased to make bosses more challenging
         // Boss damage multiplier
         bossDamageMultiplier: 1.8, // Increased to make bosses more threatening
         // Elite enemy health multiplier

@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { Enemy } from './Enemy.js';
 import { ZONE_ENEMIES, ZONE_BOSSES, ENEMY_TYPES, BOSS_TYPES, ZONE_DIFFICULTY_MULTIPLIERS } from '../../config/game-balance.js';
 import { DROP_CHANCES, REGULAR_DROP_TABLE, BOSS_DROP_TABLE } from '../../config/drops.js';
-import { DIFFICULTY_SETTINGS } from '../../config/difficulty-settings.js';
 import { COMBAT_BALANCE, DIFFICULTY_SCALING } from '../../config/game-balance.js';
 import { ItemGenerator } from '../items/ItemGenerator.js';
 
@@ -80,7 +79,7 @@ export class EnemyManager {
         // Import zone difficulty multipliers from config
         this.zoneDifficultyMultipliers = ZONE_DIFFICULTY_MULTIPLIERS;
         // Track current difficulty
-        this.currentDifficulty = 'medium'; // Default difficulty
+        this.currentDifficulty = 'basic'; // Default difficulty
         
         // Multiplayer support
         this.isMultiplayer = false;
@@ -552,17 +551,17 @@ export class EnemyManager {
     }
 
     setDifficulty(difficulty) {
-        if (DIFFICULTY_SETTINGS[difficulty]) {
+        if (DIFFICULTY_SCALING.difficultyLevels[difficulty]) {
             this.currentDifficulty = difficulty;
-            console.debug(`Difficulty set to ${DIFFICULTY_SETTINGS[difficulty].name}`);
+            console.debug(`Difficulty set to ${DIFFICULTY_SCALING.difficultyLevels[difficulty].name}`);
         } else {
-            console.warn(`Unknown difficulty: ${difficulty}, defaulting to medium`);
-            this.currentDifficulty = 'medium';
+            console.warn(`Unknown difficulty: ${difficulty}, defaulting to basic`);
+            this.currentDifficulty = 'basic';
         }
     }
 
     getDifficultySettings() {
-        return DIFFICULTY_SETTINGS[this.currentDifficulty];
+        return DIFFICULTY_SCALING.difficultyLevels[this.currentDifficulty];
     }
 
     // Removed duplicate spawnEnemy method that was causing conflicts
