@@ -142,6 +142,9 @@ export class Game {
             this.scene.background = new THREE.Color(0x5a6d7e); // Darker blue-gray sky color
             // Fog will be managed by FogManager
             
+            // Initialize item drop manager
+            this.itemDropManager = new ItemDropManager(this.scene, this);
+            
             // Initialize camera
             this.camera = new THREE.PerspectiveCamera(
                 75, 
@@ -194,7 +197,7 @@ export class Game {
             this.updateLoadingProgress(75, 'Spawning enemies...', 'Initializing enemy AI and models');
             
             // Initialize enemy manager
-            this.enemyManager = new EnemyManager(this.scene, this.player, this.loadingManager, this);
+            this.enemyManager = new EnemyManager(this.scene, this.player, this.loadingManager, this, this.itemDropManager);
             await this.enemyManager.init();
             
             this.updateLoadingProgress(80, 'Setting up physics...', 'Initializing collision detection');
@@ -656,6 +659,11 @@ export class Game {
         
         // Update enemies
         this.enemyManager.update(delta);
+        
+        // Update item drops
+        if (this.itemDropManager) {
+            this.itemDropManager.update(delta);
+        }
         
         // Check collisions
         this.collisionManager.update();

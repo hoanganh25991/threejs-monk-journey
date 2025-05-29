@@ -103,8 +103,8 @@ export class ItemDropManager {
         light.position.set(0, 2, 0); // Position above the item
         itemGroup.add(light);
         
-        // Create light beam cylinder
-        const beamGeometry = new THREE.CylinderGeometry(0.1, 0.3, 4, 8, 1, true);
+        // Create light beam cylinder - straight beam (same radius top and bottom) and 3x longer (12 units)
+        const beamGeometry = new THREE.CylinderGeometry(0.2, 0.2, 12, 8, 1, true);
         const beamMaterial = new THREE.MeshBasicMaterial({
             color: color,
             transparent: true,
@@ -113,7 +113,7 @@ export class ItemDropManager {
         });
         
         const beam = new THREE.Mesh(beamGeometry, beamMaterial);
-        beam.position.set(0, 2, 0); // Position above the item
+        beam.position.set(0, 6, 0); // Position higher above the item to accommodate longer beam
         itemGroup.add(beam);
         
         // Store reference to light beam
@@ -131,6 +131,28 @@ export class ItemDropManager {
     update(delta) {
         // Update each dropped item
         for (const [id, itemData] of this.droppedItems.entries()) {
+            // Skip processing if player is not available
+            if (!this.game || !this.game.player) continue;
+            
+            const playerPosition = this.game.player.getPosition();
+            const itemPosition = itemData.group.position;
+            const distance = playerPosition.distanceTo(itemPosition);
+            
+            // Remove items that are too far away (300+ units)
+            if (distance > 300) {
+                // Remove from scene
+                if (itemData.group) {
+                    this.scene.remove(itemData.group);
+                }
+                
+                // Remove from maps
+                this.droppedItems.delete(id);
+                this.lightBeams.delete(id);
+                
+                // Skip to next item
+                continue;
+            }
+            
             // Update item model animations
             if (itemData.model) {
                 itemData.model.updateAnimations(delta);
@@ -170,21 +192,13 @@ export class ItemDropManager {
                 }
             }
             
-            // Check if player is close enough to pick up
-            if (this.game && this.game.player) {
-                const playerPosition = this.game.player.getPosition();
-                const itemPosition = itemData.group.position;
-                
-                const distance = playerPosition.distanceTo(itemPosition);
-                
-                // Auto-pickup if player is close enough and item has been on the ground for the delay period
-                const currentTime = Date.now();
-                const itemDropTime = itemData.dropTime || 0;
-                const timeOnGround = (currentTime - itemDropTime) / 1000; // Convert to seconds
-                
-                if (distance < 1.5 && timeOnGround >= this.autoPickupDelay) {
-                    this.pickupItem(id);
-                }
+            // Auto-pickup if player is close enough and item has been on the ground for the delay period
+            const currentTime = Date.now();
+            const itemDropTime = itemData.dropTime || 0;
+            const timeOnGround = (currentTime - itemDropTime) / 1000; // Convert to seconds
+            
+            if (distance < 1.5 && timeOnGround >= this.autoPickupDelay) {
+                this.pickupItem(id);
             }
         }
     }

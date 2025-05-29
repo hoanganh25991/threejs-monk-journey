@@ -57,7 +57,7 @@ export class EnemyManager {
      * @param {THREE.LoadingManager} loadingManager - The Three.js loading manager
      * @param {import("../../game/Game.js").Game} [game=null] - The main game instance
      */
-    constructor(scene, player, loadingManager, game = null) {
+    constructor(scene, player, loadingManager, game, itemDropManager) {
         this.scene = scene;
         this.player = player;
         this.loadingManager = loadingManager;
@@ -103,7 +103,7 @@ export class EnemyManager {
         this.itemGenerator = new ItemGenerator(game);
         
         // Reference to the item drop manager (will be set by the game)
-        this.itemDropManager = null;
+        this.itemDropManager = itemDropManager;
         
         // Track enemies that have already dropped items to prevent duplicate drops
         this.processedDrops = new Map();
