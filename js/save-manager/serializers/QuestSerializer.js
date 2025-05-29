@@ -23,8 +23,8 @@ export class QuestSerializer {
                     discovered: quest.objective.discovered || []
                 }
             })),
-            completedQuests: [...questManager.completedQuests],
-            availableQuests: [...questManager.quests]
+            completedQuests: [...questManager.completedQuests]
+            // Removed availableQuests to reduce save size
         };
     }
     

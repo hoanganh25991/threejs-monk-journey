@@ -1310,7 +1310,7 @@ export const DIFFICULTY_SCALING = {
 // Item drop configuration
 export const DROP_CHANCES = {
     bossDropChance: 1.0,    // 100% drop chance for bosses
-    normalDropChance: 0.05   // 5% drop chance for regular enemies (increased from 0.1% to make drops more visible)
+    normalDropChance: 0.05 * 2   // 5% drop chance for regular enemies (increased from 0.1% to make drops more visible)
 };
 
 // Item quality distribution

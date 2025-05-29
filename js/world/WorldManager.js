@@ -471,7 +471,8 @@ export class WorldManager {
         
         // Add enemies if available
         if (this.game && this.game.enemyManager) {
-            entities.push(...this.game.enemyManager.enemies);
+            // Convert Map to Array of values
+            entities.push(...this.game.enemyManager.enemies.values());
         }
         
         // Add interactive objects if available
