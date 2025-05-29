@@ -808,8 +808,8 @@ export const PLAYER_PROGRESSION = {
         experienceToNextLevel: 100,
         
         // Health and mana
-        health: 300_000,
-        maxHealth: 300_000,
+        health: 500,
+        maxHealth: 500,
         mana: 200,
         maxMana: 200,
         
