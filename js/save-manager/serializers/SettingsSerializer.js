@@ -15,8 +15,7 @@ export class SettingsSerializer {
         
         try {
             const settings = {
-                difficulty: game.difficultyManager ? 
-                    game.difficultyManager.getCurrentDifficultyIndex() : 0,
+                difficulty: game.difficulty || 'basic',
                 audioSettings: {}
             };
             
@@ -37,7 +36,7 @@ export class SettingsSerializer {
             console.warn('Error getting game settings, returning defaults:', error);
             // Return default settings if there's an error
             return {
-                difficulty: 0,
+                difficulty: 'basic',
                 audioSettings: {
                     isMuted: false,
                     musicVolume: 0.5,
@@ -59,8 +58,12 @@ export class SettingsSerializer {
         
         try {
             // Load difficulty
-            if (settings.difficulty !== undefined && game.difficultyManager) {
-                game.difficultyManager.setDifficulty(settings.difficulty);
+            if (settings.difficulty !== undefined) {
+                game.difficulty = settings.difficulty;
+                // Apply difficulty to enemy manager if available
+                if (game.enemyManager) {
+                    game.enemyManager.setDifficulty(settings.difficulty);
+                }
             }
             
             // Load audio settings

@@ -9,7 +9,7 @@ import { CollisionManager } from '../CollisionManager.js';
 import { QuestManager } from '../QuestManager.js';
 import { AudioManager } from '../AudioManager.js';
 import { SaveManager } from '../save-manager/SaveManager.js';
-import { DifficultyManager } from '../DifficultyManager.js';
+// DifficultyManager removed - using DIFFICULTY_SCALING directly
 import { PerformanceManager } from '../PerformanceManager.js';
 import { EffectsManager } from '../EffectsManager.js';
 import { GameState } from './GameState.js';
@@ -53,7 +53,7 @@ import { STORAGE_KEYS } from '../config/storage-keys.js';
  * @property {QuestManager} questManager - Manages game quests and objectives
  * @property {AudioManager} audioManager - Manages sound effects and music
  * @property {SaveManager} saveManager - Handles saving and loading game state
- * @property {DifficultyManager} difficultyManager - Manages game difficulty settings
+ * @property {string} difficulty - Current game difficulty setting
  * @property {MenuManager} menuManager - Manages game menus and UI screens
  * @property {number} _lastMemoryLog - Timestamp of the last memory usage log
  */
@@ -224,10 +224,6 @@ export class Game {
             await this.saveManager.init();
             
             this.updateLoadingProgress(98, 'Applying difficulty settings...', 'Finalizing game setup');
-            
-            // Initialize difficulty manager
-            this.difficultyManager = new DifficultyManager(this);
-            this.difficultyManager.applyDifficultySettings();
             
             // Initialize menu manager
             this.updateLoadingProgress(99, 'Initializing menu system...', 'Setting up game menus');
