@@ -38,7 +38,15 @@ export class ItemDropManager {
         // Ensure item is above ground and more visible
         if (this.game && this.game.world) {
             const terrainHeight = this.game.world.getTerrainHeight(position.x, position.z);
-            itemGroup.position.y = terrainHeight + 0.5; // Higher above ground for better visibility
+            if (terrainHeight !== null) {
+                itemGroup.position.y = terrainHeight + 0.5; // Higher above ground for better visibility
+            } else {
+                // Fallback if terrain height is null
+                itemGroup.position.y = position.y + 0.5;
+            }
+        } else {
+            // Fallback if world is not available
+            itemGroup.position.y = position.y + 0.5;
         }
         
         // Create the item model

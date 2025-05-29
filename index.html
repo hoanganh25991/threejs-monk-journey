@@ -197,33 +197,44 @@
                             <div class="slot-icon">💍</div>
                         </div>
                     </div>
-                </div>
-                <div id="player-stats-container-inventory">
-                    <h3>Player Stats</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-label">Health</div>
-                            <div class="stat-value" id="stat-health">0/0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Mana</div>
-                            <div class="stat-value" id="stat-mana">0/0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Attack</div>
-                            <div class="stat-value" id="stat-attack">0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Defense</div>
-                            <div class="stat-value" id="stat-defense">0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Speed</div>
-                            <div class="stat-value" id="stat-speed">0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Level</div>
-                            <div class="stat-value" id="stat-level">1</div>
+                    <!-- Stats button at the bottom of inventory -->
+                    <div id="inventory-footer">
+                        <button id="show-stats-button" class="inventory-action-btn">
+                            <span class="btn-icon">📊</span>
+                            <span class="btn-text">Show Stats</span>
+                        </button>
+                    </div>
+                    <!-- Player stats container moved to overlay -->
+                    <div id="player-stats-overlay" style="display: none;">
+                        <div id="player-stats-container-inventory">
+                            <h3>Player Stats</h3>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-label">Health</div>
+                                    <div class="stat-value" id="stat-health">0/0</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Mana</div>
+                                    <div class="stat-value" id="stat-mana">0/0</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Attack</div>
+                                    <div class="stat-value" id="stat-attack">0</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Defense</div>
+                                    <div class="stat-value" id="stat-defense">0</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Speed</div>
+                                    <div class="stat-value" id="stat-speed">0</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Level</div>
+                                    <div class="stat-value" id="stat-level">1</div>
+                                </div>
+                            </div>
+                            <button id="close-stats-overlay" class="circle-btn">💾</button>
                         </div>
                     </div>
                 </div>

@@ -46,6 +46,7 @@ export class InventoryUI extends UIComponent {
         // Store references to elements we need to update
         this.inventoryGrid = document.getElementById('inventory-grid');
         this.modelContainer = document.getElementById('character-model-container');
+        this.statsOverlay = document.getElementById('player-stats-overlay');
         
         // Create item popup element
         this.createItemPopup();
@@ -70,6 +71,22 @@ export class InventoryUI extends UIComponent {
                 }
             }
         });
+
+        // Add event listener for the show stats button
+        const showStatsButton = document.getElementById('show-stats-button');
+        if (showStatsButton) {
+            showStatsButton.addEventListener('click', () => {
+                this.toggleStatsOverlay(true);
+            });
+        }
+
+        // Add event listener for the close stats overlay button
+        const closeStatsButton = document.getElementById('close-stats-overlay');
+        if (closeStatsButton) {
+            closeStatsButton.addEventListener('click', () => {
+                this.toggleStatsOverlay(false);
+            });
+        }
 
         // Hide initially
         this.hide();
@@ -354,21 +371,8 @@ export class InventoryUI extends UIComponent {
                 const itemIcon = document.createElement('div');
                 itemIcon.className = 'item-icon';
                 
-                // Use emoji based on item type or default to package icon
-                let iconContent = '📦';
-                if (item.name.includes('Potion')) {
-                    iconContent = '🧪';
-                } else if (item.name.includes('Weapon')) {
-                    iconContent = '⚔️';
-                } else if (item.name.includes('Armor')) {
-                    iconContent = '🛡️';
-                } else if (item.name.includes('Helmet')) {
-                    iconContent = '🪖';
-                } else if (item.name.includes('Boots')) {
-                    iconContent = '👢';
-                } else if (item.name.includes('Accessory') || item.name.includes('Ring')) {
-                    iconContent = '💍';
-                }
+                // Use item's icon property or default to package icon
+                let iconContent = item.icon || '📦';
                 
                 itemIcon.textContent = iconContent;
                 slotElement.appendChild(itemIcon);
@@ -417,22 +421,8 @@ export class InventoryUI extends UIComponent {
         const useButton = this.itemPopup.querySelector('.item-popup-use');
         const equipButton = this.itemPopup.querySelector('.item-popup-equip');
         
-        // Set icon
-        let iconContent = '📦';
-        if (item.name.includes('Potion')) {
-            iconContent = '🧪';
-        } else if (item.name.includes('Weapon')) {
-            iconContent = '⚔️';
-        } else if (item.name.includes('Armor')) {
-            iconContent = '🛡️';
-        } else if (item.name.includes('Helmet')) {
-            iconContent = '🪖';
-        } else if (item.name.includes('Boots')) {
-            iconContent = '👢';
-        } else if (item.name.includes('Accessory') || item.name.includes('Ring')) {
-            iconContent = '💍';
-        }
-        iconElement.textContent = iconContent;
+        // Set icon using item's icon property
+        iconElement.textContent = item.icon || '📦';
         
         // Set name and type
         nameElement.textContent = item.name;
@@ -519,6 +509,26 @@ export class InventoryUI extends UIComponent {
         if (defenseElement) defenseElement.textContent = defense;
         if (speedElement) speedElement.textContent = speed.toFixed(1);
         if (levelElement) levelElement.textContent = level;
+    }
+    
+    /**
+     * Toggle the stats overlay visibility
+     * @param {boolean} show - Whether to show or hide the overlay
+     */
+    toggleStatsOverlay(show) {
+        if (!this.statsOverlay) {
+            this.statsOverlay = document.getElementById('player-stats-overlay');
+        }
+        
+        if (this.statsOverlay) {
+            // Update stats before showing
+            if (show) {
+                this.updatePlayerStats();
+                this.statsOverlay.style.display = 'flex';
+            } else {
+                this.statsOverlay.style.display = 'none';
+            }
+        }
     }
     
     /**
@@ -672,6 +682,9 @@ export class InventoryUI extends UIComponent {
      */
     hide() {
         super.hide();
+        
+        // Hide stats overlay if it's open
+        this.toggleStatsOverlay(false);
         
         // Stop the animation when hidden
         if (this.isModelInitialized && this.modelPreview) {

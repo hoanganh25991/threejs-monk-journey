@@ -104,6 +104,9 @@ export class EnemyManager {
         
         // Reference to the item drop manager (will be set by the game)
         this.itemDropManager = null;
+        
+        // Track enemies that have already dropped items to prevent duplicate drops
+        this.processedDrops = new Map();
     }
     
     // setGame method removed - game is now passed in constructor
@@ -222,6 +225,9 @@ export class EnemyManager {
                     // Remove enemy only after death animation is complete
                     enemy.remove();
                     this.enemies.delete(id);
+                    
+                    // Clean up processed drops entry for this enemy
+                    this.processedDrops.delete(id);
                 }
             }
         }
@@ -237,6 +243,10 @@ export class EnemyManager {
         // This ensures enemies are cleaned up even if the player moves slowly
         if (Math.random() < 0.01) { // ~1% chance per frame, assuming 60fps = ~once per 10 seconds
             this.cleanupDistantEnemies();
+            
+            // Also clean up any stale entries in the processedDrops map
+            // (enemies that might have been removed without proper cleanup)
+            this.cleanupProcessedDrops();
         }
     }
     
@@ -791,6 +801,14 @@ export class EnemyManager {
     }
     
     handleEnemyDrop(enemy) {
+        // Check if we've already processed this enemy's drops
+        if (this.processedDrops.has(enemy.id)) {
+            return;
+        }
+        
+        // Mark this enemy as processed to prevent duplicate drops
+        this.processedDrops.set(enemy.id, true);
+        
         // Check if enemy should drop an item
         const dropChance = enemy.isBoss ? DROP_CHANCES.bossDropChance : DROP_CHANCES.normalDropChance;
         
@@ -1095,6 +1113,8 @@ export class EnemyManager {
             if (enemy) {
                 enemy.remove();
                 this.enemies.delete(id);
+                // Also clean up processed drops entry for this enemy
+                this.processedDrops.delete(id);
                 removedCount++;
             }
         }
@@ -1239,6 +1259,20 @@ export class EnemyManager {
                     this.spawnEnemiesAroundPlayer(this.player.getPosition());
                 }
             }, waveDelay);
+        }
+    }
+    
+    /**
+     * Clean up stale entries in the processedDrops map
+     * This prevents memory leaks from enemies that might have been removed without proper cleanup
+     */
+    cleanupProcessedDrops() {
+        // Check each entry in processedDrops
+        for (const [id, processed] of this.processedDrops.entries()) {
+            // If this enemy no longer exists in the enemies map, remove the entry
+            if (!this.enemies.has(id)) {
+                this.processedDrops.delete(id);
+            }
         }
     }
 }
