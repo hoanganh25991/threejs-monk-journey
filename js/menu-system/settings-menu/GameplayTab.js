@@ -176,13 +176,7 @@ export class GameplayTab extends SettingsTab {
                             }
                         }
                         
-                        // Then start a new game
-                        this.game.start();
-                        
-                        // Show notification if HUD manager is available
-                        if (this.game.hudManager) {
-                            this.game.hudManager.showNotification('New game started');
-                        }
+                        window.location.reload();
                     }
                 }
             });

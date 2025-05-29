@@ -4,8 +4,8 @@
  * @module entities/player/PlayerStats
  */
 
-import { DEFAULT_PLAYER_STATS, LEVEL_UP_EXPERIENCE_MULTIPLIER, LEVEL_UP_STAT_INCREASES } from '../../../config/player.js';
-import { COMBAT_BALANCE } from '../../config/game-balance.js';
+import { PLAYER_PROGRESSION } from '../../config/game-balance.js';
+const {DEFAULT_PLAYER_STATS, LEVEL_UP_EXPERIENCE_MULTIPLIER, LEVEL_UP_STAT_INCREASES, COMBAT_BALANCE} = PLAYER_PROGRESSION
 
 /**
  * @typedef {Object} TemporaryBoost
