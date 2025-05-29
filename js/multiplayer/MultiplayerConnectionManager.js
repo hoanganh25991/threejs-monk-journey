@@ -80,6 +80,9 @@ export class MultiplayerConnectionManager {
             // Set host flag
             this.isHost = true;
             this.isConnected = true;
+            
+            // Update multiplayer button to show "Disconnect"
+            this.multiplayerManager.ui.updateMultiplayerButton(true);
 
             // Assign a color to the host
             const hostColor = this.multiplayerManager.playerColors[0]; // First color for host
@@ -132,6 +135,9 @@ export class MultiplayerConnectionManager {
                 
                 // Set connected flag
                 this.isConnected = true;
+                
+                // Update multiplayer button to show "Disconnect"
+                this.multiplayerManager.ui.updateMultiplayerButton(true);
                 
                 // Update connection status
                 this.multiplayerManager.ui.updateConnectionStatus('Connected to host! Waiting for game to start...', 'join-connection-status');
@@ -303,6 +309,46 @@ export class MultiplayerConnectionManager {
                 // Trigger skill cast animation on remote player
                 this.multiplayerManager.remotePlayerManager.handleSkillCast(casterId, data.skillName);
                 break;
+            case 'kicked':
+                // Handle being kicked by the host
+                console.debug('[MultiplayerConnectionManager] Kicked from game by host:', data.message);
+                
+                // Show notification
+                if (this.multiplayerManager.game.hudManager) {
+                    this.multiplayerManager.game.hudManager.showNotification('You have been removed from the game by the host', 'error');
+                }
+                
+                // Clean up connection
+                this.dispose();
+                
+                // Return to main menu
+                if (this.multiplayerManager.game.state) {
+                    this.multiplayerManager.game.state.setPaused();
+                }
+                if (this.multiplayerManager.game.menuManager) {
+                    this.multiplayerManager.game.menuManager.showMainMenu();
+                }
+                break;
+            case 'hostLeft':
+                // Handle host leaving the game
+                console.debug('[MultiplayerConnectionManager] Host left the game');
+                
+                // Show notification
+                if (this.multiplayerManager.game.hudManager) {
+                    this.multiplayerManager.game.hudManager.showNotification('The host has left the game', 'error');
+                }
+                
+                // Clean up connection
+                this.dispose();
+                
+                // Return to main menu
+                if (this.multiplayerManager.game.state) {
+                    this.multiplayerManager.game.state.setPaused();
+                }
+                if (this.multiplayerManager.game.menuManager) {
+                    this.multiplayerManager.game.menuManager.showMainMenu();
+                }
+                break;
             default:
                 console.error('Unknown data type from host:', data.type);
         }
@@ -416,6 +462,7 @@ export class MultiplayerConnectionManager {
             // If host disconnected, end the game
             if (peerId === this.hostId) {
                 this.isConnected = false;
+                this.multiplayerManager.ui.updateMultiplayerButton(false);
                 this.multiplayerManager.ui.updateConnectionStatus('Disconnected from host');
                 
                 // Show disconnection message
@@ -434,6 +481,39 @@ export class MultiplayerConnectionManager {
         }
     }
 
+    /**
+     * Kick a player from the game (host only)
+     * @param {string} peerId - The ID of the peer to kick
+     */
+    kickPlayer(peerId) {
+        if (!this.isHost) {
+            console.error('[MultiplayerConnectionManager] Only the host can kick players');
+            return;
+        }
+        
+        const conn = this.peers.get(peerId);
+        if (conn) {
+            // Send kick message to the player
+            conn.send({
+                type: 'kicked',
+                message: 'You have been removed from the game by the host'
+            });
+            
+            // Close the connection
+            conn.close();
+            
+            // Handle the disconnection (this will clean up UI and notify other players)
+            this.handleDisconnect(peerId);
+            
+            console.debug(`[MultiplayerConnectionManager] Player ${peerId} has been kicked by the host`);
+            
+            // Show notification
+            if (this.multiplayerManager.game.hudManager) {
+                this.multiplayerManager.game.hudManager.showNotification('Player has been removed', 'info');
+            }
+        }
+    }
+    
     /**
      * Send data to a specific peer
      * @param {string} peerId - The ID of the peer to send data to

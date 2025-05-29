@@ -14,7 +14,8 @@ export const MessageType = {
     PLAYER_COLORS: 5,
     SKILL_CAST: 6,
     PLAYER_INPUT: 7,
-    PLAYER_POSITION: 8
+    PLAYER_POSITION: 8,
+    HOST_LEFT: 9
 };
 
 // Schema definitions for different message types
@@ -28,7 +29,8 @@ const SCHEMAS = {
     [MessageType.PLAYER_COLORS]: ['colors'],
     [MessageType.SKILL_CAST]: ['skillName', 'playerId', 'position', 'rotation'],
     [MessageType.PLAYER_INPUT]: ['input'],
-    [MessageType.PLAYER_POSITION]: ['position', 'rotation', 'animation', 'modelId']
+    [MessageType.PLAYER_POSITION]: ['position', 'rotation', 'animation', 'modelId'],
+    [MessageType.HOST_LEFT]: []
 };
 
 export class BinarySerializer {
@@ -231,6 +233,7 @@ export class BinarySerializer {
             case 'skillCast': return MessageType.SKILL_CAST;
             case 'playerInput': return MessageType.PLAYER_INPUT;
             case 'playerPosition': return MessageType.PLAYER_POSITION;
+            case 'hostLeft': return MessageType.HOST_LEFT;
             default: return undefined;
         }
     }
@@ -251,6 +254,7 @@ export class BinarySerializer {
             case MessageType.SKILL_CAST: return 'skillCast';
             case MessageType.PLAYER_INPUT: return 'playerInput';
             case MessageType.PLAYER_POSITION: return 'playerPosition';
+            case MessageType.HOST_LEFT: return 'hostLeft';
             default: return 'unknown';
         }
     }

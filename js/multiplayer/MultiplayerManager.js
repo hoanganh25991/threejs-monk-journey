@@ -288,6 +288,44 @@ export class MultiplayerManager {
     }
     
     /**
+     * Leave the current multiplayer game
+     * Disconnects from all peers and cleans up resources
+     */
+    leaveGame() {
+        console.debug('[MultiplayerManager] Leaving multiplayer game');
+        
+        // Notify other players if we're the host
+        if (this.connection.isHost && this.connection.peers.size > 0) {
+            this.connection.broadcast({
+                type: 'hostLeft'
+            });
+        }
+        
+        // Clean up connections
+        if (this.connection) {
+            this.connection.dispose();
+        }
+        
+        // Clean up remote players
+        if (this.remotePlayerManager) {
+            this.remotePlayerManager.removeAllPlayers();
+        }
+        
+        // Reset game state if needed
+        if (this.game.state && this.game.state.isRunning()) {
+            // Return to main menu
+            if (this.game.menuManager) {
+                this.game.menuManager.showMainMenu();
+            }
+        }
+        
+        // Show notification
+        if (this.game.hudManager) {
+            this.game.hudManager.showNotification('Disconnected from multiplayer game', 'info');
+        }
+    }
+
+    /**
      * Clean up resources
      */
     dispose() {

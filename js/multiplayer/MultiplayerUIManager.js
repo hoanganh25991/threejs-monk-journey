@@ -14,6 +14,7 @@ export class MultiplayerUIManager {
         this.qrCodeScanner = null;
         this.availableCameras = [];
         this.selectedCameraId = null;
+        this.connectionInfoListenersInitialized = false;
     }
 
     /**
@@ -61,7 +62,16 @@ export class MultiplayerUIManager {
         // Multiplayer button (in game menu)
         const multiplayerButton = document.getElementById('multiplayer-button');
         if (multiplayerButton) {
-            multiplayerButton.addEventListener('click', () => this.showMultiplayerModal());
+            multiplayerButton.addEventListener('click', () => {
+                // If we're already in multiplayer mode, show connection info
+                if (this.multiplayerManager.connection && this.multiplayerManager.connection.isConnected) {
+                    console.debug('[MultiplayerUIManager] Showing multiplayer connection info');
+                    this.showConnectionInfoScreen();
+                } else {
+                    // Otherwise show the multiplayer modal
+                    this.showMultiplayerModal();
+                }
+            });
         }
         
         // Host game button
@@ -223,10 +233,55 @@ export class MultiplayerUIManager {
             document.getElementById('host-game-screen').style.display = 'none';
             document.getElementById('join-game-screen').style.display = 'none';
             document.getElementById('player-waiting-screen').style.display = 'none';
+            document.getElementById('connection-info-screen').style.display = 'none';
             
             // Reset connection status
             const statusElements = document.querySelectorAll('.connection-status');
             statusElements.forEach(el => el.textContent = '');
+        }
+    }
+    
+    /**
+     * Show the connection info screen
+     * Displays current connection status, host info, and connected players
+     */
+    showConnectionInfoScreen() {
+        const modal = document.getElementById('multiplayer-menu');
+        if (modal) {
+            modal.style.display = 'flex';
+            
+            // Get the connection info screen element
+            const connectionInfoScreen = document.getElementById('connection-info-screen');
+            
+            // Set up event listeners for the buttons if not already done
+            if (!this.connectionInfoListenersInitialized) {
+                const disconnectBtn = document.getElementById('disconnect-btn');
+                if (disconnectBtn) {
+                    disconnectBtn.addEventListener('click', () => {
+                        console.debug('[MultiplayerUIManager] Disconnecting from multiplayer game');
+                        this.multiplayerManager.leaveGame();
+                        this.updateMultiplayerButton(false);
+                        this.closeMultiplayerModal();
+                    });
+                }
+                
+                const closeBtn = document.getElementById('close-connection-info-btn');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', () => this.closeMultiplayerModal());
+                }
+                
+                this.connectionInfoListenersInitialized = true;
+            }
+            
+            // Hide other screens, show connection info screen
+            document.getElementById('multiplayer-initial-screen').style.display = 'none';
+            document.getElementById('host-game-screen').style.display = 'none';
+            document.getElementById('join-game-screen').style.display = 'none';
+            document.getElementById('player-waiting-screen').style.display = 'none';
+            connectionInfoScreen.style.display = 'flex';
+            
+            // Update connection info
+            this.updateConnectionInfoScreen();
         }
     }
 
@@ -240,6 +295,164 @@ export class MultiplayerUIManager {
             
             // Stop QR scanner if active
             this.stopQRScanner();
+            
+            // Hide connection info screen if it exists
+            const connectionInfoScreen = document.getElementById('connection-info-screen');
+            if (connectionInfoScreen) {
+                connectionInfoScreen.style.display = 'none';
+            }
+        }
+    }
+    
+    /**
+     * Update the connection info screen with current connection data
+     */
+    updateConnectionInfoScreen() {
+        // Update connection status
+        const statusElement = document.getElementById('connection-info-status');
+        if (statusElement) {
+            if (this.multiplayerManager.connection && this.multiplayerManager.connection.isConnected) {
+                statusElement.textContent = 'Connected';
+                statusElement.className = 'status-connected';
+            } else {
+                statusElement.textContent = 'Disconnected';
+                statusElement.className = 'status-disconnected';
+            }
+        }
+        
+        // Update role info
+        const roleElement = document.getElementById('connection-role-info');
+        if (roleElement) {
+            if (this.multiplayerManager.connection) {
+                if (this.multiplayerManager.connection.isHost) {
+                    roleElement.textContent = 'You are the host';
+                } else {
+                    roleElement.textContent = 'You are connected as a player';
+                }
+            } else {
+                roleElement.textContent = '';
+            }
+        }
+        
+        // Update player list
+        this.updateConnectionInfoPlayerList();
+    }
+    
+    /**
+     * Update the player list in the connection info screen
+     */
+    updateConnectionInfoPlayerList() {
+        const playersList = document.getElementById('connection-info-players');
+        if (!playersList) return;
+        
+        // Clear existing list
+        playersList.innerHTML = '';
+        
+        // Add host entry if we're connected
+        if (this.multiplayerManager.connection && this.multiplayerManager.connection.isConnected) {
+            // Get host ID and color
+            let hostId = this.multiplayerManager.connection.isHost ? 
+                this.multiplayerManager.connection.peer.id : 
+                this.multiplayerManager.connection.hostId;
+            
+            // Get host color
+            let hostColor = '#FF5733'; // Default color
+            if (this.multiplayerManager.assignedColors.has(hostId)) {
+                hostColor = this.multiplayerManager.assignedColors.get(hostId);
+            }
+            
+            // Create host entry
+            const hostItem = document.createElement('div');
+            hostItem.className = 'player-item host-player';
+            
+            // Create host color indicator
+            const hostColorIndicator = document.createElement('div');
+            hostColorIndicator.className = 'player-color-indicator';
+            hostColorIndicator.style.backgroundColor = hostColor;
+            
+            // Create host name span
+            const hostName = document.createElement('span');
+            hostName.textContent = 'Host';
+            
+            // Add "You" indicator if the user is the host
+            if (this.multiplayerManager.connection.isHost) {
+                const youIndicator = document.createElement('span');
+                youIndicator.className = 'you-indicator';
+                youIndicator.textContent = '(You)';
+                hostName.appendChild(youIndicator);
+            }
+            
+            // Append elements
+            hostItem.appendChild(hostColorIndicator);
+            hostItem.appendChild(hostName);
+            playersList.appendChild(hostItem);
+            
+            // Add connected players
+            if (this.multiplayerManager.connection.peers) {
+                this.multiplayerManager.connection.peers.forEach((conn, peerId) => {
+                    // Get player color
+                    let playerColor = '#33FF57'; // Default color
+                    if (this.multiplayerManager.assignedColors.has(peerId)) {
+                        playerColor = this.multiplayerManager.assignedColors.get(peerId);
+                    }
+                    
+                    // Create player item
+                    const playerItem = document.createElement('div');
+                    playerItem.className = 'player-item';
+                    
+                    // Create player color indicator
+                    const colorIndicator = document.createElement('div');
+                    colorIndicator.className = 'player-color-indicator';
+                    colorIndicator.style.backgroundColor = playerColor;
+                    
+                    // Create player name span
+                    const playerName = document.createElement('span');
+                    playerName.textContent = `Player ${peerId.substring(0, 8)}`;
+                    
+                    // Add "You" indicator if this is the current player
+                    if (peerId === this.multiplayerManager.connection.peer.id) {
+                        const youIndicator = document.createElement('span');
+                        youIndicator.className = 'you-indicator';
+                        youIndicator.textContent = '(You)';
+                        playerName.appendChild(youIndicator);
+                    }
+                    
+                    // Create kick button (for host only)
+                    if (this.multiplayerManager.connection.isHost) {
+                        const kickButton = document.createElement('button');
+                        kickButton.className = 'kick-player-btn';
+                        kickButton.textContent = '✕';
+                        kickButton.title = 'Remove player';
+                        kickButton.setAttribute('data-player-id', peerId);
+                        kickButton.addEventListener('click', (event) => {
+                            event.stopPropagation();
+                            const playerId = event.target.getAttribute('data-player-id');
+                            if (playerId && this.multiplayerManager.connection) {
+                                this.multiplayerManager.connection.kickPlayer(playerId);
+                                // Update the UI after kicking
+                                setTimeout(() => this.updateConnectionInfoScreen(), 500);
+                            }
+                        });
+                        
+                        // Append elements
+                        playerItem.appendChild(colorIndicator);
+                        playerItem.appendChild(playerName);
+                        playerItem.appendChild(kickButton);
+                    } else {
+                        // Append elements without kick button for non-hosts
+                        playerItem.appendChild(colorIndicator);
+                        playerItem.appendChild(playerName);
+                    }
+                    
+                    playersList.appendChild(playerItem);
+                });
+            }
+        } else {
+            // Not connected
+            const noConnectionItem = document.createElement('div');
+            noConnectionItem.className = 'no-connection-message';
+            noConnectionItem.textContent = 'Not connected to any multiplayer game';
+            playersList.appendChild(noConnectionItem);
         }
     }
 
@@ -721,9 +934,24 @@ export class MultiplayerUIManager {
         const playerName = document.createElement('span');
         playerName.textContent = `Player ${playerId.substring(0, 8)}`;
         
+        // Create kick button (for host only)
+        const kickButton = document.createElement('button');
+        kickButton.className = 'kick-player-btn';
+        kickButton.textContent = '✕';
+        kickButton.title = 'Remove player';
+        kickButton.setAttribute('data-player-id', playerId);
+        kickButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const peerId = event.target.getAttribute('data-player-id');
+            if (peerId && this.multiplayerManager.connection) {
+                this.multiplayerManager.connection.kickPlayer(peerId);
+            }
+        });
+        
         // Append elements
         playerItem.appendChild(colorIndicator);
         playerItem.appendChild(playerName);
+        playerItem.appendChild(kickButton);
         playersList.appendChild(playerItem);
     }
 
@@ -809,5 +1037,22 @@ export class MultiplayerUIManager {
             script.onerror = () => reject(new Error('Failed to load HTML5-QRCode'));
             document.head.appendChild(script);
         });
+    }
+    
+    /**
+     * Update the multiplayer button text based on connection status
+     * @param {boolean} isConnected - Whether we're connected to a multiplayer game
+     */
+    updateMultiplayerButton(isConnected) {
+        const multiplayerButton = document.getElementById('multiplayer-button');
+        if (multiplayerButton) {
+            if (isConnected) {
+                multiplayerButton.textContent = 'Disconnect';
+                multiplayerButton.classList.add('connected');
+            } else {
+                multiplayerButton.textContent = 'Multiplayer';
+                multiplayerButton.classList.remove('connected');
+            }
+        }
     }
 }

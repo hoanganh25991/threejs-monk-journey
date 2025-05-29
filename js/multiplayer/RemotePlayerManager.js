@@ -172,4 +172,20 @@ export class RemotePlayerManager {
         // Cast the skill
         return remotePlayer.castSkill(skillName);
     }
+    
+    /**
+     * Remove all remote players
+     * Cleans up all remote player instances and clears the map
+     */
+    removeAllPlayers() {
+        console.debug(`[RemotePlayerManager] Removing all remote players (${this.remotePlayers.size} players)`);
+        
+        // Dispose all remote players
+        this.remotePlayers.forEach(remotePlayer => {
+            remotePlayer.dispose();
+        });
+        
+        // Clear the map
+        this.remotePlayers.clear();
+    }
 }

@@ -413,6 +413,32 @@
             </div>
             <div id="player-connection-status" class="connection-status"></div>
         </div>
+        
+        <!-- Connection Info Screen -->
+        <div class="multiplayer-menu-content fullscreen-layout" id="connection-info-screen" style="display: none;">
+            <div class="modal-header">
+                <h2>Multiplayer Connection</h2>
+                <button id="close-connection-info-btn" class="circle-btn" title="Close">↩️</button>
+            </div>
+            <div class="connection-info-container">
+                <div class="connection-status-box">
+                    <h3>Connection Status</h3>
+                    <p id="connection-info-status">Connected</p>
+                    <p id="connection-role-info"></p>
+                </div>
+                
+                <div class="connected-players-box">
+                    <h3>Connected Players</h3>
+                    <div id="connection-info-players" class="connected-players-list">
+                        <!-- Players will be added here dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-container">
+                <button id="disconnect-btn" class="danger-button">Disconnect</button>
+            </div>
+        </div>
     </div>
 
     <!-- Settings Menu -->
