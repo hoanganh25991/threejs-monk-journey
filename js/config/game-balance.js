@@ -39,7 +39,7 @@ export const PLAYER_PROGRESSION = {
     // Stat increases per level
     LEVEL_UP_STAT_INCREASES: {
         maxHealth: 10,
-        maxMana: 5,
+        maxMana: 15,  // Increased from 5 to 15 (3x)
         strength: 1,
         dexterity: 1,
         intelligence: 1,

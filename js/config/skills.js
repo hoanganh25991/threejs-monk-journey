@@ -272,6 +272,7 @@ export const NORMAL_SKILLS = [
         radius: 5,
         moveSpeed: 30, // Speed at which the effect moves forward
         cooldown: 0.2,
+        lockDuration: 5,
         get duration() { return this.lockDuration + (this.range / this.moveSpeed) },
         get color() { return SKILL_ICONS[this.name].color; },
         get icon() { return SKILL_ICONS[this.name].emoji; },
@@ -288,7 +289,6 @@ export const NORMAL_SKILLS = [
         // Apply lock effect to enemies hit during travel
         lockEnemiesDuringTravel: true,
         // Lock effect duration (in seconds)
-        lockDuration: 5,
         sounds: {
             cast: SKILL_SOUNDS.imprisonedFists.id, // Sound of monk focusing energy
             impact: SKILL_SOUNDS.chainImpact.id, // Sound of chains binding enemies

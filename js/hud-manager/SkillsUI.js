@@ -1,5 +1,7 @@
 import { UIComponent } from '../UIComponent.js';
 import { getSkillIcon } from '../config/skill-icons.js';
+import { CAST_INTERVAL } from '../config/input.js';
+
 /**
  * Skills UI component
  * Displays player skills and cooldowns
@@ -13,9 +15,10 @@ export class SkillsUI extends UIComponent {
         super('skills-container', game);
         this.skillButtons = [];
         
-        // For continuous primary attack
-        this.primaryAttackInterval = null;
-        this.primaryAttackDelay = 200; // ms between attacks
+        // For continuous skill casting
+        this.skillCastIntervals = {};
+        this.skillCastCooldowns = {};
+        this.castInterval = CAST_INTERVAL * 1000; // Convert to milliseconds
     }
     
     /**
@@ -83,41 +86,72 @@ export class SkillsUI extends UIComponent {
                 }, 300);
             });
             
-            // For primary attack, add touch events for continuous attack
-            if (isPrimaryAttack) {
-                // Start continuous attack on touch start
-                button.addEventListener('touchstart', (e) => {
-                    e.preventDefault(); // Prevent default behavior
-                    
-                    // Clear any existing interval
-                    this.stopContinuousAttack();
-                    
-                    // Trigger first attack immediately
+            // Add touch events for continuous casting for all skills
+            // Start continuous casting on touch start
+            button.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // Prevent default behavior
+                
+                // Clear any existing interval for this skill
+                this.stopContinuousCasting(index);
+                
+                // Trigger first cast immediately
+                if (isPrimaryAttack) {
                     this.game.player.usePrimaryAttack();
-                    
-                    // Set up continuous attack
-                    this.primaryAttackInterval = setInterval(() => {
-                        this.game.player.usePrimaryAttack();
-                    }, this.primaryAttackDelay);
-                    
-                    // Add active state
-                    button.classList.add('skill-activated');
-                });
+                } else {
+                    this.game.player.useSkill(index);
+                }
                 
-                // Stop continuous attack on touch end
-                button.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    this.stopContinuousAttack();
-                    button.classList.remove('skill-activated');
-                });
+                // Initialize cooldown for this skill
+                this.skillCastCooldowns[index] = 0;
                 
-                // Also stop on touch cancel
-                button.addEventListener('touchcancel', (e) => {
-                    e.preventDefault();
-                    this.stopContinuousAttack();
-                    button.classList.remove('skill-activated');
-                });
-            }
+                // Set up continuous casting with respect to cooldown
+                this.skillCastIntervals[index] = setInterval(() => {
+                    // Reduce cooldown
+                    this.skillCastCooldowns[index] -= this.castInterval / 1000;
+                    
+                    // If cooldown is up, cast the skill again
+                    if (this.skillCastCooldowns[index] <= 0) {
+                        try {
+                            // Get the actual skill to check its current cooldown
+                            const skills = this.game.player.getSkills();
+                            const skill = skills[index];
+                            
+                            // Only cast if the skill is not on cooldown
+                            if (skill && skill.getCooldownPercent() === 0) {
+                                if (isPrimaryAttack) {
+                                    this.game.player.usePrimaryAttack();
+                                } else {
+                                    this.game.player.useSkill(index);
+                                }
+                                
+                                // Reset the casting cooldown
+                                this.skillCastCooldowns[index] = CAST_INTERVAL;
+                            }
+                        } catch (error) {
+                            console.error(`Error in continuous casting for skill ${index}:`, error);
+                            // Stop the interval to prevent further errors
+                            this.stopContinuousCasting(index);
+                        }
+                    }
+                }, 100); // Check more frequently than the cast interval for better responsiveness
+                
+                // Add active state
+                button.classList.add('skill-activated');
+            });
+            
+            // Stop continuous casting on touch end
+            button.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                this.stopContinuousCasting(index);
+                button.classList.remove('skill-activated');
+            });
+            
+            // Also stop on touch cancel
+            button.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                this.stopContinuousCasting(index);
+                button.classList.remove('skill-activated');
+            });
             
             // Add tooltip with description on hover
             button.title = `${skill.name}: ${skill.description}`;
@@ -129,13 +163,28 @@ export class SkillsUI extends UIComponent {
     }
     
     /**
-     * Stop continuous primary attack
+     * Stop continuous casting for a specific skill
+     * @param {number} skillIndex - Index of the skill to stop casting
      */
-    stopContinuousAttack() {
-        if (this.primaryAttackInterval) {
-            clearInterval(this.primaryAttackInterval);
-            this.primaryAttackInterval = null;
+    stopContinuousCasting(skillIndex) {
+        if (this.skillCastIntervals[skillIndex]) {
+            clearInterval(this.skillCastIntervals[skillIndex]);
+            this.skillCastIntervals[skillIndex] = null;
+            this.skillCastCooldowns[skillIndex] = 0;
         }
+    }
+    
+    /**
+     * Stop all continuous casting
+     */
+    stopAllContinuousCasting() {
+        Object.keys(this.skillCastIntervals).forEach(index => {
+            if (this.skillCastIntervals[index]) {
+                clearInterval(this.skillCastIntervals[index]);
+                this.skillCastIntervals[index] = null;
+                this.skillCastCooldowns[index] = 0;
+            }
+        });
     }
     
     /**
@@ -206,8 +255,8 @@ export class SkillsUI extends UIComponent {
      * Clean up resources when component is destroyed
      */
     destroy() {
-        // Stop any continuous attack
-        this.stopContinuousAttack();
+        // Stop all continuous casting
+        this.stopAllContinuousCasting();
         
         // Call parent destroy method if it exists
         if (super.destroy) {
