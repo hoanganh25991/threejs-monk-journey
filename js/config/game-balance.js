@@ -49,6 +49,47 @@ export const PLAYER_PROGRESSION = {
 
 // Enemy configuration
 export const ENEMY_CONFIG = {
+    // Health regeneration rates for different enemy types (per second)
+    HEALTH_REGENERATION_RATES: {
+        // Default regeneration rate (used if type not specified)
+        'default': 0,
+        
+        // Undead enemies - minimal regeneration
+        'skeleton': 0.5,
+        'skeleton_archer': 0.5,
+        'skeleton_king': 1.0,
+        'zombie': 0.8,
+        'zombie_brute': 1.2,
+        
+        // Magical/elemental enemies - moderate regeneration
+        'necromancer': 2.0,
+        'necromancer_lord': 3.0,
+        'fire_elemental': 2.5,
+        'frost_elemental': 2.5,
+        'frost_titan': 4.0,
+        'void_wraith': 3.0,
+        
+        // Natural/beast enemies - high regeneration
+        'forest_spider': 1.5,
+        'corrupted_treant': 3.0,
+        'feral_wolf': 2.0,
+        'swamp_horror': 4.0,
+        'bog_lurker': 2.5,
+        'mountain_troll': 3.5,
+        
+        // Demonic enemies - variable regeneration
+        'demon': 1.5,
+        'demon_scout': 1.0,
+        'demon_lord': 3.0,
+        'ash_demon': 2.0,
+        'hellhound': 2.5,
+        
+        // Golem enemies - slow but steady regeneration
+        'infernal_golem': 1.0,
+        'lava_golem': 1.5,
+        'ice_golem': 1.0
+    },
+    
     // Zone difficulty multipliers
     ZONE_DIFFICULTY_MULTIPLIERS: {
         'forest': 1.0,

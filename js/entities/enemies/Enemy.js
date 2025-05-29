@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { EnemyModelFactory } from './models/EnemyModelFactory.js';
 import { ENEMY_BEHAVIOR_SETTINGS, ENEMY_TYPE_BEHAVIOR } from '../../config/enemy-behavior.js';
+import { ENEMY_CONFIG } from '../../config/game-balance.js';
 
 export class Enemy {
     // Static counter for generating unique IDs
@@ -189,6 +190,9 @@ export class Enemy {
         
         // Update terrain height
         this.updateTerrainHeight();
+        
+        // Regenerate health based on enemy type
+        this.regenerateHealth(delta);
         
         // Update attack cooldown
         if (this.state.attackCooldown > 0) {
@@ -455,6 +459,57 @@ export class Enemy {
         // Implementation for health bar update
         // This can be empty for now as it's just to prevent the error
         // In a future update, this could be implemented to show visual health bars
+    }
+    
+    /**
+     * Regenerates health based on enemy type
+     * Different enemy types have different regeneration rates
+     * @param {number} delta - Time since last update in seconds
+     */
+    regenerateHealth(delta) {
+        // Skip regeneration if dead
+        if (this.state.isDead) {
+            return;
+        }
+        
+        // Get regeneration rate for this enemy type
+        const regenerationRate = ENEMY_CONFIG.HEALTH_REGENERATION_RATES[this.type] || 
+                                ENEMY_CONFIG.HEALTH_REGENERATION_RATES['default'] || 0;
+        
+        // Skip if no regeneration
+        if (regenerationRate <= 0) {
+            return;
+        }
+        
+        // Calculate health to regenerate
+        const healthToRegenerate = regenerationRate * delta;
+        
+        // Apply regeneration (don't exceed max health)
+        if (this.health < this.maxHealth) {
+            this.health = Math.min(this.health + healthToRegenerate, this.maxHealth);
+            
+            // Update health bar
+            this.updateHealthBar();
+            
+            // Visual feedback for significant regeneration (optional)
+            if (healthToRegenerate > 1) {
+                this.showRegenerationEffect();
+            }
+        }
+    }
+    
+    /**
+     * Shows a visual effect when the enemy regenerates a significant amount of health
+     * This is a placeholder that could be implemented with particle effects
+     */
+    showRegenerationEffect() {
+        // This is a placeholder for visual feedback
+        // In a future update, this could show particles or other visual effects
+        
+        // For now, just log to console in debug mode
+        if (this.health > this.maxHealth * 0.9) {
+            console.debug(`${this.name} regenerated to near full health`);
+        }
     }
     
     applyKnockback(direction) {
