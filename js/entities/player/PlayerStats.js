@@ -5,7 +5,7 @@
  */
 
 import { PLAYER_PROGRESSION } from '../../config/game-balance.js';
-const {DEFAULT_PLAYER_STATS, LEVEL_UP_EXPERIENCE_MULTIPLIER, LEVEL_UP_STAT_INCREASES, COMBAT_BALANCE} = PLAYER_PROGRESSION
+const {DEFAULT_PLAYER_STATS, LEVEL_UP_EXPERIENCE_MULTIPLIER, LEVEL_UP_STAT_INCREASES, RESOURCE_REGENERATION} = PLAYER_PROGRESSION
 
 /**
  * @typedef {Object} TemporaryBoost
@@ -36,22 +36,6 @@ const {DEFAULT_PLAYER_STATS, LEVEL_UP_EXPERIENCE_MULTIPLIER, LEVEL_UP_STAT_INCRE
  * @property {number} [attackPower] - Attack power
  */
 export class PlayerStats {
-    /**
-     * @property {number} level - Player's current level
-     * @property {number} experience - Player's current experience points
-     * @property {number} experienceToNextLevel - Experience points needed for next level
-     * @property {number} health - Current health points
-     * @property {number} maxHealth - Maximum health points
-     * @property {number} mana - Current mana points
-     * @property {number} maxMana - Maximum mana points
-     * @property {number} strength - Strength attribute
-     * @property {number} dexterity - Dexterity attribute
-     * @property {number} intelligence - Intelligence attribute
-     * @property {number} movementSpeed - Movement speed
-     * @property {number} attackPower - Attack power
-     * @property {Object.<string, StatBoost>} temporaryBoosts - Map of temporary stat boosts
-     */
-
     /**
      * Creates a new PlayerStats instance
      * @param {PlayerStatsInitializer} [initialStats={}] - Initial stats to override defaults
@@ -329,7 +313,7 @@ export class PlayerStats {
         
         // Regenerate health using game balance settings
         if (this.health < this.maxHealth) {
-            this.health += delta * COMBAT_BALANCE.player.healthRegenPerSecond;
+            this.health += delta * RESOURCE_REGENERATION.health;
             if (this.health > this.maxHealth) {
                 this.health = this.maxHealth;
             }
@@ -337,7 +321,7 @@ export class PlayerStats {
         
         // Regenerate mana using game balance settings
         if (this.mana < this.maxMana) {
-            this.mana += delta * COMBAT_BALANCE.player.manaRegenPerSecond;
+            this.mana += delta * RESOURCE_REGENERATION.mana;
             if (this.mana > this.maxMana) {
                 this.mana = this.maxMana;
             }
