@@ -141,7 +141,7 @@ export class InventoryUI extends UIComponent {
      */
     createStatsContainer() {
         // Find or create the stats container
-        const inventoryContainer = document.querySelector('#inventory-container');
+        const inventoryContainer = document.getElementById('inventory-container');
         
         if (inventoryContainer) {
             // Check if stats container already exists

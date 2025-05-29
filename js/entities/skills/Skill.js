@@ -261,11 +261,17 @@ export class Skill {
             // Add weapon damage if equipped
             const equipment = player.inventory.getEquipment();
             if (equipment.weapon) {
-                damage += equipment.weapon.getStat('damage') || 0;
-                
-                // Apply elemental bonuses if matching
-                if (this.element && equipment.weapon.getStat(`${this.element}Damage`)) {
-                    damage *= (1 + (equipment.weapon.getStat(`${this.element}Damage`) / 100));
+                // Check if the weapon has the getStat method before calling it
+                if (typeof equipment.weapon.getStat === 'function') {
+                    damage += equipment.weapon.getStat('damage') || 0;
+                    
+                    // Apply elemental bonuses if matching
+                    if (this.element && equipment.weapon.getStat(`${this.element}Damage`)) {
+                        damage *= (1 + (equipment.weapon.getStat(`${this.element}Damage`) / 100));
+                    }
+                } else if (equipment.weapon.baseStats && equipment.weapon.baseStats.damage) {
+                    // Fallback to directly accessing baseStats if getStat is not available
+                    damage += equipment.weapon.baseStats.damage;
                 }
             }
             
@@ -276,16 +282,32 @@ export class Skill {
             for (const slot in equipment) {
                 const item = equipment[slot];
                 if (item) {
-                    // General skill damage bonus
-                    skillDamageBonus += item.getStat('skillDamage') || 0;
-                    
-                    // Specific skill type bonus
-                    if (this.variant) {
-                        skillDamageBonus += item.getStat(`${this.variant}Damage`) || 0;
+                    // Check if the item has the getStat method
+                    if (typeof item.getStat === 'function') {
+                        // General skill damage bonus
+                        skillDamageBonus += item.getStat('skillDamage') || 0;
+                        
+                        // Specific skill type bonus
+                        if (this.variant) {
+                            skillDamageBonus += item.getStat(`${this.variant}Damage`) || 0;
+                        }
+                        
+                        // Specific skill bonus
+                        skillDamageBonus += item.getStat(`${this.name}Damage`) || 0;
+                    } else if (item.processedSecondaryStats && Array.isArray(item.processedSecondaryStats)) {
+                        // Fallback to directly checking secondary stats
+                        item.processedSecondaryStats.forEach(stat => {
+                            if (stat.type === 'skillDamage') {
+                                skillDamageBonus += stat.value || 0;
+                            }
+                            if (this.variant && stat.type === `${this.variant}Damage`) {
+                                skillDamageBonus += stat.value || 0;
+                            }
+                            if (stat.type === `${this.name}Damage`) {
+                                skillDamageBonus += stat.value || 0;
+                            }
+                        });
                     }
-                    
-                    // Specific skill bonus
-                    skillDamageBonus += item.getStat(`${this.name}Damage`) || 0;
                 }
             }
             

@@ -1310,7 +1310,7 @@ export const DIFFICULTY_SCALING = {
 // Item drop configuration
 export const DROP_CHANCES = {
     bossDropChance: 1.0,    // 100% drop chance for bosses
-    normalDropChance: 0.3   // 30% drop chance for regular enemies (increased from 0.1% to make drops more visible)
+    normalDropChance: 0.05   // 5% drop chance for regular enemies (increased from 0.1% to make drops more visible)
 };
 
 // Item quality distribution
@@ -1323,10 +1323,10 @@ export const ITEM_QUALITY_CHANCES = {
 
 // Item type distribution
 export const ITEM_TYPE_CHANCES = {
-    weapon: 0.3,
-    armor: 0.3,
-    accessory: 0.2,
-    consumable: 0.2
+    weapon: 0.1,
+    armor: 0.1,
+    accessory: 0.5,
+    consumable: 0.5
 };
 
 // Regular enemy drop table
