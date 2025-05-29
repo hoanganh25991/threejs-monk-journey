@@ -17,8 +17,8 @@ export class ItemDropManager {
         this.game = game;
         this.droppedItems = new Map(); // Map of item ID to dropped item data
         this.lightBeams = new Map(); // Map of item ID to light beam effect
-        this.autoPickupDelay = 3; // Delay in seconds before auto-pickup (was instant before)
-        this.autoRemoveDelay = 5; // Delay in seconds before auto-removing items if not picked up
+        this.autoPickupDelay = 1; // Delay in seconds before auto-pickup (was instant before)
+        this.autoRemoveDelay = 7; // Delay in seconds before auto-removing items if not picked up
     }
 
     /**
