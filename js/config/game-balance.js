@@ -3,6 +3,50 @@
  * Contains settings for game balance, difficulty scaling, and combat mechanics
  */
 
+// Player progression and stats configuration
+export const PLAYER_PROGRESSION = {
+    DEFAULT_PLAYER_STATS: {
+        // Level and experience
+        level: 1,
+        experience: 0,
+        experienceToNextLevel: 100,
+        
+        // Health and mana
+        health: 500,
+        maxHealth: 500,
+        mana: 200,
+        maxMana: 200,
+        
+        // Base attributes
+        strength: 10,
+        dexterity: 10,
+        intelligence: 10,
+        
+        // Movement and combat
+        movementSpeed: 15,
+        attackPower: 10
+    },
+
+    // Experience scaling factor for leveling up
+    LEVEL_UP_EXPERIENCE_MULTIPLIER : 1.5,
+
+    // Resource regeneration rates (per second)
+    RESOURCE_REGENERATION: {
+        health: 2,
+        mana: 5
+    },
+
+    // Stat increases per level
+    LEVEL_UP_STAT_INCREASES: {
+        maxHealth: 10,
+        maxMana: 5,
+        strength: 1,
+        dexterity: 1,
+        intelligence: 1,
+        attackPower: 2
+    },
+};
+
 // Combat balance settings
 export const COMBAT_BALANCE = {
     // Player combat settings
@@ -797,48 +841,4 @@ export const LEVEL_UP_REWARDS = {
             }
         }
     }
-};
-
-// Player progression and stats configuration
-export const PLAYER_PROGRESSION = {
-    DEFAULT_PLAYER_STATS: {
-        // Level and experience
-        level: 1,
-        experience: 0,
-        experienceToNextLevel: 100,
-        
-        // Health and mana
-        health: 500,
-        maxHealth: 500,
-        mana: 200,
-        maxMana: 200,
-        
-        // Base attributes
-        strength: 10,
-        dexterity: 10,
-        intelligence: 10,
-        
-        // Movement and combat
-        movementSpeed: 15,
-        attackPower: 10
-    },
-
-    // Experience scaling factor for leveling up
-    LEVEL_UP_EXPERIENCE_MULTIPLIER : 1.5,
-
-    // Resource regeneration rates (per second)
-    RESOURCE_REGENERATION: {
-        health: 2,
-        mana: 5
-    },
-
-    // Stat increases per level
-    LEVEL_UP_STAT_INCREASES: {
-        maxHealth: 10,
-        maxMana: 5,
-        strength: 1,
-        dexterity: 1,
-        intelligence: 1,
-        attackPower: 2
-    },
 };
