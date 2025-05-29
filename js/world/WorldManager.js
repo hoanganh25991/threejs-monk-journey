@@ -12,7 +12,7 @@ import { TeleportManager } from './teleport/TeleportManager.js';
  * Main World Manager class that coordinates all world-related systems
  */
 export class WorldManager {
-    constructor(scene, loadingManager, game = null) {
+    constructor(scene, loadingManager, game) {
         this.scene = scene;
         this.loadingManager = loadingManager;
         this.game = game;
