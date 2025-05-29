@@ -837,7 +837,7 @@ export class InventoryUI extends UIComponent {
         // Use the game's save manager to save the inventory data
         if (this.game.saveManager) {
             // Save the game (which includes inventory data)
-            this.game.saveManager.saveGame(true).then(success => {
+            this.game.saveManager.saveGame(true, true).then(success => {
                 if (success) {
                     this.game.hudManager.showNotification('Inventory saved successfully!');
                 } else {
