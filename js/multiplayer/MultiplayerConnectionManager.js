@@ -330,39 +330,8 @@ export class MultiplayerConnectionManager {
                 }
                 break;
             case 'hostLeft':
-                // Handle host leaving the game
-                console.debug('[MultiplayerConnectionManager] Host left the game');
-                
-                // Show notification
-                if (this.multiplayerManager.game.hudManager) {
-                    this.multiplayerManager.game.hudManager.showNotification('The host has left the game', 'error');
-                }
-                
-                // Remove all remote players
-                if (this.multiplayerManager.remotePlayerManager) {
-                    console.debug('[MultiplayerConnectionManager] Removing all remote players after host left');
-                    this.multiplayerManager.remotePlayerManager.removeAllPlayers();
-                }
-                
-                // Take back control of enemy spawning as local mode
-                if (this.multiplayerManager.game.enemyManager) {
-                    console.debug('[MultiplayerConnectionManager] Taking back control of enemy spawning in local mode');
-                    
-                    // Clear existing enemies (which were controlled by host)
-                    this.multiplayerManager.game.enemyManager.removeAllEnemies();
-                    
-                    // Start local enemy spawning
-                    this.multiplayerManager.game.enemyManager.enableLocalSpawning();
-                }
-                
-                // Clean up connection
-                this.dispose();
-                
-                // Keep the game running but in local mode instead of returning to menu
-                if (this.multiplayerManager.game.state) {
-                    // Don't pause the game, just continue in local mode
-                    console.debug('[MultiplayerConnectionManager] Continuing game in local mode after host left');
-                }
+                // Handle host leaving the game using the unified method
+                this.handleHostDisconnection();
                 break;
             default:
                 console.error('Unknown data type from host:', data.type);
@@ -447,7 +416,51 @@ export class MultiplayerConnectionManager {
     }
 
     /**
-     * Handle disconnect
+     * Handle host disconnection (for members)
+     * This is a unified method to handle host disconnection, called from both
+     * the 'hostLeft' message handler and the handleDisconnect method
+     */
+    handleHostDisconnection() {
+        console.debug('[MultiplayerConnectionManager] Host disconnected from game');
+        
+        this.isConnected = false;
+        this.multiplayerManager.ui.updateMultiplayerButton(false);
+        this.multiplayerManager.ui.updateConnectionStatus('Disconnected from host');
+        
+        // Show notification
+        if (this.multiplayerManager.game.hudManager) {
+            this.multiplayerManager.game.hudManager.showNotification('The host has left the game', 'error');
+        }
+        
+        // Remove all remote players
+        if (this.multiplayerManager.remotePlayerManager) {
+            console.debug('[MultiplayerConnectionManager] Removing all remote players after host left');
+            this.multiplayerManager.remotePlayerManager.removeAllPlayers();
+        }
+        
+        // Take back control of enemy spawning as local mode
+        if (this.multiplayerManager.game.enemyManager) {
+            console.debug('[MultiplayerConnectionManager] Taking back control of enemy spawning in local mode');
+            
+            // Clear existing enemies (which were controlled by host)
+            this.multiplayerManager.game.enemyManager.removeAllEnemies();
+            
+            // Start local enemy spawning
+            this.multiplayerManager.game.enemyManager.enableLocalSpawning();
+        }
+        
+        // Clean up connection
+        this.dispose();
+        
+        // Keep the game running but in local mode instead of returning to menu
+        if (this.multiplayerManager.game.state) {
+            // Don't pause the game, just continue in local mode
+            console.debug('[MultiplayerConnectionManager] Continuing game in local mode after host left');
+        }
+    }
+
+    /**
+     * Handle disconnection of a peer
      * @param {string} peerId - The ID of the peer that disconnected
      */
     handleDisconnect(peerId) {
@@ -474,24 +487,9 @@ export class MultiplayerConnectionManager {
                 this.multiplayerManager.ui.setStartButtonEnabled(false);
             }
         } else {
-            // If host disconnected, end the game
+            // If host disconnected, handle it with the unified method
             if (peerId === this.hostId) {
-                this.isConnected = false;
-                this.multiplayerManager.ui.updateMultiplayerButton(false);
-                this.multiplayerManager.ui.updateConnectionStatus('Disconnected from host');
-                
-                // Show disconnection message
-                if (this.multiplayerManager.game.hudManager) {
-                    this.multiplayerManager.game.hudManager.showNotification('Disconnected from host', 'error');
-                }
-                
-                // Return to main menu
-                if (this.multiplayerManager.game.state) {
-                    this.multiplayerManager.game.state.setPaused();
-                }
-                if (this.multiplayerManager.game.menuManager) {
-                    this.multiplayerManager.game.menuManager.showMenu('gameMenu');
-                }
+                this.handleHostDisconnection();
             }
         }
     }
