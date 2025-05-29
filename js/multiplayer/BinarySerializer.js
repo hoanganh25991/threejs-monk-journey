@@ -15,7 +15,8 @@ export const MessageType = {
     SKILL_CAST: 6,
     PLAYER_INPUT: 7,
     PLAYER_POSITION: 8,
-    HOST_LEFT: 9
+    HOST_LEFT: 9,
+    PLAYER_DAMAGE: 10
 };
 
 // Schema definitions for different message types
@@ -30,7 +31,8 @@ const SCHEMAS = {
     [MessageType.SKILL_CAST]: ['skillName', 'playerId', 'position', 'rotation', 'variant'],
     [MessageType.PLAYER_INPUT]: ['input'],
     [MessageType.PLAYER_POSITION]: ['position', 'rotation', 'animation', 'modelId'],
-    [MessageType.HOST_LEFT]: []
+    [MessageType.HOST_LEFT]: [],
+    [MessageType.PLAYER_DAMAGE]: ['amount', 'enemyId']
 };
 
 export class BinarySerializer {
@@ -234,6 +236,7 @@ export class BinarySerializer {
             case 'playerInput': return MessageType.PLAYER_INPUT;
             case 'playerPosition': return MessageType.PLAYER_POSITION;
             case 'hostLeft': return MessageType.HOST_LEFT;
+            case 'playerDamage': return MessageType.PLAYER_DAMAGE;
             default: return undefined;
         }
     }
@@ -255,6 +258,7 @@ export class BinarySerializer {
             case MessageType.PLAYER_INPUT: return 'playerInput';
             case MessageType.PLAYER_POSITION: return 'playerPosition';
             case MessageType.HOST_LEFT: return 'hostLeft';
+            case MessageType.PLAYER_DAMAGE: return 'playerDamage';
             default: return 'unknown';
         }
     }

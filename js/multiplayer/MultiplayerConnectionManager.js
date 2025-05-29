@@ -327,6 +327,13 @@ export class MultiplayerConnectionManager {
                 // Handle host leaving the game using the unified method
                 this.handleHostDisconnection();
                 break;
+            case 'playerDamage':
+                // Handle damage to the local player from an enemy
+                if (data.amount && this.multiplayerManager.game.player) {
+                    console.debug(`[MultiplayerConnectionManager] Player taking damage: ${data.amount} from enemy ID: ${data.enemyId}`);
+                    this.multiplayerManager.game.player.takeDamage(data.amount);
+                }
+                break;
             default:
                 console.error('Unknown data type from host:', data.type);
         }
@@ -401,6 +408,30 @@ export class MultiplayerConnectionManager {
                             });
                         }
                     });
+                    break;
+                case 'playerDamage':
+                    // Handle damage to a remote player from an enemy (host only)
+                    if (data.amount && data.enemyId) {
+                        console.debug(`[MultiplayerConnectionManager] Remote player ${peerId} taking damage: ${data.amount} from enemy ID: ${data.enemyId}`);
+                        
+                        // Apply damage to the remote player if we have a player manager
+                        const remotePlayer = this.multiplayerManager.remotePlayerManager.getPlayer(peerId);
+                        if (remotePlayer && typeof remotePlayer.takeDamage === 'function') {
+                            remotePlayer.takeDamage(data.amount);
+                        }
+                        
+                        // Forward damage to other members so they can see the effects
+                        this.peers.forEach((conn, id) => {
+                            if (id !== peerId) {
+                                conn.send({
+                                    type: 'playerDamage',
+                                    amount: data.amount,
+                                    enemyId: data.enemyId,
+                                    playerId: peerId // Add the player ID so other clients know who was damaged
+                                });
+                            }
+                        });
+                    }
                     break;
                 default:
                     console.error('[MultiplayerConnectionManager] Unknown data type from member:', data.type);

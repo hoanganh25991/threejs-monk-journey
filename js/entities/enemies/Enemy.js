@@ -343,14 +343,12 @@ export class Enemy {
                                 // The actual damage will be applied by the host
                                 if (this.player.game.multiplayerManager.isHost) {
                                     // If we're the host, broadcast damage to the specific player
-                                    const conn = this.player.game.multiplayerManager.peers.get(peerId);
-                                    if (conn) {
-                                        conn.send({
-                                            type: 'playerDamage',
-                                            amount: amount,
-                                            enemyId: this.id
-                                        });
-                                    }
+                                    // Use the connection manager's sendToPeer method to ensure proper serialization
+                                    this.player.game.multiplayerManager.connection.sendToPeer(peerId, {
+                                        type: 'playerDamage',
+                                        amount: amount,
+                                        enemyId: this.id
+                                    });
                                 }
                             }
                         };
