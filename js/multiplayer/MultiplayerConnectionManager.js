@@ -334,6 +334,13 @@ export class MultiplayerConnectionManager {
                     this.multiplayerManager.game.player.takeDamage(data.amount);
                 }
                 break;
+            case 'shareExperience':
+                // Handle experience shared from killing an enemy
+                if (data.amount && this.multiplayerManager.game.player) {
+                    console.debug(`[MultiplayerConnectionManager] Player receiving experience: ${data.amount} from enemy ID: ${data.enemyId} (shared among ${data.playerCount} players)`);
+                    this.multiplayerManager.game.player.addExperience(data.amount);
+                }
+                break;
             default:
                 console.error('Unknown data type from host:', data.type);
         }

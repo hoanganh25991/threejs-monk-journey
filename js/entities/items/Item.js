@@ -22,12 +22,12 @@ export class Item {
         // Set information
         this.setId = config.setId || null;
         
-        // Visual properties
-        this.visual = config.visual || {
-            model: null,
-            texture: null,
-            particles: null
-        };
+        // Visual properties - model path should be provided by ItemGenerator
+        this.visual = config.visual || {};
+        
+        // Set default texture and particles if not provided
+        this.visual.texture = this.visual.texture || null;
+        this.visual.particles = this.visual.particles || null;
         
         // Calculate effective stats based on level and rarity
         this.calculateEffectiveStats();

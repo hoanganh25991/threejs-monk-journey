@@ -38,6 +38,7 @@ export class ItemPreview {
         this.animations = {};
         this.currentAnimation = null;
         this.currentItem = null;
+        this.loader = new GLTFLoader(); // Create a single loader instance
         
         // Create a wrapper to handle visibility
         this.wrapper = document.createElement('div');
@@ -195,6 +196,7 @@ export class ItemPreview {
      * @param {Object} item - The item to load
      */
     loadItemModel(item) {
+        console.log({item})
         // Remove existing model if any
         if (this.model) {
             this.scene.remove(this.model);
@@ -206,6 +208,9 @@ export class ItemPreview {
         this.animations = {};
         this.currentAnimation = null;
         
+        // Store the current item
+        this.currentItem = item;
+        
         // Check if item has a visual model
         if (!item || !item.visual || !item.visual.model) {
             console.warn('ItemPreview: No model available for item', item ? item.name : 'unknown');
@@ -213,10 +218,12 @@ export class ItemPreview {
             return;
         }
         
+        // The model path is already set by ItemGenerator in item.visual.model
+        const modelPath = item.visual.model;
+        
         // Load new model
-        const loader = new GLTFLoader();
-        loader.load(
-            item.visual.model,
+        this.loader.load(
+            modelPath,
             (gltf) => {
                 this.model = gltf.scene;
                 
@@ -286,21 +293,49 @@ export class ItemPreview {
             // Default cube if no item
             geometry = new THREE.BoxGeometry(1, 1, 1);
         } else if (item.type === 'weapon') {
-            if (item.subType === 'sword') {
-                geometry = new THREE.BoxGeometry(0.2, 1.5, 0.05);
-            } else if (item.subType === 'staff') {
+            if (item.subType === 'staff') {
                 geometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 8);
             } else if (item.subType === 'dagger') {
                 geometry = new THREE.BoxGeometry(0.15, 0.8, 0.05);
+            } else if (item.subType === 'fist') {
+                geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
             } else {
                 geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
             }
         } else if (item.type === 'armor') {
-            geometry = new THREE.SphereGeometry(0.5, 16, 16);
+            if (item.subType === 'robe') {
+                geometry = new THREE.CylinderGeometry(0.3, 0.5, 1.2, 8);
+            } else if (item.subType === 'helmet') {
+                geometry = new THREE.SphereGeometry(0.3, 16, 16);
+            } else if (item.subType === 'gloves') {
+                geometry = new THREE.BoxGeometry(0.4, 0.2, 0.2);
+            } else if (item.subType === 'belt') {
+                geometry = new THREE.BoxGeometry(0.6, 0.1, 0.1);
+            } else if (item.subType === 'boots') {
+                geometry = new THREE.BoxGeometry(0.3, 0.3, 0.5);
+            } else {
+                geometry = new THREE.SphereGeometry(0.5, 16, 16);
+            }
         } else if (item.type === 'accessory') {
-            geometry = new THREE.TorusGeometry(0.3, 0.1, 16, 32);
+            if (item.subType === 'amulet') {
+                geometry = new THREE.CylinderGeometry(0.2, 0.2, 0.05, 16);
+            } else if (item.subType === 'ring') {
+                geometry = new THREE.TorusGeometry(0.2, 0.05, 16, 32);
+            } else if (item.subType === 'talisman') {
+                geometry = new THREE.TetrahedronGeometry(0.3);
+            } else {
+                geometry = new THREE.TorusGeometry(0.3, 0.1, 16, 32);
+            }
         } else if (item.type === 'consumable') {
-            geometry = new THREE.CylinderGeometry(0.2, 0.2, 0.5, 16);
+            if (item.subType === 'potion') {
+                geometry = new THREE.CylinderGeometry(0.15, 0.15, 0.4, 16);
+            } else if (item.subType === 'scroll') {
+                geometry = new THREE.CylinderGeometry(0.1, 0.1, 0.4, 16);
+            } else if (item.subType === 'food') {
+                geometry = new THREE.SphereGeometry(0.2, 16, 16);
+            } else {
+                geometry = new THREE.CylinderGeometry(0.2, 0.2, 0.5, 16);
+            }
         } else {
             geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
         }
@@ -456,11 +491,9 @@ export class ItemPreview {
             return null;
         }
         
-        // Generate the item
+        // Generate the item using ItemGenerator
+        // This will handle setting the model path in item.visual.model
         const item = this.itemGenerator.generateItem(options);
-        
-        // Set as current item
-        this.currentItem = item;
         
         // Load the item model
         this.loadItemModel(item);
@@ -482,7 +515,7 @@ export class ItemPreview {
             return null;
         }
         
-        // Create options object
+        // Create options object for ItemGenerator
         const options = {
             type: type,
             subType: subType,
