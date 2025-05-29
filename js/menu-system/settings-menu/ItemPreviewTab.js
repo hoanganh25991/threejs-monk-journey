@@ -31,7 +31,6 @@ export class ItemPreviewTab extends SettingsTab {
         
         this.itemPreview = null;
         this.currentItem = null;
-        this.itemGenerator = new ItemGenerator(game);
         
         // Group items by type and subtype
         this.itemsByType = {};
@@ -340,6 +339,8 @@ export class ItemPreviewTab extends SettingsTab {
      * @private
      */
     generateRandomItem() {
+        if (!this.itemPreview) return;
+        
         const selectedType = this.itemTypeSelect.value;
         const selectedSubType = this.itemSubTypeSelect.value;
         const selectedRarity = this.itemRaritySelect.value;
@@ -364,14 +365,11 @@ export class ItemPreviewTab extends SettingsTab {
             options.rarity = selectedRarity;
         }
         
-        // Generate the item
-        const item = this.itemGenerator.generateItem(options);
+        // Generate the item using the ItemPreview's generator
+        const item = this.itemPreview.generateRandomItem(options);
         
         // Set as current item
         this.currentItem = item;
-        
-        // Update the item preview
-        this.updateItemPreview();
         
         // Update the item details
         this.updateItemDetails();
@@ -384,8 +382,11 @@ export class ItemPreviewTab extends SettingsTab {
     initializeItemPreviewContainer() {
         if (!this.itemPreviewContainer) return;
         
-        // Create item preview
-        this.itemPreview = new ItemPreview(this.itemPreviewContainer);
+        // Create item preview with game instance
+        this.itemPreview = new ItemPreview(this.itemPreviewContainer, 
+                                          this.itemPreviewContainer.clientWidth, 
+                                          this.itemPreviewContainer.clientHeight, 
+                                          this.game);
         
         // Update the filtered items
         this.updateFilteredItems();
@@ -408,8 +409,11 @@ export class ItemPreviewTab extends SettingsTab {
      * @private
      */
     updateCurrentItem() {
+        if (!this.itemPreview) return;
+        
         if (this.filteredItems.length === 0) {
             this.currentItem = null;
+            this.itemPreview.loadItemModel(null);
         } else {
             const template = this.filteredItems[this.currentItemIndex];
             
@@ -419,33 +423,20 @@ export class ItemPreviewTab extends SettingsTab {
             if (selectedRarity === 'all') {
                 // Use the template as is
                 this.currentItem = template;
+                this.itemPreview.loadItemModel(template);
             } else {
-                // Generate an item with the selected rarity
-                this.currentItem = this.itemGenerator.generateItem({
-                    type: template.type,
-                    subType: template.subType,
-                    rarity: selectedRarity,
-                    level: this.game.player ? this.game.player.stats.getLevel() : 1
-                });
+                // Generate an item with the selected rarity using the ItemPreview's generator
+                this.currentItem = this.itemPreview.generateSpecificItem(
+                    template.type,
+                    template.subType,
+                    selectedRarity,
+                    this.game.player ? this.game.player.stats.getLevel() : 1
+                );
             }
         }
         
-        // Update the item preview
-        this.updateItemPreview();
-        
         // Update the item details
         this.updateItemDetails();
-    }
-    
-    /**
-     * Update the item preview with the current item
-     * @private
-     */
-    updateItemPreview() {
-        if (!this.itemPreview) return;
-        
-        // Load the item model
-        this.itemPreview.loadItemModel(this.currentItem);
     }
     
     /**

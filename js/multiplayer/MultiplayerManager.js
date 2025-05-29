@@ -149,6 +149,24 @@ export class MultiplayerManager {
             this.game.enemyManager.updateEnemiesFromHost(data.enemies);
         }
     }
+
+    /**
+     * Check if multiplayer is active
+     * @returns {boolean} True if multiplayer is active
+     */
+    isActive() {
+        return this.connection && 
+               (this.connection.isHost || this.connection.isConnected) && 
+               this.remotePlayerManager !== null;
+    }
+    
+    /**
+     * Check if this client is the host
+     * @returns {boolean} True if this client is the host
+     */
+    get isHost() {
+        return this.connection && this.connection.isHost;
+    }
     
     /**
      * Start multiplayer game (host only)

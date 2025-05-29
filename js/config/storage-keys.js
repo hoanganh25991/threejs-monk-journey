@@ -35,6 +35,9 @@ export const STORAGE_KEYS = {
     SKILL_TREE_DATA: 'monk_journey_skill_tree_data',
     SELECTED_ENEMY_PREVIEW: 'monk_journey_selected_enemy_preview',
     SELECTED_ENEMY_ANIMATION: 'monk_journey_selected_enemy_animation',
+    SELECTED_ITEM_TYPE: 'monk_journey_selected_item_type',
+    SELECTED_ITEM_SUBTYPE: 'monk_journey_selected_item_subtype',
+    SELECTED_ITEM_RARITY: 'monk_journey_selected_item_rarity',
     CUSTOM_SKILLS: 'monk_journey_custom_skills',
     CAMERA_ZOOM: 'monk_journey_camera_zoom',
     

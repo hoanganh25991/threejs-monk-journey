@@ -479,8 +479,37 @@ export class Enemy {
         // Set dead state
         this.state.isDead = true;
         
-        // Award experience to player
-        this.player.addExperience(this.experienceValue);
+        // Check if we're in multiplayer mode
+        if (this.player.game && 
+            this.player.game.multiplayerManager && 
+            this.player.game.multiplayerManager.isActive()) {
+            
+            // Get the number of players (local + remote)
+            const remotePlayerCount = this.player.game.multiplayerManager.remotePlayerManager ? 
+                this.player.game.multiplayerManager.remotePlayerManager.getPlayers().size : 0;
+            const totalPlayerCount = remotePlayerCount + 1; // +1 for local player
+            
+            // Calculate experience per player (divide equally)
+            const expPerPlayer = Math.floor(this.experienceValue / totalPlayerCount);
+            
+            // Award experience to local player
+            this.player.addExperience(expPerPlayer);
+            
+            // If we're the host, broadcast experience to all remote players
+            if (this.player.game.multiplayerManager.isHost) {
+                this.player.game.multiplayerManager.connection.broadcast({
+                    type: 'shareExperience',
+                    amount: expPerPlayer,
+                    enemyId: this.id,
+                    playerCount: totalPlayerCount
+                });
+                
+                console.debug(`[Multiplayer] Shared ${expPerPlayer} experience with ${totalPlayerCount} players from enemy ${this.id}`);
+            }
+        } else {
+            // Single player mode - award all experience to the player
+            this.player.addExperience(this.experienceValue);
+        }
         
         // Set a flag to track animation completion
         this.deathAnimationInProgress = true;

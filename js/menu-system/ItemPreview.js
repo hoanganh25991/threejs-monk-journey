@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { updateAnimation } from '../utils/AnimationUtils.js';
+import { ItemGenerator } from '../entities/items/ItemGenerator.js';
 
 export class ItemPreview {
     /**
@@ -14,11 +15,16 @@ export class ItemPreview {
      * @param {HTMLElement} container - The container element
      * @param {number} width - The width of the preview
      * @param {number} height - The height of the preview
+     * @param {import('../game/Game.js').Game} game - The game instance
      */
-    constructor(container, width = 300, height = 300) {
+    constructor(container, width = 300, height = 300, game = null) {
         this.container = container;
         this.width = width;
         this.height = height;
+        this.game = game;
+        
+        // Create an item generator
+        this.itemGenerator = new ItemGenerator(game);
         
         this.scene = null;
         this.camera = null;
@@ -31,6 +37,7 @@ export class ItemPreview {
         this.visible = true;
         this.animations = {};
         this.currentAnimation = null;
+        this.currentItem = null;
         
         // Create a wrapper to handle visibility
         this.wrapper = document.createElement('div');
@@ -439,6 +446,62 @@ export class ItemPreview {
     }
     
     /**
+     * Generate a random item using the ItemGenerator
+     * @param {Object} options - Options for item generation
+     * @returns {Object} - The generated item
+     */
+    generateRandomItem(options = {}) {
+        if (!this.itemGenerator) {
+            console.error('ItemPreview: ItemGenerator not initialized');
+            return null;
+        }
+        
+        // Generate the item
+        const item = this.itemGenerator.generateItem(options);
+        
+        // Set as current item
+        this.currentItem = item;
+        
+        // Load the item model
+        this.loadItemModel(item);
+        
+        return item;
+    }
+    
+    /**
+     * Generate an item with specific properties
+     * @param {string} type - Item type
+     * @param {string} subType - Item subtype
+     * @param {string} rarity - Item rarity
+     * @param {number} level - Item level
+     * @returns {Object} - The generated item
+     */
+    generateSpecificItem(type, subType, rarity, level = 1) {
+        if (!this.itemGenerator) {
+            console.error('ItemPreview: ItemGenerator not initialized');
+            return null;
+        }
+        
+        // Create options object
+        const options = {
+            type: type,
+            subType: subType,
+            rarity: rarity,
+            level: level
+        };
+        
+        return this.generateRandomItem(options);
+    }
+    
+    /**
+     * Get the current item
+     * @returns {Object} - The current item
+     */
+    getCurrentItem() {
+        return this.currentItem;
+    }
+    
+    /**
      * Dispose of resources
      */
     dispose() {
@@ -484,5 +547,6 @@ export class ItemPreview {
         this.mixer = null;
         this.animations = {};
         this.currentAnimation = null;
+        this.currentItem = null;
     }
 }

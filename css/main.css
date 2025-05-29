@@ -18,6 +18,12 @@
 /* Import loading screen styles */
 @import 'loading-screen.css';
 
+/* Import inventory styles */
+@import 'inventory.css';
+
+/* Import item popup styles */
+@import 'item-popup.css';
+
 /* Import Game styles */
 @import 'game.css';
 

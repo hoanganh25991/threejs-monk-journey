@@ -7,8 +7,6 @@
     <meta http-equiv="ScreenOrientation" content="autoRotate:disabled">
     <title>Monk Journey</title>
     <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/inventory.css">
-    <link rel="stylesheet" href="css/item-popup.css">
     <!-- Font Awesome removed and replaced with custom icon.css -->
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#ffcc66">
@@ -422,6 +420,7 @@
                     <button id="tab-model-preview" class="tab-icon" title="Model Preview">👤</button>
                     <button id="tab-skills-preview" class="tab-icon" title="Skills Preview">✨</button>
                     <button id="tab-enemy-preview" class="tab-icon" title="Enemy Preview">👹</button>
+                    <button id="tab-item-preview" class="tab-icon" title="Item Preview">🎁</button>
                     <button id="tab-performance" class="tab-icon active" title="Performance">⚡</button>
                 </div>
             </div>
@@ -625,6 +624,51 @@
                     </div>
                 </div>
                 
+                <!-- Item Preview Tab -->
+                <div id="item-preview-tab" class="tab-content">
+                    <h2 id="item-preview-title">Item Preview</h2>
+                    <div class="item-preview-layout">
+                        <div class="item-preview-section">
+                            <div id="item-preview-container">
+                                <!-- Item preview will be rendered here -->
+                            </div>
+                            <div class="item-preview-controls">
+                                <button id="reset-item-camera-button" class="settings-button">Reset Camera</button>
+                                <button id="generate-random-item-button" class="settings-button">Generate Random Item</button>
+                            </div>
+                        </div>
+                        <div class="item-preview-options">
+                            <div class="item-filter-controls">
+                                <div class="setting-item">
+                                    <label for="item-type-select" class="settings-label">Item Type:</label>
+                                    <select id="item-type-select" class="settings-select">
+                                        <option value="all">All Types</option>
+                                    </select>
+                                </div>
+                                <div class="setting-item">
+                                    <label for="item-sub-type-select" class="settings-label">Item Subtype:</label>
+                                    <select id="item-sub-type-select" class="settings-select">
+                                        <option value="all">All Subtypes</option>
+                                    </select>
+                                </div>
+                                <div class="setting-item">
+                                    <label for="item-rarity-select" class="settings-label">Item Rarity:</label>
+                                    <select id="item-rarity-select" class="settings-select">
+                                        <option value="all">All Rarities</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="item-navigation">
+                                <button id="prev-item-button" class="nav-button">◀ Previous</button>
+                                <button id="next-item-button" class="nav-button">Next ▶</button>
+                            </div>
+                            <div id="item-details" class="item-details">
+                                <!-- Item details will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Enemy Preview Tab -->
                 <div id="enemy-preview-tab" class="tab-content">
                     <h2 id="enemy-preview-title">Enemy Preview</h2>
