@@ -219,8 +219,21 @@ export class MultiplayerUIManager {
         const leaveGameBtn = document.getElementById('leave-game-btn');
         if (leaveGameBtn) {
             leaveGameBtn.addEventListener('click', () => {
+                console.debug('[MultiplayerUIManager] Leaving multiplayer game');
+                
+                // Disconnect from the multiplayer game
                 this.multiplayerManager.leaveGame();
-                this.showMultiplayerModal();
+                
+                // Update UI
+                this.updateMultiplayerButton(false);
+                
+                // Close the multiplayer modal
+                this.closeMultiplayerModal();
+                
+                // Return to game menu if the game has a menu manager
+                if (this.multiplayerManager.game && this.multiplayerManager.game.menuManager) {
+                    this.multiplayerManager.game.menuManager.showMenu('gameMenu');
+                }
             });
         }
     }
@@ -267,10 +280,20 @@ export class MultiplayerUIManager {
                 if (disconnectBtn) {
                     disconnectBtn.addEventListener('click', () => {
                         console.debug('[MultiplayerUIManager] Disconnecting from multiplayer game');
+                        
+                        // Disconnect from the multiplayer game
                         this.multiplayerManager.leaveGame();
+                        
+                        // Update UI
                         this.updateMultiplayerButton(false);
-                        // Show connection info screen instead of closing the modal
-                        this.showConnectionInfoScreen();
+                        
+                        // Close the multiplayer modal
+                        this.closeMultiplayerModal();
+                        
+                        // Return to game menu if the game has a menu manager
+                        if (this.multiplayerManager.game && this.multiplayerManager.game.menuManager) {
+                            this.multiplayerManager.game.menuManager.showMenu('gameMenu');
+                        }
                     });
                 }
                 
