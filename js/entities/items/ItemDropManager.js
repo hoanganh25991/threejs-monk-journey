@@ -18,6 +18,7 @@ export class ItemDropManager {
         this.droppedItems = new Map(); // Map of item ID to dropped item data
         this.lightBeams = new Map(); // Map of item ID to light beam effect
         this.autoPickupDelay = 3; // Delay in seconds before auto-pickup (was instant before)
+        this.autoRemoveDelay = 5; // Delay in seconds before auto-removing items if not picked up
     }
 
     /**
@@ -223,6 +224,32 @@ export class ItemDropManager {
             if (distance < 1.5 && timeOnGround >= this.autoPickupDelay) {
                 this.pickupItem(id);
             }
+            
+            // Auto-remove item if it's been on the ground for too long
+            if (timeOnGround >= this.autoRemoveDelay) {
+                // Remove item group from scene
+                if (itemData.group) {
+                    this.scene.remove(itemData.group);
+                }
+                
+                // Remove beam group from scene
+                const lightBeam = this.lightBeams.get(id);
+                if (lightBeam && lightBeam.beamGroup) {
+                    this.scene.remove(lightBeam.beamGroup);
+                }
+                
+                // Remove from maps
+                this.droppedItems.delete(id);
+                this.lightBeams.delete(id);
+                
+                // Show notification if HUD is available
+                if (this.game && this.game.hudManager) {
+                    this.game.hudManager.showNotification(`${itemData.item.name} disappeared!`);
+                }
+                
+                // Skip to next item since this one was removed
+                continue;
+            }
         }
     }
     
@@ -281,5 +308,23 @@ export class ItemDropManager {
         // Clear maps
         this.droppedItems.clear();
         this.lightBeams.clear();
+    }
+    
+    /**
+     * Set the auto-remove delay for dropped items
+     * @param {number} seconds - The delay in seconds before items are automatically removed
+     */
+    setAutoRemoveDelay(seconds) {
+        if (typeof seconds === 'number' && seconds >= 0) {
+            this.autoRemoveDelay = seconds;
+        }
+    }
+    
+    /**
+     * Get the current auto-remove delay for dropped items
+     * @returns {number} The delay in seconds
+     */
+    getAutoRemoveDelay() {
+        return this.autoRemoveDelay;
     }
 }
