@@ -31,6 +31,11 @@ export class InventoryUI extends UIComponent {
         this.userRotationYOnMouseDown = 0;
         this.mouseX = 0;
         this.mouseXOnMouseDown = 0;
+        
+        // Item popup properties
+        this.itemPopup = null;
+        this.statsContainer = null;
+        this.activeItemSlot = null;
     }
     
     /**
@@ -42,17 +47,149 @@ export class InventoryUI extends UIComponent {
         this.inventoryGrid = document.getElementById('inventory-grid');
         this.modelContainer = document.getElementById('character-model-container');
         
+        // Create item popup element
+        this.createItemPopup();
+        
+        // Create stats container
+        this.createStatsContainer();
+        
         // Add click event to save inventory
         const saveButton = document.getElementById('inventory-save');
         saveButton.addEventListener('click', () => {
             this.saveInventory();
             this.toggleInventory();
         });
+        
+        // Add click event to close popup when clicking outside
+        document.addEventListener('click', (event) => {
+            if (this.itemPopup && this.itemPopup.style.display === 'block') {
+                // Check if click is outside the popup
+                if (!this.itemPopup.contains(event.target) && 
+                    (!this.activeItemSlot || !this.activeItemSlot.contains(event.target))) {
+                    this.hideItemPopup();
+                }
+            }
+        });
 
         // Hide initially
         this.hide();
         
         return true;
+    }
+    
+    /**
+     * Create the item popup element
+     */
+    createItemPopup() {
+        // Create popup element if it doesn't exist
+        if (!this.itemPopup) {
+            this.itemPopup = document.createElement('div');
+            this.itemPopup.id = 'item-popup';
+            this.itemPopup.className = 'item-popup';
+            this.itemPopup.style.display = 'none';
+            
+            // Add popup content
+            this.itemPopup.innerHTML = `
+                <div class="item-popup-header">
+                    <div class="item-popup-icon"></div>
+                    <div class="item-popup-title">
+                        <h3 class="item-popup-name"></h3>
+                        <div class="item-popup-type"></div>
+                    </div>
+                </div>
+                <div class="item-popup-stats"></div>
+                <div class="item-popup-description"></div>
+                <div class="item-popup-actions">
+                    <button class="item-popup-use">Use</button>
+                    <button class="item-popup-equip">Equip</button>
+                    <button class="item-popup-drop">Drop</button>
+                </div>
+            `;
+            
+            // Add to document body
+            document.body.appendChild(this.itemPopup);
+            
+            // Add event listeners for buttons
+            const useButton = this.itemPopup.querySelector('.item-popup-use');
+            useButton.addEventListener('click', () => {
+                if (this.currentItem) {
+                    this.useItem(this.currentItem);
+                    this.hideItemPopup();
+                }
+            });
+            
+            const equipButton = this.itemPopup.querySelector('.item-popup-equip');
+            equipButton.addEventListener('click', () => {
+                if (this.currentItem && this.currentItem.type) {
+                    this.equipItem(this.currentItem);
+                    this.hideItemPopup();
+                }
+            });
+            
+            const dropButton = this.itemPopup.querySelector('.item-popup-drop');
+            dropButton.addEventListener('click', () => {
+                if (this.currentItem) {
+                    this.dropItem(this.currentItem);
+                    this.hideItemPopup();
+                }
+            });
+        }
+    }
+    
+    /**
+     * Create the stats container
+     */
+    createStatsContainer() {
+        // Find or create the stats container
+        const inventoryContainer = document.querySelector('#inventory-container');
+        
+        if (inventoryContainer) {
+            // Check if stats container already exists
+            let statsContainer = document.getElementById('player-stats-container');
+            
+            if (!statsContainer) {
+                // Create stats container
+                statsContainer = document.createElement('div');
+                statsContainer.id = 'player-stats-container';
+                statsContainer.className = 'player-stats-container';
+                
+                // Add stats content
+                statsContainer.innerHTML = `
+                    <h3>Player Stats</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Health</div>
+                            <div class="stat-value" id="stat-health">0/0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Mana</div>
+                            <div class="stat-value" id="stat-mana">0/0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Attack</div>
+                            <div class="stat-value" id="stat-attack">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Defense</div>
+                            <div class="stat-value" id="stat-defense">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Speed</div>
+                            <div class="stat-value" id="stat-speed">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Level</div>
+                            <div class="stat-value" id="stat-level">1</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add to inventory container
+                inventoryContainer.appendChild(statsContainer);
+            }
+            
+            this.statsContainer = statsContainer;
+        }
     }
     
     /**
@@ -144,6 +281,9 @@ export class InventoryUI extends UIComponent {
      */
     toggleInventory() {
         if (this.isInventoryOpen) {
+            // Hide any open item popup
+            this.hideItemPopup();
+            
             // Hide inventory
             this.hide();
             this.isInventoryOpen = false;
@@ -157,6 +297,9 @@ export class InventoryUI extends UIComponent {
             // Show inventory first so container has dimensions
             this.show();
             this.isInventoryOpen = true;
+            
+            // Update player stats
+            this.updatePlayerStats();
             
             // Pause game
             this.game.pause(false);
@@ -177,56 +320,205 @@ export class InventoryUI extends UIComponent {
         // Get player inventory
         const inventory = this.game.player.getInventory();
         
-        // Add items to inventory grid
-        inventory.forEach(item => {
-            // Create item element
-            const itemElement = document.createElement('div');
-            itemElement.className = 'inventory-item';
+        // Create a grid of slots first (6x5 grid = 30 slots)
+        const totalSlots = 30;
+        const slots = [];
+        
+        for (let i = 0; i < totalSlots; i++) {
+            const slotElement = document.createElement('div');
+            slotElement.className = 'inventory-item empty';
+            slotElement.dataset.slotIndex = i;
+            this.inventoryGrid.appendChild(slotElement);
+            slots.push(slotElement);
+        }
+        
+        // Add items to inventory grid slots
+        inventory.forEach((item, index) => {
+            // Get the slot for this item (either from item.slotIndex or use the index)
+            const slotIndex = item.slotIndex !== undefined ? item.slotIndex : index;
             
-            // Create item icon
-            const itemIcon = document.createElement('div');
-            itemIcon.className = 'item-icon';
-            
-            // Use emoji based on item type or default to package icon
-            let iconContent = '📦';
-            if (item.name.includes('Potion')) {
-                iconContent = '🧪';
-            } else if (item.name.includes('Weapon')) {
-                iconContent = '⚔️';
-            } else if (item.name.includes('Armor')) {
-                iconContent = '🛡️';
+            // Make sure the slot index is valid
+            if (slotIndex >= 0 && slotIndex < totalSlots) {
+                const slotElement = slots[slotIndex];
+                
+                // Remove empty class
+                slotElement.className = 'inventory-item';
+                
+                // Store item reference in the DOM element
+                slotElement.dataset.itemName = item.name;
+                
+                // Clear previous content
+                slotElement.innerHTML = '';
+                
+                // Create item icon
+                const itemIcon = document.createElement('div');
+                itemIcon.className = 'item-icon';
+                
+                // Use emoji based on item type or default to package icon
+                let iconContent = '📦';
+                if (item.name.includes('Potion')) {
+                    iconContent = '🧪';
+                } else if (item.name.includes('Weapon')) {
+                    iconContent = '⚔️';
+                } else if (item.name.includes('Armor')) {
+                    iconContent = '🛡️';
+                } else if (item.name.includes('Helmet')) {
+                    iconContent = '🪖';
+                } else if (item.name.includes('Boots')) {
+                    iconContent = '👢';
+                } else if (item.name.includes('Accessory') || item.name.includes('Ring')) {
+                    iconContent = '💍';
+                }
+                
+                itemIcon.textContent = iconContent;
+                slotElement.appendChild(itemIcon);
+                
+                // Create item count
+                const itemCount = document.createElement('div');
+                itemCount.className = 'item-count';
+                itemCount.textContent = item.amount > 1 ? `x${item.amount}` : '';
+                slotElement.appendChild(itemCount);
+                
+                // Add click event to show item popup
+                slotElement.addEventListener('click', (event) => {
+                    // Show item popup
+                    this.showItemPopup(item, slotElement, event);
+                });
+                
+                // Add tooltip with item name
+                slotElement.title = item.name;
+                
+                // Store the slot index in the item for future reference
+                item.slotIndex = slotIndex;
             }
-            
-            itemIcon.textContent = iconContent;
-            itemElement.appendChild(itemIcon);
-            
-            // Create item count
-            const itemCount = document.createElement('div');
-            itemCount.className = 'item-count';
-            itemCount.textContent = item.amount > 1 ? `x${item.amount}` : '';
-            itemElement.appendChild(itemCount);
-            
-            // Add click event for item use
-            itemElement.addEventListener('click', () => {
-                // Handle item use
-                this.useItem(item);
-            });
-            
-            // Add tooltip with item name
-            itemElement.title = item.name;
-            
-            this.inventoryGrid.appendChild(itemElement);
         });
         
-        // Add empty slots
-        const totalSlots = 25; // 5x5 grid
-        const emptySlots = totalSlots - inventory.length;
+        // Update player stats
+        this.updatePlayerStats();
+    }
+    
+    /**
+     * Show item popup with details
+     * @param {Object} item - Item to show details for
+     * @param {HTMLElement} slotElement - The slot element that was clicked
+     * @param {Event} event - The click event
+     */
+    showItemPopup(item, slotElement, event) {
+        // Store reference to current item and slot
+        this.currentItem = item;
+        this.activeItemSlot = slotElement;
         
-        for (let i = 0; i < emptySlots; i++) {
-            const emptySlot = document.createElement('div');
-            emptySlot.className = 'inventory-item empty';
-            this.inventoryGrid.appendChild(emptySlot);
+        // Update popup content
+        const iconElement = this.itemPopup.querySelector('.item-popup-icon');
+        const nameElement = this.itemPopup.querySelector('.item-popup-name');
+        const typeElement = this.itemPopup.querySelector('.item-popup-type');
+        const statsElement = this.itemPopup.querySelector('.item-popup-stats');
+        const descElement = this.itemPopup.querySelector('.item-popup-description');
+        const useButton = this.itemPopup.querySelector('.item-popup-use');
+        const equipButton = this.itemPopup.querySelector('.item-popup-equip');
+        
+        // Set icon
+        let iconContent = '📦';
+        if (item.name.includes('Potion')) {
+            iconContent = '🧪';
+        } else if (item.name.includes('Weapon')) {
+            iconContent = '⚔️';
+        } else if (item.name.includes('Armor')) {
+            iconContent = '🛡️';
+        } else if (item.name.includes('Helmet')) {
+            iconContent = '🪖';
+        } else if (item.name.includes('Boots')) {
+            iconContent = '👢';
+        } else if (item.name.includes('Accessory') || item.name.includes('Ring')) {
+            iconContent = '💍';
         }
+        iconElement.textContent = iconContent;
+        
+        // Set name and type
+        nameElement.textContent = item.name;
+        typeElement.textContent = item.type || 'Consumable';
+        
+        // Set stats if available
+        if (item.stats) {
+            let statsHtml = '<ul class="item-stats-list">';
+            for (const [stat, value] of Object.entries(item.stats)) {
+                const formattedStat = stat.charAt(0).toUpperCase() + stat.slice(1);
+                const valueText = value > 0 ? `+${value}` : value;
+                statsHtml += `<li><span class="stat-name">${formattedStat}:</span> <span class="stat-value ${value > 0 ? 'positive' : 'negative'}">${valueText}</span></li>`;
+            }
+            statsHtml += '</ul>';
+            statsElement.innerHTML = statsHtml;
+            statsElement.style.display = 'block';
+        } else {
+            statsElement.innerHTML = '';
+            statsElement.style.display = 'none';
+        }
+        
+        // Set description
+        descElement.textContent = item.description || `A ${item.name.toLowerCase()}.`;
+        
+        // Show/hide buttons based on item type
+        if (item.name.includes('Potion') || !item.type) {
+            useButton.style.display = 'block';
+            equipButton.style.display = 'none';
+        } else if (item.type) {
+            useButton.style.display = 'none';
+            equipButton.style.display = 'block';
+        }
+        
+        // Position popup near the clicked item
+        const rect = slotElement.getBoundingClientRect();
+        this.itemPopup.style.left = `${rect.right + 10}px`;
+        this.itemPopup.style.top = `${rect.top}px`;
+        
+        // Show popup
+        this.itemPopup.style.display = 'block';
+        
+        // Prevent event from bubbling to document
+        event.stopPropagation();
+    }
+    
+    /**
+     * Hide the item popup
+     */
+    hideItemPopup() {
+        if (this.itemPopup) {
+            this.itemPopup.style.display = 'none';
+            this.currentItem = null;
+            this.activeItemSlot = null;
+        }
+    }
+    
+    /**
+     * Update player stats display
+     */
+    updatePlayerStats() {
+        if (!this.statsContainer) return;
+        
+        // Get player stats
+        const health = this.game.player.getHealth();
+        const maxHealth = this.game.player.getMaxHealth();
+        const mana = this.game.player.getMana();
+        const maxMana = this.game.player.getMaxMana();
+        const attack = this.game.player.getAttack ? this.game.player.getAttack() : 10;
+        const defense = this.game.player.getDefense ? this.game.player.getDefense() : 5;
+        const speed = this.game.player.getSpeed ? this.game.player.getSpeed() : 1.0;
+        const level = this.game.player.getLevel ? this.game.player.getLevel() : 1;
+        
+        // Update stat values
+        const healthElement = document.getElementById('stat-health');
+        const manaElement = document.getElementById('stat-mana');
+        const attackElement = document.getElementById('stat-attack');
+        const defenseElement = document.getElementById('stat-defense');
+        const speedElement = document.getElementById('stat-speed');
+        const levelElement = document.getElementById('stat-level');
+        
+        if (healthElement) healthElement.textContent = `${health}/${maxHealth}`;
+        if (manaElement) manaElement.textContent = `${mana}/${maxMana}`;
+        if (attackElement) attackElement.textContent = attack;
+        if (defenseElement) defenseElement.textContent = defense;
+        if (speedElement) speedElement.textContent = speed.toFixed(1);
+        if (levelElement) levelElement.textContent = level;
     }
     
     /**
@@ -237,7 +529,8 @@ export class InventoryUI extends UIComponent {
         // Handle different item types
         if (item.name === 'Health Potion') {
             // Heal player
-            const newHealth = this.game.player.getHealth() + 50;
+            const healAmount = item.healAmount || 50;
+            const newHealth = this.game.player.getHealth() + healAmount;
             const maxHealth = this.game.player.getMaxHealth();
             this.game.player.getStatsObject().setHealth(Math.min(newHealth, maxHealth));
             
@@ -245,13 +538,14 @@ export class InventoryUI extends UIComponent {
             this.game.player.removeFromInventory(item.name, 1);
             
             // Show notification
-            this.game.hudManager.showNotification('Used Health Potion: +50 Health');
+            this.game.hudManager.showNotification(`Used Health Potion: +${healAmount} Health`);
             
             // Update inventory
             this.updateInventoryItems();
         } else if (item.name === 'Mana Potion') {
             // Restore mana
-            const newMana = this.game.player.getMana() + 50;
+            const manaAmount = item.manaAmount || 50;
+            const newMana = this.game.player.getMana() + manaAmount;
             const maxMana = this.game.player.getMaxMana();
             this.game.player.getStatsObject().setMana(Math.min(newMana, maxMana));
             
@@ -259,13 +553,79 @@ export class InventoryUI extends UIComponent {
             this.game.player.removeFromInventory(item.name, 1);
             
             // Show notification
-            this.game.hudManager.showNotification('Used Mana Potion: +50 Mana');
+            this.game.hudManager.showNotification(`Used Mana Potion: +${manaAmount} Mana`);
+            
+            // Update inventory
+            this.updateInventoryItems();
+        } else if (item.name === 'Stamina Potion') {
+            // Restore stamina if the game has stamina system
+            if (this.game.player.getStamina && this.game.player.getMaxStamina && this.game.player.getStatsObject().setStamina) {
+                const staminaAmount = item.staminaAmount || 50;
+                const newStamina = this.game.player.getStamina() + staminaAmount;
+                const maxStamina = this.game.player.getMaxStamina();
+                this.game.player.getStatsObject().setStamina(Math.min(newStamina, maxStamina));
+                
+                // Remove item from inventory
+                this.game.player.removeFromInventory(item.name, 1);
+                
+                // Show notification
+                this.game.hudManager.showNotification(`Used Stamina Potion: +${staminaAmount} Stamina`);
+                
+                // Update inventory
+                this.updateInventoryItems();
+            } else {
+                this.game.hudManager.showNotification(`Cannot use ${item.name}: Stamina system not available`);
+            }
+        } else {
+            // Show item description
+            this.game.hudManager.showNotification(`Item: ${item.name}`);
+        }
+    }
+    
+    /**
+     * Equip an item from the inventory
+     * @param {Object} item - Item to equip
+     */
+    equipItem(item) {
+        // Check if item has a type
+        if (!item.type) {
+            this.game.hudManager.showNotification(`Cannot equip ${item.name}: Not an equippable item`);
+            return;
+        }
+        
+        // Try to equip the item
+        const success = this.game.player.inventory.equipItem(item);
+        
+        if (success) {
+            // Show notification
+            this.game.hudManager.showNotification(`Equipped ${item.name}`);
             
             // Update inventory
             this.updateInventoryItems();
         } else {
-            // Show item description
-            this.game.hudManager.showNotification(`Item: ${item.name}`);
+            this.game.hudManager.showNotification(`Failed to equip ${item.name}`);
+        }
+    }
+    
+    /**
+     * Drop an item from the inventory
+     * @param {Object} item - Item to drop
+     */
+    dropItem(item) {
+        // Confirm with the player
+        if (confirm(`Are you sure you want to drop ${item.name}?`)) {
+            // Remove item from inventory
+            const success = this.game.player.removeFromInventory(item.name, 1);
+            
+            if (success) {
+                // Show notification
+                this.game.hudManager.showNotification(`Dropped ${item.name}`);
+                
+                // Update inventory
+                this.updateInventoryItems();
+            } else {
+                this.game.hudManager.showNotification(`Failed to drop ${item.name}`);
+            }
         }
     }
     
@@ -340,6 +700,12 @@ export class InventoryUI extends UIComponent {
             // The ModelPreview class has its own dispose method that handles cleanup
             this.modelPreview.dispose();
             this.modelPreview = null;
+        }
+        
+        // Remove item popup if it exists
+        if (this.itemPopup && this.itemPopup.parentNode) {
+            this.itemPopup.parentNode.removeChild(this.itemPopup);
+            this.itemPopup = null;
         }
         
         // Remove event listeners
