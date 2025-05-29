@@ -473,34 +473,31 @@
 #connection-info-screen {
     display: none;
     flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: var(--padding-medium);
     width: 100%;
     height: 100%;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
-.connection-info-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 600px;
-    gap: 20px;
-    margin: 20px 0;
-}
-
+/* Connection status box - now in the QR section */
 .connection-status-box {
     background-color: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
     padding: var(--padding-medium);
     text-align: center;
+    margin-top: var(--margin-medium);
 }
 
-.connected-players-box {
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    padding: var(--padding-medium);
+/* Host controls section */
+#host-controls {
+    margin-top: var(--margin-medium);
+    margin-bottom: var(--margin-medium);
+}
+
+/* Button container in players section */
+.players-section .button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--margin-medium);
 }
 
 .status-connected {

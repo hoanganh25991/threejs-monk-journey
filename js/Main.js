@@ -69,15 +69,41 @@ class Main {
         if (urlParams.get('join') === 'true') {
             console.debug("Direct multiplayer join detected, skipping main menu");
             
-            // Simulate clicking the multiplayer button
-            const multiplayerButton = document.getElementById('multiplayer-button');
-            if (multiplayerButton) {
-                console.debug("Automatically opening multiplayer UI");
-                // The MultiplayerUIManager will handle the rest based on URL parameters
-                multiplayerButton.click();
+            // Check if we have a connect-id parameter
+            const connectId = urlParams.get('connect-id');
+            if (connectId) {
+                console.debug("Direct connection ID found:", connectId);
+                
+                // Wait a short moment for game systems to initialize
+                setTimeout(() => {
+                    // If the game has a multiplayer manager, connect directly
+                    if (game.multiplayerManager) {
+                        console.debug("Directly connecting to game with ID:", connectId);
+                        
+                        // Join the game directly without showing the host/join screen
+                        game.multiplayerManager.joinGame(connectId);
+                    } else {
+                        console.error("MultiplayerManager not available, falling back to UI flow");
+                        // Fallback to clicking the multiplayer button
+                        const multiplayerButton = document.getElementById('multiplayer-button');
+                        if (multiplayerButton) {
+                            multiplayerButton.click();
+                        } else {
+                            this.showRegularMainMenu(game);
+                        }
+                    }
+                }, 500); // Short delay to ensure game systems are ready
             } else {
-                console.error("Multiplayer button not found, falling back to main menu");
-                this.showRegularMainMenu(game);
+                // No connect-id, just open the multiplayer UI
+                console.debug("No connection ID found, opening multiplayer UI");
+                const multiplayerButton = document.getElementById('multiplayer-button');
+                if (multiplayerButton) {
+                    console.debug("Automatically opening multiplayer UI");
+                    multiplayerButton.click();
+                } else {
+                    console.error("Multiplayer button not found, falling back to main menu");
+                    this.showRegularMainMenu(game);
+                }
             }
         } else {
             // Show regular main menu

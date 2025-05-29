@@ -420,24 +420,32 @@
                 <h2>Multiplayer Connection</h2>
                 <button id="close-connection-info-btn" class="circle-btn" title="Close">↩️</button>
             </div>
-            <div class="connection-info-container">
-                <div class="connection-status-box">
-                    <h3>Connection Status</h3>
-                    <p id="connection-info-status">Connected</p>
-                    <p id="connection-role-info"></p>
+            <div class="host-game-layout">
+                <div class="qr-section">
+                    <div id="connection-info-qr" class="centered-qr"></div>
+                    <div class="connection-code-row">
+                        <div id="connection-info-code" class="connection-code" title="Click to copy"></div>
+                        <button id="connection-copy-code-btn" class="small-btn" title="Copy to clipboard">📋</button>
+                    </div>
+                    <div class="connection-status-box">
+                        <p id="connection-info-status">Connected</p>
+                        <p id="connection-role-info"></p>
+                    </div>
                 </div>
-                
-                <div class="connected-players-box">
+                <div class="players-section">
                     <h3>Connected Players</h3>
                     <div id="connection-info-players" class="connected-players-list">
                         <!-- Players will be added here dynamically -->
                     </div>
+                    <div class="host-action" id="host-controls">
+                        <!-- Host-specific controls will be shown here when user is host -->
+                    </div>
+                    <div class="button-container">
+                        <button id="disconnect-btn" class="danger-button">Disconnect</button>
+                    </div>
                 </div>
             </div>
-            
-            <div class="button-container">
-                <button id="disconnect-btn" class="danger-button">Disconnect</button>
-            </div>
+            <div id="connection-info-status-bar" class="connection-status"></div>
         </div>
     </div>
 

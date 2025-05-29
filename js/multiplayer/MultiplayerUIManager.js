@@ -489,6 +489,23 @@ export class MultiplayerUIManager {
         document.getElementById('scan-qr-view').style.display = 'none';
         document.getElementById('manual-code-view').style.display = 'flex';
         
+        // Clear input fields to prepare for new connection
+        const manualInput = document.getElementById('manual-connection-input');
+        if (manualInput) {
+            manualInput.value = '';
+        }
+        
+        const quickInput = document.getElementById('quick-connection-input');
+        if (quickInput) {
+            quickInput.value = '';
+        }
+        
+        // Reset connect button state
+        const manualConnectBtn = document.getElementById('manual-connect-btn');
+        if (manualConnectBtn) {
+            manualConnectBtn.disabled = false;
+        }
+        
         // Set up back button
         const backButton = document.getElementById('back-from-join-btn');
         if (backButton) {
@@ -499,9 +516,8 @@ export class MultiplayerUIManager {
         }
         
         // Focus on the input field
-        const input = document.getElementById('manual-connection-input');
-        if (input) {
-            input.focus();
+        if (manualInput) {
+            manualInput.focus();
         }
         
         this.updateConnectionStatus('Enter the connection code to join the game', 'join-connection-status');
@@ -533,15 +549,29 @@ export class MultiplayerUIManager {
             
             this.updateConnectionStatus('Initializing camera...', 'join-connection-status');
             
-            // Load HTML5-QRCode library if not already loaded
-            if (typeof Html5Qrcode === 'undefined') {
-                await this.loadQRScannerJS();
-            }
+            // Load HTML5-QRCode library if not already loaded - do this in parallel
+            const libraryPromise = (typeof Html5Qrcode === 'undefined') ? this.loadQRScannerJS() : Promise.resolve();
             
-            // Get available cameras and set up camera selection
+            // Start a timeout to show manual entry if camera takes too long
+            const timeoutPromise = new Promise((resolve) => {
+                setTimeout(() => {
+                    console.debug('Camera initialization taking longer than expected, showing manual entry option');
+                    // Show manual code view alongside camera view
+                    const manualCodeView = document.getElementById('manual-code-view');
+                    if (manualCodeView) {
+                        manualCodeView.style.display = 'flex';
+                    }
+                    resolve();
+                }, 3000); // 3 seconds timeout
+            });
+            
+            // Wait for library to load
+            await libraryPromise;
+            
+            // Get available cameras and set up camera selection - prioritize back camera
             await this.getAvailableCameras();
             
-            // Start scanner automatically
+            // Start scanner automatically with higher FPS for better detection
             await this.startQRScanner();
             
             // Hide loading overlay
@@ -722,10 +752,19 @@ export class MultiplayerUIManager {
                 }
             }
             
-            // Start the scanner
+            // Start the scanner with improved settings
             await this.qrCodeScanner.start(
                 cameraConfig,
-                { fps: 10, aspectRatio: 1},
+                { 
+                    fps: 15,                // Higher FPS for better detection
+                    qrbox: { width: 250, height: 250 }, // Optimal size for QR detection
+                    aspectRatio: 1,         // Square aspect ratio
+                    formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], // Only scan for QR codes
+                    disableFlip: false,     // Allow mirrored QR codes
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true // Use native API if available
+                    }
+                },
                 (decodedText) => {
                     // Stop scanning immediately when QR code is detected
                     this.stopQRScanner();
@@ -735,17 +774,29 @@ export class MultiplayerUIManager {
                     let connectId = decodedText;
                     
                     try {
-                        // Try to parse as URL
-                        if (decodedText.includes('?join=true&connect-id=')) {
+                        // Try to parse as URL - more flexible URL detection
+                        if (decodedText.startsWith('http') || decodedText.includes('?join=') || decodedText.includes('connect-id=')) {
+                            console.debug('Detected possible URL in QR code:', decodedText);
+                            
+                            // Create URL object to parse parameters
                             const url = new URL(decodedText);
                             const params = new URLSearchParams(url.search);
+                            
+                            // Check for connect-id parameter
                             if (params.get('connect-id')) {
                                 connectId = params.get('connect-id');
                                 console.debug('Extracted connection ID from URL:', connectId);
                             }
                         }
                     } catch (e) {
-                        console.debug('Not a URL, using as direct connection ID');
+                        console.debug('Not a valid URL or parsing failed:', e);
+                        console.debug('Using scanned text as direct connection ID');
+                    }
+                    
+                    // Show the extracted connection ID in the UI
+                    const manualInput = document.getElementById('manual-connection-input');
+                    if (manualInput) {
+                        manualInput.value = connectId;
                     }
                     
                     // Auto-connect with the scanned connection ID
