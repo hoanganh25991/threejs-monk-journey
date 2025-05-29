@@ -23,9 +23,6 @@ export class PlayerSerializer {
         return {
             stats: { ...player.stats },
             position: position,
-            inventory: [...player.getInventory()], // Use getInventory() method to get the array
-            equipment: { ...player.equipment },
-            gold: player.gold,
             level: player.stats.level,
             experience: player.stats.experience,
             skills: player.skills.getSkills().map(skill => ({
@@ -70,44 +67,7 @@ export class PlayerSerializer {
             player.setPosition(0, 0, 0);
         }
         
-        // Load inventory
-        if (player.inventory) {
-            console.debug('Loading player inventory');
-            if (player.inventory.inventory) {
-                player.inventory.inventory = []; // Clear the inventory array
-            } else {
-                player.inventory.inventory = [];
-            }
-            
-            if (playerData.inventory && Array.isArray(playerData.inventory)) {
-                console.debug(`Loading ${playerData.inventory.length} inventory items`);
-                playerData.inventory.forEach(item => {
-                    if (player.addToInventory) {
-                        player.addToInventory(item);
-                    } else {
-                        player.inventory.inventory.push(item);
-                    }
-                });
-            }
-        }
-        
-        // Load equipment
-        if (playerData.equipment) {
-            console.debug('Loading player equipment');
-            // Check if player.equipment exists
-            if (!player.equipment) {
-                player.equipment = {};
-            }
-            // Update equipment properties instead of replacing the object
-            Object.keys(playerData.equipment).forEach(key => {
-                player.equipment[key] = playerData.equipment[key];
-            });
-        }
-        
         // Load additional player data if available
-        if (playerData.gold !== undefined) {
-            player.gold = playerData.gold;
-        }
         
         if (playerData.level !== undefined) {
             player.stats.level = playerData.level;

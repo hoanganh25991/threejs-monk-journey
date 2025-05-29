@@ -17,6 +17,7 @@ export class ItemDropManager {
         this.game = game;
         this.droppedItems = new Map(); // Map of item ID to dropped item data
         this.lightBeams = new Map(); // Map of item ID to light beam effect
+        this.autoPickupDelay = 3; // Delay in seconds before auto-pickup (was instant before)
     }
 
     /**
@@ -34,10 +35,10 @@ export class ItemDropManager {
         itemGroup.position.x += (Math.random() - 0.5) * 0.5;
         itemGroup.position.z += (Math.random() - 0.5) * 0.5;
         
-        // Ensure item is above ground
+        // Ensure item is above ground and more visible
         if (this.game && this.game.world) {
             const terrainHeight = this.game.world.getTerrainHeight(position.x, position.z);
-            itemGroup.position.y = terrainHeight + 0.25; // Slightly above ground
+            itemGroup.position.y = terrainHeight + 0.5; // Higher above ground for better visibility
         }
         
         // Create the item model
@@ -58,10 +59,9 @@ export class ItemDropManager {
             dropTime: Date.now()
         });
         
-        // Add light beam for rare+ items
-        if (['rare', 'epic', 'legendary', 'mythic'].includes(item.rarity)) {
-            this.addLightBeamEffect(item, itemGroup);
-        }
+        // Add light beam for all items to make them more visible
+        // Different colors/intensities based on rarity
+        this.addLightBeamEffect(item, itemGroup);
         
         // Show notification
         if (this.game && this.game.hudManager) {
@@ -72,17 +72,20 @@ export class ItemDropManager {
     }
     
     /**
-     * Add a light beam effect for rare+ items
+     * Add a light beam effect for items
      * @param {Item} item - The item
      * @param {THREE.Group} itemGroup - The item's group
      */
     addLightBeamEffect(item, itemGroup) {
         // Get color based on rarity
         const rarityColors = {
-            rare: 0x0070DD,
-            epic: 0xA335EE,
-            legendary: 0xFF8000,
-            mythic: 0xFF0000
+            common: 0xFFFFFF,    // White for common
+            uncommon: 0x1EFF00,  // Green for uncommon
+            magic: 0x0070DD,     // Blue for magic
+            rare: 0x0070DD,      // Blue for rare
+            epic: 0xA335EE,      // Purple for epic
+            legendary: 0xFF8000, // Orange for legendary
+            mythic: 0xFF0000     // Red for mythic
         };
         
         const color = rarityColors[item.rarity] || 0xFFFFFF;
@@ -123,6 +126,24 @@ export class ItemDropManager {
             // Update item model animations
             if (itemData.model) {
                 itemData.model.updateAnimations(delta);
+                
+                // Make items float and rotate for better visibility
+                const time = Date.now() * 0.001; // Convert to seconds
+                const floatHeight = Math.sin(time * 2) * 0.1; // Gentle floating effect
+                
+                // Apply floating effect
+                if (itemData.group) {
+                    // Store the base height if not already stored
+                    if (!itemData.baseHeight) {
+                        itemData.baseHeight = itemData.group.position.y;
+                    }
+                    
+                    // Apply floating effect
+                    itemData.group.position.y = itemData.baseHeight + floatHeight;
+                    
+                    // Apply rotation effect
+                    itemData.group.rotation.y += delta * 1.0; // Rotate items slowly
+                }
             }
             
             // Update light beam effect
@@ -148,8 +169,12 @@ export class ItemDropManager {
                 
                 const distance = playerPosition.distanceTo(itemPosition);
                 
-                // Auto-pickup if player is close enough
-                if (distance < 1.5) {
+                // Auto-pickup if player is close enough and item has been on the ground for the delay period
+                const currentTime = Date.now();
+                const itemDropTime = itemData.dropTime || 0;
+                const timeOnGround = (currentTime - itemDropTime) / 1000; // Convert to seconds
+                
+                if (distance < 1.5 && timeOnGround >= this.autoPickupDelay) {
                     this.pickupItem(id);
                 }
             }

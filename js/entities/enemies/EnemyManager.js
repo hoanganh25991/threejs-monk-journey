@@ -1,8 +1,17 @@
 import * as THREE from 'three';
 import { Enemy } from './Enemy.js';
-import { ZONE_ENEMIES, ZONE_BOSSES, ENEMY_TYPES, BOSS_TYPES, ZONE_DIFFICULTY_MULTIPLIERS } from '../../config/game-balance.js';
-import { DROP_CHANCES, REGULAR_DROP_TABLE, BOSS_DROP_TABLE } from '../../config/drops.js';
-import { COMBAT_BALANCE, DIFFICULTY_SCALING } from '../../config/game-balance.js';
+import { 
+    ZONE_ENEMIES, 
+    ZONE_BOSSES, 
+    ENEMY_TYPES, 
+    BOSS_TYPES, 
+    ZONE_DIFFICULTY_MULTIPLIERS,
+    DROP_CHANCES, 
+    REGULAR_DROP_TABLE, 
+    BOSS_DROP_TABLE,
+    COMBAT_BALANCE, 
+    DIFFICULTY_SCALING 
+} from '../../config/game-balance.js';
 import { ItemGenerator } from '../items/ItemGenerator.js';
 
 /**

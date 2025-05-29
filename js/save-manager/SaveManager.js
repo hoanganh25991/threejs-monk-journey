@@ -3,6 +3,7 @@ import { LocalStorageAdapter } from './LocalStorageAdapter.js';
 import { PlayerSerializer } from './serializers/PlayerSerializer.js';
 import { QuestSerializer } from './serializers/QuestSerializer.js';
 import { SettingsSerializer } from './serializers/SettingsSerializer.js';
+import { InventorySerializer } from './serializers/InventorySerializer.js';
 import { SaveOperationProgress } from './utils/SaveOperationProgress.js';
 import { STORAGE_KEYS } from '../config/storage-keys.js';
 
@@ -103,12 +104,17 @@ export class SaveManager extends ISaveSystem {
             !autoSave && this.saveProgress.start('Preparing to save hero data...');
             
             // Create save data object (only hero-related data)
-            !autoSave && this.saveProgress.update('Collecting player data...', 20);
+            !autoSave && this.saveProgress.update('Collecting player data...', 15);
             await this.delay(50); // Small delay for UI update
             
             const playerData = PlayerSerializer.serialize(this.game.player);
             
-            !autoSave && this.saveProgress.update('Collecting quest data...', 40);
+            !autoSave && this.saveProgress.update('Collecting inventory data...', 30);
+            await this.delay(50); // Small delay for UI update
+            
+            const inventoryData = InventorySerializer.serialize(this.game.player);
+            
+            !autoSave && this.saveProgress.update('Collecting quest data...', 45);
             await this.delay(50); // Small delay for UI update
             
             const questData = QuestSerializer.serialize(this.game.questManager);
@@ -120,6 +126,7 @@ export class SaveManager extends ISaveSystem {
             
             const saveData = {
                 player: playerData,
+                inventory: inventoryData,
                 quests: questData,
                 settings: settingsData,
                 timestamp: currentTime,
@@ -212,7 +219,7 @@ export class SaveManager extends ISaveSystem {
             }
             
             // Load player data
-            this.loadProgress.update('Loading player data...', 50);
+            this.loadProgress.update('Loading player data...', 45);
             await this.delay(150); // Small delay for UI update
             
             if (saveData.player) {
@@ -220,11 +227,23 @@ export class SaveManager extends ISaveSystem {
                 PlayerSerializer.deserialize(this.game.player, saveData.player);
             } else {
                 console.debug('No player data found in save', 'warn');
-                this.loadProgress.update('Warning: No player data found', 55);
+                this.loadProgress.update('Warning: No player data found', 50);
+            }
+            
+            // Load inventory data
+            this.loadProgress.update('Loading inventory data...', 55);
+            await this.delay(150); // Small delay for UI update
+            
+            if (saveData.inventory) {
+                console.debug('Loading inventory data...');
+                InventorySerializer.deserialize(this.game.player, saveData.inventory);
+            } else {
+                console.debug('No inventory data found in save', 'warn');
+                this.loadProgress.update('Warning: No inventory data found', 60);
             }
             
             // Load quest data
-            this.loadProgress.update('Loading quest data...', 70);
+            this.loadProgress.update('Loading quest data...', 65);
             await this.delay(150); // Small delay for UI update
             
             if (saveData.quests) {
