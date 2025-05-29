@@ -12,11 +12,12 @@ export class TeleportManager {
      * Create a new TeleportManager
      * @param {THREE.Scene} scene - The Three.js scene
      * @param {import("./../WorldManager.js").WorldManager} worldManager - Reference to the world manager
+     * @param {import("./../../game/Game.js").Game} game
      */
-    constructor(scene, worldManager) {
+    constructor(scene, worldManager, game) {
         this.scene = scene;
         this.worldManager = worldManager;
-        this.game = null;
+        this.game = game;
         
         // Create portal model factory
         this.portalModelFactory = new PortalModelFactory(scene);
@@ -61,14 +62,6 @@ export class TeleportManager {
     }
     
     /**
-     * Set the game reference
-     * @param {Game} game - The game instance
-     */
-    setGame(game) {
-        this.game = game;
-    }
-    
-    /**
      * Setup touch and click event listeners for portal interaction
      */
     setupTouchClickEvents() {
@@ -103,13 +96,82 @@ export class TeleportManager {
             return;
         }
         
+        // Skip if game is not initialized
+        if (!this.game) {
+            console.warn("Cannot teleport: game is not initialized");
+            return;
+        }
+        
         // Prevent default behavior for touch events
         if (event.type === 'touchend') {
             event.preventDefault();
         }
         
         console.debug('Touch/click detected with active portal - teleporting player');
-        this.teleportPlayer(this.activePortal);
+        
+        // Check if we're in multiplayer mode and have remote players
+        if (this.game.multiplayerManager && this.game.multiplayerManager.remotePlayerManager) {
+            const remotePlayerManager = this.game.multiplayerManager.remotePlayerManager;
+            const remotePlayers = remotePlayerManager.getPlayers();
+            
+            // Check if any remote players are near the portal
+            let closestPlayer = null;
+            let closestDistance = this.interactionRadius;
+            
+            // First check the local player
+            if (this.game.player && this.game.player.getPosition) {
+                try {
+                    const playerPos = this.game.player.getPosition();
+                    const portalPos = this.activePortal.sourcePosition;
+                    const distance = Math.sqrt(
+                        Math.pow(playerPos.x - portalPos.x, 2) + 
+                        Math.pow(playerPos.z - portalPos.z, 2)
+                    );
+                    
+                    if (distance < closestDistance) {
+                        closestPlayer = this.game.player;
+                        closestDistance = distance;
+                    }
+                } catch (error) {
+                    console.warn("Error checking local player position:", error);
+                }
+            }
+            
+            // Then check remote players
+            remotePlayers.forEach((remotePlayer, peerId) => {
+                if (remotePlayer && remotePlayer.getPosition) {
+                    try {
+                        const playerPos = remotePlayer.getPosition();
+                        const portalPos = this.activePortal.sourcePosition;
+                        const distance = Math.sqrt(
+                            Math.pow(playerPos.x - portalPos.x, 2) + 
+                            Math.pow(playerPos.z - portalPos.z, 2)
+                        );
+                        
+                        if (distance < closestDistance) {
+                            closestPlayer = remotePlayer;
+                            closestDistance = distance;
+                        }
+                    } catch (error) {
+                        console.warn(`Error checking remote player ${peerId} position:`, error);
+                    }
+                }
+            });
+            
+            // Teleport the closest player if one was found
+            if (closestPlayer) {
+                console.debug(`Teleporting closest player (distance: ${closestDistance.toFixed(2)})`);
+                this.teleportPlayer(this.activePortal, closestPlayer);
+            } else {
+                console.debug("No players found near the portal");
+            }
+        } else if (this.game.player) {
+            // Default behavior - teleport local player if it exists
+            console.debug("Teleporting local player (no multiplayer detected)");
+            this.teleportPlayer(this.activePortal, this.game.player);
+        } else {
+            console.warn("Cannot teleport: no valid player found");
+        }
     }
     
     /**
@@ -490,63 +552,104 @@ export class TeleportManager {
      * @param {THREE.Vector3} playerPosition - Current player position
      */
     checkPlayerInteraction(portal, playerPosition) {
-        // Calculate distance to portal
-        const distance = playerPosition.distanceTo(portal.sourcePosition);
+        // Validate inputs
+        if (!portal || !portal.sourcePosition || !playerPosition) {
+            return;
+        }
         
-        // Check if player is within interaction radius
-        if (distance <= this.interactionRadius) {
-            // Check cooldown
-            const currentTime = Date.now();
-            if (currentTime - this.lastTeleportTime < this.teleportCooldown) {
-                return; // Still on cooldown
-            }
+        try {
+            // Calculate distance to portal
+            const distance = playerPosition.distanceTo(portal.sourcePosition);
             
-            // Check if this is a new interaction (not already standing in portal)
-            if (currentTime - portal.lastInteractionTime > 1000) {
-                portal.lastInteractionTime = currentTime;
-                
-                // Show teleport prompt
-                if (this.game && this.game.hudManager) {
-                    this.game.hudManager.showNotification(
-                        `${portal.targetName}`,
-                        5000
-                    );
+            // Check if player is within interaction radius
+            if (distance <= this.interactionRadius) {
+                // Check cooldown
+                const currentTime = Date.now();
+                if (currentTime - this.lastTeleportTime < this.teleportCooldown) {
+                    return; // Still on cooldown
                 }
                 
-                // Store the active portal for click/touch interaction
-                this.activePortal = portal;
+                // Initialize lastInteractionTime if it doesn't exist
+                if (!portal.lastInteractionTime) {
+                    portal.lastInteractionTime = 0;
+                }
                 
-                // Check for key press (handled by game's input manager)
-                if (this.game && this.game.inputManager) {
-                    // Check if E key is pressed
-                    if (this.game.inputManager.isKeyPressed('KeyE')) {
-                        console.debug('E key pressed - teleporting player');
-                        this.teleportPlayer(portal);
+                // Check if this is a new interaction (not already standing in portal)
+                if (currentTime - portal.lastInteractionTime > 1000) {
+                    portal.lastInteractionTime = currentTime;
+                    
+                    // Show teleport prompt
+                    if (this.game && this.game.hudManager) {
+                        this.game.hudManager.showNotification(
+                            `${portal.targetName}`,
+                            5000
+                        );
+                    }
+                    
+                    // Store the active portal for click/touch interaction
+                    this.activePortal = portal;
+                    
+                    // Check for key press (handled by game's input manager)
+                    if (this.game && this.game.inputManager && this.game.player) {
+                        // Check if E key is pressed
+                        if (this.game.inputManager.isKeyPressed('KeyE')) {
+                            console.debug('E key pressed - teleporting player');
+                            this.teleportPlayer(portal, this.game.player);
+                        }
                     }
                 }
+            } else {
+                // Player moved away from portal
+                if (portal === this.activePortal) {
+                    this.activePortal = null;
+                }
             }
-        } else {
-            // Player moved away from portal
-            if (portal === this.activePortal) {
-                this.activePortal = null;
-            }
+        } catch (error) {
+            console.warn("Error in checkPlayerInteraction:", error);
         }
     }
     
     /**
-     * Teleport the player to the target location
+     * Teleport a player to the target location
      * @param {Object} portal - The portal to teleport through
+     * @param {Object} [player] - The player to teleport (defaults to local player if not provided)
      */
-    teleportPlayer(portal) {
-        // Skip if no game or player
-        if (!this.game || !this.game.player) {
-            console.error("Cannot teleport: game or player is null");
+    teleportPlayer(portal, player) {
+        // Validate portal
+        if (!portal || !portal.sourceName || !portal.targetName || !portal.targetPosition) {
+            console.error("Cannot teleport: invalid portal data", portal);
             return;
         }
         
-        console.debug(`Starting teleport from ${portal.sourceName} to ${portal.targetName}`);
-        console.debug(`Current player position: ${this.game.player.getPosition().x}, ${this.game.player.getPosition().y}, ${this.game.player.getPosition().z}`);
-        console.debug(`Target position: ${portal.targetPosition.x}, ${portal.targetPosition.y}, ${portal.targetPosition.z}`);
+        // Use provided player or default to local player
+        const targetPlayer = player || (this.game ? this.game.player : null);
+        
+        // Skip if no game or player
+        if (!this.game) {
+            console.error("Cannot teleport: game is null");
+            return;
+        }
+        
+        if (!targetPlayer) {
+            console.error("Cannot teleport: player is null");
+            return;
+        }
+        
+        // Verify player has required methods
+        if (typeof targetPlayer.getPosition !== 'function' || typeof targetPlayer.setPosition !== 'function') {
+            console.error("Cannot teleport: player does not have required methods");
+            return;
+        }
+        
+        try {
+            const playerPosition = targetPlayer.getPosition();
+            console.debug(`Starting teleport from ${portal.sourceName} to ${portal.targetName}`);
+            console.debug(`Current player position: ${playerPosition.x}, ${playerPosition.y}, ${playerPosition.z}`);
+            console.debug(`Target position: ${portal.targetPosition.x}, ${portal.targetPosition.y}, ${portal.targetPosition.z}`);
+        } catch (error) {
+            console.error("Error getting player position:", error);
+            return;
+        }
         
         // Set cooldown
         this.lastTeleportTime = Date.now();
@@ -559,7 +662,7 @@ export class TeleportManager {
         
         // Store player's current position if teleporting to a multiplier zone
         if (isMultiplierPortal) {
-            this.lastPlayerPosition = this.game.player.getPosition().clone();
+            this.lastPlayerPosition = targetPlayer.getPosition().clone();
             this.activeMultiplier = portal.multiplier;
             this.currentDestinationTerrain = portal.destinationTerrain;
             console.debug(`Setting active multiplier to ${this.activeMultiplier}x`);
@@ -585,56 +688,66 @@ export class TeleportManager {
                 console.debug(`Adjusted target height to terrain: ${targetY}`);
             }
             
-            // Move player to target position
-            // Extract x, y, z coordinates from the Vector3 object
-            this.game.player.setPosition(
-                portal.targetPosition.x,
-                targetY,
-                portal.targetPosition.z
-            );
-            
-            // Force update the player's target position if it has one
-            if (this.game.player.movement && this.game.player.movement.targetPosition) {
-                this.game.player.movement.targetPosition.set(
+            try {
+                // Move player to target position
+                // Extract x, y, z coordinates from the Vector3 object
+                targetPlayer.setPosition(
                     portal.targetPosition.x,
                     targetY,
                     portal.targetPosition.z
                 );
-            }
-            
-            // Also update the player's model position directly if available
-            if (this.game.player.model && typeof this.game.player.model.setPosition === 'function') {
-                const position = new THREE.Vector3(portal.targetPosition.x, targetY, portal.targetPosition.z);
-                this.game.player.model.setPosition(position);
-                console.debug('Updated player model position directly');
-            }
-            
-            console.debug(`Teleported player to: ${portal.targetPosition.x}, ${targetY}, ${portal.targetPosition.z}`);
-            
-            // Force an immediate camera update if the player has a movement component
-            if (this.game.player.movement && typeof this.game.player.movement.updateCamera === 'function') {
-                this.game.player.movement.updateCamera();
-                console.debug('Forced camera update after teleport');
-            }
-            
-            // Show arrival notification
-            if (this.game && this.game.hudManager) {
-                this.game.hudManager.showNotification(
-                    `Arrived at ${portal.targetName}`,
-                    3000
-                );
                 
-                // If this is a multiplier portal, show additional notification
-                if (isMultiplierPortal) {
-                    this.game.hudManager.showNotification(
-                        `Enemy spawn rate: ${portal.multiplier}x`,
-                        5000
+                // Force update the player's target position if it has one
+                if (targetPlayer.movement && targetPlayer.movement.targetPosition) {
+                    targetPlayer.movement.targetPosition.set(
+                        portal.targetPosition.x,
+                        targetY,
+                        portal.targetPosition.z
                     );
+                }
+                
+                // Also update the player's model position directly if available
+                if (targetPlayer.model && typeof targetPlayer.model.setPosition === 'function') {
+                    const position = new THREE.Vector3(portal.targetPosition.x, targetY, portal.targetPosition.z);
+                    targetPlayer.model.setPosition(position);
+                    console.debug('Updated player model position directly');
+                }
+                
+                console.debug(`Successfully teleported player to: ${portal.targetPosition.x}, ${targetY}, ${portal.targetPosition.z}`);
+            } catch (error) {
+                console.error("Error teleporting player:", error);
+                return;
+            }
+            
+            // Only update camera and show notifications if this is the local player
+            const isLocalPlayer = targetPlayer === this.game.player;
+            
+            if (isLocalPlayer) {
+                // Force an immediate camera update if the player has a movement component
+                if (targetPlayer.movement && typeof targetPlayer.movement.updateCamera === 'function') {
+                    targetPlayer.movement.updateCamera();
+                    console.debug('Forced camera update after teleport');
+                }
+                
+                // Show arrival notification
+                if (this.game && this.game.hudManager) {
+                    this.game.hudManager.showNotification(
+                        `Arrived at ${portal.targetName}`,
+                        3000
+                    );
+                    
+                    // If this is a multiplier portal, show additional notification
+                    if (isMultiplierPortal) {
+                        this.game.hudManager.showNotification(
+                            `Enemy spawn rate: ${portal.multiplier}x`,
+                            5000
+                        );
+                    }
                 }
             }
             
-            // Zoom out minimap temporarily to show both locations
-            if (this.game && this.game.hudManager && 
+            // Zoom out minimap temporarily to show both locations (only for local player)
+            if (isLocalPlayer && this.game && this.game.hudManager && 
                 this.game.hudManager.components && 
                 this.game.hudManager.components.miniMapUI) {
                 
