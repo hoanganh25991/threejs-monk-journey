@@ -104,7 +104,7 @@ export class ItemDropManager {
         itemGroup.add(light);
         
         // Create light beam cylinder - straight beam (same radius top and bottom) and 3x longer (12 units)
-        const beamGeometry = new THREE.CylinderGeometry(0.2, 0.2, 12, 8, 1, true);
+        const beamGeometry = new THREE.CylinderGeometry(0.2, 0.2, 12 * 3, 8, 1, true);
         const beamMaterial = new THREE.MeshBasicMaterial({
             color: color,
             transparent: true,
@@ -112,15 +112,25 @@ export class ItemDropManager {
             side: THREE.DoubleSide
         });
         
-        const beam = new THREE.Mesh(beamGeometry, beamMaterial);
-        beam.position.set(0, 6, 0); // Position higher above the item to accommodate longer beam
-        itemGroup.add(beam);
+        // Create a separate group for the beam to keep it independent of item rotation
+        const beamGroup = new THREE.Group();
+        this.scene.add(beamGroup);
         
-        // Store reference to light beam
+        // Set beam group position to match item position
+        beamGroup.position.copy(itemGroup.position);
+        
+        // Create the beam and add it to the beam group
+        const beam = new THREE.Mesh(beamGeometry, beamMaterial);
+        beam.position.set(0, 6, 0); // Position higher above the item to accommodate the 3x longer beam (36 units)
+        beamGroup.add(beam);
+        
+        // Store reference to light beam and its group
         this.lightBeams.set(item.id, {
             light: light,
             beam: beam,
-            intensity: 1.0
+            beamGroup: beamGroup,
+            intensity: 1.0,
+            itemPosition: itemGroup.position.clone() // Store initial position
         });
     }
     
@@ -139,9 +149,15 @@ export class ItemDropManager {
             const distance = playerPosition.distanceTo(itemPosition);
             
             if (distance > 100) {
-                // Remove from scene
+                // Remove item group from scene
                 if (itemData.group) {
                     this.scene.remove(itemData.group);
+                }
+                
+                // Remove beam group from scene
+                const lightBeam = this.lightBeams.get(id);
+                if (lightBeam && lightBeam.beamGroup) {
+                    this.scene.remove(lightBeam.beamGroup);
                 }
                 
                 // Remove from maps
@@ -185,9 +201,17 @@ export class ItemDropManager {
                 
                 lightBeam.light.intensity = pulseIntensity;
                 
-                // Rotate the beam slightly
-                if (lightBeam.beam) {
-                    lightBeam.beam.rotation.y += delta * 0.5;
+                // Update beam group position to follow the item's position (only y-axis for floating)
+                if (lightBeam.beamGroup && itemData.group) {
+                    // Keep x and z coordinates the same as the original position
+                    lightBeam.beamGroup.position.x = lightBeam.itemPosition.x;
+                    lightBeam.beamGroup.position.z = lightBeam.itemPosition.z;
+                    
+                    // Only update y position to match the floating item
+                    lightBeam.beamGroup.position.y = itemData.group.position.y;
+                    
+                    // Ensure beam stays perfectly vertical (no rotation)
+                    lightBeam.beamGroup.rotation.set(0, 0, 0);
                 }
             }
             
@@ -221,9 +245,15 @@ export class ItemDropManager {
             }
         }
         
-        // Remove from scene
+        // Remove item group from scene
         if (itemData.group) {
             this.scene.remove(itemData.group);
+        }
+        
+        // Remove beam group from scene
+        const lightBeam = this.lightBeams.get(itemId);
+        if (lightBeam && lightBeam.beamGroup) {
+            this.scene.remove(lightBeam.beamGroup);
         }
         
         // Remove from maps
@@ -235,10 +265,16 @@ export class ItemDropManager {
      * Remove all dropped items
      */
     clear() {
-        // Remove all items from scene
+        // Remove all items and beam groups from scene
         for (const [id, itemData] of this.droppedItems.entries()) {
             if (itemData.group) {
                 this.scene.remove(itemData.group);
+            }
+            
+            // Remove beam group
+            const lightBeam = this.lightBeams.get(id);
+            if (lightBeam && lightBeam.beamGroup) {
+                this.scene.remove(lightBeam.beamGroup);
             }
         }
         
