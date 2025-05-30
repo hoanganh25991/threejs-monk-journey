@@ -5,26 +5,26 @@
 Monk Journey is an action RPG game where you play as a monk with powerful martial arts abilities. Navigate through procedurally generated terrains, defeat enemies, and master a variety of special skills to become the ultimate warrior monk.
 
 ![monk-journey](screenshots/monk-journey-061105-20250511.jpg)
-![monk-journey](screenshots/monk-journey-breath-of-heaven-20250518.png)
+![monk-journey](screenshots/monk-journey-breath-of-heaven-20250518.jpg)
 ![monk-journey](screenshots/monk-journey-061156-20250511.jpg)
 
 ### Skill Selection
-![monk-journey](screenshots/monk-journey-skill-selection-20250518.png)
+![monk-journey](screenshots/monk-journey-skill-selection-20250518.jpg)
 
 ### Skill Tree
-![monk-journey](screenshots/monk-journey-variant-selection-20250518.png)
+![monk-journey](screenshots/monk-journey-variant-selection-20250518.jpg)
 
 ### Inventory
-![monk-journey](screenshots/monk-journey-inventory-20250520.png)
+![monk-journey](screenshots/monk-journey-inventory-20250520.jpg)
 
 ### Model Preview
-![monk-journey](screenshots/monk-journey-model-preview-20250520.png)
+![monk-journey](screenshots/monk-journey-model-preview-20250520.jpg)
 
 ### Skill Preview
-![monk-journey](screenshots/monk-journey-skill-preview-20250520.png)
+![monk-journey](screenshots/monk-journey-skill-preview-20250520.jpg)
 
 ### Enemy Preview
-![monk-journey](screenshots/monk-journey-enemy-preview-20250520.png)
+![monk-journey](screenshots/monk-journey-enemy-preview-20250520.jpg)
 
 ### Orbit Control
 <img src="screenshots/monk-journey-orbit-control-212029-20250527.gif" alt="multiplayer" width="100%"/>
@@ -33,8 +33,8 @@ Monk Journey is an action RPG game where you play as a monk with powerful martia
 <img src="screenshots/monk-journey-multi-player-205942-20250527.gif" alt="multiplayer" width="100%"/>
 
 ### Item - Weapon/Armor/Assessory/Consumable
-![monk-journey](screenshots/monk-journey-item-equip-20250530.png)
-![monk-journey](screenshots/monk-journey-item-preview-20250530.png)
+![monk-journey](screenshots/monk-journey-item-equip-20250530.jpg)
+![monk-journey](screenshots/monk-journey-item-preview-20250530.jpg)
 
 ## Features
 
