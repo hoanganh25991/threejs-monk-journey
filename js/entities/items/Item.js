@@ -9,7 +9,8 @@ export class Item {
         this.icon = config.icon || '📦';
         this.level = config.level || 1;
         this.rarity = config.rarity || 'common'; // common, uncommon, rare, epic, legendary, mythic
-        
+        this.amount = config.amount || 1;
+
         // Base stats
         this.baseStats = config.baseStats || {};
         

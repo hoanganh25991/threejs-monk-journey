@@ -145,7 +145,7 @@ export class InventoryUI extends UIComponent {
             const equipButton = this.itemPopup.querySelector('.item-popup-equip');
             equipButton.addEventListener('click', () => {
                 if (this.currentItem && this.currentItem.type) {
-                    this.equipItem(this.currentItem);
+                    this.useItem(this.currentItem);
                     this.hideItemPopup();
                 }
             });
@@ -384,6 +384,7 @@ export class InventoryUI extends UIComponent {
         
         // Get player inventory
         const inventory = this.game.player.getInventory();
+        console.error({inventory})
         
         // Create a grid of slots first (6x5 grid = 30 slots)
         const totalSlots = 30;
@@ -595,38 +596,26 @@ export class InventoryUI extends UIComponent {
      * @param {Object} item - Item to consume
      */
     useItem(item) {
-        // Check item type and handle accordingly
-        if (!item.type && !item.consumable) {
-            // If item has no type and is not marked as consumable, try to determine type from name
-            if (item.name.includes('Potion')) {
-                item.type = 'consumable';
-            } else {
-                this.game.hudManager.showNotification(`Cannot use ${item.name}: Unknown item type`);
-                return;
-            }
-        }
-        
-        // Handle based on item type
         switch (item.type) {
             case 'weapon':
                 // Weapons should be equipped, not used
                 this.game.hudManager.showNotification(`${item.name} is a weapon. Use 'Equip' instead of 'Use'.`);
                 // Try to equip it automatically
-                this.equipItem(item);
+                this.useEquippableItem(item);
                 break;
                 
             case 'armor':
                 // Armor should be equipped, not used
                 this.game.hudManager.showNotification(`${item.name} is armor. Use 'Equip' instead of 'Use'.`);
                 // Try to equip it automatically
-                this.equipItem(item);
+                this.useEquippableItem(item);
                 break;
                 
             case 'accessory':
                 // Accessories should be equipped, not used
                 this.game.hudManager.showNotification(`${item.name} is an accessory. Use 'Equip' instead of 'Use'.`);
                 // Try to equip it automatically
-                this.equipItem(item);
+                this.useEquippableItem(item);
                 break;
                 
             case 'consumable':
@@ -640,7 +629,7 @@ export class InventoryUI extends UIComponent {
                 } else {
                     // For items with unknown type, try to equip
                     this.game.hudManager.showNotification(`Attempting to use ${item.name}`);
-                    this.equipItem(item);
+                    this.useEquippableItem(item);
                 }
                 break;
         }
@@ -757,7 +746,7 @@ export class InventoryUI extends UIComponent {
      * Equip an item from the inventory
      * @param {Object} item - Item to equip
      */
-    equipItem(item) {
+    useEquippableItem(item) {
         // Check if item has a type
         if (!item.type) {
             this.game.hudManager.showNotification(`Cannot equip ${item.name}: Not an equippable item`);
@@ -799,6 +788,8 @@ export class InventoryUI extends UIComponent {
             this.game.hudManager.showNotification(notificationText);
             
             // Update inventory and equipment display
+            console.error("removeFromInventory")
+            console.error(this.game.player.removeFromInventory(item.name, 1));
             this.updateInventoryItems();
             this.updateEquipmentSlots();
             
