@@ -12,17 +12,9 @@ export class PlayerSerializer {
             console.warn('Player object is null or undefined');
             return {};
         }
-        
-        // Create a default position if player.position is undefined
-        const position = player.position ? {
-            x: player.position.x,
-            y: player.position.y,
-            z: player.position.z
-        } : { x: 0, y: 0, z: 0 };
-        
         return {
             stats: { ...player.stats },
-            position: position,
+            position: player.getPosition(),
             level: player.stats.level,
             experience: player.stats.experience,
             skills: player.skills.getSkills().map(skill => ({
@@ -63,8 +55,6 @@ export class PlayerSerializer {
                 playerData.position.y || 0,
                 playerData.position.z || 0
             );
-        } else {
-            player.setPosition(0, 0, 0);
         }
         
         // Load additional player data if available
