@@ -491,8 +491,9 @@ export class Game {
     
     /**
      * Start the game
+     * @param {boolean} isLoadedGame - Whether this is a loaded game or a new game
      */
-    start() {
+    start(isLoadedGame = false) {
         console.debug("Game starting...");
         
         // Make sure the canvas is visible
@@ -508,8 +509,13 @@ export class Game {
         // Disable orbit controls when game starts
         // this.controls.enabled = false;
         
-        // Reset player position
-        this.player.setPosition(0, 2, 0);
+        // Only reset player position if this is a new game, not a loaded game
+        if (!isLoadedGame) {
+            console.debug("Starting new game - resetting player position to default");
+            this.player.setPosition(0, 1, 0);
+        } else {
+            console.debug("Starting loaded game - keeping saved player position");
+        }
         
         // Start the game loop
         this.state.setRunning();

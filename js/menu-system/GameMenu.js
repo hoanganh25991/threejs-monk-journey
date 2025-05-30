@@ -56,7 +56,8 @@ export class GameMenu extends IMenu {
                         }
                         
                         // Start the game with loaded data - this will set isPaused to false and start the game loop
-                        this.game.start();
+                        // Pass true to indicate this is a loaded game, so player position isn't reset
+                        this.game.start(true);
                         
                         // Make sure settings button is visible
                         const homeButton = document.getElementById('home-button');
@@ -85,7 +86,8 @@ export class GameMenu extends IMenu {
                     }
                     
                     // Start the game - this will set isPaused to false and start the game loop
-                    this.game.start();
+                    // Pass false to indicate this is a new game, so player position should be reset
+                    this.game.start(false);
                     
                     // Make sure settings button is visible
                     const homeButton = document.getElementById('home-button');
