@@ -384,7 +384,6 @@ export class InventoryUI extends UIComponent {
         
         // Get player inventory
         const inventory = this.game.player.getInventory();
-        console.error({inventory})
         
         // Create a grid of slots first (6x5 grid = 30 slots)
         const totalSlots = 30;
@@ -788,8 +787,6 @@ export class InventoryUI extends UIComponent {
             this.game.hudManager.showNotification(notificationText);
             
             // Update inventory and equipment display
-            console.error("removeFromInventory")
-            console.error(this.game.player.removeFromInventory(item.name, 1));
             this.updateInventoryItems();
             this.updateEquipmentSlots();
             
