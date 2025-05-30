@@ -512,7 +512,7 @@ export class Game {
         // Only reset player position if this is a new game, not a loaded game
         if (!isLoadedGame) {
             console.debug("Starting new game - resetting player position to default");
-            this.player.setPosition(0, 1, 0);
+            this.player.setPosition(0, 1, -13);
         } else {
             console.debug("Starting loaded game - keeping saved player position");
         }
