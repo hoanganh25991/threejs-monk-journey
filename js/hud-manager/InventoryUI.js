@@ -640,49 +640,122 @@ export class InventoryUI extends UIComponent {
      * @private
      */
     useConsumableItem(item) {
-        // Handle specific named potions first
-        if (item.name === 'Health Potion') {
-            // Heal player
-            const healAmount = item.healAmount || 50;
-            const newHealth = this.game.player.getHealth() + healAmount;
-            const maxHealth = this.game.player.getMaxHealth();
-            this.game.player.getStatsObject().setHealth(Math.min(newHealth, maxHealth));
-            
-            // Show notification
-            this.game.hudManager.showNotification(`Consumed Health Potion: +${healAmount} Health`);
-        } else if (item.name === 'Mana Potion') {
-            // Restore mana
-            const manaAmount = item.manaAmount || 50;
-            const newMana = this.game.player.getMana() + manaAmount;
-            const maxMana = this.game.player.getMaxMana();
-            this.game.player.getStatsObject().setMana(Math.min(newMana, maxMana));
-            
-            // Show notification
-            this.game.hudManager.showNotification(`Consumed Mana Potion: +${manaAmount} Mana`);
-        } else if (item.name === 'Stamina Potion') {
-            // Restore stamina if the game has stamina system
-            if (this.game.player.getStamina && this.game.player.getMaxStamina && this.game.player.getStatsObject().setStamina) {
-                const staminaAmount = item.staminaAmount || 50;
-                const newStamina = this.game.player.getStamina() + staminaAmount;
-                const maxStamina = this.game.player.getMaxStamina();
-                this.game.player.getStatsObject().setStamina(Math.min(newStamina, maxStamina));
-                
-                // Show notification
-                this.game.hudManager.showNotification(`Consumed Stamina Potion: +${staminaAmount} Stamina`);
-            } else {
-                this.game.hudManager.showNotification(`Cannot consume ${item.name}: Stamina system not available`);
-                return; // Exit early without consuming the item
+        let effectsApplied = false;
+        let effectsDescription = [];
+        
+        // Check for baseStats properties first (from item-templates.js)
+        if (item.baseStats) {
+            // Handle health restoration
+            if (item.baseStats.healthRestore) {
+                const healAmount = item.baseStats.healthRestore;
+                const newHealth = this.game.player.getHealth() + healAmount;
+                const maxHealth = this.game.player.getMaxHealth();
+                this.game.player.stats.setHealth(Math.min(newHealth, maxHealth));
+                effectsApplied = true;
+                effectsDescription.push(`+${healAmount} Health`);
             }
-        } else if (item.effects) {
-            // Handle generic consumable items with effects
-            let effectsApplied = false;
-            let effectsDescription = [];
             
+            // Handle mana/spirit restoration
+            if (item.baseStats.manaRestore) {
+                const manaAmount = item.baseStats.manaRestore;
+                const newMana = this.game.player.getMana() + manaAmount;
+                const maxMana = this.game.player.getMaxMana();
+                this.game.player.stats.setMana(Math.min(newMana, maxMana));
+                effectsApplied = true;
+                effectsDescription.push(`+${manaAmount} Mana/Spirit`);
+            }
+            
+            // Handle stamina restoration if the system exists
+            if (item.baseStats.staminaRestore) {
+                if (this.game.player.getStamina && this.game.player.getMaxStamina && this.game.player.stats.setStamina) {
+                    const staminaAmount = item.baseStats.staminaRestore;
+                    const newStamina = this.game.player.getStamina() + staminaAmount;
+                    const maxStamina = this.game.player.getMaxStamina();
+                    this.game.player.stats.setStamina(Math.min(newStamina, maxStamina));
+                    effectsApplied = true;
+                    effectsDescription.push(`+${staminaAmount} Stamina`);
+                } else {
+                    this.game.hudManager.showNotification(`Cannot use stamina effect: Stamina system not available`);
+                }
+            }
+        }
+        
+        // Check for useEffect property (from item-templates.js)
+        if (item.useEffect) {
+            // Handle direct resource restoration
+            if (item.useEffect.type === 'heal') {
+                const healAmount = item.useEffect.value || 0;
+                const newHealth = this.game.player.getHealth() + healAmount;
+                const maxHealth = this.game.player.getMaxHealth();
+                this.game.player.stats.setHealth(Math.min(newHealth, maxHealth));
+                effectsApplied = true;
+                effectsDescription.push(`+${healAmount} Health`);
+            }
+            
+            // Handle resource restoration (mana, spirit, etc.)
+            if (item.useEffect.type === 'resource') {
+                const resourceAmount = item.useEffect.value || 0;
+                const resourceType = item.useEffect.resource || 'mana';
+                
+                if (resourceType.toLowerCase() === 'mana' || resourceType.toLowerCase() === 'spirit') {
+                    const newMana = this.game.player.getMana() + resourceAmount;
+                    const maxMana = this.game.player.getMaxMana();
+                    this.game.player.stats.setMana(Math.min(newMana, maxMana));
+                    effectsApplied = true;
+                    effectsDescription.push(`+${resourceAmount} ${resourceType}`);
+                } else if (resourceType.toLowerCase() === 'stamina') {
+                    if (this.game.player.getStamina && this.game.player.getMaxStamina && this.game.player.stats.setStamina) {
+                        const newStamina = this.game.player.getStamina() + resourceAmount;
+                        const maxStamina = this.game.player.getMaxStamina();
+                        this.game.player.stats.setStamina(Math.min(newStamina, maxStamina));
+                        effectsApplied = true;
+                        effectsDescription.push(`+${resourceAmount} Stamina`);
+                    } else {
+                        this.game.hudManager.showNotification(`Cannot use stamina effect: Stamina system not available`);
+                    }
+                }
+                
+                // Handle secondary effects (like buffs)
+                if (item.useEffect.secondaryEffect) {
+                    const secondaryEffect = item.useEffect.secondaryEffect;
+                    if (secondaryEffect.type === 'buff') {
+                        const duration = secondaryEffect.duration || 30;
+                        this.game.player.addTemporaryStatBoost(secondaryEffect.stat, secondaryEffect.value, duration);
+                        effectsApplied = true;
+                        effectsDescription.push(`+${secondaryEffect.value} ${secondaryEffect.stat} for ${duration}s`);
+                    }
+                }
+            }
+            
+            // Handle buff effects
+            if (item.useEffect.type === 'buff') {
+                const duration = item.useEffect.duration || 30;
+                
+                // Handle single stat buff
+                if (item.useEffect.stat) {
+                    this.game.player.addTemporaryStatBoost(item.useEffect.stat, item.useEffect.value, duration);
+                    effectsApplied = true;
+                    effectsDescription.push(`+${item.useEffect.value} ${item.useEffect.stat} for ${duration}s`);
+                }
+                
+                // Handle multiple stat buffs
+                if (item.useEffect.stats && Array.isArray(item.useEffect.stats)) {
+                    item.useEffect.stats.forEach(statBuff => {
+                        this.game.player.addTemporaryStatBoost(statBuff.stat, statBuff.value, duration);
+                        effectsApplied = true;
+                        effectsDescription.push(`+${statBuff.value} ${statBuff.stat} for ${duration}s`);
+                    });
+                }
+            }
+        }
+        
+        // Fall back to the old effects system if needed
+        if (!effectsApplied && item.effects) {
             // Apply effects
             if (item.effects.health) {
                 const newHealth = this.game.player.getHealth() + item.effects.health;
                 const maxHealth = this.game.player.getMaxHealth();
-                this.game.player.getStatsObject().setHealth(Math.min(newHealth, maxHealth));
+                this.game.player.stats.setHealth(Math.min(newHealth, maxHealth));
                 effectsApplied = true;
                 effectsDescription.push(`+${item.effects.health} Health`);
             }
@@ -690,7 +763,7 @@ export class InventoryUI extends UIComponent {
             if (item.effects.mana) {
                 const newMana = this.game.player.getMana() + item.effects.mana;
                 const maxMana = this.game.player.getMaxMana();
-                this.game.player.getStatsObject().setMana(Math.min(newMana, maxMana));
+                this.game.player.stats.setMana(Math.min(newMana, maxMana));
                 effectsApplied = true;
                 effectsDescription.push(`+${item.effects.mana} Mana`);
             }
@@ -719,16 +792,47 @@ export class InventoryUI extends UIComponent {
                 effectsApplied = true;
                 effectsDescription.push(`+${item.effects.speed} Speed for ${duration}s`);
             }
-            
-            if (effectsApplied) {
-                // Show notification with effects details
-                const effectsText = effectsDescription.length > 0 ? `: ${effectsDescription.join(', ')}` : '';
-                this.game.hudManager.showNotification(`Consumed ${item.name}${effectsText}`);
-            } else {
-                this.game.hudManager.showNotification(`Consumed ${item.name}, but no effects were applied`);
+        }
+        
+        // Handle legacy named potions as a fallback
+        if (!effectsApplied) {
+            if (item.name === 'Health Potion') {
+                // Heal player
+                const healAmount = item.healAmount || 50;
+                const newHealth = this.game.player.getHealth() + healAmount;
+                const maxHealth = this.game.player.getMaxHealth();
+                this.game.player.stats.setHealth(Math.min(newHealth, maxHealth));
+                effectsApplied = true;
+                effectsDescription.push(`+${healAmount} Health`);
+            } else if (item.name === 'Mana Potion') {
+                // Restore mana
+                const manaAmount = item.manaAmount || 50;
+                const newMana = this.game.player.getMana() + manaAmount;
+                const maxMana = this.game.player.getMaxMana();
+                this.game.player.stats.setMana(Math.min(newMana, maxMana));
+                effectsApplied = true;
+                effectsDescription.push(`+${manaAmount} Mana`);
+            } else if (item.name === 'Stamina Potion') {
+                // Restore stamina if the game has stamina system
+                if (this.game.player.getStamina && this.game.player.getMaxStamina && this.game.player.stats.setStamina) {
+                    const staminaAmount = item.staminaAmount || 50;
+                    const newStamina = this.game.player.getStamina() + staminaAmount;
+                    const maxStamina = this.game.player.getMaxStamina();
+                    this.game.player.stats.setStamina(Math.min(newStamina, maxStamina));
+                    effectsApplied = true;
+                    effectsDescription.push(`+${staminaAmount} Stamina`);
+                } else {
+                    this.game.hudManager.showNotification(`Cannot consume ${item.name}: Stamina system not available`);
+                    return; // Exit early without consuming the item
+                }
             }
+        }
+        
+        // Show notification with effects details or generic message
+        if (effectsApplied) {
+            const effectsText = effectsDescription.length > 0 ? `: ${effectsDescription.join(', ')}` : '';
+            this.game.hudManager.showNotification(`Consumed ${item.name}${effectsText}`);
         } else {
-            // Generic consumable with no specific effects
             this.game.hudManager.showNotification(`Consumed ${item.name}`);
         }
         
