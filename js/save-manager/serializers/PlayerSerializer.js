@@ -12,9 +12,10 @@ export class PlayerSerializer {
             console.warn('Player object is null or undefined');
             return {};
         }
+        const { x, y, z } = player.getPosition()
         return {
             stats: { ...player.stats },
-            position: player.getPosition(),
+            position: { x, y, z },
             level: player.stats.level,
             experience: player.stats.experience,
             skills: player.skills.getSkills().map(skill => ({
@@ -69,20 +70,7 @@ export class PlayerSerializer {
         
         // Load skills if available
         if (playerData.skills && Array.isArray(playerData.skills) && player.skills) {
-            try {
-                player.skills.loadSkills(playerData.skills);
-            } catch (skillError) {
-                console.warn('Error loading skills:', skillError);
-            }
-        }
-        
-        // Load skills cooldowns if available
-        if (playerData.skills && Array.isArray(playerData.skills)) {
-            playerData.skills.forEach((savedSkill, index) => {
-                if (index < player.skills.length) {
-                    player.skills[index].currentCooldown = savedSkill.currentCooldown || 0;
-                }
-            });
+            player.skills.loadSkills(playerData.skills);
         }
         
         console.debug('Player data loaded successfully');

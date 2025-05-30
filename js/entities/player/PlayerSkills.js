@@ -690,6 +690,37 @@ export class PlayerSkills {
     }
     
     /**
+     * Loads skills from saved data
+     * @param {Array<Object>} savedSkills - Array of saved skill data
+     */
+    loadSkills(savedSkills) {
+        if (!Array.isArray(savedSkills)) {
+            console.warn('Invalid saved skills data:', savedSkills);
+            return;
+        }
+        
+        console.debug('Loading skills from saved data:', savedSkills);
+        
+        // Match saved skills with existing skills by name
+        savedSkills.forEach(savedSkill => {
+            const skill = this.skills.find(s => s.name === savedSkill.name);
+            if (skill) {
+                // Update skill properties from saved data
+                if (savedSkill.cooldown !== undefined) {
+                    skill.cooldown = savedSkill.cooldown;
+                }
+                if (savedSkill.currentCooldown !== undefined) {
+                    skill.currentCooldown = savedSkill.currentCooldown;
+                }
+                
+                console.debug(`Updated skill ${skill.name} with saved data`);
+            } else {
+                console.debug(`Skill ${savedSkill.name} from saved data not found in current skills`);
+            }
+        });
+    }
+    
+    /**
      * Adds a skill from a remote player to the active skills list
      * @param {Skill} skill - The skill instance to add
      */
