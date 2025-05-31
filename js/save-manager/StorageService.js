@@ -1,6 +1,7 @@
 import { LocalStorageAdapter } from './LocalStorageAdapter.js';
 import { GoogleDriveAdapter } from './GoogleDriveAdapter.js';
 import { STORAGE_KEYS } from '../config/storage-keys.js';
+import googleAuthManager from './GoogleAuthManager.js';
 
 /**
  * Centralized storage service for the entire application
@@ -26,6 +27,7 @@ export class StorageService {
         this.pendingSaves = new Map(); // Track pending save operations
         this.initialized = false;
         this.isSigningIn = false;
+        this.autoLoginAttempted = false;
         
         // Add event listeners for storage events
         window.addEventListener('storage', this.handleStorageEvent.bind(this));
@@ -61,6 +63,21 @@ export class StorageService {
             this.syncFromGoogleDrive().catch(error => {
                 console.error('Error syncing from Google Drive during init:', error);
             });
+        } else if (!this.autoLoginAttempted && googleAuthManager.shouldAttemptAutoLogin()) {
+            // Try auto-login if not already signed in and auto-login is enabled
+            this.autoLoginAttempted = true;
+            console.debug('Attempting auto-login to Google Drive');
+            
+            try {
+                const success = await this.signInToGoogle();
+                if (success) {
+                    console.debug('Auto-login successful');
+                } else {
+                    console.debug('Auto-login failed');
+                }
+            } catch (error) {
+                console.error('Error during auto-login:', error);
+            }
         }
     }
     

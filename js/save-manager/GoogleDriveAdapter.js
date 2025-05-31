@@ -1,5 +1,6 @@
 import { IStorageAdapter } from './IStorageAdapter.js';
 import { STORAGE_KEYS } from '../config/storage-keys.js';
+import googleAuthManager from './GoogleAuthManager.js';
 
 /**
  * Implementation of storage adapter using Google Drive API
@@ -82,6 +83,9 @@ export class GoogleDriveAdapter extends IStorageAdapter {
                         this.accessToken = tokenResponse.access_token;
                         this.isSignedIn = true;
                         
+                        // Record successful login for auto-login
+                        googleAuthManager.recordSuccessfulLogin();
+                        
                         // Ensure save folder exists - await to prevent race conditions
                         try {
                             await this.ensureSaveFolder();
@@ -104,6 +108,11 @@ export class GoogleDriveAdapter extends IStorageAdapter {
                     }));
                 }
             });
+            
+            // Check if auto-login should be attempted
+            if (googleAuthManager.shouldAttemptAutoLogin()) {
+                console.debug('Auto-login is enabled, will attempt to sign in automatically');
+            }
         } catch (error) {
             console.error('Error initializing Google API:', error);
         }
@@ -152,6 +161,9 @@ export class GoogleDriveAdapter extends IStorageAdapter {
             this.folderId = null;
             this.isFolderCheckInProgress = false;
             this.folderCheckPromise = null;
+            
+            // Record logout in auth manager
+            googleAuthManager.recordLogout();
             
             // Dispatch event for sign-out
             window.dispatchEvent(new CustomEvent('google-signout'));
