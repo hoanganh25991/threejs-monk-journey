@@ -6,6 +6,7 @@
 import { SettingsTab } from './SettingsTab.js';
 import { STORAGE_KEYS } from '../../config/storage-keys.js';
 import { DIFFICULTY_SCALING } from '../../config/game-balance.js';
+import storageService from '../../save-manager/StorageService.js';
 
 export class GameplayTab extends SettingsTab {
     /**
@@ -31,16 +32,19 @@ export class GameplayTab extends SettingsTab {
         this.updateToLatestButton = document.getElementById('update-to-latest-button');
         this.currentVersionSpan = document.getElementById('current-version');
         
-        this.init();
+        // Initialize storage service
+        storageService.init().then(() => {
+            this.init();
+        });
     }
     
     /**
      * Initialize the gameplay settings
-     * @returns {boolean} - True if initialization was successful
+     * @returns {Promise<boolean>} - Promise resolving to true if initialization was successful
      */
-    init() {
-        this.initializeDifficultySettings();
-        this.initializeReleaseSettings();
+    async init() {
+        await this.initializeDifficultySettings();
+        await this.initializeReleaseSettings();
         
         return true;
     }
@@ -49,7 +53,7 @@ export class GameplayTab extends SettingsTab {
      * Initialize difficulty settings
      * @private
      */
-    initializeDifficultySettings() {
+    async initializeDifficultySettings() {
         if (this.difficultySelect) {
             // Clear existing options
             while (this.difficultySelect.options.length > 0) {
@@ -65,7 +69,8 @@ export class GameplayTab extends SettingsTab {
             }
             
             // Set current difficulty (default to 'basic')
-            const currentDifficulty = localStorage.getItem(STORAGE_KEYS.DIFFICULTY) || 'basic';
+            const currentDifficulty = await storageService.loadData(STORAGE_KEYS.DIFFICULTY) || 'basic';
+            
             console.debug(`Loading difficulty setting: ${currentDifficulty}`);
             this.difficultySelect.value = currentDifficulty;
             
@@ -74,13 +79,14 @@ export class GameplayTab extends SettingsTab {
             if (!this.difficultySelect.value) {
                 console.debug('Invalid difficulty setting detected, defaulting to basic');
                 this.difficultySelect.value = 'basic';
-                localStorage.setItem(STORAGE_KEYS.DIFFICULTY, 'basic');
+                await storageService.saveData(STORAGE_KEYS.DIFFICULTY, 'basic');
             }
             
             // Add change event listener
-            this.difficultySelect.addEventListener('change', () => {
+            this.difficultySelect.addEventListener('change', async () => {
                 const selectedDifficulty = this.difficultySelect.value;
-                localStorage.setItem(STORAGE_KEYS.DIFFICULTY, selectedDifficulty);
+                // Store the value using storage service
+                await storageService.saveData(STORAGE_KEYS.DIFFICULTY, selectedDifficulty);
                 
                 // Apply difficulty settings immediately if game is available
                 if (this.game && this.game.enemyManager) {
@@ -97,12 +103,12 @@ export class GameplayTab extends SettingsTab {
         
         if (this.customSkillsCheckbox) {
             // Set current custom skills state (default is false)
-            const customSkillsEnabled = localStorage.getItem(STORAGE_KEYS.CUSTOM_SKILLS) === 'true';
+            const customSkillsEnabled = await storageService.loadData(STORAGE_KEYS.CUSTOM_SKILLS) || false;
             this.customSkillsCheckbox.checked = customSkillsEnabled;
             
             // Add change event listener
-            this.customSkillsCheckbox.addEventListener('change', () => {
-                localStorage.setItem(STORAGE_KEYS.CUSTOM_SKILLS, this.customSkillsCheckbox.checked);
+            this.customSkillsCheckbox.addEventListener('change', async () => {
+                await storageService.saveData(STORAGE_KEYS.CUSTOM_SKILLS, this.customSkillsCheckbox.checked);
                 
                 // Apply custom skills settings immediately if game is available
                 if (this.game && this.game.player && this.game.player.skills) {
@@ -119,7 +125,7 @@ export class GameplayTab extends SettingsTab {
             this.cameraZoomSlider.step = 1;  // 1 unit increments
             
             // Get stored zoom value or use default
-            const storedZoom = localStorage.getItem(STORAGE_KEYS.CAMERA_ZOOM);
+            const storedZoom = await storageService.loadData(STORAGE_KEYS.CAMERA_ZOOM);
             const defaultZoom = 20; // Default camera distance
             const currentZoom = storedZoom ? parseInt(storedZoom) : defaultZoom;
             
@@ -132,7 +138,7 @@ export class GameplayTab extends SettingsTab {
             }
             
             // Add event listener for zoom changes
-            this.cameraZoomSlider.addEventListener('input', () => {
+            this.cameraZoomSlider.addEventListener('input', async () => {
                 const zoomValue = parseInt(this.cameraZoomSlider.value);
                 
                 // Update the display value
@@ -141,7 +147,7 @@ export class GameplayTab extends SettingsTab {
                 }
                 
                 // Store the zoom value
-                localStorage.setItem(STORAGE_KEYS.CAMERA_ZOOM, zoomValue);
+                await storageService.saveData(STORAGE_KEYS.CAMERA_ZOOM, zoomValue);
                 
                 // Apply zoom immediately if game is available
                 if (this.game && this.game.hudManager && this.game.hudManager.components && this.game.hudManager.components.cameraControlUI) {
@@ -278,11 +284,12 @@ export class GameplayTab extends SettingsTab {
     /**
      * Save the gameplay settings
      */
-    saveSettings() {
+    async saveSettings() {
         if (this.difficultySelect) {
             // Save difficulty, defaulting to 'basic' if no valid selection
             const difficulty = this.difficultySelect.value || 'basic';
-            localStorage.setItem(STORAGE_KEYS.DIFFICULTY, difficulty);
+            // Store using storage service
+            await storageService.saveData(STORAGE_KEYS.DIFFICULTY, difficulty);
             
             // Update game difficulty if game is available
             if (this.game) {
@@ -296,18 +303,18 @@ export class GameplayTab extends SettingsTab {
         }
         
         if (this.customSkillsCheckbox) {
-            localStorage.setItem(STORAGE_KEYS.CUSTOM_SKILLS, this.customSkillsCheckbox.checked);
+            await storageService.saveData(STORAGE_KEYS.CUSTOM_SKILLS, this.customSkillsCheckbox.checked);
         }
         
         if (this.cameraZoomSlider) {
-            localStorage.setItem(STORAGE_KEYS.CAMERA_ZOOM, this.cameraZoomSlider.value);
+            await storageService.saveData(STORAGE_KEYS.CAMERA_ZOOM, parseInt(this.cameraZoomSlider.value));
         }
     }
     
     /**
      * Reset the gameplay settings to defaults
      */
-    resetToDefaults() {
+    async resetToDefaults() {
         if (this.difficultySelect) {
             this.difficultySelect.value = 'basic';
             console.debug('Reset difficulty to basic');
@@ -326,6 +333,6 @@ export class GameplayTab extends SettingsTab {
             }
         }
         
-        this.saveSettings();
+        await this.saveSettings();
     }
 }

@@ -18,7 +18,6 @@ import { SceneOptimizer } from './SceneOptimizer.js';
 import { LoadingManager } from './LoadingManager.js';
 import { RENDER_CONFIG } from '../config/render.js';
 import { MenuManager } from '../menu-system/MenuManager.js';
-import { isDebugMode } from '../utils/FlagUtils.js';
 import { InteractionSystem } from '../interaction/InteractionSystem.js';
 import { MultiplayerManager } from '../multiplayer/MultiplayerManager.js';
 import { ItemGenerator } from '../entities/items/ItemGenerator.js';
@@ -75,11 +74,6 @@ export class Game {
         
         // Default difficulty (will be updated in init)
         this.difficulty = 'medium';
-        
-        // Initialize storage service
-        storageService.init().then(() => {
-            this.loadInitialSettings();
-        });
     }
     
     /**
@@ -150,6 +144,9 @@ export class Game {
             
             // Update loading progress
             this.updateLoadingProgress(5, 'Initializing renderer...', 'Setting up WebGL');
+            await storageService.init();
+            await this.loadInitialSettings();
+
             
             // Initialize renderer with quality settings from localStorage or use 'ultra' as default
             const qualityLevel = localStorage.getItem('monk_journey_quality_level') || 'ultra';
@@ -184,7 +181,7 @@ export class Game {
             
             // Initialize performance manager (before other systems)
             this.performanceManager = new PerformanceManager(this);
-            this.performanceManager.init();
+            await this.performanceManager.init();
             
             this.updateLoadingProgress(20, 'Building world...', 'Generating terrain and environment');
             
@@ -309,32 +306,30 @@ export class Game {
      * Set up event listeners for window and document events
      */
     setupEventListeners() {
-        if (isDebugMode()) {
-            console.debug('Event listeners for PWA features are disabled in debug mode.');
-            return;
-        }
-        // Handle window resize
-        window.addEventListener('resize', () => this.onWindowResize());
+        return;
+
+        // // Handle window resize
+        // window.addEventListener('resize', () => this.onWindowResize());
         
-        // Handle visibility change events
-        document.addEventListener('visibilitychange', () => this.onVisibilityChange());
+        // // Handle visibility change events
+        // document.addEventListener('visibilitychange', () => this.onVisibilityChange());
         
-        // Handle mobile-specific events
-        window.addEventListener('pagehide', () => this.onPageHide());
-        window.addEventListener('pageshow', () => this.onPageShow());
+        // // Handle mobile-specific events
+        // window.addEventListener('pagehide', () => this.onPageHide());
+        // window.addEventListener('pageshow', () => this.onPageShow());
         
-        // Handle blur/focus events (additional fallback for some browsers)
-        window.addEventListener('blur', () => this.onBlur());
-        window.addEventListener('focus', () => this.onFocus());
+        // // Handle blur/focus events (additional fallback for some browsers)
+        // window.addEventListener('blur', () => this.onBlur());
+        // window.addEventListener('focus', () => this.onFocus());
     }
     
     /**
      * Request fullscreen mode for the game canvas
      * @returns {Promise} A promise that resolves when fullscreen is entered or rejects if there's an error
      */
-    requestFullscreen() {
-        if (isDebugMode()) {
-            console.debug('Fullscreen request is ignored in debug mode.');
+    async requestFullscreen() {
+        if (await storageService.loadData(STORAGE_KEYS.DEBUG_MODE)) {
+            console.warn('Fullscreen request is ignored in debug mode.');
             return Promise.resolve();
         }
         console.debug("Requesting fullscreen mode...");

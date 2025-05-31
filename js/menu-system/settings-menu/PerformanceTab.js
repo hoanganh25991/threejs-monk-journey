@@ -25,17 +25,38 @@ export class PerformanceTab extends SettingsTab {
         this.debugModeCheckbox = document.getElementById('debug-mode-checkbox');
         this.logEnabledCheckbox = document.getElementById('log-enabled-checkbox');
         
-        // Initialize storage service
-        storageService.init().then(() => {
-            this.init();
-        });
+        // Initialize storage service and tab
+        this.initializeTab();
+    }
+    
+    /**
+     * Initialize the tab with proper loading state
+     */
+    async initializeTab() {
+        try {
+            // Initialize storage service first
+            await storageService.init();
+            
+            // Initialize tab with loading indicator
+            await this.withProgress(
+                async () => this.initSettings(),
+                'load',
+                'Loading performance settings...'
+            );
+        } catch (error) {
+            console.error('Error initializing performance tab:', error);
+            // Show error in UI if available
+            if (this.game && this.game.ui && this.game.ui.notifications) {
+                this.game.ui.notifications.show('Error loading performance settings', 'error');
+            }
+        }
     }
     
     /**
      * Initialize the performance settings
      * @returns {Promise<boolean>} - Promise resolving to true if initialization was successful
      */
-    async init() {
+    async initSettings() {
         if (this.qualitySelect) {
             // Clear existing options
             while (this.qualitySelect.options.length > 0) {
@@ -57,28 +78,47 @@ export class PerformanceTab extends SettingsTab {
             
             // Add change event listener
             this.qualitySelect.addEventListener('change', async () => {
-                await storageService.saveData(STORAGE_KEYS.QUALITY_LEVEL, this.qualitySelect.value);
-                
-                // Apply quality settings immediately if game is available
-                if (this.game && this.game.renderer) {
-                    this.game.applyQualitySettings(this.qualitySelect.value);
-                }
+                // Show saving indicator
+                this.withProgress(
+                    async () => {
+                        await storageService.saveData(STORAGE_KEYS.QUALITY_LEVEL, this.qualitySelect.value);
+                        
+                        // Apply quality settings immediately if game is available
+                        if (this.game && this.game.renderer) {
+                            this.game.applyQualitySettings(this.qualitySelect.value);
+                        }
+                    },
+                    'save',
+                    'Saving quality settings...'
+                );
             });
         }
         
         if (this.adaptiveCheckbox) {
             // Set current adaptive quality state
             const adaptiveQuality = await storageService.loadData(STORAGE_KEYS.ADAPTIVE_QUALITY);
-            this.adaptiveCheckbox.checked = adaptiveQuality === 'true';
+            
+            // Handle both boolean and string values
+            // This ensures compatibility with both LocalStorageAdapter and GoogleDriveAdapter
+            this.adaptiveCheckbox.checked = adaptiveQuality === true || adaptiveQuality === 'true';
+            
+            console.debug(`Adaptive quality loaded: ${adaptiveQuality} (${typeof adaptiveQuality}), checkbox set to: ${this.adaptiveCheckbox.checked}`);
             
             // Add change event listener
             this.adaptiveCheckbox.addEventListener('change', async () => {
-                await storageService.saveData(STORAGE_KEYS.ADAPTIVE_QUALITY, this.adaptiveCheckbox.checked.toString());
-                
-                // Apply adaptive quality settings immediately if game is available
-                if (this.game && this.game.renderer) {
-                    this.game.useAdaptiveQuality = this.adaptiveCheckbox.checked;
-                }
+                // Show saving indicator
+                this.withProgress(
+                    async () => {
+                        await storageService.saveData(STORAGE_KEYS.ADAPTIVE_QUALITY, this.adaptiveCheckbox.checked.toString());
+                        
+                        // Apply adaptive quality settings immediately if game is available
+                        if (this.game && this.game.renderer) {
+                            this.game.useAdaptiveQuality = this.adaptiveCheckbox.checked;
+                        }
+                    },
+                    'save',
+                    'Saving adaptive quality settings...'
+                );
             });
         }
         
@@ -89,64 +129,116 @@ export class PerformanceTab extends SettingsTab {
             this.fpsSlider.value = parsedFPS;
             this.fpsValue.textContent = parsedFPS;
             
-            // Add input event listener
-            this.fpsSlider.addEventListener('input', async () => {
+            // Add input event listener with debounce
+            let fpsDebounceTimeout = null;
+            this.fpsSlider.addEventListener('input', () => {
                 const value = parseInt(this.fpsSlider.value);
                 this.fpsValue.textContent = value;
-                await storageService.saveData(STORAGE_KEYS.TARGET_FPS, value.toString());
                 
-                // Apply target FPS immediately if game is available
-                if (this.game) {
-                    this.game.targetFPS = value;
+                // Clear previous timeout
+                if (fpsDebounceTimeout) {
+                    clearTimeout(fpsDebounceTimeout);
                 }
+                
+                // Set new timeout for saving
+                fpsDebounceTimeout = setTimeout(() => {
+                    this.withProgress(
+                        async () => {
+                            await storageService.saveData(STORAGE_KEYS.TARGET_FPS, value.toString());
+                            
+                            // Apply target FPS immediately if game is available
+                            if (this.game) {
+                                this.game.targetFPS = value;
+                            }
+                        },
+                        'save',
+                        'Saving FPS settings...'
+                    );
+                }, 500); // Debounce for 500ms
             });
         }
         
         if (this.showPerformanceInfoCheckbox) {
             // Set current show performance info state
             const showPerformanceInfo = await storageService.loadData(STORAGE_KEYS.SHOW_PERFORMANCE_INFO);
-            this.showPerformanceInfoCheckbox.checked = showPerformanceInfo === 'true';
+            
+            // Handle both boolean and string values
+            // This ensures compatibility with both LocalStorageAdapter and GoogleDriveAdapter
+            this.showPerformanceInfoCheckbox.checked = showPerformanceInfo === true || showPerformanceInfo === 'true';
+            
+            console.debug(`Show performance info loaded: ${showPerformanceInfo} (${typeof showPerformanceInfo}), checkbox set to: ${this.showPerformanceInfoCheckbox.checked}`);
             
             // Add change event listener
             this.showPerformanceInfoCheckbox.addEventListener('change', async () => {
-                await storageService.saveData(STORAGE_KEYS.SHOW_PERFORMANCE_INFO, this.showPerformanceInfoCheckbox.checked.toString());
-                
-                // Apply performance info display settings immediately if game is available
-                if (this.game && this.game.ui) {
-                    this.game.ui.showPerformanceInfo = this.showPerformanceInfoCheckbox.checked;
-                }
+                // Show saving indicator
+                this.withProgress(
+                    async () => {
+                        await storageService.saveData(STORAGE_KEYS.SHOW_PERFORMANCE_INFO, this.showPerformanceInfoCheckbox.checked.toString());
+                        
+                        // Apply performance info display settings immediately if game is available
+                        if (this.game && this.game.ui) {
+                            this.game.ui.showPerformanceInfo = this.showPerformanceInfoCheckbox.checked;
+                        }
+                    },
+                    'save',
+                    'Saving performance info settings...'
+                );
             });
         }
         
         if (this.debugModeCheckbox) {
             // Set current debug mode state
             const debugMode = await storageService.loadData(STORAGE_KEYS.DEBUG_MODE);
-            this.debugModeCheckbox.checked = debugMode === 'true';
+            
+            // Handle both boolean and string values
+            // This ensures compatibility with both LocalStorageAdapter and GoogleDriveAdapter
+            this.debugModeCheckbox.checked = debugMode === true || debugMode === 'true';
+            
+            console.debug(`Debug mode loaded: ${debugMode} (${typeof debugMode}), checkbox set to: ${this.debugModeCheckbox.checked}`);
             
             // Add change event listener
             this.debugModeCheckbox.addEventListener('change', async () => {
-                await storageService.saveData(STORAGE_KEYS.DEBUG_MODE, this.debugModeCheckbox.checked.toString());
-                
-                // Apply debug mode settings immediately if game is available
-                if (this.game) {
-                    this.game.debugMode = this.debugModeCheckbox.checked;
-                }
+                // Show saving indicator
+                this.withProgress(
+                    async () => {
+                        await storageService.saveData(STORAGE_KEYS.DEBUG_MODE, this.debugModeCheckbox.checked.toString());
+                        
+                        // Apply debug mode settings immediately if game is available
+                        if (this.game) {
+                            this.game.debugMode = this.debugModeCheckbox.checked;
+                        }
+                    },
+                    'save',
+                    'Saving debug mode settings...'
+                );
             });
         }
         
         if (this.logEnabledCheckbox) {
             // Set current log enabled state, default to false for better performance
             const logEnabled = await storageService.loadData(STORAGE_KEYS.LOG_ENABLED);
-            this.logEnabledCheckbox.checked = logEnabled === 'true';
+            
+            // Handle both boolean and string values
+            // This ensures compatibility with both LocalStorageAdapter and GoogleDriveAdapter
+            this.logEnabledCheckbox.checked = logEnabled === true || logEnabled === 'true';
+            
+            console.debug(`Log enabled loaded: ${logEnabled} (${typeof logEnabled}), checkbox set to: ${this.logEnabledCheckbox.checked}`);
             
             // Add change event listener
             this.logEnabledCheckbox.addEventListener('change', async () => {
-                await storageService.saveData(STORAGE_KEYS.LOG_ENABLED, this.logEnabledCheckbox.checked.toString());
-                
-                // Show a notification that changes will take effect after reload
-                if (this.game && this.game.ui && this.game.ui.notifications) {
-                    this.game.ui.notifications.show('Log settings will take effect after page reload', 'info');
-                }
+                // Show saving indicator
+                this.withProgress(
+                    async () => {
+                        await storageService.saveData(STORAGE_KEYS.LOG_ENABLED, this.logEnabledCheckbox.checked.toString());
+                        
+                        // Show a notification that changes will take effect after reload
+                        if (this.game && this.game.ui && this.game.ui.notifications) {
+                            this.game.ui.notifications.show('Log settings will take effect after page reload', 'info');
+                        }
+                    },
+                    'save',
+                    'Saving log settings...'
+                );
             });
         }
         
@@ -154,65 +246,92 @@ export class PerformanceTab extends SettingsTab {
     }
     
     /**
-     * Save the performance settings
-     * @returns {Promise<void>}
+     * Called when the tab is activated
      */
-    async saveSettings() {
-        if (this.qualitySelect) {
-            await storageService.saveData(STORAGE_KEYS.QUALITY_LEVEL, this.qualitySelect.value);
-        }
-        
-        if (this.adaptiveCheckbox) {
-            await storageService.saveData(STORAGE_KEYS.ADAPTIVE_QUALITY, this.adaptiveCheckbox.checked.toString());
-        }
-        
-        if (this.fpsSlider) {
-            await storageService.saveData(STORAGE_KEYS.TARGET_FPS, this.fpsSlider.value);
-        }
-        
-        if (this.showPerformanceInfoCheckbox) {
-            await storageService.saveData(STORAGE_KEYS.SHOW_PERFORMANCE_INFO, this.showPerformanceInfoCheckbox.checked.toString());
-        }
-        
-        if (this.debugModeCheckbox) {
-            await storageService.saveData(STORAGE_KEYS.DEBUG_MODE, this.debugModeCheckbox.checked.toString());
-        }
-        
-        if (this.logEnabledCheckbox) {
-            await storageService.saveData(STORAGE_KEYS.LOG_ENABLED, this.logEnabledCheckbox.checked.toString());
+    onActivate() {
+        // If tab was not fully initialized yet, try again
+        if (!this.initialized && !this.isLoading) {
+            this.initializeTab();
         }
     }
     
     /**
+     * Save the performance settings
+     * @returns {Promise<boolean>}
+     */
+    async saveSettings() {
+        return this.withProgress(
+            async () => {
+                if (this.qualitySelect) {
+                    await storageService.saveData(STORAGE_KEYS.QUALITY_LEVEL, this.qualitySelect.value);
+                }
+                
+                if (this.adaptiveCheckbox) {
+                    await storageService.saveData(STORAGE_KEYS.ADAPTIVE_QUALITY, this.adaptiveCheckbox.checked.toString());
+                }
+                
+                if (this.fpsSlider) {
+                    await storageService.saveData(STORAGE_KEYS.TARGET_FPS, this.fpsSlider.value);
+                }
+                
+                if (this.showPerformanceInfoCheckbox) {
+                    await storageService.saveData(STORAGE_KEYS.SHOW_PERFORMANCE_INFO, this.showPerformanceInfoCheckbox.checked.toString());
+                }
+                
+                if (this.debugModeCheckbox) {
+                    await storageService.saveData(STORAGE_KEYS.DEBUG_MODE, this.debugModeCheckbox.checked.toString());
+                }
+                
+                if (this.logEnabledCheckbox) {
+                    await storageService.saveData(STORAGE_KEYS.LOG_ENABLED, this.logEnabledCheckbox.checked.toString());
+                }
+                
+                return true;
+            },
+            'save',
+            'Saving performance settings...'
+        );
+    }
+    
+    /**
      * Reset the performance settings to defaults
-     * @returns {Promise<void>}
+     * @returns {Promise<boolean>}
      */
     async resetToDefaults() {
-        if (this.qualitySelect) {
-            this.qualitySelect.value = 'ultra';
-        }
-        
-        if (this.adaptiveCheckbox) {
-            this.adaptiveCheckbox.checked = true;
-        }
-        
-        if (this.fpsSlider && this.fpsValue) {
-            this.fpsSlider.value = 60;
-            this.fpsValue.textContent = 60;
-        }
-        
-        if (this.showPerformanceInfoCheckbox) {
-            this.showPerformanceInfoCheckbox.checked = false;
-        }
-        
-        if (this.debugModeCheckbox) {
-            this.debugModeCheckbox.checked = false;
-        }
-        
-        if (this.logEnabledCheckbox) {
-            this.logEnabledCheckbox.checked = false;
-        }
-        
-        await this.saveSettings();
+        return this.withProgress(
+            async () => {
+                if (this.qualitySelect) {
+                    this.qualitySelect.value = 'ultra';
+                }
+                
+                if (this.adaptiveCheckbox) {
+                    this.adaptiveCheckbox.checked = true;
+                }
+                
+                if (this.fpsSlider && this.fpsValue) {
+                    this.fpsSlider.value = 60;
+                    this.fpsValue.textContent = 60;
+                }
+                
+                if (this.showPerformanceInfoCheckbox) {
+                    this.showPerformanceInfoCheckbox.checked = false;
+                }
+                
+                if (this.debugModeCheckbox) {
+                    this.debugModeCheckbox.checked = false;
+                }
+                
+                if (this.logEnabledCheckbox) {
+                    this.logEnabledCheckbox.checked = false;
+                }
+                
+                // Save the default settings
+                await this.saveSettings();
+                
+                return true;
+            },
+            'save',
+            'Resetting performance settings...'
+        );
     }
 }

@@ -1,4 +1,5 @@
 import { SyncStorageAdapter } from './SyncStorageAdapter.js';
+import { LocalStorageAdapter } from './LocalStorageAdapter.js';
 import { STORAGE_KEYS } from '../config/storage-keys.js';
 
 /**
@@ -27,6 +28,11 @@ export class StorageService {
         
         // Add event listeners for storage events
         window.addEventListener('storage', this.handleStorageEvent.bind(this));
+        
+        // Fix existing localStorage data format issues
+        if (this.adapter.getActiveAdapter() instanceof LocalStorageAdapter) {
+            this.adapter.getActiveAdapter().fixExistingData();
+        }
         
         // Migrate existing localStorage data if needed
         await this.migrateLocalData();
