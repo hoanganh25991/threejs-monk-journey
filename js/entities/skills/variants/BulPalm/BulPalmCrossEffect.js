@@ -192,12 +192,13 @@ export class BulPalmCrossEffect extends BulPalmEffect {
   createDirectionalPalm(direction, index) {
     // Calculate palm position
     // Position the palm at the edge of the area in the given direction
-    // Use the exact radius of the area indicator (3.9 - average of inner and outer ring)
-    const areaIndicatorRadius = this.areaRadius * 3.9; // Average of 3.8 and 4.0
+    // Use the exact radius of the area indicator
+    const areaIndicatorRadius = this.areaRadius * 3.9; // Match the area indicator radius
+    // Calculate position relative to the effect group
     const palmPosition = new THREE.Vector3(
-      this.centerPosition.x + direction.x * areaIndicatorRadius,
-      this.centerPosition.y + this.startHeight,
-      this.centerPosition.z + direction.z * areaIndicatorRadius
+      direction.x * areaIndicatorRadius,
+      this.startHeight,
+      direction.z * areaIndicatorRadius
     );
     
     // Create palm group
@@ -274,10 +275,10 @@ export class BulPalmCrossEffect extends BulPalmEffect {
       particles: particles,
       startPosition: palmPosition.clone(),
       targetPosition: new THREE.Vector3(
-        // Use the same area indicator radius as the starting position
-        this.centerPosition.x + direction.x * areaIndicatorRadius,
-        this.centerPosition.y,
-        this.centerPosition.z + direction.z * areaIndicatorRadius
+        // Target position relative to the effect group
+        direction.x * areaIndicatorRadius,
+        0, // Ground level relative to effect group
+        direction.z * areaIndicatorRadius
       ),
       direction: direction.clone(),
       age: 0,
@@ -285,13 +286,9 @@ export class BulPalmCrossEffect extends BulPalmEffect {
       index: index
     };
     
-    // Add to scene - make sure to add to the parent scene
-    if (this.effect && this.effect.parent) {
-      this.effect.parent.add(palmGroup);
-    } else {
-      // If no parent, add to the effect itself
-      this.effect.add(palmGroup);
-    }
+    // Always add palms to the effect group to keep them positioned relative to the effect
+    // This ensures they fall at the correct position relative to the hero
+    this.effect.add(palmGroup);
     
     // Log palm creation for debugging
     console.log(`Created palm ${index} at position:`, palmPosition);
@@ -495,8 +492,8 @@ export class BulPalmCrossEffect extends BulPalmEffect {
         // Update falling palm
         this.updateFallingPalm(palmData, delta);
         
-        // Check if this palm has reached the ground
-        if (palmData.group.position.y > this.centerPosition.y) {
+        // Check if this palm has reached the ground (ground level is 0 relative to effect group)
+        if (palmData.group.position.y > 0) {
           allPalmsLanded = false;
           allPalmsExploded = false;
         }
@@ -570,10 +567,10 @@ export class BulPalmCrossEffect extends BulPalmEffect {
     const moveDistance = this.fallSpeed * delta;
     palmData.group.position.y -= moveDistance;
     
-    // Check if palm has hit the ground
-    if (palmData.group.position.y <= this.centerPosition.y) {
+    // Check if palm has hit the ground (ground level is 0 relative to effect group)
+    if (palmData.group.position.y <= 0) {
       // Snap to ground
-      palmData.group.position.y = this.centerPosition.y;
+      palmData.group.position.y = 0;
       
       // Create individual explosion if not already exploded
       if (!palmData.hasExploded && !this.hasExploded) {
