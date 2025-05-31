@@ -187,7 +187,7 @@ export class EnemyManager {
                 
                 // Random chance to spawn a boss
                 if (Math.random() < this.bossSpawnChance) {
-                    console.log('Spawning random boss...');
+                    console.debug('Spawning random boss...');
                     this.spawnRandomBoss();
                     
                     // Play boss theme if available

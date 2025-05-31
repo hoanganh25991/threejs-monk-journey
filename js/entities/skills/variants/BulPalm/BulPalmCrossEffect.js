@@ -35,7 +35,7 @@ export class BulPalmCrossEffect extends BulPalmEffect {
     this.defaultColor = 0x33ff33; // Green color for Bul Palm
     
     // Log configuration for debugging
-    console.log('BulPalmCrossEffect initialized with:', {
+    console.debug('BulPalmCrossEffect initialized with:', {
       palmCount: this.palmCount,
       areaRadius: this.areaRadius,
       palmRadius: this.palmRadius,
@@ -291,7 +291,7 @@ export class BulPalmCrossEffect extends BulPalmEffect {
     this.effect.add(palmGroup);
     
     // Log palm creation for debugging
-    console.log(`Created palm ${index} at position:`, palmPosition);
+    console.debug(`Created palm ${index} at position:`, palmPosition);
     
     // Add to palm groups
     this.palmGroups.push(palmData);
@@ -851,7 +851,7 @@ export class BulPalmCrossEffect extends BulPalmEffect {
     const canvas = document.getElementById('game-canvas');
     if (!canvas) return;
     
-    console.log(`Applying screen shake: intensity=${intensity}, duration=${duration}`);
+    console.debug(`Applying screen shake: intensity=${intensity}, duration=${duration}`);
     
     // Store original transform
     const originalTransform = canvas.style.transform || '';

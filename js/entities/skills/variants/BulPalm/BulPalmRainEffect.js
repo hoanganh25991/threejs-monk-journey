@@ -30,7 +30,7 @@ export class BulPalmRainEffect extends BulPalmEffect {
     this.defaultColor = 0x33ff33; // Green color for Bul Palm
     
     // Log configuration for debugging
-    console.log('BulPalmRainEffect initialized with:', {
+    console.debug('BulPalmRainEffect initialized with:', {
       palmCount: this.palmCount,
       palmDelay: this.palmDelay,
       areaRadius: this.areaRadius,

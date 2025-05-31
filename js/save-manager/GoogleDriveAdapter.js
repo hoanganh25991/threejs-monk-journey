@@ -118,9 +118,10 @@ export class GoogleDriveAdapter extends IStorageAdapter {
     
     /**
      * Request sign-in with Google
+     * @param {boolean} silentMode - Whether to attempt silent sign-in without user interaction
      * @returns {Promise<boolean>} Whether sign-in was successful
      */
-    signIn() {
+    signIn(silentMode = false) {
         return new Promise((resolve) => {
             if (this.isSignedIn) {
                 resolve(true);
@@ -143,8 +144,14 @@ export class GoogleDriveAdapter extends IStorageAdapter {
             window.addEventListener('google-signin-success', successListener);
             window.addEventListener('google-signin-error', errorListener);
             
-            // Request access token
-            this.tokenClient.requestAccessToken();
+            // Request access token with appropriate prompt
+            if (silentMode) {
+                // Use 'none' prompt for silent sign-in (no UI)
+                this.tokenClient.requestAccessToken({ prompt: 'none' });
+            } else {
+                // Default behavior with UI prompt
+                this.tokenClient.requestAccessToken();
+            }
         });
     }
     

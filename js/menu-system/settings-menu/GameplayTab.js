@@ -476,12 +476,13 @@ export class GameplayTab extends SettingsTab {
             // Sign out
             this.game.saveManager.signOutFromGoogle();
         } else {
-            // Sign in
+            // Sign in (interactive mode - false means not silent)
             this.loginButton.disabled = true;
             this.loginButton.textContent = 'Signing in...';
             
             // Use Promise chain for better error handling
-            this.game.saveManager.signInToGoogle()
+            // Use false for silentMode to ensure the user sees the UI
+            this.game.saveManager.signInToGoogle(false)
                 .then(success => {
                     if (!success && this.loginButton) {
                         this.loginButton.disabled = false;

@@ -196,7 +196,7 @@ export class ItemPreview {
      * @param {Object} item - The item to load
      */
     loadItemModel(item) {
-        console.log('ItemPreview: Loading model for item', item ? item.name : 'unknown');
+        console.debug('ItemPreview: Loading model for item', item ? item.name : 'unknown');
         
         // Remove existing model if any
         if (this.model) {

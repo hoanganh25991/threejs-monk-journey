@@ -58,21 +58,23 @@ export class StorageService {
         // Try auto-login first if enabled (before setting initialized flag)
         if (!this.autoLoginAttempted && !this.isSignedInToGoogle() && googleAuthManager.shouldAttemptAutoLogin()) {
             this.autoLoginAttempted = true;
-            console.debug('Attempting auto-login to Google Drive during initialization');
+            console.debug('Attempting silent auto-login to Google Drive during initialization');
             
             try {
                 // Set a flag to indicate we're in the sign-in process
                 this.isSigningIn = true;
                 
-                // Attempt to sign in
-                const success = await this.signInToGoogle();
+                // Attempt to sign in silently (true = silent mode)
+                const success = await this.signInToGoogle(true);
                 
                 if (success) {
-                    console.debug('Auto-login successful during initialization');
+                    console.debug('Silent auto-login successful during initialization');
                     // Wait a moment for the sign-in to complete
                     await new Promise(resolve => setTimeout(resolve, 500));
                 } else {
-                    console.debug('Auto-login failed during initialization');
+                    console.debug('Silent auto-login failed during initialization');
+                    // Note: We don't try interactive mode here during initialization
+                    // to avoid showing popups during page load
                 }
                 
                 // Clear the signing in flag
@@ -497,15 +499,16 @@ export class StorageService {
     
     /**
      * Sign in to Google Drive
+     * @param {boolean} silentMode - Whether to attempt silent sign-in without user interaction
      * @returns {Promise<boolean>} Whether sign-in was successful
      */
-    async signInToGoogle() {
+    async signInToGoogle(silentMode = false) {
         try {
             // Set flag to indicate we're in the sign-in process
             this.isSigningIn = true;
             
-            // Attempt to sign in
-            const success = await this.googleDrive.signIn();
+            // Attempt to sign in with the specified mode
+            const success = await this.googleDrive.signIn(silentMode);
             
             // If successful, wait a moment for the sign-in to complete
             if (success) {
@@ -514,8 +517,30 @@ export class StorageService {
                 
                 // Record successful login for auto-login
                 googleAuthManager.recordSuccessfulLogin();
+            } else if (silentMode) {
+                // If silent mode failed but auto-login is enabled, try interactive mode
+                if (googleAuthManager.getAutoLoginState()) {
+                    console.debug('Silent sign-in failed, trying interactive sign-in');
+                    const interactiveSuccess = await this.googleDrive.signIn(false);
+                    
+                    if (interactiveSuccess) {
+                        // Wait for the sign-in process to complete
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        
+                        // Record successful login for auto-login
+                        googleAuthManager.recordSuccessfulLogin();
+                        
+                        // Clear the signing in flag
+                        this.isSigningIn = false;
+                        
+                        return true;
+                    } else {
+                        // If interactive sign-in also failed, disable auto-login
+                        googleAuthManager.setAutoLoginState(false);
+                    }
+                }
             } else {
-                // If sign-in failed, disable auto-login to prevent repeated failures
+                // If regular sign-in failed, disable auto-login to prevent repeated failures
                 googleAuthManager.setAutoLoginState(false);
             }
             

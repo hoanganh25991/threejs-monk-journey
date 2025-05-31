@@ -72,15 +72,17 @@ export class GoogleAuthManager {
         }
 
         try {
-            console.debug('Attempting auto-login to Google Drive');
-            const success = await storageService.signInToGoogle();
+            console.debug('Attempting silent auto-login to Google Drive');
+            // Use silent mode (true) to avoid showing the popup
+            const success = await storageService.signInToGoogle(true);
             
             if (success) {
-                console.debug('Auto-login successful');
+                console.debug('Silent auto-login successful');
                 return true;
             } else {
-                console.debug('Auto-login failed, disabling auto-login');
-                this.setAutoLoginState(false);
+                console.debug('Silent auto-login failed');
+                // Note: We don't disable auto-login here because the StorageService
+                // will try interactive mode if silent mode fails
                 return false;
             }
         } catch (error) {
