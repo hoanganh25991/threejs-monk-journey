@@ -4,13 +4,13 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '40';
+const CACHE_VERSION = '42';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 6826065;
-const TOTAL_CACHE_SIZE_MB = 6.51;
+const TOTAL_CACHE_SIZE_BYTES = 6992166;
+const TOTAL_CACHE_SIZE_MB = 6.67;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
@@ -23,16 +23,16 @@ const ASSETS_TO_CACHE = [
   'css/difficulty-menu.css',
   'css/game-menu.css',
   'css/game.css',
-  'css/hud-common.css',
-  'css/hud-effects-container.css',
-  'css/hud-enemy-health.css',
-  'css/hud-joystick.css',
-  'css/hud-layout.css',
+  'css/hud/common.css',
+  'css/hud/effects-container.css',
+  'css/hud/enemy-health.css',
+  'css/hud/joystick.css',
+  'css/hud/layout.css',
+  'css/hud/minimap.css',
+  'css/hud/player-stats.css',
+  'css/hud/quest-log.css',
+  'css/hud/skills.css',
   'css/hud-manager.css',
-  'css/hud-minimap.css',
-  'css/hud-player-stats.css',
-  'css/hud-quest-log.css',
-  'css/hud-skills.css',
   'css/icons.css',
   'css/initial-loading.css',
   'css/inventory.css',
@@ -44,6 +44,16 @@ const ASSETS_TO_CACHE = [
   'css/orientation-message.css',
   'css/performance-manager.css',
   'css/reset.css',
+  'css/settings/base.css',
+  'css/settings/buttons.css',
+  'css/settings/controls.css',
+  'css/settings/enemy-preview.css',
+  'css/settings/forms.css',
+  'css/settings/item-preview.css',
+  'css/settings/mobile.css',
+  'css/settings/model-preview.css',
+  'css/settings/skills-preview.css',
+  'css/settings/tabs.css',
   'css/settings-menu.css',
   'css/skill-preview.css',
   'css/skill-selection.css',
@@ -128,6 +138,10 @@ const ASSETS_TO_CACHE = [
   'js/entities/skills/variants/BreathOfHeaven/RadiantBreathEffect.js',
   'js/entities/skills/variants/BreathOfHeaven/SoothingMistEffect.js',
   'js/entities/skills/variants/BreathOfHeaven/ZephyrsGraceEffect.js',
+  'js/entities/skills/variants/BulPalm/BulPalmCrossEffect.js',
+  'js/entities/skills/variants/BulPalm/BulPalmRainEffect.js',
+  'js/entities/skills/variants/BulPalm/PalmCrossEffect.js',
+  'js/entities/skills/variants/BulPalm/PalmRainEffect.js',
   'js/entities/skills/variants/CycloneStrike/EyeOfTheStormEffect.js',
   'js/entities/skills/variants/CycloneStrike/MysticWindsEffect.js',
   'js/entities/skills/variants/CycloneStrike/PathOfTheStormEffect.js',
@@ -246,17 +260,19 @@ const ASSETS_TO_CACHE = [
   'js/multiplayer/MultiplayerUIManager.js',
   'js/multiplayer/RemotePlayer.js',
   'js/multiplayer/RemotePlayerManager.js',
+  'js/save-manager/GoogleAuthManager.js',
+  'js/save-manager/GoogleDriveAdapter.js',
   'js/save-manager/ISaveSystem.js',
   'js/save-manager/IStorageAdapter.js',
   'js/save-manager/LocalStorageAdapter.js',
   'js/save-manager/SaveManager.js',
+  'js/save-manager/StorageService.js',
   'js/save-manager/serializers/InventorySerializer.js',
   'js/save-manager/serializers/PlayerSerializer.js',
   'js/save-manager/serializers/QuestSerializer.js',
   'js/save-manager/serializers/SettingsSerializer.js',
   'js/save-manager/utils/SaveOperationProgress.js',
   'js/utils/AnimationUtils.js',
-  'js/utils/FlagUtils.js',
   'js/utils/SkillTreeUtils.js',
   'js/world/WorldManager.js',
   'js/world/environment/Bush.js',

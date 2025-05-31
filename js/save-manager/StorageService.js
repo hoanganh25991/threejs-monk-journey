@@ -129,6 +129,12 @@ export class StorageService {
         
         console.debug('Syncing data from Google Drive to localStorage');
         
+        // Define keys that should not be synced from Google Drive
+        const localOnlyKeys = [
+            STORAGE_KEYS.GOOGLE_LAST_LOGIN,
+            STORAGE_KEYS.GOOGLE_AUTO_LOGIN
+        ];
+        
         // Get all keys from localStorage that start with 'monk_journey_'
         const keys = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -141,6 +147,12 @@ export class StorageService {
         // For each key, check if it exists in Google Drive
         for (const key of keys) {
             try {
+                // Skip keys that should only be stored locally
+                if (localOnlyKeys.includes(key)) {
+                    console.debug(`Skipping sync for local-only key: ${key}`);
+                    continue;
+                }
+                
                 // Check if the key exists in Google Drive
                 const hasCloudData = await this.googleDrive.hasData(key);
                 
@@ -207,9 +219,21 @@ export class StorageService {
             }
         }
         
-        // Sync each key to Google Drive
+        // Define keys that should not be synced to Google Drive
+        const localOnlyKeys = [
+            STORAGE_KEYS.GOOGLE_LAST_LOGIN,
+            STORAGE_KEYS.GOOGLE_AUTO_LOGIN
+        ];
+        
+        // Sync each key to Google Drive (except local-only keys)
         for (const key of keys) {
             try {
+                // Skip keys that should only be stored locally
+                if (localOnlyKeys.includes(key)) {
+                    console.debug(`Skipping sync for local-only key: ${key}`);
+                    continue;
+                }
+                
                 const data = this.localStorage.loadData(key);
                 if (data !== null) {
                     await this.googleDrive.saveData(key, data);
@@ -231,6 +255,19 @@ export class StorageService {
      */
     async resolveConflict(key, localData, cloudData) {
         console.warn(`Conflict detected for ${key}`);
+        
+        // Define keys that should only be stored locally
+        const localOnlyKeys = [
+            STORAGE_KEYS.GOOGLE_LAST_LOGIN,
+            STORAGE_KEYS.GOOGLE_AUTO_LOGIN
+        ];
+        
+        // For local-only keys, always use the local version without asking
+        if (localOnlyKeys.includes(key)) {
+            console.debug(`Using local version for local-only key: ${key}`);
+            await this.googleDrive.saveData(key, localData);
+            return;
+        }
         
         // For now, we'll use a simple confirm dialog
         // In a real implementation, you would use a more sophisticated UI
@@ -283,6 +320,12 @@ export class StorageService {
             this.pendingSaves.delete(key);
         }
         
+        // Define keys that should not be synced to Google Drive
+        const localOnlyKeys = [
+            STORAGE_KEYS.GOOGLE_LAST_LOGIN,
+            STORAGE_KEYS.GOOGLE_AUTO_LOGIN
+        ];
+        
         try {
             // Always save to localStorage first
             const localSuccess = this.localStorage.saveData(key, data);
@@ -294,12 +337,14 @@ export class StorageService {
                 }));
             }
             
-            // If signed in to Google Drive, sync in background
-            if (this.isSignedInToGoogle()) {
+            // If signed in to Google Drive, sync in background (except for local-only keys)
+            if (this.isSignedInToGoogle() && !localOnlyKeys.includes(key)) {
                 // Don't await this - let it run in the background
                 this.googleDrive.saveData(key, data).catch(error => {
                     console.error(`Error syncing ${key} to Google Drive:`, error);
                 });
+            } else if (localOnlyKeys.includes(key)) {
+                console.debug(`Skipping Google Drive sync for local-only key: ${key}`);
             }
             
             return localSuccess;
@@ -317,6 +362,18 @@ export class StorageService {
      * @returns {Promise<boolean>} Success status (resolves when save is scheduled)
      */
     debounceSave(key, data, debounceMs = 300) {
+        // Define keys that should not be synced to Google Drive
+        const localOnlyKeys = [
+            STORAGE_KEYS.GOOGLE_LAST_LOGIN,
+            STORAGE_KEYS.GOOGLE_AUTO_LOGIN
+        ];
+        
+        // For local-only keys, save immediately without debounce
+        if (localOnlyKeys.includes(key)) {
+            console.debug(`Immediate save for local-only key: ${key}`);
+            return this.saveData(key, data);
+        }
+        
         return new Promise(resolve => {
             // Cancel any pending save for this key
             if (this.pendingSaves.has(key)) {
