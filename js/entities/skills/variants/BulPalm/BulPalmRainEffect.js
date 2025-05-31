@@ -10,18 +10,18 @@ export class BulPalmRainEffect extends BulPalmEffect {
     super(skill);
     
     // Palm rain effect settings
-    this.palmCount = 10; // Number of palms to create
+    this.palmCount = 20; // Number of palms to create
     this.palmsCreated = 0; // Counter for created palms
     this.palmDelay = 0.15; // Delay between palm creations in seconds
     this.lastPalmTime = 0; // Time since last palm creation
     this.palmGroups = []; // Store all palm groups
     
     // Area settings
-    this.areaRadius = skill.radius * 2 || 6; // Radius of the area to spawn palms
+    this.areaRadius = skill.radius * 3 || 9; // Radius of the area to spawn palms (increased by 50%)
     
     // Height settings
     this.startHeight = 30; // Height from which palms start falling
-    this.fallSpeed = 15; // Speed at which palms fall
+    this.fallSpeed = 25; // Speed at which palms fall (increased from 15 to 25)
     
     // Default color (fallback if skill color is not defined)
     this.defaultColor = 0x33ff33; // Green color for Bul Palm
@@ -71,8 +71,8 @@ export class BulPalmRainEffect extends BulPalmEffect {
    * @private
    */
   createAreaIndicator(effectGroup, position) {
-    // Create a circular area indicator
-    const areaGeometry = new THREE.RingGeometry(this.areaRadius - 0.1, this.areaRadius, 32);
+    // Create a circular area indicator (larger and more visible)
+    const areaGeometry = new THREE.RingGeometry(this.areaRadius - 0.2, this.areaRadius, 48);
     const areaMaterial = this.createMaterial(
       this.getSkillColor(),
       1.5,
@@ -145,12 +145,12 @@ export class BulPalmRainEffect extends BulPalmEffect {
       true
     );
     
-    // Set hand orientation - different from original to point downward
-    handGroup.rotation.x = Math.PI / 2; // Point fingers downward
+    // Set hand orientation - exactly 90 degrees to point directly downward
+    handGroup.rotation.x = Math.PI / 2; // Point fingers downward at exactly 90 degrees
     
-    // Add random rotation to make each palm look different
+    // Only rotate around Y-axis for visual variety, but keep Z-axis at 0 to ensure all palms face directly down
     handGroup.rotation.y = Math.random() * Math.PI * 2;
-    handGroup.rotation.z = Math.random() * Math.PI / 4 - Math.PI / 8; // Slight tilt
+    handGroup.rotation.z = 0; // No tilt, all palms face directly to the ground
     
     // Add hand to palm group
     palmGroup.add(handGroup);
