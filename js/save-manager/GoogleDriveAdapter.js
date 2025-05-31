@@ -102,17 +102,15 @@ export class GoogleDriveAdapter extends IStorageAdapter {
                     this.isSignedIn = false;
                     this.accessToken = null;
                     
+                    // Disable auto-login on error to prevent repeated failures
+                    googleAuthManager.setAutoLoginState(false);
+                    
                     // Dispatch event for sign-in error
                     window.dispatchEvent(new CustomEvent('google-signin-error', { 
                         detail: { error } 
                     }));
                 }
             });
-            
-            // Check if auto-login should be attempted
-            if (googleAuthManager.shouldAttemptAutoLogin()) {
-                console.debug('Auto-login is enabled, will attempt to sign in automatically');
-            }
         } catch (error) {
             console.error('Error initializing Google API:', error);
         }

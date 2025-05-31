@@ -143,8 +143,13 @@ export class Game {
             this.loadingScreen = document.getElementById('loading-screen');
             
             // Update loading progress
-            this.updateLoadingProgress(5, 'Initializing renderer...', 'Setting up WebGL');
+            this.updateLoadingProgress(5, 'Initializing storage...', 'Setting up cloud sync');
+            
+            // Initialize storage service first to enable auto-login
             await storageService.init();
+            
+            // Update loading progress
+            this.updateLoadingProgress(10, 'Loading settings...', 'Retrieving game configuration');
             await this.loadInitialSettings();
 
             

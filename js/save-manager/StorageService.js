@@ -55,6 +55,34 @@ export class StorageService {
             return;
         }
         
+        // Try auto-login first if enabled (before setting initialized flag)
+        if (!this.autoLoginAttempted && !this.isSignedInToGoogle() && googleAuthManager.shouldAttemptAutoLogin()) {
+            this.autoLoginAttempted = true;
+            console.debug('Attempting auto-login to Google Drive during initialization');
+            
+            try {
+                // Set a flag to indicate we're in the sign-in process
+                this.isSigningIn = true;
+                
+                // Attempt to sign in
+                const success = await this.signInToGoogle();
+                
+                if (success) {
+                    console.debug('Auto-login successful during initialization');
+                    // Wait a moment for the sign-in to complete
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } else {
+                    console.debug('Auto-login failed during initialization');
+                }
+                
+                // Clear the signing in flag
+                this.isSigningIn = false;
+            } catch (error) {
+                console.error('Error during auto-login initialization:', error);
+                this.isSigningIn = false;
+            }
+        }
+        
         this.initialized = true;
         
         // If user is signed in to Google, try to load data from Google Drive
@@ -63,21 +91,6 @@ export class StorageService {
             this.syncFromGoogleDrive().catch(error => {
                 console.error('Error syncing from Google Drive during init:', error);
             });
-        } else if (!this.autoLoginAttempted && googleAuthManager.shouldAttemptAutoLogin()) {
-            // Try auto-login if not already signed in and auto-login is enabled
-            this.autoLoginAttempted = true;
-            console.debug('Attempting auto-login to Google Drive');
-            
-            try {
-                const success = await this.signInToGoogle();
-                if (success) {
-                    console.debug('Auto-login successful');
-                } else {
-                    console.debug('Auto-login failed');
-                }
-            } catch (error) {
-                console.error('Error during auto-login:', error);
-            }
         }
     }
     
@@ -488,9 +501,35 @@ export class StorageService {
      */
     async signInToGoogle() {
         try {
-            return await this.googleDrive.signIn();
+            // Set flag to indicate we're in the sign-in process
+            this.isSigningIn = true;
+            
+            // Attempt to sign in
+            const success = await this.googleDrive.signIn();
+            
+            // If successful, wait a moment for the sign-in to complete
+            if (success) {
+                // Wait for the sign-in process to complete
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Record successful login for auto-login
+                googleAuthManager.recordSuccessfulLogin();
+            } else {
+                // If sign-in failed, disable auto-login to prevent repeated failures
+                googleAuthManager.setAutoLoginState(false);
+            }
+            
+            // Clear the signing in flag
+            this.isSigningIn = false;
+            
+            return success;
         } catch (error) {
             console.error('Error signing in to Google Drive:', error);
+            this.isSigningIn = false;
+            
+            // Disable auto-login on error
+            googleAuthManager.setAutoLoginState(false);
+            
             return false;
         }
     }
