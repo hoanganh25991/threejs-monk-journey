@@ -913,6 +913,13 @@ const BASE_SKILL_TREES = {
         unlockedBy: "Legendary bracers Cross of the Heavens",
         cost: 5,
         requiredPoints: 0,
+      },
+      "Storm of Palms": {
+        description: "Summons a storm of giant palms that follow you and crash down on enemies in your path.",
+        effects: ["Follows hero", "Increased palm count", "Extended duration"],
+        unlockedBy: "Legendary amulet Storm Caller's Pendant",
+        cost: 5,
+        requiredPoints: 0,
       }
     },
     buffs: {

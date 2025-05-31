@@ -4,13 +4,13 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '42';
+const CACHE_VERSION = '43';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 6992166;
-const TOTAL_CACHE_SIZE_MB = 6.67;
+const TOTAL_CACHE_SIZE_BYTES = 7006458;
+const TOTAL_CACHE_SIZE_MB = 6.68;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
@@ -140,8 +140,7 @@ const ASSETS_TO_CACHE = [
   'js/entities/skills/variants/BreathOfHeaven/ZephyrsGraceEffect.js',
   'js/entities/skills/variants/BulPalm/BulPalmCrossEffect.js',
   'js/entities/skills/variants/BulPalm/BulPalmRainEffect.js',
-  'js/entities/skills/variants/BulPalm/PalmCrossEffect.js',
-  'js/entities/skills/variants/BulPalm/PalmRainEffect.js',
+  'js/entities/skills/variants/BulPalm/StormOfPalmsEffect.js',
   'js/entities/skills/variants/CycloneStrike/EyeOfTheStormEffect.js',
   'js/entities/skills/variants/CycloneStrike/MysticWindsEffect.js',
   'js/entities/skills/variants/CycloneStrike/PathOfTheStormEffect.js',

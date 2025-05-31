@@ -13,6 +13,8 @@ export class BulPalmRainEffect extends BulPalmEffect {
     const config = skill.palmRainConfig || {};
     
     // Palm rain effect settings
+    this.damage = skill.damage * 3;
+    this.manaCost = skill.manaCost * 1.5;
     this.palmCount = config.palmCount || 20; // Number of palms to create (default: 20)
     this.palmsCreated = 0; // Counter for created palms
     this.palmDelay = config.palmDelay || 0.15; // Delay between palm creations in seconds (default: 0.15)

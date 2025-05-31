@@ -3,7 +3,7 @@ import { BulPalmEffect } from "../../BulPalmEffect.js";
 
 /**
  * Specialized effect for Bul Palm Cross skill variant
- * Creates 4 giant palms in a cross/plus pattern that fall from the sky simultaneously,
+ * Creates 4 giant palms in a plus (+) pattern that fall from the sky simultaneously,
  * causing a massive explosion when they hit the ground
  */
 export class BulPalmCrossEffect extends BulPalmEffect {
@@ -14,7 +14,7 @@ export class BulPalmCrossEffect extends BulPalmEffect {
     const config = skill.palmCrossConfig || {};
     
     // Palm cross effect settings
-    this.palmCount = 4; // Fixed number of palms in a cross pattern
+    this.palmCount = 4; // Fixed number of palms in a plus (+) pattern
     this.palmsCreated = 0; // Counter for created palms
     this.palmGroups = []; // Store all palm groups
     
@@ -45,7 +45,7 @@ export class BulPalmCrossEffect extends BulPalmEffect {
   }
   
   /**
-   * Create a Bul Palm Cross effect
+   * Create a Bul Palm Cross effect with palms in a plus (+) pattern
    * @param {THREE.Vector3} position - Position to place the effect
    * @param {THREE.Vector3} direction - Direction (used for area orientation)
    * @returns {THREE.Group} - The created effect
@@ -156,22 +156,19 @@ export class BulPalmCrossEffect extends BulPalmEffect {
   }
   
   /**
-   * Create all 4 palms in a cross pattern
+   * Create all 4 palms in a plus (+) pattern
    * @private
    */
   createCrossPalms() {
-    // Define the 4 directions for the palms in a circular pattern
-    // Using angles at 45, 135, 225, and 315 degrees to place them diagonally
-    // This ensures they're evenly spaced around the center
+    // Define the 4 directions for the palms in a plus (+) pattern
+    // Using cardinal directions at 0, 90, 180, and 270 degrees
+    // This creates a plus sign pattern instead of an X pattern
     
-    // Fix Bug 2: Ensure palms are properly separated
-    // We'll use the same direction vectors but ensure they're normalized
-    // This guarantees consistent spacing in all directions
     const baseDirections = [
-      new THREE.Vector3(0.7071, 0, 0.7071),   // Northeast (45 degrees)
-      new THREE.Vector3(-0.7071, 0, 0.7071),  // Northwest (135 degrees)
-      new THREE.Vector3(-0.7071, 0, -0.7071), // Southwest (225 degrees)
-      new THREE.Vector3(0.7071, 0, -0.7071)   // Southeast (315 degrees)
+      new THREE.Vector3(0, 0, 1),    // North (0 degrees)
+      new THREE.Vector3(1, 0, 0),    // East (90 degrees)
+      new THREE.Vector3(0, 0, -1),   // South (180 degrees)
+      new THREE.Vector3(-1, 0, 0)    // West (270 degrees)
     ];
     
     // Normalize each direction vector to ensure consistent spacing
@@ -249,8 +246,8 @@ export class BulPalmCrossEffect extends BulPalmEffect {
       true
     );
     
-    // Set hand orientation - point fingers downward
-    handGroup.rotation.x = Math.PI / 2; // Point fingers downward
+    // Set hand orientation - palm flat to hit the ground horizontally
+    handGroup.rotation.x = 0; // Palm flat (horizontal)
     
     // Rotate around Y-axis to face the center
     const angle = Math.atan2(-direction.x, -direction.z);

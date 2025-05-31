@@ -310,11 +310,21 @@ export const NORMAL_SKILLS = [
             palmDelay: 0.15, // Delay between palm creations in seconds
             fallSpeed: 25, // Speed at which palms fall
         },
+        // Storm of Palms variant configuration
+        stormOfPalmsConfig: {
+            palmCount: 30, // Increased number of palms
+            palmDelay: 0.12, // Faster palm creation
+            fallSpeed: 30, // Faster falling speed
+        },
         // Duration is calculated based on palmCount and palmDelay plus extra time for explosions
         get duration() { 
-            return this.palmRainConfig ? 
-                (this.palmRainConfig.palmCount * this.palmRainConfig.palmDelay) + 2 : 
-                5; // Default duration if not using rain variant
+            if (this.variant === 'Storm of Palms' && this.stormOfPalmsConfig) {
+                return (this.stormOfPalmsConfig.palmCount * this.stormOfPalmsConfig.palmDelay) + 3;
+            } else if (this.palmRainConfig) {
+                return (this.palmRainConfig.palmCount * this.palmRainConfig.palmDelay) + 2;
+            } else {
+                return 5; // Default duration if not using rain variant
+            }
         },
         get color() { return SKILL_ICONS[this.name]?.color; }, // Green color
         get icon() { return SKILL_ICONS[this.name]?.emoji; }, // Leaf emoji as fallback
