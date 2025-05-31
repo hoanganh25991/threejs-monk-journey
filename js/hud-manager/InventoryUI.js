@@ -909,9 +909,22 @@ export class InventoryUI extends UIComponent {
         // Get player equipment
         const equipment = this.game.player.getEquipment();
         
+        // Get all equipment slots
+        const equipmentSlots = document.querySelectorAll('.equipment-slot');
+        
+        // Create a map to store slots by their data-slot attribute
+        const slotMap = {};
+        equipmentSlots.forEach(slot => {
+            const slotType = slot.getAttribute('data-slot');
+            if (slotType) {
+                slotMap[slotType] = slot;
+            }
+        });
+        
         // Update each equipment slot
         Object.entries(equipment).forEach(([slot, item]) => {
-            const slotElement = document.getElementById(`equipment-slot-${slot}`);
+            // Find the slot element using the map
+            const slotElement = slotMap[slot];
             
             if (slotElement) {
                 // Clear previous content
@@ -947,8 +960,10 @@ export class InventoryUI extends UIComponent {
                     // Add tooltip with slot name
                     slotElement.title = this.getSlotName(slot);
                     
-                    // Remove any click events
-                    slotElement.replaceWith(slotElement.cloneNode(true));
+                    // Remove any click events by replacing with clone
+                    const newSlotElement = slotElement.cloneNode(true);
+                    slotElement.parentNode.replaceChild(newSlotElement, slotElement);
+                    slotMap[slot] = newSlotElement; // Update the reference in the map
                 }
             }
         });
