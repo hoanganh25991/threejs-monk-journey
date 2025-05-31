@@ -286,7 +286,30 @@
     margin-top: 10px;
 }
 
-/* Two-column layout for controls */
+/* Vertical scroll layout for controls */
+.controls-info-vertical-scroll {
+    max-height: 500px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.2);
+}
+
+/* Webkit scrollbar styling */
+.controls-info-vertical-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.controls-info-vertical-scroll::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.controls-info-vertical-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+/* Two-column layout for controls (legacy) */
 .controls-info-two-columns {
     display: flex;
     flex-direction: row;
@@ -297,6 +320,11 @@
 .controls-column {
     flex: 1;
     min-width: 250px;
+}
+
+/* Full width column for vertical layout */
+.controls-column-full {
+    width: 100%;
 }
 
 .control-row {
@@ -958,6 +986,62 @@
     line-height: 1.4;
     /* border-radius: 6px; */
     /* border-left: 3px solid rgba(255, 204, 0, 0.7); */
+}
+
+/* Google Login Styles */
+.settings-google-login {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.google-login-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: #ffffff;
+    color: #757575;
+    border: 1px solid #dadce0;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.3s;
+    min-width: 180px;
+}
+
+.google-login-button:hover {
+    background-color: #f8f8f8;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.google-login-button img {
+    width: 18px;
+    height: 18px;
+}
+
+.google-login-status {
+    margin-top: 8px;
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.google-login-status.signed-in {
+    background-color: rgba(52, 168, 83, 0.2);
+    color: #34a853;
+    border-left: 3px solid #34a853;
+}
+
+.google-login-status.signed-out {
+    background-color: rgba(234, 67, 53, 0.2);
+    color: #ea4335;
+    border-left: 3px solid #ea4335;
 }
 
 /* Skill Preview */

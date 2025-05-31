@@ -505,7 +505,7 @@ export class StorageService {
 
 // Create a singleton instance
 const storageService = new StorageService(
-    '1070303484277-3dmj1pfiv64gmgj396j5hcbvnqdkuje4.apps.googleusercontent.com'
+    '1070303484277-ssbjoks5dqt7pdh5n887t3fkofm2cssf.apps.googleusercontent.com'
 );
 
 export default storageService;

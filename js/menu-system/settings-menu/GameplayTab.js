@@ -88,73 +88,35 @@ export class GameplayTab extends SettingsTab {
     initializeGoogleLogin() {
         console.debug('GameplayTab: Initializing Google Login UI');
         
-        // Create container if it doesn't exist
-        if (!this.googleLoginContainer) {
-            // Find the game settings section to add the Google login UI
-            const settingsSection = document.querySelector('#game-tab .settings-section');
+        // Use the existing Google login section in the HTML
+        const googleLoginSection = document.getElementById('google-login-section');
+        
+        if (googleLoginSection) {
+            // Get the existing container for Google login elements
+            this.googleLoginContainer = googleLoginSection.querySelector('.settings-google-login');
             
-            if (settingsSection) {
-                // Create Google login container
-                const googleLoginSection = document.createElement('div');
-                googleLoginSection.id = 'google-login-section';
-                googleLoginSection.className = 'setting-item';
+            if (this.googleLoginContainer) {
+                // Get the existing login button
+                this.loginButton = document.getElementById('google-login-button');
                 
-                // Add section title
-                const sectionTitle = document.createElement('h3');
-                sectionTitle.textContent = 'Account Sync';
-                googleLoginSection.appendChild(sectionTitle);
+                if (this.loginButton) {
+                    // Add click event listener to the existing button
+                    this.loginButton.addEventListener('click', () => this.handleLoginClick());
+                }
                 
-                // Create setting row for login button
-                const loginRow = document.createElement('div');
-                loginRow.className = 'setting-row';
-                
-                // Add label
-                const loginLabel = document.createElement('div');
-                loginLabel.className = 'settings-label';
-                loginLabel.textContent = 'Google Account';
-                loginRow.appendChild(loginLabel);
-                
-                // Create container for Google login elements
-                this.googleLoginContainer = document.createElement('div');
-                this.googleLoginContainer.className = 'settings-google-login';
-                loginRow.appendChild(this.googleLoginContainer);
-                
-                // Create login button
-                this.loginButton = document.createElement('button');
-                this.loginButton.className = 'settings-button google-login-button';
-                this.loginButton.innerHTML = `
-                    <img src="${this.googleIcon}" alt="Google">
-                    <span>Sign in with Google</span>
-                `;
-                this.loginButton.addEventListener('click', () => this.handleLoginClick());
-                this.googleLoginContainer.appendChild(this.loginButton);
-                
-                // Create status element (hidden initially)
-                this.statusElement = document.createElement('div');
-                this.statusElement.className = 'google-login-status signed-out';
-                this.statusElement.style.display = 'none';
-                this.googleLoginContainer.appendChild(this.statusElement);
-                
-                // Add the login row to the section
-                googleLoginSection.appendChild(loginRow);
-                
-                // Add description
-                const description = document.createElement('div');
-                description.className = 'settings-description';
-                description.textContent = 'Sync your game progress across devices';
-                googleLoginSection.appendChild(description);
-                
-                // Insert at the beginning of the settings section
-                settingsSection.insertBefore(googleLoginSection, settingsSection.firstChild);
+                // Get the existing status element
+                this.statusElement = this.googleLoginContainer.querySelector('.google-login-status');
                 
                 // Listen for sign-in/sign-out events
                 window.addEventListener('google-signin-success', () => this.updateUI(true));
                 window.addEventListener('google-signout', () => this.updateUI(false));
                 
-                console.debug('GameplayTab: Google Login UI elements created');
+                console.debug('GameplayTab: Google Login UI elements initialized');
             } else {
-                console.error('GameplayTab: Could not find settings section to add Google login UI');
+                console.error('GameplayTab: Could not find Google login container');
             }
+        } else {
+            console.error('GameplayTab: Could not find Google login section');
         }
         
         // Check if already signed in - do this synchronously
@@ -414,13 +376,17 @@ export class GameplayTab extends SettingsTab {
     
     /**
      * Save the gameplay settings
+     * @returns {Promise<boolean>} - True if save was successful
      */
     async saveSettings() {
+        // Create a list of promises for all settings
+        const savePromises = [];
+        
         if (this.difficultySelect) {
             // Save difficulty, defaulting to 'basic' if no valid selection
             const difficulty = this.difficultySelect.value || 'basic';
             // Store using storage service
-            await storageService.saveData(STORAGE_KEYS.DIFFICULTY, difficulty);
+            savePromises.push(this.saveSetting(STORAGE_KEYS.DIFFICULTY, difficulty));
             
             // Update game difficulty if game is available
             if (this.game) {
@@ -434,16 +400,21 @@ export class GameplayTab extends SettingsTab {
         }
         
         if (this.customSkillsCheckbox) {
-            await storageService.saveData(STORAGE_KEYS.CUSTOM_SKILLS, this.customSkillsCheckbox.checked);
+            savePromises.push(this.saveSetting(STORAGE_KEYS.CUSTOM_SKILLS, this.customSkillsCheckbox.checked.toString()));
         }
         
         if (this.cameraZoomSlider) {
-            await storageService.saveData(STORAGE_KEYS.CAMERA_ZOOM, parseInt(this.cameraZoomSlider.value));
+            savePromises.push(this.saveSetting(STORAGE_KEYS.CAMERA_ZOOM, parseInt(this.cameraZoomSlider.value).toString()));
         }
+        
+        // Wait for all saves to complete
+        await Promise.all(savePromises);
+        return true;
     }
     
     /**
      * Reset the gameplay settings to defaults
+     * @returns {Promise<boolean>} - True if reset was successful
      */
     async resetToDefaults() {
         if (this.difficultySelect) {
@@ -464,17 +435,18 @@ export class GameplayTab extends SettingsTab {
             }
         }
         
-        await this.saveSettings();
+        // Save all the reset values
+        return this.saveSettings();
     }
     
     /**
      * Handle login button click
      * @private
      */
-    async handleLoginClick() {
+    handleLoginClick() {
         // Make sure the UI elements are initialized
         if (!this.googleLoginContainer) {
-            await this.initializeGoogleLogin();
+            this.initializeGoogleLogin();
         }
         
         // Check if button exists before updating it
@@ -491,15 +463,27 @@ export class GameplayTab extends SettingsTab {
             this.loginButton.disabled = true;
             this.loginButton.textContent = 'Signing in...';
             
-            const success = await this.game.saveManager.signInToGoogle();
-            
-            if (!success && this.loginButton) {
-                this.loginButton.disabled = false;
-                this.loginButton.innerHTML = `
-                    <img src="${this.googleIcon}" alt="Google">
-                    <span>Sign in with Google</span>
-                `;
-            }
+            // Use Promise chain for better error handling
+            this.game.saveManager.signInToGoogle()
+                .then(success => {
+                    if (!success && this.loginButton) {
+                        this.loginButton.disabled = false;
+                        this.loginButton.innerHTML = `
+                            <img src="${this.googleIcon}" alt="Google">
+                            <span>Sign in with Google</span>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error signing in to Google:', error);
+                    if (this.loginButton) {
+                        this.loginButton.disabled = false;
+                        this.loginButton.innerHTML = `
+                            <img src="${this.googleIcon}" alt="Google">
+                            <span>Sign in with Google</span>
+                        `;
+                    }
+                });
         }
     }
     

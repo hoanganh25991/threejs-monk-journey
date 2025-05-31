@@ -474,6 +474,22 @@
                 <div id="game-tab" class="tab-content active">
                     <h2 id="game-title">Game Settings</h2>
                     <div class="settings-section">
+                        <!-- Google Login Section -->
+                        <div id="google-login-section" class="setting-item">
+                            <h3>Account Sync</h3>
+                            <div class="setting-row">
+                                <div class="settings-label">Google Account</div>
+                                <div class="settings-google-login">
+                                    <button id="google-login-button" class="settings-button google-login-button">
+                                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTcuNiA5LjJsLS4xLTEuOEg5djMuNGg0LjhDMTMuNiAxMiAxMyAxMyAxMiAxMy42djIuMmgzYTguOCA4LjggMCAwIDAgMi42LTYuNnoiIGZpbGw9IiM0Mjg1RjQiIGZpbGwtcnVsZT0ibm9uemVybyIvPjxwYXRoIGQ9Ik05IDE4YzIuNCAwIDQuNS0uOCA2LTIuMmwtMy0yLjJhNS40IDUuNCAwIDAgMS04LTIuOUgxVjEzYTkgOSAwIDAgMCA4IDV6IiBmaWxsPSIjMzRBODUzIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNNCAxMC43YTUuNCA1LjQgMCAwIDEgMC0zLjRWNUgxYTkgOSAwIDAgMCAwIDhsMy0yLjN6IiBmaWxsPSIjRkJCQzA1IiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNOSAzLjZjMS4zIDAgMi41LjQgMy40IDEuM0wxNSAyLjNBOSA5IDAgMCAwIDEgNWwzIDIuNGE1LjQgNS40IDAgMCAxIDUtMy43eiIgZmlsbD0iI0VBNDMzNSIgZmlsbC1ydWxlPSJub256ZXJvIi8+PHBhdGggZD0iTTAgMGgxOHYxOEgweiIvPjwvZz48L3N2Zz4=" alt="Google">
+                                        <span>Sign in with Google</span>
+                                    </button>
+                                    <div class="google-login-status signed-out" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="settings-description">Sync your game progress across devices</div>
+                        </div>
+                        
                         <!-- Game Difficulty Setting -->
                         <div id="difficulty-container" class="setting-item">
                             <h3>Game Difficulty</h3>
@@ -894,6 +910,9 @@
 
     <!-- PeerJS Library for WebRTC connections -->
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+
+    <!-- Google API -->
+    <script src="https://accounts.google.com/gsi/client"></script>
 
     <!-- Main script module -->
     <script type="module" src="js/Main.js"></script>
