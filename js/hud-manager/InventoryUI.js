@@ -505,14 +505,46 @@ export class InventoryUI extends UIComponent {
         // Make sure the preview container is visible
         this.itemPreviewContainer.style.display = 'block';
         
-        // Position popup near the clicked item
-        const rect = slotElement.getBoundingClientRect();
-        this.itemPopup.style.left = `${rect.right + 10}px`;
-        // this.itemPopup.style.top = `${rect.top}px`;
-        this.itemPopup.style.top = `10px`;
-        
-        // Show popup
+        // Show popup first with temporary positioning to get its dimensions
         this.itemPopup.style.display = 'block';
+        this.itemPopup.style.left = '0';
+        this.itemPopup.style.top = '0';
+        
+        // Get dimensions
+        const rect = slotElement.getBoundingClientRect();
+        const popupRect = this.itemPopup.getBoundingClientRect();
+        const popupWidth = popupRect.width;
+        const popupHeight = popupRect.height;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        
+        // Calculate optimal position
+        let leftPos, rightPos, topPos;
+        
+        // Check if the popup would go off the right edge of the screen
+        if (rect.right + 10 + popupWidth > windowWidth) {
+            // Position from right edge if close to right border
+            leftPos = 'auto';
+            rightPos = '10px';
+        } else {
+            // Position from left as usual
+            rightPos = 'auto';
+            leftPos = `${rect.right + 10}px`;
+        }
+        
+        // Check vertical positioning
+        if (rect.top + popupHeight > windowHeight) {
+            // If popup would go off bottom of screen, position it higher
+            topPos = `${Math.max(10, windowHeight - popupHeight - 10)}px`;
+        } else {
+            // Align with the top of the item slot
+            topPos = `${rect.top}px`;
+        }
+        
+        // Apply final positioning
+        this.itemPopup.style.left = leftPos;
+        this.itemPopup.style.right = rightPos;
+        this.itemPopup.style.top = topPos;
         
         // Prevent event from bubbling to document
         event.stopPropagation();
@@ -524,6 +556,10 @@ export class InventoryUI extends UIComponent {
     hideItemPopup() {
         if (this.itemPopup) {
             this.itemPopup.style.display = 'none';
+            // Reset positioning properties
+            this.itemPopup.style.left = 'auto';
+            this.itemPopup.style.right = 'auto';
+            
             this.currentItem = null;
             this.activeItemSlot = null;
             
