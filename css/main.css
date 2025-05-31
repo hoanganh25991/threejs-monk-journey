@@ -83,3 +83,6 @@
 
 /* Import difficulty menu styles */
 @import 'difficulty-menu.css';
+
+/* Import Google login styles */
+@import 'google-login.css';

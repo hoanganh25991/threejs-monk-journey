@@ -1,5 +1,5 @@
 import { ISaveSystem } from './ISaveSystem.js';
-import { LocalStorageAdapter } from './LocalStorageAdapter.js';
+import { SyncStorageAdapter } from './SyncStorageAdapter.js';
 import { PlayerSerializer } from './serializers/PlayerSerializer.js';
 import { QuestSerializer } from './serializers/QuestSerializer.js';
 import { SettingsSerializer } from './serializers/SettingsSerializer.js';
@@ -31,8 +31,11 @@ export class SaveManager extends ISaveSystem {
         this.lastSaveTime = 0; // Track time of last save
         this.minTimeBetweenSaves = 60_000; // Minimum minute between saves
         
-        // Create storage adapter
-        this.storage = new LocalStorageAdapter();
+        // Google Client ID for authentication
+        this.googleClientId = '1070303484277-3dmj1pfiv64gmgj396j5hcbvnqdkuje4.apps.googleusercontent.com';
+        
+        // Create storage adapter with Google Drive support
+        this.storage = new SyncStorageAdapter(this.googleClientId);
         
         // Current save version
         this.currentVersion = '1.1.0';
@@ -136,8 +139,8 @@ export class SaveManager extends ISaveSystem {
             !autoSave && this.saveProgress.update('Writing hero data to storage...', 80);
             await this.delay(10); // Small delay for UI update
         
-            // Save to storage
-            const success = this.storage.saveData(this.saveKey, saveData);
+            // Save to storage (now async)
+            const success = await this.storage.saveData(this.saveKey, saveData);
             
             if (!success) {
                 throw new Error('Failed to save hero data');
@@ -188,7 +191,7 @@ export class SaveManager extends ISaveSystem {
             this.loadProgress.update('Reading save data...', 20);
             await this.delay(10); // Small delay for UI update
             
-            const saveData = this.storage.loadData(this.saveKey);
+            const saveData = await this.storage.loadData(this.saveKey);
             
             // Check if save data exists
             if (!saveData) {
@@ -307,6 +310,46 @@ export class SaveManager extends ISaveSystem {
             
             return false;
         }
+    }
+    
+    /**
+     * Sign in to Google Drive
+     * @returns {Promise<boolean>} Whether sign-in was successful
+     */
+    async signInToGoogle() {
+        try {
+            const success = await this.storage.signInToGoogle();
+            
+            if (success) {
+                console.debug('Successfully signed in to Google Drive');
+                
+                // Try to load save data from Google Drive
+                await this.loadGame();
+            } else {
+                console.debug('Failed to sign in to Google Drive');
+            }
+            
+            return success;
+        } catch (error) {
+            console.error('Error signing in to Google Drive:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Sign out from Google Drive
+     */
+    signOutFromGoogle() {
+        this.storage.signOutFromGoogle();
+        console.debug('Signed out from Google Drive');
+    }
+    
+    /**
+     * Check if signed in to Google Drive
+     * @returns {boolean} Whether signed in to Google Drive
+     */
+    isSignedInToGoogle() {
+        return this.storage.isSignedInToGoogle();
     }
     
     /**

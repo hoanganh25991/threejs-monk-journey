@@ -14,7 +14,25 @@ export class GameMenu extends IMenu {
         super('game-menu', game);
         this.loadGameButton = document.getElementById('load-game-button');
         this.settingsMenuButton = document.getElementById('settings-menu-button');
+        this.googleSignInButton = document.getElementById('google-signin-button');
         this.setupEventListeners();
+        
+        // Listen for Google sign-in/sign-out events
+        window.addEventListener('google-signin-success', () => this.updateGoogleSignInButton(true));
+        window.addEventListener('google-signout', () => this.updateGoogleSignInButton(false));
+    }
+    
+    /**
+     * Update the Google Sign-In button text based on sign-in state
+     * @param {boolean} isSignedIn - Whether the user is signed in
+     */
+    updateGoogleSignInButton(isSignedIn) {
+        if (this.googleSignInButton) {
+            this.googleSignInButton.textContent = isSignedIn 
+                ? "Sign out from Google" 
+                : "Sign in with Google";
+            this.googleSignInButton.disabled = false;
+        }
     }
 
     /**
@@ -113,6 +131,40 @@ export class GameMenu extends IMenu {
                     this.game.menuManager.showMenu('settingsMenu');
                 }
             });
+        }
+        
+        // Google Sign-In button
+        if (this.googleSignInButton) {
+            this.googleSignInButton.addEventListener('click', async () => {
+                console.debug("Google Sign-In button clicked");
+                
+                if (this.game.saveManager) {
+                    if (this.game.saveManager.isSignedInToGoogle()) {
+                        // Sign out
+                        this.game.saveManager.signOutFromGoogle();
+                        this.googleSignInButton.textContent = "Sign in with Google";
+                    } else {
+                        // Sign in
+                        this.googleSignInButton.textContent = "Signing in...";
+                        this.googleSignInButton.disabled = true;
+                        
+                        const success = await this.game.saveManager.signInToGoogle();
+                        
+                        if (success) {
+                            this.googleSignInButton.textContent = "Sign out from Google";
+                        } else {
+                            this.googleSignInButton.textContent = "Sign in with Google";
+                        }
+                        
+                        this.googleSignInButton.disabled = false;
+                    }
+                }
+            });
+            
+            // Update button text based on current sign-in state
+            if (this.game.saveManager && this.game.saveManager.isSignedInToGoogle()) {
+                this.googleSignInButton.textContent = "Sign out from Google";
+            }
         }
     }
 

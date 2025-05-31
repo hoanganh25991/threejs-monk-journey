@@ -32,9 +32,25 @@ export class LocalStorageAdapter extends IStorageAdapter {
             if (!serializedData) {
                 return null;
             }
+            
+            // Special handling for skill variant keys which store plain strings
+            if (key.startsWith('monk_journey_selected_skill_variant_')) {
+                return serializedData; // Return the raw string value
+            }
+            
+            // For all other keys, parse as JSON
             return JSON.parse(serializedData);
         } catch (error) {
             console.error(`Error loading data for key ${key}:`, error);
+            
+            // If JSON parsing fails, return the raw string value
+            // This handles cases where non-JSON values were stored
+            const rawData = localStorage.getItem(key);
+            if (rawData) {
+                console.debug(`Returning raw string value for key ${key}`);
+                return rawData;
+            }
+            
             return null;
         }
     }
