@@ -304,7 +304,18 @@ export const NORMAL_SKILLS = [
         cooldown: 0.2, // Moderate cooldown
         range: 40, // Long range
         radius: 3, // Explosion radius
-        duration: 5, // Duration in seconds
+        // Rain variant configuration
+        palmRainConfig: {
+            palmCount: 20, // Number of palms to create
+            palmDelay: 0.15, // Delay between palm creations in seconds
+            fallSpeed: 25, // Speed at which palms fall
+        },
+        // Duration is calculated based on palmCount and palmDelay plus extra time for explosions
+        get duration() { 
+            return this.palmRainConfig ? 
+                (this.palmRainConfig.palmCount * this.palmRainConfig.palmDelay) + 2 : 
+                5; // Default duration if not using rain variant
+        },
         get color() { return SKILL_ICONS[this.name]?.color; }, // Green color
         get icon() { return SKILL_ICONS[this.name]?.emoji; }, // Leaf emoji as fallback
         sounds: {

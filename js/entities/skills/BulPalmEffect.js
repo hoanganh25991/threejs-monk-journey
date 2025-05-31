@@ -12,6 +12,7 @@ export class BulPalmEffect extends SkillEffect {
     // Palm effect settings
     this.palmHeight = 0.5; // Height above ground
     this.palmScale = 1.5; // Size of the palm
+    this.auraRadius = 0.2; // Radius of the energy aura circle inside the palm
     
     // Explosion settings
     this.explosionInterval = 0.5; // Time between explosions in seconds
@@ -95,12 +96,19 @@ export class BulPalmEffect extends SkillEffect {
    * Create a Bul Palm effect
    * @param {THREE.Vector3} position - Position to place the palm
    * @param {THREE.Vector3} direction - Direction to move
+   * @param {Object} [options] - Optional settings for the effect
+   * @param {number} [options.auraRadius] - Custom radius for the energy aura circle
    * @returns {THREE.Group} - The created effect
    */
-  create(position, direction) {
+  create(position, direction, options = {}) {
     try {
       // Clone position to avoid modifying the original
       position = position.clone();
+      
+      // Apply custom options if provided
+      if (options.auraRadius !== undefined) {
+        this.auraRadius = options.auraRadius;
+      }
       
       // Create a group for the effect
       const effectGroup = new THREE.Group();
@@ -310,13 +318,15 @@ export class BulPalmEffect extends SkillEffect {
   createAura(handGroup) {
     // Instead of a sphere, create a subtle glow effect using small planes
     const glowCount = 8;
-    const glowRadius = 0.8;
+    // Use the configurable aura radius
+    const glowRadius = this.auraRadius;
     
     for (let i = 0; i < glowCount; i++) {
       const angle = (i / glowCount) * Math.PI * 2;
       const x = Math.cos(angle) * glowRadius;
       const z = Math.sin(angle) * glowRadius;
       
+      // Keep the plane size constant regardless of radius
       const glowGeometry = new THREE.PlaneGeometry(0.5, 0.5);
       const glowMaterial = this.createMaterial(
         this.getBrighterColor(),
