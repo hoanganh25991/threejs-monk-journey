@@ -73,12 +73,12 @@ export class BulPalmCrossEffect extends BulPalmEffect {
       // Position effect at the starting position
       effectGroup.position.copy(position);
       
-      // Create all 4 palms in a cross pattern
-      this.createCrossPalms();
-      
-      // Store effect
+      // Store effect first so it's available in createCrossPalms
       this.effect = effectGroup;
       this.isActive = true;
+      
+      // Create all 4 palms in a cross pattern
+      this.createCrossPalms();
       
       return effectGroup;
     } catch (error) {
@@ -194,9 +194,9 @@ export class BulPalmCrossEffect extends BulPalmEffect {
     // Calculate palm position
     // Position the palm at the edge of the area in the given direction
     const palmPosition = new THREE.Vector3(
-      this.centerPosition.x + direction.x * this.areaRadius * 4,
+      this.centerPosition.x + direction.x * this.areaRadius * 2,
       this.centerPosition.y + this.startHeight,
-      this.centerPosition.z + direction.z * this.areaRadius * 4
+      this.centerPosition.z + direction.z * this.areaRadius * 2
     );
     
     // Create palm group
@@ -247,13 +247,12 @@ export class BulPalmCrossEffect extends BulPalmEffect {
       true
     );
     
-    // Set hand orientation to point toward the center
-    // Calculate the angle to face the center
+    // Set hand orientation - point fingers downward
+    handGroup.rotation.x = Math.PI / 2; // Point fingers downward
+    
+    // Rotate around Y-axis to face the center
     const angle = Math.atan2(-direction.x, -direction.z);
     handGroup.rotation.y = angle;
-    
-    // Tilt the hand to point downward
-    handGroup.rotation.x = Math.PI / 2; // Point fingers downward
     
     // Add hand to palm group
     palmGroup.add(handGroup);
@@ -284,12 +283,16 @@ export class BulPalmCrossEffect extends BulPalmEffect {
       index: index
     };
     
-    // Add to scene
+    // Add to scene - make sure to add to the parent scene
     if (this.effect && this.effect.parent) {
       this.effect.parent.add(palmGroup);
     } else {
+      // If no parent, add to the effect itself
       this.effect.add(palmGroup);
     }
+    
+    // Log palm creation for debugging
+    console.log(`Created palm ${index} at position:`, palmPosition);
     
     // Add to palm groups
     this.palmGroups.push(palmData);
@@ -496,15 +499,56 @@ export class BulPalmCrossEffect extends BulPalmEffect {
         if (palmData.group.position.y > this.centerPosition.y) {
           allPalmsLanded = false;
         }
+        
+        // Update impact effect if it exists
+        if (palmData.impactGroup && palmData.impactAge !== undefined) {
+          palmData.impactAge += delta;
+          this.updateImpactEffect(palmData, delta);
+        }
       } else {
         // Hide individual palms when combined explosion happens
         palmData.handGroup.visible = false;
+        
+        // Also hide individual impact effects
+        if (palmData.impactGroup) {
+          palmData.impactGroup.visible = false;
+        }
       }
     }
     
     // If all palms have landed and we haven't triggered the explosion yet
     if (allPalmsLanded && !this.hasExploded && this.palmGroups.length === 4) {
-      this.createCombinedExplosion();
+      // Add a small delay before the combined explosion for dramatic effect
+      setTimeout(() => {
+        if (this.isActive && !this.hasExploded) {
+          this.createCombinedExplosion();
+        }
+      }, 300); // 300ms delay
+    }
+  }
+  
+  /**
+   * Update the impact effect for a palm
+   * @param {Object} palmData - Data for the palm with the impact effect
+   * @param {number} delta - Time since last update in seconds
+   * @private
+   */
+  updateImpactEffect(palmData, delta) {
+    if (!palmData.impactGroup || palmData.impactGroup.children.length === 0) return;
+    
+    const ring = palmData.impactGroup.children[0];
+    if (!ring || !ring.userData) return;
+    
+    // Scale up the ring
+    const scaleProgress = Math.min(palmData.impactAge * 2, 1); // Complete in 0.5 seconds
+    const currentScale = ring.userData.initialScale + 
+      (ring.userData.targetScale - ring.userData.initialScale) * scaleProgress;
+    
+    ring.scale.set(currentScale, currentScale, currentScale);
+    
+    // Fade out as it expands
+    if (ring.material) {
+      ring.material.opacity = Math.max(0, 0.8 - palmData.impactAge * 1.6);
     }
   }
   
@@ -523,10 +567,65 @@ export class BulPalmCrossEffect extends BulPalmEffect {
     if (palmData.group.position.y <= this.centerPosition.y) {
       // Snap to ground
       palmData.group.position.y = this.centerPosition.y;
+      
+      // Create individual explosion if not already exploded
+      if (!palmData.hasExploded && !this.hasExploded) {
+        // Create small impact effect
+        this.createPalmImpact(palmData);
+      }
     }
     
     // Update particles
     this.updateOrbitingParticles(palmData.particles, palmData.age);
+  }
+  
+  /**
+   * Create a small impact effect when a palm hits the ground
+   * @param {Object} palmData - Data for the palm that hit the ground
+   * @private
+   */
+  createPalmImpact(palmData) {
+    // Create a small shockwave at the impact point
+    const impactGroup = new THREE.Group();
+    
+    // Create a ring for the shockwave
+    const ringGeometry = new THREE.RingGeometry(0.2, 1.0, 32);
+    const ringMaterial = this.createMaterial(
+      this.getBrighterColor(),
+      2.0,
+      true,
+      0.8,
+      false,
+      true
+    );
+    
+    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+    ring.rotation.x = -Math.PI / 2; // Lay flat on the ground
+    ring.position.y = 0.1; // Slightly above ground
+    
+    // Add animation data
+    ring.userData = {
+      initialScale: 0.5,
+      targetScale: 3.0,
+      age: 0
+    };
+    
+    // Start with initial scale
+    ring.scale.set(
+      ring.userData.initialScale,
+      ring.userData.initialScale,
+      ring.userData.initialScale
+    );
+    
+    impactGroup.add(ring);
+    
+    // Add impact group to the palm's explosion group
+    palmData.explosionGroup.add(impactGroup);
+    palmData.explosionGroup.visible = true;
+    
+    // Mark as having an impact effect
+    palmData.impactGroup = impactGroup;
+    palmData.impactAge = 0;
   }
   
   /**
