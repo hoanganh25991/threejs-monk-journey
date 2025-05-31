@@ -93,6 +93,10 @@ export class EnemyManager {
         // Multiplayer support
         this.isMultiplayer = false;
         this.isHost = false;
+        this.lastSyncTime = Date.now(); // Track last time enemies were synced
+        this.enemyLastUpdated = new Map(); // Track when each enemy was last updated
+        this.multiplayerCleanupInterval = 5000; // Clean up stale enemies every 5 seconds
+        this.staleEnemyThreshold = 10000; // Consider enemies stale after 10 seconds without updates
         
         // Boss spawning configuration
         this.bossSpawnTimer = 0;
@@ -228,6 +232,9 @@ export class EnemyManager {
                     
                     // Clean up processed drops entry for this enemy
                     this.processedDrops.delete(id);
+                    
+                    // Clean up last updated timestamp
+                    this.enemyLastUpdated.delete(id);
                 }
             }
         }
@@ -242,7 +249,13 @@ export class EnemyManager {
         // Periodically clean up distant enemies (approximately every 10 seconds)
         // This ensures enemies are cleaned up even if the player moves slowly
         if (Math.random() < 0.01) { // ~1% chance per frame, assuming 60fps = ~once per 10 seconds
-            this.cleanupDistantEnemies();
+            // In multiplayer mode as a non-host, use the multiplayer cleanup
+            if (this.isMultiplayer && !this.isHost) {
+                this.cleanupStaleEnemies();
+            } else {
+                // Normal cleanup for host or single player
+                this.cleanupDistantEnemies();
+            }
             
             // Also clean up any stale entries in the processedDrops map
             // (enemies that might have been removed without proper cleanup)
@@ -296,6 +309,9 @@ export class EnemyManager {
         
         // Add to enemies map
         this.enemies.set(id, enemy);
+        
+        // Track when this enemy was last updated
+        this.enemyLastUpdated.set(id, Date.now());
         
         return enemy;
     }
@@ -352,6 +368,9 @@ export class EnemyManager {
     updateEnemiesFromHost(enemiesData) {
         if (!enemiesData) return;
         
+        // Update the last sync time
+        this.lastSyncTime = Date.now();
+        
         // Process enemy updates
         Object.values(enemiesData).forEach(enemyData => {
             const id = enemyData.id;
@@ -368,6 +387,9 @@ export class EnemyManager {
             if (!position || isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
                 return;
             }
+            
+            // Update the last updated timestamp for this enemy
+            this.enemyLastUpdated.set(id, Date.now());
             
             // Check if enemy exists
             if (this.enemies.has(id)) {
@@ -440,12 +462,28 @@ export class EnemyManager {
         });
         
         // Remove enemies that no longer exist in the host data
+        // In multiplayer mode, we want to be more aggressive with cleanup
         const hostEnemyIds = new Set(Object.keys(enemiesData));
+        const enemiesToRemove = [];
         
         for (const [id, enemy] of this.enemies.entries()) {
             if (!hostEnemyIds.has(id)) {
-                enemy.remove();
-                this.enemies.delete(id);
+                enemiesToRemove.push(id);
+            }
+        }
+        
+        // Remove enemies that are no longer in the host data
+        if (enemiesToRemove.length > 0) {
+            console.debug(`Removing ${enemiesToRemove.length} enemies that are no longer in host data`);
+            
+            for (const id of enemiesToRemove) {
+                const enemy = this.enemies.get(id);
+                if (enemy) {
+                    enemy.remove();
+                    this.enemies.delete(id);
+                    this.processedDrops.delete(id);
+                    this.enemyLastUpdated.delete(id);
+                }
             }
         }
     }
@@ -1272,6 +1310,58 @@ export class EnemyManager {
             // If this enemy no longer exists in the enemies map, remove the entry
             if (!this.enemies.has(id)) {
                 this.processedDrops.delete(id);
+            }
+        }
+    }
+    
+    /**
+     * Clean up stale enemies in multiplayer mode
+     * This is specifically for non-host players to remove enemies that haven't been updated recently
+     */
+    cleanupStaleEnemies() {
+        // Only run this in multiplayer mode as a non-host
+        if (!this.isMultiplayer || this.isHost) {
+            return;
+        }
+        
+        const now = Date.now();
+        const staleThreshold = this.staleEnemyThreshold;
+        const enemiesToRemove = [];
+        
+        // Check if we haven't received any updates for a long time
+        const timeSinceLastSync = now - this.lastSyncTime;
+        
+        // If we haven't received any updates for a long time (30 seconds),
+        // consider removing all enemies as we might have lost connection to the host
+        if (timeSinceLastSync > 30000) {
+            console.warn(`No enemy updates received for ${timeSinceLastSync/1000} seconds. Clearing all enemies.`);
+            this.removeAllEnemies();
+            return;
+        }
+        
+        // Check each enemy's last update time
+        for (const [id, enemy] of this.enemies.entries()) {
+            const lastUpdated = this.enemyLastUpdated.get(id) || 0;
+            const timeSinceUpdate = now - lastUpdated;
+            
+            // If this enemy hasn't been updated recently, mark it for removal
+            if (timeSinceUpdate > staleThreshold) {
+                enemiesToRemove.push(id);
+            }
+        }
+        
+        // Remove stale enemies
+        if (enemiesToRemove.length > 0) {
+            console.debug(`Removing ${enemiesToRemove.length} stale enemies that haven't been updated in ${staleThreshold/1000} seconds`);
+            
+            for (const id of enemiesToRemove) {
+                const enemy = this.enemies.get(id);
+                if (enemy) {
+                    enemy.remove();
+                    this.enemies.delete(id);
+                    this.processedDrops.delete(id);
+                    this.enemyLastUpdated.delete(id);
+                }
             }
         }
     }
