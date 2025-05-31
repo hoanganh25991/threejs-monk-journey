@@ -899,8 +899,65 @@ const BASE_SKILL_TREES = {
   "Bul Palm": {
     baseDescription:
       "Giant palm moving, damaging all enemies on the path.",
-    variants: {},
-    buffs: {},
+    variants: {
+      "Palm Rain": {
+        description: "Summons 10 giant palms from the sky that crash down on enemies in an area.",
+        effects: ["Multiple palms", "Area of effect", "Increased damage"],
+        unlockedBy: "Legendary gloves Hand of the Heavens",
+        cost: 5,
+        requiredPoints: 0,
+      }
+    },
+    buffs: {
+      "Palm Mastery": {
+        description: "Increases the damage of Bul Palm by 15%.",
+        effects: ["Increased damage"],
+        cost: 5,
+        maxLevel: 3,
+        levelBonuses: [
+          "Increases damage by 15%",
+          "Increases damage by 30%",
+          "Increases damage by 45%",
+        ],
+        requiredVariant: "any",
+      },
+      "Swift Palms": {
+        description: "Reduces the cooldown of Bul Palm by 0.5 seconds.",
+        effects: ["Cooldown reduction"],
+        cost: 5,
+        maxLevel: 3,
+        levelBonuses: [
+          "Reduces cooldown by 0.5 seconds",
+          "Reduces cooldown by 1.0 seconds",
+          "Reduces cooldown by 1.5 seconds",
+        ],
+        requiredVariant: "any",
+      },
+      "Widened Impact": {
+        description: "Increases the explosion radius by 20%.",
+        effects: ["Extended radius"],
+        cost: 5,
+        maxLevel: 3,
+        levelBonuses: [
+          "Increases explosion radius by 20%",
+          "Increases explosion radius by 40%",
+          "Increases explosion radius by 60%",
+        ],
+        requiredVariant: "any",
+      },
+      "Empowered Palms": {
+        description: "Palm Rain variant summons 2 additional palms.",
+        effects: ["Additional palms"],
+        cost: 5,
+        maxLevel: 3,
+        levelBonuses: [
+          "Summons 2 additional palms",
+          "Summons 4 additional palms",
+          "Summons 6 additional palms",
+        ],
+        requiredVariant: "Palm Rain",
+      },
+    },
   },
   "Bul Breath Of Heaven": {
     baseDescription:

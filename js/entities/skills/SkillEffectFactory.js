@@ -92,6 +92,9 @@ import { LightningBellEffect } from './variants/WaveOfLight/LightningBellEffect.
 import { PillarOfTheLightEffect } from './variants/WaveOfLight/PillarOfTheLightEffect.js';
 import { WallOfLightEffect } from './variants/WaveOfLight/WallOfLightEffect.js';
 
+// Import Bul Palm variant effects
+import { PalmRainEffect } from './variants/BulPalm/PalmRainEffect.js';
+
 /**
  * Factory class for creating skill effects
  */
@@ -488,6 +491,15 @@ export class SkillEffectFactory {
                 case 'Wall of Light':
                     // Creates a wall of light that blocks and damages enemies
                     return new WallOfLightEffect(skill);
+            }
+        }
+        
+        // Handle Bul Palm variants
+        else if (skillName === 'Bul Palm') {
+            switch (variantName) {
+                case 'Palm Rain':
+                    // Summons multiple palms from the sky that crash down on enemies
+                    return new PalmRainEffect(skill);
             }
         }
         
