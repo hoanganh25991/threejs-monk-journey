@@ -4,6 +4,7 @@ import { getSkillIcon, getBuffIcon } from "../config/skill-icons.js";
 import { SKILL_TREES } from "../config/skill-tree.js";
 import { applyBuffsToVariants } from "../utils/SkillTreeUtils.js";
 import { STORAGE_KEYS } from "../config/storage-keys.js";
+import storageService from "../save-manager/StorageService.js";
 
 /**
  * Skill Tree UI component
@@ -24,8 +25,7 @@ export class SkillTreeUI extends UIComponent {
     this.selectedBuff = null;
     this.skillPoints = 10_000_000; // Will be loaded from player data
 
-    // Custom skills flag
-    this.customSkillsEnabled = localStorage.getItem(STORAGE_KEYS.CUSTOM_SKILLS) === 'true';
+    // Custom skills flag - will be initialized in init()
 
     // Get the skill trees and apply buffs to variants
     this.skillTrees = JSON.parse(JSON.stringify(SKILL_TREES)); // Create a deep copy
@@ -72,9 +72,9 @@ export class SkillTreeUI extends UIComponent {
   /**
    * Refresh the skill tree when custom skills setting changes
    */
-  refreshSkillTree() {
+  async refreshSkillTree() {
     // Update the flag
-    this.customSkillsEnabled = localStorage.getItem(STORAGE_KEYS.CUSTOM_SKILLS) === 'true';
+    this.customSkillsEnabled = await storageService.loadData(STORAGE_KEYS.CUSTOM_SKILLS) === true;
     console.debug(`Custom skills ${this.customSkillsEnabled ? 'enabled' : 'disabled'} in SkillTreeUI`);
     
     // Re-render the skill tree
@@ -86,6 +86,12 @@ export class SkillTreeUI extends UIComponent {
    * @returns {boolean} - True if initialization was successful
    */
   async init() {
+    // Initialize storage service
+    await storageService.init();
+    
+    // Load custom skills flag
+    this.customSkillsEnabled = await storageService.loadData(STORAGE_KEYS.CUSTOM_SKILLS) === true;
+    
     // Check if the container exists in the DOM
     if (!this.container) {
       console.error(`Container element with ID "skill-tree" not found. Creating it dynamically.`);
@@ -106,7 +112,7 @@ export class SkillTreeUI extends UIComponent {
     this.container.style.pointerEvents = 'auto';
 
     // Initialize player skills data structure
-    this.initPlayerSkills();
+    await this.initPlayerSkills();
 
     // Render the skill tree
     this.renderSkillTree();
@@ -158,7 +164,7 @@ export class SkillTreeUI extends UIComponent {
   /**
    * Initialize player skills data structure
    */
-  initPlayerSkills() {
+  async initPlayerSkills() {
     // Create a structure to track player's skill allocations
     this.playerSkills = {};
 
@@ -192,12 +198,11 @@ export class SkillTreeUI extends UIComponent {
       }
     });
     
-    // Load saved skill tree data from localStorage if available
+    // Load saved skill tree data from storage service if available
     try {
-      const skillTreeDataJson = localStorage.getItem(STORAGE_KEYS.SKILL_TREE_DATA);
-      if (skillTreeDataJson) {
-        const savedSkillTreeData = JSON.parse(skillTreeDataJson);
-        console.debug('Loaded skill tree data from localStorage in SkillTreeUI:', savedSkillTreeData);
+      const savedSkillTreeData = await storageService.loadData(STORAGE_KEYS.SKILL_TREE_DATA);
+      if (savedSkillTreeData) {
+        console.debug('Loaded skill tree data from storage in SkillTreeUI:', savedSkillTreeData);
         
         // Merge saved data with initialized data structure
         Object.keys(savedSkillTreeData).forEach(skillName => {
@@ -207,7 +212,7 @@ export class SkillTreeUI extends UIComponent {
         });
       }
     } catch (error) {
-      console.error('Error loading skill tree data from localStorage in SkillTreeUI:', error);
+      console.error('Error loading skill tree data from storage in SkillTreeUI:', error);
     }
   }
 
@@ -892,7 +897,7 @@ ${iconData.emoji}
    * Save the skill tree configuration
    * This method will save the player's skill selections and close the skill tree
    */
-  saveSkillTree() {
+  async saveSkillTree() {
     // Calculate total points spent
     let totalPointsSpent = 0;
     
@@ -923,14 +928,18 @@ ${iconData.emoji}
       return;
     }
     
-    // Save the configuration to localStorage
+    // Save the configuration to storage service
     console.debug("Saving skill tree configuration:", this.playerSkills);
     
     try {
-      localStorage.setItem(STORAGE_KEYS.SKILL_TREE_DATA, JSON.stringify(this.playerSkills));
-      console.debug('Skill tree data saved to localStorage successfully');
+      const success = await storageService.saveData(STORAGE_KEYS.SKILL_TREE_DATA, this.playerSkills);
+      if (success) {
+        console.debug('Skill tree data saved successfully');
+      } else {
+        throw new Error('Storage service returned false');
+      }
     } catch (error) {
-      console.error('Error saving skill tree data to localStorage:', error);
+      console.error('Error saving skill tree data:', error);
       // Show error notification
       if (this.game && this.game.hudManager) {
         this.game.hudManager.showNotification('Failed to save skill tree data. Please try again.');

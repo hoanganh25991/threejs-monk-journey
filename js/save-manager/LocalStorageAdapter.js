@@ -3,6 +3,7 @@ import { STORAGE_KEYS } from '../config/storage-keys.js';
 
 /**
  * Implementation of storage adapter using browser's localStorage
+ * Simplified to use consistent serialization/deserialization
  */
 export class LocalStorageAdapter extends IStorageAdapter {
     constructor() {

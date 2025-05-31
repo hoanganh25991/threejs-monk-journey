@@ -31,8 +31,8 @@ export class SaveManager extends ISaveSystem {
         this.lastSaveTime = 0; // Track time of last save
         this.minTimeBetweenSaves = 60_000; // Minimum minute between saves
         
-        // Use the centralized storage service
-        this.storage = storageService.getAdapter();
+        // Use the centralized storage service directly
+        this.storage = storageService;
         
         // Current save version
         this.currentVersion = '1.1.0';
@@ -108,22 +108,22 @@ export class SaveManager extends ISaveSystem {
             
             // Create save data object (only hero-related data)
             !autoSave && this.saveProgress.update('Collecting player data...', 15);
-            await this.delay(50); // Small delay for UI update
+            !autoSave && await this.delay(50); // Small delay for UI update
             
             const playerData = PlayerSerializer.serialize(this.game.player);
             
             !autoSave && this.saveProgress.update('Collecting inventory data...', 30);
-            await this.delay(50); // Small delay for UI update
+            !autoSave && await this.delay(50); // Small delay for UI update
             
             const inventoryData = InventorySerializer.serialize(this.game.player);
             
             !autoSave && this.saveProgress.update('Collecting quest data...', 45);
-            await this.delay(50); // Small delay for UI update
+            !autoSave && await this.delay(50); // Small delay for UI update
             
             const questData = QuestSerializer.serialize(this.game.questManager);
             
             !autoSave && this.saveProgress.update('Collecting settings...', 60);
-            await this.delay(50); // Small delay for UI update
+            !autoSave && await this.delay(50); // Small delay for UI update
             
             const settingsData = SettingsSerializer.serialize(this.game);
             
@@ -137,7 +137,7 @@ export class SaveManager extends ISaveSystem {
             };
             
             !autoSave && this.saveProgress.update('Writing hero data to storage...', 80);
-            await this.delay(10); // Small delay for UI update
+            !autoSave && await this.delay(10); // Small delay for UI update
         
             // Save to storage (now async)
             const success = await this.storage.saveData(this.saveKey, saveData);
@@ -150,7 +150,7 @@ export class SaveManager extends ISaveSystem {
             this.lastSaveLevel = playerLevel;
             
             !autoSave && this.saveProgress.update('Save complete!', 100);
-            await this.delay(10); // Show completion for a moment
+            !autoSave && await this.delay(10); // Show completion for a moment
             
             console.debug('Hero data saved successfully');
             

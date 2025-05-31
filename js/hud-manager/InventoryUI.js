@@ -1,7 +1,5 @@
 import * as THREE from 'three';
 import { UIComponent } from '../UIComponent.js';
-import { PlayerModel } from '../entities/player/PlayerModel.js';
-import { PlayerState } from '../entities/player/PlayerState.js';
 import { ModelPreview } from '../menu-system/ModelPreview.js';
 import { ItemPreview } from '../menu-system/ItemPreview.js';
 import { updateAnimation } from '../utils/AnimationUtils.js';
