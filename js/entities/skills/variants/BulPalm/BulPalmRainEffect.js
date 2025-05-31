@@ -178,9 +178,6 @@ export class BulPalmRainEffect extends BulPalmEffect {
       true
     );
     
-    // Set hand orientation - exactly 90 degrees to point directly downward
-    // handGroup.rotation.x = Math.PI / 2; // Point fingers downward at exactly 90 degrees
-    
     // Only rotate around Y-axis for visual variety, but keep Z-axis at 0 to ensure all palms face directly down
     handGroup.rotation.y = Math.random() * Math.PI * 2;
     handGroup.rotation.z = 0; // No tilt, all palms face directly to the ground

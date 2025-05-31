@@ -115,38 +115,28 @@ export class BulPalmCrossEffect extends BulPalmEffect {
       initialOpacity: 0.6
     };
     
-    // Create cross pattern indicator
-    const crossMaterial = this.createMaterial(
-      this.getBrighterColor(),
-      2.0,
+    // Create inner circle for better visibility
+    const innerCircleGeometry = new THREE.CircleGeometry(this.areaRadius * 3.7, 48);
+    const innerCircleMaterial = this.createMaterial(
+      this.getSkillColor(),
+      1.0,
       true,
-      0.7,
+      0.2,
       false,
       true
     );
     
-    // Horizontal line of the cross
-    const horizontalGeometry = new THREE.PlaneGeometry(this.areaRadius * 8, this.areaRadius * 0.5);
-    const horizontalLine = new THREE.Mesh(horizontalGeometry, crossMaterial);
-    horizontalLine.rotation.x = -Math.PI / 2; // Lay flat on the ground
-    horizontalLine.position.y = 0.15; // Slightly above the ring
-    
-    // Vertical line of the cross
-    const verticalGeometry = new THREE.PlaneGeometry(this.areaRadius * 0.5, this.areaRadius * 8);
-    const verticalLine = new THREE.Mesh(verticalGeometry, crossMaterial);
-    verticalLine.rotation.x = -Math.PI / 2; // Lay flat on the ground
-    verticalLine.position.y = 0.15; // Slightly above the ring
-    
-    // Add cross lines to the effect group
-    effectGroup.add(horizontalLine);
-    effectGroup.add(verticalLine);
+    const innerCircle = new THREE.Mesh(innerCircleGeometry, innerCircleMaterial);
+    innerCircle.rotation.x = -Math.PI / 2; // Lay flat on the ground
+    innerCircle.position.y = 0.05; // Slightly above ground but below the ring
     
     // Store references
     this.areaIndicator = areaIndicator;
-    this.horizontalLine = horizontalLine;
-    this.verticalLine = verticalLine;
+    this.innerCircle = innerCircle;
     
+    // Add to effect group
     effectGroup.add(areaIndicator);
+    effectGroup.add(innerCircle);
   }
   
   /**
@@ -170,13 +160,22 @@ export class BulPalmCrossEffect extends BulPalmEffect {
    * @private
    */
   createCrossPalms() {
-    // Define the 4 directions for the cross pattern
-    const directions = [
-      new THREE.Vector3(1, 0, 0),   // Right
-      new THREE.Vector3(-1, 0, 0),  // Left
-      new THREE.Vector3(0, 0, 1),   // Forward
-      new THREE.Vector3(0, 0, -1)   // Backward
+    // Define the 4 directions for the palms in a circular pattern
+    // Using angles at 45, 135, 225, and 315 degrees to place them diagonally
+    // This ensures they're evenly spaced around the center
+    
+    // Fix Bug 2: Ensure palms are properly separated
+    // We'll use the same direction vectors but ensure they're normalized
+    // This guarantees consistent spacing in all directions
+    const baseDirections = [
+      new THREE.Vector3(0.7071, 0, 0.7071),   // Northeast (45 degrees)
+      new THREE.Vector3(-0.7071, 0, 0.7071),  // Northwest (135 degrees)
+      new THREE.Vector3(-0.7071, 0, -0.7071), // Southwest (225 degrees)
+      new THREE.Vector3(0.7071, 0, -0.7071)   // Southeast (315 degrees)
     ];
+    
+    // Normalize each direction vector to ensure consistent spacing
+    const directions = baseDirections.map(dir => dir.clone().normalize());
     
     // Create a palm in each direction
     for (let i = 0; i < directions.length; i++) {
@@ -193,10 +192,12 @@ export class BulPalmCrossEffect extends BulPalmEffect {
   createDirectionalPalm(direction, index) {
     // Calculate palm position
     // Position the palm at the edge of the area in the given direction
+    // Use the exact radius of the area indicator (3.9 - average of inner and outer ring)
+    const areaIndicatorRadius = this.areaRadius * 3.9; // Average of 3.8 and 4.0
     const palmPosition = new THREE.Vector3(
-      this.centerPosition.x + direction.x * this.areaRadius * 2,
+      this.centerPosition.x + direction.x * areaIndicatorRadius,
       this.centerPosition.y + this.startHeight,
-      this.centerPosition.z + direction.z * this.areaRadius * 2
+      this.centerPosition.z + direction.z * areaIndicatorRadius
     );
     
     // Create palm group
@@ -273,9 +274,10 @@ export class BulPalmCrossEffect extends BulPalmEffect {
       particles: particles,
       startPosition: palmPosition.clone(),
       targetPosition: new THREE.Vector3(
-        this.centerPosition.x + direction.x * this.areaRadius,
+        // Use the same area indicator radius as the starting position
+        this.centerPosition.x + direction.x * areaIndicatorRadius,
         this.centerPosition.y,
-        this.centerPosition.z + direction.z * this.areaRadius
+        this.centerPosition.z + direction.z * areaIndicatorRadius
       ),
       direction: direction.clone(),
       age: 0,
@@ -349,6 +351,9 @@ export class BulPalmCrossEffect extends BulPalmEffect {
     // Mark as exploded
     this.hasExploded = true;
     this.explosionAge = 0;
+    
+    // Apply a stronger screen shake for the combined explosion
+    this.applyScreenShake(1.0, 0.8); // Higher intensity and longer duration for the big explosion
   }
   
   /**
@@ -457,12 +462,9 @@ export class BulPalmCrossEffect extends BulPalmEffect {
       const pulseValue = (Math.sin(this.age * this.areaIndicator.userData.pulseSpeed) + 1) / 2;
       this.areaIndicator.material.opacity = this.areaIndicator.userData.initialOpacity * pulseValue;
       
-      // Also pulse the cross lines
-      if (this.horizontalLine) {
-        this.horizontalLine.material.opacity = 0.7 * pulseValue;
-      }
-      if (this.verticalLine) {
-        this.verticalLine.material.opacity = 0.7 * pulseValue;
+      // Also pulse the inner circle
+      if (this.innerCircle) {
+        this.innerCircle.material.opacity = 0.2 * pulseValue;
       }
       
       // Fade out when explosion happens
@@ -470,11 +472,8 @@ export class BulPalmCrossEffect extends BulPalmEffect {
         const fadeOutFactor = Math.max(0, 1 - this.explosionAge);
         this.areaIndicator.material.opacity *= fadeOutFactor;
         
-        if (this.horizontalLine) {
-          this.horizontalLine.material.opacity *= fadeOutFactor;
-        }
-        if (this.verticalLine) {
-          this.verticalLine.material.opacity *= fadeOutFactor;
+        if (this.innerCircle) {
+          this.innerCircle.material.opacity *= fadeOutFactor;
         }
       }
     }
@@ -487,6 +486,7 @@ export class BulPalmCrossEffect extends BulPalmEffect {
    */
   updatePalmGroups(delta) {
     let allPalmsLanded = true;
+    let allPalmsExploded = true;
     
     for (const palmData of this.palmGroups) {
       palmData.age += delta;
@@ -498,6 +498,12 @@ export class BulPalmCrossEffect extends BulPalmEffect {
         // Check if this palm has reached the ground
         if (palmData.group.position.y > this.centerPosition.y) {
           allPalmsLanded = false;
+          allPalmsExploded = false;
+        }
+        
+        // Check if this palm has exploded individually
+        if (!palmData.hasExploded) {
+          allPalmsExploded = false;
         }
         
         // Update impact effect if it exists
@@ -516,14 +522,15 @@ export class BulPalmCrossEffect extends BulPalmEffect {
       }
     }
     
-    // If all palms have landed and we haven't triggered the explosion yet
-    if (allPalmsLanded && !this.hasExploded && this.palmGroups.length === 4) {
+    // If all palms have landed AND all palms have their individual explosions
+    // AND we haven't triggered the combined explosion yet
+    if (allPalmsLanded && allPalmsExploded && !this.hasExploded && this.palmGroups.length === 4) {
       // Add a small delay before the combined explosion for dramatic effect
       setTimeout(() => {
         if (this.isActive && !this.hasExploded) {
           this.createCombinedExplosion();
         }
-      }, 300); // 300ms delay
+      }, 500); // 500ms delay for more dramatic effect after all palms have hit
     }
   }
   
@@ -572,6 +579,12 @@ export class BulPalmCrossEffect extends BulPalmEffect {
       if (!palmData.hasExploded && !this.hasExploded) {
         // Create small impact effect
         this.createPalmImpact(palmData);
+        
+        // Mark this palm as having exploded individually
+        palmData.hasExploded = true;
+        
+        // Add a screen shake effect for impact feedback
+        this.applyScreenShake(0.5, 0.3);
       }
     }
     
@@ -829,5 +842,61 @@ export class BulPalmCrossEffect extends BulPalmEffect {
     );
     
     handGroup.add(nail);
+  }
+  
+  /**
+   * Apply a screen shake effect
+   * @param {number} intensity - The intensity of the shake (0-1)
+   * @param {number} duration - The duration of the shake in seconds
+   */
+  applyScreenShake(intensity = 0.5, duration = 0.3) {
+    // Get the canvas element
+    const canvas = document.getElementById('game-canvas');
+    if (!canvas) return;
+    
+    console.log(`Applying screen shake: intensity=${intensity}, duration=${duration}`);
+    
+    // Store original transform
+    const originalTransform = canvas.style.transform || '';
+    
+    // Make sure the canvas has position relative or absolute
+    if (window.getComputedStyle(canvas).position === 'static') {
+      canvas.style.position = 'relative';
+    }
+    
+    // Set up variables for the shake effect
+    let startTime = performance.now();
+    let shaking = true;
+    
+    // Function to update the shake effect
+    const updateShake = () => {
+      if (!shaking) return;
+      
+      // Calculate elapsed time
+      const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
+      
+      // Check if shake should end
+      if (elapsed >= duration) {
+        shaking = false;
+        canvas.style.transform = originalTransform;
+        return;
+      }
+      
+      // Calculate shake factor (decreases over time)
+      const shakeFactor = (1 - elapsed / duration) * intensity;
+      
+      // Apply random offset to canvas position
+      const offsetX = (Math.random() - 0.5) * 2 * shakeFactor * 15; // Multiply by 15 for pixels
+      const offsetY = (Math.random() - 0.5) * 2 * shakeFactor * 15; // Multiply by 15 for pixels
+      
+      // Apply shake to canvas position
+      canvas.style.transform = `${originalTransform} translate(${offsetX}px, ${offsetY}px)`;
+      
+      // Request next frame
+      requestAnimationFrame(updateShake);
+    };
+    
+    // Start the shake effect
+    requestAnimationFrame(updateShake);
   }
 }
