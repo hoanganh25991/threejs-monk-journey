@@ -5,6 +5,7 @@
 
 import { UIComponent } from '../../UIComponent.js';
 import { SaveOperationProgress } from '../../save-manager/utils/SaveOperationProgress.js';
+import storageService from '../../save-manager/StorageService.js';
 
 export class SettingsTab extends UIComponent {
     /**
@@ -19,6 +20,17 @@ export class SettingsTab extends UIComponent {
         this.settingsMenu = settingsMenu;
         this.isLoading = false;
         this.tabElement = document.getElementById(`${tabId}-tab`);
+        
+        // Listen for storage updates from Google Drive sync
+        window.addEventListener('storage-service-update', this.handleStorageUpdate.bind(this));
+    }
+    
+    /**
+     * Handle storage updates from Google Drive sync
+     * @param {CustomEvent} event - Storage update event
+     */
+    handleStorageUpdate(event) {
+        // To be implemented by child classes if needed
     }
     
     /**
@@ -85,6 +97,26 @@ export class SettingsTab extends UIComponent {
     }
     
     /**
+     * Load data synchronously from localStorage
+     * @param {string} key - Storage key
+     * @param {*} defaultValue - Default value if key not found
+     * @returns {*} The loaded data or default value
+     */
+    loadSettingSync(key, defaultValue = null) {
+        return storageService.loadDataSync(key, defaultValue);
+    }
+    
+    /**
+     * Save data to localStorage and sync to cloud in background
+     * @param {string} key - Storage key
+     * @param {*} value - Value to save
+     * @returns {Promise<boolean>} Success status
+     */
+    async saveSetting(key, value) {
+        return storageService.saveData(key, value);
+    }
+    
+    /**
      * Show a loading indicator during an async operation
      * @param {Function} asyncOperation - The async operation to perform
      * @param {string} operationType - Type of operation ('save' or 'load')
@@ -122,5 +154,13 @@ export class SettingsTab extends UIComponent {
             this.setLoading(false);
             throw error;
         }
+    }
+    
+    /**
+     * Clean up event listeners
+     */
+    dispose() {
+        window.removeEventListener('storage-service-update', this.handleStorageUpdate.bind(this));
+        super.dispose();
     }
 }

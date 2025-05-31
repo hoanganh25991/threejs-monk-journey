@@ -35,9 +35,6 @@
     <meta name="twitter:image" content="https://hoanganh25991.github.io/threejs-monk-journey/images/home.jpg">
     <meta property="twitter:image:width" content="1920">
     <meta property="twitter:image:height" content="968">
-    
-    <!-- Google Sign-In API -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
@@ -348,7 +345,6 @@
             <button id="load-game-button" class="menu-button">Play Game</button>
             <button id="multiplayer-button" class="menu-button">Multiplayer</button>
             <button id="settings-menu-button" class="menu-button">Settings</button>
-            <button id="google-signin-button" class="menu-button">Sign in with Google</button>
         </div>
     </div>
 
@@ -478,35 +474,61 @@
                 <div id="game-tab" class="tab-content active">
                     <h2 id="game-title">Game Settings</h2>
                     <div class="settings-section">
+                        <!-- Game Difficulty Setting -->
                         <div id="difficulty-container" class="setting-item">
-                            <label for="difficulty-select" class="settings-label">Difficulty: </label>
-                            <select id="difficulty-select" class="settings-select"></select>
+                            <h3>Game Difficulty</h3>
+                            <div class="setting-row">
+                                <label for="difficulty-select" class="settings-label">Difficulty Level</label>
+                                <select id="difficulty-select" class="settings-select"></select>
+                            </div>
+                            <div class="settings-description">Choose the difficulty level for your game experience</div>
                         </div>
+                        
+                        <!-- Custom Skills Setting -->
                         <div id="custom-skills-container" class="setting-item">
-                            <label for="custom-skills-checkbox" class="settings-label">Enable Custom Skills: </label>
-                            <input type="checkbox" id="custom-skills-checkbox" class="settings-checkbox">
-                            <span class="settings-description">Include in Skill Selection</span>
+                            <h3>Skill Options</h3>
+                            <div class="setting-row">
+                                <label for="custom-skills-checkbox" class="settings-label">Enable Custom Skills</label>
+                                <input type="checkbox" id="custom-skills-checkbox" class="settings-checkbox">
+                            </div>
+                            <div class="settings-description">Include custom skills in the Skill Selection menu</div>
                         </div>
+                        
+                        <!-- Camera Settings -->
                         <div id="camera-settings-container" class="setting-item">
                             <h3>Camera Settings</h3>
-                            <div class="camera-zoom-container">
-                                <label for="camera-zoom-slider" class="settings-label">Camera Zoom: </label>
-                                <input type="range" id="camera-zoom-slider" class="settings-slider" min="10" max="100" step="1" value="20">
-                                <span id="camera-zoom-value" class="settings-value">20</span>
-                                <span class="settings-description">Adjust camera distance (higher values = further away)</span>
+                            <div class="setting-row">
+                                <label for="camera-zoom-slider" class="settings-label">Camera Zoom</label>
+                                <div style="display: flex; align-items: center;">
+                                    <input type="range" id="camera-zoom-slider" class="settings-slider" min="10" max="100" step="1" value="20">
+                                    <span id="camera-zoom-value" class="settings-value">20</span>
+                                </div>
                             </div>
+                            <div class="settings-description">Adjust camera distance (higher values = further away)</div>
                         </div>
+                        
+                        <!-- Game Control -->
                         <div id="new-game-container" class="setting-item">
                             <h3>Game Control</h3>
-                            <button id="new-game-button" class="settings-button">New Game</button>
-                            <span class="settings-description">Start a new game (current progress will be lost)</span>
+                            <div class="setting-row">
+                                <div class="settings-label">Reset Game Progress</div>
+                                <button id="new-game-button" class="settings-button">New Game</button>
+                            </div>
+                            <div class="settings-description">Start a new game (current progress will be lost)</div>
                         </div>
-                        <!-- Release settings moved here from release tab -->
+                        
+                        <!-- Version Control -->
                         <div id="version-container" class="setting-item">
                             <h3>Version Control</h3>
-                            <p>Current version: <span id="current-version">Current Version</span></p>
-                            <button id="update-to-latest-button" class="settings-button">Update to Latest</button>
-                            <span class="settings-description">Clear cache and reload the latest version</span>
+                            <div class="setting-row">
+                                <div class="settings-label">Current Version</div>
+                                <span id="current-version" class="settings-value">Current Version</span>
+                            </div>
+                            <div class="setting-row">
+                                <div class="settings-label">Update Game</div>
+                                <button id="update-to-latest-button" class="settings-button">Update to Latest</button>
+                            </div>
+                            <div class="settings-description">Clear cache and reload the latest version</div>
                         </div>
                     </div>
                 </div>
@@ -531,27 +553,51 @@
                 <div id="audio-tab" class="tab-content">
                     <h2 id="audio-title">Audio Settings</h2>
                     <div id="audio-controls-container" class="settings-section">
-                        <div id="mute-container" class="setting-item">
-                            <label for="mute-checkbox" class="settings-label">Mute Audio: </label>
-                            <input type="checkbox" id="mute-checkbox" class="settings-checkbox">
+                        <!-- Main Audio Controls -->
+                        <div id="main-audio-container" class="setting-item">
+                            <h3>Main Audio Controls</h3>
+                            <div class="setting-row">
+                                <label for="mute-checkbox" class="settings-label">Mute All Audio</label>
+                                <input type="checkbox" id="mute-checkbox" class="settings-checkbox">
+                            </div>
+                            <div class="settings-description">Toggle all game audio on or off</div>
                         </div>
-                        <div id="music-volume-container" class="setting-item">
-                            <label for="music-volume-slider" class="settings-label">Music Volume: </label>
-                            <input type="range" id="music-volume-slider" class="settings-slider" min="0" max="100" value="80">
-                            <span id="music-volume-value" class="settings-value">80%</span>
+                        
+                        <!-- Volume Controls -->
+                        <div id="volume-controls-container" class="setting-item">
+                            <h3>Volume Controls</h3>
+                            <div class="setting-row">
+                                <label for="music-volume-slider" class="settings-label">Music Volume</label>
+                                <div style="display: flex; align-items: center;">
+                                    <input type="range" id="music-volume-slider" class="settings-slider" min="0" max="100" value="80">
+                                    <span id="music-volume-value" class="settings-value">80%</span>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <label for="sfx-volume-slider" class="settings-label">SFX Volume</label>
+                                <div style="display: flex; align-items: center;">
+                                    <input type="range" id="sfx-volume-slider" class="settings-slider" min="0" max="100" value="80">
+                                    <span id="sfx-volume-value" class="settings-value">80%</span>
+                                </div>
+                            </div>
+                            <div class="settings-description">Adjust volume levels for music and sound effects separately</div>
                         </div>
-                        <div id="sfx-volume-container" class="setting-item">
-                            <label for="sfx-volume-slider" class="settings-label">SFX Volume: </label>
-                            <input type="range" id="sfx-volume-slider" class="settings-slider" min="0" max="100" value="80">
-                            <span id="sfx-volume-value" class="settings-value">80%</span>
-                        </div>
+                        
+                        <!-- Test Sound -->
                         <div id="test-sound-container" class="setting-item">
-                            <button id="test-sound-button" class="settings-button">Test Sound</button>
+                            <h3>Sound Test</h3>
+                            <div class="setting-row">
+                                <div class="settings-label">Play Test Sound</div>
+                                <button id="test-sound-button" class="settings-button">Test Sound</button>
+                            </div>
+                            <div class="settings-description">Play a test sound to check your current volume settings</div>
                         </div>
 
-                        <div id="audio-disabled-message" style="display: none;">
-                            Audio is currently disabled. Audio files need to be added to the assets/audio directory.
+                        <div id="audio-disabled-message" style="display: none;" class="setting-item">
+                            <h3>Audio Unavailable</h3>
+                            <div class="settings-description">Audio is currently disabled. Audio files need to be added to the assets/audio directory.</div>
                         </div>
+                    </div>
 
                         <div id="simulated-audio-note" style="display: none;">
                             Using simulated audio. For better audio experience, add audio files to the assets/audio

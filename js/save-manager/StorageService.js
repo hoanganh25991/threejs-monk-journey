@@ -10,6 +10,10 @@ import { STORAGE_KEYS } from '../config/storage-keys.js';
  * 1. Always store to localStorage first, async in background to sync to GoogleDrive
  * 2. On first load, when no state in localStorage, try to get from GoogleDrive if the user has signed in
  * 3. For conflict resolution, ask user to choose between localStorage or GoogleDrive version
+ * 
+ * Optimized for UI components:
+ * - Use loadDataSync() for immediate UI rendering without async effects
+ * - Use saveData() which saves to localStorage immediately and syncs to cloud in background
  */
 export class StorageService {
     /**
@@ -34,10 +38,14 @@ export class StorageService {
         window.addEventListener('google-signout', () => {
             console.debug('Google sign-out detected');
         });
+        
+        // Fix existing localStorage data format issues immediately
+        this.localStorage.fixExistingData();
     }
     
     /**
      * Initialize the storage service
+     * This is now a lightweight operation since fixExistingData is called in constructor
      * @returns {Promise<void>}
      */
     async init() {
@@ -45,14 +53,14 @@ export class StorageService {
             return;
         }
         
-        // Fix existing localStorage data format issues
-        this.localStorage.fixExistingData();
-        
         this.initialized = true;
         
         // If user is signed in to Google, try to load data from Google Drive
+        // This happens in background and doesn't block UI rendering
         if (this.isSignedInToGoogle()) {
-            await this.syncFromGoogleDrive();
+            this.syncFromGoogleDrive().catch(error => {
+                console.error('Error syncing from Google Drive during init:', error);
+            });
         }
     }
     
@@ -298,6 +306,50 @@ export class StorageService {
     }
     
     /**
+     * Load data for the given key synchronously from localStorage only
+     * This is the preferred method for UI components that need immediate data
+     * @param {string} key - Storage key
+     * @param {*} defaultValue - Default value to return if key is not found
+     * @returns {*} The loaded data (or defaultValue if not found)
+     */
+    loadDataSync(key, defaultValue = null) {
+        try {
+            // Only try localStorage - this is synchronous and immediate
+            const localData = this.localStorage.loadData(key);
+            
+            // If data exists in localStorage, return it
+            if (localData !== null) {
+                return localData;
+            }
+            
+            // If we're signed in to Google but don't have local data,
+            // trigger a background sync that will eventually update localStorage
+            if (this.isSignedInToGoogle() && !this.isSigningIn) {
+                // Don't await - this happens in background
+                this.googleDrive.loadData(key)
+                    .then(cloudData => {
+                        if (cloudData !== null) {
+                            this.localStorage.saveData(key, cloudData);
+                            // Dispatch event to notify UI components of the update
+                            window.dispatchEvent(new CustomEvent('storage-service-update', {
+                                detail: { key, newValue: cloudData }
+                            }));
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Error loading data from Google Drive for key ${key}:`, error);
+                    });
+            }
+            
+            // Return the default value
+            return defaultValue;
+        } catch (error) {
+            console.error(`Error loading data synchronously for key ${key}:`, error);
+            return defaultValue;
+        }
+    }
+    
+    /**
      * Load data for the given key
      * @param {string} key - Storage key
      * @returns {Promise<*>} The loaded data (or null if not found)
@@ -363,6 +415,20 @@ export class StorageService {
             return localSuccess;
         } catch (error) {
             console.error(`Error deleting data for key ${key}:`, error);
+            return false;
+        }
+    }
+    
+    /**
+     * Check if data exists for the given key synchronously (localStorage only)
+     * @param {string} key - Storage key
+     * @returns {boolean} Whether data exists in localStorage
+     */
+    hasDataSync(key) {
+        try {
+            return this.localStorage.hasData(key);
+        } catch (error) {
+            console.error(`Error checking if data exists synchronously for key ${key}:`, error);
             return false;
         }
     }

@@ -17,6 +17,13 @@ export class GameplayTab extends SettingsTab {
     constructor(game, settingsMenu) {
         super('game', game, settingsMenu);
         
+        // Google login elements
+        this.googleLoginContainer = null;
+        this.loginButton = null;
+        this.statusElement = null;
+        this.isGoogleLoginVisible = false;
+        this.googleIcon = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTcuNiA5LjJsLS4xLTEuOEg5djMuNGg0LjhDMTMuNiAxMiAxMyAxMyAxMiAxMy42djIuMmgzYTguOCA4LjggMCAwIDAgMi42LTYuNnoiIGZpbGw9IiM0Mjg1RjQiIGZpbGwtcnVsZT0ibm9uemVybyIvPjxwYXRoIGQ9Ik05IDE4YzIuNCAwIDQuNS0uOCA2LTIuMmwtMy0yLjJhNS40IDUuNCAwIDAgMS04LTIuOUgxVjEzYTkgOSAwIDAgMCA4IDV6IiBmaWxsPSIjMzRBODUzIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNNCAxMC43YTUuNCA1LjQgMCAwIDEgMC0zLjRWNUgxYTkgOSAwIDAgMCAwIDhsMy0yLjN6IiBmaWxsPSIjRkJCQzA1IiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNOSAzLjZjMS4zIDAgMi41LjQgMy40IDEuM0wxNSAyLjNBOSA5IDAgMCAwIDEgNWwzIDIuNGE1LjQgNS40IDAgMCAxIDUtMy43eiIgZmlsbD0iI0VBNDMzNSIgZmlsbC1ydWxlPSJub256ZXJvIi8+PHBhdGggZD0iTTAgMGgxOHYxOEgweiIvPjwvZz48L3N2Zz4=';
+        
         // Game settings elements
         this.difficultySelect = document.getElementById('difficulty-select');
         this.customSkillsCheckbox = document.getElementById('custom-skills-checkbox');
@@ -32,28 +39,136 @@ export class GameplayTab extends SettingsTab {
         this.updateToLatestButton = document.getElementById('update-to-latest-button');
         this.currentVersionSpan = document.getElementById('current-version');
         
-        // Initialize storage service
-        storageService.init().then(() => {
-            this.init();
+        // Initialize settings immediately
+        this.init();
+        
+        // Initialize storage service in background (non-blocking)
+        storageService.init().catch(error => {
+            console.error('Error initializing storage service:', error);
         });
     }
     
     /**
      * Initialize the gameplay settings
-     * @returns {Promise<boolean>} - Promise resolving to true if initialization was successful
+     * @returns {boolean} - True if initialization was successful
      */
-    async init() {
-        await this.initializeDifficultySettings();
-        await this.initializeReleaseSettings();
+    init() {
+        this.initializeGoogleLogin();
+        this.initializeDifficultySettings();
+        this.initializeReleaseSettings();
         
         return true;
+    }
+    
+    /**
+     * Handle storage updates from Google Drive sync
+     * @param {CustomEvent} event - Storage update event
+     */
+    handleStorageUpdate(event) {
+        const { key, newValue } = event.detail;
+        
+        // Update UI based on the key that changed
+        if (key === STORAGE_KEYS.DIFFICULTY && this.difficultySelect) {
+            this.difficultySelect.value = newValue || 'basic';
+        } else if (key === STORAGE_KEYS.CUSTOM_SKILLS && this.customSkillsCheckbox) {
+            this.customSkillsCheckbox.checked = newValue === true || newValue === 'true';
+        } else if (key === STORAGE_KEYS.CAMERA_ZOOM && this.cameraZoomSlider) {
+            const zoomValue = parseInt(newValue) || 20;
+            this.cameraZoomSlider.value = zoomValue;
+            if (this.cameraZoomValue) {
+                this.cameraZoomValue.textContent = zoomValue;
+            }
+        }
+    }
+    
+    /**
+     * Initialize Google login UI
+     * @private
+     */
+    initializeGoogleLogin() {
+        console.debug('GameplayTab: Initializing Google Login UI');
+        
+        // Create container if it doesn't exist
+        if (!this.googleLoginContainer) {
+            // Find the game settings section to add the Google login UI
+            const settingsSection = document.querySelector('#game-tab .settings-section');
+            
+            if (settingsSection) {
+                // Create Google login container
+                const googleLoginSection = document.createElement('div');
+                googleLoginSection.id = 'google-login-section';
+                googleLoginSection.className = 'setting-item';
+                
+                // Add section title
+                const sectionTitle = document.createElement('h3');
+                sectionTitle.textContent = 'Account Sync';
+                googleLoginSection.appendChild(sectionTitle);
+                
+                // Create setting row for login button
+                const loginRow = document.createElement('div');
+                loginRow.className = 'setting-row';
+                
+                // Add label
+                const loginLabel = document.createElement('div');
+                loginLabel.className = 'settings-label';
+                loginLabel.textContent = 'Google Account';
+                loginRow.appendChild(loginLabel);
+                
+                // Create container for Google login elements
+                this.googleLoginContainer = document.createElement('div');
+                this.googleLoginContainer.className = 'settings-google-login';
+                loginRow.appendChild(this.googleLoginContainer);
+                
+                // Create login button
+                this.loginButton = document.createElement('button');
+                this.loginButton.className = 'settings-button google-login-button';
+                this.loginButton.innerHTML = `
+                    <img src="${this.googleIcon}" alt="Google">
+                    <span>Sign in with Google</span>
+                `;
+                this.loginButton.addEventListener('click', () => this.handleLoginClick());
+                this.googleLoginContainer.appendChild(this.loginButton);
+                
+                // Create status element (hidden initially)
+                this.statusElement = document.createElement('div');
+                this.statusElement.className = 'google-login-status signed-out';
+                this.statusElement.style.display = 'none';
+                this.googleLoginContainer.appendChild(this.statusElement);
+                
+                // Add the login row to the section
+                googleLoginSection.appendChild(loginRow);
+                
+                // Add description
+                const description = document.createElement('div');
+                description.className = 'settings-description';
+                description.textContent = 'Sync your game progress across devices';
+                googleLoginSection.appendChild(description);
+                
+                // Insert at the beginning of the settings section
+                settingsSection.insertBefore(googleLoginSection, settingsSection.firstChild);
+                
+                // Listen for sign-in/sign-out events
+                window.addEventListener('google-signin-success', () => this.updateUI(true));
+                window.addEventListener('google-signout', () => this.updateUI(false));
+                
+                console.debug('GameplayTab: Google Login UI elements created');
+            } else {
+                console.error('GameplayTab: Could not find settings section to add Google login UI');
+            }
+        }
+        
+        // Check if already signed in - do this synchronously
+        if (this.game.saveManager && this.game.saveManager.isSignedInToGoogle) {
+            const isSignedIn = this.game.saveManager.isSignedInToGoogle();
+            this.updateUI(isSignedIn);
+        }
     }
     
     /**
      * Initialize difficulty settings
      * @private
      */
-    async initializeDifficultySettings() {
+    initializeDifficultySettings() {
         if (this.difficultySelect) {
             // Clear existing options
             while (this.difficultySelect.options.length > 0) {
@@ -68,8 +183,8 @@ export class GameplayTab extends SettingsTab {
                 this.difficultySelect.appendChild(option);
             }
             
-            // Set current difficulty (default to 'basic')
-            const currentDifficulty = await storageService.loadData(STORAGE_KEYS.DIFFICULTY) || 'basic';
+            // Set current difficulty synchronously (default to 'basic')
+            const currentDifficulty = this.loadSettingSync(STORAGE_KEYS.DIFFICULTY, 'basic');
             
             console.debug(`Loading difficulty setting: ${currentDifficulty}`);
             this.difficultySelect.value = currentDifficulty;
@@ -79,14 +194,14 @@ export class GameplayTab extends SettingsTab {
             if (!this.difficultySelect.value) {
                 console.debug('Invalid difficulty setting detected, defaulting to basic');
                 this.difficultySelect.value = 'basic';
-                await storageService.saveData(STORAGE_KEYS.DIFFICULTY, 'basic');
+                this.saveSetting(STORAGE_KEYS.DIFFICULTY, 'basic');
             }
             
             // Add change event listener
-            this.difficultySelect.addEventListener('change', async () => {
+            this.difficultySelect.addEventListener('change', () => {
                 const selectedDifficulty = this.difficultySelect.value;
                 // Store the value using storage service
-                await storageService.saveData(STORAGE_KEYS.DIFFICULTY, selectedDifficulty);
+                this.saveSetting(STORAGE_KEYS.DIFFICULTY, selectedDifficulty);
                 
                 // Apply difficulty settings immediately if game is available
                 if (this.game && this.game.enemyManager) {
@@ -102,13 +217,13 @@ export class GameplayTab extends SettingsTab {
         }
         
         if (this.customSkillsCheckbox) {
-            // Set current custom skills state (default is false)
-            const customSkillsEnabled = await storageService.loadData(STORAGE_KEYS.CUSTOM_SKILLS) || false;
-            this.customSkillsCheckbox.checked = customSkillsEnabled;
+            // Set current custom skills state synchronously (default is false)
+            const customSkillsEnabled = this.loadSettingSync(STORAGE_KEYS.CUSTOM_SKILLS, false);
+            this.customSkillsCheckbox.checked = customSkillsEnabled === true || customSkillsEnabled === 'true';
             
             // Add change event listener
-            this.customSkillsCheckbox.addEventListener('change', async () => {
-                await storageService.saveData(STORAGE_KEYS.CUSTOM_SKILLS, this.customSkillsCheckbox.checked);
+            this.customSkillsCheckbox.addEventListener('change', () => {
+                this.saveSetting(STORAGE_KEYS.CUSTOM_SKILLS, this.customSkillsCheckbox.checked.toString());
                 
                 // Apply custom skills settings immediately if game is available
                 if (this.game && this.game.player && this.game.player.skills) {
@@ -124,10 +239,10 @@ export class GameplayTab extends SettingsTab {
             this.cameraZoomSlider.max = 100;  // Furthest zoom (100 units)
             this.cameraZoomSlider.step = 1;  // 1 unit increments
             
-            // Get stored zoom value or use default
-            const storedZoom = await storageService.loadData(STORAGE_KEYS.CAMERA_ZOOM);
+            // Get stored zoom value synchronously or use default
             const defaultZoom = 20; // Default camera distance
-            const currentZoom = storedZoom ? parseInt(storedZoom) : defaultZoom;
+            const storedZoom = this.loadSettingSync(STORAGE_KEYS.CAMERA_ZOOM, defaultZoom);
+            const currentZoom = parseInt(storedZoom) || defaultZoom;
             
             // Set the slider to the current zoom value
             this.cameraZoomSlider.value = currentZoom;
@@ -137,23 +252,32 @@ export class GameplayTab extends SettingsTab {
                 this.cameraZoomValue.textContent = currentZoom;
             }
             
-            // Add event listener for zoom changes
-            this.cameraZoomSlider.addEventListener('input', async () => {
+            // Add event listener for zoom changes with debounce
+            let zoomDebounceTimeout = null;
+            this.cameraZoomSlider.addEventListener('input', () => {
                 const zoomValue = parseInt(this.cameraZoomSlider.value);
                 
-                // Update the display value
+                // Update the display value immediately
                 if (this.cameraZoomValue) {
                     this.cameraZoomValue.textContent = zoomValue;
                 }
-                
-                // Store the zoom value
-                await storageService.saveData(STORAGE_KEYS.CAMERA_ZOOM, zoomValue);
                 
                 // Apply zoom immediately if game is available
                 if (this.game && this.game.hudManager && this.game.hudManager.components && this.game.hudManager.components.cameraControlUI) {
                     // Use the new setCameraDistance method
                     this.game.hudManager.components.cameraControlUI.setCameraDistance(zoomValue);
                 }
+                
+                // Clear previous timeout
+                if (zoomDebounceTimeout) {
+                    clearTimeout(zoomDebounceTimeout);
+                }
+                
+                // Set new timeout for saving
+                zoomDebounceTimeout = setTimeout(() => {
+                    // Store the zoom value
+                    this.saveSetting(STORAGE_KEYS.CAMERA_ZOOM, zoomValue.toString());
+                }, 300); // Debounce for 300ms
             });
         }
         
@@ -193,60 +317,67 @@ export class GameplayTab extends SettingsTab {
      * Initialize release settings (moved from ReleaseTab)
      * @private
      */
-    async initializeReleaseSettings() {
+    initializeReleaseSettings() {
         // Display current version (simplified)
         if (this.currentVersionSpan) {
-            try {
-                const version = await this.fetchCacheVersion();
-                this.currentVersionSpan.textContent = version;
-            } catch (error) {
-                console.error('Error setting version display:', error);
-                this.currentVersionSpan.textContent = 'Current Version';
-            }
+            // Set a default version immediately
+            this.currentVersionSpan.textContent = 'Current Version';
+            
+            // Fetch the actual version in the background
+            this.fetchCacheVersion()
+                .then(version => {
+                    this.currentVersionSpan.textContent = version;
+                })
+                .catch(error => {
+                    console.error('Error setting version display:', error);
+                });
         }
         
         // Set up update button with simplified functionality
         if (this.updateToLatestButton) {
-            this.updateToLatestButton.addEventListener('click', async () => {
+            this.updateToLatestButton.addEventListener('click', () => {
                 // Show loading state
                 this.updateToLatestButton.textContent = 'Updating...';
                 this.updateToLatestButton.disabled = true;
                 
-                try {
-                    // Unregister all service workers
-                    if ('serviceWorker' in navigator) {
-                        const registrations = await navigator.serviceWorker.getRegistrations();
-                        for (const registration of registrations) {
-                            await registration.unregister();
-                            console.debug('Service worker unregistered');
+                // Use Promise chain for better error handling
+                Promise.resolve()
+                    .then(async () => {
+                        // Unregister all service workers
+                        if ('serviceWorker' in navigator) {
+                            const registrations = await navigator.serviceWorker.getRegistrations();
+                            for (const registration of registrations) {
+                                await registration.unregister();
+                                console.debug('Service worker unregistered');
+                            }
                         }
-                    }
-                    
-                    // Clear all caches
-                    if ('caches' in window) {
-                        const cacheNames = await caches.keys();
-                        await Promise.all(
-                            cacheNames.map(cacheName => {
-                                console.debug(`Deleting cache: ${cacheName}`);
-                                return caches.delete(cacheName);
-                            })
-                        );
-                        console.debug('All caches cleared');
-                    }
-                    
-                    // Force reload the page from server (bypass cache)
-                    console.debug('Reloading page...');
-                    window.location.reload(true);
-                } catch (error) {
-                    console.error('Error updating to latest version:', error);
-                    
-                    // Reset button state
-                    this.updateToLatestButton.textContent = 'Update to Latest';
-                    this.updateToLatestButton.disabled = false;
-                    
-                    // Show error message
-                    alert('Failed to update to the latest version. Please try again later.');
-                }
+                        
+                        // Clear all caches
+                        if ('caches' in window) {
+                            const cacheNames = await caches.keys();
+                            await Promise.all(
+                                cacheNames.map(cacheName => {
+                                    console.debug(`Deleting cache: ${cacheName}`);
+                                    return caches.delete(cacheName);
+                                })
+                            );
+                            console.debug('All caches cleared');
+                        }
+                        
+                        // Force reload the page from server (bypass cache)
+                        console.debug('Reloading page...');
+                        window.location.reload(true);
+                    })
+                    .catch(error => {
+                        console.error('Error updating to latest version:', error);
+                        
+                        // Reset button state
+                        this.updateToLatestButton.textContent = 'Update to Latest';
+                        this.updateToLatestButton.disabled = false;
+                        
+                        // Show error message
+                        alert('Failed to update to the latest version. Please try again later.');
+                    });
             });
         }
     }
@@ -334,5 +465,83 @@ export class GameplayTab extends SettingsTab {
         }
         
         await this.saveSettings();
+    }
+    
+    /**
+     * Handle login button click
+     * @private
+     */
+    async handleLoginClick() {
+        // Make sure the UI elements are initialized
+        if (!this.googleLoginContainer) {
+            await this.initializeGoogleLogin();
+        }
+        
+        // Check if button exists before updating it
+        if (!this.loginButton) {
+            console.debug('GameplayTab: Login button not initialized yet');
+            return;
+        }
+        
+        if (this.game.saveManager.isSignedInToGoogle()) {
+            // Sign out
+            this.game.saveManager.signOutFromGoogle();
+        } else {
+            // Sign in
+            this.loginButton.disabled = true;
+            this.loginButton.textContent = 'Signing in...';
+            
+            const success = await this.game.saveManager.signInToGoogle();
+            
+            if (!success && this.loginButton) {
+                this.loginButton.disabled = false;
+                this.loginButton.innerHTML = `
+                    <img src="${this.googleIcon}" alt="Google">
+                    <span>Sign in with Google</span>
+                `;
+            }
+        }
+    }
+    
+    /**
+     * Update UI based on sign-in status
+     * @param {boolean} isSignedIn - Whether user is signed in
+     * @private
+     */
+    updateUI(isSignedIn) {
+        // Make sure the UI elements are initialized
+        if (!this.googleLoginContainer) {
+            this.initializeGoogleLogin();
+            return;
+        }
+        
+        // Check if elements exist before updating them
+        if (!this.loginButton || !this.statusElement) {
+            console.debug('GameplayTab: UI elements not initialized yet');
+            return;
+        }
+        
+        if (isSignedIn) {
+            // Update login button to show sign out
+            this.loginButton.disabled = false;
+            this.loginButton.innerHTML = `<span>Sign out</span>`;
+            
+            // Update status element
+            this.statusElement.className = 'google-login-status signed-in';
+            this.statusElement.innerHTML = `
+                <div class="google-login-name">Syncing data<div class="google-login-sync-indicator"></div></div>
+            `;
+            this.statusElement.style.display = 'flex';
+        } else {
+            // Update login button to show sign in
+            this.loginButton.disabled = false;
+            this.loginButton.innerHTML = `
+                <img src="${this.googleIcon}" alt="Google">
+                <span>Sign in with Google</span>
+            `;
+            
+            // Hide status element
+            this.statusElement.style.display = 'none';
+        }
     }
 }

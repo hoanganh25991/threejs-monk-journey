@@ -111,18 +111,7 @@
     box-sizing: border-box;
 }
 
-/* Settings Description */
-.settings-description {
-    color: #ccc;
-    font-size: 0.6rem;
-    margin-left: var(--margin-medium);
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 6px;
-    border-left: 3px solid rgba(255, 204, 0, 0.7);
-    border-right: 3px solid rgba(255, 204, 0, 0.7);
-    font-style: italic;
-    line-height: 1.4;
-}
+/* Settings Description - Removed as we've defined it in the new setting-item styles */
 
 /* Add white color to all text elements in settings */
 #main-options-menu h2, 
@@ -148,8 +137,8 @@
     background-color: rgba(255, 204, 0, 0.7);
     color: #4a3000;
     border: 2px solid rgba(255, 230, 150, 0.8);
-    padding: calc(var(--padding-medium) + 3px) var(--padding-medium);
-    margin: var(--padding-medium);
+    padding: 8px 15px;
+    margin: 0;
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
@@ -161,8 +150,9 @@
     text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
     position: relative;
     overflow: hidden;
-    min-width: 110px;
+    min-width: 120px;
     text-align: center;
+    white-space: nowrap;
 }
 
 .settings-button::before {
@@ -801,9 +791,11 @@
     background-position: right 8px center;
     padding-right: 28px;
     transition: all 0.3s ease;
-    min-width: 110px;
+    min-width: 150px;
+    max-width: 200px;
     white-space: nowrap;
     overflow: hidden;
+    text-align: left;
     text-overflow: ellipsis;
 }
 
@@ -864,13 +856,13 @@
 .settings-slider {
     -webkit-appearance: none;
     appearance: none;
-    width: 100%;
-    max-width: 250px;
+    width: 180px;
     height: 8px;
     border-radius: 4px;
     background: rgba(0, 0, 0, 0.3);
     outline: none;
     transition: all 0.3s ease;
+    margin-right: 10px;
 }
 
 .settings-slider::-webkit-slider-thumb {
@@ -904,30 +896,68 @@
 }
 
 /* Label styling */
+/* Setting item layout - Improved for consistent key-value display */
+.setting-item {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 12px 15px;
+    border-left: 3px solid rgba(255, 204, 0, 0.5);
+}
+
+/* Setting item header */
+.setting-item h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 16px;
+    color: rgba(255, 230, 150, 0.9);
+    border-bottom: 1px solid rgba(255, 204, 0, 0.3);
+    padding-bottom: 8px;
+}
+
+/* Setting row - for consistent key-value layout */
+.setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+/* Settings label styling */
 .settings-label {
     font-size: 14px;
     font-weight: bold;
     color: white;
-    margin-right: 10px;
-    display: block;
-    width: 100%;
+    flex: 1;
+    text-align: left;
+    margin-right: 15px;
 }
 
 /* Value display styling */
 .settings-value {
     font-size: 14px;
     color: rgba(255, 230, 150, 0.9);
-    margin-left: 10px;
+    text-align: right;
     min-width: 50px;
-    display: inline-block;
 }
 
-/* Setting item layout */
-.setting-item {
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
+/* Settings description - consistent styling */
+.settings-description {
+    color: #ccc;
+    font-size: 12px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 5px 10px;
+    font-style: italic;
+    line-height: 1.4;
+    /* border-radius: 6px; */
+    /* border-left: 3px solid rgba(255, 204, 0, 0.7); */
 }
 
 /* Skill Preview */

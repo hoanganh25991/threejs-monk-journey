@@ -5,7 +5,6 @@
 
 import { GameMenu } from './GameMenu.js';
 import { SettingsMenu } from './SettingsMenu.js';
-import { GoogleLoginUI } from './GoogleLoginUI.js';
 
 export class MenuManager {
     /**
@@ -34,14 +33,6 @@ export class MenuManager {
         // Create game menu
         this.createMenu('gameMenu');
         
-        // Create and initialize Google login UI immediately
-        const googleLoginUI = this.createMenu('googleLoginUI');
-        if (googleLoginUI) {
-            console.debug("Initializing Google Login UI");
-            googleLoginUI.init();
-            googleLoginUI.show();
-        }
-        
         // Settings menu will be created on demand when needed
         console.debug("Default menus initialized");
     }
@@ -61,9 +52,6 @@ export class MenuManager {
                 break;
             case 'settingsMenu':
                 menu = new SettingsMenu(this.game);
-                break;
-            case 'googleLoginUI':
-                menu = new GoogleLoginUI(this.game);
                 break;
             default:
                 console.error(`Unknown menu type: ${menuType}`);
@@ -155,27 +143,12 @@ export class MenuManager {
     handleGameStateChange(state) {
         console.debug(`Game state changed to: ${state}`);
         
-        // Always show Google login UI
-        let googleLoginUI = this.getMenu('googleLoginUI');
-        if (!googleLoginUI) {
-            // Create it if it doesn't exist
-            googleLoginUI = this.createMenu('googleLoginUI');
-        }
-        
-        if (googleLoginUI) {
-            // Initialize if needed and show
-            if (typeof googleLoginUI.init === 'function' && !googleLoginUI.container) {
-                googleLoginUI.init();
-            }
-            googleLoginUI.show();
-        }
-        
         if (state === 'paused') {
             // Check if any menu is currently visible
             let anyMenuVisible = false;
             
             for (const [type, menu] of this.menus.entries()) {
-                if (type !== 'googleLoginUI' && menu.visible) {
+                if (menu.visible) {
                     console.debug(`Menu ${type} is already visible, keeping it active`);
                     anyMenuVisible = true;
                     this.activeMenu = menu; // Ensure active menu is set correctly
@@ -189,10 +162,10 @@ export class MenuManager {
                 this.showMenu('gameMenu');
             }
         } else if (state === 'running') {
-            // If game is running, hide all menus except Google login UI
-            console.debug('Game is running, hiding all menus except Google login UI');
+            // If game is running, hide all menus
+            console.debug('Game is running, hiding all menus');
             
-            if (this.activeMenu && this.activeMenu !== googleLoginUI) {
+            if (this.activeMenu) {
                 this.activeMenu.hide();
                 this.activeMenu = null;
             }
