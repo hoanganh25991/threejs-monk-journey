@@ -16,8 +16,8 @@ export class GoogleDriveAdapter extends IStorageAdapter {
         this.tokenClient = null;
         this.accessToken = null;
         this.fileCache = new Map(); // Cache file IDs for faster access
-        this.FOLDER_NAME = 'MonkJourneySaves';
-        this.folderId = null;
+        this.FOLDER_NAME = 'MonkJourneySaves'; // Use a consistent folder name
+        this.folderId = null; // Will store the folder ID once found or created
         
         // Scopes needed for Google Drive API
         this.SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
@@ -141,11 +141,37 @@ export class GoogleDriveAdapter extends IStorageAdapter {
             const data = await response.json();
             
             if (data.files && data.files.length > 0) {
+                // Use the first folder found
                 this.folderId = data.files[0].id;
+                
+                // If multiple folders with the same name exist, delete the extras
+                if (data.files.length > 1) {
+                    console.debug(`Found ${data.files.length} '${this.FOLDER_NAME}' folders, keeping only the first one`);
+                    
+                    // Delete extra folders (starting from the second one)
+                    for (let i = 1; i < data.files.length; i++) {
+                        try {
+                            await fetch(
+                                `https://www.googleapis.com/drive/v3/files/${data.files[i].id}`,
+                                {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Authorization': `Bearer ${this.accessToken}`
+                                    }
+                                }
+                            );
+                            console.debug(`Deleted duplicate folder with ID: ${data.files[i].id}`);
+                        } catch (deleteError) {
+                            console.error(`Error deleting duplicate folder: ${deleteError}`);
+                        }
+                    }
+                }
+                
                 return this.folderId;
             }
             
             // Create folder if it doesn't exist
+            console.debug(`Creating new '${this.FOLDER_NAME}' folder in Google Drive`);
             const createResponse = await fetch(
                 'https://www.googleapis.com/drive/v3/files',
                 {
@@ -163,6 +189,7 @@ export class GoogleDriveAdapter extends IStorageAdapter {
             
             const folder = await createResponse.json();
             this.folderId = folder.id;
+            console.debug(`Created new folder with ID: ${this.folderId}`);
             return this.folderId;
         } catch (error) {
             console.error('Error ensuring save folder:', error);
@@ -221,7 +248,8 @@ export class GoogleDriveAdapter extends IStorageAdapter {
         if (!this.isSignedIn) {
             console.warn('Not signed in to Google Drive, falling back to localStorage');
             try {
-                const serializedData = JSON.stringify(data);
+                // Handle string values that are already serialized
+                const serializedData = typeof data === 'string' ? data : JSON.stringify(data);
                 localStorage.setItem(key, serializedData);
                 return true;
             } catch (error) {
@@ -231,7 +259,8 @@ export class GoogleDriveAdapter extends IStorageAdapter {
         }
         
         try {
-            const serializedData = JSON.stringify(data);
+            // Handle string values that are already serialized
+            const serializedData = typeof data === 'string' ? `"${data}"` : JSON.stringify(data);
             const folderId = await this.ensureSaveFolder();
             
             if (!folderId) {
@@ -295,7 +324,8 @@ export class GoogleDriveAdapter extends IStorageAdapter {
             
             // Fallback to localStorage
             try {
-                const serializedData = JSON.stringify(data);
+                // Handle string values that are already serialized
+                const serializedData = typeof data === 'string' ? data : JSON.stringify(data);
                 localStorage.setItem(key, serializedData);
                 return true;
             } catch (localError) {
@@ -318,7 +348,8 @@ export class GoogleDriveAdapter extends IStorageAdapter {
                 if (!serializedData) {
                     return null;
                 }
-                return JSON.parse(serializedData);
+                const parsedData = JSON.parse(serializedData);
+                return this.processLoadedData(parsedData);
             } catch (error) {
                 console.error(`Error loading data for key ${key} from localStorage:`, error);
                 return null;
@@ -333,7 +364,8 @@ export class GoogleDriveAdapter extends IStorageAdapter {
                 const localData = localStorage.getItem(key);
                 if (localData) {
                     try {
-                        return JSON.parse(localData);
+                        const parsedData = JSON.parse(localData);
+                        return this.processLoadedData(parsedData);
                     } catch (parseError) {
                         console.error(`Error parsing local data for key ${key}:`, parseError);
                         return null;
@@ -356,7 +388,7 @@ export class GoogleDriveAdapter extends IStorageAdapter {
             }
             
             const data = await response.json();
-            return data;
+            return this.processLoadedData(data);
         } catch (error) {
             console.error(`Error loading data for key ${key} from Google Drive:`, error);
             
@@ -366,7 +398,8 @@ export class GoogleDriveAdapter extends IStorageAdapter {
                 if (!serializedData) {
                     return null;
                 }
-                return JSON.parse(serializedData);
+                const parsedData = JSON.parse(serializedData);
+                return this.processLoadedData(parsedData);
             } catch (localError) {
                 console.error(`Error loading data for key ${key} from localStorage:`, localError);
                 return null;
@@ -445,5 +478,39 @@ export class GoogleDriveAdapter extends IStorageAdapter {
             console.error(`Error checking if data exists for key ${key}:`, error);
             return false;
         }
+    }
+    
+    /**
+     * Process loaded data to convert string booleans to actual booleans
+     * @param {*} data - The data to process
+     * @returns {*} The processed data
+     */
+    processLoadedData(data) {
+        if (data === null || data === undefined) {
+            return data;
+        }
+        
+        // Handle string boolean values
+        if (data === "true") return true;
+        if (data === "false") return false;
+        
+        // Handle arrays
+        if (Array.isArray(data)) {
+            return data.map(item => this.processLoadedData(item));
+        }
+        
+        // Handle objects
+        if (typeof data === 'object') {
+            const result = {};
+            for (const key in data) {
+                if (Object.prototype.hasOwnProperty.call(data, key)) {
+                    result[key] = this.processLoadedData(data[key]);
+                }
+            }
+            return result;
+        }
+        
+        // Return other types as is
+        return data;
     }
 }

@@ -64,18 +64,74 @@ export class GameMenu extends IMenu {
                     
                     console.debug("Game resumed - enemies and player are now active");
                 } else  if (this.game.saveManager && this.game.saveManager.hasSaveData()) {
-                    if (await this.game.saveManager.loadGame()) {
-                        console.debug("Game data loaded successfully");
+                    try {
+                        const loadResult = await this.game.saveManager.loadGame();
+                        
+                        if (loadResult) {
+                            console.debug("Game data loaded successfully");
+                            this.hide();
+                            
+                            // Hide the main background when loading a game
+                            if (this.game.hudManager && this.game.hudManager.mainBackground) {
+                                this.game.hudManager.mainBackground.hide();
+                            }
+                            
+                            // Start the game with loaded data - this will set isPaused to false and start the game loop
+                            // Pass true to indicate this is a loaded game, so player position isn't reset
+                            this.game.start(true);
+                            
+                            // Make sure settings button is visible
+                            const homeButton = document.getElementById('home-button');
+                            if (homeButton) {
+                                homeButton.style.display = 'block';
+                            }
+                            
+                            // Show all HUD elements
+                            if (this.game.hudManager) {
+                                this.game.hudManager.showAllUI();
+                            }
+                            
+                            console.debug("Game started with loaded data - enemies and player are now active");
+                        } else {
+                            console.debug("No save data found or failed to load, starting new game instead");
+                            
+                            // Start a new game instead
+                            this.hide();
+                            
+                            // Hide the main background when starting the game
+                            if (this.game.hudManager && this.game.hudManager.mainBackground) {
+                                this.game.hudManager.mainBackground.hide();
+                            }
+                            
+                            // Start the game - this will set isPaused to false and start the game loop
+                            // Pass false to indicate this is a new game, so player position should be reset
+                            this.game.start(false);
+                            
+                            // Make sure settings button is visible
+                            const homeButton = document.getElementById('home-button');
+                            if (homeButton) {
+                                homeButton.style.display = 'block';
+                            }
+                            
+                            // Show all HUD elements
+                            if (this.game.hudManager) {
+                                this.game.hudManager.showAllUI();
+                            }
+                        }
+                    } catch (error) {
+                        console.error("Error loading game data:", error);
+                        alert('An error occurred while loading the game. Starting a new game instead.');
+                        
+                        // Start a new game instead
                         this.hide();
                         
-                        // Hide the main background when loading a game
+                        // Hide the main background when starting the game
                         if (this.game.hudManager && this.game.hudManager.mainBackground) {
                             this.game.hudManager.mainBackground.hide();
                         }
                         
-                        // Start the game with loaded data - this will set isPaused to false and start the game loop
-                        // Pass true to indicate this is a loaded game, so player position isn't reset
-                        this.game.start(true);
+                        // Start the game - this will set isPaused to false and start the game loop
+                        this.game.start(false);
                         
                         // Make sure settings button is visible
                         const homeButton = document.getElementById('home-button');
@@ -87,12 +143,7 @@ export class GameMenu extends IMenu {
                         if (this.game.hudManager) {
                             this.game.hudManager.showAllUI();
                         }
-                        
-                        console.debug("Game started with loaded data - enemies and player are now active");
-                    } else {
-                        console.error("Failed to Continue Game data");
-                        alert('Failed to Continue Game data.');
-                    };
+                    }
                 } else {
                     // Game has never been started - start a new game
                     console.debug("New Game button clicked - starting new game...");

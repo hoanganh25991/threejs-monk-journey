@@ -24,6 +24,7 @@ import { MultiplayerManager } from '../multiplayer/MultiplayerManager.js';
 import { ItemGenerator } from '../entities/items/ItemGenerator.js';
 import { ItemDropManager } from '../entities/items/ItemDropManager.js';
 import { STORAGE_KEYS } from '../config/storage-keys.js';
+import storageService from '../save-manager/StorageService.js';
 
 /**
  * Main Game class that serves as a facade to the underlying game systems
@@ -72,9 +73,28 @@ export class Game {
         this.loadingManager = new LoadingManager().getManager();
         this.itemGenerator = new ItemGenerator(this);
         
-        // Load difficulty from localStorage or use 'medium' as default
-        this.difficulty = localStorage.getItem(STORAGE_KEYS.DIFFICULTY) || 'medium';
-        console.debug(`Game initialized with difficulty: ${this.difficulty}`);
+        // Default difficulty (will be updated in init)
+        this.difficulty = 'medium';
+        
+        // Initialize storage service
+        storageService.init().then(() => {
+            this.loadInitialSettings();
+        });
+    }
+    
+    /**
+     * Load initial settings from storage service
+     * @returns {Promise<void>}
+     */
+    async loadInitialSettings() {
+        try {
+            // Load difficulty from storage service
+            const difficulty = await storageService.loadData(STORAGE_KEYS.DIFFICULTY);
+            this.difficulty = difficulty || 'medium';
+            console.debug(`Game initialized with difficulty: ${this.difficulty}`);
+        } catch (error) {
+            console.error('Error loading initial settings:', error);
+        }
     }
     
     /**

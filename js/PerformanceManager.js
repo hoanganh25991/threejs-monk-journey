@@ -3,14 +3,15 @@ import Stats from 'three/addons/libs/stats.module.js';
 import { QUALITY_LEVELS } from './config/quality-levels.js';
 import { RENDER_CONFIG } from './config/render.js';
 import { STORAGE_KEYS } from './config/storage-keys.js';
+import storageService from './save-manager/StorageService.js';
 
 export class PerformanceManager {
     constructor(game) {
         this.game = game;
         
-        // Load target FPS from localStorage or use 60 as default
-        const storedFPS = localStorage.getItem(STORAGE_KEYS.TARGET_FPS);
-        this.targetFPS = storedFPS ? parseInt(storedFPS) : 60;
+        // Default values (will be updated in init)
+        this.targetFPS = 60;
+        this.currentQuality = 'ultra';
         
         this.fpsHistory = [];
         this.historySize = 30; // Store last 30 frames for smoothing
@@ -36,16 +37,23 @@ export class PerformanceManager {
         };
         this.qualityLevels = QUALITY_LEVELS;
         
-        // Load quality level from local storage or use 'ultra' as default
-        this.currentQuality = localStorage.getItem('monk_journey_quality_level') || 'ultra';
         this.stats = null;
         this.memoryDisplay = null;
         this.disposalQueue = []; // Queue for objects to be disposed
         this.disposalInterval = 5000; // Process disposal queue every 5 seconds
         this.lastDisposalTime = 0;
+        
+        // Flag to track if settings have been loaded
+        this.settingsLoaded = false;
     }
     
-    init() {
+    async init() {
+        // Initialize storage service if not already initialized
+        await storageService.init();
+        
+        // Load settings from storage service
+        await this.loadSettings();
+        
         // Initialize Stats.js for FPS monitoring
         this.stats = new Stats();
         this.applyStandardIndicatorStyle(this.stats.dom, 0);
@@ -84,24 +92,79 @@ export class PerformanceManager {
         // Check if performance info should be visible
         this.applyPerformanceInfoVisibility();
         
+        // Listen for storage updates
+        window.addEventListener('storage-service-update', this.handleStorageUpdate.bind(this));
+        
         console.debug("Performance Manager initialized with quality:", this.currentQuality);
         
         return this;
     }
     
     /**
-     * Apply performance info visibility based on localStorage setting
+     * Load settings from storage service
      */
-    applyPerformanceInfoVisibility() {
-        // Get the stored value or default to false (hide performance info by default)
-        const showPerformanceInfo = localStorage.getItem('monk_journey_show_performance_info');
-        const showPerformanceInfoValue = showPerformanceInfo === null ? false : showPerformanceInfo === 'true';
+    async loadSettings() {
+        try {
+            // Load target FPS
+            const storedFPS = await storageService.loadData(STORAGE_KEYS.TARGET_FPS);
+            this.targetFPS = storedFPS ? parseInt(storedFPS) : 60;
+            
+            // Load quality level
+            const qualityLevel = await storageService.loadData(STORAGE_KEYS.QUALITY_LEVEL);
+            this.currentQuality = qualityLevel || 'ultra';
+            
+            // Mark settings as loaded
+            this.settingsLoaded = true;
+        } catch (error) {
+            console.error('Error loading performance settings:', error);
+            // Use default values if loading fails
+            this.targetFPS = 60;
+            this.currentQuality = 'ultra';
+        }
+    }
+    
+    /**
+     * Handle storage update events
+     * @param {CustomEvent} event - Storage update event
+     */
+    handleStorageUpdate(event) {
+        const { key, newValue } = event.detail;
         
-        // Set visibility based on the setting
-        if (this.stats) this.stats.dom.style.display = showPerformanceInfoValue ? 'block' : 'none';
-        if (this.memoryDisplay) this.memoryDisplay.style.display = showPerformanceInfoValue ? 'block' : 'none';
-        if (this.gpuEnabledIndicator) this.gpuEnabledIndicator.style.display = showPerformanceInfoValue ? 'block' : 'none';
-        if (this.qualityIndicator) this.qualityIndicator.style.display = showPerformanceInfoValue ? 'block' : 'none';
+        // Update settings if they change in storage
+        if (key === STORAGE_KEYS.TARGET_FPS) {
+            this.targetFPS = newValue ? parseInt(newValue) : 60;
+            this.updateQualityIndicator();
+        } else if (key === STORAGE_KEYS.QUALITY_LEVEL) {
+            this.currentQuality = newValue || 'ultra';
+            this.applyQualitySettings(this.currentQuality);
+            this.updateQualityIndicator();
+        } else if (key === STORAGE_KEYS.SHOW_PERFORMANCE_INFO) {
+            this.applyPerformanceInfoVisibility();
+        }
+    }
+    
+    /**
+     * Apply performance info visibility based on storage setting
+     */
+    async applyPerformanceInfoVisibility() {
+        try {
+            // Get the stored value or default to false (hide performance info by default)
+            const showPerformanceInfo = await storageService.loadData(STORAGE_KEYS.SHOW_PERFORMANCE_INFO);
+            const showPerformanceInfoValue = showPerformanceInfo === null ? false : showPerformanceInfo === 'true';
+            
+            // Set visibility based on the setting
+            if (this.stats) this.stats.dom.style.display = showPerformanceInfoValue ? 'block' : 'none';
+            if (this.memoryDisplay) this.memoryDisplay.style.display = showPerformanceInfoValue ? 'block' : 'none';
+            if (this.gpuEnabledIndicator) this.gpuEnabledIndicator.style.display = showPerformanceInfoValue ? 'block' : 'none';
+            if (this.qualityIndicator) this.qualityIndicator.style.display = showPerformanceInfoValue ? 'block' : 'none';
+        } catch (error) {
+            console.error('Error applying performance info visibility:', error);
+            // Default to hiding performance info if there's an error
+            if (this.stats) this.stats.dom.style.display = 'none';
+            if (this.memoryDisplay) this.memoryDisplay.style.display = 'none';
+            if (this.gpuEnabledIndicator) this.gpuEnabledIndicator.style.display = 'none';
+            if (this.qualityIndicator) this.qualityIndicator.style.display = 'none';
+        }
     }
     
     // Apply standard styling to all indicators
@@ -762,17 +825,27 @@ export class PerformanceManager {
     }
     
     getParticleMultiplier() {
+        // Add safety checks to prevent "Cannot read properties of undefined" error
+        if (!this.qualityLevels || !this.currentQuality || !this.qualityLevels[this.currentQuality]) {
+            console.warn('Quality levels not properly initialized, using default particle multiplier');
+            return 0.5; // Default medium particle count as fallback
+        }
         return this.qualityLevels[this.currentQuality].particleCount;
     }
     
     getDrawDistanceMultiplier() {
+        // Add safety checks to prevent "Cannot read properties of undefined" error
+        if (!this.qualityLevels || !this.currentQuality || !this.qualityLevels[this.currentQuality]) {
+            console.warn('Quality levels not properly initialized, using default draw distance');
+            return 0.5; // Default medium draw distance as fallback
+        }
         return this.qualityLevels[this.currentQuality].drawDistance;
     }
     
-    setTargetFPS(fps) {
+    async setTargetFPS(fps) {
         this.targetFPS = fps;
-        // Save to localStorage
-        localStorage.setItem(STORAGE_KEYS.TARGET_FPS, fps);
+        // Save to storage service
+        await storageService.saveData(STORAGE_KEYS.TARGET_FPS, fps);
         // Update the quality indicator to show the new target FPS
         this.updateQualityIndicator();
     }

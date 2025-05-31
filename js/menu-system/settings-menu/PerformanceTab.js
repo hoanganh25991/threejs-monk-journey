@@ -5,6 +5,7 @@
 
 import { SettingsTab } from './SettingsTab.js';
 import { STORAGE_KEYS } from '../../config/storage-keys.js';
+import storageService from '../../save-manager/StorageService.js';
 
 export class PerformanceTab extends SettingsTab {
     /**
@@ -24,14 +25,17 @@ export class PerformanceTab extends SettingsTab {
         this.debugModeCheckbox = document.getElementById('debug-mode-checkbox');
         this.logEnabledCheckbox = document.getElementById('log-enabled-checkbox');
         
-        this.init();
+        // Initialize storage service
+        storageService.init().then(() => {
+            this.init();
+        });
     }
     
     /**
      * Initialize the performance settings
-     * @returns {boolean} - True if initialization was successful
+     * @returns {Promise<boolean>} - Promise resolving to true if initialization was successful
      */
-    init() {
+    async init() {
         if (this.qualitySelect) {
             // Clear existing options
             while (this.qualitySelect.options.length > 0) {
@@ -48,12 +52,12 @@ export class PerformanceTab extends SettingsTab {
             });
             
             // Set current quality
-            const currentQuality = localStorage.getItem(STORAGE_KEYS.QUALITY_LEVEL) || 'ultra';
+            const currentQuality = await storageService.loadData(STORAGE_KEYS.QUALITY_LEVEL) || 'ultra';
             this.qualitySelect.value = currentQuality;
             
             // Add change event listener
-            this.qualitySelect.addEventListener('change', () => {
-                localStorage.setItem(STORAGE_KEYS.QUALITY_LEVEL, this.qualitySelect.value);
+            this.qualitySelect.addEventListener('change', async () => {
+                await storageService.saveData(STORAGE_KEYS.QUALITY_LEVEL, this.qualitySelect.value);
                 
                 // Apply quality settings immediately if game is available
                 if (this.game && this.game.renderer) {
@@ -64,12 +68,12 @@ export class PerformanceTab extends SettingsTab {
         
         if (this.adaptiveCheckbox) {
             // Set current adaptive quality state
-            const adaptiveQuality = localStorage.getItem(STORAGE_KEYS.ADAPTIVE_QUALITY) === 'true';
-            this.adaptiveCheckbox.checked = adaptiveQuality;
+            const adaptiveQuality = await storageService.loadData(STORAGE_KEYS.ADAPTIVE_QUALITY);
+            this.adaptiveCheckbox.checked = adaptiveQuality === 'true';
             
             // Add change event listener
-            this.adaptiveCheckbox.addEventListener('change', () => {
-                localStorage.setItem(STORAGE_KEYS.ADAPTIVE_QUALITY, this.adaptiveCheckbox.checked);
+            this.adaptiveCheckbox.addEventListener('change', async () => {
+                await storageService.saveData(STORAGE_KEYS.ADAPTIVE_QUALITY, this.adaptiveCheckbox.checked.toString());
                 
                 // Apply adaptive quality settings immediately if game is available
                 if (this.game && this.game.renderer) {
@@ -80,15 +84,16 @@ export class PerformanceTab extends SettingsTab {
         
         if (this.fpsSlider && this.fpsValue) {
             // Set current target FPS
-            const targetFPS = parseInt(localStorage.getItem(STORAGE_KEYS.TARGET_FPS)) || 60;
-            this.fpsSlider.value = targetFPS;
-            this.fpsValue.textContent = targetFPS;
+            const targetFPS = await storageService.loadData(STORAGE_KEYS.TARGET_FPS);
+            const parsedFPS = targetFPS ? parseInt(targetFPS) : 60;
+            this.fpsSlider.value = parsedFPS;
+            this.fpsValue.textContent = parsedFPS;
             
             // Add input event listener
-            this.fpsSlider.addEventListener('input', () => {
+            this.fpsSlider.addEventListener('input', async () => {
                 const value = parseInt(this.fpsSlider.value);
                 this.fpsValue.textContent = value;
-                localStorage.setItem(STORAGE_KEYS.TARGET_FPS, value);
+                await storageService.saveData(STORAGE_KEYS.TARGET_FPS, value.toString());
                 
                 // Apply target FPS immediately if game is available
                 if (this.game) {
@@ -99,12 +104,12 @@ export class PerformanceTab extends SettingsTab {
         
         if (this.showPerformanceInfoCheckbox) {
             // Set current show performance info state
-            const showPerformanceInfo = localStorage.getItem(STORAGE_KEYS.SHOW_PERFORMANCE_INFO) === 'true';
-            this.showPerformanceInfoCheckbox.checked = showPerformanceInfo;
+            const showPerformanceInfo = await storageService.loadData(STORAGE_KEYS.SHOW_PERFORMANCE_INFO);
+            this.showPerformanceInfoCheckbox.checked = showPerformanceInfo === 'true';
             
             // Add change event listener
-            this.showPerformanceInfoCheckbox.addEventListener('change', () => {
-                localStorage.setItem(STORAGE_KEYS.SHOW_PERFORMANCE_INFO, this.showPerformanceInfoCheckbox.checked);
+            this.showPerformanceInfoCheckbox.addEventListener('change', async () => {
+                await storageService.saveData(STORAGE_KEYS.SHOW_PERFORMANCE_INFO, this.showPerformanceInfoCheckbox.checked.toString());
                 
                 // Apply performance info display settings immediately if game is available
                 if (this.game && this.game.ui) {
@@ -115,12 +120,12 @@ export class PerformanceTab extends SettingsTab {
         
         if (this.debugModeCheckbox) {
             // Set current debug mode state
-            const debugMode = localStorage.getItem(STORAGE_KEYS.DEBUG_MODE) === 'true';
-            this.debugModeCheckbox.checked = debugMode;
+            const debugMode = await storageService.loadData(STORAGE_KEYS.DEBUG_MODE);
+            this.debugModeCheckbox.checked = debugMode === 'true';
             
             // Add change event listener
-            this.debugModeCheckbox.addEventListener('change', () => {
-                localStorage.setItem(STORAGE_KEYS.DEBUG_MODE, this.debugModeCheckbox.checked);
+            this.debugModeCheckbox.addEventListener('change', async () => {
+                await storageService.saveData(STORAGE_KEYS.DEBUG_MODE, this.debugModeCheckbox.checked.toString());
                 
                 // Apply debug mode settings immediately if game is available
                 if (this.game) {
@@ -131,12 +136,12 @@ export class PerformanceTab extends SettingsTab {
         
         if (this.logEnabledCheckbox) {
             // Set current log enabled state, default to false for better performance
-            const logEnabled = localStorage.getItem(STORAGE_KEYS.LOG_ENABLED) === 'true';
-            this.logEnabledCheckbox.checked = logEnabled;
+            const logEnabled = await storageService.loadData(STORAGE_KEYS.LOG_ENABLED);
+            this.logEnabledCheckbox.checked = logEnabled === 'true';
             
             // Add change event listener
-            this.logEnabledCheckbox.addEventListener('change', () => {
-                localStorage.setItem(STORAGE_KEYS.LOG_ENABLED, this.logEnabledCheckbox.checked);
+            this.logEnabledCheckbox.addEventListener('change', async () => {
+                await storageService.saveData(STORAGE_KEYS.LOG_ENABLED, this.logEnabledCheckbox.checked.toString());
                 
                 // Show a notification that changes will take effect after reload
                 if (this.game && this.game.ui && this.game.ui.notifications) {
@@ -150,37 +155,39 @@ export class PerformanceTab extends SettingsTab {
     
     /**
      * Save the performance settings
+     * @returns {Promise<void>}
      */
-    saveSettings() {
+    async saveSettings() {
         if (this.qualitySelect) {
-            localStorage.setItem(STORAGE_KEYS.QUALITY_LEVEL, this.qualitySelect.value);
+            await storageService.saveData(STORAGE_KEYS.QUALITY_LEVEL, this.qualitySelect.value);
         }
         
         if (this.adaptiveCheckbox) {
-            localStorage.setItem(STORAGE_KEYS.ADAPTIVE_QUALITY, this.adaptiveCheckbox.checked);
+            await storageService.saveData(STORAGE_KEYS.ADAPTIVE_QUALITY, this.adaptiveCheckbox.checked.toString());
         }
         
         if (this.fpsSlider) {
-            localStorage.setItem(STORAGE_KEYS.TARGET_FPS, this.fpsSlider.value);
+            await storageService.saveData(STORAGE_KEYS.TARGET_FPS, this.fpsSlider.value);
         }
         
         if (this.showPerformanceInfoCheckbox) {
-            localStorage.setItem(STORAGE_KEYS.SHOW_PERFORMANCE_INFO, this.showPerformanceInfoCheckbox.checked);
+            await storageService.saveData(STORAGE_KEYS.SHOW_PERFORMANCE_INFO, this.showPerformanceInfoCheckbox.checked.toString());
         }
         
         if (this.debugModeCheckbox) {
-            localStorage.setItem(STORAGE_KEYS.DEBUG_MODE, this.debugModeCheckbox.checked);
+            await storageService.saveData(STORAGE_KEYS.DEBUG_MODE, this.debugModeCheckbox.checked.toString());
         }
         
         if (this.logEnabledCheckbox) {
-            localStorage.setItem(STORAGE_KEYS.LOG_ENABLED, this.logEnabledCheckbox.checked);
+            await storageService.saveData(STORAGE_KEYS.LOG_ENABLED, this.logEnabledCheckbox.checked.toString());
         }
     }
     
     /**
      * Reset the performance settings to defaults
+     * @returns {Promise<void>}
      */
-    resetToDefaults() {
+    async resetToDefaults() {
         if (this.qualitySelect) {
             this.qualitySelect.value = 'ultra';
         }
@@ -206,6 +213,6 @@ export class PerformanceTab extends SettingsTab {
             this.logEnabledCheckbox.checked = false;
         }
         
-        this.saveSettings();
+        await this.saveSettings();
     }
 }

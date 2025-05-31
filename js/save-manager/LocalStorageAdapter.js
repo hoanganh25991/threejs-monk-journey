@@ -33,13 +33,20 @@ export class LocalStorageAdapter extends IStorageAdapter {
                 return null;
             }
             
-            // Special handling for skill variant keys which store plain strings
-            if (key.startsWith('monk_journey_selected_skill_variant_')) {
+            // Handle keys that might contain simple string values
+            if (key.startsWith('monk_journey_selected_skill_variant_') || 
+                key === 'monk_journey_selected_size' ||
+                key === 'monk_journey_selected_model' ||
+                key === 'monk_journey_difficulty' ||
+                key === 'monk_journey_quality_level') {
                 return serializedData; // Return the raw string value
             }
             
             // For all other keys, parse as JSON
-            return JSON.parse(serializedData);
+            const parsedData = JSON.parse(serializedData);
+            
+            // Process the parsed data to convert string booleans to actual booleans
+            return this.processLoadedData(parsedData);
         } catch (error) {
             console.error(`Error loading data for key ${key}:`, error);
             
@@ -53,6 +60,40 @@ export class LocalStorageAdapter extends IStorageAdapter {
             
             return null;
         }
+    }
+    
+    /**
+     * Process loaded data to convert string booleans to actual booleans
+     * @param {*} data - The data to process
+     * @returns {*} The processed data
+     */
+    processLoadedData(data) {
+        if (data === null || data === undefined) {
+            return data;
+        }
+        
+        // Handle string boolean values
+        if (data === "true") return true;
+        if (data === "false") return false;
+        
+        // Handle arrays
+        if (Array.isArray(data)) {
+            return data.map(item => this.processLoadedData(item));
+        }
+        
+        // Handle objects
+        if (typeof data === 'object') {
+            const result = {};
+            for (const key in data) {
+                if (Object.prototype.hasOwnProperty.call(data, key)) {
+                    result[key] = this.processLoadedData(data[key]);
+                }
+            }
+            return result;
+        }
+        
+        // Return other types as is
+        return data;
     }
     
     /**

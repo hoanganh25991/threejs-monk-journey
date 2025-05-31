@@ -1,14 +1,14 @@
 import { ISaveSystem } from './ISaveSystem.js';
-import { SyncStorageAdapter } from './SyncStorageAdapter.js';
 import { PlayerSerializer } from './serializers/PlayerSerializer.js';
 import { QuestSerializer } from './serializers/QuestSerializer.js';
 import { SettingsSerializer } from './serializers/SettingsSerializer.js';
 import { InventorySerializer } from './serializers/InventorySerializer.js';
 import { SaveOperationProgress } from './utils/SaveOperationProgress.js';
 import { STORAGE_KEYS } from '../config/storage-keys.js';
+import storageService from './StorageService.js';
 
 /**
- * SaveManager implementation using localStorage
+ * SaveManager implementation using StorageService
  * Handles saving and loading game state with progress indicators
  */
 export class SaveManager extends ISaveSystem {
@@ -31,11 +31,8 @@ export class SaveManager extends ISaveSystem {
         this.lastSaveTime = 0; // Track time of last save
         this.minTimeBetweenSaves = 60_000; // Minimum minute between saves
         
-        // Google Client ID for authentication
-        this.googleClientId = '1070303484277-3dmj1pfiv64gmgj396j5hcbvnqdkuje4.apps.googleusercontent.com';
-        
-        // Create storage adapter with Google Drive support
-        this.storage = new SyncStorageAdapter(this.googleClientId);
+        // Use the centralized storage service
+        this.storage = storageService.getAdapter();
         
         // Current save version
         this.currentVersion = '1.1.0';
@@ -43,9 +40,12 @@ export class SaveManager extends ISaveSystem {
     
     /**
      * Initialize the save system
-     * @returns {boolean} Success status
+     * @returns {Promise<boolean>} Success status
      */
-    init() {
+    async init() {
+        // Initialize the storage service
+        await storageService.init();
+        
         // Start auto-save timer
         this.startAutoSave();
         
@@ -196,7 +196,9 @@ export class SaveManager extends ISaveSystem {
             // Check if save data exists
             if (!saveData) {
                 console.debug('No save data found');
-                this.loadProgress.error('No save data found');
+                this.loadProgress.update('No save data found, continuing with new game', 100);
+                await this.delay(10);
+                this.loadProgress.complete();
                 return false;
             }
             
@@ -318,13 +320,25 @@ export class SaveManager extends ISaveSystem {
      */
     async signInToGoogle() {
         try {
-            const success = await this.storage.signInToGoogle();
+            // Use the centralized storageService instead of the adapter directly
+            const success = await storageService.signInToGoogle();
             
             if (success) {
                 console.debug('Successfully signed in to Google Drive');
                 
-                // Try to load save data from Google Drive
-                await this.loadGame();
+                // Check if save data exists before trying to load
+                const hasSaveData = await this.hasSaveData();
+                
+                if (hasSaveData) {
+                    // Try to load save data from Google Drive
+                    await this.loadGame();
+                } else {
+                    console.debug('No save data found in Google Drive, continuing with new game');
+                    // Complete the progress indicator if it was started
+                    if (this.loadProgress.isActive) {
+                        this.loadProgress.complete();
+                    }
+                }
             } else {
                 console.debug('Failed to sign in to Google Drive');
             }
@@ -340,7 +354,8 @@ export class SaveManager extends ISaveSystem {
      * Sign out from Google Drive
      */
     signOutFromGoogle() {
-        this.storage.signOutFromGoogle();
+        // Use the centralized storageService instead of the adapter directly
+        storageService.signOutFromGoogle();
         console.debug('Signed out from Google Drive');
     }
     
@@ -349,7 +364,8 @@ export class SaveManager extends ISaveSystem {
      * @returns {boolean} Whether signed in to Google Drive
      */
     isSignedInToGoogle() {
-        return this.storage.isSignedInToGoogle();
+        // Use the centralized storageService instead of the adapter directly
+        return storageService.isSignedInToGoogle();
     }
     
     /**
@@ -517,6 +533,11 @@ export class SaveManager extends ISaveSystem {
      * @returns {boolean} Whether save data exists
      */
     hasSaveData() {
-        return this.storage.hasData(this.saveKey);
+        try {
+            return this.storage.hasData(this.saveKey);
+        } catch (error) {
+            console.error('Error checking if save data exists:', error);
+            return false;
+        }
     }
 }
