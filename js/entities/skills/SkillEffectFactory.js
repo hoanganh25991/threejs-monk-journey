@@ -94,6 +94,7 @@ import { WallOfLightEffect } from './variants/WaveOfLight/WallOfLightEffect.js';
 
 // Import Bul Palm variant effects
 import { PalmRainEffect } from './variants/BulPalm/PalmRainEffect.js';
+import { PalmCrossEffect } from './variants/BulPalm/PalmCrossEffect.js';
 
 /**
  * Factory class for creating skill effects
@@ -500,6 +501,9 @@ export class SkillEffectFactory {
                 case 'Palm Rain':
                     // Summons multiple palms from the sky that crash down on enemies
                     return new PalmRainEffect(skill);
+                case 'Palm Cross':
+                    // Summons 4 giant palms in a cross pattern that fall and cause a massive explosion
+                    return new PalmCrossEffect(skill);
             }
         }
         

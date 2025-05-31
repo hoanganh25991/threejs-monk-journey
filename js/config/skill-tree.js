@@ -906,6 +906,13 @@ const BASE_SKILL_TREES = {
         unlockedBy: "Legendary gloves Hand of the Heavens",
         cost: 5,
         requiredPoints: 0,
+      },
+      "Palm Cross": {
+        description: "Summons 4 giant palms in a cross pattern that fall simultaneously and cause a massive explosion.",
+        effects: ["Cross pattern", "Giant palms", "Massive explosion"],
+        unlockedBy: "Legendary bracers Cross of the Heavens",
+        cost: 5,
+        requiredPoints: 0,
       }
     },
     buffs: {
