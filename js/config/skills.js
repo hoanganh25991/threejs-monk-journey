@@ -299,8 +299,8 @@ export const NORMAL_SKILLS = [
         name: 'Bul Palm',
         description: 'Giant palm moving, damaging all enemies on the path.',
         type: 'projectile',
-        damage: 50, // Reduced from 100 for better balance
-        manaCost: 40, // Increased from 25 to match the power
+        damage: 200, // Reduced from 100 for better balance
+        manaCost: 150, // Increased from 25 to match the power
         cooldown: 0.2, // Moderate cooldown
         range: 40, // Long range
         radius: 3, // Explosion radius
