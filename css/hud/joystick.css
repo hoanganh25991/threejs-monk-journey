@@ -18,6 +18,7 @@
     background-color: transparent; /* Make container transparent */
     border: none; /* Remove border from container */
     box-shadow: none; /* Remove box shadow from container */
+    z-index: 900; /* Ensure joystick is above most elements but below the overlay */
 }
 
 #virtual-joystick-base {
@@ -42,4 +43,17 @@
     border: 3px solid rgba(255, 255, 255, 0.9);
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
     background: radial-gradient(circle, rgba(200, 200, 200, 0.9) 0%, rgba(150, 150, 150, 0.9) 100%);
+}
+
+/* Joystick Overlay */
+#joystick-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 50%; /* Only cover the left half of the screen */
+    height: 100%;
+    z-index: 1000; /* High z-index to be above other elements */
+    pointer-events: auto;
+    touch-action: none;
+    background-color: transparent; /* Make it invisible */
 }
