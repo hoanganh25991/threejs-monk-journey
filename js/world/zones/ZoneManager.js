@@ -226,6 +226,11 @@ export class ZoneManager {
      * @param {THREE.Vector3} position - The position to check
      * @returns {object|null} - The zone at the specified position, or null if none
      */
+    // Cache for the last zone lookup to avoid frequent recalculations
+    lastZonePosition = new THREE.Vector3(0, 0, 0);
+    lastZoneResult = null;
+    zoneUpdateThreshold = 50; // Only update zone when player moves this far
+    
     getZoneAt(position) {
         // If zones array is empty, return default Terrant zone
         if (!this.zones || this.zones.length === 0) {
@@ -235,6 +240,11 @@ export class ZoneManager {
                 center: position.clone(),
                 radius: 1
             };
+        }
+        
+        // Check if we're still in the same area as the last lookup
+        if (this.lastZoneResult && position.distanceTo(this.lastZonePosition) < this.zoneUpdateThreshold) {
+            return this.lastZoneResult;
         }
         
         // Check if we have a cached zone for this chunk
@@ -258,43 +268,68 @@ export class ZoneManager {
                     }
                 }
                 
-                return {
+                // Cache this result
+                this.lastZonePosition.copy(position);
+                this.lastZoneResult = {
                     name: zoneName,
                     color: zoneColor,
                     // We don't need these properties for most use cases
                     center: position.clone(),
                     radius: 1
                 };
+                
+                return this.lastZoneResult;
             }
         }
         
         // If no cache or cache miss, fall back to distance-based lookup
         try {
-            // Sort zones by distance to optimize lookup (closest first)
-            const sortedZones = [...this.zones].sort((a, b) => {
-                const distA = position.distanceTo(a.center);
-                const distB = position.distanceTo(b.center);
-                return distA - distB;
-            });
+            // Instead of sorting all zones, just find the first matching zone
+            // This is much more efficient than sorting the entire array
+            let closestZone = null;
+            let closestDistance = Infinity;
             
-            // Check zones in order of proximity
-            for (const zone of sortedZones) {
+            for (const zone of this.zones) {
                 const distance = position.distanceTo(zone.center);
                 if (distance <= zone.radius) {
+                    // We found a zone that contains this position, no need to check others
+                    // Cache this result
+                    this.lastZonePosition.copy(position);
+                    this.lastZoneResult = zone;
                     return zone;
                 }
+                
+                // Keep track of the closest zone in case we don't find one that contains the position
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestZone = zone;
+                }
+            }
+            
+            // If we didn't find a zone that contains the position, use the closest one
+            if (closestZone) {
+                // Cache this result
+                this.lastZonePosition.copy(position);
+                this.lastZoneResult = closestZone;
+                return closestZone;
             }
         } catch (error) {
             console.warn("Error in zone lookup:", error);
         }
         
         // Default to Terrant if no zone found
-        return {
+        const defaultZone = {
             name: 'Terrant',
             color: ZONE_COLORS.Terrant ? ZONE_COLORS.Terrant.soil : 0x8B4513, // Earth Brown
             center: position.clone(),
             radius: 1
         };
+        
+        // Cache this result
+        this.lastZonePosition.copy(position);
+        this.lastZoneResult = defaultZone;
+        
+        return defaultZone;
     }
     
     /**

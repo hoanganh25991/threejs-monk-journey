@@ -76,25 +76,35 @@ export class CollisionManager {
         
         // Check collision with structures if available
         if (this.world && this.world.structureManager && this.world.structureManager.structures) {
-            this.world.structureManager.structures.forEach(object => {
-                // Get object bounding box
-                const boundingBox = new THREE.Box3().setFromObject(object);
+            this.world.structureManager.structures.forEach(structureData => {
+                // Get the actual THREE.Object3D from the structure data
+                const object = structureData.object;
                 
-                // Create a sphere that encompasses the bounding box
-                const center = new THREE.Vector3();
-                boundingBox.getCenter(center);
-                const size = new THREE.Vector3();
-                boundingBox.getSize(size);
-                const objectRadius = Math.max(size.x, size.z) / 2;
+                // Skip if object is not valid
+                if (!object) return;
                 
-                // Calculate distance between player and object center
-                const distance = new THREE.Vector2(playerPosition.x, playerPosition.z)
-                    .distanceTo(new THREE.Vector2(center.x, center.z));
-                
-                // Check if collision occurred
-                if (distance < playerRadius + objectRadius) {
-                    // Handle collision
-                    this.handlePlayerObjectCollision(object, center);
+                try {
+                    // Get object bounding box
+                    const boundingBox = new THREE.Box3().setFromObject(object);
+                    
+                    // Create a sphere that encompasses the bounding box
+                    const center = new THREE.Vector3();
+                    boundingBox.getCenter(center);
+                    const size = new THREE.Vector3();
+                    boundingBox.getSize(size);
+                    const objectRadius = Math.max(size.x, size.z) / 2;
+                    
+                    // Calculate distance between player and object center
+                    const distance = new THREE.Vector2(playerPosition.x, playerPosition.z)
+                        .distanceTo(new THREE.Vector2(center.x, center.z));
+                    
+                    // Check if collision occurred
+                    if (distance < playerRadius + objectRadius) {
+                        // Handle collision
+                        this.handlePlayerObjectCollision(object, center);
+                    }
+                } catch (error) {
+                    console.warn("Error checking collision with structure:", error);
                 }
             });
         }

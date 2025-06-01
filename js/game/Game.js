@@ -161,7 +161,7 @@ export class Game {
             
             // Initialize scene
             this.scene = new THREE.Scene();
-            this.scene.background = new THREE.Color(0x5a6d7e); // Darker blue-gray sky color
+            this.scene.background = new THREE.Color(0x87ceeb); // Light sky blue color
             // Fog will be managed by FogManager
             
             // Initialize item drop manager
@@ -190,9 +190,24 @@ export class Game {
             
             this.updateLoadingProgress(20, 'Building world...', 'Generating terrain and environment');
             
-            // Initialize world
+            // Initialize world with loading state
+            this.isWorldLoading = true;
             this.world = new WorldManager(this.scene, this.loadingManager, this);
+            
+            // Show a more detailed loading message for terrain generation
+            this.updateLoadingProgress(25, 'Generating terrain...', 'This may take a moment');
+            
+            // Initialize the world
             await this.world.init();
+            
+            // Pre-generate terrain in a separate step with loading indicator
+            this.updateLoadingProgress(30, 'Pre-generating terrain...', 'Creating world chunks');
+            await this.world.preGenerateTerrain();
+            
+            // TODO: Add functionality to save generated terrain to localStorage
+            // for faster loading in the future once we're satisfied with generation
+            
+            this.isWorldLoading = false;
             
             this.updateLoadingProgress(40, 'Loading character...', 'Preparing player model and animations');
             
@@ -681,7 +696,7 @@ export class Game {
         // Update world based on player position
         // Use performance-based draw distance
         const drawDistance = this.performanceManager.getDrawDistanceMultiplier();
-        this.world.updateWorldForPlayer(this.player.getPosition(), drawDistance);
+        this.world.updateWorldForPlayer(this.player.getPosition(), drawDistance, delta);
         
         // Update enemies
         this.enemyManager.update(delta);
