@@ -430,14 +430,62 @@ export class Enemy {
         }, 800);
     }
     
-    takeDamage(amount, knockback = false, knockbackDirection = null) {
-        // Reduce health
-        this.health -= amount;
+    /**
+     * Handle enemy taking damage with defense calculations
+     * @param {number} amount - The raw damage amount
+     * @param {boolean} knockback - Whether to apply knockback
+     * @param {THREE.Vector3} knockbackDirection - Direction of knockback
+     * @param {boolean} ignoreDefense - Whether to ignore defense (for true damage)
+     * @returns {number} - The actual damage taken after reductions
+     */
+    takeDamage(amount, knockback = false, knockbackDirection = null, ignoreDefense = false) {
+        // Calculate actual damage after defense
+        let actualDamage = amount;
+        
+        // Apply defense reduction if not ignoring defense
+        if (!ignoreDefense) {
+            // Base defense value - can be customized per enemy type
+            let defenseValue = 0;
+            
+            // Get defense based on enemy type
+            if (this.type === 'skeleton_king' || this.type === 'necromancer_lord' || 
+                this.type === 'demon_lord' || this.type === 'frost_titan') {
+                // Boss enemies have higher defense
+                defenseValue = 25;
+            } else if (this.type.includes('golem') || this.type === 'mountain_troll' || 
+                       this.type === 'corrupted_treant' || this.type === 'ancient_guardian') {
+                // Tank enemies have medium-high defense
+                defenseValue = 15;
+            } else if (this.type.includes('skeleton') || this.type.includes('zombie')) {
+                // Undead enemies have low defense
+                defenseValue = 5;
+            } else {
+                // Default defense for other enemies
+                defenseValue = 10;
+            }
+            
+            // Apply defense formula: damage reduction percentage based on defense
+            // Formula: reduction = defense / (defense + 100)
+            // This gives diminishing returns for high defense values
+            const reductionPercent = defenseValue / (defenseValue + 100);
+            actualDamage = amount * (1 - reductionPercent);
+            
+            console.debug(`Enemy ${this.name} defense: ${defenseValue}, damage reduction: ${(reductionPercent * 100).toFixed(1)}%, raw damage: ${amount}, actual damage: ${actualDamage.toFixed(1)}`);
+        }
+        
+        // Round the damage to avoid floating point issues
+        actualDamage = Math.round(actualDamage);
+        
+        // Ensure minimum damage of 1
+        actualDamage = Math.max(1, actualDamage);
+        
+        // Reduce health by the actual damage
+        this.health -= actualDamage;
         
         // Check if dead
         if (this.health <= 0) {
             this.die();
-            return amount;
+            return actualDamage;
         }
         
         // Apply knockback if specified
@@ -448,7 +496,7 @@ export class Enemy {
         // Update health bar
         this.updateHealthBar();
         
-        return amount;
+        return actualDamage;
     }
     
     /**
