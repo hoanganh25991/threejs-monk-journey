@@ -4,13 +4,13 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '43';
+const CACHE_VERSION = '44';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 7006458;
-const TOTAL_CACHE_SIZE_MB = 6.68;
+const TOTAL_CACHE_SIZE_BYTES = 7103093;
+const TOTAL_CACHE_SIZE_MB = 6.77;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
@@ -279,6 +279,7 @@ const ASSETS_TO_CACHE = [
   'js/world/environment/Flower.js',
   'js/world/environment/FogManager.js',
   'js/world/environment/Rock.js',
+  'js/world/environment/SkyManager.js',
   'js/world/environment/Tree.js',
   'js/world/interactive/BossSpawnPoint.js',
   'js/world/interactive/InteractiveObjectManager.js',
