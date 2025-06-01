@@ -28,6 +28,7 @@ export class StorageService {
         this.initialized = false;
         this.isSigningIn = false;
         this.autoLoginAttempted = false;
+        this.isSyncFromGoogleDrive = false;
         
         // Add event listeners for storage events
         window.addEventListener('storage', this.handleStorageEvent.bind(this));
@@ -43,6 +44,49 @@ export class StorageService {
     }
     
     /**
+     * Check if login is required based on previous login history
+     * @returns {boolean} Whether login is required
+     */
+    isLoginRequired() {
+        // Check if there was a previous login
+        const lastLogin = localStorage.getItem(STORAGE_KEYS.GOOGLE_LAST_LOGIN);
+        return lastLogin !== null;
+    }
+    
+    /**
+     * Enforce login if previously logged in
+     * @returns {Promise<boolean>} Whether the user chose to login or start fresh
+     */
+    async enforceLoginIfRequired() {
+        if (this.isLoginRequired() && !this.isSignedInToGoogle()) {
+            console.debug('Previous login detected, enforcing login');
+            
+            // Ask user to confirm login
+            const shouldLogin = confirm(
+                'You previously logged in with Google Drive to save your progress.\n\n' +
+                'Would you like to login again to load your saved data?\n\n' +
+                'Click OK to login and load your saved data.\n' +
+                'Click Cancel to start a new game.'
+            );
+            
+            if (shouldLogin) {
+                // User chose to login
+                console.debug('User chose to login');
+                const success = await this.signInToGoogle(false);
+                return success;
+            } else {
+                // User chose to start fresh
+                console.debug('User chose to start fresh');
+                // Clear the last login record to prevent future prompts
+                localStorage.removeItem(STORAGE_KEYS.GOOGLE_LAST_LOGIN);
+                return false;
+            }
+        }
+        
+        return true; // No login required or already logged in
+    }
+
+    /**
      * Initialize the storage service
      * This is now a lightweight operation since fixExistingData is called in constructor
      * @returns {Promise<void>}
@@ -52,7 +96,13 @@ export class StorageService {
             return;
         }
         
-        // Try auto-login first if enabled (before setting initialized flag)
+        // First, check if login is required based on previous login history
+        const loginResult = await this.enforceLoginIfRequired();
+        
+        // If login was required but user declined or login failed, we'll start fresh
+        // Otherwise, proceed with normal initialization
+        
+        // Try auto-login if not already signed in and auto-login is enabled
         if (!this.autoLoginAttempted && !this.isSignedInToGoogle() && googleAuthManager.shouldAttemptAutoLogin()) {
             this.autoLoginAttempted = true;
             console.debug('Attempting silent auto-login to Google Drive during initialization');
@@ -124,9 +174,12 @@ export class StorageService {
         if (!this.isSignedInToGoogle()) {
             return;
         }
+        if (this.isSyncFromGoogleDrive) {
+            return
+        }
         console.log("syncFromGoogleDrive")
         console.debug('Syncing data from Google Drive to localStorage');
-        
+        this.isSyncFromGoogleDrive = true;
         // Define keys that should not be synced from Google Drive
         const localOnlyKeys = [
             STORAGE_KEYS.GOOGLE_LAST_LOGIN,

@@ -850,12 +850,30 @@ export class BulPalmCrossEffect extends BulPalmEffect {
     
     console.debug(`Applying screen shake: intensity=${intensity}, duration=${duration}`);
     
-    // Store original transform
-    const originalTransform = canvas.style.transform || '';
+    // Get the game container instead of just the canvas
+    // This ensures we shake the entire game view while preserving UI elements
+    const gameContainer = document.getElementById('game-container');
+    if (!gameContainer) return;
     
-    // Make sure the canvas has position relative or absolute
-    if (window.getComputedStyle(canvas).position === 'static') {
-      canvas.style.position = 'relative';
+    // Store original transform
+    const originalTransform = gameContainer.style.transform || '';
+    
+    // Make sure the game container has position relative or absolute
+    if (window.getComputedStyle(gameContainer).position === 'static') {
+      gameContainer.style.position = 'relative';
+    }
+    
+    // Ensure joystick stays visible during shake
+    const joystickContainer = document.getElementById('virtual-joystick-container');
+    if (joystickContainer) {
+      // Temporarily increase z-index to ensure it stays on top
+      const originalZIndex = joystickContainer.style.zIndex || '900';
+      joystickContainer.style.zIndex = '2000'; // Higher than any other UI element
+      
+      // Reset z-index after shake completes
+      setTimeout(() => {
+        joystickContainer.style.zIndex = originalZIndex;
+      }, duration * 1000 + 50); // Add small buffer to ensure it completes after shake
     }
     
     // Set up variables for the shake effect
@@ -872,19 +890,19 @@ export class BulPalmCrossEffect extends BulPalmEffect {
       // Check if shake should end
       if (elapsed >= duration) {
         shaking = false;
-        canvas.style.transform = originalTransform;
+        gameContainer.style.transform = originalTransform;
         return;
       }
       
       // Calculate shake factor (decreases over time)
       const shakeFactor = (1 - elapsed / duration) * intensity;
       
-      // Apply random offset to canvas position
+      // Apply random offset to game container position
       const offsetX = (Math.random() - 0.5) * 2 * shakeFactor * 15; // Multiply by 15 for pixels
       const offsetY = (Math.random() - 0.5) * 2 * shakeFactor * 15; // Multiply by 15 for pixels
       
-      // Apply shake to canvas position
-      canvas.style.transform = `${originalTransform} translate(${offsetX}px, ${offsetY}px)`;
+      // Apply shake to game container position
+      gameContainer.style.transform = `${originalTransform} translate(${offsetX}px, ${offsetY}px)`;
       
       // Request next frame
       requestAnimationFrame(updateShake);
