@@ -85,6 +85,62 @@ export class StorageService {
         
         return true; // No login required or already logged in
     }
+    
+    /**
+     * Ensures the user is logged in before proceeding with an operation
+     * Shows the login flow if the user is not logged in
+     * 
+     * @param {boolean} silentMode - Whether to attempt silent login first
+     * @param {string} message - Custom message to show in the confirmation dialog
+     * @returns {Promise<boolean>} Whether the user is now logged in
+     */
+    async ensureLogin(silentMode = false, message = null) {
+        // Check if already logged in
+        if (this.isSignedInToGoogle()) {
+            console.debug('User already logged in, proceeding');
+            return true;
+        }
+        
+        console.debug('Login required, showing login flow');
+        
+        // Try silent login first if requested
+        if (silentMode && googleAuthManager.shouldAttemptAutoLogin()) {
+            console.debug('Attempting silent login first');
+            const silentSuccess = await this.signInToGoogle(true);
+            
+            if (silentSuccess) {
+                console.debug('Silent login successful');
+                return true;
+            }
+            
+            console.debug('Silent login failed, proceeding to interactive login');
+        }
+        
+        // Show confirmation dialog with custom or default message
+        const defaultMessage = 'This operation requires you to be logged in with Google.\n\n' +
+                              'Would you like to login now?\n' +
+                              'Click OK to login.\n' +
+                              'Click Cancel to abort the operation.';
+        
+        const shouldLogin = confirm(message || defaultMessage);
+        
+        if (shouldLogin) {
+            // User chose to login
+            console.debug('User chose to login');
+            const success = await this.signInToGoogle(false);
+            
+            if (!success) {
+                console.debug('Login failed');
+                alert('Login failed. Please try again later.');
+            }
+            
+            return success;
+        } else {
+            // User chose not to login
+            console.debug('User chose not to login');
+            return false;
+        }
+    }
 
     /**
      * Initialize the storage service

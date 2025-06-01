@@ -87,9 +87,11 @@ export class SaveManager extends ISaveSystem {
      * Save the current game state with progress indicator
      * Only saves hero information (player data, quests, settings)
      * @param {boolean} forceSave - Whether to force save regardless of conditions
+     * @param {boolean} autoSave - Whether this is an automatic save
+     * @param {boolean} requireCloudSave - Whether to ensure cloud save by requiring login
      * @returns {Promise<boolean>} Promise resolving to success status
      */
-    async saveGame(forceSave = false, autoSave = false) {
+    async saveGame(forceSave = false, autoSave = false, requireCloudSave = false) {
         try {
             const currentTime = Date.now();
             const playerLevel = this.game.player.stats.level;
@@ -101,6 +103,21 @@ export class SaveManager extends ISaveSystem {
             if (!forceSave && !enoughTimePassed) {
                 console.debug('Skipping save - not enough time passed since last save');
                 return true; // Skip saving but return success
+            }
+            
+            // If cloud save is required, ensure the user is logged in
+            if (requireCloudSave && !autoSave) {
+                const isLoggedIn = await this.ensureLogin(true, 
+                    'To save your progress to the cloud, you need to be logged in with Google.\n\n' +
+                    'Would you like to login now?\n' +
+                    'Click OK to login and save to the cloud.\n' +
+                    'Click Cancel to save locally only.'
+                );
+                
+                if (!isLoggedIn) {
+                    console.debug('User chose not to login for cloud save, continuing with local save only');
+                    // We'll still save locally, so we continue with the save process
+                }
             }
 
             // Initialize progress indicator
@@ -149,8 +166,15 @@ export class SaveManager extends ISaveSystem {
             this.lastSaveTime = currentTime;
             this.lastSaveLevel = playerLevel;
             
-            !autoSave && this.saveProgress.update('Save complete!', 100);
-            !autoSave && await this.delay(10); // Show completion for a moment
+            // Show appropriate message based on login status
+            if (!autoSave) {
+                if (this.isSignedInToGoogle()) {
+                    this.saveProgress.update('Save complete! Your progress is saved to the cloud.', 100);
+                } else {
+                    this.saveProgress.update('Save complete! (Local save only)', 100);
+                }
+                await this.delay(10); // Show completion for a moment
+            }
             
             console.debug('Hero data saved successfully');
             
@@ -348,6 +372,18 @@ export class SaveManager extends ISaveSystem {
             console.error('Error signing in to Google Drive:', error);
             return false;
         }
+    }
+    
+    /**
+     * Ensures the user is logged in before proceeding with an operation
+     * Shows the login flow if the user is not logged in
+     * 
+     * @param {boolean} silentMode - Whether to attempt silent login first
+     * @param {string} message - Custom message to show in the confirmation dialog
+     * @returns {Promise<boolean>} Whether the user is now logged in
+     */
+    async ensureLogin(silentMode = false, message = null) {
+        return await storageService.ensureLogin(silentMode, message);
     }
     
     /**

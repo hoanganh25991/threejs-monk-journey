@@ -4,13 +4,13 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '44';
+const CACHE_VERSION = '45';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 7103093;
-const TOTAL_CACHE_SIZE_MB = 6.77;
+const TOTAL_CACHE_SIZE_BYTES = 7107646;
+const TOTAL_CACHE_SIZE_MB = 6.78;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
