@@ -4,13 +4,13 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '48';
+const CACHE_VERSION = '49';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 7136163;
-const TOTAL_CACHE_SIZE_MB = 6.81;
+const TOTAL_CACHE_SIZE_BYTES = 7134211;
+const TOTAL_CACHE_SIZE_MB = 6.80;
 
 // Assets to cache
 const ASSETS_TO_CACHE = [
@@ -70,6 +70,7 @@ const ASSETS_TO_CACHE = [
   'js/Main.js',
   'js/PerformanceManager.js',
   'js/QuestManager.js',
+  'js/SimpleUI.js',
   'js/UIComponent.js',
   'js/effects/EffectObjectPool.js',
   'js/entities/enemies/Enemy.js',
@@ -239,7 +240,6 @@ const ASSETS_TO_CACHE = [
   'js/menu-system/GameMenu.js',
   'js/menu-system/IMenu.js',
   'js/menu-system/ItemPreview.js',
-  'js/menu-system/MainBackground.js',
   'js/menu-system/MenuManager.js',
   'js/menu-system/ModelPreview.js',
   'js/menu-system/SettingsMenu.js',

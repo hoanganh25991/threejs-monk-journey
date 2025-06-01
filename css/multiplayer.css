@@ -17,10 +17,6 @@
     box-sizing: border-box;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     color: white;
-    background-image: url('../assets/images/background.jpg');
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
 }
 
 .multiplayer-menu-content {

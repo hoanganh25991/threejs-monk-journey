@@ -11,7 +11,6 @@ import { DeathScreenUI } from './DeathScreenUI.js';
 import { NotificationsUI } from './NotificationsUI.js';
 import { QuestLogUI } from './QuestLogUI.js';
 import { MiniMapUI } from './MiniMapUI.js';
-import { MainBackground } from '../menu-system/MainBackground.js';
 import { HomeButton } from './HomeUI.js';
 import { FullscreenButton } from './SkillSelectionButton.js';
 import { SkillTreeButton } from './SkillTreeButton.js';
@@ -45,9 +44,6 @@ export class HUDManager {
         // Validate UI container exists
         this.validateUIContainer();
         
-        // Create main background
-        this.createMainBackground();
-        
         // Create UI components
         this.createUIComponents();
         
@@ -68,17 +64,6 @@ export class HUDManager {
         if (!this.uiContainer) {
             console.error('UI container not found in DOM. Creating it dynamically.');
         }
-    }
-    
-    /**
-     * Create the main background
-     */
-    createMainBackground() {
-        // Initialize the main background
-        this.mainBackground = new MainBackground(this.game);
-        
-        // Show the background
-        this.mainBackground.show();
     }
     
     /**
@@ -174,16 +159,6 @@ export class HUDManager {
         this.components.skillTreeButton.update(delta);
         this.components.inventoryButton.update(delta);
         this.components.miniMapButton.update(delta);
-    }
-    
-    /**
-     * Set a new background image
-     * @param {string} imagePath - Path to the new background image
-     */
-    setBackgroundImage(imagePath) {
-        if (this.mainBackground) {
-            this.mainBackground.setBackgroundImage(imagePath);
-        }
     }
     
     /**

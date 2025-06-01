@@ -50,9 +50,7 @@ export class GameMenu extends IMenu {
                     this.hide();
                     
                     // Hide the main background when resuming the game
-                    if (this.game.hudManager && this.game.hudManager.mainBackground) {
-                        this.game.hudManager.mainBackground.hide();
-                    }
+
 
                     // Resume the game
                     this.game.resume(false);
@@ -70,11 +68,6 @@ export class GameMenu extends IMenu {
                         if (loadResult) {
                             console.debug("Game data loaded successfully");
                             this.hide();
-                            
-                            // Hide the main background when loading a game
-                            if (this.game.hudManager && this.game.hudManager.mainBackground) {
-                                this.game.hudManager.mainBackground.hide();
-                            }
                             
                             // Start the game with loaded data - this will set isPaused to false and start the game loop
                             // Pass true to indicate this is a loaded game, so player position isn't reset
@@ -98,11 +91,6 @@ export class GameMenu extends IMenu {
                             // Start a new game instead
                             this.hide();
                             
-                            // Hide the main background when starting the game
-                            if (this.game.hudManager && this.game.hudManager.mainBackground) {
-                                this.game.hudManager.mainBackground.hide();
-                            }
-                            
                             // Start the game - this will set isPaused to false and start the game loop
                             // Pass false to indicate this is a new game, so player position should be reset
                             this.game.start(false);
@@ -125,11 +113,6 @@ export class GameMenu extends IMenu {
                         // Start a new game instead
                         this.hide();
                         
-                        // Hide the main background when starting the game
-                        if (this.game.hudManager && this.game.hudManager.mainBackground) {
-                            this.game.hudManager.mainBackground.hide();
-                        }
-                        
                         // Start the game - this will set isPaused to false and start the game loop
                         this.game.start(false);
                         
@@ -150,9 +133,6 @@ export class GameMenu extends IMenu {
                     this.hide();
                     
                     // Hide the main background when starting the game
-                    if (this.game.hudManager && this.game.hudManager.mainBackground) {
-                        this.game.hudManager.mainBackground.hide();
-                    }
                     
                     // Start the game - this will set isPaused to false and start the game loop
                     // Pass false to indicate this is a new game, so player position should be reset
@@ -235,11 +215,6 @@ export class GameMenu extends IMenu {
             // Hide all HUD UI elements using the HUDManager
             if (this.game.hudManager) {
                 this.game.hudManager.hideAllUI();
-            }
-            
-            // Show the main background when showing the game menu
-            if (this.game.hudManager && this.game.hudManager.mainBackground) {
-                this.game.hudManager.mainBackground.show();
             }
             
             // Make sure the menu is visible

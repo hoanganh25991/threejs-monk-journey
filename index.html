@@ -48,6 +48,16 @@
         <p id="loading-info">Downloading game assets...</p>
     </div>
     
+    <!-- Initial Loading Indicator for Map Generation -->
+    <div id="initial-loading-indicator" class="main-background" style="display: none;">
+        <div class="loading-title">Initializing Map</div>
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="initial-loading-bar"></div>
+        </div>
+        <div class="loading-text" id="initial-loading-text">Generating world...</div>
+        <div class="loading-info" id="initial-loading-info">Please wait while we create your adventure</div>
+    </div>
+    
     <!-- Orientation Message -->
     <div id="orientation-message" style="display: none;">
         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
@@ -94,9 +104,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Main Background -->
-    <div id="main-background"></div>
 
     <!-- Game Container -->
     <div id="game-container">
@@ -377,7 +384,7 @@
     </div>
 
     <!-- Game Menu -->
-    <div id="game-menu" class="game-menu" style="display: none;">
+    <div id="game-menu" class="game-menu main-background" style="display: none;">
         <h1>Monk Journey</h1>
         <div class="menu-button-container">
             <button id="load-game-button" class="menu-button">Play Game</button>
@@ -387,7 +394,7 @@
     </div>
 
     <!-- Multiplayer Menu -->
-    <div id="multiplayer-menu" class="game-menu">
+    <div id="multiplayer-menu" class="game-menu main-background">
         <!-- Initial Options Screen -->
         <div class="multiplayer-menu-content" id="multiplayer-initial-screen">
             <div class="modal-header">
@@ -480,7 +487,7 @@
     </div>
 
     <!-- Settings Menu -->
-    <div id="main-options-menu" class="game-menu top-tabs-layout" style="display: none;">
+    <div id="main-options-menu" class="game-menu main-background top-tabs-layout" style="display: none;">
         <!-- Settings Icon in Top-Right -->
         <!-- <div class="settings-header-icon">⚙️</div> -->
         <div class="settings-header-icon">

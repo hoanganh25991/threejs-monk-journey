@@ -24,6 +24,7 @@ import { ItemGenerator } from '../entities/items/ItemGenerator.js';
 import { ItemDropManager } from '../entities/items/ItemDropManager.js';
 import { STORAGE_KEYS } from '../config/storage-keys.js';
 import storageService from '../save-manager/StorageService.js';
+import { SimpleUI } from '../SimpleUI.js';
 
 /**
  * Main Game class that serves as a facade to the underlying game systems
@@ -71,6 +72,9 @@ export class Game {
         this.events = new GameEvents();
         this.loadingManager = new LoadingManager().getManager();
         this.itemGenerator = new ItemGenerator(this);
+        
+        // Initialize simple UI for loading screens
+        this.ui = new SimpleUI();
         
         // Default difficulty (will be updated in init)
         this.difficulty = 'medium';

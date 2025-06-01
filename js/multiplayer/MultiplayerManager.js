@@ -188,12 +188,6 @@ export class MultiplayerManager {
             this.game.menuManager.hideActiveMenu();
         }
         
-        // Hide the main background if it exists
-        if (this.game.hudManager && this.game.hudManager.mainBackground) {
-            console.debug('[MultiplayerManager] Hiding main background');
-            this.game.hudManager.mainBackground.hide();
-        }
-        
         // Show all HUD elements
         if (this.game.hudManager) {
             console.debug('[MultiplayerManager] Showing all HUD elements');
@@ -250,12 +244,6 @@ export class MultiplayerManager {
         if (this.game.menuManager) {
             console.debug('[MultiplayerManager] Hiding Game Menu');
             this.game.menuManager.hideActiveMenu();
-        }
-        
-        // Hide the main background if it exists
-        if (this.game.hudManager && this.game.hudManager.mainBackground) {
-            console.debug('[MultiplayerManager] Hiding main background');
-            this.game.hudManager.mainBackground.hide();
         }
         
         // For members, we need to ensure the game is fully started
