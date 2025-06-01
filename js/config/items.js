@@ -3,7 +3,11 @@
  * Contains templates for generating different types of items
  */
 
-// Item templates for item generation
+import { ItemTypes } from './item-types.js';
+
+/**
+ * @type {Array<import('./item-types.js').ItemTemplate>}
+ */
 export const ITEM_TEMPLATES = [
     // ==================== WEAPONS ====================
     
@@ -261,6 +265,11 @@ export const ITEM_TEMPLATES = [
         baseStats: {
             healthRestore: 50
         },
+        useEffect: {
+            type: 'heal',
+            value: 50
+        },
+        consumable: true
     },
     {
         id: "minorManaPotion",
@@ -272,6 +281,12 @@ export const ITEM_TEMPLATES = [
         baseStats: {
             manaRestore: 30
         },
+        useEffect: {
+            type: 'resource',
+            resource: 'mana',
+            value: 30
+        },
+        consumable: true
     },
     {
         id: "greaterManaPotion",
@@ -283,6 +298,58 @@ export const ITEM_TEMPLATES = [
         baseStats: {
             manaRestore: 100
         },
+        useEffect: {
+            type: 'resource',
+            resource: 'mana',
+            value: 100,
+            secondaryEffect: {
+                type: 'buff',
+                stat: 'manaRegen',
+                value: 5,
+                duration: 30
+            }
+        },
+        consumable: true
+    },
+    {
+        id: "rejuvenationPotion",
+        name: "Potion of Rejuvenation",
+        type: "consumable",
+        subType: "potion",
+        description: "Restores health and mana over time.",
+        icon: "🧪",
+        baseStats: {
+            healthRestore: 20,
+            manaRestore: 20,
+            duration: 15
+        },
+        useEffect: {
+            type: 'buff',
+            stats: [
+                { stat: 'healthRegen', value: 5, duration: 15 },
+                { stat: 'manaRegen', value: 3, duration: 15 }
+            ]
+        },
+        consumable: true
+    },
+    {
+        id: "elixirOfPower",
+        name: "Elixir of Power",
+        type: "consumable",
+        subType: "potion",
+        description: "Temporarily increases attack power and critical hit chance.",
+        icon: "⚡",
+        baseStats: {
+            duration: 45
+        },
+        useEffect: {
+            type: 'buff',
+            stats: [
+                { stat: 'attackPower', value: 15, duration: 45 },
+                { stat: 'critChance', value: 10, duration: 45 }
+            ]
+        },
+        consumable: true
     },
     
     // Scrolls
@@ -294,9 +361,34 @@ export const ITEM_TEMPLATES = [
         description: "Temporarily increases attack power.",
         icon: "📜",
         baseStats: {
-            healthBonus: 200,
             duration: 60
         },
+        useEffect: {
+            type: 'buff',
+            stat: 'attackPower',
+            value: 20,
+            duration: 60
+        },
+        consumable: true
+    },
+    {
+        id: "scrollOfProtection",
+        name: "Scroll of Protection",
+        type: "consumable",
+        subType: "scroll",
+        description: "Temporarily increases defense and all resistances.",
+        icon: "📜",
+        baseStats: {
+            duration: 60
+        },
+        useEffect: {
+            type: 'buff',
+            stats: [
+                { stat: 'defense', value: 15, duration: 60 },
+                { stat: 'allResistance', value: 10, duration: 60 }
+            ]
+        },
+        consumable: true
     },
     
     // Food
@@ -305,12 +397,48 @@ export const ITEM_TEMPLATES = [
         name: "Rice Ball",
         type: "consumable",
         subType: "food",
-        description: "A simple rice ball that provides sustenance.",
+        description: "A simple rice ball that provides sustenance and temporarily increases maximum health.",
         icon: "🍙",
         baseStats: {
-            healthBonus: 200,
-            duration: 60
+            healthRestore: 30,
+            healthBonus: 50,
+            duration: 120
         },
+        useEffect: {
+            type: 'heal',
+            value: 30,
+            secondaryEffect: {
+                type: 'buff',
+                stat: 'maxHealth',
+                value: 50,
+                duration: 120
+            }
+        },
+        consumable: true
+    },
+    {
+        id: "herbalTea",
+        name: "Herbal Tea",
+        type: "consumable",
+        subType: "food",
+        description: "A soothing tea that restores mana and increases wisdom temporarily.",
+        icon: "🍵",
+        baseStats: {
+            manaRestore: 25,
+            duration: 180
+        },
+        useEffect: {
+            type: 'resource',
+            resource: 'mana',
+            value: 25,
+            secondaryEffect: {
+                type: 'buff',
+                stat: 'wisdom',
+                value: 10,
+                duration: 180
+            }
+        },
+        consumable: true
     }
 ];
 
