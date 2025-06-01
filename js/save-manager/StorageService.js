@@ -63,7 +63,7 @@ export class StorageService {
             
             // Ask user to confirm login
             const shouldLogin = confirm(
-                'You previously logged in with Google to save your progress.\n' +
+                'You previously logged in with Google to save your progress.\n\n' +
                 'Would you like to login again to load your saved data?\n' +
                 'Click OK to login and load your saved data.\n' +
                 'Click Cancel to start a new game.'
@@ -96,13 +96,7 @@ export class StorageService {
             return;
         }
         
-        // First, check if login is required based on previous login history
-        const loginResult = await this.enforceLoginIfRequired();
-        
-        // If login was required but user declined or login failed, we'll start fresh
-        // Otherwise, proceed with normal initialization
-        
-        // Try auto-login if not already signed in and auto-login is enabled
+        // First, try silent auto-login if not already signed in and auto-login is enabled
         if (!this.autoLoginAttempted && !this.isSignedInToGoogle() && googleAuthManager.shouldAttemptAutoLogin()) {
             this.autoLoginAttempted = true;
             console.debug('Attempting silent auto-login to Google Drive during initialization');
@@ -131,6 +125,10 @@ export class StorageService {
                 this.isSigningIn = false;
             }
         }
+        
+        // Then, check if login is required based on previous login history
+        // This will only prompt the user if silent login failed and login is required
+        const loginResult = await this.enforceLoginIfRequired();
         
         this.initialized = true;
         
@@ -337,9 +335,10 @@ export class StorageService {
             // If timestamps are equal or not present, show detailed comparison for save data
             const useCloudVersion = confirm(
                 `Save data conflict detected!\n\n` +
-                `Local save: ${JSON.stringify(localData)}\n` +
-                `Cloud save: ${JSON.stringify(cloudData)}\n` +
-                `Click OK to use the cloud version, or Cancel to keep your local version.`
+                `Local save: ${JSON.stringify(localData).substring(0, 32)}...\n` +
+                `Cloud save: ${JSON.stringify(cloudData).substring(0, 32)}...\n` +
+                `Click OK to use the cloud version, or\n` + 
+                `Click Cancel to keep your local version.`
             );
             
             if (useCloudVersion) {
