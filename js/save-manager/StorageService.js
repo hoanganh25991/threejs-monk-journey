@@ -98,6 +98,7 @@ export class StorageService {
      * @private
      */
     async handleGoogleSignIn() {
+        console.log("handleGoogleSignIn")
         console.debug('Google sign-in detected, syncing data');
         this.isSigningIn = true;
         
@@ -123,7 +124,7 @@ export class StorageService {
         if (!this.isSignedInToGoogle()) {
             return;
         }
-        
+        console.log("syncFromGoogleDrive")
         console.debug('Syncing data from Google Drive to localStorage');
         
         // Define keys that should not be synced from Google Drive
@@ -142,47 +143,52 @@ export class StorageService {
         }
         
         // For each key, check if it exists in Google Drive
+        const promises = [];
         for (const key of keys) {
-            try {
-                // Skip keys that should only be stored locally
-                if (localOnlyKeys.includes(key)) {
-                    console.debug(`Skipping sync for local-only key: ${key}`);
-                    continue;
-                }
-                
-                // Check if the key exists in Google Drive
-                const hasCloudData = await this.googleDrive.hasData(key);
-                
-                if (hasCloudData) {
-                    // Check if the key exists in localStorage
-                    const hasLocalData = this.localStorage.hasData(key);
+            promises.push(new Promise(async (resolve, reject) => {
+                try {
+                    // Skip keys that should only be stored locally
+                    if (localOnlyKeys.includes(key)) {
+                        console.debug(`Skipping sync for local-only key: ${key}`);
+                    }
                     
-                    if (!hasLocalData) {
-                        // If the key doesn't exist in localStorage, load it from Google Drive
-                        const cloudData = await this.googleDrive.loadData(key);
-                        if (cloudData !== null) {
-                            this.localStorage.saveData(key, cloudData);
-                            console.debug(`Loaded ${key} from Google Drive to localStorage`);
-                        }
-                    } else {
-                        // Both exist - check for conflicts
-                        const localData = this.localStorage.loadData(key);
-                        const cloudData = await this.googleDrive.loadData(key);
+                    // Check if the key exists in Google Drive
+                    const hasCloudData = await this.googleDrive.hasData(key);
+                    
+                    if (hasCloudData) {
+                        // Check if the key exists in localStorage
+                        const hasLocalData = this.localStorage.hasData(key);
                         
-                        // Simple string comparison to detect conflicts
-                        const localStr = JSON.stringify(localData);
-                        const cloudStr = JSON.stringify(cloudData);
-                        
-                        if (localStr !== cloudStr) {
-                            // Conflict detected - ask user to resolve
-                            await this.resolveConflict(key, localData, cloudData);
+                        if (!hasLocalData) {
+                            // If the key doesn't exist in localStorage, load it from Google Drive
+                            const cloudData = await this.googleDrive.loadData(key);
+                            if (cloudData !== null) {
+                                this.localStorage.saveData(key, cloudData);
+                                console.debug(`Loaded ${key} from Google Drive to localStorage`);
+                            }
+                        } else {
+                            // Both exist - check for conflicts
+                            const localData = this.localStorage.loadData(key);
+                            const cloudData = await this.googleDrive.loadData(key);
+                            
+                            // Simple string comparison to detect conflicts
+                            const localStr = JSON.stringify(localData);
+                            const cloudStr = JSON.stringify(cloudData);
+                            
+                            if (localStr !== cloudStr) {
+                                // Conflict detected - ask user to resolve
+                                await this.resolveConflict(key, localData, cloudData);
+                            }
                         }
                     }
+                    resolve();
+                } catch (error) {
+                    resolve();
+                    console.error(`Error syncing ${key} from Google Drive:`, error);
                 }
-            } catch (error) {
-                console.error(`Error syncing ${key} from Google Drive:`, error);
-            }
+            }))
         }
+        await Promise.all(promises);
         
         // Also check for keys that exist in Google Drive but not in localStorage
         try {
@@ -204,7 +210,7 @@ export class StorageService {
         if (!this.isSignedInToGoogle()) {
             return;
         }
-        
+        console.log("syncToGoogleDrive")
         console.debug('Syncing data from localStorage to Google Drive');
         
         // Get all keys from localStorage that start with 'monk_journey_'
@@ -223,23 +229,28 @@ export class StorageService {
         ];
         
         // Sync each key to Google Drive (except local-only keys)
+        const promises = []
         for (const key of keys) {
-            try {
-                // Skip keys that should only be stored locally
-                if (localOnlyKeys.includes(key)) {
-                    console.debug(`Skipping sync for local-only key: ${key}`);
-                    continue;
-                }
-                
-                const data = this.localStorage.loadData(key);
-                if (data !== null) {
-                    await this.googleDrive.saveData(key, data);
-                    console.debug(`Synced ${key} to Google Drive`);
-                }
-            } catch (error) {
-                console.error(`Error syncing ${key} to Google Drive:`, error);
-            }
+            promises.push(new Promise(async (resolve, reject) => {
+                try {
+                    // Skip keys that should only be stored locally
+                    if (localOnlyKeys.includes(key)) {
+                        console.debug(`Skipping sync for local-only key: ${key}`);
+                    }
+                    
+                    const data = this.localStorage.loadData(key);
+                    if (data !== null) {
+                        await this.googleDrive.saveData(key, data);
+                        console.debug(`Synced ${key} to Google Drive`);
+                    }
+                    resolve();
+                } catch (error) {
+                    console.error(`Error syncing ${key} to Google Drive:`, error);
+                    resolve();
+                }}
+            ))
         }
+        await Promise.all(promises);
     }
     
     /**
@@ -270,17 +281,11 @@ export class StorageService {
         if (key === STORAGE_KEYS.SAVE_DATA) {
             console.debug(`Special conflict handling for save data: ${key}`);
             
-            // Extract timestamps or other relevant data for comparison
-            const localTimestamp = localData.lastSaved || 0;
-            const cloudTimestamp = cloudData.lastSaved || 0;
-            
             // If timestamps are equal or not present, show detailed comparison for save data
             const useCloudVersion = confirm(
                 `Save data conflict detected!\n\n` +
-                `Local save: ${localData.playerName || 'Unknown'} - Level ${localData.playerLevel || '?'} - Last saved: ${localTimestamp ? new Date(localTimestamp).toLocaleString() : 'Unknown'}\n` +
-                `Progress: ${JSON.stringify(localData.progress || {}).substring(0, 50)}...\n\n` +
-                `Cloud save: ${cloudData.playerName || 'Unknown'} - Level ${cloudData.playerLevel || '?'} - Last saved: ${cloudTimestamp ? new Date(cloudTimestamp).toLocaleString() : 'Unknown'}\n` +
-                `Progress: ${JSON.stringify(cloudData.progress || {}).substring(0, 50)}...\n\n` +
+                `Local save: ${JSON.stringify(localData)}\n` +
+                `Cloud save: ${JSON.stringify(cloudData)}\n` +
                 `Click OK to use the cloud version, or Cancel to keep your local version.`
             );
             

@@ -138,7 +138,7 @@ export class SettingsMenu extends UIComponent {
                 } catch (error) {
                     console.error('Error saving settings:', error);
                     saveProgress.error('Error saving settings');
-                    
+                } finally {
                     // Re-enable the button
                     this.saveButton.disabled = false;
                 }
