@@ -132,75 +132,8 @@ export class CollisionManager {
             } else {
                 // Fallback to legacy method
                 console.warn('Interaction system not available, using legacy method');
-                this.handleLegacyInteraction(closestObject);
             }
         }
-    }
-    
-    // Legacy interaction handler for backward compatibility
-    handleLegacyInteraction(interactiveObject) {
-        // Call the object's interaction handler
-        const result = interactiveObject.onInteract();
-        
-        // Check if result is null or undefined before proceeding
-        if (!result) {
-            // No interaction result, possibly already interacted with
-            if (this.player.game && this.player.game.hudManager) {
-                this.player.game.hudManager.showNotification("Nothing happens.");
-            }
-            // Reset interaction state
-            this.player.setInteracting(false);
-            return;
-        }
-        
-        // Handle different interaction types
-        switch (result.type) {
-            case 'quest':
-                // Handle quest interaction
-                if (this.player.game && this.player.game.questManager) {
-                    this.player.game.questManager.startQuest(result.quest);
-                }
-                break;
-                
-            case 'treasure':
-                // Handle treasure interaction
-                if (this.player.game && this.player.game.hudManager) {
-                    // this.player.game.hudManager.showNotification(`Found ${result.item.name}!`);
-                    this.player.addToInventory(result.item);
-                }
-                break;
-                
-            case 'boss_spawn':
-                // Handle boss spawn interaction
-                if (this.player.game && this.player.game.enemyManager) {
-                    // Show notification
-                    if (this.player.game.hudManager) {
-                        this.player.game.hudManager.showNotification(result.message, 5);
-                    }
-                    
-                    // Spawn the boss
-                    this.player.game.enemyManager.spawnBoss(
-                        result.bossType,
-                        interactiveObject.position
-                    );
-                }
-                break;
-                
-            case 'item':
-                // Handle item interaction
-                if (this.player.game && this.player.game.hudManager) {
-                    // this.player.game.hudManager.showNotification(`Found ${result.item.name}!`);
-                    this.player.addToInventory(result.item);
-                }
-                break;
-                
-            default:
-                console.warn(`Unknown interaction type: ${result.type}`);
-                break;
-        }
-        
-        // Reset interaction state
-        this.player.setInteracting(false);
     }
     
     handlePlayerObjectCollision(object, objectCenter) {

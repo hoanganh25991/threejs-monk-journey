@@ -18,7 +18,7 @@
     background-color: transparent; /* Make container transparent */
     border: none; /* Remove border from container */
     box-shadow: none; /* Remove box shadow from container */
-    z-index: 900; /* Ensure joystick is above most elements but below the overlay */
+    z-index: 100; /* Ensure joystick is above most elements but below the overlay */
 }
 
 #virtual-joystick-base {
@@ -52,7 +52,7 @@
     left: 0;
     width: 50%; /* Only cover the left half of the screen */
     height: 100%;
-    z-index: 1000; /* High z-index to be above other elements */
+    z-index: 100; /* High z-index to be above other elements */
     pointer-events: auto;
     touch-action: none;
     background-color: transparent; /* Make it invisible */

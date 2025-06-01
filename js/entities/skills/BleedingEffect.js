@@ -14,7 +14,7 @@ export class BleedingEffect extends SkillEffect {
         // Create a temporary skill object to pass to the parent constructor
         const tempSkill = {
             color: 0xff0000, // Default red color for blood
-            duration: config.duration || 1.5, // Default duration of 1.5 seconds
+            duration: config.duration || 1.0, // Default duration of 1.5 seconds
             position: new THREE.Vector3(),
             damage: config.amount || 0
         };
@@ -117,8 +117,8 @@ export class BleedingEffect extends SkillEffect {
      */
     createParticle(index) {
         // Randomize particle size based on damage
-        const minSize = 0.03 * 3;
-        const maxSize = 0.06 * 3 + (this.amount / 3000); // Reduced max size for better performance
+        const minSize = 0.03 * 5;
+        const maxSize = 0.06 * 5 + (this.amount / 3000); // Reduced max size for better performance
         const size = minSize + Math.random() * (maxSize - minSize);
         
         // Create or reuse geometry
