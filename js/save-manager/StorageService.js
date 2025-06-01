@@ -63,7 +63,7 @@ export class StorageService {
             
             // Ask user to confirm login
             const shouldLogin = confirm(
-                'You previously logged in with Google Drive to save your progress.\n' +
+                'You previously logged in with Google to save your progress.\n' +
                 'Would you like to login again to load your saved data?\n' +
                 'Click OK to login and load your saved data.\n' +
                 'Click Cancel to start a new game.'
