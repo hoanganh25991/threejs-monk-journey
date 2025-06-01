@@ -248,8 +248,11 @@ export class CollisionManager {
         const damage = skill.getDamage();
         enemy.takeDamage(damage);
         
-        // Show damage number
-        this.player.game.hudManager.createBleedingEffect(damage, enemy.getPosition());
+        // Get enemy position for effects
+        const enemyPosition = enemy.getPosition();
+        
+        // Show damage number with bleeding effect
+        this.player.game.hudManager.createBleedingEffect(damage, enemyPosition);
         
         // Check if enemy is defeated
         if (enemy.getHealth() <= 0) {
@@ -264,7 +267,7 @@ export class CollisionManager {
         // This allows skills to create visual effects when they hit an enemy
         if (skill.effect) {
             // All skill effects inherit from SkillEffect which has a createHitEffect method
-            skill.effect.createHitEffect(enemy.getPosition());
+            skill.effect.createHitEffect(enemyPosition);
         }
         
         // Clean up old entries from the hit registry occasionally
