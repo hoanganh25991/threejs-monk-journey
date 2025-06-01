@@ -106,7 +106,7 @@ export class PerformanceTab extends SettingsTab {
                 
                 // Apply quality settings immediately if game is available
                 if (this.game && this.game.renderer) {
-                    this.game.applyQualitySettings(this.qualitySelect.value);
+                    // this.game.applyQualitySettings(this.qualitySelect.value);
                 }
             });
         }

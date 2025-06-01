@@ -4,10 +4,10 @@ import { Rock } from './Rock.js';
 import { Bush } from './Bush.js';
 import { Flower } from './Flower.js';
 import { RandomGenerator } from '../utils/RandomGenerator.js';
-import { ENVIRONMENT_CONFIG } from '../../config/environment.js';
 
 /**
  * Manages environment objects like trees, rocks, bushes, etc.
+ * Fully randomized with natural grouping of similar objects
  */
 export class EnvironmentManager {
     constructor(scene, worldManager, game = null) {
@@ -16,82 +16,294 @@ export class EnvironmentManager {
         this.game = game;
         
         // Environment object collections
-        this.environmentObjects = {}; // Store environment objects by chunk key
-        this.visibleChunks = {}; // Store currently visible chunks
+        this.environmentObjects = []; // Simple array to track all environment objects
+        this.visibleChunks = {}; // Empty object for compatibility with old system
         
-        // Environment object types and densities from config
-        this.environmentObjectTypes = ENVIRONMENT_CONFIG.objectTypes;
-        this.environmentObjectDensity = ENVIRONMENT_CONFIG.objectDensity;
-        
-        // Chunk properties from config
-        this.chunkSize = ENVIRONMENT_CONFIG.chunkSize; // Size of each environment chunk
-        
-        // For save/load functionality
-        this.savedEnvironmentObjects = null;
+        // Environment object types (no longer using config)
+        this.environmentObjectTypes = ['tree', 'rock', 'bush', 'flower'];
         
         // For minimap functionality
         this.trees = [];
         this.rocks = [];
         this.bushes = [];
         this.flowers = [];
-        this.waterBodies = [];
-        this.paths = [];
+        
+        // Last player position for distance tracking
+        this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
+        this.minDistanceForNewObject = 30; // Reduced from 50 to generate more objects
+        this.lastObjectTime = 0;
+        this.objectCooldown = 1000; // Reduced from 2000ms to 1000ms for more frequent generation
+        
+        // Natural grouping settings
+        this.groupingProbabilities = {
+            'tree': 0.9,   // Increased from 80% to 90% chance that trees will be in groups
+            'rock': 0.6,   // 60% chance that rocks will be in groups
+            'bush': 0.7,   // 70% chance that bushes will be in groups
+            'flower': 0.9   // 90% chance that flowers will be in groups
+        };
+        
+        this.groupSizes = {
+            'tree': { min: 10, max: 30 },   // Increased from 6-24 to 10-30 for more visible tree groups
+            'rock': { min: 2, max: 6 },     // Rocks come in groups of 2-6
+            'bush': { min: 3, max: 10 },    // Increased from 2-8 to 3-10
+            'flower': { min: 5, max: 15 }   // Flowers come in groups of 5-15
+        };
+        
+        // Group spread determines how tightly packed the groups are
+        this.groupSpread = {
+            'tree': 12,     // Increased from 8 to 12 to spread trees more
+            'rock': 5,      // Rocks spread up to 5 units from center
+            'bush': 6,      // Bushes spread up to 6 units from center
+            'flower': 4     // Flowers spread up to 4 units from center
+        };
+        
+        // Create some initial environment objects
+        this.createInitialEnvironment();
     }
     
-    // setGame method removed - game is now passed in constructor
+    /**
+     * Create initial environment objects around the starting area
+     */
+    createInitialEnvironment() {
+        // Create a larger forest near the starting position (3x more trees)
+        for (let i = 0; i < 30; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 10 + Math.random() * 30;
+            const x = Math.cos(angle) * distance;
+            const z = Math.sin(angle) * distance;
+            
+            const tree = this.createTree(x, z);
+            if (tree) {
+                this.environmentObjects.push({
+                    type: 'tree',
+                    object: tree,
+                    position: new THREE.Vector3(x, 0, z)
+                });
+                this.trees.push(tree);
+            }
+        }
+        
+        // Add some rocks
+        for (let i = 0; i < 8; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 15 + Math.random() * 20;
+            const x = Math.cos(angle) * distance;
+            const z = Math.sin(angle) * distance;
+            
+            const rock = this.createRock(x, z);
+            if (rock) {
+                this.environmentObjects.push({
+                    type: 'rock',
+                    object: rock,
+                    position: new THREE.Vector3(x, 0, z)
+                });
+                this.rocks.push(rock);
+            }
+        }
+        
+        console.debug("Initial environment objects created");
+    }
     
     /**
      * Update environment objects based on player position
      * @param {THREE.Vector3} playerPosition - The player's current position
-     * @param {number} drawDistanceMultiplier - Multiplier for draw distance
+     * @param {number} drawDistanceMultiplier - Multiplier for draw distance (not used in simplified version)
      */
     updateForPlayer(playerPosition, drawDistanceMultiplier = 1.0) {
-        // Get the chunk coordinates for the player's position
-        const chunkX = Math.floor(playerPosition.x / this.chunkSize);
-        const chunkZ = Math.floor(playerPosition.z / this.chunkSize);
-        
-        // Update visible chunks
-        this.updateVisibleChunks(chunkX, chunkZ, drawDistanceMultiplier);
-        
-        // Update environment collections for minimap
-        this.updateEnvironmentCollections();
+        // Check if player has moved far enough to generate a new random object
+        this.checkForRandomObject(playerPosition);
     }
     
     /**
-     * Update visible environment chunks based on player position
-     * @param {number} centerX - Center X chunk coordinate
-     * @param {number} centerZ - Center Z chunk coordinate
-     * @param {number} drawDistanceMultiplier - Multiplier for draw distance
+     * Check if player has moved far enough to generate a new random environment object
+     * @param {THREE.Vector3} playerPosition - Current player position
      */
-    updateVisibleChunks(centerX, centerZ, drawDistanceMultiplier = 1.0) {
-        // Track which chunks should be visible
-        const newVisibleChunks = {};
+    checkForRandomObject(playerPosition) {
+        // Calculate distance moved since last object
+        const distanceMoved = playerPosition.distanceTo(this.lastPlayerPosition);
+        const currentTime = Date.now();
+        const timeSinceLastObject = currentTime - this.lastObjectTime;
         
-        // Adjust view distance based on performance
-        const viewDistance = Math.max(1, Math.floor(3 * drawDistanceMultiplier));
+        // Only generate a new object if player has moved far enough and enough time has passed
+        if (distanceMoved >= this.minDistanceForNewObject && timeSinceLastObject >= this.objectCooldown) {
+            // Update last position and time
+            this.lastPlayerPosition.copy(playerPosition);
+            this.lastObjectTime = currentTime;
+            
+            // 40% chance to generate an object when conditions are met
+            this.generateRandomObject(playerPosition);
+            return true;
+        }
         
-        // Generate or update chunks in render distance
-        for (let x = centerX - viewDistance; x <= centerX + viewDistance; x++) {
-            for (let z = centerZ - viewDistance; z <= centerZ + viewDistance; z++) {
-                const chunkKey = `${x},${z}`;
-                newVisibleChunks[chunkKey] = true;
+        return false;
+    }
+    
+    /**
+     * Generate a random environment object or group near the player
+     * @param {THREE.Vector3} playerPosition - Current player position
+     */
+    generateRandomObject(playerPosition) {
+        // Choose a random object type with higher probability for trees
+        // 60% chance for trees, 40% chance for other object types
+        const randomValue = Math.random();
+        let randomType;
+        
+        if (randomValue < 0.6) {
+            // 60% chance to generate a tree
+            randomType = 'tree';
+        } else {
+            // 40% chance to generate other object types
+            const otherTypes = this.environmentObjectTypes.filter(type => type !== 'tree');
+            randomType = otherTypes[Math.floor(Math.random() * otherTypes.length)];
+        }
+        
+        // Generate a position that's visible but not too close to the player
+        // Random angle and distance between 30-100 units from player
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 30 + Math.random() * 70;
+        
+        const centerX = playerPosition.x + Math.cos(angle) * distance;
+        const centerZ = playerPosition.z + Math.sin(angle) * distance;
+        
+        // Determine if we should create a group or a single object
+        const createGroup = Math.random() < this.groupingProbabilities[randomType];
+        
+        if (createGroup) {
+            // Create a group of objects
+            const groupSize = Math.floor(
+                this.groupSizes[randomType].min + 
+                Math.random() * (this.groupSizes[randomType].max - this.groupSizes[randomType].min)
+            );
+            
+            const spread = this.groupSpread[randomType];
+            const groupObjects = [];
+            
+            console.debug(`Generating a group of ${groupSize} ${randomType}s at (${centerX.toFixed(1)}, ${centerZ.toFixed(1)})`);
+            
+            // Create objects in a natural-looking group pattern
+            for (let i = 0; i < groupSize; i++) {
+                // For natural grouping, use a combination of random and patterned placement
+                let objectX, objectZ;
                 
-                // If this chunk doesn't exist yet, create it
-                if (!this.visibleChunks[chunkKey]) {
-                    this.generateEnvironmentObjects(x, z);
+                if (i === 0) {
+                    // First object at center
+                    objectX = centerX;
+                    objectZ = centerZ;
+                } else {
+                    // Subsequent objects in a natural pattern
+                    // Use polar coordinates for more natural grouping
+                    const groupAngle = Math.random() * Math.PI * 2;
+                    
+                    // Distance from center increases slightly with each object
+                    // but with some randomness for natural look
+                    const groupDistance = Math.random() * spread * (i / groupSize + 0.3);
+                    
+                    objectX = centerX + Math.cos(groupAngle) * groupDistance;
+                    objectZ = centerZ + Math.sin(groupAngle) * groupDistance;
+                }
+                
+                // Create the object
+                let object = null;
+                
+                switch (randomType) {
+                    case 'tree':
+                        // Vary tree sizes slightly within a group for natural look
+                        const scaleFactor = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
+                        object = this.createTree(objectX, objectZ, null, scaleFactor);
+                        if (object) this.trees.push(object);
+                        break;
+                    case 'rock':
+                        object = this.createRock(objectX, objectZ);
+                        if (object) this.rocks.push(object);
+                        break;
+                    case 'bush':
+                        object = this.createBush(objectX, objectZ);
+                        if (object) this.bushes.push(object);
+                        break;
+                    case 'flower':
+                        object = this.createFlower(objectX, objectZ);
+                        if (object) this.flowers.push(object);
+                        break;
+                }
+                
+                if (object) {
+                    // Add to environment objects array for tracking
+                    this.environmentObjects.push({
+                        type: randomType,
+                        object: object,
+                        position: new THREE.Vector3(objectX, 0, objectZ),
+                        groupId: `group_${Date.now()}_${randomType}` // Track group membership
+                    });
+                    
+                    groupObjects.push(object);
+                }
+            }
+            
+            console.debug(`Created group of ${groupObjects.length} ${randomType}s`);
+        } else {
+            // Create a single object
+            let object = null;
+            
+            switch (randomType) {
+                case 'tree':
+                    object = this.createTree(centerX, centerZ);
+                    if (object) this.trees.push(object);
+                    break;
+                case 'rock':
+                    object = this.createRock(centerX, centerZ);
+                    if (object) this.rocks.push(object);
+                    break;
+                case 'bush':
+                    object = this.createBush(centerX, centerZ);
+                    if (object) this.bushes.push(object);
+                    break;
+                case 'flower':
+                    object = this.createFlower(centerX, centerZ);
+                    if (object) this.flowers.push(object);
+                    break;
+            }
+            
+            if (object) {
+                console.debug(`Generated single ${randomType} at (${centerX.toFixed(1)}, ${centerZ.toFixed(1)})`);
+                
+                // Add to environment objects array for tracking
+                this.environmentObjects.push({
+                    type: randomType,
+                    object: object,
+                    position: new THREE.Vector3(centerX, 0, centerZ)
+                });
+            }
+        }
+        
+        // Limit the number of environment objects to prevent memory issues
+        // Increased limit to account for groups and higher generation rate
+        const maxObjects = 500; // Increased from 150 to 500 to accommodate more trees
+        if (this.environmentObjects.length > maxObjects) {
+            // Remove oldest objects
+            const objectsToRemove = this.environmentObjects.length - maxObjects;
+            for (let i = 0; i < objectsToRemove; i++) {
+                const oldestObject = this.environmentObjects.shift();
+                if (oldestObject && oldestObject.object && oldestObject.object.parent) {
+                    this.scene.remove(oldestObject.object);
+                    
+                    // Also remove from type-specific arrays
+                    switch (oldestObject.type) {
+                        case 'tree':
+                            this.trees = this.trees.filter(t => t !== oldestObject.object);
+                            break;
+                        case 'rock':
+                            this.rocks = this.rocks.filter(r => r !== oldestObject.object);
+                            break;
+                        case 'bush':
+                            this.bushes = this.bushes.filter(b => b !== oldestObject.object);
+                            break;
+                        case 'flower':
+                            this.flowers = this.flowers.filter(f => f !== oldestObject.object);
+                            break;
+                    }
                 }
             }
         }
-        
-        // Remove objects from chunks that are no longer visible
-        for (const chunkKey in this.visibleChunks) {
-            if (!newVisibleChunks[chunkKey]) {
-                this.removeChunkObjects(chunkKey);
-            }
-        }
-        
-        // Update the visible chunks
-        this.visibleChunks = newVisibleChunks;
     }
     
     /**
@@ -340,11 +552,20 @@ export class EnvironmentManager {
      * @param {number} x - X coordinate
      * @param {number} z - Z coordinate
      * @param {string} zoneType - The type of zone (Forest, Desert, etc.)
+     * @param {number} scaleFactor - Optional scale factor for natural variation
      * @returns {THREE.Group} - The tree group
      */
-    createTree(x, z, zoneType = 'Forest') {
+    createTree(x, z, zoneType = 'Forest', scaleFactor = 1.0) {
         const tree = new Tree(zoneType);
         const treeGroup = tree.createMesh();
+        
+        // Apply scale factor for natural variation
+        if (scaleFactor !== 1.0) {
+            treeGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
+        }
+        
+        // Add some random rotation for natural look
+        treeGroup.rotation.y = Math.random() * Math.PI * 2;
         
         // Position tree on terrain
         treeGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);

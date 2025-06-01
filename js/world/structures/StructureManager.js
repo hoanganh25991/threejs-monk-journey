@@ -7,10 +7,10 @@ import { Mountain } from './Mountain.js';
 import { Bridge } from './Bridge.js';
 import { Village } from './Village.js';
 import { RandomGenerator } from '../utils/RandomGenerator.js';
-import { STRUCTURE_CONFIG } from '../../config/structure.js';
 
 /**
  * Manages structure generation and placement
+ * Fully randomized with natural grouping of similar structures
  */
 export class StructureManager {
     constructor(scene, worldManager, game = null) {
@@ -20,23 +20,59 @@ export class StructureManager {
         
         // Structure collections
         this.structures = [];
-        this.structuresPlaced = {}; // Track placed structures by chunk key
         this.specialStructures = {}; // Track special structures like Dark Sanctum
+        this.structuresPlaced = {}; // Empty object for compatibility with old system
         
-        // Structure types and densities
+        // Structure types (no longer using config)
         this.structureTypes = [
             'house', 'tower', 'ruins', 'darkSanctum', 
             'mountain', 'bridge', 'village'
-        ]; // Types of structures
+        ];
         
-        // Use structure densities from config
-        this.structureDensity = STRUCTURE_CONFIG.structureDensity;
+        // Last player position for distance tracking
+        this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
+        this.minDistanceForNewStructure = 100; // Minimum distance to move before showing a new structure
+        this.lastStructureTime = 0;
+        this.structureCooldown = 8000; // 8 seconds cooldown between structure spawns (reduced from 10s)
+        
+        // Natural grouping settings
+        this.groupingProbabilities = {
+            'house': 0.85,      // 85% chance that houses will be in groups (villages)
+            'tower': 0.4,       // 40% chance that towers will be in groups (fortifications)
+            'ruins': 0.6,       // 60% chance that ruins will be in groups (ancient cities)
+            'darkSanctum': 0.1, // 10% chance for multiple sanctums (rare)
+            'mountain': 0.9,    // 90% chance for mountain ranges
+            'bridge': 0.2,      // 20% chance for multiple bridges
+            'village': 1.0      // Villages are always groups by definition
+        };
+        
+        this.groupSizes = {
+            'house': { min: 3, max: 8 },      // Houses come in groups of 3-8
+            'tower': { min: 2, max: 4 },      // Towers come in groups of 2-4
+            'ruins': { min: 2, max: 6 },      // Ruins come in groups of 2-6
+            'darkSanctum': { min: 2, max: 3 }, // Sanctums come in groups of 2-3 (rare)
+            'mountain': { min: 3, max: 7 },    // Mountains come in ranges of 3-7
+            'bridge': { min: 2, max: 3 },      // Bridges come in groups of 2-3
+            'village': { min: 5, max: 12 }     // Villages have 5-12 buildings
+        };
+        
+        // Group spread determines how tightly packed the groups are
+        this.groupSpread = {
+            'house': 15,        // Houses spread up to 15 units from center
+            'tower': 30,        // Towers spread up to 30 units from center
+            'ruins': 25,        // Ruins spread up to 25 units from center
+            'darkSanctum': 50,  // Sanctums spread up to 50 units from center
+            'mountain': 40,     // Mountains spread up to 40 units from center
+            'bridge': 35,       // Bridges spread up to 35 units from center
+            'village': 25       // Villages spread up to 25 units from center
+        };
+        
+        // Maximum number of structures to keep in memory
+        this.maxStructures = 50; // Increased from 20 to account for groups
     }
     
-    // setGame method removed - game is now passed in constructor
-    
     /**
-     * Initialize the structure system
+     * Initialize the structure system with static structures
      */
     init() {
         // Create initial structures near the player's starting position
@@ -53,224 +89,518 @@ export class StructureManager {
     }
     
     /**
-     * Generate structures for a specific chunk
-     * @param {number} chunkX - X chunk coordinate
-     * @param {number} chunkZ - Z chunk coordinate
-     * @param {boolean} dataOnly - If true, only generate data without creating 3D objects
+     * Check if player has moved far enough to generate a new random structure
+     * @param {THREE.Vector3} playerPosition - Current player position
      */
-    generateStructuresForChunk(chunkX, chunkZ, dataOnly = false) {
-        const chunkKey = `${chunkX},${chunkZ}`;
+    checkForRandomStructure(playerPosition) {
+        // Calculate distance moved since last structure
+        const distanceMoved = playerPosition.distanceTo(this.lastPlayerPosition);
+        const currentTime = Date.now();
+        const timeSinceLastStructure = currentTime - this.lastStructureTime;
         
-        // Skip if structures already generated for this chunk
-        if (this.structuresPlaced[chunkKey]) {
-            return;
+        // Only generate a new structure if player has moved far enough and enough time has passed
+        if (distanceMoved >= this.minDistanceForNewStructure && timeSinceLastStructure >= this.structureCooldown) {
+            // Update last position and time
+            this.lastPlayerPosition.copy(playerPosition);
+            this.lastStructureTime = currentTime;
+            
+            // 30% chance to generate a structure when conditions are met
+            if (Math.random() < 0.3) {
+                this.generateRandomStructure(playerPosition);
+                return true;
+            }
         }
         
-        // Mark this chunk as processed
-        this.structuresPlaced[chunkKey] = [];
+        return false;
+    }
+    
+    /**
+     * Generate a random structure or structure group near the player
+     * @param {THREE.Vector3} playerPosition - Current player position
+     * @returns {Object|null} - Information about the generated structure or null if none was created
+     */
+    generateRandomStructure(playerPosition) {
+        // Choose a random structure type
+        const randomType = this.structureTypes[Math.floor(Math.random() * this.structureTypes.length)];
         
-        // Calculate world coordinates for this chunk
-        const terrainChunkSize = this.worldManager.terrainManager.terrainChunkSize;
-        const worldX = chunkX * terrainChunkSize;
-        const worldZ = chunkZ * terrainChunkSize;
+        // Generate a position that's visible but not too close to the player
+        // Random angle and distance between 50-150 units from player
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 50 + Math.random() * 100;
         
-        // Use seeded random for consistent generation
-        // Use a more stable seed that combines chunk coordinates
-        const seed = `${chunkX * 10000 + chunkZ}`;
-        const random = RandomGenerator.seededRandom(seed);
+        const centerX = playerPosition.x + Math.cos(angle) * distance;
+        const centerZ = playerPosition.z + Math.sin(angle) * distance;
         
-        // Get the zone type for this chunk to determine structure types and density
-        const chunkCenterX = worldX + terrainChunkSize / 2;
-        const chunkCenterZ = worldZ + terrainChunkSize / 2;
-        const zoneType = this.getZoneTypeAt(chunkCenterX, chunkCenterZ);
+        // Determine if we should create a group or a single structure
+        const createGroup = Math.random() < this.groupingProbabilities[randomType];
         
-        // Adjust structure density based on zone type
-        let densityMultiplier = 1.0;
-        if (zoneType === 'Forest') densityMultiplier = 1.2;
-        if (zoneType === 'Desert') densityMultiplier = 0.7;
-        if (zoneType === 'Mountains') densityMultiplier = 0.5;
-        if (zoneType === 'Ruins') densityMultiplier = 1.5;
-        if (zoneType === 'Dark Sanctum') densityMultiplier = 0.8;
-        if (zoneType === 'Terrant') densityMultiplier = 1.0;
-        
-        // IMPROVED: Better distribution of Dark Sanctums
-        // Modified to make them more common and better distributed
-        const shouldHaveDarkSanctum = 
-            (Math.abs(chunkX) % 15 === 0 && Math.abs(chunkZ) % 15 === 0) && // Changed from 20 to 15
-            (Math.abs(chunkX) > 3 || Math.abs(chunkZ) > 3); // Reduced from 5 to 3 to place them closer to center
-        
-        if (shouldHaveDarkSanctum) {
-            // Place Dark Sanctum near the center of the chunk
-            const x = worldX + terrainChunkSize / 2 + (random() * 20 - 10);
-            const z = worldZ + terrainChunkSize / 2 + (random() * 20 - 10);
+        if (createGroup) {
+            // Create a group of structures
+            const groupSize = Math.floor(
+                this.groupSizes[randomType].min + 
+                Math.random() * (this.groupSizes[randomType].max - this.groupSizes[randomType].min)
+            );
             
-            // Check if we're too close to an existing Dark Sanctum
-            let tooClose = false;
-            for (const key in this.specialStructures) {
-                if (this.specialStructures[key].type === 'darkSanctum') {
-                    const dx = this.specialStructures[key].x - x;
-                    const dz = this.specialStructures[key].z - z;
-                    const distance = Math.sqrt(dx * dx + dz * dz);
-                    if (distance < 200) { // Minimum distance between Dark Sanctums
-                        tooClose = true;
-                        break;
-                    }
-                }
+            const spread = this.groupSpread[randomType];
+            const groupObjects = [];
+            const groupId = `group_${Date.now()}_${randomType}`;
+            
+            console.debug(`Generating a group of ${groupSize} ${randomType}s at (${centerX.toFixed(1)}, ${centerZ.toFixed(1)})`);
+            
+            // Special handling for villages which need a more organized layout
+            if (randomType === 'village') {
+                const villageInfo = this.createVillageGroup(centerX, centerZ, groupSize);
+                return villageInfo;
             }
             
-            if (!tooClose) {
-                // Store the structure data
-                const structureData = { x, z, type: 'darkSanctum', chunkKey };
-                this.structuresPlaced[chunkKey].push(structureData);
+            // Special handling for mountain ranges which need a more natural formation
+            if (randomType === 'mountain') {
+                const mountainInfo = this.createMountainRange(centerX, centerZ, groupSize);
+                return mountainInfo;
+            }
+            
+            // Create structures in a natural-looking group pattern
+            for (let i = 0; i < groupSize; i++) {
+                // For natural grouping, use a combination of random and patterned placement
+                let structureX, structureZ;
                 
-                // Only create the actual 3D object if not in data-only mode
-                if (!dataOnly) {
-                    const darkSanctum = this.createDarkSanctum(x, z);
-                    // Store chunk key in the mesh userData for easier cleanup
-                    if (darkSanctum) {
-                        darkSanctum.userData.chunkKey = chunkKey;
-                        darkSanctum.userData.structureType = 'darkSanctum';
-                    }
+                if (i === 0) {
+                    // First structure at center
+                    structureX = centerX;
+                    structureZ = centerZ;
+                } else {
+                    // Subsequent structures in a natural pattern
+                    // Use polar coordinates for more natural grouping
+                    const groupAngle = Math.random() * Math.PI * 2;
                     
-                    this.specialStructures[`darkSanctum_${chunkKey}`] = { 
-                        x, z, type: 'darkSanctum', chunkKey 
-                    };
+                    // Distance from center increases slightly with each structure
+                    // but with some randomness for natural look
+                    const groupDistance = Math.random() * spread * (i / groupSize + 0.3);
+                    
+                    structureX = centerX + Math.cos(groupAngle) * groupDistance;
+                    structureZ = centerZ + Math.sin(groupAngle) * groupDistance;
                 }
+                
+                // Create the structure
+                let structure = null;
+                
+                switch (randomType) {
+                    case 'house':
+                        // Vary house sizes slightly within a group for natural look
+                        const width = 3 + Math.random() * 5;
+                        const depth = 3 + Math.random() * 5;
+                        const height = 2 + Math.random() * 5;
+                        structure = this.createBuilding(structureX, structureZ, width, depth, height);
+                        break;
+                    case 'tower':
+                        structure = this.createTower(structureX, structureZ);
+                        break;
+                    case 'ruins':
+                        structure = this.createRuins(structureX, structureZ);
+                        break;
+                    case 'darkSanctum':
+                        structure = this.createDarkSanctum(structureX, structureZ);
+                        break;
+                    case 'bridge':
+                        structure = this.createBridge(structureX, structureZ);
+                        break;
+                }
+                
+                if (structure) {
+                    // Create structure info
+                    const structureInfo = {
+                        type: randomType,
+                        object: structure,
+                        position: new THREE.Vector3(structureX, 0, structureZ),
+                        groupId: groupId
+                    };
+                    
+                    // Add to structures array for tracking
+                    this.structures.push(structureInfo);
+                    
+                    groupObjects.push(structure);
+                }
+            }
+            
+            console.debug(`Created group of ${groupObjects.length} ${randomType}s`);
+            
+            // Return info about the group
+            return {
+                type: randomType,
+                isGroup: true,
+                groupId: groupId,
+                position: new THREE.Vector3(centerX, 0, centerZ),
+                count: groupObjects.length
+            };
+        } else {
+            // Create a single structure
+            let structure = null;
+            
+            switch (randomType) {
+                case 'house':
+                    const width = 3 + Math.random() * 5;
+                    const depth = 3 + Math.random() * 5;
+                    const height = 2 + Math.random() * 5;
+                    structure = this.createBuilding(centerX, centerZ, width, depth, height);
+                    break;
+                case 'tower':
+                    structure = this.createTower(centerX, centerZ);
+                    break;
+                case 'ruins':
+                    structure = this.createRuins(centerX, centerZ);
+                    break;
+                case 'darkSanctum':
+                    structure = this.createDarkSanctum(centerX, centerZ);
+                    break;
+                case 'mountain':
+                    structure = this.createMountain(centerX, centerZ);
+                    break;
+                case 'bridge':
+                    structure = this.createBridge(centerX, centerZ);
+                    break;
+                case 'village':
+                    structure = this.createVillage(centerX, centerZ);
+                    break;
+            }
+            
+            if (structure) {
+                console.debug(`Generated single ${randomType} at (${centerX.toFixed(1)}, ${centerZ.toFixed(1)})`);
+                
+                // Create structure info
+                const structureInfo = {
+                    type: randomType,
+                    object: structure,
+                    position: new THREE.Vector3(centerX, 0, centerZ)
+                };
+                
+                // Add to structures array for tracking
+                this.structures.push(structureInfo);
+                
+                // Limit the number of structures to prevent memory issues
+                if (this.structures.length > this.maxStructures) {
+                    const oldestStructure = this.structures.shift();
+                    if (oldestStructure.object && oldestStructure.object.parent) {
+                        this.scene.remove(oldestStructure.object);
+                    }
+                }
+                
+                return structureInfo;
             }
         }
         
-        // Generate mountains (if in Mountains zone)
-        if (zoneType === 'Mountains') {
-            const mountainCount = Math.floor(2 + random() * 3); // 2-4 mountains per chunk
-            for (let i = 0; i < mountainCount; i++) {
-                const x = worldX + random() * terrainChunkSize;
-                const z = worldZ + random() * terrainChunkSize;
+        return null;
+    }
+    
+    /**
+     * Create a village group with organized layout
+     * @param {number} centerX - X coordinate of village center
+     * @param {number} centerZ - Z coordinate of village center
+     * @param {number} buildingCount - Number of buildings in the village
+     * @returns {Object} - Information about the created village
+     */
+    createVillageGroup(centerX, centerZ, buildingCount) {
+        console.debug(`Creating village with ${buildingCount} buildings at (${centerX.toFixed(1)}, ${centerZ.toFixed(1)})`);
+        
+        const groupId = `village_${Date.now()}`;
+        const villageBuildings = [];
+        
+        // Create a central village structure
+        const villageCenter = this.createVillage(centerX, centerZ);
+        
+        if (villageCenter) {
+            // Create village info
+            const villageCenterInfo = {
+                type: 'village',
+                object: villageCenter,
+                position: new THREE.Vector3(centerX, 0, centerZ),
+                groupId: groupId
+            };
+            
+            // Add to structures array
+            this.structures.push(villageCenterInfo);
+            villageBuildings.push(villageCenterInfo);
+            
+            // Create a path around the village center (circular path)
+            this.createVillagePath(centerX, centerZ, 12);
+            
+            // Create houses around the village center
+            // Use a spiral pattern for more organized village layout
+            const spread = this.groupSpread['village'];
+            
+            for (let i = 0; i < buildingCount - 1; i++) {
+                // Spiral pattern
+                const angle = i * 0.5; // Gradually increasing angle
+                const radius = 5 + i * 3; // Gradually increasing radius
                 
-                // Store the structure data
-                const structureData = { x, z, type: 'mountain', chunkKey };
-                this.structuresPlaced[chunkKey].push(structureData);
+                const houseX = centerX + Math.cos(angle) * radius;
+                const houseZ = centerZ + Math.sin(angle) * radius;
                 
-                // Only create the actual 3D object if not in data-only mode
-                if (!dataOnly) {
-                    const mountain = this.createMountain(x, z);
-                    if (mountain) {
-                        mountain.userData.chunkKey = chunkKey;
-                        mountain.userData.structureType = 'mountain';
+                // Vary house sizes
+                const width = 3 + Math.random() * 4;
+                const depth = 3 + Math.random() * 4;
+                const height = 2 + Math.random() * 3;
+                
+                const house = this.createBuilding(houseX, houseZ, width, depth, height);
+                
+                if (house) {
+                    // Rotate house to face village center
+                    const angleToCenter = Math.atan2(centerZ - houseZ, centerX - houseX);
+                    house.rotation.y = angleToCenter;
+                    
+                    // Create house info
+                    const houseInfo = {
+                        type: 'house',
+                        object: house,
+                        position: new THREE.Vector3(houseX, 0, houseZ),
+                        groupId: groupId
+                    };
+                    
+                    // Add to structures array
+                    this.structures.push(houseInfo);
+                    villageBuildings.push(houseInfo);
+                    
+                    // Create small paths connecting houses to the center
+                    if (i % 2 === 0) { // Only create paths for some houses to avoid clutter
+                        this.createVillageHousePath(centerX, centerZ, houseX, houseZ);
                     }
                 }
             }
-        }
-        
-        // Generate villages (rare, but contain multiple buildings)
-        if (random() < this.structureDensity.village * densityMultiplier) {
-            const villageX = worldX + terrainChunkSize / 2 + (random() * 20 - 10);
-            const villageZ = worldZ + terrainChunkSize / 2 + (random() * 20 - 10);
             
-            // Store the structure data
-            const structureData = { x: villageX, z: villageZ, type: 'village', chunkKey };
-            this.structuresPlaced[chunkKey].push(structureData);
-            
-            // Only create the actual 3D object if not in data-only mode
-            if (!dataOnly) {
-                const village = this.createVillage(villageX, villageZ);
-                if (village) {
-                    village.userData.chunkKey = chunkKey;
-                    village.userData.structureType = 'village';
-                }
-            }
-        }
-        
-        // Generate houses
-        const houseCount = Math.floor(terrainChunkSize * terrainChunkSize * this.structureDensity.house * densityMultiplier);
-        for (let i = 0; i < houseCount; i++) {
-            const x = worldX + random() * terrainChunkSize;
-            const z = worldZ + random() * terrainChunkSize;
-            
-            // Randomize house dimensions
-            const width = 3 + random() * 5;
-            const depth = 3 + random() * 5;
-            const height = 2 + random() * 5;
-            
-            // Store the structure data
-            const structureData = { 
-                x, z, type: 'house', 
-                dimensions: { width, depth, height },
-                chunkKey
+            // Return info about the village
+            return {
+                type: 'village',
+                isGroup: true,
+                groupId: groupId,
+                position: new THREE.Vector3(centerX, 0, centerZ),
+                count: villageBuildings.length
             };
-            this.structuresPlaced[chunkKey].push(structureData);
-            
-            // Only create the actual 3D object if not in data-only mode
-            if (!dataOnly) {
-                const building = this.createBuilding(x, z, width, depth, height);
-                if (building) {
-                    building.userData.chunkKey = chunkKey;
-                    building.userData.structureType = 'house';
-                }
-            }
         }
         
-        // Generate towers
-        const towerCount = Math.floor(terrainChunkSize * terrainChunkSize * this.structureDensity.tower * densityMultiplier);
-        for (let i = 0; i < towerCount; i++) {
-            const x = worldX + random() * terrainChunkSize;
-            const z = worldZ + random() * terrainChunkSize;
-            
-            // Store the structure data
-            const structureData = { x, z, type: 'tower', chunkKey };
-            this.structuresPlaced[chunkKey].push(structureData);
-            
-            // Only create the actual 3D object if not in data-only mode
-            if (!dataOnly) {
-                const tower = this.createTower(x, z);
-                if (tower) {
-                    tower.userData.chunkKey = chunkKey;
-                    tower.userData.structureType = 'tower';
-                }
-            }
-        }
+        return null;
+    }
+    
+    /**
+     * Create a circular path around a village center
+     * @param {number} centerX - X coordinate of village center
+     * @param {number} centerZ - Z coordinate of village center
+     * @param {number} radius - Radius of the path
+     */
+    createVillagePath(centerX, centerZ, radius) {
+        // Create a circular path around the village center
+        const segments = 12; // Number of segments in the circle
         
-        // Generate ruins
-        const ruinsCount = Math.floor(terrainChunkSize * terrainChunkSize * this.structureDensity.ruins * densityMultiplier);
-        for (let i = 0; i < ruinsCount; i++) {
-            const x = worldX + random() * terrainChunkSize;
-            const z = worldZ + random() * terrainChunkSize;
+        for (let i = 0; i < segments; i++) {
+            const startAngle = (i / segments) * Math.PI * 2;
+            const endAngle = ((i + 1) / segments) * Math.PI * 2;
             
-            // Store the structure data
-            const structureData = { x, z, type: 'ruins', chunkKey };
-            this.structuresPlaced[chunkKey].push(structureData);
+            const startX = centerX + Math.cos(startAngle) * radius;
+            const startZ = centerZ + Math.sin(startAngle) * radius;
             
-            // Only create the actual 3D object if not in data-only mode
-            if (!dataOnly) {
-                const ruins = this.createRuins(x, z);
-                if (ruins) {
-                    ruins.userData.chunkKey = chunkKey;
-                    ruins.userData.structureType = 'ruins';
-                }
-            }
-        }
-        
-        // Generate bridges (if near water or valleys)
-        if (random() < this.structureDensity.bridge * densityMultiplier) {
-            const x = worldX + random() * terrainChunkSize;
-            const z = worldZ + random() * terrainChunkSize;
+            const endX = centerX + Math.cos(endAngle) * radius;
+            const endZ = centerZ + Math.sin(endAngle) * radius;
             
-            // Store the structure data
-            const structureData = { x, z, type: 'bridge', chunkKey };
-            this.structuresPlaced[chunkKey].push(structureData);
-            
-            // Only create the actual 3D object if not in data-only mode
-            if (!dataOnly) {
-                const bridge = this.createBridge(x, z);
-                if (bridge) {
-                    bridge.userData.chunkKey = chunkKey;
-                    bridge.userData.structureType = 'bridge';
-                }
+            // Create path segment
+            if (this.game && this.game.worldManager && this.game.worldManager.createPathSegment) {
+                this.game.worldManager.createPathSegment(startX, startZ, endX, endZ);
             }
         }
     }
     
     /**
+     * Create a path from village center to a house
+     * @param {number} centerX - X coordinate of village center
+     * @param {number} centerZ - Z coordinate of village center
+     * @param {number} houseX - X coordinate of house
+     * @param {number} houseZ - Z coordinate of house
+     */
+    createVillageHousePath(centerX, centerZ, houseX, houseZ) {
+        // Create a path from the village center to the house
+        if (this.game && this.game.worldManager && this.game.worldManager.createPathSegment) {
+            this.game.worldManager.createPathSegment(centerX, centerZ, houseX, houseZ);
+        }
+    }
+    
+    /**
+     * Create a mountain range with natural formation
+     * @param {number} centerX - X coordinate of range center
+     * @param {number} centerZ - Z coordinate of range center
+     * @param {number} mountainCount - Number of mountains in the range
+     * @returns {Object} - Information about the created mountain range
+     */
+    createMountainRange(centerX, centerZ, mountainCount) {
+        console.debug(`Creating mountain range with ${mountainCount} peaks at (${centerX.toFixed(1)}, ${centerZ.toFixed(1)})`);
+        
+        const groupId = `mountain_range_${Date.now()}`;
+        const mountains = [];
+        
+        // Create mountains in a line or arc formation
+        const isLinear = Math.random() > 0.3; // 70% chance of linear formation
+        const spread = this.groupSpread['mountain'];
+        
+        // Choose a main direction for the range
+        const rangeAngle = Math.random() * Math.PI * 2;
+        
+        // Create a path along the mountain range
+        const pathPoints = [];
+        
+        for (let i = 0; i < mountainCount; i++) {
+            let mountainX, mountainZ;
+            
+            if (isLinear) {
+                // Linear mountain range
+                const distance = (i - mountainCount / 2) * (spread / 2);
+                mountainX = centerX + Math.cos(rangeAngle) * distance;
+                mountainZ = centerZ + Math.sin(rangeAngle) * distance;
+                
+                // Add some randomness perpendicular to the main direction
+                const perpAngle = rangeAngle + Math.PI / 2;
+                const perpDistance = (Math.random() - 0.5) * (spread / 3);
+                mountainX += Math.cos(perpAngle) * perpDistance;
+                mountainZ += Math.sin(perpAngle) * perpDistance;
+                
+                // Add path point
+                if (i > 0 && i < mountainCount - 1) { // Skip first and last for better path
+                    pathPoints.push({ x: mountainX, z: mountainZ });
+                }
+            } else {
+                // Arc/cluster formation
+                const arcAngle = rangeAngle + (Math.random() - 0.5) * Math.PI / 2;
+                const distance = Math.random() * spread;
+                mountainX = centerX + Math.cos(arcAngle) * distance;
+                mountainZ = centerZ + Math.sin(arcAngle) * distance;
+                
+                // Add path point if not too close to center
+                if (distance > spread * 0.3) {
+                    pathPoints.push({ x: mountainX, z: mountainZ });
+                }
+            }
+            
+            // Vary mountain sizes
+            const scaleFactor = 0.7 + Math.random() * 0.6; // 0.7 to 1.3
+            const mountain = this.createMountain(mountainX, mountainZ, scaleFactor);
+            
+            if (mountain) {
+                // Create mountain info
+                const mountainInfo = {
+                    type: 'mountain',
+                    object: mountain,
+                    position: new THREE.Vector3(mountainX, 0, mountainZ),
+                    groupId: groupId
+                };
+                
+                // Add to structures array
+                this.structures.push(mountainInfo);
+                mountains.push(mountainInfo);
+            }
+        }
+        
+        // Create a path through the mountain range if we have enough points
+        if (pathPoints.length >= 2 && this.game && this.game.worldManager && this.game.worldManager.createPathSegment) {
+            // Sort path points to create a sensible path
+            if (isLinear) {
+                // For linear ranges, sort by distance along the range direction
+                pathPoints.sort((a, b) => {
+                    const aDist = (a.x - centerX) * Math.cos(rangeAngle) + (a.z - centerZ) * Math.sin(rangeAngle);
+                    const bDist = (b.x - centerX) * Math.cos(rangeAngle) + (b.z - centerZ) * Math.sin(rangeAngle);
+                    return aDist - bDist;
+                });
+            } else {
+                // For arc/cluster, sort by angle around center
+                pathPoints.sort((a, b) => {
+                    const aAngle = Math.atan2(a.z - centerZ, a.x - centerX);
+                    const bAngle = Math.atan2(b.z - centerZ, b.x - centerX);
+                    return aAngle - bAngle;
+                });
+            }
+            
+            // Create path segments connecting the points
+            for (let i = 0; i < pathPoints.length - 1; i++) {
+                const start = pathPoints[i];
+                const end = pathPoints[i + 1];
+                
+                // Create path segment with some randomness
+                const midX = (start.x + end.x) / 2 + (Math.random() - 0.5) * 5;
+                const midZ = (start.z + end.z) / 2 + (Math.random() - 0.5) * 5;
+                
+                // Create first half
+                this.game.worldManager.createPathSegment(start.x, start.z, midX, midZ);
+                
+                // Create second half
+                this.game.worldManager.createPathSegment(midX, midZ, end.x, end.z);
+            }
+        }
+        
+        // Return info about the mountain range
+        return {
+            type: 'mountain',
+            isGroup: true,
+            groupId: groupId,
+            position: new THREE.Vector3(centerX, 0, centerZ),
+            count: mountains.length
+        };
+    }
+    
+    /**
+     * Legacy method kept for compatibility
+     * Now just a stub that does nothing
+     */
+    generateStructuresForChunk(chunkX, chunkZ, dataOnly = false) {
+        // This method is kept as a stub for compatibility
+        // It no longer generates structures based on chunks
+        return;
+    }
+    
+    /**
+     * Compatibility method for the old chunk-based system
+     * This is needed because TerrainManager still calls this method
+     * @param {string} chunkKey - The chunk key to remove
+     * @param {boolean} disposeResources - Whether to dispose resources
+     */
+    removeStructuresInChunk(chunkKey, disposeResources = false) {
+        // In our simplified system, we don't need to do anything here
+        // This method is kept for compatibility with TerrainManager
+        console.debug(`removeStructuresInChunk called for chunk ${chunkKey} (no action needed in simplified system)`);
+        
+        // We'll add a check for structures that might be in this chunk area
+        // and remove them if they're too far from the player
+        if (this.structures && this.structures.length > 0) {
+            // Parse chunk coordinates
+            const [chunkX, chunkZ] = chunkKey.split(',').map(Number);
+            
+            // Calculate world coordinates for this chunk
+            const terrainChunkSize = this.worldManager.terrainManager.terrainChunkSize;
+            const worldX = chunkX * terrainChunkSize;
+            const worldZ = chunkZ * terrainChunkSize;
+            
+            // Remove structures that are in this chunk area
+            this.structures = this.structures.filter(structureData => {
+                if (!structureData || !structureData.position) return true;
+                
+                // Check if structure is in this chunk
+                const structureX = structureData.position.x;
+                const structureZ = structureData.position.z;
+                
+                const isInChunk = 
+                    structureX >= worldX && 
+                    structureX < worldX + terrainChunkSize &&
+                    structureZ >= worldZ && 
+                    structureZ < worldZ + terrainChunkSize;
+                
+                // If structure is in this chunk, remove it
+                if (isInChunk && structureData.object) {
+                    console.debug(`Removing structure at (${structureX.toFixed(1)}, ${structureZ.toFixed(1)}) in chunk ${chunkKey}`);
+                    this.scene.remove(structureData.object);
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+    }
+    
+    /**
      * Load structures for a chunk from saved data
+     * Compatibility method for the old chunk-based system
      * @param {number} chunkX - X chunk coordinate
      * @param {number} chunkZ - Z chunk coordinate
      * @param {Array} structures - Array of structure data
@@ -283,35 +613,29 @@ export class StructureManager {
             return;
         }
         
-        // Store the structures data
-        this.structuresPlaced[chunkKey] = structures;
+        // Mark this chunk as processed to prevent repeated loading
+        this.structuresPlaced[chunkKey] = structures || [];
         
-        // Create the actual 3D objects
-        structures.forEach(structure => {
-            switch (structure.type) {
-                case 'house':
-                    this.createBuilding(
-                        structure.x, 
-                        structure.z, 
-                        structure.dimensions.width, 
-                        structure.dimensions.depth, 
-                        structure.dimensions.height
-                    );
-                    break;
-                case 'tower':
-                    this.createTower(structure.x, structure.z);
-                    break;
-                case 'ruins':
-                    this.createRuins(structure.x, structure.z);
-                    break;
-                case 'darkSanctum':
+        // In our simplified system, we don't need to create objects from saved data
+        // We'll just log that this method was called
+        console.debug(`loadStructuresForChunk called for chunk ${chunkKey} with ${structures ? structures.length : 0} structures (simplified system)`);
+        
+        // If we're near the starting area, we might want to create some structures
+        // This ensures compatibility with save/load functionality
+        if (Math.abs(chunkX) <= 1 && Math.abs(chunkZ) <= 1 && structures && structures.length > 0) {
+            console.debug("Loading structures near starting area");
+            
+            // Create the actual 3D objects for important structures
+            structures.forEach(structure => {
+                // Only create important structures like darkSanctum
+                if (structure.type === 'darkSanctum') {
                     this.createDarkSanctum(structure.x, structure.z);
-                    this.specialStructures[`darkSanctum_${chunkKey}_${this.structuresPlaced[chunkKey].indexOf(structure)}`] = { 
+                    this.specialStructures[`darkSanctum_${chunkKey}_${structures.indexOf(structure)}`] = { 
                         x: structure.x, z: structure.z, type: 'darkSanctum' 
                     };
-                    break;
-            }
-        });
+                }
+            });
+        }
     }
     
     /**
@@ -451,19 +775,27 @@ export class StructureManager {
      * Create a mountain at the specified position
      * @param {number} x - X coordinate
      * @param {number} z - Z coordinate
+     * @param {number} scaleFactor - Optional scale factor for natural variation
      * @returns {THREE.Group} - The mountain group
      */
-    createMountain(x, z) {
+    createMountain(x, z, scaleFactor = 1.0) {
         const zoneType = this.getZoneTypeAt(x, z);
         const mountain = new Mountain(zoneType);
         const mountainGroup = mountain.createMesh();
+        
+        // Apply scale factor for natural variation
+        if (scaleFactor !== 1.0) {
+            mountainGroup.scale.set(scaleFactor, scaleFactor * 0.8, scaleFactor);
+        }
+        
+        // Add some random rotation for natural look
+        mountainGroup.rotation.y = Math.random() * Math.PI * 2;
         
         // Position mountain on terrain
         mountainGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
         
         // Add to scene
         this.scene.add(mountainGroup);
-        this.structures.push(mountainGroup);
         
         return mountainGroup;
     }
