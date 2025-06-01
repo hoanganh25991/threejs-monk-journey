@@ -115,26 +115,26 @@ export class SettingsMenu extends UIComponent {
                 this.saveButton.disabled = true;
                 
                 // Create progress indicator
-                const saveProgress = new SaveOperationProgress(this.game, 'save');
-                saveProgress.start('Saving settings...');
+                // const saveProgress = new SaveOperationProgress(this.game, 'save');
+                // saveProgress.start('Saving settings...');
                 
                 try {
                     // Save settings (async)
                     await this.saveSettings();
                     
                     // Update progress
-                    saveProgress.update('Settings saved!', 100);
+                    // saveProgress.update('Settings saved!', 100);
                     
                     // Show main menu and resume game after a delay
                     setTimeout(() => {
                         // Hide the progress indicator
-                        saveProgress.hide();
+                        // saveProgress.hide();
                         // Show main menu if available
-                        window.location.reload();
+                        // window.location.reload();
                         // this.game.start();
                         // this.game.pause(false);
-                        // this.game.menuManager.showMenu('gameMenu');
                     }, 300);
+                    this.game.menuManager.showMenu('gameMenu');
                 } catch (error) {
                     console.error('Error saving settings:', error);
                     saveProgress.error('Error saving settings');
