@@ -12,6 +12,8 @@
     color: white;
     pointer-events: auto; /* Ensure clicks are registered */
     z-index: 50; /* Below UI Controls but above other elements */
+    width: 200px;
+    height: 200px;
 }
 
 #mini-map-canvas {
@@ -21,4 +23,11 @@
     height: 100%;
     opacity: 0.8;
     transition: opacity 0.2s ease;
+}
+
+@media (max-height: 430px) {
+    #mini-map {
+        width: 120px;
+        height: 120px;
+    }
 }

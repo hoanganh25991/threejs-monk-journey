@@ -191,29 +191,16 @@ export class MiniMapUI extends UIComponent {
             e.stopPropagation();
         });
         
-        // Set exact dimensions for both container and canvas
-        this.updateMapSize();
-        
-        // // Hide the map initially (since isVisible is false by default)
-        // if (this.mapElement) {
-        //     this.mapElement.style.display = 'none';
-        // }
-        
         // Add window resize listener to adjust map size on screen size changes
-        window.addEventListener('resize', () => {
-            // Check if we're on mobile
-            const mobile = window.innerWidth <= 768;
-            
-            // Update map size based on device
-            this.mapSize = mobile ? 100 : 200;
-            this.canvasSize = this.mapSize;
-            
-            // Update the map dimensions
-            this.updateMapSize();
-            
-            // Force a re-render of the map
-            this.renderMiniMap();
-        });
+        // window.addEventListener('resize', () => {
+        //     // Check if we're on mobile
+        //     const mobile = window.innerWidth <= 768;
+        //     // Update map size based on device
+        //     this.mapSize = mobile ? 100 : 200;
+        //     this.canvasSize = this.mapSize;
+        //     // Force a re-render of the map
+        //     this.renderMiniMap();
+        // });
         
         // Add CSS for map controls
         this.addMapControlStyles();
@@ -400,25 +387,6 @@ export class MiniMapUI extends UIComponent {
         }
         
         return null;
-    }
-    
-    /**
-     * Update the map size based on current settings
-     */
-    updateMapSize() {
-        if (!this.mapElement || !this.canvas) return;
-        
-        // Set exact dimensions for both container and canvas
-        this.mapElement.style.width = `${this.mapSize}px`;
-        this.mapElement.style.height = `${this.mapSize}px`;
-        
-        // Ensure canvas has the correct dimensions
-        this.canvas.width = this.canvasSize;
-        this.canvas.height = this.canvasSize;
-        
-        // Apply CSS to ensure canvas fits perfectly in the container
-        this.canvas.style.width = '100%';
-        this.canvas.style.height = '100%';
     }
     
     /**

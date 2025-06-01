@@ -1129,7 +1129,7 @@ export class InventoryUI extends UIComponent {
         }
         
         // Remove event listeners
-        window.removeEventListener('resize', this.onModelContainerResize);
+        // window.removeEventListener('resize', this.onModelContainerResize);
         
         // Note: Since we're using anonymous functions for event listeners,
         // we can't directly remove them. In a production app, you would
