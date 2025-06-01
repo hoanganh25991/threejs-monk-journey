@@ -739,23 +739,36 @@ ${iconData.emoji}
       !this.skillTrees ||
       !this.skillTrees[skillName] ||
       !this.skillTrees[skillName].variants ||
-      !this.skillTrees[skillName].variants[variantName] ||
-      !this.skillTrees[skillName].variants[variantName].buffs
+      !this.skillTrees[skillName].variants[variantName]
     ) {
       this.elements.skillBuffs.innerHTML =
         '<div class="no-buffs">No buffs available for this variant.</div>';
       return;
     }
 
+    // Get the skill data and buffs
+    const skillData = this.skillTrees[skillName];
     const variantData = this.skillTrees[skillName].variants[variantName];
+    
+    // Check if there are any buffs for this skill
+    if (!skillData.buffs || Object.keys(skillData.buffs).length === 0) {
+      this.elements.skillBuffs.innerHTML =
+        '<div class="no-buffs">No buffs available for this variant.</div>';
+      return;
+    }
     const playerSkillData = this.playerSkills[skillName];
-    const buffs = variantData.buffs;
-
+    
     // Create HTML for buffs
     const buffsHtml = [];
-
-    // For each buff
-    Object.entries(buffs).forEach(([buffName, buffData]) => {
+    
+    // Filter buffs that are applicable to this variant
+    Object.entries(skillData.buffs).forEach(([buffName, buffData]) => {
+      // Check if this buff is applicable to this variant
+      const requiredVariant = buffData.requiredVariant || "any";
+      if (requiredVariant !== "any" && requiredVariant !== variantName) {
+        return; // Skip buffs that don't apply to this variant
+      }
+      
       // Determine if this buff is active
       const isActive =
         playerSkillData &&
