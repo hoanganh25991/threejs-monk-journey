@@ -300,7 +300,7 @@ export class GameplayTab extends SettingsTab {
         // Display current version (simplified)
         if (this.currentVersionSpan) {
             // Set a default version immediately
-            this.currentVersionSpan.textContent = 'Current Version';
+            this.currentVersionSpan.textContent = 'Fetching...';
             
             // Fetch the actual version in the background
             this.fetchCacheVersion()
@@ -308,6 +308,7 @@ export class GameplayTab extends SettingsTab {
                     this.currentVersionSpan.textContent = version;
                 })
                 .catch(error => {
+                    this.currentVersionSpan.textContent = 'Failed to fetch';
                     console.error('Error setting version display:', error);
                 });
         }
