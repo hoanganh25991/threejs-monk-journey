@@ -175,33 +175,33 @@ export class StormOfPalmsEffect extends BulPalmRainEffect {
   update(delta) {
     if (!this.isActive || !this.effect) return;
     
-    // Get current hero position from the skill's position
-    // This is more reliable as the skill position is updated by the player
-    if (this.skill && this.skill.position) {
-      const skillPosition = this.skill.position.clone();
-      
-      // Check if the hero has moved significantly
-      if (skillPosition.distanceTo(this.lastHeroPosition) > this.moveWithHeroThreshold) {
-        // Update the center position to follow the hero
-        this.centerPosition.x = skillPosition.x;
-        this.centerPosition.z = skillPosition.z;
-        
-        // Update the effect position
-        this.effect.position.x = skillPosition.x;
-        this.effect.position.z = skillPosition.z;
-        
-        // Update all existing palms to maintain their relative position to the hero
-        this.updatePalmPositions(skillPosition);
-        
-        // Update the last known hero position
-        this.lastHeroPosition.copy(skillPosition);
-      }
-    }
-    
-    // Call the parent update method for other updates
-    // We're overriding this to ensure our custom palm position updates happen first
+    // First, update the base properties
     this.age += delta;
     this.elapsedTime += delta;
+    
+    // IMPORTANT: Update the skill's position property to match the effect's position
+    // This ensures the skill.position is always available
+    this.skill.position.copy(this.effect.position);
+    
+    // Now get current hero position from the skill's position
+    const skillPosition = this.skill.position.clone();
+    
+    // Check if the hero has moved significantly
+    if (skillPosition.distanceTo(this.lastHeroPosition) > this.moveWithHeroThreshold) {
+      // Update the center position to follow the hero
+      this.centerPosition.x = skillPosition.x;
+      this.centerPosition.z = skillPosition.z;
+      
+      // Update the effect position
+      this.effect.position.x = skillPosition.x;
+      this.effect.position.z = skillPosition.z;
+      
+      // Update all existing palms to maintain their relative position to the hero
+      this.updatePalmPositions(skillPosition);
+      
+      // Update the last known hero position
+      this.lastHeroPosition.copy(skillPosition);
+    }
     
     // Create new palms at regular intervals
     if (this.palmsCreated < this.palmCount) {

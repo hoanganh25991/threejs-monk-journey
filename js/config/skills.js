@@ -319,7 +319,7 @@ export const NORMAL_SKILLS = [
         // Duration is calculated based on palmCount and palmDelay plus extra time for explosions
         get duration() { 
             if (this.variant === 'Storm of Palms' && this.stormOfPalmsConfig) {
-                return (this.stormOfPalmsConfig.palmCount * this.stormOfPalmsConfig.palmDelay) + 3;
+                return 5 + (this.stormOfPalmsConfig.palmCount * this.stormOfPalmsConfig.palmDelay) + 3;
             } else if (this.palmRainConfig) {
                 return (this.palmRainConfig.palmCount * this.palmRainConfig.palmDelay) + 2;
             } else {

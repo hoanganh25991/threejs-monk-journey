@@ -55,7 +55,7 @@ export class Skill {
      * Create a new skill
      * @param {Object} config - Skill configuration
      */
-    constructor(config) {
+    constructor(config, game) {
         this.name = config.name || 'Unknown Skill';
         this.description = config.description || '';
         this.type = config.type || 'ranged';
@@ -93,7 +93,10 @@ export class Skill {
         this.direction = new THREE.Vector3();
 
         // Game reference
-        this.game = null;
+        this.game = game;
+        
+        // Target enemy reference (for auto-targeting)
+        this.targetEnemy = config.targetEnemy;
         
         // Add a unique instance ID for this skill
         // This helps with tracking which skill instance has hit which enemies
@@ -163,12 +166,28 @@ export class Skill {
             playerRotation = { y: 0 };
         }
         
-        // Set skill direction based on player rotation
-        this.direction.set(
-            Math.sin(playerRotation.y),
-            0,
-            Math.cos(playerRotation.y)
-        );
+        // Check if we have a target enemy and adjust direction accordingly
+        if (this.targetEnemy) {
+            // Get enemy position
+            const enemyPosition = this.targetEnemy.getPosition();
+            
+            // Calculate direction to enemy
+            const targetDirection = new THREE.Vector3().subVectors(enemyPosition, this.position).normalize();
+            
+            // Set skill direction based on enemy position
+            this.direction.copy(targetDirection);
+            this.direction.y = 0; // Keep direction horizontal
+            this.direction.normalize();
+            
+            console.debug(`Skill ${this.name} targeting enemy at position: ${enemyPosition.x.toFixed(2)}, ${enemyPosition.y.toFixed(2)}, ${enemyPosition.z.toFixed(2)}`);
+        } else {
+            // No target enemy, use player rotation as before
+            this.direction.set(
+                Math.sin(playerRotation.y),
+                0,
+                Math.cos(playerRotation.y)
+            );
+        }
         
         // Validate direction vector
         if (!this.validateVector(this.direction)) {
@@ -429,6 +448,9 @@ export class Skill {
         // Reset position and direction
         this.position = new THREE.Vector3();
         this.direction = new THREE.Vector3();
+        
+        // Reset target enemy
+        this.targetEnemy = null;
         
         // Generate a new instance ID when the skill is reset
         // This ensures that each use of the skill is treated as a new instance
