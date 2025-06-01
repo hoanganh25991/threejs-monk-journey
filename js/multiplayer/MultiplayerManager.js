@@ -206,9 +206,35 @@ export class MultiplayerManager {
             homeButton.style.display = 'block';
         }
         
+        // Store current player level and stats before starting
+        let currentLevel = null;
+        let currentExp = null;
+        if (this.game.player && this.game.player.stats) {
+            console.debug('[MultiplayerManager] Preserving host player level and experience');
+            currentLevel = this.game.player.getLevel();
+            currentExp = this.game.player.stats.getCurrentExperience();
+        }
+        
         // Start the game - this will properly initialize the game state
         console.debug('[MultiplayerManager] Starting multiplayer game - calling game.start()');
-        this.game.start();
+        // Pass true to indicate this is a loaded game to preserve player position
+        this.game.start(true);
+        
+        // Restore player level and experience if we had them
+        if (currentLevel !== null && this.game.player && this.game.player.stats) {
+            console.debug(`[MultiplayerManager] Restoring host player level (${currentLevel}) and experience (${currentExp})`);
+            
+            // Set level directly through stats to avoid triggering level up notifications
+            this.game.player.stats.setLevel(currentLevel);
+            if (currentExp !== null) {
+                this.game.player.stats.setExperience(currentExp);
+            }
+            
+            // Update HUD to reflect restored level
+            if (this.game.hudManager) {
+                this.game.hudManager.updatePlayerStats();
+            }
+        }
     }
     
     /**
@@ -248,8 +274,34 @@ export class MultiplayerManager {
                 homeButton.style.display = 'block';
             }
             
+            // Store current player level and stats before starting
+            let currentLevel = null;
+            let currentExp = null;
+            if (this.game.player && this.game.player.stats) {
+                console.debug('[MultiplayerManager] Preserving player level and experience');
+                currentLevel = this.game.player.getLevel();
+                currentExp = this.game.player.stats.getCurrentExperience();
+            }
+            
             // Start the game - this will properly initialize the game state
-            this.game.start();
+            // Pass true to indicate this is a loaded game to preserve player position
+            this.game.start(true);
+            
+            // Restore player level and experience if we had them
+            if (currentLevel !== null && this.game.player && this.game.player.stats) {
+                console.debug(`[MultiplayerManager] Restoring player level (${currentLevel}) and experience (${currentExp})`);
+                
+                // Set level directly through stats to avoid triggering level up notifications
+                this.game.player.stats.setLevel(currentLevel);
+                if (currentExp !== null) {
+                    this.game.player.stats.setExperience(currentExp);
+                }
+                
+                // Update HUD to reflect restored level
+                if (this.game.hudManager) {
+                    this.game.hudManager.updatePlayerStats();
+                }
+            }
         } else {
             // For host, the game should already be started by startMultiplayerGame()
             console.debug('[MultiplayerManager] Host starting game - ensuring game state is running');

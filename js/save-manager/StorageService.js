@@ -61,26 +61,136 @@ export class StorageService {
         if (this.isLoginRequired() && !this.isSignedInToGoogle()) {
             console.debug('Previous login detected, enforcing login');
             
-            // Ask user to confirm login
-            const shouldLogin = confirm(
-                'You previously logged in with Google to save your progress.\n\n' +
-                'Would you like to login again to load your saved data?\n' +
-                'Click OK to login and load your saved data.\n' +
-                'Click Cancel to start a new game.'
-            );
-            
-            if (shouldLogin) {
-                // User chose to login
-                console.debug('User chose to login');
-                const success = await this.signInToGoogle(false);
-                return success;
-            } else {
-                // User chose to start fresh
-                console.debug('User chose to start fresh');
-                // Clear the last login record to prevent future prompts
-                localStorage.removeItem(STORAGE_KEYS.GOOGLE_LAST_LOGIN);
-                return false;
-            }
+            // Use the pre-defined login modal in the HTML
+            return new Promise((resolve) => {
+                const modal = document.getElementById('login-modal');
+                const messageEl = document.getElementById('login-modal-message');
+                const statusEl = document.getElementById('login-modal-status');
+                const buttonsContainer = document.getElementById('login-modal-buttons');
+                const loginBtn = document.getElementById('login-modal-login-btn');
+                const cancelBtn = document.getElementById('login-modal-cancel-btn');
+                const loader = modal.querySelector('.login-modal-loader');
+                
+                // Set the message for enforced login
+                messageEl.textContent = 'You previously logged in with Google to save your progress. Would you like to login again to load your saved data?';
+                
+                // Reset the modal state
+                statusEl.textContent = '';
+                statusEl.style.display = 'none';
+                statusEl.className = 'login-modal-status';
+                loader.style.display = 'none';
+                
+                // Reset buttons
+                buttonsContainer.innerHTML = '';
+                buttonsContainer.appendChild(loginBtn);
+                buttonsContainer.appendChild(cancelBtn);
+                loginBtn.disabled = false;
+                cancelBtn.disabled = false;
+                
+                // Update button text
+                loginBtn.textContent = 'Login';
+                cancelBtn.textContent = 'Start New Game';
+                
+                // Show the modal
+                modal.style.display = 'flex';
+                
+                // Add event listeners
+                const loginHandler = async () => {
+                    // Show loading state
+                    loginBtn.disabled = true;
+                    cancelBtn.disabled = true;
+                    loader.style.display = 'block';
+                    statusEl.textContent = 'Connecting to Google...';
+                    statusEl.style.display = 'block';
+                    
+                    // Set a timeout to detect if login is taking too long
+                    const loginTimeout = setTimeout(() => {
+                        statusEl.textContent = 'Login is taking longer than expected. You may need to check your browser popup settings.';
+                        statusEl.className = 'login-modal-status error';
+                        
+                        // Create retry and abort buttons
+                        const retryBtn = document.createElement('button');
+                        retryBtn.textContent = 'Retry';
+                        retryBtn.className = 'retry-btn';
+                        
+                        const abortBtn = document.createElement('button');
+                        abortBtn.textContent = 'Cancel';
+                        abortBtn.className = 'abort-btn';
+                        
+                        // Clear existing buttons
+                        buttonsContainer.innerHTML = '';
+                        buttonsContainer.appendChild(retryBtn);
+                        buttonsContainer.appendChild(abortBtn);
+                        
+                        // Add event listeners for new buttons
+                        const retryHandler = async () => {
+                            // Remove the timeout message and buttons
+                            statusEl.textContent = 'Retrying connection to Google...';
+                            statusEl.className = 'login-modal-status';
+                            buttonsContainer.innerHTML = '';
+                            
+                            // Try login again
+                            const success = await this.signInToGoogle(false);
+                            
+                            if (success) {
+                                statusEl.textContent = 'Login successful!';
+                                statusEl.className = 'login-modal-status success';
+                                setTimeout(() => {
+                                    modal.style.display = 'none';
+                                    resolve(true);
+                                }, 1000);
+                            } else {
+                                statusEl.textContent = 'Login failed. Please try again later.';
+                                statusEl.className = 'login-modal-status error';
+                                buttonsContainer.appendChild(retryBtn);
+                                buttonsContainer.appendChild(abortBtn);
+                            }
+                        };
+                        
+                        const abortHandler = () => {
+                            modal.style.display = 'none';
+                            // Clear the last login record to prevent future prompts
+                            localStorage.removeItem(STORAGE_KEYS.GOOGLE_LAST_LOGIN);
+                            resolve(false);
+                        };
+                        
+                        retryBtn.addEventListener('click', retryHandler, { once: true });
+                        abortBtn.addEventListener('click', abortHandler, { once: true });
+                    }, 15000); // 15 seconds timeout
+                    
+                    // Attempt to sign in
+                    const success = await this.signInToGoogle(false);
+                    
+                    // Clear the timeout
+                    clearTimeout(loginTimeout);
+                    
+                    if (success) {
+                        statusEl.textContent = 'Login successful!';
+                        statusEl.className = 'login-modal-status success';
+                        setTimeout(() => {
+                            modal.style.display = 'none';
+                            resolve(true);
+                        }, 1000);
+                    } else {
+                        statusEl.textContent = 'Login failed. Please try again.';
+                        statusEl.className = 'login-modal-status error';
+                        loginBtn.disabled = false;
+                        cancelBtn.disabled = false;
+                        loader.style.display = 'none';
+                    }
+                };
+                
+                const cancelHandler = () => {
+                    modal.style.display = 'none';
+                    // Clear the last login record to prevent future prompts
+                    localStorage.removeItem(STORAGE_KEYS.GOOGLE_LAST_LOGIN);
+                    resolve(false);
+                };
+                
+                // Use once: true to ensure the event listeners are removed after they're used
+                loginBtn.addEventListener('click', loginHandler, { once: true });
+                cancelBtn.addEventListener('click', cancelHandler, { once: true });
+            });
         }
         
         return true; // No login required or already logged in
@@ -116,30 +226,133 @@ export class StorageService {
             console.debug('Silent login failed, proceeding to interactive login');
         }
         
-        // Show confirmation dialog with custom or default message
-        const defaultMessage = 'This operation requires you to be logged in with Google.\n\n' +
-                              'Would you like to login now?\n' +
-                              'Click OK to login.\n' +
-                              'Click Cancel to abort the operation.';
-        
-        const shouldLogin = confirm(message || defaultMessage);
-        
-        if (shouldLogin) {
-            // User chose to login
-            console.debug('User chose to login');
-            const success = await this.signInToGoogle(false);
+        // Use the pre-defined login modal in the HTML
+        return new Promise((resolve) => {
+            const modal = document.getElementById('login-modal');
+            const messageEl = document.getElementById('login-modal-message');
+            const statusEl = document.getElementById('login-modal-status');
+            const buttonsContainer = document.getElementById('login-modal-buttons');
+            const loginBtn = document.getElementById('login-modal-login-btn');
+            const cancelBtn = document.getElementById('login-modal-cancel-btn');
+            const loader = modal.querySelector('.login-modal-loader');
             
-            if (!success) {
-                console.debug('Login failed');
-                alert('Login failed. Please try again later.');
-            }
+            // Set the custom message if provided
+            const defaultMessage = 'This operation requires you to be logged in with Google. Would you like to login now?';
+            messageEl.textContent = message || defaultMessage;
             
-            return success;
-        } else {
-            // User chose not to login
-            console.debug('User chose not to login');
-            return false;
-        }
+            // Reset the modal state
+            statusEl.textContent = '';
+            statusEl.style.display = 'none';
+            statusEl.className = 'login-modal-status';
+            loader.style.display = 'none';
+            
+            // Reset buttons
+            buttonsContainer.innerHTML = '';
+            buttonsContainer.appendChild(loginBtn);
+            buttonsContainer.appendChild(cancelBtn);
+            loginBtn.disabled = false;
+            cancelBtn.disabled = false;
+            
+            // Update button text
+            loginBtn.textContent = 'Login';
+            cancelBtn.textContent = 'Cancel';
+            
+            // Show the modal
+            modal.style.display = 'flex';
+            
+            // Add event listeners
+            const loginHandler = async () => {
+                // Show loading state
+                loginBtn.disabled = true;
+                cancelBtn.disabled = true;
+                loader.style.display = 'block';
+                statusEl.textContent = 'Connecting to Google...';
+                statusEl.style.display = 'block';
+                
+                // Set a timeout to detect if login is taking too long
+                const loginTimeout = setTimeout(() => {
+                    statusEl.textContent = 'Login is taking longer than expected. You may need to check your browser popup settings.';
+                    statusEl.className = 'login-modal-status error';
+                    
+                    // Create retry and abort buttons
+                    const retryBtn = document.createElement('button');
+                    retryBtn.textContent = 'Retry';
+                    retryBtn.className = 'retry-btn';
+                    
+                    const abortBtn = document.createElement('button');
+                    abortBtn.textContent = 'Cancel';
+                    abortBtn.className = 'abort-btn';
+                    
+                    // Clear existing buttons
+                    buttonsContainer.innerHTML = '';
+                    buttonsContainer.appendChild(retryBtn);
+                    buttonsContainer.appendChild(abortBtn);
+                    
+                    // Add event listeners for new buttons
+                    const retryHandler = async () => {
+                        // Remove the timeout message and buttons
+                        statusEl.textContent = 'Retrying connection to Google...';
+                        statusEl.className = 'login-modal-status';
+                        buttonsContainer.innerHTML = '';
+                        
+                        // Try login again
+                        const success = await this.signInToGoogle(false);
+                        
+                        if (success) {
+                            statusEl.textContent = 'Login successful!';
+                            statusEl.className = 'login-modal-status success';
+                            setTimeout(() => {
+                                modal.style.display = 'none';
+                                resolve(true);
+                            }, 1000);
+                        } else {
+                            statusEl.textContent = 'Login failed. Please try again later.';
+                            statusEl.className = 'login-modal-status error';
+                            buttonsContainer.appendChild(retryBtn);
+                            buttonsContainer.appendChild(abortBtn);
+                        }
+                    };
+                    
+                    const abortHandler = () => {
+                        modal.style.display = 'none';
+                        resolve(false);
+                    };
+                    
+                    retryBtn.addEventListener('click', retryHandler, { once: true });
+                    abortBtn.addEventListener('click', abortHandler, { once: true });
+                }, 15000); // 15 seconds timeout
+                
+                // Attempt to sign in
+                const success = await this.signInToGoogle(false);
+                
+                // Clear the timeout
+                clearTimeout(loginTimeout);
+                
+                if (success) {
+                    statusEl.textContent = 'Login successful!';
+                    statusEl.className = 'login-modal-status success';
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        resolve(true);
+                    }, 1000);
+                } else {
+                    statusEl.textContent = 'Login failed. Please try again.';
+                    statusEl.className = 'login-modal-status error';
+                    loginBtn.disabled = false;
+                    cancelBtn.disabled = false;
+                    loader.style.display = 'none';
+                }
+            };
+            
+            const cancelHandler = () => {
+                modal.style.display = 'none';
+                resolve(false);
+            };
+            
+            // Use once: true to ensure the event listeners are removed after they're used
+            loginBtn.addEventListener('click', loginHandler, { once: true });
+            cancelBtn.addEventListener('click', cancelHandler, { once: true });
+        });
     }
 
     /**

@@ -56,6 +56,44 @@
         </svg>
         <p>Please rotate your device to landscape mode for the best experience</p>
     </div>
+    
+    <!-- Login Modal -->
+    <div id="login-modal" class="login-modal-overlay">
+        <div class="login-modal-dialog">
+            <h3 class="login-modal-title">Login Required</h3>
+            <p class="login-modal-message" id="login-modal-message">
+                You previously logged in with Google to save your progress. Would you like to login again to load your saved data?
+            </p>
+            <div class="login-modal-loader"></div>
+            <p class="login-modal-status" id="login-modal-status"></p>
+            <div class="login-modal-buttons" id="login-modal-buttons">
+                <button class="login-btn" id="login-modal-login-btn">Login</button>
+                <button class="cancel-btn" id="login-modal-cancel-btn">Start New Game</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Conflict Resolution Modal -->
+    <div id="conflict-modal" class="login-modal-overlay">
+        <div class="login-modal-dialog">
+            <h3 class="login-modal-title">Save Data Conflict</h3>
+            <p class="login-modal-message">
+                We found different save data on your device and in the cloud. Which version would you like to keep?
+            </p>
+            <div class="conflict-data-preview">
+                <div class="conflict-data-label">Local Save:</div>
+                <div id="conflict-local-data"></div>
+            </div>
+            <div class="conflict-data-preview">
+                <div class="conflict-data-label">Cloud Save:</div>
+                <div id="conflict-cloud-data"></div>
+            </div>
+            <div class="login-modal-buttons">
+                <button class="login-btn" id="conflict-use-cloud-btn">Use Cloud Version</button>
+                <button class="cancel-btn" id="conflict-use-local-btn">Use Local Version</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Main Background -->
     <div id="main-background"></div>

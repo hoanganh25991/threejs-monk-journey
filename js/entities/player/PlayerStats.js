@@ -159,11 +159,67 @@ export class PlayerStats {
     }
     
     /**
+     * Set player level directly (used for multiplayer synchronization)
+     * @param {number} value - New level value
+     */
+    setLevel(value) {
+        // Validate the input value
+        const newLevel = this.validateNumber(value, 1);
+        
+        // Only proceed if the new level is valid and different
+        if (newLevel !== this.level) {
+            // Store the old level for reference
+            const oldLevel = this.level;
+            this.level = newLevel;
+            
+            // Recalculate stats based on level difference
+            // This is a simplified approach - we're not running the full levelUp logic
+            // to avoid triggering notifications and other side effects
+            
+            // Calculate experience for next level based on the new level
+            this.experienceToNextLevel = DEFAULT_PLAYER_STATS.experienceToNextLevel;
+            for (let i = 1; i < newLevel; i++) {
+                this.experienceToNextLevel = Math.floor(this.experienceToNextLevel * LEVEL_UP_EXPERIENCE_MULTIPLIER);
+            }
+            
+            // Adjust stats based on level difference
+            const levelDiff = newLevel - oldLevel;
+            this.maxHealth = DEFAULT_PLAYER_STATS.maxHealth + (LEVEL_UP_STAT_INCREASES.maxHealth * (newLevel - 1));
+            this.maxMana = DEFAULT_PLAYER_STATS.maxMana + (LEVEL_UP_STAT_INCREASES.maxMana * (newLevel - 1));
+            this.strength = DEFAULT_PLAYER_STATS.strength + (LEVEL_UP_STAT_INCREASES.strength * (newLevel - 1));
+            this.dexterity = DEFAULT_PLAYER_STATS.dexterity + (LEVEL_UP_STAT_INCREASES.dexterity * (newLevel - 1));
+            this.intelligence = DEFAULT_PLAYER_STATS.intelligence + (LEVEL_UP_STAT_INCREASES.intelligence * (newLevel - 1));
+            this.attackPower = DEFAULT_PLAYER_STATS.attackPower + (LEVEL_UP_STAT_INCREASES.attackPower * (newLevel - 1));
+            
+            // Restore health and mana to full
+            this.health = this.maxHealth;
+            this.mana = this.maxMana;
+        }
+    }
+    
+    /**
      * Get current experience points
      * @returns {number} Current experience points
      */
     getExperience() {
         return this.experience;
+    }
+    
+    /**
+     * Get current experience points (alias for getExperience for multiplayer compatibility)
+     * @returns {number} Current experience points
+     */
+    getCurrentExperience() {
+        return this.experience;
+    }
+    
+    /**
+     * Set experience points directly (used for multiplayer synchronization)
+     * @param {number} value - New experience value
+     */
+    setExperience(value) {
+        // Validate the input value
+        this.experience = this.validateNumber(value, 0);
     }
     
     /**
