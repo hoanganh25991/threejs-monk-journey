@@ -73,14 +73,14 @@ export class WorldManager {
         this.lowPerformanceMode = false;
         
         // Random world generation settings
-        this.randomGenerationEnabled = true;
-        this.randomGenerationBuffer = 150; // Buffer distance for smooth transitions (increased from 100)
-        this.randomGenerationInterval = 500; // Milliseconds between generation attempts (increased for more stability)
+        this.randomGenerationEnabled = false;
+        this.randomGenerationBuffer = 100; // Reduced buffer distance from 150 to 100 to prevent buffering too far
+        this.randomGenerationInterval = 800; // Milliseconds between generation attempts (increased for better stability)
         this.lastRandomGenerationTime = 0;
         this.randomGenerationProbability = {
-            structure: 0.20,  // 20% chance to generate a structure (reduced slightly for stability)
-            environment: 0.5, // 50% chance to generate environment objects (reduced slightly for stability)
-            interactive: 0.1  // 10% chance to generate interactive objects
+            structure: 0.04,  // 4% chance to generate a structure (reduced by 5x for performance)
+            environment: 0.1, // 10% chance to generate environment objects (reduced by 5x for performance)
+            interactive: 0.02 // 2% chance to generate interactive objects (reduced by 5x for performance)
         };
         
         // Path generation settings
@@ -92,7 +92,12 @@ export class WorldManager {
         this.paths = []; // Array to store path meshes
         
         // Enhanced environment settings
-        this.enhancedTreeDensity = 2.5; // Multiplier for tree density along paths
+        this.enhancedTreeDensity = 0.5; // Multiplier for tree density along paths (reduced by 5x for performance)
+        
+        // Chunk tracking for consistent loading/unloading
+        this.activeChunks = {}; // Track which chunks are currently active
+        this.chunkObjectCounts = {}; // Track how many objects are in each chunk
+        this.chunkLoadRadius = 2; // How many chunks to load in each direction from player
         this.enhancedMountainDensity = 1.8; // Multiplier for mountain density in the distance
         
         // Track player movement for predictive generation
@@ -252,8 +257,8 @@ export class WorldManager {
             }
         }
         
-        // Generate some structures in this chunk
-        const structureCount = 1 + Math.floor(Math.random() * 3); // 1-3 structures per chunk
+        // Generate some structures in this chunk (reduced density)
+        const structureCount = Math.floor(Math.random() * 2); // 0-1 structures per chunk (reduced from 1-3)
         for (let i = 0; i < structureCount; i++) {
             const structX = chunkX + Math.random() * chunkSize;
             const structZ = chunkZ + Math.random() * chunkSize;
@@ -272,13 +277,14 @@ export class WorldManager {
                         z: structure.position.z
                     },
                     isGroup: structure.isGroup || false,
-                    groupId: structure.groupId || null
+                    groupId: structure.groupId || null,
+                    chunkKey: chunkKey // Store which chunk this belongs to
                 });
             }
         }
         
-        // Generate some environment objects in this chunk
-        const envObjectCount = 5 + Math.floor(Math.random() * 10); // 5-15 environment objects per chunk
+        // Generate some environment objects in this chunk (reduced density)
+        const envObjectCount = 1 + Math.floor(Math.random() * 20); // 1-3 environment objects per chunk (reduced from 5-15)
         for (let i = 0; i < envObjectCount; i++) {
             const envX = chunkX + Math.random() * chunkSize;
             const envZ = chunkZ + Math.random() * chunkSize;
@@ -295,7 +301,8 @@ export class WorldManager {
                         x: envObject.position.x,
                         y: envObject.position.y,
                         z: envObject.position.z
-                    }
+                    },
+                    chunkKey: chunkKey // Store which chunk this belongs to
                 });
             }
         }
@@ -389,24 +396,17 @@ export class WorldManager {
         const effectiveDrawDistance = this.lowPerformanceMode ? 
             Math.min(0.6, drawDistanceMultiplier) : drawDistanceMultiplier;
         
-        // Calculate which terrain chunk the player is in (still needed for terrain)
-        const terrainChunkSize = this.terrainManager.terrainChunkSize;
-        const playerChunkX = Math.floor(playerPosition.x / terrainChunkSize);
-        const playerChunkZ = Math.floor(playerPosition.z / terrainChunkSize);
-        
         // Check if we need to load cached terrain data for this area
         this.loadCachedTerrainForPlayer(playerPosition);
         
         // Update terrain chunks with potentially reduced draw distance
         this.terrainManager.updateForPlayer(playerPosition, effectiveDrawDistance);
         
+        // Update environment objects based on player position
+        // this.environmentManager.updateForPlayer(playerPosition, effectiveDrawDistance);
+        
         // Track player movement for predictive generation
         this.updatePlayerMovementTracking(playerPosition);
-        
-        // Generate random world elements using our new unified approach
-        if (this.randomGenerationEnabled) {
-            this.generateRandomWorldElements(playerPosition, effectiveDrawDistance);
-        }
         
         // Update lighting to follow player
         this.updateLighting(playerPosition);
@@ -429,29 +429,87 @@ export class WorldManager {
         const playerChunkX = Math.floor(playerPosition.x / chunkSize);
         const playerChunkZ = Math.floor(playerPosition.z / chunkSize);
         
-        // Check if we have cached data for this chunk and surrounding chunks
-        for (let xOffset = -1; xOffset <= 1; xOffset++) {
-            for (let zOffset = -1; zOffset <= 1; zOffset++) {
+        // Track which chunks should be active
+        const newActiveChunks = {};
+        
+        // Check if we have cached data for this chunk and surrounding chunks within load radius
+        for (let xOffset = -this.chunkLoadRadius; xOffset <= this.chunkLoadRadius; xOffset++) {
+            for (let zOffset = -this.chunkLoadRadius; zOffset <= this.chunkLoadRadius; zOffset++) {
                 const chunkX = (playerChunkX + xOffset) * chunkSize;
                 const chunkZ = (playerChunkZ + zOffset) * chunkSize;
                 const chunkKey = `${playerChunkX + xOffset}_${playerChunkZ + zOffset}`;
+                
+                // Mark this chunk as active
+                newActiveChunks[chunkKey] = true;
                 
                 // If we don't have this chunk cached, generate it
                 if (!this.terrainCache.chunks[chunkKey]) {
                     this.generateTerrainChunk(chunkX, chunkZ);
                 }
                 
-                // If we have cached structures for this chunk, ensure they're created
-                if (this.terrainCache.chunks[chunkKey] && this.terrainCache.chunks[chunkKey].structures) {
-                    this.ensureStructuresCreated(this.terrainCache.chunks[chunkKey].structures);
-                }
-                
-                // If we have cached environment objects for this chunk, ensure they're created
-                if (this.terrainCache.chunks[chunkKey] && this.terrainCache.chunks[chunkKey].environment) {
-                    this.ensureEnvironmentCreated(this.terrainCache.chunks[chunkKey].environment);
+                // Only load objects if this chunk wasn't already active
+                if (!this.activeChunks[chunkKey]) {
+                    console.debug(`Loading chunk ${chunkKey}`);
+                    
+                    // If we have cached structures for this chunk, ensure they're created
+                    if (this.terrainCache.chunks[chunkKey] && this.terrainCache.chunks[chunkKey].structures) {
+                        this.ensureStructuresCreated(this.terrainCache.chunks[chunkKey].structures);
+                    }
+                    
+                    // If we have cached environment objects for this chunk, ensure they're created
+                    if (this.terrainCache.chunks[chunkKey] && this.terrainCache.chunks[chunkKey].environment) {
+                        this.ensureEnvironmentCreated(this.terrainCache.chunks[chunkKey].environment);
+                    }
                 }
             }
         }
+        
+        // Unload chunks that are no longer active
+        for (const chunkKey in this.activeChunks) {
+            if (!newActiveChunks[chunkKey]) {
+                console.debug(`Unloading chunk ${chunkKey}`);
+                this.unloadChunk(chunkKey);
+            }
+        }
+        
+        // Update active chunks
+        this.activeChunks = newActiveChunks;
+    }
+    
+    /**
+     * Unload objects from a chunk that is no longer active
+     * @param {string} chunkKey - The key of the chunk to unload
+     */
+    unloadChunk(chunkKey) {
+        // Unload structures in this chunk
+        this.structureManager.structures = this.structureManager.structures.filter(structure => {
+            // Keep structures that don't have a chunkKey or are in a different chunk
+            if (!structure.chunkKey || structure.chunkKey !== chunkKey) {
+                return true;
+            }
+            
+            // Remove the structure from the scene
+            if (structure.object && structure.object.parent) {
+                this.scene.remove(structure.object);
+            }
+            
+            return false;
+        });
+        
+        // Unload environment objects in this chunk
+        this.environmentManager.environmentObjects = this.environmentManager.environmentObjects.filter(envObj => {
+            // Keep objects that don't have a chunkKey or are in a different chunk
+            if (!envObj.chunkKey || envObj.chunkKey !== chunkKey) {
+                return true;
+            }
+            
+            // Remove the object from the scene
+            if (envObj.object && envObj.object.parent) {
+                this.scene.remove(envObj.object);
+            }
+            
+            return false;
+        });
     }
     
     /**
@@ -551,7 +609,8 @@ export class WorldManager {
                     const structureInfo = {
                         type: structureData.type,
                         object: structure,
-                        position: structurePosition
+                        position: structurePosition,
+                        chunkKey: structureData.chunkKey // Track which chunk this belongs to
                     };
                     
                     // Add to structures array for tracking
@@ -596,7 +655,7 @@ export class WorldManager {
             const distanceThreshold = 20; // Increased from 5 to 20
             
             // Check if this object already exists in the world
-            const exists = this.environmentManager.objects.some(o => {
+            const exists = this.environmentManager.environmentObjects.some(o => {
                 // Skip objects without valid position
                 if (!o || !o.position) return false;
                 
@@ -615,19 +674,32 @@ export class WorldManager {
                 );
                 
                 // Use the appropriate creation method based on object type
+                let envObject = null;
                 switch (envData.type) {
                     case 'tree':
-                        this.environmentManager.createTree(position.x, position.z);
+                        envObject = this.environmentManager.createTree(position.x, position.z);
                         break;
                     case 'rock':
-                        this.environmentManager.createRock(position.x, position.z);
+                        envObject = this.environmentManager.createRock(position.x, position.z);
                         break;
                     case 'bush':
-                        this.environmentManager.createBush(position.x, position.z);
+                        envObject = this.environmentManager.createBush(position.x, position.z);
                         break;
                     case 'flower':
-                        this.environmentManager.createFlower(position.x, position.z);
+                        envObject = this.environmentManager.createFlower(position.x, position.z);
                         break;
+                }
+                
+                // If we have a created object, add the chunk information to it
+                if (envObject && this.environmentManager.environmentObjects.length > 0) {
+                    // Get the last added object (the one we just created)
+                    const lastIndex = this.environmentManager.environmentObjects.length - 1;
+                    const lastObject = this.environmentManager.environmentObjects[lastIndex];
+                    
+                    // Add chunk key to the object
+                    if (lastObject) {
+                        lastObject.chunkKey = envData.chunkKey;
+                    }
                 }
             }
         });
@@ -742,127 +814,6 @@ export class WorldManager {
                 
                 // Normalize to get average direction
                 this.playerMovementDirection.divideScalar(this.playerMovementHistory.length - 1);
-            }
-        }
-    }
-    
-    /**
-     * Generate random world elements using a unified approach
-     * @param {THREE.Vector3} playerPosition - Current player position
-     * @param {number} drawDistanceMultiplier - Multiplier for draw distance
-     */
-    generateRandomWorldElements(playerPosition, drawDistanceMultiplier) {
-        const currentTime = Date.now();
-        
-        // Only generate new elements at certain intervals to avoid performance issues and flickering
-        if (currentTime - this.lastRandomGenerationTime < this.randomGenerationInterval) {
-            return;
-        }
-        
-        // Store the time of last generation
-        this.lastRandomGenerationTime = currentTime;
-        
-        // Store the player position at generation time to help with stability
-        const generationPosition = playerPosition.clone();
-        
-        // Calculate buffer zone based on player movement direction
-        // This creates more objects in the direction the player is moving
-        const bufferMultiplier = 1.8; // Generate 80% more objects in the direction of movement (increased from 50%)
-        const baseBuffer = this.randomGenerationBuffer * drawDistanceMultiplier;
-        
-        // Check if we should generate a path segment
-        if (this.pathGenerationEnabled) {
-            this.generatePathSegment(generationPosition);
-        }
-        
-        // Generate structures with probability check
-        if (Math.random() < this.randomGenerationProbability.structure) {
-            // Generate in the buffer zone with bias toward movement direction
-            const angle = Math.random() * Math.PI * 2;
-            let distance = baseBuffer * (0.5 + Math.random() * 0.5); // 50-100% of buffer distance
-            
-            // Adjust distance based on movement direction (more in front, less behind)
-            const directionBias = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle))
-                .dot(this.playerMovementDirection);
-            
-            if (directionBias > 0) {
-                // In front of player - increase distance
-                distance *= (1 + directionBias * bufferMultiplier);
-            }
-            
-            const x = generationPosition.x + Math.cos(angle) * distance;
-            const z = generationPosition.z + Math.sin(angle) * distance;
-            
-            // Generate structure
-            const structure = this.structureManager.generateRandomStructure(new THREE.Vector3(x, 0, z));
-            
-            // If it's a significant structure, add it as a path node
-            if (structure && ['village', 'tower', 'darkSanctum', 'mountain'].includes(structure.type)) {
-                this.addPathNode(new THREE.Vector3(x, 0, z), structure.type);
-            }
-            
-            // Generate more trees around structures
-            if (structure) {
-                this.generateTreesAroundPoint(new THREE.Vector3(x, 0, z), 30, 5 + Math.floor(Math.random() * 8));
-            }
-        }
-        
-        // Generate environment objects with probability check
-        if (Math.random() < this.randomGenerationProbability.environment) {
-            // Generate multiple environment objects at once for efficiency
-            const numObjects = 2 + Math.floor(Math.random() * 4); // 2-5 objects at a time (increased from 1-3)
-            
-            for (let i = 0; i < numObjects; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                let distance = baseBuffer * (0.3 + Math.random() * 0.7); // 30-100% of buffer distance
-                
-                // Adjust distance based on movement direction
-                const directionBias = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle))
-                    .dot(this.playerMovementDirection);
-                
-                if (directionBias > 0) {
-                    // In front of player - increase distance
-                    distance *= (1 + directionBias * bufferMultiplier);
-                }
-                
-                const x = generationPosition.x + Math.cos(angle) * distance;
-                const z = generationPosition.z + Math.sin(angle) * distance;
-                
-                // Generate environment object
-                this.environmentManager.generateRandomObject(new THREE.Vector3(x, 0, z));
-            }
-            
-            // Generate additional trees along the player's path
-            if (Math.random() < 0.4) { // 40% chance for extra trees
-                this.generateTreesAlongPath(generationPosition, 5 + Math.floor(Math.random() * 10));
-            }
-            
-            // Generate additional mountains in the distance
-            if (Math.random() < 0.15) { // 15% chance for mountains
-                this.generateDistantMountains(generationPosition, 2 + Math.floor(Math.random() * 3));
-            }
-        }
-        
-        // Generate interactive objects with probability check
-        if (Math.random() < this.randomGenerationProbability.interactive && this.interactiveManager.generateRandomObject) {
-            const angle = Math.random() * Math.PI * 2;
-            let distance = baseBuffer * (0.4 + Math.random() * 0.6); // 40-100% of buffer distance
-            
-            // Adjust distance based on movement direction
-            const directionBias = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle))
-                .dot(this.playerMovementDirection);
-            
-            if (directionBias > 0) {
-                // In front of player - increase distance
-                distance *= (1 + directionBias * bufferMultiplier);
-            }
-            
-            const x = playerPosition.x + Math.cos(angle) * distance;
-            const z = playerPosition.z + Math.sin(angle) * distance;
-            
-            // Generate interactive object if the method exists
-            if (this.interactiveManager.generateRandomObject) {
-                this.interactiveManager.generateRandomObject(new THREE.Vector3(x, 0, z));
             }
         }
     }
@@ -1130,11 +1081,11 @@ export class WorldManager {
      */
     cleanupDistantObjects(playerPosition, drawDistanceMultiplier) {
         // Calculate maximum cleanup distance based on buffer and draw distance
-        // Increase the multiplier to prevent objects from disappearing too quickly
-        const maxCleanupDistance = this.randomGenerationBuffer * drawDistanceMultiplier * 3.5; // Increased from 2 to 3.5
+        // Reduced multiplier to clean up objects sooner and prevent too many objects in the scene
+        const maxCleanupDistance = this.randomGenerationBuffer * drawDistanceMultiplier * 2.5; // Reduced from 3.5 to 2.5
         
-        // Add a buffer to prevent flickering - only clean up objects that are significantly beyond the threshold
-        const cleanupBuffer = 50; // Additional buffer distance
+        // Add a smaller buffer to prevent flickering - clean up objects sooner
+        const cleanupBuffer = 30; // Reduced from 50 to 30
         const effectiveCleanupDistance = maxCleanupDistance + cleanupBuffer;
         
         // Clean up terrain (still using chunk-based approach for terrain)

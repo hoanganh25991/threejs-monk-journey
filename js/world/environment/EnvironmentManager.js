@@ -30,31 +30,31 @@ export class EnvironmentManager {
         
         // Last player position for distance tracking
         this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
-        this.minDistanceForNewObject = 50; // Minimum distance to move before showing a new object
+        this.minDistanceForNewObject = 30; // Reduced from 50 to generate more objects
         this.lastObjectTime = 0;
-        this.objectCooldown = 2000; // 2 seconds cooldown between object spawns (reduced for more frequent generation)
+        this.objectCooldown = 1000; // Reduced from 2000ms to 1000ms for more frequent generation
         
         // Natural grouping settings
         this.groupingProbabilities = {
-            'tree': 0.8,   // 80% chance that trees will be in groups
+            'tree': 0.9,   // Increased from 80% to 90% chance that trees will be in groups
             'rock': 0.6,   // 60% chance that rocks will be in groups
             'bush': 0.7,   // 70% chance that bushes will be in groups
-            'flower': 0.9  // 90% chance that flowers will be in groups
+            'flower': 0.9   // 90% chance that flowers will be in groups
         };
         
         this.groupSizes = {
-            'tree': { min: 3, max: 12 },    // Trees come in groups of 3-12
+            'tree': { min: 10, max: 30 },   // Increased from 6-24 to 10-30 for more visible tree groups
             'rock': { min: 2, max: 6 },     // Rocks come in groups of 2-6
-            'bush': { min: 2, max: 8 },     // Bushes come in groups of 2-8
+            'bush': { min: 3, max: 10 },    // Increased from 2-8 to 3-10
             'flower': { min: 5, max: 15 }   // Flowers come in groups of 5-15
         };
         
         // Group spread determines how tightly packed the groups are
         this.groupSpread = {
-            'tree': 8,     // Trees spread up to 8 units from center
-            'rock': 5,     // Rocks spread up to 5 units from center
-            'bush': 6,     // Bushes spread up to 6 units from center
-            'flower': 4    // Flowers spread up to 4 units from center
+            'tree': 12,     // Increased from 8 to 12 to spread trees more
+            'rock': 5,      // Rocks spread up to 5 units from center
+            'bush': 6,      // Bushes spread up to 6 units from center
+            'flower': 4     // Flowers spread up to 4 units from center
         };
         
         // Create some initial environment objects
@@ -65,10 +65,10 @@ export class EnvironmentManager {
      * Create initial environment objects around the starting area
      */
     createInitialEnvironment() {
-        // Create a small forest near the starting position
-        for (let i = 0; i < 10; i++) {
+        // Create a larger forest near the starting position (3x more trees)
+        for (let i = 0; i < 30; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const distance = 10 + Math.random() * 20;
+            const distance = 10 + Math.random() * 30;
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
             
@@ -84,9 +84,9 @@ export class EnvironmentManager {
         }
         
         // Add some rocks
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 8; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const distance = 15 + Math.random() * 15;
+            const distance = 15 + Math.random() * 20;
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
             
@@ -131,10 +131,8 @@ export class EnvironmentManager {
             this.lastObjectTime = currentTime;
             
             // 40% chance to generate an object when conditions are met
-            if (Math.random() < 0.4) {
-                this.generateRandomObject(playerPosition);
-                return true;
-            }
+            this.generateRandomObject(playerPosition);
+            return true;
         }
         
         return false;
@@ -145,8 +143,19 @@ export class EnvironmentManager {
      * @param {THREE.Vector3} playerPosition - Current player position
      */
     generateRandomObject(playerPosition) {
-        // Choose a random object type
-        const randomType = this.environmentObjectTypes[Math.floor(Math.random() * this.environmentObjectTypes.length)];
+        // Choose a random object type with higher probability for trees
+        // 60% chance for trees, 40% chance for other object types
+        const randomValue = Math.random();
+        let randomType;
+        
+        if (randomValue < 0.6) {
+            // 60% chance to generate a tree
+            randomType = 'tree';
+        } else {
+            // 40% chance to generate other object types
+            const otherTypes = this.environmentObjectTypes.filter(type => type !== 'tree');
+            randomType = otherTypes[Math.floor(Math.random() * otherTypes.length)];
+        }
         
         // Generate a position that's visible but not too close to the player
         // Random angle and distance between 30-100 units from player
@@ -267,8 +276,8 @@ export class EnvironmentManager {
         }
         
         // Limit the number of environment objects to prevent memory issues
-        // Increased limit to account for groups
-        const maxObjects = 150;
+        // Increased limit to account for groups and higher generation rate
+        const maxObjects = 500; // Increased from 150 to 500 to accommodate more trees
         if (this.environmentObjects.length > maxObjects) {
             // Remove oldest objects
             const objectsToRemove = this.environmentObjects.length - maxObjects;
@@ -295,38 +304,6 @@ export class EnvironmentManager {
                 }
             }
         }
-    }
-    
-    /**
-     * Compatibility method for the old chunk-based system
-     * This is needed because TerrainManager still calls this method
-     * @param {string} chunkKey - The chunk key to remove
-     * @param {boolean} disposeResources - Whether to dispose resources
-     */
-    removeChunkObjects(chunkKey, disposeResources = false) {
-        // In our simplified system, we don't need to do anything here
-        // This method is kept for compatibility with TerrainManager
-        console.debug(`removeChunkObjects called for chunk ${chunkKey} (no action needed in simplified system)`);
-    }
-    
-    /**
-     * Compatibility method for the old chunk-based system
-     * @param {number} chunkX - X chunk coordinate
-     * @param {number} chunkZ - Z chunk coordinate
-     */
-    generateEnvironmentObjects(chunkX, chunkZ) {
-        // In our simplified system, we don't need to do anything here
-        // This method is kept for compatibility
-        console.debug(`generateEnvironmentObjects called for chunk ${chunkX},${chunkZ} (no action needed in simplified system)`);
-    }
-    
-    /**
-     * Compatibility method for the old chunk-based system
-     */
-    updateEnvironmentCollections() {
-        // In our simplified system, we don't need to do anything here
-        // This method is kept for compatibility
-        return;
     }
     
     /**

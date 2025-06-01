@@ -242,8 +242,16 @@ export class TerrainManager {
                 const chunkKey = `${x},${z}`;
                 newVisibleTerrainChunks[chunkKey] = true;
                 
-                // If this terrain chunk doesn't exist yet, create it immediately
-                // First check if it's in the buffer
+                // Skip if this chunk is already active
+                if (this.terrainChunks[chunkKey]) {
+                    // Make sure it's in the scene
+                    if (!this.terrainChunks[chunkKey].parent) {
+                        this.scene.add(this.terrainChunks[chunkKey]);
+                    }
+                    continue;
+                }
+                
+                // If this terrain chunk doesn't exist yet, check if it's in the buffer
                 if (this.terrainBuffer[chunkKey]) {
                     // Check if it's a placeholder and convert if needed
                     if (this.terrainBuffer[chunkKey].isPlaceholder) {
@@ -253,16 +261,27 @@ export class TerrainManager {
                     // Move from buffer to active chunks
                     this.terrainChunks[chunkKey] = this.terrainBuffer[chunkKey];
                     
-                    // Add to scene
-                    this.scene.add(this.terrainChunks[chunkKey]);
+                    // Add to scene if not already added
+                    if (!this.terrainChunks[chunkKey].parent) {
+                        this.scene.add(this.terrainChunks[chunkKey]);
+                    }
                     
                     // Remove from buffer
                     delete this.terrainBuffer[chunkKey];
                     console.debug(`Chunk ${chunkKey} moved from buffer to active`);
                 } 
-                // If not in buffer, create it immediately
-                else if (!this.terrainChunks[chunkKey]) {
-                    this.createTerrainChunk(x, z);
+                // If not in buffer or active chunks, create it
+                else {
+                    // Check if it's in the generation queue first
+                    const isInQueue = this.terrainGenerationQueue.some(item => 
+                        item.chunkX === x && item.chunkZ === z
+                    );
+                    
+                    if (!isInQueue) {
+                        this.createTerrainChunk(x, z);
+                    } else {
+                        console.debug(`Chunk ${chunkKey} already in generation queue, skipping creation`);
+                    }
                 }
             }
         }
@@ -390,8 +409,26 @@ export class TerrainManager {
     createTerrainChunk(chunkX, chunkZ) {
         const chunkKey = `${chunkX},${chunkZ}`;
         
-        // Skip if this chunk already exists
+        // Skip if this chunk already exists in active chunks
         if (this.terrainChunks[chunkKey]) {
+            console.debug(`Using existing terrain chunk ${chunkKey}`);
+            return this.terrainChunks[chunkKey];
+        }
+        
+        // Skip if this chunk already exists in buffer
+        if (this.terrainBuffer[chunkKey]) {
+            console.debug(`Moving terrain chunk ${chunkKey} from buffer to active`);
+            // Move from buffer to active chunks
+            this.terrainChunks[chunkKey] = this.terrainBuffer[chunkKey];
+            
+            // Add to scene if not already added
+            if (!this.terrainChunks[chunkKey].parent) {
+                this.scene.add(this.terrainChunks[chunkKey]);
+            }
+            
+            // Remove from buffer
+            delete this.terrainBuffer[chunkKey];
+            
             return this.terrainChunks[chunkKey];
         }
         
@@ -404,6 +441,7 @@ export class TerrainManager {
             return null; // Skip creating this chunk as it wasn't in the saved state
         }
         
+        console.debug(`Creating new terrain chunk ${chunkKey}`);
         // If not loaded from storage, create a new chunk
         return this.createNewTerrainChunk(chunkX, chunkZ);
     }
@@ -628,7 +666,23 @@ export class TerrainManager {
         const chunkKey = `${chunkX},${chunkZ}`;
         
         // Skip if this chunk already exists in any collection
-        if (this.terrainChunks[chunkKey] || this.terrainBuffer[chunkKey]) {
+        if (this.terrainChunks[chunkKey]) {
+            console.debug(`Chunk ${chunkKey} already exists in active chunks, skipping buffer creation`);
+            return;
+        }
+        
+        if (this.terrainBuffer[chunkKey]) {
+            console.debug(`Chunk ${chunkKey} already exists in buffer, skipping buffer creation`);
+            return;
+        }
+        
+        // Check if this chunk is in the generation queue
+        const isInQueue = this.terrainGenerationQueue.some(item => 
+            item.chunkX === chunkX && item.chunkZ === chunkZ
+        );
+        
+        if (isInQueue) {
+            console.debug(`Chunk ${chunkKey} already in generation queue, skipping buffer creation`);
             return;
         }
         
@@ -638,6 +692,7 @@ export class TerrainManager {
                                  Object.keys(this.savedTerrainChunks).length === 0;
         
         if (!shouldCreateChunk) {
+            console.debug(`Chunk ${chunkKey} not in saved state, skipping buffer creation`);
             return; // Skip creating this chunk as it wasn't in the saved state
         }
         
@@ -753,8 +808,16 @@ export class TerrainManager {
             return;
         }
         
-        // Clear existing queue to avoid duplicates
-        this.terrainGenerationQueue = [];
+        // Create a new queue to avoid duplicates
+        const newQueue = [];
+        
+        // Keep track of chunks already in the queue using a Set for O(1) lookups
+        const existingChunks = new Set();
+        
+        // Add existing queue items to the set to avoid duplicates
+        this.terrainGenerationQueue.forEach(item => {
+            existingChunks.add(`${item.chunkX},${item.chunkZ}`);
+        });
         
         // Track how many chunks we've added to the queue
         let chunksAdded = 0;
@@ -769,8 +832,11 @@ export class TerrainManager {
                 }
                 const chunkKey = `${x},${z}`;
                 
-                // Skip if already in visible chunks or already in buffer
-                if (this.visibleTerrainChunks[chunkKey] || this.terrainBuffer[chunkKey] || this.terrainChunks[chunkKey]) {
+                // Skip if already in visible chunks, buffer, active chunks, or already in queue
+                if (this.visibleTerrainChunks[chunkKey] || 
+                    this.terrainBuffer[chunkKey] || 
+                    this.terrainChunks[chunkKey] ||
+                    existingChunks.has(chunkKey)) {
                     continue;
                 }
                 
@@ -786,13 +852,16 @@ export class TerrainManager {
                     priority = dotProduct;
                 }
                 
-                // Add to queue with priority
-                this.terrainGenerationQueue.push({
-                    x: x,
-                    z: z,
+                // Add to new queue with priority
+                newQueue.push({
+                    chunkX: x,
+                    chunkZ: z,
                     priority: priority,
                     chunkKey: chunkKey
                 });
+                
+                // Add to set to prevent duplicates
+                existingChunks.add(chunkKey);
                 
                 // Increment the counter
                 chunksAdded++;
@@ -802,6 +871,14 @@ export class TerrainManager {
             if (chunksAdded >= MAX_CHUNKS_PER_UPDATE) {
                 break;
             }
+        }
+        
+        // Merge the new queue with the existing queue
+        this.terrainGenerationQueue = [...this.terrainGenerationQueue, ...newQueue];
+        
+        // Limit the queue size
+        if (this.terrainGenerationQueue.length > MAX_QUEUE_SIZE) {
+            this.terrainGenerationQueue = this.terrainGenerationQueue.slice(0, MAX_QUEUE_SIZE);
         }
         
         // Sort queue by priority (higher priority first)
@@ -818,6 +895,12 @@ export class TerrainManager {
      * Optimized to process multiple chunks per frame when possible
      */
     processTerrainGenerationQueue() {
+        // If already processing, don't start another processing cycle
+        if (this.isProcessingTerrainQueue) {
+            console.debug("Already processing terrain queue, skipping duplicate processing");
+            return;
+        }
+        
         // Track when we process the queue to prevent too frequent processing
         this.lastQueueProcessTime = Date.now();
         
@@ -848,8 +931,15 @@ export class TerrainManager {
             // Get the highest priority chunk
             const nextChunk = this.terrainGenerationQueue.shift();
             
+            // Skip if this chunk already exists in active chunks or buffer
+            const chunkKey = `${nextChunk.chunkX},${nextChunk.chunkZ}`;
+            if (this.terrainChunks[chunkKey] || this.terrainBuffer[chunkKey]) {
+                console.debug(`Skipping duplicate chunk ${chunkKey} in queue`);
+                continue;
+            }
+            
             // Create the chunk in the buffer (not visible yet)
-            this.createBufferedTerrainChunk(nextChunk.x, nextChunk.z);
+            this.createBufferedTerrainChunk(nextChunk.chunkX, nextChunk.chunkZ);
         }
         
         // If there are still chunks to process, continue in the next frame
