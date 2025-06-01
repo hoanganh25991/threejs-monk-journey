@@ -96,6 +96,34 @@ export class Game {
     }
     
     /**
+     * Initialize storage service with timeout to prevent hanging on mobile devices
+     * @returns {Promise<void>}
+     */
+    async initStorageServiceWithTimeout() {
+        const STORAGE_INIT_TIMEOUT = 10000; // 10 seconds timeout
+        
+        return new Promise(async (resolve, reject) => {
+            // Set up timeout
+            const timeoutId = setTimeout(() => {
+                console.warn('Storage service initialization timed out after 10 seconds');
+                reject(new Error('Storage service initialization timeout'));
+            }, STORAGE_INIT_TIMEOUT);
+            
+            try {
+                // Try to initialize storage service
+                await storageService.init();
+                clearTimeout(timeoutId);
+                console.debug('Storage service initialized successfully');
+                resolve();
+            } catch (error) {
+                clearTimeout(timeoutId);
+                console.error('Storage service initialization failed:', error);
+                reject(error);
+            }
+        });
+    }
+    
+    /**
      * Add an event listener
      * @param {string} event - The event name
      * @param {Function} callback - The callback function
@@ -149,8 +177,15 @@ export class Game {
             // Update loading progress
             this.updateLoadingProgress(5, 'Initializing storage...', 'Setting up cloud sync');
             
-            // Initialize storage service first to enable auto-login
-            await storageService.init();
+            // Initialize storage service with timeout to prevent hanging on mobile
+            try {
+                await this.initStorageServiceWithTimeout();
+                this.updateLoadingProgress(8, 'Storage initialized', 'Cloud sync ready');
+            } catch (error) {
+                console.warn('Storage service initialization failed or timed out, continuing with local storage only:', error);
+                this.updateLoadingProgress(8, 'Using local storage', 'Cloud sync unavailable - you can enable it later in settings');
+                // Continue with game initialization even if cloud sync fails
+            }
             
             // Update loading progress
             this.updateLoadingProgress(10, 'Loading settings...', 'Retrieving game configuration');

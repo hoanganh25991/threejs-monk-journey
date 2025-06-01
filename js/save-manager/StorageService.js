@@ -374,8 +374,8 @@ export class StorageService {
                 // Set a flag to indicate we're in the sign-in process
                 this.isSigningIn = true;
                 
-                // Attempt to sign in silently (true = silent mode)
-                const success = await this.signInToGoogle(true);
+                // Attempt to sign in silently with timeout (true = silent mode)
+                const success = await this.signInToGoogleWithTimeout(true, 5000); // 5 second timeout for silent login
                 
                 if (success) {
                     console.debug('Silent auto-login successful during initialization');
@@ -392,12 +392,21 @@ export class StorageService {
             } catch (error) {
                 console.error('Error during auto-login initialization:', error);
                 this.isSigningIn = false;
+                // Disable auto-login on timeout/error to prevent future hangs
+                googleAuthManager.setAutoLoginState(false);
             }
         }
         
         // Then, check if login is required based on previous login history
         // This will only prompt the user if silent login failed and login is required
-        const loginResult = await this.enforceLoginIfRequired();
+        // Skip this during initialization to prevent hanging - user can login later via settings
+        try {
+            const loginResult = await this.enforceLoginIfRequiredWithTimeout(3000); // 3 second timeout
+        } catch (error) {
+            console.warn('Login enforcement timed out or failed during initialization, skipping:', error);
+            // Clear the last login record to prevent future prompts during initialization
+            localStorage.removeItem(STORAGE_KEYS.GOOGLE_LAST_LOGIN);
+        }
         
         this.initialized = true;
         
@@ -927,6 +936,53 @@ export class StorageService {
             
             return false;
         }
+    }
+    
+    /**
+     * Sign in to Google with timeout to prevent hanging
+     * @param {boolean} silentMode - Whether to attempt silent sign-in
+     * @param {number} timeoutMs - Timeout in milliseconds
+     * @returns {Promise<boolean>} Whether sign-in was successful
+     */
+    async signInToGoogleWithTimeout(silentMode = false, timeoutMs = 8000) {
+        return new Promise(async (resolve, reject) => {
+            const timeoutId = setTimeout(() => {
+                console.warn(`Google sign-in timed out after ${timeoutMs}ms`);
+                reject(new Error(`Google sign-in timeout after ${timeoutMs}ms`));
+            }, timeoutMs);
+            
+            try {
+                const success = await this.signInToGoogle(silentMode);
+                clearTimeout(timeoutId);
+                resolve(success);
+            } catch (error) {
+                clearTimeout(timeoutId);
+                reject(error);
+            }
+        });
+    }
+    
+    /**
+     * Enforce login if required with timeout
+     * @param {number} timeoutMs - Timeout in milliseconds
+     * @returns {Promise<boolean>} Whether login was successful or not required
+     */
+    async enforceLoginIfRequiredWithTimeout(timeoutMs = 5000) {
+        return new Promise(async (resolve, reject) => {
+            const timeoutId = setTimeout(() => {
+                console.warn(`Login enforcement timed out after ${timeoutMs}ms`);
+                reject(new Error(`Login enforcement timeout after ${timeoutMs}ms`));
+            }, timeoutMs);
+            
+            try {
+                const result = await this.enforceLoginIfRequired();
+                clearTimeout(timeoutId);
+                resolve(result);
+            } catch (error) {
+                clearTimeout(timeoutId);
+                reject(error);
+            }
+        });
     }
     
     /**

@@ -74,6 +74,12 @@ export class GoogleDriveAdapter extends IStorageAdapter {
      */
     async init() {
         try {
+            // Check if Google API is available
+            if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
+                console.warn('Google API not available, Google Drive sync will be disabled');
+                return;
+            }
+            
             // Initialize the tokenClient
             this.tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: this.clientId,
@@ -128,14 +134,32 @@ export class GoogleDriveAdapter extends IStorageAdapter {
                 return;
             }
             
+            // Check if tokenClient is available
+            if (!this.tokenClient) {
+                console.warn('Google API not initialized, cannot sign in');
+                resolve(false);
+                return;
+            }
+            
+            // Set timeout for sign-in process to prevent hanging
+            const timeoutMs = silentMode ? 5000 : 15000; // 5s for silent, 15s for interactive
+            const timeoutId = setTimeout(() => {
+                console.warn(`Google sign-in timed out after ${timeoutMs}ms (silent: ${silentMode})`);
+                window.removeEventListener('google-signin-success', successListener);
+                window.removeEventListener('google-signin-error', errorListener);
+                resolve(false);
+            }, timeoutMs);
+            
             // Set up event listeners for sign-in result
             const successListener = () => {
+                clearTimeout(timeoutId);
                 window.removeEventListener('google-signin-success', successListener);
                 window.removeEventListener('google-signin-error', errorListener);
                 resolve(true);
             };
             
             const errorListener = () => {
+                clearTimeout(timeoutId);
                 window.removeEventListener('google-signin-success', successListener);
                 window.removeEventListener('google-signin-error', errorListener);
                 resolve(false);
@@ -144,13 +168,21 @@ export class GoogleDriveAdapter extends IStorageAdapter {
             window.addEventListener('google-signin-success', successListener);
             window.addEventListener('google-signin-error', errorListener);
             
-            // Request access token with appropriate prompt
-            if (silentMode) {
-                // Use 'none' prompt for silent sign-in (no UI)
-                this.tokenClient.requestAccessToken({ prompt: 'none' });
-            } else {
-                // Default behavior with UI prompt
-                this.tokenClient.requestAccessToken();
+            try {
+                // Request access token with appropriate prompt
+                if (silentMode) {
+                    // Use 'none' prompt for silent sign-in (no UI)
+                    this.tokenClient.requestAccessToken({ prompt: 'none' });
+                } else {
+                    // Default behavior with UI prompt
+                    this.tokenClient.requestAccessToken();
+                }
+            } catch (error) {
+                console.error('Error requesting access token:', error);
+                clearTimeout(timeoutId);
+                window.removeEventListener('google-signin-success', successListener);
+                window.removeEventListener('google-signin-error', errorListener);
+                resolve(false);
             }
         });
     }
