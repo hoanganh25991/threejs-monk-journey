@@ -677,7 +677,7 @@ export class InventoryUI extends UIComponent {
         let effectsApplied = false;
         let effectsDescription = [];
         
-        // Check for baseStats properties first (from item-templates.js)
+        // Check for baseStats properties (from item-templates.js)
         if (item.baseStats) {
             // Handle health restoration
             if (item.baseStats.healthRestore) {
@@ -712,73 +712,33 @@ export class InventoryUI extends UIComponent {
                     this.game.hudManager.showNotification(`Cannot use stamina effect: Stamina system not available`);
                 }
             }
-        }
-        
-        // Check for useEffect property (from item-templates.js)
-        if (item.useEffect) {
-            // Handle direct resource restoration
-            if (item.useEffect.type === 'heal') {
-                const healAmount = item.useEffect.value || 0;
-                const newHealth = this.game.player.getHealth() + healAmount;
-                const maxHealth = this.game.player.getMaxHealth();
-                this.game.player.stats.setHealth(Math.min(newHealth, maxHealth));
-                effectsApplied = true;
-                effectsDescription.push(`+${healAmount} Health`);
-            }
             
-            // Handle resource restoration (mana, spirit, etc.)
-            if (item.useEffect.type === 'resource') {
-                const resourceAmount = item.useEffect.value || 0;
-                const resourceType = item.useEffect.resource || 'mana';
+            // Handle buff effects based on effectType
+            if (item.baseStats.effectType === 'buff' || item.baseStats.effectType === 'over_time') {
+                const duration = item.baseStats.duration || 30; // Default 30 seconds
                 
-                if (resourceType.toLowerCase() === 'mana' || resourceType.toLowerCase() === 'spirit') {
-                    const newMana = this.game.player.getMana() + resourceAmount;
-                    const maxMana = this.game.player.getMaxMana();
-                    this.game.player.stats.setMana(Math.min(newMana, maxMana));
-                    effectsApplied = true;
-                    effectsDescription.push(`+${resourceAmount} ${resourceType}`);
-                } else if (resourceType.toLowerCase() === 'stamina') {
-                    if (this.game.player.getStamina && this.game.player.getMaxStamina && this.game.player.stats.setStamina) {
-                        const newStamina = this.game.player.getStamina() + resourceAmount;
-                        const maxStamina = this.game.player.getMaxStamina();
-                        this.game.player.stats.setStamina(Math.min(newStamina, maxStamina));
-                        effectsApplied = true;
-                        effectsDescription.push(`+${resourceAmount} Stamina`);
-                    } else {
-                        this.game.hudManager.showNotification(`Cannot use stamina effect: Stamina system not available`);
+                // Apply buff stats if they exist
+                if (item.baseStats.buffStats) {
+                    const buffStats = item.baseStats.buffStats;
+                    
+                    // Process each buff stat
+                    for (const [stat, value] of Object.entries(buffStats)) {
+                        if (value) {
+                            this.game.player.addTemporaryStatBoost(stat, value, duration);
+                            effectsApplied = true;
+                            effectsDescription.push(`+${value} ${stat} for ${duration}s`);
+                        }
                     }
                 }
                 
-                // Handle secondary effects (like buffs)
-                if (item.useEffect.secondaryEffect) {
-                    const secondaryEffect = item.useEffect.secondaryEffect;
-                    if (secondaryEffect.type === 'buff') {
-                        const duration = secondaryEffect.duration || 30;
-                        this.game.player.addTemporaryStatBoost(secondaryEffect.stat, secondaryEffect.value, duration);
+                // Handle health bonus (temporary max health increase)
+                if (item.baseStats.healthBonus || item.baseStats.maxHealth) {
+                    const healthBonus = item.baseStats.healthBonus || item.baseStats.maxHealth || 0;
+                    if (healthBonus > 0) {
+                        this.game.player.addTemporaryStatBoost('maxHealth', healthBonus, duration);
                         effectsApplied = true;
-                        effectsDescription.push(`+${secondaryEffect.value} ${secondaryEffect.stat} for ${duration}s`);
+                        effectsDescription.push(`+${healthBonus} Max Health for ${duration}s`);
                     }
-                }
-            }
-            
-            // Handle buff effects
-            if (item.useEffect.type === 'buff') {
-                const duration = item.useEffect.duration || 30;
-                
-                // Handle single stat buff
-                if (item.useEffect.stat) {
-                    this.game.player.addTemporaryStatBoost(item.useEffect.stat, item.useEffect.value, duration);
-                    effectsApplied = true;
-                    effectsDescription.push(`+${item.useEffect.value} ${item.useEffect.stat} for ${duration}s`);
-                }
-                
-                // Handle multiple stat buffs
-                if (item.useEffect.stats && Array.isArray(item.useEffect.stats)) {
-                    item.useEffect.stats.forEach(statBuff => {
-                        this.game.player.addTemporaryStatBoost(statBuff.stat, statBuff.value, duration);
-                        effectsApplied = true;
-                        effectsDescription.push(`+${statBuff.value} ${statBuff.stat} for ${duration}s`);
-                    });
                 }
             }
         }

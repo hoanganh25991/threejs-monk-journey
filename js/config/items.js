@@ -263,11 +263,8 @@ export const ITEM_TEMPLATES = [
         description: "Restores a small amount of health.",
         icon: "🧪",
         baseStats: {
-            healthRestore: 50
-        },
-        useEffect: {
-            type: 'heal',
-            value: 50
+            healthRestore: 50,
+            effectType: "instant"
         },
         consumable: true
     },
@@ -279,12 +276,8 @@ export const ITEM_TEMPLATES = [
         description: "Restores a small amount of spirit.",
         icon: "🧪",
         baseStats: {
-            manaRestore: 30
-        },
-        useEffect: {
-            type: 'resource',
-            resource: 'mana',
-            value: 30
+            manaRestore: 30,
+            effectType: "instant"
         },
         consumable: true
     },
@@ -296,17 +289,11 @@ export const ITEM_TEMPLATES = [
         description: "Restores a significant amount of mana and temporarily increases mana regeneration.",
         icon: "🧪",
         baseStats: {
-            manaRestore: 100
-        },
-        useEffect: {
-            type: 'resource',
-            resource: 'mana',
-            value: 100,
-            secondaryEffect: {
-                type: 'buff',
-                stat: 'manaRegen',
-                value: 5,
-                duration: 30
+            manaRestore: 100,
+            effectType: "buff",
+            duration: 30,
+            buffStats: {
+                manaRegen: 5
             }
         },
         consumable: true
@@ -321,14 +308,12 @@ export const ITEM_TEMPLATES = [
         baseStats: {
             healthRestore: 20,
             manaRestore: 20,
-            duration: 15
-        },
-        useEffect: {
-            type: 'buff',
-            stats: [
-                { stat: 'healthRegen', value: 5, duration: 15 },
-                { stat: 'manaRegen', value: 3, duration: 15 }
-            ]
+            effectType: "over_time",
+            duration: 15,
+            buffStats: {
+                healthRegen: 5,
+                manaRegen: 3
+            }
         },
         consumable: true
     },
@@ -340,14 +325,12 @@ export const ITEM_TEMPLATES = [
         description: "Temporarily increases attack power and critical hit chance.",
         icon: "⚡",
         baseStats: {
-            duration: 45
-        },
-        useEffect: {
-            type: 'buff',
-            stats: [
-                { stat: 'attackPower', value: 15, duration: 45 },
-                { stat: 'critChance', value: 10, duration: 45 }
-            ]
+            effectType: "buff",
+            duration: 45,
+            buffStats: {
+                attackPower: 15,
+                critChance: 10
+            }
         },
         consumable: true
     },
@@ -361,13 +344,11 @@ export const ITEM_TEMPLATES = [
         description: "Temporarily increases attack power.",
         icon: "📜",
         baseStats: {
-            duration: 60
-        },
-        useEffect: {
-            type: 'buff',
-            stat: 'attackPower',
-            value: 20,
-            duration: 60
+            effectType: "buff",
+            duration: 60,
+            buffStats: {
+                attackPower: 20
+            }
         },
         consumable: true
     },
@@ -379,14 +360,12 @@ export const ITEM_TEMPLATES = [
         description: "Temporarily increases defense and all resistances.",
         icon: "📜",
         baseStats: {
-            duration: 60
-        },
-        useEffect: {
-            type: 'buff',
-            stats: [
-                { stat: 'defense', value: 15, duration: 60 },
-                { stat: 'allResistance', value: 10, duration: 60 }
-            ]
+            effectType: "buff",
+            duration: 60,
+            buffStats: {
+                defense: 15,
+                allResistance: 10
+            }
         },
         consumable: true
     },
@@ -401,17 +380,10 @@ export const ITEM_TEMPLATES = [
         icon: "🍙",
         baseStats: {
             healthRestore: 30,
-            healthBonus: 50,
-            duration: 120
-        },
-        useEffect: {
-            type: 'heal',
-            value: 30,
-            secondaryEffect: {
-                type: 'buff',
-                stat: 'maxHealth',
-                value: 50,
-                duration: 120
+            effectType: "buff",
+            duration: 120,
+            buffStats: {
+                maxHealth: 50
             }
         },
         consumable: true
@@ -425,17 +397,10 @@ export const ITEM_TEMPLATES = [
         icon: "🍵",
         baseStats: {
             manaRestore: 25,
-            duration: 180
-        },
-        useEffect: {
-            type: 'resource',
-            resource: 'mana',
-            value: 25,
-            secondaryEffect: {
-                type: 'buff',
-                stat: 'wisdom',
-                value: 10,
-                duration: 180
+            effectType: "buff",
+            duration: 180,
+            buffStats: {
+                wisdom: 10
             }
         },
         consumable: true

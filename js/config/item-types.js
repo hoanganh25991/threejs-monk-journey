@@ -18,26 +18,23 @@
  * @property {number} [elementalDamage] - Elemental damage modifier
  * @property {number} [allResistance] - All resistance modifier
  * @property {number} [healthRegen] - Health regeneration modifier
+ * @property {number} [manaRegen] - Mana regeneration modifier
  * @property {number} [healthRestore] - Amount of health restored when consumed
  * @property {number} [manaRestore] - Amount of mana/spirit restored when consumed
  * @property {number} [staminaRestore] - Amount of stamina restored when consumed
  * @property {number} [healthBonus] - Temporary bonus to maximum health
+ * @property {number} [maxHealth] - Temporary bonus to maximum health (alternative name)
  * @property {number} [duration] - Duration of temporary effects in seconds
- */
-
-/**
- * @typedef {Object} ItemUseEffect
- * @property {string} type - Effect type: 'heal', 'resource', 'buff'
- * @property {number} [value] - Effect value amount
- * @property {string} [resource] - Resource type for 'resource' effects: 'mana', 'spirit', 'stamina'
- * @property {string} [stat] - Stat affected by 'buff' effects
- * @property {number} [duration] - Duration of the effect in seconds
- * @property {Array<{stat: string, value: number}>} [stats] - Multiple stats for 'buff' effects
- * @property {Object} [secondaryEffect] - Secondary effect that triggers with the primary effect
- * @property {string} secondaryEffect.type - Secondary effect type
- * @property {string} [secondaryEffect.stat] - Stat affected by secondary effect
- * @property {number} [secondaryEffect.value] - Value of the secondary effect
- * @property {number} [secondaryEffect.duration] - Duration of the secondary effect in seconds
+ * @property {string} [effectType] - Type of effect for consumables: 'instant', 'over_time', 'buff'
+ * @property {Object} [buffStats] - Stats affected by buff effects
+ * @property {number} [buffStats.attackPower] - Attack power buff
+ * @property {number} [buffStats.defense] - Defense buff
+ * @property {number} [buffStats.critChance] - Critical chance buff
+ * @property {number} [buffStats.allResistance] - All resistance buff
+ * @property {number} [buffStats.wisdom] - Wisdom buff
+ * @property {number} [buffStats.healthRegen] - Health regeneration buff
+ * @property {number} [buffStats.manaRegen] - Mana regeneration buff
+ * @property {number} [buffStats.movementSpeed] - Movement speed buff
  */
 
 /**
@@ -59,7 +56,6 @@
  * @property {string} description - Item description text
  * @property {string} icon - Icon representation (emoji or path to image)
  * @property {ItemBaseStats} baseStats - Base statistics for the item
- * @property {ItemUseEffect} [useEffect] - Effect when the item is used (for consumables)
  * @property {ItemEffects} [effects] - Legacy effects system (for backward compatibility)
  * @property {boolean} [consumable] - Flag indicating if the item is consumable
  */
