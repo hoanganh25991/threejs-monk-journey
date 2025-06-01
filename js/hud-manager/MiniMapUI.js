@@ -448,17 +448,38 @@ export class MiniMapUI extends UIComponent {
                     const currentPos = player.getPosition();
                     const currentRot = player.getRotation().y;
                     
+                    // Track camera rotation for orbit controls
+                    let cameraRotation = 0;
+                    if (this.game.controls && this.game.controls.enabled) {
+                        // Get camera's forward direction
+                        const cameraDirection = new THREE.Vector3(0, 0, -1);
+                        cameraDirection.applyQuaternion(this.game.camera.quaternion);
+                        
+                        // Project onto the XZ plane and normalize
+                        cameraDirection.y = 0;
+                        cameraDirection.normalize();
+                        
+                        // Calculate the angle in the XZ plane
+                        cameraRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
+                    }
+                    
                     if (!this._lastPlayerRot) {
                         this._lastPlayerRot = currentRot;
                     }
                     
+                    if (!this._lastCameraRot) {
+                        this._lastCameraRot = cameraRotation;
+                    }
+                    
                     const hasMoved = this._lastPlayerPos.distanceTo(currentPos) > 1;
                     const hasRotated = Math.abs(this._lastPlayerRot - currentRot) > 0.1;
+                    const hasCameraRotated = Math.abs(this._lastCameraRot - cameraRotation) > 0.05;
                     
-                    if (hasMoved || hasRotated) {
+                    if (hasMoved || hasRotated || hasCameraRotated) {
                         this.renderMiniMap();
                         this._lastPlayerPos.copy(currentPos);
                         this._lastPlayerRot = currentRot;
+                        this._lastCameraRot = cameraRotation;
                     }
                 }
             } else {
@@ -548,14 +569,33 @@ export class MiniMapUI extends UIComponent {
         this.ctx.stroke();
         
         // Draw player direction indicator
-        const playerRotation = player.getRotation().y;
+        // Get direction from camera or player rotation depending on which is active
+        let directionAngle;
+        
+        if (this.game.controls && this.game.controls.enabled) {
+            // When orbit controls are active, use camera's horizontal rotation
+            // Create a vector pointing in the camera's forward direction
+            const cameraDirection = new THREE.Vector3(0, 0, -1);
+            cameraDirection.applyQuaternion(this.game.camera.quaternion);
+            
+            // Project onto the XZ plane and normalize
+            cameraDirection.y = 0;
+            cameraDirection.normalize();
+            
+            // Calculate the angle in the XZ plane
+            directionAngle = Math.atan2(cameraDirection.x, cameraDirection.z);
+        } else {
+            // Use player's rotation when orbit controls are not active
+            directionAngle = player.getRotation().y;
+        }
+        
         this.ctx.strokeStyle = '#00ff00';
         this.ctx.lineWidth = 2;
         this.ctx.beginPath();
         this.ctx.moveTo(offsetCenterX, offsetCenterY);
         this.ctx.lineTo(
-            offsetCenterX + Math.sin(playerRotation) * 10,
-            offsetCenterY + Math.cos(playerRotation) * 10
+            offsetCenterX + Math.sin(directionAngle) * 10,
+            offsetCenterY + Math.cos(directionAngle) * 10
         );
         this.ctx.stroke();
         

@@ -300,7 +300,12 @@ export const NORMAL_SKILLS = [
         description: 'Giant palm moving, damaging all enemies on the path.',
         type: 'projectile',
         damage: 200, // Reduced from 100 for better balance
-        manaCost: 50, // Increased from 25 to match the power
+        get manaCost() {
+            if (!this.variant) {
+                return 50;
+            }
+            return 100;
+        }, // Increased from 25 to match the power
         cooldown: 0.2, // Moderate cooldown
         range: 40, // Long range
         radius: 3, // Explosion radius
@@ -357,8 +362,8 @@ export const NORMAL_SKILLS = [
             impact: SKILL_SOUNDS.healingPulse.id, // Soft healing pulse sound
             end: SKILL_SOUNDS.divineEcho.id // Echoing divine sound as effect fades
         },
-        speedBoostMultiplier: 10, // 10x speed boost (5x the normal 2x boost)
-        speedBoostDuration: 10, // 10 seconds of speed boost
+        speedBoostMultiplier: 0.6, // 10x speed boost (5x the normal 2x boost)
+        speedBoostDuration: 5, // 10 seconds of speed boost
         isCustomSkill: true,
     },
     // TODO: Add more skills here
