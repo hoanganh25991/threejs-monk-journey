@@ -601,23 +601,40 @@ export class StorageService {
         if (key === STORAGE_KEYS.SAVE_DATA) {
             console.debug(`Special conflict handling for save data: ${key}`);
             
-            // If timestamps are equal or not present, show detailed comparison for save data
-            const useCloudVersion = confirm(
-                `Save data conflict detected!\n\n` +
-                `Local save: ${JSON.stringify(localData).substring(0, 32)}...\n` +
-                `Cloud save: ${JSON.stringify(cloudData).substring(0, 32)}...\n` +
-                `Click OK to use the cloud version, or\n` + 
-                `Click Cancel to keep your local version.`
-            );
-            
-            if (useCloudVersion) {
-                this.localStorage.saveData(key, cloudData);
-                console.debug(`Resolved save data conflict by using cloud version`);
-            } else {
-                await this.googleDrive.saveData(key, localData);
-                console.debug(`Resolved save data conflict by using local version`);
-            }
-            return;
+            // Use the pre-defined conflict modal in the HTML
+            return new Promise((resolve) => {
+                const modal = document.getElementById('conflict-modal');
+                const localDataEl = document.getElementById('conflict-local-data');
+                const cloudDataEl = document.getElementById('conflict-cloud-data');
+                const useCloudBtn = document.getElementById('conflict-use-cloud-btn');
+                const useLocalBtn = document.getElementById('conflict-use-local-btn');
+                
+                // Set the data previews
+                localDataEl.textContent = JSON.stringify(localData).substring(0, 100) + '...';
+                cloudDataEl.textContent = JSON.stringify(cloudData).substring(0, 100) + '...';
+                
+                // Show the modal
+                modal.style.display = 'flex';
+                
+                // Add event listeners
+                const useCloudHandler = async () => {
+                    this.localStorage.saveData(key, cloudData);
+                    console.debug(`Resolved save data conflict by using cloud version`);
+                    modal.style.display = 'none';
+                    resolve();
+                };
+                
+                const useLocalHandler = async () => {
+                    await this.googleDrive.saveData(key, localData);
+                    console.debug(`Resolved save data conflict by using local version`);
+                    modal.style.display = 'none';
+                    resolve();
+                };
+                
+                // Use once: true to ensure the event listeners are removed after they're used
+                useCloudBtn.addEventListener('click', useCloudHandler, { once: true });
+                useLocalBtn.addEventListener('click', useLocalHandler, { once: true });
+            });
         } else {
             // Use the local version - sync to cloud
             await this.googleDrive.saveData(key, localData);
