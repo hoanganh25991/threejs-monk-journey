@@ -132,6 +132,32 @@ export const ITEM_TEMPLATES = [
             wisdom: 2
         },
     },
+    {
+        id: "meditationCrown",
+        name: "Meditation Crown",
+        type: "armor",
+        subType: "helmet",
+        description: "A special crown that enhances focus and spiritual awareness.",
+        icon: "👑",
+        baseStats: {
+            defense: 4,
+            wisdom: 5,
+            manaRegen: 2
+        },
+    },
+    {
+        id: "enlightenedHood",
+        name: "Enlightened Hood",
+        type: "armor",
+        subType: "helmet",
+        description: "A mystical hood worn by those who have achieved spiritual enlightenment.",
+        icon: "🧠",
+        baseStats: {
+            defense: 5,
+            wisdom: 8,
+            skillDamage: 5
+        },
+    },
     
     // Gloves
     {
@@ -144,6 +170,33 @@ export const ITEM_TEMPLATES = [
         baseStats: {
             defense: 2,
             attackSpeed: 3
+        },
+    },
+    {
+        id: "ironGloves",
+        name: "Iron Knuckle Gloves",
+        type: "armor",
+        subType: "gloves",
+        description: "Reinforced gloves with iron plates over the knuckles.",
+        icon: "🥊",
+        baseStats: {
+            defense: 4,
+            attackSpeed: 2,
+            damage: 5
+        },
+    },
+    {
+        id: "dragonClawGloves",
+        name: "Dragon Claw Gloves",
+        type: "armor",
+        subType: "gloves",
+        description: "Mystical gloves that transform the wearer's strikes to resemble dragon claws.",
+        icon: "🐲",
+        baseStats: {
+            defense: 5,
+            attackSpeed: 4,
+            damage: 8,
+            elementalDamage: 5
         },
     },
     
@@ -172,6 +225,150 @@ export const ITEM_TEMPLATES = [
         baseStats: {
             defense: 2,
             movementSpeed: 5
+        },
+    },
+    {
+        id: "swiftBoots",
+        name: "Swift Traveler Boots",
+        type: "armor",
+        subType: "boots",
+        description: "Lightweight boots designed for long journeys and quick movements.",
+        icon: "👢",
+        baseStats: {
+            defense: 3,
+            movementSpeed: 8
+        },
+    },
+    {
+        id: "cloudwalkers",
+        name: "Cloudwalkers",
+        type: "armor",
+        subType: "boots",
+        description: "Mystical boots that make the wearer feel as light as air.",
+        icon: "☁️",
+        baseStats: {
+            defense: 4,
+            movementSpeed: 10,
+            jumpHeight: 5
+        },
+    },
+    
+    // Arms/Bracers
+    {
+        id: "basicBracers",
+        name: "Training Bracers",
+        type: "armor",
+        subType: "arms",
+        description: "Simple cloth bracers to protect the forearms during training.",
+        icon: "🧶",
+        baseStats: {
+            defense: 3,
+            attackSpeed: 2
+        },
+    },
+    {
+        id: "ironBracers",
+        name: "Iron Bracers",
+        type: "armor",
+        subType: "arms",
+        description: "Sturdy iron bracers that provide good protection in combat.",
+        icon: "⚔️",
+        baseStats: {
+            defense: 5,
+            attackPower: 3
+        },
+    },
+    {
+        id: "windBracers",
+        name: "Wind Spirit Bracers",
+        type: "armor",
+        subType: "arms",
+        description: "Enchanted bracers that channel the power of wind spirits.",
+        icon: "🌪️",
+        baseStats: {
+            defense: 4,
+            attackSpeed: 5,
+            elementalDamage: 8
+        },
+    },
+    
+    // Shoulders
+    {
+        id: "basicShoulders",
+        name: "Monk's Shoulder Pads",
+        type: "armor",
+        subType: "shoulders",
+        description: "Simple padded cloth to protect the shoulders.",
+        icon: "🧥",
+        baseStats: {
+            defense: 4,
+            maxHealth: 10
+        },
+    },
+    {
+        id: "mountainShoulders",
+        name: "Mountain Guardian Spaulders",
+        type: "armor",
+        subType: "shoulders",
+        description: "Heavy spaulders that provide excellent protection.",
+        icon: "🏔️",
+        baseStats: {
+            defense: 7,
+            maxHealth: 15,
+            allResistance: 3
+        },
+    },
+    {
+        id: "spiritShoulders",
+        name: "Spirit Caller Mantle",
+        type: "armor",
+        subType: "shoulders",
+        description: "A mystical mantle that enhances spiritual connection.",
+        icon: "👻",
+        baseStats: {
+            defense: 5,
+            manaBonus: 20,
+            skillDamage: 8
+        },
+    },
+    
+    // Legs/Pants
+    {
+        id: "basicLegs",
+        name: "Monk's Leggings",
+        type: "armor",
+        subType: "legs",
+        description: "Simple cloth leggings that allow for fluid movement.",
+        icon: "👖",
+        baseStats: {
+            defense: 4,
+            movementSpeed: 3
+        },
+    },
+    {
+        id: "silkLegs",
+        name: "Silk Leggings",
+        type: "armor",
+        subType: "legs",
+        description: "Finely woven silk leggings that enhance mobility and comfort.",
+        icon: "🧵",
+        baseStats: {
+            defense: 5,
+            movementSpeed: 5,
+            healthRegen: 2
+        },
+    },
+    {
+        id: "dragonLegs",
+        name: "Dragon Scale Leggings",
+        type: "armor",
+        subType: "legs",
+        description: "Leggings crafted from the scales of a dragon, offering superior protection.",
+        icon: "🐉",
+        baseStats: {
+            defense: 8,
+            movementSpeed: 2,
+            allResistance: 5
         },
     },
     
