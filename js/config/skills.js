@@ -3,7 +3,7 @@ import { SKILL_ICONS } from './skill-icons.js';
 import { SKILL_SOUNDS } from './sounds.js';
 // Type definitions are available in skill-types.d.ts
 // @ts-check
-/** @typedef {import('./config.ts').SkillConfig} SkillConfig */
+/** @typedef {import('./config.type.js').SkillConfig} SkillConfig */
 
 // Primary attacks - basic attacks that don't consume mana
 /** @type {SkillConfig[]} */
@@ -224,7 +224,7 @@ export const NORMAL_SKILLS = [
         name: 'Flying Dragon',
         description: 'A powerful attack that launches the Monk into the air, striking enemies with a flurry of kicks.',
         type: 'dash',
-        damage: 60, // Significantly reduced from 120 for better balance
+        damage: 100, // Significantly reduced from 120 for better balance
         manaCost: 60, // Reduced from 100 to match the adjusted damage
         cooldown: 0.2,
         range: 30, // Increased range for fast forward movement
@@ -300,7 +300,7 @@ export const NORMAL_SKILLS = [
         description: 'Giant palm moving, damaging all enemies on the path.',
         type: 'projectile',
         damage: 200, // Reduced from 100 for better balance
-        manaCost: 150, // Increased from 25 to match the power
+        manaCost: 50, // Increased from 25 to match the power
         cooldown: 0.2, // Moderate cooldown
         range: 40, // Long range
         radius: 3, // Explosion radius
