@@ -62,6 +62,12 @@ export class InventoryUI extends UIComponent {
             this.toggleInventory();
         });
         
+        // Add click event to teleport to origin
+        const teleportButton = document.getElementById('inventory-teleport');
+        teleportButton.addEventListener('click', () => {
+            this.teleportToOrigin();
+        });
+        
         // Add click event to close popup when clicking outside
         document.addEventListener('click', (event) => {
             if (this.itemPopup && this.itemPopup.style.display === 'block') {
@@ -1059,6 +1065,31 @@ export class InventoryUI extends UIComponent {
             // Fallback if save manager is not available
             console.warn('SaveManager not available, inventory not saved');
             this.game.hudManager.showNotification('Inventory saved successfully!');
+        }
+    }
+    
+    /**
+     * Teleport player to origin position (0,0,0)
+     */
+    teleportToOrigin() {
+        if (this.game && this.game.player) {
+            // Set player position to origin
+            this.game.player.setPosition(0, 0, 0);
+            
+            // Show notification
+            if (this.game.hudManager) {
+                this.game.hudManager.showNotification('Teleported to origin!');
+            }
+            
+            // Close inventory after teleporting
+            this.toggleInventory();
+            
+            console.log('Player teleported to origin (0,0,0)');
+        } else {
+            console.error('Cannot teleport: Game or player not available');
+            if (this.game.hudManager) {
+                this.game.hudManager.showNotification('Failed to teleport!', 'error');
+            }
         }
     }
     
