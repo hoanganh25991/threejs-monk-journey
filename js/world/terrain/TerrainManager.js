@@ -296,7 +296,7 @@ export class TerrainManager {
         }
         
         // Only process the queue if we're not already processing and enough time has passed
-        const QUEUE_PROCESS_COOLDOWN = 1000; // 1000ms (1 second) cooldown between queue processing
+        const QUEUE_PROCESS_COOLDOWN = 3000; // 3000ms (3 seconds) cooldown for mobile performance
         if (!this.isProcessingTerrainQueue && 
             currentTime - this.lastQueueProcessTime > QUEUE_PROCESS_COOLDOWN) {
             this.lastQueueProcessTime = currentTime;

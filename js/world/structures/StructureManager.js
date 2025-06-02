@@ -31,9 +31,9 @@ export class StructureManager {
         
         // Last player position for distance tracking
         this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
-        this.minDistanceForNewStructure = 100; // Minimum distance to move before showing a new structure
+        this.minDistanceForNewStructure = 150; // Increased from 100 to 150 for mobile performance
         this.lastStructureTime = 0;
-        this.structureCooldown = 8000; // 8 seconds cooldown between structure spawns (reduced from 10s)
+        this.structureCooldown = 15000; // Increased from 8s to 15s for mobile performance
         
         // Natural grouping settings
         this.groupingProbabilities = {

@@ -30,9 +30,9 @@ export class EnvironmentManager {
         
         // Last player position for distance tracking
         this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
-        this.minDistanceForNewObject = 30; // Reduced from 50 to generate more objects
+        this.minDistanceForNewObject = 80; // Increased from 30 to 80 for mobile performance
         this.lastObjectTime = 0;
-        this.objectCooldown = 1000; // Reduced from 2000ms to 1000ms for more frequent generation
+        this.objectCooldown = 5000; // Increased from 1000ms to 5000ms for mobile performance
         
         // Natural grouping settings
         this.groupingProbabilities = {
@@ -68,7 +68,7 @@ export class EnvironmentManager {
         // Create a larger forest near the starting position (3x more trees)
         for (let i = 0; i < 30; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const distance = 10 + Math.random() * 30;
+            const distance = 10 + Math.random() * 20; // Reduced distance
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
             
@@ -86,7 +86,7 @@ export class EnvironmentManager {
         // Add some rocks
         for (let i = 0; i < 8; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const distance = 15 + Math.random() * 20;
+            const distance = 15 + Math.random() * 15; // Reduced distance
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
             
@@ -130,9 +130,11 @@ export class EnvironmentManager {
             this.lastPlayerPosition.copy(playerPosition);
             this.lastObjectTime = currentTime;
             
-            // 40% chance to generate an object when conditions are met
-            this.generateRandomObject(playerPosition);
-            return true;
+            // 20% chance to generate an object when conditions are met (reduced from 40%)
+            if (Math.random() < 1) {
+                this.generateRandomObject(playerPosition);
+                return true;
+            }
         }
         
         return false;
