@@ -23,7 +23,8 @@ export class VirtualJoystickUI extends UIComponent {
             centerY: 0,
             currentX: 0,
             currentY: 0,
-            direction: { x: 0, y: 0 }
+            direction: { x: 0, y: 0 },
+            touchId: null // Track which touch is controlling the joystick
         };
     }
     
@@ -79,7 +80,7 @@ export class VirtualJoystickUI extends UIComponent {
             this.joystickOverlay.style.left = '0';
             this.joystickOverlay.style.width = '50%'; // Only cover the left half of the screen
             this.joystickOverlay.style.height = '100%';
-            this.joystickOverlay.style.zIndex = '1000'; // High z-index to be above other elements
+            this.joystickOverlay.style.zIndex = '150'; // Higher z-index to be above skill buttons but below modals
             this.joystickOverlay.style.pointerEvents = 'auto';
             this.joystickOverlay.style.touchAction = 'none';
             this.joystickOverlay.style.background = 'transparent'; // Make it invisible
@@ -101,17 +102,26 @@ export class VirtualJoystickUI extends UIComponent {
         // Touch start event on overlay
         this.joystickOverlay.addEventListener('touchstart', (event) => {
             event.preventDefault();
-            // Only respond to touches on the left half of the screen
-            if (this.isOnLeftHalfOfScreen(event.touches[0].clientX)) {
-                this.handleJoystickStart(event.touches[0].clientX, event.touches[0].clientY);
+            event.stopPropagation();
+            
+            // Only respond if joystick is not already active
+            if (!this.joystickState.active) {
+                const touch = event.touches[0];
+                // Only respond to touches on the left half of the screen
+                if (this.isOnLeftHalfOfScreen(touch.clientX)) {
+                    this.joystickState.touchId = touch.identifier;
+                    this.handleJoystickStart(touch.clientX, touch.clientY);
+                }
             }
         });
         
         // Mouse down event on overlay (for testing on desktop)
         this.joystickOverlay.addEventListener('mousedown', (event) => {
             event.preventDefault();
-            // Only respond to clicks on the left half of the screen
-            if (this.isOnLeftHalfOfScreen(event.clientX)) {
+            event.stopPropagation();
+            
+            // Only respond if joystick is not already active and click is on left half
+            if (!this.joystickState.active && this.isOnLeftHalfOfScreen(event.clientX)) {
                 this.handleJoystickStart(event.clientX, event.clientY);
                 
                 // Add global mouse move and up events
@@ -122,25 +132,43 @@ export class VirtualJoystickUI extends UIComponent {
         
         // Touch move event on document (to ensure smooth movement even when finger moves outside overlay)
         document.addEventListener('touchmove', (event) => {
-            if (this.joystickState.active) {
-                event.preventDefault();
-                this.handleJoystickMove(event.touches[0].clientX, event.touches[0].clientY);
+            if (this.joystickState.active && this.joystickState.touchId !== null) {
+                // Find the touch that corresponds to our joystick
+                for (let i = 0; i < event.touches.length; i++) {
+                    if (event.touches[i].identifier === this.joystickState.touchId) {
+                        event.preventDefault();
+                        this.handleJoystickMove(event.touches[i].clientX, event.touches[i].clientY);
+                        break;
+                    }
+                }
             }
         }, { passive: false });
         
         // Touch end event on document
         document.addEventListener('touchend', (event) => {
-            if (this.joystickState.active) {
-                event.preventDefault();
-                this.handleJoystickEnd();
+            if (this.joystickState.active && this.joystickState.touchId !== null) {
+                // Check if our joystick touch ended
+                for (let i = 0; i < event.changedTouches.length; i++) {
+                    if (event.changedTouches[i].identifier === this.joystickState.touchId) {
+                        event.preventDefault();
+                        this.handleJoystickEnd();
+                        break;
+                    }
+                }
             }
         });
         
         // Touch cancel event on document
         document.addEventListener('touchcancel', (event) => {
-            if (this.joystickState.active) {
-                event.preventDefault();
-                this.handleJoystickEnd();
+            if (this.joystickState.active && this.joystickState.touchId !== null) {
+                // Check if our joystick touch was cancelled
+                for (let i = 0; i < event.changedTouches.length; i++) {
+                    if (event.changedTouches[i].identifier === this.joystickState.touchId) {
+                        event.preventDefault();
+                        this.handleJoystickEnd();
+                        break;
+                    }
+                }
             }
         });
         
@@ -241,6 +269,7 @@ export class VirtualJoystickUI extends UIComponent {
         // Reset joystick state
         this.joystickState.active = false;
         this.joystickState.direction = { x: 0, y: 0 };
+        this.joystickState.touchId = null;
         
         // Reset joystick handle position
         this.joystickHandle.style.transform = 'translate(-50%, -50%)';

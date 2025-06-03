@@ -11,6 +11,8 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 5px;
     pointer-events: auto;
+    position: relative;
+    z-index: 120; /* Higher than joystick overlay to ensure skill buttons work */
 }
 
 /* Change Skills Button */
@@ -58,6 +60,9 @@
     position: relative;
     box-shadow: 0 0 10px rgba(255, 150, 0, 0.3);
     overflow: hidden; /* Ensure cooldown overlay stays within the circle */
+    z-index: 125; /* Higher than skills container to ensure proper touch handling */
+    touch-action: none; /* Prevent default touch behaviors */
+    pointer-events: auto; /* Ensure skill buttons can receive touch events */
 }
 
 .skill-button:active {
@@ -118,4 +123,17 @@
 .not-enough-mana {
     filter: grayscale(70%);
     border-color: #555 !important;
+}
+
+/* Skills Overlay - Right half of screen for skill button priority */
+#skills-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 50%; /* Only cover the right half of the screen */
+    height: 100%;
+    z-index: 100; /* Lower than skill buttons but above other elements */
+    pointer-events: none; /* Allow events to pass through to skill buttons */
+    touch-action: none;
+    background-color: transparent; /* Make it invisible */
 }
