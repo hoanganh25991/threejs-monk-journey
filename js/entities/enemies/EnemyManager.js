@@ -317,6 +317,15 @@ export class EnemyManager {
     }
     
     /**
+     * Get an enemy by its ID
+     * @param {string} id - The ID of the enemy to retrieve
+     * @returns {Enemy|undefined} The enemy with the specified ID, or undefined if not found
+     */
+    getEnemyById(id) {
+        return this.enemies.get(id);
+    }
+    
+    /**
      * Get serializable enemy data for network transmission
      * Optimized to reduce bandwidth usage
      * @returns {Object} Object containing serialized enemy data

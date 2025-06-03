@@ -168,18 +168,33 @@ export class Skill {
         
         // Check if we have a target enemy and adjust direction accordingly
         if (this.targetEnemy) {
-            // Get enemy position
-            const enemyPosition = this.targetEnemy.getPosition();
-            
-            // Calculate direction to enemy
-            const targetDirection = new THREE.Vector3().subVectors(enemyPosition, this.position).normalize();
-            
-            // Set skill direction based on enemy position
-            this.direction.copy(targetDirection);
-            this.direction.y = 0; // Keep direction horizontal
-            this.direction.normalize();
-            
-            console.debug(`Skill ${this.name} targeting enemy at position: ${enemyPosition.x.toFixed(2)}, ${enemyPosition.y.toFixed(2)}, ${enemyPosition.z.toFixed(2)}`);
+            try {
+                // Get enemy position
+                const enemyPosition = this.targetEnemy.getPosition();
+                
+                // Validate enemy position
+                if (this.validateVector(enemyPosition)) {
+                    // Calculate direction to enemy
+                    const targetDirection = new THREE.Vector3().subVectors(enemyPosition, this.position).normalize();
+                    
+                    // Set skill direction based on enemy position
+                    this.direction.copy(targetDirection);
+                    this.direction.y = 0; // Keep direction horizontal
+                    this.direction.normalize();
+                    
+                    console.debug(`Skill ${this.name} targeting enemy at position: ${enemyPosition.x.toFixed(2)}, ${enemyPosition.y.toFixed(2)}, ${enemyPosition.z.toFixed(2)}`);
+                } else {
+                    throw new Error("Invalid enemy position");
+                }
+            } catch (error) {
+                console.warn(`Error targeting enemy with skill ${this.name}: ${error.message}. Using player rotation instead.`);
+                // Fallback to player rotation if there's any error with the enemy
+                this.direction.set(
+                    Math.sin(playerRotation.y),
+                    0,
+                    Math.cos(playerRotation.y)
+                );
+            }
         } else {
             // No target enemy, use player rotation as before
             this.direction.set(
