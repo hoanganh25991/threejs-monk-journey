@@ -40,10 +40,10 @@ export class WorldManager {
         this.environmentManager = new EnvironmentManager(scene, this, game);
         this.interactiveManager = new InteractiveObjectManager(scene, this, game);
         this.zoneManager = new ZoneManager(scene, this, game);
+        this.teleportManager = new TeleportManager(scene, this, game);
         
         // Load cached terrain data if available
         this.loadTerrainCache();
-        this.teleportManager = new TeleportManager(scene, this, game);
         
         // For screen-based enemy spawning
         this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
@@ -77,18 +77,16 @@ export class WorldManager {
         this.lowPerformanceMode = false;
         
         // Random world generation settings
-        this.randomGenerationEnabled = false;
-        this.randomGenerationBuffer = 100; // Reduced buffer distance from 150 to 100 to prevent buffering too far
-        this.randomGenerationInterval = 800; // Milliseconds between generation attempts (increased for better stability)
+        this.randomGenerationBuffer = 100; // Buffer distance for generation
+        this.randomGenerationInterval = 800; // Milliseconds between generation attempts
         this.lastRandomGenerationTime = 0;
         this.randomGenerationProbability = {
-            structure: 0.04,  // 4% chance to generate a structure (reduced by 5x for performance)
-            environment: 0.1, // 10% chance to generate environment objects (reduced by 5x for performance)
-            interactive: 0.02 // 2% chance to generate interactive objects (reduced by 5x for performance)
+            structure: 0.04,  // 4% chance to generate a structure
+            environment: 0.1, // 10% chance to generate environment objects
+            interactive: 0.02 // 2% chance to generate interactive objects
         };
         
         // Path generation settings
-        this.pathGenerationEnabled = true;
         this.pathWidth = 3;
         this.pathSegmentLength = 10;
         this.pathCurve = 0.2; // How much the path can curve
@@ -96,7 +94,7 @@ export class WorldManager {
         this.paths = []; // Array to store path meshes
         
         // Enhanced environment settings
-        this.enhancedTreeDensity = 0.5; // Multiplier for tree density along paths (reduced by 5x for performance)
+        this.enhancedTreeDensity = 0.5; // Multiplier for tree density along paths
         
         // Chunk tracking for consistent loading/unloading
         this.activeChunks = {}; // Track which chunks are currently active
@@ -106,7 +104,7 @@ export class WorldManager {
         
         // Track player movement for predictive generation
         this.playerMovementHistory = [];
-        this.playerMovementHistoryMaxLength = 15; // Increased from 10 for better prediction
+        this.playerMovementHistoryMaxLength = 15; // For movement prediction
         this.playerMovementDirection = new THREE.Vector3(0, 0, 0);
         this.lastPathGenerationPosition = new THREE.Vector3(0, 0, 0);
         this.pathGenerationDistance = 30; // Distance between path segments
@@ -450,11 +448,6 @@ export class WorldManager {
         // Always update terrain chunks (but they have their own optimization)
         this.terrainManager.updateForPlayer(playerPosition, effectiveDrawDistance);
         
-        // Only update environment objects if player moved significantly
-        if (shouldUpdate) {
-            // this.environmentManager.updateForPlayer(playerPosition, effectiveDrawDistance);
-        }
-        
         // Track player movement for predictive generation
         this.updatePlayerMovementTracking(playerPosition);
         
@@ -462,7 +455,6 @@ export class WorldManager {
         this.updateLighting(playerPosition);
         
         // Check if player has moved far enough for screen-based enemy spawning
-        // Only update if we're not in low performance mode or if significant movement has occurred
         const distanceFromLastCheck = playerPosition.distanceTo(this.lastPlayerPosition);
         if (!this.lowPerformanceMode || distanceFromLastCheck > this.screenSpawnDistance) {
             this.checkPlayerScreenMovement(playerPosition, effectiveDrawDistance, delta);
@@ -1224,24 +1216,7 @@ export class WorldManager {
         }
     }
     
-    /**
-     * Clean up structures that are far from the player
-     * @param {number} playerChunkX - Player's chunk X coordinate (not used in new randomized version)
-     * @param {number} playerChunkZ - Player's chunk Z coordinate (not used in new randomized version)
-     * @deprecated Use cleanupDistantObjects instead
-     */
-    cleanupDistantStructures(playerChunkX, playerChunkZ) {
-        // This method is kept for backward compatibility
-        // The new cleanupDistantObjects method handles all object types
-        console.debug("cleanupDistantStructures called (deprecated, using unified cleanup system instead)");
-        
-        // If we have a player position, use the new method
-        if (this.lastPlayerPosition) {
-            this.cleanupDistantObjects(this.lastPlayerPosition, 1.0);
-        }
-        
-        return;
-    }
+
     
     /**
      * Manage memory and performance to prevent memory leaks and maintain frame rate
@@ -1363,13 +1338,13 @@ export class WorldManager {
      */
     hintGarbageCollection() {
         // Force garbage collection hint if available
-        if (window.gc) {
-            try {
+        try {
+            if (window.gc) {
                 window.gc();
                 console.debug("Garbage collection hint triggered");
-            } catch (e) {
-                // Ignore if not available
             }
+        } catch (e) {
+            // Ignore if not available
         }
     }
     
@@ -1436,20 +1411,13 @@ export class WorldManager {
         return this.zoneManager.getZoneAt(position);
     }
     
-    /**
-     * Get interactive objects near a specific position
-     * @param {THREE.Vector3} position - The position to check
-     * @param {number} radius - The radius to check
-     * @returns {Array} - Array of interactive objects within the radius
-     */
-    getInteractiveObjectsNear(position, radius) {
-        return this.interactiveManager.getObjectsNear(position, radius);
-    }
+
     
     /**
      * Clear all world objects for a clean reload
      */
     clearWorldObjects() {
+        // Clear all managers
         this.terrainManager.clear();
         this.structureManager.clear();
         this.environmentManager.clear();
@@ -1465,13 +1433,7 @@ export class WorldManager {
         this.paths = [];
         
         // Force garbage collection hint
-        if (window.gc) {
-            try {
-                window.gc();
-            } catch (e) {
-                // Ignore if not available
-            }
-        }
+        this.hintGarbageCollection();
         
         console.debug("World objects cleared for reload");
     }
@@ -1628,22 +1590,62 @@ export class WorldManager {
     }
     
     /**
+     * Get environment objects for the minimap by type
+     * @param {string} type - The type of objects to get ('trees', 'rocks', 'buildings', 'paths')
+     * @returns {Array} - Array of objects of the specified type
+     */
+    getEnvironmentObjects(type) {
+        switch (type) {
+            case 'trees':
+                this.trees = [];
+                if (this.environmentManager?.trees) {
+                    this.trees = this.environmentManager.trees.map(tree => ({
+                        position: tree.position
+                    }));
+                }
+                return this.trees;
+                
+            case 'rocks':
+                this.rocks = [];
+                if (this.environmentManager?.rocks) {
+                    this.rocks = this.environmentManager.rocks.map(rock => ({
+                        position: rock.position
+                    }));
+                }
+                return this.rocks;
+                
+            case 'buildings':
+                this.buildings = [];
+                if (this.structureManager?.structures) {
+                    this.buildings = this.structureManager.structures
+                        .filter(structure => structure.type === 'building')
+                        .map(building => ({
+                            position: building.position
+                        }));
+                }
+                return this.buildings;
+                
+            case 'paths':
+                this.paths = [];
+                if (this.environmentManager?.paths) {
+                    this.paths = this.environmentManager.paths.map(path => ({
+                        position: path.position,
+                        nextPoint: path.nextPoint
+                    }));
+                }
+                return this.paths;
+                
+            default:
+                return [];
+        }
+    }
+    
+    /**
      * Get trees for the minimap
      * @returns {Array} - Array of trees
      */
     getTrees() {
-        this.trees = [];
-        
-        // Add trees from environment manager
-        if (this.environmentManager && this.environmentManager.trees) {
-            this.environmentManager.trees.forEach(tree => {
-                this.trees.push({
-                    position: tree.position
-                });
-            });
-        }
-        
-        return this.trees;
+        return this.getEnvironmentObjects('trees');
     }
     
     /**
@@ -1651,18 +1653,7 @@ export class WorldManager {
      * @returns {Array} - Array of rocks
      */
     getRocks() {
-        this.rocks = [];
-        
-        // Add rocks from environment manager
-        if (this.environmentManager && this.environmentManager.rocks) {
-            this.environmentManager.rocks.forEach(rock => {
-                this.rocks.push({
-                    position: rock.position
-                });
-            });
-        }
-        
-        return this.rocks;
+        return this.getEnvironmentObjects('rocks');
     }
     
     /**
@@ -1670,20 +1661,7 @@ export class WorldManager {
      * @returns {Array} - Array of buildings
      */
     getBuildings() {
-        this.buildings = [];
-        
-        // Add buildings from structure manager
-        if (this.structureManager && this.structureManager.structures) {
-            this.structureManager.structures.forEach(structure => {
-                if (structure.type === 'building') {
-                    this.buildings.push({
-                        position: structure.position
-                    });
-                }
-            });
-        }
-        
-        return this.buildings;
+        return this.getEnvironmentObjects('buildings');
     }
     
     /**
@@ -1691,19 +1669,7 @@ export class WorldManager {
      * @returns {Array} - Array of paths
      */
     getPaths() {
-        this.paths = [];
-        
-        // Add paths from environment manager or other sources
-        if (this.environmentManager && this.environmentManager.paths) {
-            this.environmentManager.paths.forEach(path => {
-                this.paths.push({
-                    position: path.position,
-                    nextPoint: path.nextPoint
-                });
-            });
-        }
-        
-        return this.paths;
+        return this.getEnvironmentObjects('paths');
     }
     
     /**
@@ -1724,32 +1690,19 @@ export class WorldManager {
      * @returns {Array} - Array of interactive objects within range
      */
     getInteractiveObjectsNear(position, range) {
-        // Default to empty array
-        let nearbyObjects = [];
-        
         // Get interactive objects from the interactive manager
-        if (this.interactiveManager && this.interactiveManager.getObjectsNear) {
-            nearbyObjects = this.interactiveManager.getObjectsNear(position, range);
-        }
+        const nearbyObjects = this.interactiveManager?.getObjectsNear?.(position, range) || [];
         
         // Add teleport portals if they exist
-        if (this.teleportManager && this.teleportManager.getPortals) {
+        if (this.teleportManager?.getPortals) {
             const portals = this.teleportManager.getPortals();
             
-            // Filter portals by distance
-            const nearbyPortals = portals.filter(portal => {
-                // Skip portals without a position
-                if (!portal.position) return false;
-                
-                // Calculate distance
-                const distance = position.distanceTo(portal.position);
-                
-                // Return true if within range
-                return distance <= range;
-            });
+            // Filter portals by distance and add to result
+            const nearbyPortals = portals.filter(portal => 
+                portal.position && position.distanceTo(portal.position) <= range
+            );
             
-            // Add nearby portals to the result
-            nearbyObjects = nearbyObjects.concat(nearbyPortals);
+            return [...nearbyObjects, ...nearbyPortals];
         }
         
         return nearbyObjects;
