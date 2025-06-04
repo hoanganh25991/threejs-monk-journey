@@ -396,20 +396,25 @@ class MapGenerator {
         if (features.treeDensity) {
             this.generateTreesAlongPaths(features.treeDensity, theme);
         }
+        
+        // Generate dense forest clusters
+        if (features.treeDensity) {
+            this.generateForestClusters(features.treeDensity, theme);
+        }
 
-        // Generate rocks
-        this.generateRocks(50, theme);
+        // Generate rocks in clusters
+        this.generateRockClusters(50, theme);
 
-        // Generate bushes
-        this.generateBushes(30, theme);
+        // Generate bushes in clusters
+        this.generateBushClusters(30, theme);
 
-        // Generate flowers
-        this.generateFlowers(40, theme);
+        // Generate flowers in patches
+        this.generateFlowerPatches(40, theme);
 
         // Theme-specific environment
         switch (theme.primaryZone) {
             case 'Mountains':
-                this.generateMountains(20, theme);
+                this.generateMountainRanges(20, theme);
                 break;
             case 'Swamp':
                 this.generateWaterFeatures(15, theme);
@@ -516,7 +521,8 @@ class MapGenerator {
             theme: theme.name,
             buildings: [],
             decorations: [],
-            paths: []
+            paths: [],
+            connections: [] // Track building connections
         };
 
         // Determine village style based on theme and random factor
@@ -524,7 +530,7 @@ class MapGenerator {
         const villageStyle = Math.floor(this.rng() * 4);
         
         // Generate more buildings for a substantial village
-        const buildingCount = 8 + Math.floor(this.rng() * 10); // 8-17 buildings
+        const buildingCount = 10 + Math.floor(this.rng() * 12); // 10-22 buildings for denser villages
         
         // Add a central feature based on village style
         let centralFeature = null;
@@ -534,17 +540,21 @@ class MapGenerator {
                 centralFeature = {
                     type: 'plaza',
                     position: { x: position.x, y: 0, z: position.z },
-                    radius: 8 + this.rng() * 4
+                    radius: 6 + this.rng() * 3 // Smaller plaza for tighter village
                 };
                 
                 // Create buildings in a circle around the plaza
-                for (let i = 0; i < buildingCount; i++) {
-                    const angle = (i / buildingCount) * Math.PI * 2;
-                    const distance = centralFeature.radius + 5 + this.rng() * 10;
+                // First ring - important buildings
+                const firstRingCount = 3 + Math.floor(this.rng() * 3); // 3-5 buildings
+                for (let i = 0; i < firstRingCount; i++) {
+                    const angle = (i / firstRingCount) * Math.PI * 2;
+                    const distance = centralFeature.radius + 2 + this.rng() * 3; // Much closer to plaza
                     
-                    // Vary building sizes and types
-                    const buildingType = this.rng() < 0.8 ? 'house' : (this.rng() < 0.5 ? 'shop' : 'temple');
-                    const buildingSize = buildingType === 'temple' ? 1.5 : (buildingType === 'shop' ? 1.2 : 1.0);
+                    // First ring has important buildings
+                    const buildingType = this.rng() < 0.4 ? 'temple' : 
+                                       (this.rng() < 0.6 ? 'shop' : 'tavern');
+                    const buildingSize = buildingType === 'temple' ? 1.5 : 
+                                       (buildingType === 'tavern' ? 1.3 : 1.2);
                     
                     village.buildings.push({
                         type: buildingType,
@@ -554,36 +564,176 @@ class MapGenerator {
                             z: position.z + Math.sin(angle) * distance
                         },
                         rotation: angle + Math.PI, // Face toward plaza
-                        width: (3 + this.rng() * 3) * buildingSize,
-                        depth: (3 + this.rng() * 3) * buildingSize,
-                        height: (2 + this.rng() * 2) * buildingSize,
-                        style: Math.floor(this.rng() * 3) // 0-2 different building styles
+                        width: (3 + this.rng() * 2) * buildingSize,
+                        depth: (3 + this.rng() * 2) * buildingSize,
+                        height: (2 + this.rng() * 1.5) * buildingSize,
+                        style: Math.floor(this.rng() * 3), // 0-2 different building styles
+                        ring: 1 // Track which ring this building is in
                     });
                 }
                 
+                // Second ring - regular houses, tightly packed
+                const secondRingCount = buildingCount - firstRingCount;
+                for (let i = 0; i < secondRingCount; i++) {
+                    // Stagger the angles to avoid direct alignment with first ring
+                    const angleOffset = (0.5 / secondRingCount) * Math.PI * 2;
+                    const angle = angleOffset + (i / secondRingCount) * Math.PI * 2;
+                    
+                    // Vary distance slightly but keep buildings close together
+                    const ringRadius = centralFeature.radius + 8 + this.rng() * 4;
+                    
+                    // Add some radial variation to create clusters
+                    const clusterVariation = (i % 3 === 0) ? (this.rng() * 3) : 0;
+                    const distance = ringRadius + clusterVariation;
+                    
+                    // Second ring is mostly houses
+                    const buildingType = this.rng() < 0.85 ? 'house' : 'shop';
+                    const buildingSize = buildingType === 'shop' ? 1.1 : 1.0;
+                    
+                    // Add some lateral variation to create a less perfect circle
+                    const lateralVariation = this.rng() * 2 - 1;
+                    const lateralAngle = angle + Math.PI/2;
+                    
+                    const buildingPosition = {
+                        x: position.x + Math.cos(angle) * distance + Math.cos(lateralAngle) * lateralVariation,
+                        y: 0,
+                        z: position.z + Math.sin(angle) * distance + Math.sin(lateralAngle) * lateralVariation
+                    };
+                    
+                    // Vary rotation slightly to create more organic feel
+                    const rotationVariation = (this.rng() * 0.4) - 0.2; // -0.2 to 0.2 radians
+                    
+                    village.buildings.push({
+                        type: buildingType,
+                        position: buildingPosition,
+                        rotation: angle + Math.PI + rotationVariation, // Face toward plaza with slight variation
+                        width: (2.5 + this.rng() * 1.5) * buildingSize, // Smaller, more consistent sizes
+                        depth: (2.5 + this.rng() * 1.5) * buildingSize,
+                        height: (2 + this.rng() * 1) * buildingSize,
+                        style: Math.floor(this.rng() * 3),
+                        ring: 2
+                    });
+                    
+                    // Add small decorations near houses - gardens, wells, etc.
+                    if (this.rng() < 0.4) {
+                        const decorType = this.rng() < 0.5 ? 'garden' : 
+                                        (this.rng() < 0.5 ? 'well' : 'woodpile');
+                        
+                        const decorDist = 2 + this.rng() * 1.5;
+                        const decorAngle = angle + (this.rng() * Math.PI/2 - Math.PI/4);
+                        
+                        village.decorations.push({
+                            type: decorType,
+                            position: {
+                                x: buildingPosition.x + Math.cos(decorAngle) * decorDist,
+                                y: 0,
+                                z: buildingPosition.z + Math.sin(decorAngle) * decorDist
+                            },
+                            rotation: this.rng() * Math.PI * 2,
+                            size: 0.6 + this.rng() * 0.4
+                        });
+                    }
+                }
+                
                 // Add decorative elements to the plaza
-                for (let i = 0; i < 3 + Math.floor(this.rng() * 3); i++) {
+                for (let i = 0; i < 2 + Math.floor(this.rng() * 2); i++) {
                     const angle = this.rng() * Math.PI * 2;
-                    const distance = this.rng() * centralFeature.radius * 0.7;
+                    const distance = this.rng() * centralFeature.radius * 0.6;
                     
                     village.decorations.push({
-                        type: this.rng() < 0.5 ? 'statue' : 'fountain',
+                        type: this.rng() < 0.4 ? 'statue' : 
+                             (this.rng() < 0.6 ? 'fountain' : 'market_stall'),
                         position: {
                             x: position.x + Math.cos(angle) * distance,
                             y: 0,
                             z: position.z + Math.sin(angle) * distance
                         },
-                        size: 1 + this.rng() * 1.5
+                        rotation: this.rng() * Math.PI * 2,
+                        size: 0.8 + this.rng() * 0.4
                     });
                 }
                 
-                // Create circular path around the plaza
+                // Create multiple paths - main circular path plus connecting paths
+                // Main circular path around the plaza
                 village.paths.push({
                     type: 'circle',
                     center: { x: position.x, y: 0, z: position.z },
                     radius: centralFeature.radius + 2,
-                    width: 2 + this.rng()
+                    width: 2 + this.rng(),
+                    pathType: 'main'
                 });
+                
+                // Add secondary paths connecting buildings
+                for (let i = 0; i < village.buildings.length; i++) {
+                    const building = village.buildings[i];
+                    
+                    // Connect to plaza
+                    village.paths.push({
+                        type: 'line',
+                        points: [
+                            { x: position.x, y: 0, z: position.z },
+                            { x: building.position.x, y: 0, z: building.position.z }
+                        ],
+                        width: 1 + this.rng() * 0.5,
+                        pathType: 'secondary'
+                    });
+                    
+                    // Connect some buildings to each other
+                    if (i > 0 && this.rng() < 0.7) {
+                        // Find a nearby building to connect to
+                        let nearestIdx = -1;
+                        let minDist = 999;
+                        
+                        for (let j = 0; j < village.buildings.length; j++) {
+                            if (i === j) continue;
+                            
+                            const otherBuilding = village.buildings[j];
+                            const dx = building.position.x - otherBuilding.position.x;
+                            const dz = building.position.z - otherBuilding.position.z;
+                            const dist = Math.sqrt(dx * dx + dz * dz);
+                            
+                            if (dist < minDist && dist < 20) { // Only connect if reasonably close
+                                minDist = dist;
+                                nearestIdx = j;
+                            }
+                        }
+                        
+                        if (nearestIdx >= 0) {
+                            const otherBuilding = village.buildings[nearestIdx];
+                            
+                            // Add a slightly curved path between buildings
+                            const midX = (building.position.x + otherBuilding.position.x) / 2;
+                            const midZ = (building.position.z + otherBuilding.position.z) / 2;
+                            
+                            // Add slight curve
+                            const perpX = -(otherBuilding.position.z - building.position.z);
+                            const perpZ = otherBuilding.position.x - building.position.x;
+                            const perpLen = Math.sqrt(perpX * perpX + perpZ * perpZ);
+                            const curveFactor = (this.rng() * 2 - 1) * 0.2; // -0.2 to 0.2
+                            
+                            const controlX = midX + (perpX / perpLen) * curveFactor * minDist;
+                            const controlZ = midZ + (perpZ / perpLen) * curveFactor * minDist;
+                            
+                            village.paths.push({
+                                type: 'curve',
+                                points: [
+                                    { x: building.position.x, y: 0, z: building.position.z },
+                                    { x: controlX, y: 0, z: controlZ },
+                                    { x: otherBuilding.position.x, y: 0, z: otherBuilding.position.z }
+                                ],
+                                width: 1 + this.rng() * 0.5,
+                                pathType: 'tertiary'
+                            });
+                            
+                            // Record the connection
+                            village.connections.push({
+                                from: i,
+                                to: nearestIdx,
+                                type: 'path'
+                            });
+                        }
+                    }
+                }
                 break;
                 
             case 1: // Grid village with streets
@@ -996,7 +1146,7 @@ class MapGenerator {
                     );
                     
                     // Significantly increase tree density along paths
-                    const treeCount = Math.floor(distance * density / 5); // Doubled density
+                    const treeCount = Math.floor(distance * density / 3); // Higher density
                     
                     for (let i = 0; i < treeCount; i++) {
                         const t = i / treeCount;
@@ -1007,7 +1157,7 @@ class MapGenerator {
                         for (let side = -1; side <= 1; side += 2) { // Both sides of the path
                             // Vary the offset to create a more natural forest edge
                             const baseOffset = path.width + 2;
-                            const variableOffset = this.rng() * 15; // Increased from 5 to 15
+                            const variableOffset = this.rng() * 8; // Smaller variation for tighter grouping
                             const offset = baseOffset + variableOffset;
                             
                             // Add trees with varying sizes
@@ -1024,24 +1174,30 @@ class MapGenerator {
                                 size: treeSize
                             });
                             
-                            // Add a second row of trees for denser forest
-                            if (this.rng() < 0.7) { // 70% chance for second row
-                                const secondRowOffset = offset + 5 + this.rng() * 10;
-                                this.mapData.environment.push({
-                                    type: 'tree',
-                                    position: {
-                                        x: x + side * secondRowOffset,
-                                        y: 0,
-                                        z: z + side * secondRowOffset
-                                    },
-                                    theme: theme.name,
-                                    size: 0.8 + this.rng() * 0.4
-                                });
+                            // Add multiple rows of trees for denser forest
+                            for (let row = 1; row <= 3; row++) { // Up to 3 additional rows
+                                if (this.rng() < 0.85 - (row * 0.15)) { // Decreasing chance for each row
+                                    const rowOffset = offset + (row * 3) + this.rng() * 4; // Tighter spacing
+                                    
+                                    // Add slight lateral variation
+                                    const lateralShift = this.rng() * 4 - 2; // -2 to 2 units shift
+                                    
+                                    this.mapData.environment.push({
+                                        type: 'tree',
+                                        position: {
+                                            x: x + side * rowOffset + lateralShift,
+                                            y: 0,
+                                            z: z + side * rowOffset + lateralShift
+                                        },
+                                        theme: theme.name,
+                                        size: 0.6 + this.rng() * 0.8 // More size variation
+                                    });
+                                }
                             }
                             
                             // Add occasional bushes and rocks near trees
-                            if (this.rng() < 0.3) {
-                                const bushOffset = offset + (this.rng() - 0.5) * 5;
+                            if (this.rng() < 0.4) { // Increased chance
+                                const bushOffset = offset + (this.rng() - 0.5) * 3; // Tighter clustering
                                 this.mapData.environment.push({
                                     type: 'bush',
                                     position: {
@@ -1049,12 +1205,13 @@ class MapGenerator {
                                         y: 0,
                                         z: z + side * bushOffset
                                     },
-                                    theme: theme.name
+                                    theme: theme.name,
+                                    size: 0.4 + this.rng() * 0.3 // Smaller bushes
                                 });
                             }
                             
-                            if (this.rng() < 0.15) {
-                                const rockOffset = offset + (this.rng() - 0.5) * 5;
+                            if (this.rng() < 0.2) { // Slightly increased chance
+                                const rockOffset = offset + (this.rng() - 0.5) * 3;
                                 this.mapData.environment.push({
                                     type: 'rock',
                                     position: {
@@ -1072,62 +1229,448 @@ class MapGenerator {
             });
         });
     }
+    
+    /**
+     * Generate dense forest clusters throughout the map
+     */
+    generateForestClusters(density, theme) {
+        // Number of forest clusters based on map size and density
+        const clusterCount = Math.floor((this.mapSize / 100) * density);
+        
+        for (let i = 0; i < clusterCount; i++) {
+            // Create forest clusters away from paths and structures
+            const clusterCenter = this.getRandomPosition(100, 400);
+            
+            // Skip if too close to structures or paths
+            if (!this.isPositionValid(clusterCenter, 30, 20)) {
+                continue;
+            }
+            
+            // Determine forest cluster size
+            const clusterSize = 20 + Math.floor(this.rng() * 30); // 20-50 trees per cluster
+            const clusterRadius = 15 + this.rng() * 25; // 15-40 units radius
+            
+            // Generate trees in the cluster with tight spacing
+            for (let j = 0; j < clusterSize; j++) {
+                // Trees get denser toward the center of the cluster
+                const distanceFromCenter = this.rng() * this.rng() * clusterRadius; // Squared distribution
+                const angle = this.rng() * Math.PI * 2;
+                
+                const treePosition = {
+                    x: clusterCenter.x + Math.cos(angle) * distanceFromCenter,
+                    y: 0,
+                    z: clusterCenter.z + Math.sin(angle) * distanceFromCenter
+                };
+                
+                // Add some randomness to tree size - smaller trees more common
+                const treeSize = 0.6 + this.rng() * this.rng() * 0.8; // 0.6-1.4 with bias toward smaller
+                
+                this.mapData.environment.push({
+                    type: 'tree',
+                    position: treePosition,
+                    theme: theme.name,
+                    size: treeSize,
+                    cluster: `forest_${i}` // Tag trees as part of a cluster
+                });
+                
+                // Add undergrowth - bushes, flowers, fallen logs, etc.
+                if (this.rng() < 0.4) {
+                    const undergrowthType = this.rng() < 0.6 ? 'bush' : 
+                                          (this.rng() < 0.5 ? 'flower' : 'fallen_log');
+                    
+                    const undergrowthPosition = this.getNearbyPosition(treePosition, 1, 3);
+                    
+                    this.mapData.environment.push({
+                        type: undergrowthType,
+                        position: undergrowthPosition,
+                        theme: theme.name,
+                        size: 0.3 + this.rng() * 0.3,
+                        cluster: `forest_${i}`
+                    });
+                }
+            }
+            
+            // Add some clearings within the forest
+            if (this.rng() < 0.4 && clusterRadius > 25) {
+                const clearingCount = 1 + Math.floor(this.rng() * 2);
+                
+                for (let c = 0; c < clearingCount; c++) {
+                    const clearingPosition = this.getNearbyPosition(clusterCenter, 5, clusterRadius * 0.7);
+                    const clearingRadius = 3 + this.rng() * 5;
+                    
+                    // Add special features to clearings
+                    if (this.rng() < 0.7) {
+                        // Add a special feature - rock formation, small shrine, etc.
+                        const featureType = this.rng() < 0.5 ? 'rock_formation' : 
+                                          (this.rng() < 0.5 ? 'shrine' : 'stump');
+                        
+                        this.mapData.environment.push({
+                            type: featureType,
+                            position: clearingPosition,
+                            theme: theme.name,
+                            size: 1 + this.rng() * 0.5,
+                            cluster: `forest_${i}`
+                        });
+                    }
+                    
+                    // Add flowers or mushrooms in the clearing
+                    const smallFeatureCount = 3 + Math.floor(this.rng() * 5);
+                    for (let f = 0; f < smallFeatureCount; f++) {
+                        const featurePosition = this.getNearbyPosition(clearingPosition, 0.5, clearingRadius);
+                        const featureType = this.rng() < 0.6 ? 'flower' : 'mushroom';
+                        
+                        this.mapData.environment.push({
+                            type: featureType,
+                            position: featurePosition,
+                            theme: theme.name,
+                            size: 0.2 + this.rng() * 0.3,
+                            cluster: `forest_${i}`
+                        });
+                    }
+                }
+            }
+        }
+    }
 
     /**
-     * Generate rocks
+     * Generate rock clusters
      */
-    generateRocks(count, theme) {
-        for (let i = 0; i < count; i++) {
+    generateRockClusters(count, theme) {
+        // Create several rock formations/clusters
+        const clusterCount = Math.floor(count / 5); // Create fewer, denser clusters
+        
+        for (let i = 0; i < clusterCount; i++) {
+            const clusterCenter = this.getRandomPosition(50, 400);
+            
+            // Skip if too close to structures
+            if (!this.isPositionValid(clusterCenter, 20, 10)) {
+                continue;
+            }
+            
+            // Determine cluster size
+            const rocksInCluster = 3 + Math.floor(this.rng() * 7); // 3-10 rocks per cluster
+            const clusterRadius = 5 + this.rng() * 10; // 5-15 units radius
+            
+            // Generate rocks in the cluster
+            for (let j = 0; j < rocksInCluster; j++) {
+                // Rocks get denser toward the center
+                const distanceFromCenter = this.rng() * clusterRadius;
+                const angle = this.rng() * Math.PI * 2;
+                
+                const rockPosition = {
+                    x: clusterCenter.x + Math.cos(angle) * distanceFromCenter,
+                    y: 0,
+                    z: clusterCenter.z + Math.sin(angle) * distanceFromCenter
+                };
+                
+                // Vary rock sizes - create some large boulders and smaller rocks
+                const isLargeBoulder = j === 0 || this.rng() < 0.2;
+                const rockSize = isLargeBoulder ? 
+                    (2 + this.rng() * 3) : // 2-5 size for boulders
+                    (0.5 + this.rng() * 1.5); // 0.5-2 size for regular rocks
+                
+                this.mapData.environment.push({
+                    type: 'rock',
+                    position: rockPosition,
+                    theme: theme.name,
+                    size: rockSize,
+                    cluster: `rock_formation_${i}`
+                });
+                
+                // Add moss or small plants around rocks
+                if (this.rng() < 0.3) {
+                    const plantPosition = this.getNearbyPosition(rockPosition, 0.5, 1.5);
+                    this.mapData.environment.push({
+                        type: this.rng() < 0.7 ? 'moss' : 'small_plant',
+                        position: plantPosition,
+                        theme: theme.name,
+                        size: 0.3 + this.rng() * 0.2,
+                        cluster: `rock_formation_${i}`
+                    });
+                }
+            }
+        }
+        
+        // Add some individual rocks scattered around
+        const remainingRocks = count - (clusterCount * 5);
+        for (let i = 0; i < remainingRocks; i++) {
             const position = this.getRandomPosition(50, 400);
-            this.mapData.environment.push({
-                type: 'rock',
-                position,
-                theme: theme.name,
-                size: 1 + this.rng() * 3
-            });
+            if (this.isPositionValid(position, 10, 5)) {
+                this.mapData.environment.push({
+                    type: 'rock',
+                    position,
+                    theme: theme.name,
+                    size: 0.8 + this.rng() * 1.5
+                });
+            }
         }
     }
 
     /**
-     * Generate bushes
+     * Generate bush clusters
      */
-    generateBushes(count, theme) {
-        for (let i = 0; i < count; i++) {
+    generateBushClusters(count, theme) {
+        // Create several bush clusters/thickets
+        const clusterCount = Math.floor(count / 4);
+        
+        for (let i = 0; i < clusterCount; i++) {
+            const clusterCenter = this.getRandomPosition(30, 350);
+            
+            // Skip if too close to structures
+            if (!this.isPositionValid(clusterCenter, 15, 8)) {
+                continue;
+            }
+            
+            // Determine cluster size
+            const bushesInCluster = 4 + Math.floor(this.rng() * 8); // 4-12 bushes per cluster
+            const clusterRadius = 4 + this.rng() * 8; // 4-12 units radius
+            
+            // Generate bushes in the cluster
+            for (let j = 0; j < bushesInCluster; j++) {
+                // Bushes get denser toward the center
+                const distanceFromCenter = this.rng() * this.rng() * clusterRadius; // Squared distribution
+                const angle = this.rng() * Math.PI * 2;
+                
+                const bushPosition = {
+                    x: clusterCenter.x + Math.cos(angle) * distanceFromCenter,
+                    y: 0,
+                    z: clusterCenter.z + Math.sin(angle) * distanceFromCenter
+                };
+                
+                // Vary bush sizes
+                const bushSize = 0.5 + this.rng() * 0.7; // 0.5-1.2 size
+                
+                this.mapData.environment.push({
+                    type: 'bush',
+                    position: bushPosition,
+                    theme: theme.name,
+                    size: bushSize,
+                    cluster: `bush_thicket_${i}`
+                });
+                
+                // Add flowers or small plants among bushes
+                if (this.rng() < 0.4) {
+                    const flowerPosition = this.getNearbyPosition(bushPosition, 0.5, 1.5);
+                    this.mapData.environment.push({
+                        type: this.rng() < 0.6 ? 'flower' : 'small_plant',
+                        position: flowerPosition,
+                        theme: theme.name,
+                        size: 0.3 + this.rng() * 0.2,
+                        cluster: `bush_thicket_${i}`
+                    });
+                }
+            }
+        }
+        
+        // Add some individual bushes scattered around
+        const remainingBushes = count - (clusterCount * 6);
+        for (let i = 0; i < remainingBushes; i++) {
             const position = this.getRandomPosition(30, 350);
-            this.mapData.environment.push({
-                type: 'bush',
-                position,
-                theme: theme.name
-            });
+            if (this.isPositionValid(position, 8, 4)) {
+                this.mapData.environment.push({
+                    type: 'bush',
+                    position,
+                    theme: theme.name,
+                    size: 0.6 + this.rng() * 0.5
+                });
+            }
         }
     }
 
     /**
-     * Generate flowers
+     * Generate flower patches
      */
-    generateFlowers(count, theme) {
-        for (let i = 0; i < count; i++) {
+    generateFlowerPatches(count, theme) {
+        // Create several flower patches/meadows
+        const patchCount = Math.floor(count / 8); // Fewer, denser patches
+        
+        for (let i = 0; i < patchCount; i++) {
+            const patchCenter = this.getRandomPosition(20, 300);
+            
+            // Skip if too close to structures
+            if (!this.isPositionValid(patchCenter, 10, 5)) {
+                continue;
+            }
+            
+            // Determine patch size
+            const flowersInPatch = 8 + Math.floor(this.rng() * 12); // 8-20 flowers per patch
+            const patchRadius = 3 + this.rng() * 7; // 3-10 units radius
+            
+            // Choose a dominant flower type for this patch
+            const flowerTypes = ['wildflower', 'daisy', 'tulip', 'rose', 'sunflower', 'lily'];
+            const dominantType = flowerTypes[Math.floor(this.rng() * flowerTypes.length)];
+            
+            // Generate flowers in the patch
+            for (let j = 0; j < flowersInPatch; j++) {
+                // Flowers get denser toward the center
+                const distanceFromCenter = this.rng() * this.rng() * patchRadius; // Squared distribution
+                const angle = this.rng() * Math.PI * 2;
+                
+                const flowerPosition = {
+                    x: patchCenter.x + Math.cos(angle) * distanceFromCenter,
+                    y: 0,
+                    z: patchCenter.z + Math.sin(angle) * distanceFromCenter
+                };
+                
+                // 80% chance to use dominant flower type, 20% chance for variety
+                const flowerType = this.rng() < 0.8 ? 
+                    dominantType : 
+                    flowerTypes[Math.floor(this.rng() * flowerTypes.length)];
+                
+                // Vary flower sizes
+                const flowerSize = 0.3 + this.rng() * 0.4; // 0.3-0.7 size
+                
+                this.mapData.environment.push({
+                    type: 'flower',
+                    flowerType: flowerType,
+                    position: flowerPosition,
+                    theme: theme.name,
+                    size: flowerSize,
+                    cluster: `flower_patch_${i}`
+                });
+                
+                // Add tall grass among flowers
+                if (this.rng() < 0.3) {
+                    const grassPosition = this.getNearbyPosition(flowerPosition, 0.3, 1.0);
+                    this.mapData.environment.push({
+                        type: 'tall_grass',
+                        position: grassPosition,
+                        theme: theme.name,
+                        size: 0.4 + this.rng() * 0.3,
+                        cluster: `flower_patch_${i}`
+                    });
+                }
+            }
+        }
+        
+        // Add some individual flowers scattered around
+        const remainingFlowers = count - (patchCount * 10);
+        for (let i = 0; i < remainingFlowers; i++) {
             const position = this.getRandomPosition(20, 300);
-            this.mapData.environment.push({
-                type: 'flower',
-                position,
-                theme: theme.name
-            });
+            if (this.isPositionValid(position, 5, 3)) {
+                this.mapData.environment.push({
+                    type: 'flower',
+                    position,
+                    theme: theme.name,
+                    size: 0.3 + this.rng() * 0.3
+                });
+            }
         }
     }
 
     /**
-     * Generate mountains
+     * Generate mountain ranges
      */
-    generateMountains(count, theme) {
-        for (let i = 0; i < count; i++) {
+    generateMountainRanges(count, theme) {
+        // Create several mountain ranges
+        const rangeCount = Math.floor(count / 4); // Fewer, connected ranges
+        
+        for (let i = 0; i < rangeCount; i++) {
+            const rangeCenter = this.getRandomPosition(150, 400);
+            
+            // Skip if too close to structures
+            if (!this.isPositionValid(rangeCenter, 40, 30)) {
+                continue;
+            }
+            
+            // Determine range size
+            const mountainsInRange = 4 + Math.floor(this.rng() * 6); // 4-10 mountains per range
+            const rangeLength = 40 + this.rng() * 60; // 40-100 units length
+            const rangeWidth = 15 + this.rng() * 25; // 15-40 units width
+            
+            // Choose a direction for the range
+            const rangeAngle = this.rng() * Math.PI * 2;
+            const dirX = Math.cos(rangeAngle);
+            const dirZ = Math.sin(rangeAngle);
+            
+            // Generate mountains along the range direction
+            for (let j = 0; j < mountainsInRange; j++) {
+                // Position along the range length
+                const t = j / (mountainsInRange - 1); // 0 to 1
+                const distanceAlongRange = -rangeLength/2 + rangeLength * t;
+                
+                // Add some randomness perpendicular to the range direction
+                const perpOffset = (this.rng() - 0.5) * rangeWidth;
+                
+                const mountainPosition = {
+                    x: rangeCenter.x + dirX * distanceAlongRange - dirZ * perpOffset,
+                    y: 0,
+                    z: rangeCenter.z + dirZ * distanceAlongRange + dirX * perpOffset
+                };
+                
+                // Vary mountain heights - taller in the middle of the range
+                const heightFactor = 1 - Math.abs(t - 0.5) * 2; // 1 at center, 0 at edges
+                const mountainHeight = (20 + this.rng() * 20) * (0.7 + heightFactor * 0.6);
+                
+                this.mapData.environment.push({
+                    type: 'mountain',
+                    position: mountainPosition,
+                    theme: theme.name,
+                    height: mountainHeight,
+                    cluster: `mountain_range_${i}`
+                });
+                
+                // Add smaller features around mountains - rocks, snow patches, etc.
+                const smallFeatureCount = 1 + Math.floor(this.rng() * 3);
+                for (let f = 0; f < smallFeatureCount; f++) {
+                    const featurePosition = this.getNearbyPosition(mountainPosition, 5, 15);
+                    const featureType = this.rng() < 0.6 ? 'rock' : 
+                                      (this.rng() < 0.5 ? 'snow_patch' : 'small_peak');
+                    
+                    this.mapData.environment.push({
+                        type: featureType,
+                        position: featurePosition,
+                        theme: theme.name,
+                        size: 1 + this.rng() * 2,
+                        cluster: `mountain_range_${i}`
+                    });
+                }
+            }
+            
+            // Add a mountain pass or valley
+            if (this.rng() < 0.7) {
+                const passPosition = {
+                    x: rangeCenter.x + (this.rng() - 0.5) * rangeLength * 0.6,
+                    y: 0,
+                    z: rangeCenter.z + (this.rng() - 0.5) * rangeLength * 0.6
+                };
+                
+                this.mapData.environment.push({
+                    type: 'mountain_pass',
+                    position: passPosition,
+                    theme: theme.name,
+                    width: 5 + this.rng() * 10,
+                    cluster: `mountain_range_${i}`
+                });
+                
+                // Add a structure near the pass - watchtower, shrine, etc.
+                if (this.rng() < 0.5) {
+                    const structurePosition = this.getNearbyPosition(passPosition, 5, 15);
+                    const structureType = this.rng() < 0.7 ? 'watchtower' : 'mountain_shrine';
+                    
+                    this.mapData.structures.push({
+                        type: structureType,
+                        position: structurePosition,
+                        theme: theme.name,
+                        size: 1 + this.rng() * 0.5,
+                        cluster: `mountain_range_${i}`
+                    });
+                }
+            }
+        }
+        
+        // Add some individual mountains scattered around
+        const remainingMountains = count - (rangeCount * 5);
+        for (let i = 0; i < remainingMountains; i++) {
             const position = this.getRandomPosition(100, 400);
-            this.mapData.environment.push({
-                type: 'mountain',
-                position,
-                theme: theme.name,
-                height: 20 + this.rng() * 30
-            });
+            if (this.isPositionValid(position, 30, 20)) {
+                this.mapData.environment.push({
+                    type: 'mountain',
+                    position,
+                    theme: theme.name,
+                    height: 15 + this.rng() * 25
+                });
+            }
         }
     }
 
@@ -1173,6 +1716,51 @@ class MapGenerator {
             y: 0,
             z: Math.sin(angle) * radius
         };
+    }
+    
+    /**
+     * Get a position near another position (for clustering)
+     */
+    getNearbyPosition(center, minDistance, maxDistance) {
+        const angle = this.rng() * Math.PI * 2;
+        const distance = minDistance + this.rng() * (maxDistance - minDistance);
+        
+        return {
+            x: center.x + Math.cos(angle) * distance,
+            y: center.y,
+            z: center.z + Math.sin(angle) * distance
+        };
+    }
+    
+    /**
+     * Check if a position is too close to existing structures or paths
+     */
+    isPositionValid(position, minDistanceToStructures = 10, minDistanceToPaths = 5) {
+        // Check distance to structures
+        for (const structure of this.mapData.structures) {
+            const dx = position.x - structure.position.x;
+            const dz = position.z - structure.position.z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+            
+            if (distance < minDistanceToStructures) {
+                return false;
+            }
+        }
+        
+        // Check distance to paths
+        for (const path of this.mapData.paths) {
+            for (const point of path.points) {
+                const dx = position.x - point.x;
+                const dz = position.z - point.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                
+                if (distance < minDistanceToPaths + path.width) {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
     }
 
     /**
