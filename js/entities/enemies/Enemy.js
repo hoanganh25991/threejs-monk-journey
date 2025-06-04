@@ -70,6 +70,9 @@ export class Enemy {
         
         // Reference to game world for terrain height
         this.world = null;
+        
+        // Flag to control terrain height updates (useful for bosses with fixed positions)
+        this.allowTerrainHeightUpdates = true;
     }
     
     init() {
@@ -722,8 +725,8 @@ export class Enemy {
     }
 
     updateTerrainHeight() {
-        // Update position based on terrain height if world is available
-        if (this.world) {
+        // Update position based on terrain height if world is available and terrain updates are allowed
+        if (this.world && this.allowTerrainHeightUpdates) {
             const terrainHeight = this.world.getTerrainHeight(this.position.x, this.position.z);
             if (terrainHeight !== null) {
                 this.position.y = terrainHeight + this.heightOffset;
@@ -734,7 +737,7 @@ export class Enemy {
                 }
             }
         } else if (this.modelGroup) {
-            // If no world, just update model position and rotation
+            // If no world or terrain updates disabled, just update model position and rotation
             this.modelGroup.position.copy(this.position);
             this.modelGroup.rotation.y = this.rotation.y;
         }
@@ -748,6 +751,21 @@ export class Enemy {
         if (this.modelGroup) {
             this.modelGroup.position.copy(this.position);
         }
+    }
+    
+    /**
+     * Disable terrain height updates for this enemy
+     * Useful for bosses or enemies that need fixed positioning
+     */
+    disableTerrainHeightUpdates() {
+        this.allowTerrainHeightUpdates = false;
+    }
+    
+    /**
+     * Enable terrain height updates for this enemy
+     */
+    enableTerrainHeightUpdates() {
+        this.allowTerrainHeightUpdates = true;
     }
 
     getPosition() {

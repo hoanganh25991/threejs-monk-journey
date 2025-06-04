@@ -100,8 +100,8 @@ export class EnemyManager {
         
         // Boss spawning configuration
         this.bossSpawnTimer = 0;
-        this.bossSpawnInterval = 120; // Spawn boss every 120 seconds (2 minutes)
-        this.bossSpawnChance = 0.2; // 20% chance to spawn a boss when timer is up
+        this.bossSpawnInterval = 60; // Spawn boss every 60 seconds (1 minute) - increased rate
+        this.bossSpawnChance = 0.4; // 40% chance to spawn a boss when timer is up - increased rate
         
         // Item generation
         this.itemGenerator = new ItemGenerator(game);
@@ -1005,23 +1005,40 @@ export class EnemyManager {
         // Apply difficulty scaling
         const scaledBossConfig = this.applyDifficultyScaling(bossConfig);
         
-        // Create boss
-        const boss = new Enemy(this.scene, this.player, scaledBossConfig);
-        boss.init();
-        
-        // Position boss
+        // Determine spawn position
+        let spawnPosition;
         if (position) {
-            boss.setPosition(position.x, position.y + 1, position.z); // Raise slightly above ground
+            spawnPosition = position.clone();
         } else {
             // Use player position as reference
             const playerPos = this.player.getPosition();
-            boss.setPosition(playerPos.x, playerPos.y + 1, playerPos.z + 5); // 5 units in front of player
+            spawnPosition = new THREE.Vector3(playerPos.x, playerPos.y, playerPos.z + 5); // 5 units in front of player
         }
         
-        // Add to enemies map
-        const id = `boss_${this.nextEnemyId++}`;
-        boss.id = id;
-        this.enemies.set(id, boss);
+        // Adjust position to terrain height if world is available
+        if (this.game && this.game.world) {
+            const terrainHeight = this.game.world.getTerrainHeight(spawnPosition.x, spawnPosition.z);
+            if (terrainHeight !== null) {
+                // Use the boss's height offset for proper positioning
+                const bossHeightOffset = (scaledBossConfig.scale || 1) * 0.4; // Same calculation as in Enemy constructor
+                spawnPosition.y = terrainHeight + bossHeightOffset;
+            }
+        }
+        
+        // Use the existing spawnEnemy method to ensure consistent positioning
+        const boss = this.spawnEnemy(bossType, spawnPosition, `boss_${this.nextEnemyId++}`);
+        
+        if (!boss) {
+            console.warn(`Failed to spawn boss ${bossType}`);
+            return null;
+        }
+        
+        // Mark as boss
+        boss.isBoss = true;
+        
+        // Disable terrain height updates for bosses to prevent underground issues
+        // This ensures the boss stays at the carefully calculated spawn position
+        boss.disableTerrainHeightUpdates();
         
         // Play boss spawn effect
         if (this.game && this.game.audioManager) {
@@ -1061,15 +1078,10 @@ export class EnemyManager {
         let spawnPosition = position;
         if (!spawnPosition) {
             spawnPosition = this.getRandomSpawnPosition();
-            
-            // Adjust height if world is available
-            if (this.game && this.game.world) {
-                const terrainHeight = this.game.world.getTerrainHeight(spawnPosition.x, spawnPosition.z);
-                spawnPosition.y = terrainHeight + 1; // Add offset for boss height
-            }
         }
         
         // Spawn the boss using the existing spawnBoss method
+        // The spawnBoss method will handle terrain height adjustment properly
         return this.spawnBoss(randomBossType.type, spawnPosition);
     }
     

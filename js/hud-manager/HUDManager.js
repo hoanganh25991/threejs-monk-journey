@@ -16,6 +16,8 @@ import { FullscreenButton } from './SkillSelectionButton.js';
 import { SkillTreeButton } from './SkillTreeButton.js';
 import { MiniMapButton } from './MiniMapButton.js';
 import { InventoryButton } from './InventoryButton.js';
+import { MapSelectorUI } from './MapSelectorUI.js';
+import { MapSelectorButton } from './MapSelectorButton.js';
 
 /**
  * HUD Manager
@@ -122,12 +124,16 @@ export class HUDManager {
         this.components.questLogUI = new QuestLogUI(this.game);
         this.components.questLogUI.init();
         
+        // Create map selector UI
+        this.components.mapSelectorUI = new MapSelectorUI(this.game);
+        
         // Create UI buttons
         this.components.homeButton = new HomeButton(this.game);
         this.components.fullscreenButton = new FullscreenButton(this.game);
         this.components.skillTreeButton = new SkillTreeButton(this.game);
         this.components.inventoryButton = new InventoryButton(this.game);
         this.components.miniMapButton = new MiniMapButton(this.game);
+        this.components.mapSelectorButton = new MapSelectorButton(this.game);
         // Note: These buttons initialize themselves in their constructors
     }
     
@@ -159,6 +165,7 @@ export class HUDManager {
         this.components.skillTreeButton.update(delta);
         this.components.inventoryButton.update(delta);
         this.components.miniMapButton.update(delta);
+        this.components.mapSelectorButton.update(delta);
     }
     
     /**
@@ -341,6 +348,7 @@ export class HUDManager {
         const skillTreeButton = document.getElementById('skill-tree-button');
         const inventoryButton = document.getElementById('inventory-button');
         const miniMapButton = document.getElementById('mini-map-button');
+        const mapSelectorButton = document.getElementById('map-selector-button');
         
         if (homeButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
             homeButton.style.display = 'none';
@@ -360,6 +368,10 @@ export class HUDManager {
         
         if (miniMapButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
             miniMapButton.style.display = 'none';
+        }
+        
+        if (mapSelectorButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
+            mapSelectorButton.style.display = 'none';
         }
     }
     
@@ -395,6 +407,11 @@ export class HUDManager {
         const miniMapButton = document.getElementById('mini-map-button');
         if (miniMapButton) {
             miniMapButton.style.display = 'block';
+        }
+        
+        const mapSelectorButton = document.getElementById('map-selector-button');
+        if (mapSelectorButton) {
+            mapSelectorButton.style.display = 'block';
         }
     }
     

@@ -8,6 +8,7 @@ import { LightingManager } from './lighting/LightingManager.js';
 import { FogManager } from './environment/FogManager.js';
 import { SkyManager } from './environment/SkyManager.js';
 import { TeleportManager } from './teleport/TeleportManager.js';
+import { MapLoader } from './utils/MapLoader.js';
 
 /**
  * Main World Manager class that coordinates all world-related systems
@@ -41,6 +42,7 @@ export class WorldManager {
         this.interactiveManager = new InteractiveObjectManager(scene, this, game);
         this.zoneManager = new ZoneManager(scene, this, game);
         this.teleportManager = new TeleportManager(scene, this, game);
+        this.mapLoader = new MapLoader(this);
         
         // Load cached terrain data if available
         this.loadTerrainCache();
@@ -1477,6 +1479,98 @@ export class WorldManager {
         // Load teleport data if available
         if (worldState.teleport && this.teleportManager.load) {
             this.teleportManager.load(worldState.teleport);
+        }
+    }
+    
+    /**
+     * Load a pre-generated map
+     * @param {Object} mapData - The map data to load
+     * @returns {Promise<boolean>} - True if loading was successful
+     */
+    async loadPreGeneratedMap(mapData) {
+        console.log('Loading pre-generated map...');
+        
+        try {
+            // Use the map loader to load the map
+            const success = await this.mapLoader.loadMap(mapData);
+            
+            if (success) {
+                // Update terrain cache to mark as pre-generated
+                this.terrainCache.preGenerated = true;
+                this.saveTerrainCache();
+                
+                console.log('Pre-generated map loaded successfully');
+                
+                // Show success message
+                if (this.game.ui) {
+                    this.game.ui.showMessage('Map loaded successfully!', 3000);
+                }
+            }
+            
+            return success;
+        } catch (error) {
+            console.error('Error loading pre-generated map:', error);
+            
+            // Show error message
+            if (this.game.ui) {
+                this.game.ui.showMessage('Failed to load map', 3000);
+            }
+            
+            return false;
+        }
+    }
+    
+    /**
+     * Load a pre-generated map from a file
+     * @param {string} mapFilePath - Path to the map JSON file
+     * @returns {Promise<boolean>} - True if loading was successful
+     */
+    async loadPreGeneratedMapFromFile(mapFilePath) {
+        console.log(`Loading map from file: ${mapFilePath}`);
+        
+        try {
+            return await this.mapLoader.loadMapFromFile(mapFilePath);
+        } catch (error) {
+            console.error('Error loading map from file:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Get information about the currently loaded map
+     * @returns {Object|null} - Map information or null if no map is loaded
+     */
+    getCurrentMapInfo() {
+        return this.mapLoader.getCurrentMapInfo();
+    }
+    
+    /**
+     * Clear the currently loaded map and return to procedural generation
+     * @returns {Promise<boolean>} - True if clearing was successful
+     */
+    async clearCurrentMap() {
+        try {
+            await this.mapLoader.clearCurrentMap();
+            
+            // Reset terrain cache
+            this.terrainCache.preGenerated = false;
+            this.terrainCache.chunks = {};
+            this.terrainCache.structures = {};
+            this.terrainCache.environment = {};
+            
+            // Reinitialize the world with procedural generation
+            await this.init();
+            
+            console.log('Map cleared, returned to procedural generation');
+            
+            if (this.game.ui) {
+                this.game.ui.showMessage('Returned to procedural world', 3000);
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Error clearing current map:', error);
+            return false;
         }
     }
     
