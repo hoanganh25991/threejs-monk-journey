@@ -53,6 +53,12 @@ export class MiniMapUI extends UIComponent {
         // For teleport visualization
         this.highlightedPortal = null; // Currently highlighted portal
         this.teleportAnimationTime = 0; // For teleport animation
+        
+        // For pre-generated map
+        this.staticMapCanvas = null;
+        this.staticMapCtx = null;
+        this.staticMapGenerated = false;
+        this.staticMapImage = null;
     }
     
     /**
@@ -76,6 +82,12 @@ export class MiniMapUI extends UIComponent {
         this.mapElement = document.getElementById('mini-map');
         this.canvas = document.getElementById('mini-map-canvas');
         this.ctx = this.canvas.getContext('2d');
+        
+        // Create a hidden canvas for the static map
+        this.staticMapCanvas = document.createElement('canvas');
+        this.staticMapCanvas.width = this.canvasSize;
+        this.staticMapCanvas.height = this.canvasSize;
+        this.staticMapCtx = this.staticMapCanvas.getContext('2d');
         
         // Add event listener to the opacity toggle checkbox
         const opacityToggle = document.getElementById('mini-map-opacity-toggle');
@@ -205,6 +217,33 @@ export class MiniMapUI extends UIComponent {
         // Add CSS for map controls
         this.addMapControlStyles();
         
+        // Generate the static map once the world is loaded
+        if (this.game.world) {
+            // Use setTimeout to ensure the world is fully loaded
+            setTimeout(() => {
+                this.generateStaticMap();
+            }, 500);
+        }
+        
+        // Add a method to the world manager to regenerate the map when the world changes
+        if (this.game.world) {
+            // Store the original method
+            const originalAddStructure = this.game.world.addStructure;
+            
+            // Override the method to regenerate the map when structures change
+            if (originalAddStructure) {
+                this.game.world.addStructure = (...args) => {
+                    // Call the original method
+                    const result = originalAddStructure.apply(this.game.world, args);
+                    
+                    // Regenerate the map
+                    this.staticMapGenerated = false;
+                    
+                    return result;
+                };
+            }
+        }
+        
         return true;
     }
     
@@ -258,6 +297,208 @@ export class MiniMapUI extends UIComponent {
                 font-size: 16px !important;
             }
         `;
+    }
+    
+    /**
+     * Generate the static map background
+     * This is called once when the world is loaded
+     */
+    generateStaticMap() {
+        if (!this.staticMapCtx || !this.game.world) return;
+        
+        console.log('Generating static minimap...');
+        
+        // Clear the canvas
+        this.staticMapCtx.clearRect(0, 0, this.mapSize, this.mapSize);
+        
+        // Center of the mini map
+        const centerX = this.mapSize / 2;
+        const centerY = this.mapSize / 2;
+        const radius = this.mapSize / 2 - 2; // Slightly smaller than half the canvas
+        
+        // Create circular clipping path
+        this.staticMapCtx.save();
+        this.staticMapCtx.beginPath();
+        this.staticMapCtx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        this.staticMapCtx.clip();
+        
+        // Draw background
+        this.staticMapCtx.fillStyle = 'rgba(10, 10, 15, 0.75)'; // Darker, more opaque background
+        this.staticMapCtx.fillRect(0, 0, this.mapSize, this.mapSize);
+        
+        // Add a subtle radial gradient for depth
+        const gradient = this.staticMapCtx.createRadialGradient(
+            centerX, centerY, radius * 0.1,
+            centerX, centerY, radius
+        );
+        gradient.addColorStop(0, 'rgba(30, 30, 40, 0.1)');
+        gradient.addColorStop(1, 'rgba(5, 5, 10, 0.3)');
+        this.staticMapCtx.fillStyle = gradient;
+        this.staticMapCtx.fillRect(0, 0, this.mapSize, this.mapSize);
+        
+        // Draw grid lines for reference
+        this.drawGrid(centerX, centerY, radius, this.staticMapCtx);
+        
+        // Get world reference
+        const world = this.game.world;
+        
+        // Draw terrain features (walls, obstacles, trees, etc.)
+        if (world.getTerrainFeatures) {
+            const features = world.getTerrainFeatures();
+            
+            // Group features by type for batch rendering
+            const featuresByType = {
+                wall: [],
+                door: [],
+                water: [],
+                tree: [],
+                rock: [],
+                path: [],
+                other: []
+            };
+            
+            // Process all features (no need to limit for static map)
+            features.forEach(feature => {
+                const type = feature.type || 'other';
+                const group = featuresByType[type] || featuresByType.other;
+                
+                group.push({
+                    x: centerX + feature.position.x * this.scale,
+                    y: centerY + feature.position.z * this.scale
+                });
+            });
+            
+            // Batch render each feature type
+            // Walls
+            if (featuresByType.wall.length > 0) {
+                this.staticMapCtx.fillStyle = 'rgba(85, 85, 85, 0.8)';
+                featuresByType.wall.forEach(pos => {
+                    this.staticMapCtx.fillRect(pos.x - 2, pos.y - 2, 4, 4);
+                });
+            }
+            
+            // Doors
+            if (featuresByType.door.length > 0) {
+                this.staticMapCtx.fillStyle = 'rgba(136, 85, 85, 0.8)';
+                featuresByType.door.forEach(pos => {
+                    this.staticMapCtx.beginPath();
+                    this.staticMapCtx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
+                    this.staticMapCtx.fill();
+                });
+            }
+            
+            // Water
+            if (featuresByType.water.length > 0) {
+                this.staticMapCtx.fillStyle = 'rgba(85, 85, 255, 0.5)';
+                featuresByType.water.forEach(pos => {
+                    this.staticMapCtx.fillRect(pos.x - 3, pos.y - 3, 6, 6);
+                });
+            }
+            
+            // Trees
+            if (featuresByType.tree.length > 0) {
+                this.staticMapCtx.fillStyle = 'rgba(34, 139, 34, 0.7)';
+                featuresByType.tree.forEach(pos => {
+                    this.staticMapCtx.beginPath();
+                    this.staticMapCtx.arc(pos.x, pos.y, 2, 0, Math.PI * 2);
+                    this.staticMapCtx.fill();
+                });
+            }
+            
+            // Rocks
+            if (featuresByType.rock.length > 0) {
+                this.staticMapCtx.fillStyle = 'rgba(128, 128, 128, 0.7)';
+                featuresByType.rock.forEach(pos => {
+                    this.staticMapCtx.beginPath();
+                    this.staticMapCtx.arc(pos.x, pos.y, 1.5, 0, Math.PI * 2);
+                    this.staticMapCtx.fill();
+                });
+            }
+            
+            // Paths
+            if (featuresByType.path.length > 0) {
+                this.staticMapCtx.fillStyle = 'rgba(210, 180, 140, 0.6)';
+                featuresByType.path.forEach(pos => {
+                    this.staticMapCtx.fillRect(pos.x - 2, pos.y - 2, 4, 4);
+                });
+            }
+            
+            // Other features
+            if (featuresByType.other.length > 0) {
+                this.staticMapCtx.fillStyle = 'rgba(200, 200, 200, 0.5)';
+                featuresByType.other.forEach(pos => {
+                    this.staticMapCtx.fillRect(pos.x - 1, pos.y - 1, 2, 2);
+                });
+            }
+        }
+        
+        // Draw teleport portals (static ones)
+        const portals = this.game.world.getTeleportPortals ? 
+            this.game.world.getTeleportPortals() : [];
+            
+        if (portals && portals.length > 0) {
+            // Draw portal markers
+            portals.forEach(portal => {
+                // Calculate position
+                const screenX = centerX + portal.position.x * this.scale;
+                const screenY = centerY + portal.position.z * this.scale;
+                
+                // Draw portal marker
+                this.staticMapCtx.fillStyle = this.teleportPortalColor;
+                this.staticMapCtx.beginPath();
+                this.staticMapCtx.arc(screenX, screenY, this.teleportPortalSize, 0, Math.PI * 2);
+                this.staticMapCtx.fill();
+                
+                // Add a white border
+                this.staticMapCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                this.staticMapCtx.lineWidth = 1.5;
+                this.staticMapCtx.beginPath();
+                this.staticMapCtx.arc(screenX, screenY, this.teleportPortalSize, 0, Math.PI * 2);
+                this.staticMapCtx.stroke();
+                
+                // Draw portal icon (teleport symbol)
+                this.staticMapCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                this.staticMapCtx.beginPath();
+                this.staticMapCtx.arc(screenX, screenY, this.teleportPortalSize * 0.6, 0, Math.PI * 2);
+                this.staticMapCtx.fill();
+                
+                // Draw "T" letter
+                this.staticMapCtx.fillStyle = 'white';
+                this.staticMapCtx.font = 'bold 8px Arial';
+                this.staticMapCtx.textAlign = 'center';
+                this.staticMapCtx.textBaseline = 'middle';
+                this.staticMapCtx.fillText('T', screenX, screenY);
+            });
+        }
+        
+        // Restore context
+        this.staticMapCtx.restore();
+        
+        // Draw circular border with gradient
+        const borderGradient = this.staticMapCtx.createLinearGradient(
+            centerX - radius, centerY - radius,
+            centerX + radius, centerY + radius
+        );
+        borderGradient.addColorStop(0, 'rgba(100, 100, 180, 0.7)');
+        borderGradient.addColorStop(0.5, 'rgba(200, 200, 255, 0.7)');
+        borderGradient.addColorStop(1, 'rgba(100, 100, 180, 0.7)');
+        
+        this.staticMapCtx.strokeStyle = borderGradient;
+        this.staticMapCtx.lineWidth = 2;
+        this.staticMapCtx.beginPath();
+        this.staticMapCtx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        this.staticMapCtx.stroke();
+        
+        // Draw cardinal directions
+        this.drawCardinalDirections(centerX, centerY, radius, this.staticMapCtx);
+        
+        // Create an image from the canvas
+        this.staticMapImage = new Image();
+        this.staticMapImage.src = this.staticMapCanvas.toDataURL();
+        
+        // Mark as generated
+        this.staticMapGenerated = true;
+        console.log('Static minimap generation complete');
     }
     
     /**
@@ -486,30 +727,44 @@ export class MiniMapUI extends UIComponent {
         this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
         this.ctx.clip();
         
-        // Draw background
-        this.ctx.fillStyle = 'rgba(10, 10, 15, 0.75)'; // Darker, more opaque background
-        this.ctx.fillRect(0, 0, this.mapSize, this.mapSize);
+        // Generate static map if not already generated
+        if (!this.staticMapGenerated) {
+            this.generateStaticMap();
+        }
         
-        // Add a subtle radial gradient for depth
-        const gradient = this.ctx.createRadialGradient(
-            centerX, centerY, radius * 0.1,
-            centerX, centerY, radius
-        );
-        gradient.addColorStop(0, 'rgba(30, 30, 40, 0.1)');
-        gradient.addColorStop(1, 'rgba(5, 5, 10, 0.3)');
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, this.mapSize, this.mapSize);
+        // Use the pre-generated static map as background if available
+        if (this.staticMapGenerated && this.staticMapImage) {
+            // Draw the static map image
+            this.ctx.drawImage(this.staticMapImage, 0, 0, this.mapSize, this.mapSize);
+        } else {
+            // Fallback to dynamic rendering if static map is not available
+            // Draw background
+            this.ctx.fillStyle = 'rgba(10, 10, 15, 0.75)'; // Darker, more opaque background
+            this.ctx.fillRect(0, 0, this.mapSize, this.mapSize);
+            
+            // Add a subtle radial gradient for depth
+            const gradient = this.ctx.createRadialGradient(
+                centerX, centerY, radius * 0.1,
+                centerX, centerY, radius
+            );
+            gradient.addColorStop(0, 'rgba(30, 30, 40, 0.1)');
+            gradient.addColorStop(1, 'rgba(5, 5, 10, 0.3)');
+            this.ctx.fillStyle = gradient;
+            this.ctx.fillRect(0, 0, this.mapSize, this.mapSize);
+            
+            // Draw grid lines for reference
+            this.drawGrid(centerX, centerY, radius);
+            
+            // Draw terrain/environment
+            this.drawEnvironment(playerX, playerY, centerX, centerY);
+            
+            // Draw teleport portals (static ones)
+            this.drawTeleportPortals(playerX, playerY, centerX, centerY);
+        }
         
-        // Draw grid lines for reference
-        this.drawGrid(centerX, centerY, radius);
+        // Draw dynamic elements that change frequently
         
-        // Draw terrain/environment
-        this.drawEnvironment(playerX, playerY, centerX, centerY);
-        
-        // Draw teleport portals
-        this.drawTeleportPortals(playerX, playerY, centerX, centerY);
-        
-        // Draw NPCs and enemies
+        // Draw NPCs and enemies (always dynamic)
         this.drawEntities(playerX, playerY, centerX, centerY);
         
         // Apply map offset for player position
@@ -588,7 +843,8 @@ export class MiniMapUI extends UIComponent {
         // Draw cardinal directions
         this.drawCardinalDirections(centerX, centerY, radius);
         
-        // Draw map controls (they're already added in the HTML)
+        // Update last render time
+        this.lastRenderTime = Date.now();
     }
     
     /**
@@ -781,24 +1037,25 @@ export class MiniMapUI extends UIComponent {
     }
     
     /**
-     * Draw grid lines for reference
+     * Draw grid lines on the map
      * @param {number} centerX - Center X of the mini map
      * @param {number} centerY - Center Y of the mini map
      * @param {number} radius - Radius of the mini map
+     * @param {CanvasRenderingContext2D} [ctx=this.ctx] - Canvas context to draw on
      */
-    drawGrid(centerX, centerY, radius) {
+    drawGrid(centerX, centerY, radius, ctx = this.ctx) {
         // Enhanced grid lines for better visibility
-        this.ctx.lineWidth = 1.5; // Increased line width
+        ctx.lineWidth = 1.5; // Increased line width
         
         // Draw concentric circles
         for (let r = radius / 4; r <= radius; r += radius / 4) {
             // Make outer circles more visible
             const opacity = 0.15 + (r / radius) * 0.1; // Gradually increase opacity for outer circles
-            this.ctx.strokeStyle = `rgba(120, 140, 200, ${opacity})`;
+            ctx.strokeStyle = `rgba(120, 140, 200, ${opacity})`;
             
-            this.ctx.beginPath();
-            this.ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
-            this.ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+            ctx.stroke();
         }
         
         // Draw radial lines
@@ -806,25 +1063,25 @@ export class MiniMapUI extends UIComponent {
             // Make cardinal directions more visible
             if (angle % (Math.PI/2) < 0.01) {
                 // Cardinal directions (N, E, S, W)
-                this.ctx.strokeStyle = 'rgba(150, 150, 220, 0.35)';
-                this.ctx.lineWidth = 2; // Thicker lines for cardinal directions
+                ctx.strokeStyle = 'rgba(150, 150, 220, 0.35)';
+                ctx.lineWidth = 2; // Thicker lines for cardinal directions
             } else if (angle % (Math.PI/4) < 0.01) {
                 // Intercardinal directions (NE, SE, SW, NW)
-                this.ctx.strokeStyle = 'rgba(120, 120, 180, 0.25)';
-                this.ctx.lineWidth = 1.5;
+                ctx.strokeStyle = 'rgba(120, 120, 180, 0.25)';
+                ctx.lineWidth = 1.5;
             } else {
                 // Other angles
-                this.ctx.strokeStyle = 'rgba(100, 100, 150, 0.18)';
-                this.ctx.lineWidth = 1;
+                ctx.strokeStyle = 'rgba(100, 100, 150, 0.18)';
+                ctx.lineWidth = 1;
             }
             
-            this.ctx.beginPath();
-            this.ctx.moveTo(centerX, centerY);
-            this.ctx.lineTo(
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(
                 centerX + Math.cos(angle) * radius,
                 centerY + Math.sin(angle) * radius
             );
-            this.ctx.stroke();
+            ctx.stroke();
         }
     }
     
@@ -833,30 +1090,31 @@ export class MiniMapUI extends UIComponent {
      * @param {number} centerX - Center X of the mini map
      * @param {number} centerY - Center Y of the mini map
      * @param {number} radius - Radius of the mini map
+     * @param {CanvasRenderingContext2D} [ctx=this.ctx] - Canvas context to draw on
      */
-    drawCardinalDirections(centerX, centerY, radius) {
+    drawCardinalDirections(centerX, centerY, radius, ctx = this.ctx) {
         // Create a glow effect for the text
-        this.ctx.shadowColor = 'rgba(100, 100, 255, 0.8)';
-        this.ctx.shadowBlur = 4;
-        this.ctx.fillStyle = 'rgba(220, 220, 255, 0.9)';
-        this.ctx.font = 'bold 12px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(100, 100, 255, 0.8)';
+        ctx.shadowBlur = 4;
+        ctx.fillStyle = 'rgba(220, 220, 255, 0.9)';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         
         // North
-        this.ctx.fillText('N', centerX, centerY - radius + 10);
+        ctx.fillText('N', centerX, centerY - radius + 10);
         
         // East
-        this.ctx.fillText('E', centerX + radius - 10, centerY);
+        ctx.fillText('E', centerX + radius - 10, centerY);
         
         // South
-        this.ctx.fillText('S', centerX, centerY + radius - 10);
+        ctx.fillText('S', centerX, centerY + radius - 10);
         
         // West
-        this.ctx.fillText('W', centerX - radius + 10, centerY);
+        ctx.fillText('W', centerX - radius + 10, centerY);
         
         // Reset shadow
-        this.ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0;
     }
     
     /**

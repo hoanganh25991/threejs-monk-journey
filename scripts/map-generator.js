@@ -281,27 +281,127 @@ class MapGenerator {
     generateZones(theme) {
         console.log('Generating zones...');
         
+        // Create a square boundary for the map
+        const mapHalfSize = this.mapSize / 2;
+        const boundarySize = this.mapSize * 0.95; // 95% of map size to create a clear boundary
+        const boundaryHalfSize = boundarySize / 2;
+        
+        // Create a square boundary zone
+        const boundaryZone = {
+            name: 'Boundary',
+            type: 'boundary',
+            // Define the boundary as a square
+            points: [
+                { x: -boundaryHalfSize, y: 0, z: -boundaryHalfSize },
+                { x: boundaryHalfSize, y: 0, z: -boundaryHalfSize },
+                { x: boundaryHalfSize, y: 0, z: boundaryHalfSize },
+                { x: -boundaryHalfSize, y: 0, z: boundaryHalfSize }
+            ],
+            color: theme.colors.boundary || '#444444'
+        };
+        
+        this.mapData.zones.push(boundaryZone);
+        
+        // Create a central zone
         const centerZone = {
             name: theme.primaryZone,
             center: { x: 0, y: 0, z: 0 },
-            radius: 200,
+            radius: boundaryHalfSize * 0.5, // Half the boundary half-size
             color: theme.colors.ground || theme.colors.soil || theme.colors.sand
         };
         
         this.mapData.zones.push(centerZone);
 
-        // Add secondary zones around the edges
-        const secondaryZones = [
-            { name: 'Terrant', center: { x: 300, y: 0, z: 300 }, radius: 150 },
-            { name: 'Forest', center: { x: -300, y: 0, z: 300 }, radius: 150 },
-            { name: 'Desert', center: { x: 300, y: 0, z: -300 }, radius: 150 },
-            { name: 'Mountains', center: { x: -300, y: 0, z: -300 }, radius: 150 }
+        // Add more complex zone layout with multiple zones
+        // Create 8 zones in a grid pattern
+        const zoneSize = boundaryHalfSize * 0.6;
+        const zoneOffset = zoneSize * 0.8; // Slight overlap between zones
+        
+        const zonePositions = [
+            // Center row
+            { x: -zoneOffset, y: 0, z: 0 },
+            { x: zoneOffset, y: 0, z: 0 },
+            // Top row
+            { x: -zoneOffset, y: 0, z: -zoneOffset },
+            { x: 0, y: 0, z: -zoneOffset },
+            { x: zoneOffset, y: 0, z: -zoneOffset },
+            // Bottom row
+            { x: -zoneOffset, y: 0, z: zoneOffset },
+            { x: 0, y: 0, z: zoneOffset },
+            { x: zoneOffset, y: 0, z: zoneOffset }
+        ];
+        
+        // Zone types based on theme
+        const zoneTypes = [
+            theme.primaryZone,
+            theme.secondaryZone || theme.primaryZone,
+            'Forest',
+            'Mountains',
+            'Desert',
+            'Swamp',
+            'Ruins',
+            'Lava'
         ];
 
-        secondaryZones.forEach(zone => {
-            zone.color = ZONE_COLORS[zone.name]?.soil || ZONE_COLORS[zone.name]?.sand || ZONE_COLORS[zone.name]?.foliage;
+        // Create zones with different types and sizes
+        for (let i = 0; i < zonePositions.length; i++) {
+            const pos = zonePositions[i];
+            const zoneType = zoneTypes[i % zoneTypes.length];
+            
+            // Add some randomness to zone size
+            const sizeVariation = 0.7 + (this.rng() * 0.6); // 0.7 to 1.3
+            const radius = zoneSize * sizeVariation;
+            
+            // Create the zone
+            const zone = {
+                id: `zone_${i}`,
+                name: zoneType,
+                type: zoneType.toLowerCase(),
+                center: { x: pos.x, y: 0, z: pos.z },
+                position: { x: pos.x, y: 0, z: pos.z },
+                radius: radius,
+                color: ZONE_COLORS[zoneType]?.soil || 
+                       ZONE_COLORS[zoneType]?.sand || 
+                       ZONE_COLORS[zoneType]?.foliage || 
+                       '#555555'
+            };
+            
             this.mapData.zones.push(zone);
-        });
+        }
+        
+        // Add some smaller sub-zones for more complexity
+        const subZoneCount = Math.floor(5 + this.rng() * 10); // 5-15 sub-zones
+        
+        for (let i = 0; i < subZoneCount; i++) {
+            // Random position within the boundary
+            const angle = this.rng() * Math.PI * 2;
+            const distance = this.rng() * boundaryHalfSize * 0.8;
+            const x = Math.cos(angle) * distance;
+            const z = Math.sin(angle) * distance;
+            
+            // Random zone type
+            const zoneType = zoneTypes[Math.floor(this.rng() * zoneTypes.length)];
+            
+            // Smaller radius for sub-zones
+            const radius = 30 + this.rng() * 70; // 30-100
+            
+            const subZone = {
+                id: `subzone_${i}`,
+                name: zoneType,
+                type: zoneType.toLowerCase(),
+                center: { x, y: 0, z },
+                position: { x, y: 0, z },
+                radius: radius,
+                color: ZONE_COLORS[zoneType]?.soil || 
+                       ZONE_COLORS[zoneType]?.sand || 
+                       ZONE_COLORS[zoneType]?.foliage || 
+                       '#555555'
+            };
+            
+            this.mapData.zones.push(subZone);
+        }
+        
+        console.log(`Created ${this.mapData.zones.length} zones`);
     }
 
     /**
@@ -310,36 +410,193 @@ class MapGenerator {
     generateMainPaths(theme) {
         console.log('Generating main paths...');
         
-        const pathWidth = theme.features.pathWidth;
+        const pathWidth = theme.features.pathWidth || 3;
+        const boundarySize = this.mapSize * 0.95;
+        const boundaryHalfSize = boundarySize / 2;
         
-        // Create main cross roads
-        this.createPath('main_horizontal', [
-            { x: -400, z: 0 },
-            { x: 400, z: 0 }
-        ], pathWidth, PATH_PATTERNS.STRAIGHT);
+        // Create a grid of paths
+        const gridSize = 3; // 3x3 grid
+        const cellSize = boundarySize / gridSize;
+        
+        // Create horizontal grid lines
+        for (let i = 0; i <= gridSize; i++) {
+            const z = -boundaryHalfSize + (i * cellSize);
+            
+            // Add some randomness to the path
+            const points = [];
+            const segmentCount = 10; // Number of segments for the path
+            const segmentLength = boundarySize / segmentCount;
+            
+            for (let j = 0; j <= segmentCount; j++) {
+                const x = -boundaryHalfSize + (j * segmentLength);
+                // Add some randomness to the path
+                const randomZ = z + (this.rng() * 30 - 15); // +/- 15 units
+                points.push({ x, z: randomZ });
+            }
+            
+            this.createPath(`horizontal_${i}`, points, pathWidth, PATH_PATTERNS.NATURAL);
+        }
+        
+        // Create vertical grid lines
+        for (let i = 0; i <= gridSize; i++) {
+            const x = -boundaryHalfSize + (i * cellSize);
+            
+            // Add some randomness to the path
+            const points = [];
+            const segmentCount = 10; // Number of segments for the path
+            const segmentLength = boundarySize / segmentCount;
+            
+            for (let j = 0; j <= segmentCount; j++) {
+                const z = -boundaryHalfSize + (j * segmentLength);
+                // Add some randomness to the path
+                const randomX = x + (this.rng() * 30 - 15); // +/- 15 units
+                points.push({ x: randomX, z });
+            }
+            
+            this.createPath(`vertical_${i}`, points, pathWidth, PATH_PATTERNS.NATURAL);
+        }
+        
+        // Create diagonal paths
+        this.createPath('diagonal_1', [
+            { x: -boundaryHalfSize, z: -boundaryHalfSize },
+            { x: -boundaryHalfSize/2, z: -boundaryHalfSize/2 },
+            { x: 0, z: 0 },
+            { x: boundaryHalfSize/2, z: boundaryHalfSize/2 },
+            { x: boundaryHalfSize, z: boundaryHalfSize }
+        ], pathWidth, PATH_PATTERNS.NATURAL);
+        
+        this.createPath('diagonal_2', [
+            { x: boundaryHalfSize, z: -boundaryHalfSize },
+            { x: boundaryHalfSize/2, z: -boundaryHalfSize/2 },
+            { x: 0, z: 0 },
+            { x: -boundaryHalfSize/2, z: boundaryHalfSize/2 },
+            { x: -boundaryHalfSize, z: boundaryHalfSize }
+        ], pathWidth, PATH_PATTERNS.NATURAL);
+        
+        // Create circular roads at different radii
+        this.createCircularPath('center_circle_1', { x: 0, z: 0 }, boundaryHalfSize * 0.3, pathWidth);
+        this.createCircularPath('center_circle_2', { x: 0, z: 0 }, boundaryHalfSize * 0.6, pathWidth);
+        
+        // Create some random circular paths
+        for (let i = 0; i < 3; i++) {
+            const centerX = (this.rng() * boundarySize - boundaryHalfSize) * 0.7;
+            const centerZ = (this.rng() * boundarySize - boundaryHalfSize) * 0.7;
+            const radius = 50 + this.rng() * 100; // 50-150
+            
+            this.createCircularPath(`random_circle_${i}`, { x: centerX, z: centerZ }, radius, pathWidth);
+        }
+        
+        // Create some random curved paths
+        for (let i = 0; i < 5; i++) {
+            const startX = (this.rng() * boundarySize - boundaryHalfSize) * 0.8;
+            const startZ = (this.rng() * boundarySize - boundaryHalfSize) * 0.8;
+            const endX = (this.rng() * boundarySize - boundaryHalfSize) * 0.8;
+            const endZ = (this.rng() * boundarySize - boundaryHalfSize) * 0.8;
+            
+            // Create a curved path with control points
+            const controlX = (startX + endX) / 2 + (this.rng() * 200 - 100);
+            const controlZ = (startZ + endZ) / 2 + (this.rng() * 200 - 100);
+            
+            // Generate points along a quadratic curve
+            const points = [];
+            const steps = 10;
+            
+            for (let t = 0; t <= steps; t++) {
+                const progress = t / steps;
+                // Quadratic Bezier curve formula
+                const x = (1-progress)*(1-progress)*startX + 2*(1-progress)*progress*controlX + progress*progress*endX;
+                const z = (1-progress)*(1-progress)*startZ + 2*(1-progress)*progress*controlZ + progress*progress*endZ;
+                points.push({ x, z });
+            }
+            
+            this.createPath(`curved_path_${i}`, points, pathWidth, PATH_PATTERNS.NATURAL);
+        }
 
-        this.createPath('main_vertical', [
-            { x: 0, z: -400 },
-            { x: 0, z: 400 }
-        ], pathWidth, PATH_PATTERNS.STRAIGHT);
-
-        // Create circular road around center
-        this.createCircularPath('center_circle', { x: 0, z: 0 }, 100, pathWidth);
-
-        // Create branching paths to corners
+        // Create paths to the corners of the map
         const corners = [
-            { x: 200, z: 200 },
-            { x: -200, z: 200 },
-            { x: 200, z: -200 },
-            { x: -200, z: -200 }
+            { x: -boundaryHalfSize, z: -boundaryHalfSize },
+            { x: boundaryHalfSize, z: -boundaryHalfSize },
+            { x: boundaryHalfSize, z: boundaryHalfSize },
+            { x: -boundaryHalfSize, z: boundaryHalfSize }
         ];
-
+        
         corners.forEach((corner, index) => {
-            this.createPath(`branch_${index}`, [
-                { x: 0, z: 0 },
-                { x: corner.x * 0.5, z: corner.z * 0.5 },
-                corner
-            ], pathWidth * 0.8, PATH_PATTERNS.CURVED);
+            // Create a path with multiple control points for more natural look
+            const points = [];
+            const steps = 8;
+            
+            // Start from center
+            const startX = 0;
+            const startZ = 0;
+            
+            // End at corner
+            const endX = corner.x;
+            const endZ = corner.z;
+            
+            // Add some randomness to the control points
+            const controlPoints = [
+                { 
+                    x: startX + (endX - startX) * 0.25 + (this.rng() * 50 - 25),
+                    z: startZ + (endZ - startZ) * 0.25 + (this.rng() * 50 - 25)
+                },
+                { 
+                    x: startX + (endX - startX) * 0.5 + (this.rng() * 80 - 40),
+                    z: startZ + (endZ - startZ) * 0.5 + (this.rng() * 80 - 40)
+                },
+                { 
+                    x: startX + (endX - startX) * 0.75 + (this.rng() * 50 - 25),
+                    z: startZ + (endZ - startZ) * 0.75 + (this.rng() * 50 - 25)
+                }
+            ];
+            
+            // Start point
+            points.push({ x: startX, z: startZ });
+            
+            // Add points along the path with some randomness
+            for (let i = 1; i < steps; i++) {
+                const progress = i / steps;
+                
+                // Find the appropriate segment
+                let segment = 0;
+                if (progress < 0.25) segment = 0;
+                else if (progress < 0.5) segment = 1;
+                else if (progress < 0.75) segment = 2;
+                else segment = 3;
+                
+                // Calculate position along the segment
+                let segmentProgress = 0;
+                if (segment === 0) segmentProgress = progress / 0.25;
+                else if (segment === 1) segmentProgress = (progress - 0.25) / 0.25;
+                else if (segment === 2) segmentProgress = (progress - 0.5) / 0.25;
+                else segmentProgress = (progress - 0.75) / 0.25;
+                
+                let x, z;
+                
+                if (segment === 0) {
+                    x = startX + (controlPoints[0].x - startX) * segmentProgress;
+                    z = startZ + (controlPoints[0].z - startZ) * segmentProgress;
+                } else if (segment === 1) {
+                    x = controlPoints[0].x + (controlPoints[1].x - controlPoints[0].x) * segmentProgress;
+                    z = controlPoints[0].z + (controlPoints[1].z - controlPoints[0].z) * segmentProgress;
+                } else if (segment === 2) {
+                    x = controlPoints[1].x + (controlPoints[2].x - controlPoints[1].x) * segmentProgress;
+                    z = controlPoints[1].z + (controlPoints[2].z - controlPoints[1].z) * segmentProgress;
+                } else {
+                    x = controlPoints[2].x + (endX - controlPoints[2].x) * segmentProgress;
+                    z = controlPoints[2].z + (endZ - controlPoints[2].z) * segmentProgress;
+                }
+                
+                // Add some randomness
+                x += this.rng() * 20 - 10;
+                z += this.rng() * 20 - 10;
+                
+                points.push({ x, z });
+            }
+            
+            // End point
+            points.push({ x: endX, z: endZ });
+            
+            this.createPath(`corner_path_${index}`, points, pathWidth * 0.8, PATH_PATTERNS.NATURAL);
         });
     }
 
@@ -350,37 +607,197 @@ class MapGenerator {
         console.log('Generating structures...');
         
         const features = theme.features;
+        const boundarySize = this.mapSize * 0.95;
+        const boundaryHalfSize = boundarySize / 2;
         
-        // Generate villages
-        for (let i = 0; i < features.villageCount; i++) {
-            const position = this.getRandomPosition(150, 350);
+        // Increase structure counts for more complexity
+        const villageCount = features.villageCount ? features.villageCount * 2 : 10;
+        const towerCount = features.towerCount ? features.towerCount * 2 : 15;
+        const ruinsCount = features.ruinsCount ? features.ruinsCount * 2 : 20;
+        const darkSanctumCount = features.darkSanctumCount ? features.darkSanctumCount * 2 : 5;
+        
+        // Create structure clusters
+        const clusterCount = 5 + Math.floor(this.rng() * 5); // 5-10 clusters
+        const clusters = [];
+        
+        // Generate cluster centers
+        for (let i = 0; i < clusterCount; i++) {
+            // Random position within the boundary
+            const angle = this.rng() * Math.PI * 2;
+            const distance = this.rng() * boundaryHalfSize * 0.8;
+            const x = Math.cos(angle) * distance;
+            const z = Math.sin(angle) * distance;
+            
+            clusters.push({
+                position: { x, y: 0, z },
+                radius: 50 + this.rng() * 100 // 50-150
+            });
+        }
+        
+        // Generate villages in clusters
+        for (let i = 0; i < villageCount; i++) {
+            let position;
+            
+            if (i < clusterCount && this.rng() < 0.7) {
+                // Place village at cluster center
+                const cluster = clusters[i % clusterCount];
+                position = { ...cluster.position };
+            } else if (this.rng() < 0.6) {
+                // Place village near a cluster
+                const cluster = clusters[Math.floor(this.rng() * clusterCount)];
+                const angle = this.rng() * Math.PI * 2;
+                const distance = this.rng() * cluster.radius;
+                position = {
+                    x: cluster.position.x + Math.cos(angle) * distance,
+                    y: 0,
+                    z: cluster.position.z + Math.sin(angle) * distance
+                };
+            } else {
+                // Random position
+                position = this.getRandomPosition(0, boundaryHalfSize * 0.9);
+            }
+            
             this.createVillage(position, `village_${i}`, theme);
         }
 
-        // Generate towers
-        for (let i = 0; i < features.towerCount; i++) {
-            const position = this.getRandomPosition(100, 400);
+        // Generate towers along paths and at strategic locations
+        for (let i = 0; i < towerCount; i++) {
+            let position;
+            
+            if (i < 8) {
+                // Place towers at strategic locations (near corners and midpoints of boundary)
+                const locations = [
+                    { x: -boundaryHalfSize * 0.8, z: -boundaryHalfSize * 0.8 }, // Near corners
+                    { x: boundaryHalfSize * 0.8, z: -boundaryHalfSize * 0.8 },
+                    { x: boundaryHalfSize * 0.8, z: boundaryHalfSize * 0.8 },
+                    { x: -boundaryHalfSize * 0.8, z: boundaryHalfSize * 0.8 },
+                    { x: 0, z: -boundaryHalfSize * 0.8 }, // Midpoints of sides
+                    { x: boundaryHalfSize * 0.8, z: 0 },
+                    { x: 0, z: boundaryHalfSize * 0.8 },
+                    { x: -boundaryHalfSize * 0.8, z: 0 }
+                ];
+                
+                position = locations[i];
+                // Add some randomness
+                position.x += this.rng() * 40 - 20;
+                position.z += this.rng() * 40 - 20;
+            } else if (this.rng() < 0.4) {
+                // Place tower near a cluster
+                const cluster = clusters[Math.floor(this.rng() * clusterCount)];
+                const angle = this.rng() * Math.PI * 2;
+                const distance = cluster.radius + 20 + this.rng() * 30; // Just outside the cluster
+                position = {
+                    x: cluster.position.x + Math.cos(angle) * distance,
+                    y: 0,
+                    z: cluster.position.z + Math.sin(angle) * distance
+                };
+            } else {
+                // Random position
+                position = this.getRandomPosition(0, boundaryHalfSize * 0.9);
+            }
+            
             this.createTower(position, `tower_${i}`, theme);
         }
 
-        // Generate ruins
-        for (let i = 0; i < features.ruinsCount; i++) {
-            const position = this.getRandomPosition(80, 380);
+        // Generate ruins scattered throughout the map
+        for (let i = 0; i < ruinsCount; i++) {
+            let position;
+            
+            if (this.rng() < 0.3) {
+                // Place ruins near a cluster
+                const cluster = clusters[Math.floor(this.rng() * clusterCount)];
+                const angle = this.rng() * Math.PI * 2;
+                const distance = this.rng() * (cluster.radius + 50);
+                position = {
+                    x: cluster.position.x + Math.cos(angle) * distance,
+                    y: 0,
+                    z: cluster.position.z + Math.sin(angle) * distance
+                };
+            } else {
+                // Random position
+                position = this.getRandomPosition(0, boundaryHalfSize * 0.95);
+            }
+            
             this.createRuins(position, `ruins_${i}`, theme);
         }
 
-        // Generate dark sanctums (if applicable)
-        if (features.darkSanctumCount) {
-            for (let i = 0; i < features.darkSanctumCount; i++) {
-                const position = this.getRandomPosition(200, 350);
+        // Generate dark sanctums in remote locations
+        if (darkSanctumCount) {
+            for (let i = 0; i < darkSanctumCount; i++) {
+                let position;
+                
+                if (i < 4 && this.rng() < 0.7) {
+                    // Place some dark sanctums in the corners of the map
+                    const corners = [
+                        { x: -boundaryHalfSize * 0.7, z: -boundaryHalfSize * 0.7 },
+                        { x: boundaryHalfSize * 0.7, z: -boundaryHalfSize * 0.7 },
+                        { x: boundaryHalfSize * 0.7, z: boundaryHalfSize * 0.7 },
+                        { x: -boundaryHalfSize * 0.7, z: boundaryHalfSize * 0.7 }
+                    ];
+                    
+                    position = corners[i];
+                    // Add some randomness
+                    position.x += this.rng() * 60 - 30;
+                    position.z += this.rng() * 60 - 30;
+                } else {
+                    // Random remote position
+                    const angle = this.rng() * Math.PI * 2;
+                    const distance = boundaryHalfSize * (0.6 + this.rng() * 0.3); // 60-90% of distance to boundary
+                    position = {
+                        x: Math.cos(angle) * distance,
+                        y: 0,
+                        z: Math.sin(angle) * distance
+                    };
+                }
+                
                 this.createDarkSanctum(position, `sanctum_${i}`, theme);
             }
         }
 
-        // Generate bridges
-        for (let i = 0; i < features.bridgeCount; i++) {
-            const position = this.getRandomPosition(50, 300);
-            this.createBridge(position, `bridge_${i}`, theme);
+        // Generate bridges at strategic locations
+        const bridgeCount = features.bridgeCount ? features.bridgeCount * 1.5 : 15;
+        
+        for (let i = 0; i < bridgeCount; i++) {
+            let position;
+            
+            if (i < 8) {
+                // Place bridges at strategic locations along the grid paths
+                const gridSize = 3;
+                const cellSize = boundarySize / gridSize;
+                
+                // Calculate grid positions
+                const gridPositions = [];
+                for (let x = 1; x < gridSize; x++) {
+                    for (let z = 1; z < gridSize; z++) {
+                        gridPositions.push({
+                            x: -boundaryHalfSize + x * cellSize,
+                            z: -boundaryHalfSize + z * cellSize
+                        });
+                    }
+                }
+                
+                position = gridPositions[i % gridPositions.length];
+                // Add some randomness
+                position.x += this.rng() * 50 - 25;
+                position.z += this.rng() * 50 - 25;
+            } else if (this.rng() < 0.4) {
+                // Place bridge near a cluster
+                const cluster = clusters[Math.floor(this.rng() * clusterCount)];
+                const angle = this.rng() * Math.PI * 2;
+                const distance = cluster.radius * (0.8 + this.rng() * 0.4); // Near the edge of the cluster
+                position = {
+                    x: cluster.position.x + Math.cos(angle) * distance,
+                    y: 0,
+                    z: cluster.position.z + Math.sin(angle) * distance
+                };
+            } else {
+                // Random position
+                position = this.getRandomPosition(0, boundaryHalfSize * 0.9);
+            }
+            
+            // Randomize bridge orientation
+            const rotation = this.rng() * Math.PI;
+            this.createBridge(position, `bridge_${i}`, theme, rotation);
         }
     }
 
@@ -391,25 +808,36 @@ class MapGenerator {
         console.log('Generating environment...');
         
         const features = theme.features;
+        const boundarySize = this.mapSize * 0.95;
+        const boundaryHalfSize = boundarySize / 2;
         
         // Generate background coverage first (dense tree/object coverage across the entire map)
         this.generateBackgroundCoverage(theme);
         
-        // Generate trees along paths
+        // Generate trees along paths with much higher density
         if (features.treeDensity) {
-            this.generateTreesAlongPaths(features.treeDensity * 1.5, theme); // Increased density
+            this.generateTreesAlongPaths(features.treeDensity * 3, theme); // Tripled density
         }
         
-        // Generate dense forest clusters
+        // Generate dense forest clusters with much higher density
         if (features.treeDensity) {
-            this.generateForestClusters(features.treeDensity * 2, theme); // Doubled density
+            this.generateForestClusters(features.treeDensity * 4, theme); // Quadrupled density
         }
 
-        // Generate rocks in clusters
-        this.generateRockClusters(80, theme); // Increased from 50
+        // Generate rocks in clusters with much higher density
+        this.generateRockClusters(150, theme); // Significantly increased
 
-        // Generate bushes in clusters
-        this.generateBushClusters(60, theme); // Increased from 30
+        // Generate bushes in clusters with much higher density
+        this.generateBushClusters(120, theme); // Significantly increased
+        
+        // Generate mountain ranges along the boundary
+        this.generateMountainRanges(theme, boundaryHalfSize);
+        
+        // Generate water features (lakes, ponds, rivers)
+        this.generateWaterFeatures(theme, boundaryHalfSize);
+        
+        // Generate special environment features based on theme
+        this.generateSpecialEnvironmentFeatures(theme, boundaryHalfSize);
 
         // Generate flowers in patches
         this.generateFlowerPatches(80, theme); // Increased from 40
@@ -1768,12 +2196,21 @@ class MapGenerator {
 
     /**
      * Generate mountain ranges
+     * This method can be called in two ways:
+     * 1. generateMountainRanges(count, theme) - Generate a specific number of mountain ranges
+     * 2. generateMountainRanges(theme, boundaryHalfSize) - Generate mountain ranges based on theme and boundary
      */
-    generateMountainRanges(count, theme) {
-        // Create several mountain ranges
-        const rangeCount = Math.floor(count / 4); // Fewer, connected ranges
-        
-        for (let i = 0; i < rangeCount; i++) {
+    generateMountainRanges(countOrTheme, themeOrBoundaryHalfSize) {
+        // Check if first parameter is a number (count) or an object (theme)
+        if (typeof countOrTheme === 'number') {
+            // Called with (count, theme)
+            const count = countOrTheme;
+            const theme = themeOrBoundaryHalfSize;
+            
+            // Create several mountain ranges
+            const rangeCount = Math.floor(count / 4); // Fewer, connected ranges
+            
+            for (let i = 0; i < rangeCount; i++) {
             const rangeCenter = this.getRandomPosition(150, 400);
             
             // Skip if too close to structures
@@ -1880,20 +2317,96 @@ class MapGenerator {
                 });
             }
         }
+        } else {
+            // Called with (theme, boundaryHalfSize)
+            const theme = countOrTheme;
+            const boundaryHalfSize = themeOrBoundaryHalfSize;
+            
+            // Determine count based on theme
+            let count = 16; // Default count (4 ranges with 4 mountains each)
+            
+            if (theme.features && theme.features.mountainRangeCount) {
+                count = theme.features.mountainRangeCount;
+            } else if (theme.primaryZone === 'Mountains') {
+                count = 32; // More mountains in mountain zones
+            }
+            
+            // Create boundary mountains - mountains around the edge of the map
+            const boundaryMountainCount = 24; // Mountains around the boundary
+            const boundaryRadius = boundaryHalfSize * 0.9; // Slightly inside the boundary
+            
+            for (let i = 0; i < boundaryMountainCount; i++) {
+                const angle = (i / boundaryMountainCount) * Math.PI * 2;
+                const x = Math.cos(angle) * boundaryRadius;
+                const z = Math.sin(angle) * boundaryRadius;
+                
+                // Add some randomness to position
+                const position = {
+                    x: x + (this.rng() - 0.5) * 30,
+                    y: 0,
+                    z: z + (this.rng() - 0.5) * 30
+                };
+                
+                // Create mountain
+                this.mapData.environment.push({
+                    type: 'mountain',
+                    position,
+                    theme: theme.name,
+                    height: 40 + this.rng() * 80 // 40-120 height (taller boundary mountains)
+                });
+            }
+            
+            // Also create some internal mountain ranges
+            this.generateMountainRanges(count, theme);
+        }
     }
 
     /**
      * Generate water features
+     * This method can be called in two ways:
+     * 1. generateWaterFeatures(count, theme) - Generate a specific number of water features
+     * 2. generateWaterFeatures(theme, boundaryHalfSize) - Generate water features based on theme and boundary
      */
-    generateWaterFeatures(count, theme) {
-        for (let i = 0; i < count; i++) {
-            const position = this.getRandomPosition(80, 350);
-            this.mapData.environment.push({
-                type: 'water',
-                position,
-                theme: theme.name,
-                size: 5 + this.rng() * 10
-            });
+    generateWaterFeatures(countOrTheme, themeOrBoundaryHalfSize) {
+        // Check if first parameter is a number (count) or an object (theme)
+        if (typeof countOrTheme === 'number') {
+            // Called with (count, theme)
+            const count = countOrTheme;
+            const theme = themeOrBoundaryHalfSize;
+            
+            for (let i = 0; i < count; i++) {
+                const position = this.getRandomPosition(80, 350);
+                this.mapData.environment.push({
+                    type: 'water',
+                    position,
+                    theme: theme.name,
+                    size: 5 + this.rng() * 10
+                });
+            }
+        } else {
+            // Called with (theme, boundaryHalfSize)
+            const theme = countOrTheme;
+            const boundaryHalfSize = themeOrBoundaryHalfSize;
+            
+            // Determine count based on theme
+            let count = 20; // Default count
+            
+            if (theme.features && theme.features.waterFeatureCount) {
+                count = theme.features.waterFeatureCount;
+            } else if (theme.primaryZone === 'Swamp') {
+                count = 30; // More water in swamps
+            }
+            
+            // Generate water features
+            for (let i = 0; i < count; i++) {
+                const position = this.getRandomPosition(80, boundaryHalfSize * 0.8);
+                this.mapData.environment.push({
+                    type: 'water',
+                    position,
+                    theme: theme.name,
+                    size: 5 + this.rng() * 10
+                });
+            }
         }
     }
 
@@ -1908,6 +2421,135 @@ class MapGenerator {
                 position,
                 theme: theme.name,
                 size: 3 + this.rng() * 8
+            });
+        }
+    }
+
+    /**
+     * Generate special environment features based on theme
+     * This method handles the theme-specific special features
+     */
+    generateSpecialEnvironmentFeatures(theme, boundaryHalfSize) {
+        // Determine count based on theme
+        let count = 15; // Default count
+        
+        if (theme.features && theme.features.specialFeatureCount) {
+            count = theme.features.specialFeatureCount;
+        }
+        
+        // Generate different special features based on theme
+        switch (theme.primaryZone) {
+            case 'Forest':
+                this.generateForestSpecialFeatures(count, theme);
+                break;
+            case 'Mountains':
+                this.generateMountainSpecialFeatures(count, theme);
+                break;
+            case 'Desert':
+                this.generateDesertSpecialFeatures(count, theme);
+                break;
+            case 'Swamp':
+                this.generateSwampSpecialFeatures(count, theme);
+                break;
+            case 'Ruins':
+                this.generateRuinsSpecialFeatures(count, theme);
+                break;
+            default:
+                // For any other theme, generate generic special features
+                this.generateGenericSpecialFeatures(count, theme);
+                break;
+        }
+    }
+    
+    /**
+     * Generate forest-specific special features
+     */
+    generateForestSpecialFeatures(count, theme) {
+        for (let i = 0; i < count; i++) {
+            const position = this.getRandomPosition(80, 350);
+            this.mapData.environment.push({
+                type: 'ancient_tree',
+                position,
+                theme: theme.name,
+                size: 8 + this.rng() * 12
+            });
+        }
+    }
+    
+    /**
+     * Generate mountain-specific special features
+     */
+    generateMountainSpecialFeatures(count, theme) {
+        for (let i = 0; i < count; i++) {
+            const position = this.getRandomPosition(100, 350);
+            this.mapData.environment.push({
+                type: 'ice_formation',
+                position,
+                theme: theme.name,
+                size: 5 + this.rng() * 10
+            });
+        }
+    }
+    
+    /**
+     * Generate desert-specific special features
+     */
+    generateDesertSpecialFeatures(count, theme) {
+        for (let i = 0; i < count; i++) {
+            const position = this.getRandomPosition(100, 350);
+            this.mapData.environment.push({
+                type: 'oasis',
+                position,
+                theme: theme.name,
+                size: 6 + this.rng() * 8
+            });
+        }
+    }
+    
+    /**
+     * Generate swamp-specific special features
+     */
+    generateSwampSpecialFeatures(count, theme) {
+        for (let i = 0; i < count; i++) {
+            const position = this.getRandomPosition(80, 350);
+            this.mapData.environment.push({
+                type: 'swamp_light',
+                position,
+                theme: theme.name,
+                size: 3 + this.rng() * 6
+            });
+        }
+    }
+    
+    /**
+     * Generate ruins-specific special features
+     */
+    generateRuinsSpecialFeatures(count, theme) {
+        for (let i = 0; i < count; i++) {
+            const position = this.getRandomPosition(100, 350);
+            this.mapData.environment.push({
+                type: 'ancient_statue',
+                position,
+                theme: theme.name,
+                size: 4 + this.rng() * 8
+            });
+        }
+    }
+    
+    /**
+     * Generate generic special features for any theme
+     */
+    generateGenericSpecialFeatures(count, theme) {
+        for (let i = 0; i < count; i++) {
+            const position = this.getRandomPosition(100, 350);
+            const types = ['crystal_formation', 'rare_plant', 'magical_stone', 'ancient_artifact'];
+            const type = types[Math.floor(this.rng() * types.length)];
+            
+            this.mapData.environment.push({
+                type,
+                position,
+                theme: theme.name,
+                size: 3 + this.rng() * 7
             });
         }
     }

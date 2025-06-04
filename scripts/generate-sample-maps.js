@@ -3,11 +3,17 @@
 /**
  * Generate Sample Maps Script
  * Creates sample maps for each theme and saves them to the generated-maps directory
+ * Also generates minimaps and map images
  */
 
 import { MapGenerator, MAP_THEMES } from './map-generator.js';
 import fs from 'fs';
 import path from 'path';
+import { createRequire } from 'module';
+
+// Use createRequire to import CommonJS modules
+const require = createRequire(import.meta.url);
+const MinimapGenerator = require('./minimap-generator.js');
 
 /**
  * Generate all sample maps
@@ -36,11 +42,33 @@ async function generateAllSampleMaps() {
         // Save map
         fs.writeFileSync(filepath, generator.exportToJSON());
         
+        // Generate minimap
+        const minimapOutputDir = path.join(outputDir, 'minimaps');
+        if (!fs.existsSync(minimapOutputDir)) {
+            fs.mkdirSync(minimapOutputDir, { recursive: true });
+        }
+        
+        const baseFilename = path.basename(filename, '.json');
+        const minimapGenerator = new MinimapGenerator(mapData, {
+            outputDir: minimapOutputDir,
+            minimapResolution: 200,
+            imageResolutions: [256]
+        });
+        
+        // Generate minimap data and images
+        const minimapResult = minimapGenerator.generate(baseFilename);
+        
         console.log(`✓ ${theme.name} saved to: ${filename}`);
         console.log(`  - Zones: ${mapData.zones.length}`);
         console.log(`  - Structures: ${mapData.structures.length}`);
         console.log(`  - Paths: ${mapData.paths.length}`);
         console.log(`  - Environment objects: ${mapData.environment.length}`);
+        console.log(`  - Minimap generated: ${minimapResult.imageFiles.length} images`);
+        
+        // Get the highest resolution minimap image for preview
+        const highestResImage = minimapResult.imageFiles.reduce((highest, current) => {
+            return (!highest || current.resolution > highest.resolution) ? current : highest;
+        }, null);
         
         // Create map entry for index
         generatedMaps.push({
@@ -48,7 +76,12 @@ async function generateAllSampleMaps() {
             name: theme.name,
             description: theme.description,
             filename: filename,
-            preview: `images/map-previews/${themeKey.toLowerCase()}.jpg`,
+            // Use the highest resolution minimap image as preview if available
+            preview: highestResImage ? `minimaps/${path.basename(highestResImage.path)}` : `images/map-previews/${themeKey.toLowerCase()}.jpg`,
+            minimap: {
+                data: `minimaps/${baseFilename}_minimap.json`,
+                images: minimapResult.imageFiles.map(img => `minimaps/${path.basename(img.path)}`)
+            },
             stats: {
                 zones: mapData.zones.length,
                 structures: mapData.structures.length,
@@ -197,11 +230,33 @@ async function generateRandomMaps(count = 20) {
         const filepath = path.join(outputDir, filename);
         fs.writeFileSync(filepath, generator.exportToJSON());
         
+        // Generate minimap
+        const minimapOutputDir = path.join(outputDir, 'minimaps');
+        if (!fs.existsSync(minimapOutputDir)) {
+            fs.mkdirSync(minimapOutputDir, { recursive: true });
+        }
+        
+        const baseFilename = path.basename(filename, '.json');
+        const minimapGenerator = new MinimapGenerator(mapData, {
+            outputDir: minimapOutputDir,
+            minimapResolution: 200,
+            imageResolutions: [256]
+        });
+        
+        // Generate minimap data and images
+        const minimapResult = minimapGenerator.generate(baseFilename);
+        
         console.log(`✓ ${mapName} saved to: ${filename}`);
         console.log(`  - Zones: ${mapData.zones.length}`);
         console.log(`  - Structures: ${mapData.structures.length}`);
         console.log(`  - Paths: ${mapData.paths.length}`);
         console.log(`  - Environment objects: ${mapData.environment.length}`);
+        console.log(`  - Minimap generated: ${minimapResult.imageFiles.length} images`);
+        
+        // Get the highest resolution minimap image for preview
+        const highestResImage = minimapResult.imageFiles.reduce((highest, current) => {
+            return (!highest || current.resolution > highest.resolution) ? current : highest;
+        }, null);
         
         // Create map entry for index
         generatedMaps.push({
@@ -209,7 +264,12 @@ async function generateRandomMaps(count = 20) {
             name: mapName,
             description: `${variation.name} variation of ${theme.description}`,
             filename: filename,
-            preview: `images/map-previews/${themeKey.toLowerCase()}.jpg`,
+            // Use the highest resolution minimap image as preview if available
+            preview: highestResImage ? `minimaps/${path.basename(highestResImage.path)}` : `images/map-previews/${themeKey.toLowerCase()}.jpg`,
+            minimap: {
+                data: `minimaps/${baseFilename}_minimap.json`,
+                images: minimapResult.imageFiles.map(img => `minimaps/${path.basename(img.path)}`)
+            },
             seed: seed,
             mapSize: mapSize,
             variation: variation.name,
@@ -354,17 +414,35 @@ function generateCustomMap(themeName, options = {}) {
     const filepath = path.join(outputDir, filename);
     fs.writeFileSync(filepath, generator.exportToJSON());
     
+    // Generate minimap
+    const minimapOutputDir = path.join(outputDir, 'minimaps');
+    if (!fs.existsSync(minimapOutputDir)) {
+        fs.mkdirSync(minimapOutputDir, { recursive: true });
+    }
+    
+    const baseFilename = path.basename(filename, '.json');
+    const minimapGenerator = new MinimapGenerator(mapData, {
+        outputDir: minimapOutputDir,
+        minimapResolution: 200,
+        imageResolutions: [256]
+    });
+    
+    // Generate minimap data and images
+    const minimapResult = minimapGenerator.generate(baseFilename);
+    
     // Update index.json with the new map
-    updateMapIndex(themeName, filename, mapData);
+    updateMapIndex(themeName, filename, mapData, minimapResult);
     
     console.log(`Custom map generated: ${filepath}`);
-    return { mapData, filepath };
+    console.log(`Minimap generated: ${minimapResult.imageFiles.length} images`);
+    
+    return { mapData, filepath, minimap: minimapResult };
 }
 
 /**
  * Update the maps index.json file with a new map
  */
-function updateMapIndex(themeName, filename, mapData) {
+function updateMapIndex(themeName, filename, mapData, minimapResult = null) {
     const indexPath = path.join(process.cwd(), 'assets/maps/index.json');
     let indexData = { maps: [] };
     
@@ -379,6 +457,8 @@ function updateMapIndex(themeName, filename, mapData) {
     
     // Create map entry
     const theme = MAP_THEMES[themeName];
+    const baseFilename = path.basename(filename, '.json');
+    
     const mapEntry = {
         id: `${themeName.toLowerCase()}_custom_${Date.now()}`,
         name: `Custom ${theme.name}`,
@@ -392,6 +472,24 @@ function updateMapIndex(themeName, filename, mapData) {
             environment: mapData.environment.length
         }
     };
+    
+    // Add minimap information if available
+    if (minimapResult) {
+        // Get the highest resolution minimap image for preview
+        const highestResImage = minimapResult.imageFiles.reduce((highest, current) => {
+            return (!highest || current.resolution > highest.resolution) ? current : highest;
+        }, null);
+        
+        // Use the highest resolution minimap image as preview
+        if (highestResImage) {
+            mapEntry.preview = `minimaps/${path.basename(highestResImage.path)}`;
+        }
+        
+        mapEntry.minimap = {
+            data: `minimaps/${baseFilename}_minimap.json`,
+            images: minimapResult.imageFiles.map(img => `minimaps/${path.basename(img.path)}`)
+        };
+    }
     
     // Add to maps array
     indexData.maps.push(mapEntry);
