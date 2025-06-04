@@ -24,6 +24,7 @@ export class SkillTreeUI extends UIComponent {
     this.selectedVariant = null;
     this.selectedBuff = null;
     this.skillPoints = 10_000_000; // Will be loaded from player data
+    this.selectionMode = 'variants'; // 'variants' or 'buffs'
 
     // Custom skills flag - will be initialized in init()
 
@@ -42,7 +43,9 @@ export class SkillTreeUI extends UIComponent {
       skillDetailDescription: null,
       skillVariants: null,
       skillBuffs: null,
-      saveButton: null
+      saveButton: null,
+      continueButton: null, // New button to continue from variants to buffs
+      backButton: null      // New button to go back from buffs to variants
     };
   }
   
@@ -117,6 +120,9 @@ export class SkillTreeUI extends UIComponent {
     // Render the skill tree
     this.renderSkillTree();
     
+    // Initialize with no skill selected - show empty variants panel
+    this.showSkillVariants(null);
+    
     // Add event listener for save button
     if (this.elements.saveButton) {
       this.elements.saveButton.addEventListener('click', () => {
@@ -146,6 +152,51 @@ export class SkillTreeUI extends UIComponent {
     this.elements.skillBuffs = document.getElementById('skill-buffs');
     this.elements.saveButton = document.getElementById('skill-tree-save-btn');
     
+    // Create continue button for mobile optimization
+    this.elements.continueButton = document.createElement('button');
+    this.elements.continueButton.id = 'skill-tree-continue-btn';
+    this.elements.continueButton.className = 'skill-tree-nav-btn';
+    this.elements.continueButton.textContent = 'Continue to Buffs';
+    this.elements.continueButton.style.display = 'none';
+    this.elements.continueButton.addEventListener('click', () => this.switchToBuffSelection());
+    
+    // Create back button for mobile optimization
+    this.elements.backButton = document.createElement('button');
+    this.elements.backButton.id = 'skill-tree-back-btn';
+    this.elements.backButton.className = 'skill-tree-nav-btn';
+    this.elements.backButton.textContent = 'Back to Variants';
+    this.elements.backButton.style.display = 'none';
+    this.elements.backButton.addEventListener('click', () => this.switchToVariantSelection());
+    
+    // Add buttons to the DOM
+    const variantsContainer = document.getElementById('skill-variants-container');
+    const buffsContainer = document.getElementById('skill-buffs-container');
+    
+    // Create instruction elements for variants and buffs
+    this.elements.variantsInstruction = document.createElement('div');
+    this.elements.variantsInstruction.className = 'skill-tree-instruction';
+    this.elements.variantsInstruction.innerHTML = '<p>Select a variant for your skill</p>';
+    
+    this.elements.buffsInstruction = document.createElement('div');
+    this.elements.buffsInstruction.className = 'skill-tree-instruction';
+    this.elements.buffsInstruction.innerHTML = '<p>Select buffs for your variant</p>';
+    
+    if (variantsContainer) {
+      // Add instruction and continue button at the top
+      variantsContainer.insertBefore(this.elements.variantsInstruction, variantsContainer.firstChild);
+      variantsContainer.insertBefore(this.elements.continueButton, variantsContainer.firstChild.nextSibling);
+    } else {
+      console.error("Variants container not found in the DOM");
+    }
+    
+    if (buffsContainer) {
+      // Add instruction and back button at the top
+      buffsContainer.insertBefore(this.elements.buffsInstruction, buffsContainer.firstChild);
+      buffsContainer.insertBefore(this.elements.backButton, buffsContainer.firstChild.nextSibling);
+    } else {
+      console.error("Buffs container not found in the DOM");
+    }
+    
     // Update skill points display
     if (this.elements.skillPointsValue) {
       this.elements.skillPointsValue.textContent = this.skillPoints;
@@ -155,10 +206,98 @@ export class SkillTreeUI extends UIComponent {
     
     // Log any missing elements
     Object.entries(this.elements).forEach(([key, element]) => {
-      if (!element) {
+      if (!element && key !== 'continueButton' && key !== 'backButton') {
         console.error(`DOM element "${key}" not found in the skill tree UI`);
       }
     });
+    
+    // Add CSS for mobile optimization
+    this.addMobileOptimizationStyles();
+  }
+  
+  /**
+   * Add CSS styles for mobile optimization
+   */
+  addMobileOptimizationStyles() {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+      /* Global styles for skill tree */
+      .skill-tree-instruction {
+        padding: 10px;
+        margin-bottom: 15px;
+        background-color: rgba(0, 0, 0, 0.5);
+        border-radius: 5px;
+        text-align: center;
+        font-size: 16px;
+        color: #fff;
+      }
+      
+      .skill-tree-nav-btn {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0 20px 0;
+        background-color: #3a3a3a;
+        color: white;
+        border: 2px solid #555;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        text-align: center;
+      }
+      
+      .skill-tree-nav-btn:hover {
+        background-color: #4a4a4a;
+      }
+      
+      /* Single column layout for variants and buffs */
+      .skill-variant, .skill-buff {
+        width: 100%;
+        margin-bottom: 15px;
+        display: block;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      
+      .variant-header, .buff-header {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 8px;
+      }
+      
+      .variant-name, .buff-name {
+        flex-grow: 1;
+        font-size: 16px;
+      }
+      
+      .variant-cost, .buff-cost {
+        font-size: 14px;
+        white-space: nowrap;
+        margin-left: 10px;
+      }
+      
+      .variant-icon, .buff-icon {
+        margin-right: 10px;
+      }
+      
+      /* Section titles outside of options */
+      .section-title {
+        margin-bottom: 15px;
+        padding: 5px;
+        background-color: rgba(0, 0, 0, 0.3);
+        border-radius: 5px;
+      }
+      
+      /* Mobile optimization styles */
+      @media (max-width: 1024px), (orientation: landscape) and (max-height: 768px) {
+        #skill-variants-container, #skill-buffs-container {
+          width: 100%;
+          max-width: 100%;
+        }
+      }
+    `;
+    document.head.appendChild(styleElement);
   }
 
   /**
@@ -284,17 +423,137 @@ ${iconData.emoji}
     // Update skill details
     this.updateSkillDetails(skillName);
 
+    // Reset selection mode to variants first
+    this.switchToVariantSelection();
+  }
+  
+  /**
+   * Switch to variant selection mode
+   */
+  switchToVariantSelection() {
+    // Set selection mode
+    this.selectionMode = 'variants';
+    
     // Show variants for the selected skill
-    this.showSkillVariants(skillName);
-
+    this.showSkillVariants(this.selectedSkill);
+    
+    // Hide buffs container
+    if (this.elements.skillBuffs) {
+      const buffsContainer = document.getElementById('skill-buffs-container');
+      if (buffsContainer) {
+        buffsContainer.style.display = 'none';
+      }
+    }
+    
+    // Show variants container
+    const variantsContainer = document.getElementById('skill-variants-container');
+    if (variantsContainer) {
+      variantsContainer.style.display = 'block';
+    }
+    
+    // Show continue button if a variant is selected
+    const playerSkillData = this.playerSkills[this.selectedSkill];
+    if (playerSkillData && (playerSkillData.activeVariant || playerSkillData.activeVariant === null)) {
+      this.elements.continueButton.style.display = 'block';
+    } else {
+      this.elements.continueButton.style.display = 'none';
+    }
+    
+    // Hide back button
+    this.elements.backButton.style.display = 'none';
+  }
+  
+  /**
+   * Switch to buff selection mode
+   */
+  switchToBuffSelection() {
+    // Set selection mode
+    this.selectionMode = 'buffs';
+    
+    // Hide variants container
+    const variantsContainer = document.getElementById('skill-variants-container');
+    if (variantsContainer) {
+      variantsContainer.style.display = 'none';
+    }
+    
+    // Show buffs container
+    const buffsContainer = document.getElementById('skill-buffs-container');
+    if (buffsContainer) {
+      buffsContainer.style.display = 'block';
+    }
+    
+    // Show back button
+    this.elements.backButton.style.display = 'block';
+    
+    // Hide continue button
+    this.elements.continueButton.style.display = 'none';
+    
     // Check if there's an active variant for this skill
-    const playerSkillData = this.playerSkills[skillName];
+    const playerSkillData = this.playerSkills[this.selectedSkill];
     if (playerSkillData && playerSkillData.activeVariant) {
       // Show buffs for the active variant
-      this.showVariantBuffs(skillName, playerSkillData.activeVariant);
+      this.showVariantBuffs(this.selectedSkill, playerSkillData.activeVariant);
     } else {
       // Show buffs for the base skill
-      this.showBaseSkillBuffs(skillName);
+      this.showBaseSkillBuffs(this.selectedSkill);
+    }
+    
+    // Add selected variant info at the top of buffs container
+    this.showSelectedVariantInfo();
+  }
+  
+  /**
+   * Show selected variant info at the top of buffs container
+   */
+  showSelectedVariantInfo() {
+    const playerSkillData = this.playerSkills[this.selectedSkill];
+    if (!playerSkillData) return;
+    
+    const variantName = playerSkillData.activeVariant || 'base';
+    const skillData = this.skillTrees[this.selectedSkill];
+    
+    if (!skillData) return;
+    
+    // Create variant info element
+    const variantInfoElement = document.createElement('div');
+    variantInfoElement.className = 'selected-variant-info';
+    
+    // Get variant data and icon
+    let variantData, iconData;
+    if (variantName === 'base') {
+      variantData = {
+        description: skillData.baseDescription || "No description available."
+      };
+      iconData = getSkillIcon(this.selectedSkill);
+    } else {
+      variantData = skillData.variants[variantName];
+      iconData = getSkillIcon(variantName);
+    }
+    
+    if (!variantData) return;
+    
+    // Create HTML for variant info
+    variantInfoElement.innerHTML = `
+      <div class="selected-variant-header">
+        <div class="variant-icon ${iconData.cssClass}" style="background-color: rgba(0, 0, 0, 0.7); border: 2px solid ${iconData.color}; box-shadow: 0 0 10px ${iconData.color}40;">
+          ${iconData.emoji}
+        </div>
+        <div class="variant-name">${variantName === 'base' ? `Base ${this.selectedSkill}` : variantName}</div>
+      </div>
+      <div class="selected-variant-description">${variantData.description || "No description available."}</div>
+    `;
+    
+    // Add to buffs container
+    const buffsContainer = document.getElementById('skill-buffs-container');
+    if (buffsContainer) {
+      // Remove any existing variant info
+      const existingInfo = buffsContainer.querySelector('.selected-variant-info');
+      if (existingInfo) {
+        existingInfo.remove();
+      }
+      
+      // Insert at the beginning
+      buffsContainer.insertBefore(variantInfoElement, buffsContainer.firstChild);
     }
   }
 
@@ -340,6 +599,18 @@ ${iconData.emoji}
 
     // Clear container
     this.elements.skillVariants.innerHTML = "";
+    
+    // If no skill is selected, don't show any variants
+    if (!skillName) {
+      // Update instruction text
+      this.elements.variantsInstruction.innerHTML = '<p>Select a skill from the tree to view its variants</p>';
+      // Hide continue button
+      this.elements.continueButton.style.display = 'none';
+      return;
+    }
+    
+    // Update instruction text for selected skill
+    this.elements.variantsInstruction.innerHTML = `<p>Select a variant for your <strong>${skillName}</strong> skill</p>`;
 
     // Check if we have data for this skill
     if (
@@ -437,6 +708,13 @@ ${iconData.emoji}
         }
       });
     });
+    
+    // Show continue button if a variant is already selected
+    if (playerSkillData && (playerSkillData.activeVariant || playerSkillData.activeVariant === null)) {
+      this.elements.continueButton.style.display = 'block';
+    } else {
+      this.elements.continueButton.style.display = 'none';
+    }
   }
 
   /**
@@ -512,8 +790,16 @@ ${iconData.emoji}
       this.playerSkills[skillName].activeVariant = null;
     }
     
-    // Show buffs for the base skill
-    this.showBaseSkillBuffs(skillName);
+    // Show continue button if in variant selection mode
+    if (this.selectionMode === 'variants') {
+      this.elements.continueButton.style.display = 'block';
+    }
+    
+    // If in buffs mode, update the selected variant info and show buffs
+    if (this.selectionMode === 'buffs') {
+      this.showSelectedVariantInfo();
+      this.showBaseSkillBuffs(skillName);
+    }
     
     // Save to localStorage
     try {
@@ -547,6 +833,9 @@ ${iconData.emoji}
 
     // Clear container
     this.elements.skillBuffs.innerHTML = "";
+    
+    // Update instruction text for base skill
+    this.elements.buffsInstruction.innerHTML = `<p>Choose buffs for your <strong>Base ${skillName}</strong> skill</p>`;
 
     // Check if we have data for this skill and it has buffs
     if (
@@ -687,6 +976,12 @@ ${iconData.emoji}
       
       // Update available points display
       this.updateAvailablePoints();
+      
+      // Show continue button since base variant is selected
+      if (this.selectionMode === 'variants') {
+        this.elements.continueButton.style.display = 'block';
+      }
+      
       return;
     }
 
@@ -708,12 +1003,18 @@ ${iconData.emoji}
       selectedVariant.classList.add("active");
     }
 
-    // We've removed the variant buttons from the UI
-    
-    // We've removed the base skill status and button from the UI
+    // Show continue button if in variant selection mode
+    if (this.selectionMode === 'variants') {
+      this.elements.continueButton.style.display = 'block';
+    }
 
-    // Show buffs for the selected variant
-    this.showVariantBuffs(skillName, variantName);
+    // If in buffs mode, update the selected variant info
+    if (this.selectionMode === 'buffs') {
+      this.showSelectedVariantInfo();
+      
+      // Show buffs for the selected variant
+      this.showVariantBuffs(skillName, variantName);
+    }
     
     // Update available points display
     this.updateAvailablePoints();
@@ -733,6 +1034,10 @@ ${iconData.emoji}
 
     // Clear container
     this.elements.skillBuffs.innerHTML = "";
+    
+    // Update instruction text for selected variant
+    const displayName = variantName === null ? `Base ${skillName}` : variantName;
+    this.elements.buffsInstruction.innerHTML = `<p>Choose buffs for your <strong>${displayName}</strong> variant</p>`;
 
     // Check if we have data for this skill and variant
     if (
@@ -809,7 +1114,6 @@ ${iconData.emoji}
               : ""
             }
           </div>
-
         </div>
       `;
 

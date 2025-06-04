@@ -235,6 +235,167 @@ class MapGenerator {
             metadata: {}
         };
     }
+    
+    /**
+     * Generate a random color in hex format
+     * @param {number} baseHue - Optional base hue (0-360) to build color around
+     * @param {number} satRange - Range of saturation variation [min, max] (0-100)
+     * @param {number} lightRange - Range of lightness variation [min, max] (0-100)
+     * @returns {string} - Hex color code
+     */
+    generateRandomColor(baseHue = null, satRange = [50, 100], lightRange = [30, 70]) {
+        // Generate random hue or use base hue with slight variation
+        let hue;
+        if (baseHue !== null) {
+            // Add some variation to the base hue (±15 degrees)
+            hue = (baseHue + (this.rng() * 30 - 15)) % 360;
+            if (hue < 0) hue += 360;
+        } else {
+            hue = this.rng() * 360;
+        }
+        
+        // Generate random saturation and lightness within specified ranges
+        const sat = satRange[0] + this.rng() * (satRange[1] - satRange[0]);
+        const light = lightRange[0] + this.rng() * (lightRange[1] - lightRange[0]);
+        
+        // Convert HSL to RGB
+        return this.hslToHex(hue, sat, light);
+    }
+    
+    /**
+     * Convert HSL color values to hex string
+     * @param {number} h - Hue (0-360)
+     * @param {number} s - Saturation (0-100)
+     * @param {number} l - Lightness (0-100)
+     * @returns {string} - Hex color code
+     */
+    hslToHex(h, s, l) {
+        // Convert HSL percentages to decimals
+        s /= 100;
+        l /= 100;
+        
+        const c = (1 - Math.abs(2 * l - 1)) * s;
+        const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+        const m = l - c / 2;
+        
+        let r, g, b;
+        
+        if (h >= 0 && h < 60) {
+            [r, g, b] = [c, x, 0];
+        } else if (h >= 60 && h < 120) {
+            [r, g, b] = [x, c, 0];
+        } else if (h >= 120 && h < 180) {
+            [r, g, b] = [0, c, x];
+        } else if (h >= 180 && h < 240) {
+            [r, g, b] = [0, x, c];
+        } else if (h >= 240 && h < 300) {
+            [r, g, b] = [x, 0, c];
+        } else {
+            [r, g, b] = [c, 0, x];
+        }
+        
+        // Convert to hex
+        const toHex = (value) => {
+            const hex = Math.round((value + m) * 255).toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        };
+        
+        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+    
+    /**
+     * Generate a random theme with unique colors
+     * @param {string} themeName - Name for the theme
+     * @param {string} description - Description of the theme
+     * @param {string} baseTheme - Optional base theme to derive from
+     * @returns {Object} - Complete theme object
+     */
+    generateRandomTheme(themeName, description, baseTheme = null) {
+        // Select a base hue for the theme's color palette
+        const baseHue = this.rng() * 360;
+        
+        // Create a new theme object
+        const newTheme = {
+            name: themeName,
+            description: description,
+            primaryZone: baseTheme ? MAP_THEMES[baseTheme].primaryZone : 'Terrant',
+            features: {}
+        };
+        
+        // Generate colors based on the base hue
+        const colors = {
+            // Ground/base colors
+            ground: this.generateRandomColor(baseHue, [20, 60], [30, 50]),
+            soil: this.generateRandomColor(baseHue, [30, 70], [40, 60]),
+            
+            // Vegetation colors
+            foliage: this.generateRandomColor((baseHue + 120) % 360, [50, 90], [20, 40]),
+            vegetation: this.generateRandomColor((baseHue + 120) % 360, [60, 90], [25, 45]),
+            trunk: this.generateRandomColor((baseHue + 30) % 360, [50, 80], [20, 40]),
+            
+            // Structure colors
+            structure: this.generateRandomColor(baseHue, [10, 40], [20, 50]),
+            rock: this.generateRandomColor(baseHue, [5, 30], [30, 60]),
+            
+            // Water and special elements
+            water: this.generateRandomColor((baseHue + 210) % 360, [60, 90], [40, 70]),
+            ice: this.generateRandomColor((baseHue + 210) % 360, [20, 50], [70, 90]),
+            
+            // Accent and glow colors
+            accent: this.generateRandomColor((baseHue + 180) % 360, [70, 100], [50, 70]),
+            glow: this.generateRandomColor((baseHue + 60) % 360, [80, 100], [60, 80]),
+            
+            // Path color
+            path: this.generateRandomColor(baseHue, [30, 60], [30, 50])
+        };
+        
+        // Add special colors based on theme type
+        if (themeName.includes('Lava') || themeName.includes('Volcanic') || themeName.includes('Fire')) {
+            colors.lava = this.generateRandomColor(20, [80, 100], [50, 60]);
+            colors.magma = this.generateRandomColor(30, [90, 100], [60, 70]);
+            colors.ember = this.generateRandomColor(40, [90, 100], [70, 80]);
+        }
+        
+        if (themeName.includes('Ice') || themeName.includes('Frozen') || themeName.includes('Snow')) {
+            colors.snow = this.generateRandomColor(210, [5, 20], [85, 95]);
+            colors.ice = this.generateRandomColor(200, [30, 50], [70, 85]);
+        }
+        
+        if (themeName.includes('Crystal') || themeName.includes('Gem') || themeName.includes('Magic')) {
+            colors.crystal = this.generateRandomColor((baseHue + 150) % 360, [70, 90], [60, 80]);
+            colors.glow = this.generateRandomColor((baseHue + 180) % 360, [80, 100], [70, 90]);
+        }
+        
+        // Set the colors
+        newTheme.colors = colors;
+        
+        // Generate random features based on theme name
+        newTheme.features = {
+            treeDensity: 0.2 + this.rng() * 0.8,
+            pathWidth: 2 + this.rng() * 3,
+            villageCount: 1 + Math.floor(this.rng() * 5),
+            towerCount: 2 + Math.floor(this.rng() * 8),
+            ruinsCount: Math.floor(this.rng() * 10),
+            bridgeCount: 2 + Math.floor(this.rng() * 8)
+        };
+        
+        // Add special features based on theme type
+        if (themeName.includes('Lava') || themeName.includes('Volcanic')) {
+            newTheme.features.lavaDensity = 0.3 + this.rng() * 0.5;
+            newTheme.features.darkSanctumCount = Math.floor(this.rng() * 5);
+        }
+        
+        if (themeName.includes('Water') || themeName.includes('Swamp') || themeName.includes('Lake')) {
+            newTheme.features.waterDensity = 0.4 + this.rng() * 0.5;
+            newTheme.features.bridgeCount += Math.floor(this.rng() * 5);
+        }
+        
+        if (themeName.includes('Mountain') || themeName.includes('Hill')) {
+            newTheme.features.mountainDensity = 0.4 + this.rng() * 0.5;
+        }
+        
+        return newTheme;
+    }
 
     /**
      * Create a seeded random number generator
@@ -2696,9 +2857,135 @@ class MapGenerator {
     }
 
     /**
+     * Batch trees to reduce file size
+     * Groups nearby trees into tree clusters to significantly reduce file size
+     */
+    batchTrees() {
+        if (!this.mapData.environment || this.mapData.environment.length === 0) {
+            return;
+        }
+
+        console.log('Batching trees to reduce file size...');
+        
+        // Separate trees from other environment objects
+        const trees = this.mapData.environment.filter(obj => obj.type === 'tree');
+        const otherObjects = this.mapData.environment.filter(obj => obj.type !== 'tree');
+        
+        // Skip if no trees
+        if (trees.length === 0) {
+            return;
+        }
+        
+        console.log(`Found ${trees.length} trees to batch`);
+        
+        // Create grid for spatial partitioning
+        const gridSize = 20; // Size of each grid cell
+        const grid = {};
+        
+        // Assign trees to grid cells
+        trees.forEach(tree => {
+            // Calculate grid cell coordinates
+            const cellX = Math.floor(tree.position.x / gridSize);
+            const cellZ = Math.floor(tree.position.z / gridSize);
+            const cellKey = `${cellX},${cellZ}`;
+            
+            // Create cell if it doesn't exist
+            if (!grid[cellKey]) {
+                grid[cellKey] = [];
+            }
+            
+            // Add tree to cell
+            grid[cellKey].push(tree);
+        });
+        
+        // Create tree clusters
+        const treeClusters = [];
+        
+        Object.keys(grid).forEach(cellKey => {
+            const cellTrees = grid[cellKey];
+            
+            // Skip cells with only one tree
+            if (cellTrees.length <= 1) {
+                otherObjects.push(...cellTrees);
+                return;
+            }
+            
+            // Calculate average position and size
+            let avgX = 0, avgY = 0, avgZ = 0;
+            let avgSize = 0;
+            let minX = Infinity, maxX = -Infinity;
+            let minZ = Infinity, maxZ = -Infinity;
+            
+            cellTrees.forEach(tree => {
+                avgX += tree.position.x;
+                avgY += tree.position.y;
+                avgZ += tree.position.z;
+                avgSize += tree.size || 1;
+                
+                // Track bounds
+                minX = Math.min(minX, tree.position.x);
+                maxX = Math.max(maxX, tree.position.x);
+                minZ = Math.min(minZ, tree.position.z);
+                maxZ = Math.max(maxZ, tree.position.z);
+            });
+            
+            avgX /= cellTrees.length;
+            avgY /= cellTrees.length;
+            avgZ /= cellTrees.length;
+            avgSize /= cellTrees.length;
+            
+            // Calculate cluster radius
+            const radius = Math.max(
+                Math.sqrt(Math.pow(maxX - minX, 2) + Math.pow(maxZ - minZ, 2)) / 2,
+                gridSize / 2
+            );
+            
+            // Create tree cluster
+            treeClusters.push({
+                type: 'tree_cluster',
+                position: { x: avgX, y: avgY, z: avgZ },
+                theme: cellTrees[0].theme,
+                treeCount: cellTrees.length,
+                avgSize: avgSize,
+                radius: radius,
+                // Store original trees for rendering if needed
+                trees: cellTrees.map(tree => ({
+                    relativePosition: {
+                        x: tree.position.x - avgX,
+                        y: tree.position.y - avgY,
+                        z: tree.position.z - avgZ
+                    },
+                    size: tree.size
+                }))
+            });
+        });
+        
+        console.log(`Created ${treeClusters.length} tree clusters from ${trees.length} trees`);
+        
+        // Replace environment with batched trees
+        this.mapData.environment = [...otherObjects, ...treeClusters];
+        
+        // Add metadata about tree batching
+        if (!this.mapData.metadata) {
+            this.mapData.metadata = {};
+        }
+        
+        this.mapData.metadata.treeBatching = {
+            originalTreeCount: trees.length,
+            clusterCount: treeClusters.length,
+            compressionRatio: trees.length / (treeClusters.length + otherObjects.filter(obj => obj.type === 'tree').length)
+        };
+        
+        console.log(`Tree compression ratio: ${this.mapData.metadata.treeBatching.compressionRatio.toFixed(2)}x`);
+    }
+
+    /**
      * Export map data to JSON
      */
     exportToJSON() {
+        // Batch trees before exporting to reduce file size
+        this.batchTrees();
+        
         return JSON.stringify(this.mapData, null, 2);
     }
 

@@ -362,8 +362,7 @@ export class MiniMapUI extends UIComponent {
             return this.game.world.worldName.toLowerCase().replace(/\s+/g, '_');
         }
         
-        // Default to "ancient_ruins_sample" if no ID is available
-        return "ancient_ruins_sample";
+        return null;
     }
     
     /**

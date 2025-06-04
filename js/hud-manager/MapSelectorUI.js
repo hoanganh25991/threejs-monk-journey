@@ -60,28 +60,35 @@ export class MapSelectorUI extends UIComponent {
         this.element.className = 'map-selector-overlay';
         this.element.style.display = 'none';
         
-        // Generate map grid content based on available maps
-        let mapGridContent = '';
+        // Generate map list content based on available maps
+        let mapListContent = '';
+        
+        // Add "Generate New Map" button at the top of the list
+        const generateNewMapButton = `
+            <div class="map-list-item generate-new-map" id="generateNewMapBtn">
+                <div class="map-list-preview">
+                    <div class="map-preview-placeholder">
+                        <span class="map-icon">➕</span>
+                    </div>
+                </div>
+                <div class="map-list-name">Generate New Map</div>
+            </div>
+        `;
         
         if (this.availableMaps.length > 0) {
-            mapGridContent = this.availableMaps.map(map => `
-                <div class="map-card" data-map-id="${map.id}">
-                    <div class="map-preview">
+            // Add the generate button followed by the map list
+            mapListContent = generateNewMapButton + this.availableMaps.map(map => `
+                <div class="map-list-item" data-map-id="${map.id}">
+                    <div class="map-list-preview">
                         <div class="map-preview-placeholder">
                             <span class="map-icon">🗺️</span>
                         </div>
                     </div>
-                    <div class="map-info">
-                        <h4 class="map-name">${map.name}</h4>
-                        <p class="map-description">${map.description}</p>
-                        <button class="load-map-button" data-map-id="${map.id}">
-                            Load Map
-                        </button>
-                    </div>
+                    <div class="map-list-name">${map.name}</div>
                 </div>
             `).join('');
         } else {
-            mapGridContent = `
+            mapListContent = `
                 <div class="no-maps-message">
                     <p>No maps available. Please check that assets/maps/index.json exists and is properly formatted.</p>
                     <button class="action-button secondary" id="retryLoadMaps">
@@ -99,25 +106,67 @@ export class MapSelectorUI extends UIComponent {
                 </div>
                 
                 <div class="map-selector-content">
-                    <div class="current-map-info">
-                        <h3>Current Map</h3>
-                        <div id="currentMapDisplay">
-                            <span class="current-map-name">Procedural World</span>
-                            <span class="current-map-description">Randomly generated world</span>
+                    <div class="map-selector-layout">
+                        <div class="map-list-container">
+                            <div class="map-list">
+                                ${mapListContent}
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="map-grid">
-                        ${mapGridContent}
-                    </div>
-                    
-                    <div class="map-actions">
-                        <button class="action-button secondary" id="clearCurrentMap">
-                            Return to Procedural World
-                        </button>
-                        <button class="action-button primary" id="generateRandomMap" ${this.availableMaps.length === 0 ? 'disabled' : ''}>
-                            Generate Random Map
-                        </button>
+                        
+                        <div class="map-detail-container">
+                            <div class="current-map-info">
+                                <h3>Current Map</h3>
+                                <div id="currentMapDisplay">
+                                    <span class="current-map-name">Procedural World</span>
+                                    <span class="current-map-description">Randomly generated world</span>
+                                </div>
+                            </div>
+                            
+                            <div class="selected-map-info" id="selectedMapInfo">
+                                <h3>Selected Map</h3>
+                                <div class="map-preview-large">
+                                    <div class="map-preview-placeholder">
+                                        <span class="map-icon">🗺️</span>
+                                    </div>
+                                </div>
+                                <div class="map-detail-content">
+                                    <h4 class="map-name" id="selectedMapName">Select a map</h4>
+                                    <p class="map-description" id="selectedMapDescription">Choose a map from the list to view details</p>
+                                    
+                                    <div class="map-stats" id="selectedMapStats">
+                                        <div class="map-stat">
+                                            <span class="stat-label">Size:</span>
+                                            <span class="stat-value" id="mapSizeStat">-</span>
+                                        </div>
+                                        <div class="map-stat">
+                                            <span class="stat-label">Structures:</span>
+                                            <span class="stat-value" id="structuresStat">-</span>
+                                        </div>
+                                        <div class="map-stat">
+                                            <span class="stat-label">Paths:</span>
+                                            <span class="stat-value" id="pathsStat">-</span>
+                                        </div>
+                                        <div class="map-stat">
+                                            <span class="stat-label">Environment:</span>
+                                            <span class="stat-value" id="environmentStat">-</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <button class="load-map-button" id="loadSelectedMap" disabled>
+                                        Load Map
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="map-actions">
+                                <button class="action-button secondary" id="clearCurrentMap">
+                                    Return to Procedural World
+                                </button>
+                                <button class="action-button secondary" id="generateRandomMap" ${this.availableMaps.length === 0 ? 'disabled' : ''}>
+                                    Generate Random Map
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -143,24 +192,29 @@ export class MapSelectorUI extends UIComponent {
             }
         });
         
-        // Map card selection (only if maps are available)
-        const mapCards = this.element.querySelectorAll('.map-card');
-        mapCards.forEach(card => {
-            card.addEventListener('click', (e) => {
-                if (!e.target.classList.contains('load-map-button')) {
-                    this.selectMap(card.dataset.mapId);
-                }
+        // Map list item selection
+        const mapListItems = this.element.querySelectorAll('.map-list-item[data-map-id]');
+        mapListItems.forEach(item => {
+            item.addEventListener('click', () => {
+                this.selectMap(item.dataset.mapId);
             });
         });
         
-        // Load map buttons (only if maps are available)
-        const loadButtons = this.element.querySelectorAll('.load-map-button');
-        loadButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.loadMap(button.dataset.mapId);
+        // Generate New Map button in the list
+        const generateNewMapBtn = this.element.querySelector('#generateNewMapBtn');
+        if (generateNewMapBtn) {
+            generateNewMapBtn.addEventListener('click', () => this.generateRandomMap());
+        }
+        
+        // Load selected map button
+        const loadSelectedMapButton = this.element.querySelector('#loadSelectedMap');
+        if (loadSelectedMapButton) {
+            loadSelectedMapButton.addEventListener('click', () => {
+                if (this.selectedMap) {
+                    this.loadMap(this.selectedMap.id);
+                }
             });
-        });
+        }
         
         // Retry loading maps button (only shown when maps failed to load)
         const retryButton = this.element.querySelector('#retryLoadMaps');
@@ -180,7 +234,7 @@ export class MapSelectorUI extends UIComponent {
         const clearButton = this.element.querySelector('#clearCurrentMap');
         clearButton.addEventListener('click', () => this.clearCurrentMap());
         
-        // Generate random map button
+        // Generate random map button (bottom button)
         const generateButton = this.element.querySelector('#generateRandomMap');
         generateButton.addEventListener('click', () => this.generateRandomMap());
         
@@ -215,16 +269,58 @@ export class MapSelectorUI extends UIComponent {
 
     selectMap(mapId) {
         // Remove previous selection
-        const previousSelected = this.element.querySelector('.map-card.selected');
+        const previousSelected = this.element.querySelector('.map-list-item.selected');
         if (previousSelected) {
             previousSelected.classList.remove('selected');
         }
         
-        // Add selection to new card
-        const selectedCard = this.element.querySelector(`[data-map-id="${mapId}"]`);
-        if (selectedCard) {
-            selectedCard.classList.add('selected');
+        // Add selection to new item
+        const selectedItem = this.element.querySelector(`.map-list-item[data-map-id="${mapId}"]`);
+        if (selectedItem) {
+            selectedItem.classList.add('selected');
             this.selectedMap = this.availableMaps.find(map => map.id === mapId);
+            
+            // Update the selected map details
+            if (this.selectedMap) {
+                const selectedMapName = this.element.querySelector('#selectedMapName');
+                const selectedMapDescription = this.element.querySelector('#selectedMapDescription');
+                const loadSelectedMapButton = this.element.querySelector('#loadSelectedMap');
+                
+                // Update map details
+                if (selectedMapName) selectedMapName.textContent = this.selectedMap.name;
+                if (selectedMapDescription) selectedMapDescription.textContent = this.selectedMap.description;
+                if (loadSelectedMapButton) loadSelectedMapButton.disabled = false;
+                
+                // Update map stats if available
+                const mapSizeStat = this.element.querySelector('#mapSizeStat');
+                const structuresStat = this.element.querySelector('#structuresStat');
+                const pathsStat = this.element.querySelector('#pathsStat');
+                const environmentStat = this.element.querySelector('#environmentStat');
+                
+                if (mapSizeStat && this.selectedMap.mapSize) {
+                    mapSizeStat.textContent = `${this.selectedMap.mapSize}x${this.selectedMap.mapSize}`;
+                } else if (mapSizeStat) {
+                    mapSizeStat.textContent = 'Standard';
+                }
+                
+                if (this.selectedMap.stats) {
+                    if (structuresStat) structuresStat.textContent = this.selectedMap.stats.structures || 0;
+                    if (pathsStat) pathsStat.textContent = this.selectedMap.stats.paths || 0;
+                    if (environmentStat) environmentStat.textContent = this.selectedMap.stats.environment || 0;
+                }
+                
+                // Update preview image if available
+                const previewContainer = this.element.querySelector('.map-preview-large');
+                if (previewContainer && this.selectedMap.preview) {
+                    previewContainer.innerHTML = `<img src="${this.selectedMap.preview}" alt="${this.selectedMap.name}" class="map-preview-image">`;
+                } else if (previewContainer) {
+                    previewContainer.innerHTML = `
+                        <div class="map-preview-placeholder">
+                            <span class="map-icon">🗺️</span>
+                        </div>
+                    `;
+                }
+            }
         }
     }
 
