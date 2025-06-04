@@ -705,14 +705,29 @@ export class WorldManager {
             const distanceThreshold = 20; // Increased from 5 to 20
             
             // Check if this object already exists in the world
-            const exists = this.environmentManager.environmentObjects.some(o => {
-                // Skip objects without valid position
-                if (!o || !o.position) return false;
+            let exists = false;
+            
+            // Loop through all chunks in environmentObjects
+            for (const chunkKey in this.environmentManager.environmentObjects) {
+                // Get the array of objects in this chunk
+                const chunkObjects = this.environmentManager.environmentObjects[chunkKey];
                 
-                // Check distance and type
-                return o.position.distanceTo(envPosition) < distanceThreshold && 
-                       o.type === envData.type;
-            });
+                // Skip if not an array
+                if (!Array.isArray(chunkObjects)) continue;
+                
+                // Check if any object in this chunk matches
+                exists = chunkObjects.some(o => {
+                    // Skip objects without valid position
+                    if (!o || !o.position) return false;
+                    
+                    // Check distance and type
+                    return o.position.distanceTo(envPosition) < distanceThreshold && 
+                           o.type === envData.type;
+                });
+                
+                // If found in this chunk, no need to check other chunks
+                if (exists) break;
+            }
             
             // Only create if not already generated and not exists
             if (!exists && !envData.generated) {

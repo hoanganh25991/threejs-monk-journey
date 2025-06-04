@@ -243,8 +243,8 @@ export class MapSelectorUI extends UIComponent {
             // Construct the path to the map file
             const mapPath = `assets/maps/${map.filename}`;
             
-            // Load the map using WorldManager
-            const success = await this.game.worldManager.loadPreGeneratedMapFromFile(mapPath);
+            // Load the map using WorldManager (accessed via this.game.world)
+            const success = await this.game.world.loadPreGeneratedMapFromFile(mapPath);
             
             if (success) {
                 this.updateCurrentMapDisplay();
@@ -277,7 +277,7 @@ export class MapSelectorUI extends UIComponent {
         this.setLoading(true, 'Returning to procedural world...');
         
         try {
-            const success = await this.game.worldManager.clearCurrentMap();
+            const success = await this.game.world.clearCurrentMap();
             
             if (success) {
                 this.updateCurrentMapDisplay();
@@ -327,9 +327,9 @@ export class MapSelectorUI extends UIComponent {
     updateCurrentMapDisplay() {
         const currentMapDisplay = this.element.querySelector('#currentMapDisplay');
         
-        // Check if worldManager exists before trying to access it
-        if (this.game && this.game.worldManager) {
-            const mapInfo = this.game.worldManager.getCurrentMapInfo();
+        // Check if world exists before trying to access it
+        if (this.game && this.game.world) {
+            const mapInfo = this.game.world.getCurrentMapInfo();
             
             if (mapInfo) {
                 currentMapDisplay.innerHTML = `

@@ -222,7 +222,7 @@ export class MapLoader {
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
         geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
         geometry.setIndex(indices);
-        geometry.computeNormals();
+        geometry.computeVertexNormals();
         
         return geometry;
     }

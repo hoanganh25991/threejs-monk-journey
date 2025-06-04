@@ -16,7 +16,7 @@ export class EnvironmentManager {
         this.game = game;
         
         // Environment object collections
-        this.environmentObjects = []; // Simple array to track all environment objects
+        this.environmentObjects = {}; // Object to track environment objects by chunk key
         this.visibleChunks = {}; // Empty object for compatibility with old system
         
         // Environment object types (no longer using config)
@@ -65,6 +65,10 @@ export class EnvironmentManager {
      * Create initial environment objects around the starting area
      */
     createInitialEnvironment() {
+        // Use a specific chunk key for the starting area
+        const startingChunkKey = "starting-area";
+        const startingAreaObjects = [];
+        
         // Create a larger forest near the starting position (3x more trees)
         for (let i = 0; i < 30; i++) {
             const angle = Math.random() * Math.PI * 2;
@@ -74,7 +78,7 @@ export class EnvironmentManager {
             
             const tree = this.createTree(x, z);
             if (tree) {
-                this.environmentObjects.push({
+                startingAreaObjects.push({
                     type: 'tree',
                     object: tree,
                     position: new THREE.Vector3(x, 0, z)
@@ -92,7 +96,7 @@ export class EnvironmentManager {
             
             const rock = this.createRock(x, z);
             if (rock) {
-                this.environmentObjects.push({
+                startingAreaObjects.push({
                     type: 'rock',
                     object: rock,
                     position: new THREE.Vector3(x, 0, z)
@@ -100,6 +104,9 @@ export class EnvironmentManager {
                 this.rocks.push(rock);
             }
         }
+        
+        // Store the starting area objects in the environmentObjects object
+        this.environmentObjects[startingChunkKey] = startingAreaObjects;
         
         console.debug("Initial environment objects created");
     }
@@ -167,6 +174,18 @@ export class EnvironmentManager {
         const centerX = playerPosition.x + Math.cos(angle) * distance;
         const centerZ = playerPosition.z + Math.sin(angle) * distance;
         
+        // Create a chunk key for this random object
+        // Use a grid-based approach to determine the chunk
+        const chunkSize = 100; // Size of each chunk in world units
+        const chunkX = Math.floor(centerX / chunkSize);
+        const chunkZ = Math.floor(centerZ / chunkSize);
+        const chunkKey = `${chunkX},${chunkZ}`;
+        
+        // Initialize the chunk if it doesn't exist
+        if (!this.environmentObjects[chunkKey]) {
+            this.environmentObjects[chunkKey] = [];
+        }
+        
         // Determine if we should create a group or a single object
         const createGroup = Math.random() < this.groupingProbabilities[randomType];
         
@@ -229,8 +248,8 @@ export class EnvironmentManager {
                 }
                 
                 if (object) {
-                    // Add to environment objects array for tracking
-                    this.environmentObjects.push({
+                    // Add to environment objects for this chunk
+                    this.environmentObjects[chunkKey].push({
                         type: randomType,
                         object: object,
                         position: new THREE.Vector3(objectX, 0, objectZ),
@@ -268,8 +287,8 @@ export class EnvironmentManager {
             if (object) {
                 console.debug(`Generated single ${randomType} at (${centerX.toFixed(1)}, ${centerZ.toFixed(1)})`);
                 
-                // Add to environment objects array for tracking
-                this.environmentObjects.push({
+                // Add to environment objects for this chunk
+                this.environmentObjects[chunkKey].push({
                     type: randomType,
                     object: object,
                     position: new THREE.Vector3(centerX, 0, centerZ)
@@ -278,31 +297,52 @@ export class EnvironmentManager {
         }
         
         // Limit the number of environment objects to prevent memory issues
-        // Increased limit to account for groups and higher generation rate
+        // Count total objects across all chunks
+        let totalObjects = 0;
+        for (const key in this.environmentObjects) {
+            totalObjects += this.environmentObjects[key].length;
+        }
+        
         const maxObjects = 500; // Increased from 150 to 500 to accommodate more trees
-        if (this.environmentObjects.length > maxObjects) {
-            // Remove oldest objects
-            const objectsToRemove = this.environmentObjects.length - maxObjects;
-            for (let i = 0; i < objectsToRemove; i++) {
-                const oldestObject = this.environmentObjects.shift();
-                if (oldestObject && oldestObject.object && oldestObject.object.parent) {
-                    this.scene.remove(oldestObject.object);
-                    
-                    // Also remove from type-specific arrays
-                    switch (oldestObject.type) {
-                        case 'tree':
-                            this.trees = this.trees.filter(t => t !== oldestObject.object);
-                            break;
-                        case 'rock':
-                            this.rocks = this.rocks.filter(r => r !== oldestObject.object);
-                            break;
-                        case 'bush':
-                            this.bushes = this.bushes.filter(b => b !== oldestObject.object);
-                            break;
-                        case 'flower':
-                            this.flowers = this.flowers.filter(f => f !== oldestObject.object);
-                            break;
+        if (totalObjects > maxObjects) {
+            // Find the oldest chunk (assuming the first one added is the oldest)
+            const oldestChunkKey = Object.keys(this.environmentObjects)[0];
+            if (oldestChunkKey && this.environmentObjects[oldestChunkKey]) {
+                // Remove objects from the oldest chunk
+                const objectsToRemove = totalObjects - maxObjects;
+                const chunkObjects = this.environmentObjects[oldestChunkKey];
+                
+                // Remove objects up to the number needed or all in the chunk
+                const removeCount = Math.min(objectsToRemove, chunkObjects.length);
+                
+                for (let i = 0; i < removeCount; i++) {
+                    if (chunkObjects.length > 0) {
+                        const oldestObject = chunkObjects.shift();
+                        if (oldestObject && oldestObject.object && oldestObject.object.parent) {
+                            this.scene.remove(oldestObject.object);
+                            
+                            // Also remove from type-specific arrays
+                            switch (oldestObject.type) {
+                                case 'tree':
+                                    this.trees = this.trees.filter(t => t !== oldestObject.object);
+                                    break;
+                                case 'rock':
+                                    this.rocks = this.rocks.filter(r => r !== oldestObject.object);
+                                    break;
+                                case 'bush':
+                                    this.bushes = this.bushes.filter(b => b !== oldestObject.object);
+                                    break;
+                                case 'flower':
+                                    this.flowers = this.flowers.filter(f => f !== oldestObject.object);
+                                    break;
+                            }
+                        }
                     }
+                }
+                
+                // If the chunk is now empty, remove it
+                if (chunkObjects.length === 0) {
+                    delete this.environmentObjects[oldestChunkKey];
                 }
             }
         }
