@@ -392,36 +392,244 @@ class MapGenerator {
         
         const features = theme.features;
         
+        // Generate background coverage first (dense tree/object coverage across the entire map)
+        this.generateBackgroundCoverage(theme);
+        
         // Generate trees along paths
         if (features.treeDensity) {
-            this.generateTreesAlongPaths(features.treeDensity, theme);
+            this.generateTreesAlongPaths(features.treeDensity * 1.5, theme); // Increased density
         }
         
         // Generate dense forest clusters
         if (features.treeDensity) {
-            this.generateForestClusters(features.treeDensity, theme);
+            this.generateForestClusters(features.treeDensity * 2, theme); // Doubled density
         }
 
         // Generate rocks in clusters
-        this.generateRockClusters(50, theme);
+        this.generateRockClusters(80, theme); // Increased from 50
 
         // Generate bushes in clusters
-        this.generateBushClusters(30, theme);
+        this.generateBushClusters(60, theme); // Increased from 30
 
         // Generate flowers in patches
-        this.generateFlowerPatches(40, theme);
+        this.generateFlowerPatches(80, theme); // Increased from 40
 
         // Theme-specific environment
         switch (theme.primaryZone) {
             case 'Mountains':
-                this.generateMountainRanges(20, theme);
+                this.generateMountainRanges(30, theme); // Increased from 20
                 break;
             case 'Swamp':
-                this.generateWaterFeatures(15, theme);
+                this.generateWaterFeatures(25, theme); // Increased from 15
                 break;
             case 'Desert':
-                this.generateLavaFeatures(10, theme);
+                this.generateLavaFeatures(20, theme); // Increased from 10
                 break;
+        }
+        
+        // Add final layer of scattered objects for even more density
+        this.generateScatteredObjects(theme);
+    }
+    
+    /**
+     * Generate background coverage - dense trees and objects across the entire map
+     * This ensures the map doesn't look like a flat ground with sparse objects
+     */
+    generateBackgroundCoverage(theme) {
+        const mapRadius = this.mapSize / 2;
+        const gridSize = 12; // Smaller grid size for denser coverage (was 20)
+        const gridCount = Math.ceil(this.mapSize / gridSize);
+        
+        // Create a grid across the entire map
+        for (let x = -gridCount/2; x < gridCount/2; x++) {
+            for (let z = -gridCount/2; z < gridCount/2; z++) {
+                const cellX = x * gridSize;
+                const cellZ = z * gridSize;
+                
+                // Calculate distance from center
+                const distFromCenter = Math.sqrt(cellX * cellX + cellZ * cellZ);
+                
+                // Skip if outside map bounds
+                if (distFromCenter > mapRadius) {
+                    continue;
+                }
+                
+                // Add random offset within the cell
+                const offsetX = (this.rng() - 0.5) * gridSize * 0.8;
+                const offsetZ = (this.rng() - 0.5) * gridSize * 0.8;
+                
+                const position = {
+                    x: cellX + offsetX,
+                    y: 0,
+                    z: cellZ + offsetZ
+                };
+                
+                // Skip if too close to paths or structures
+                // Use the isBackgroundObject flag to ensure proper clearings
+                if (!this.isPositionValid(position, 8, 5, true)) {
+                    continue;
+                }
+                
+                // Determine what to place based on distance from center and random factor
+                const objectType = this.determineBackgroundObjectType(distFromCenter, mapRadius, theme);
+                
+                // Add the object
+                if (objectType === 'tree') {
+                    // Trees get smaller toward the edges for a natural boundary
+                    const edgeFactor = 1 - (distFromCenter / mapRadius) * 0.3;
+                    const treeSize = (0.6 + this.rng() * 0.6) * edgeFactor;
+                    
+                    this.mapData.environment.push({
+                        type: 'tree',
+                        position,
+                        theme: theme.name,
+                        size: treeSize,
+                        background: true // Mark as background object
+                    });
+                    
+                    // Add undergrowth near some trees
+                    if (this.rng() < 0.4) {
+                        const undergrowthPosition = this.getNearbyPosition(position, 0.5, 2);
+                        const undergrowthType = this.rng() < 0.6 ? 'bush' : 
+                                              (this.rng() < 0.5 ? 'flower' : 'small_plant');
+                        
+                        this.mapData.environment.push({
+                            type: undergrowthType,
+                            position: undergrowthPosition,
+                            theme: theme.name,
+                            size: 0.3 + this.rng() * 0.3,
+                            background: true
+                        });
+                    }
+                } else if (objectType === 'rock') {
+                    this.mapData.environment.push({
+                        type: 'rock',
+                        position,
+                        theme: theme.name,
+                        size: 0.5 + this.rng() * 0.8,
+                        background: true
+                    });
+                } else if (objectType === 'bush') {
+                    this.mapData.environment.push({
+                        type: 'bush',
+                        position,
+                        theme: theme.name,
+                        size: 0.4 + this.rng() * 0.5,
+                        background: true
+                    });
+                } else if (objectType === 'flower') {
+                    this.mapData.environment.push({
+                        type: 'flower',
+                        position,
+                        theme: theme.name,
+                        size: 0.3 + this.rng() * 0.3,
+                        background: true
+                    });
+                } else if (objectType === 'tall_grass') {
+                    this.mapData.environment.push({
+                        type: 'tall_grass',
+                        position,
+                        theme: theme.name,
+                        size: 0.4 + this.rng() * 0.4,
+                        background: true
+                    });
+                }
+            }
+        }
+    }
+    
+    /**
+     * Determine what type of background object to place based on distance and theme
+     */
+    determineBackgroundObjectType(distance, mapRadius, theme) {
+        // Base probabilities adjusted by theme
+        let treeProbability = theme.features.treeDensity * 0.7; // 0-0.7 based on theme
+        let rockProbability = 0.1;
+        let bushProbability = 0.15;
+        let flowerProbability = 0.1;
+        let grassProbability = 0.2;
+        
+        // Adjust based on distance from center
+        const normalizedDistance = distance / mapRadius;
+        
+        // More trees in the middle, more rocks and sparse vegetation near edges
+        if (normalizedDistance < 0.3) {
+            // Inner area - dense trees
+            treeProbability *= 1.3;
+            rockProbability *= 0.7;
+        } else if (normalizedDistance > 0.7) {
+            // Outer area - more rocks, fewer trees
+            treeProbability *= 0.8;
+            rockProbability *= 1.5;
+            bushProbability *= 1.2;
+        }
+        
+        // Adjust based on theme
+        switch (theme.primaryZone) {
+            case 'Forest':
+                treeProbability *= 1.5;
+                bushProbability *= 1.2;
+                break;
+            case 'Mountains':
+                rockProbability *= 2;
+                treeProbability *= 0.7;
+                break;
+            case 'Swamp':
+                bushProbability *= 1.5;
+                grassProbability *= 1.5;
+                treeProbability *= 0.8;
+                break;
+            case 'Desert':
+                rockProbability *= 1.5;
+                treeProbability *= 0.5;
+                bushProbability *= 0.7;
+                break;
+        }
+        
+        // Determine object type based on probabilities
+        const rand = this.rng();
+        if (rand < treeProbability) {
+            return 'tree';
+        } else if (rand < treeProbability + rockProbability) {
+            return 'rock';
+        } else if (rand < treeProbability + rockProbability + bushProbability) {
+            return 'bush';
+        } else if (rand < treeProbability + rockProbability + bushProbability + flowerProbability) {
+            return 'flower';
+        } else {
+            return 'tall_grass';
+        }
+    }
+    
+    /**
+     * Generate final scattered objects to fill any remaining gaps
+     */
+    generateScatteredObjects(theme) {
+        // Number of scattered objects based on map size - significantly increased
+        const objectCount = Math.floor(this.mapSize * 1.5); // Was this.mapSize / 2
+        
+        for (let i = 0; i < objectCount; i++) {
+            const position = this.getRandomPosition(20, this.mapSize / 2);
+            
+            // Skip if too close to paths or structures
+            // Use the isBackgroundObject flag for proper clearings
+            if (!this.isPositionValid(position, 5, 3, true)) {
+                continue;
+            }
+            
+            // Randomly choose object type
+            const objectType = this.rng() < 0.5 ? 'tree' : 
+                             (this.rng() < 0.5 ? 'bush' : 
+                             (this.rng() < 0.5 ? 'rock' : 'flower'));
+            
+            // Add the object
+            this.mapData.environment.push({
+                type: objectType,
+                position,
+                theme: theme.name,
+                size: 0.5 + this.rng() * 0.7,
+                scattered: true // Mark as scattered fill object
+            });
         }
     }
 
@@ -1734,33 +1942,115 @@ class MapGenerator {
     
     /**
      * Check if a position is too close to existing structures or paths
+     * For background objects, we want to ensure proper clearings around paths and structures
      */
-    isPositionValid(position, minDistanceToStructures = 10, minDistanceToPaths = 5) {
+    isPositionValid(position, minDistanceToStructures = 10, minDistanceToPaths = 5, isBackgroundObject = false) {
+        // For background objects, use larger clearings around structures
+        const structureDistance = isBackgroundObject ? minDistanceToStructures * 1.5 : minDistanceToStructures;
+        const pathDistance = isBackgroundObject ? minDistanceToPaths * 1.2 : minDistanceToPaths;
+        
         // Check distance to structures
         for (const structure of this.mapData.structures) {
             const dx = position.x - structure.position.x;
             const dz = position.z - structure.position.z;
             const distance = Math.sqrt(dx * dx + dz * dz);
             
-            if (distance < minDistanceToStructures) {
+            // Use structure size if available to create proper clearings
+            const structureSize = structure.size || 10;
+            if (distance < structureDistance + structureSize) {
                 return false;
             }
         }
         
-        // Check distance to paths
-        for (const path of this.mapData.paths) {
-            for (const point of path.points) {
-                const dx = position.x - point.x;
-                const dz = position.z - point.z;
+        // Check distance to villages (which are collections of buildings)
+        for (const structure of this.mapData.structures) {
+            if (structure.type === 'village') {
+                // Villages need larger clearings
+                const villageRadius = 30; // Approximate village radius
+                const dx = position.x - structure.position.x;
+                const dz = position.z - structure.position.z;
                 const distance = Math.sqrt(dx * dx + dz * dz);
                 
-                if (distance < minDistanceToPaths + path.width) {
+                if (distance < villageRadius + structureDistance) {
                     return false;
                 }
             }
         }
         
+        // Check distance to paths - more sophisticated path checking
+        for (const path of this.mapData.paths) {
+            // For circular paths
+            if (path.type === 'circle') {
+                const dx = position.x - path.center.x;
+                const dz = position.z - path.center.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                
+                // Check if we're too close to the circular path
+                const pathWidth = path.width || 2;
+                if (Math.abs(distance - path.radius) < pathDistance + pathWidth) {
+                    return false;
+                }
+            } 
+            // For line and curve paths
+            else if (path.points && path.points.length > 1) {
+                // Check each segment of the path
+                for (let i = 0; i < path.points.length - 1; i++) {
+                    const point1 = path.points[i];
+                    const point2 = path.points[i + 1];
+                    
+                    // Calculate distance from position to line segment
+                    const distance = this.distanceToLineSegment(
+                        position.x, position.z,
+                        point1.x, point1.z,
+                        point2.x, point2.z
+                    );
+                    
+                    const pathWidth = path.width || 2;
+                    if (distance < pathDistance + pathWidth) {
+                        return false;
+                    }
+                }
+            }
+        }
+        
         return true;
+    }
+    
+    /**
+     * Calculate distance from a point to a line segment
+     * Used for more accurate path clearance checking
+     */
+    distanceToLineSegment(px, pz, x1, z1, x2, z2) {
+        const A = px - x1;
+        const B = pz - z1;
+        const C = x2 - x1;
+        const D = z2 - z1;
+        
+        const dot = A * C + B * D;
+        const len_sq = C * C + D * D;
+        let param = -1;
+        
+        if (len_sq !== 0) {
+            param = dot / len_sq;
+        }
+        
+        let xx, zz;
+        
+        if (param < 0) {
+            xx = x1;
+            zz = z1;
+        } else if (param > 1) {
+            xx = x2;
+            zz = z2;
+        } else {
+            xx = x1 + param * C;
+            zz = z1 + param * D;
+        }
+        
+        const dx = px - xx;
+        const dz = pz - zz;
+        
+        return Math.sqrt(dx * dx + dz * dz);
     }
 
     /**
