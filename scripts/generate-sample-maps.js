@@ -15,7 +15,7 @@ import path from 'path';
 async function generateAllSampleMaps() {
     console.log('Generating sample maps for all themes...\n');
     
-    const outputDir = path.join(process.cwd(), 'generated-maps');
+    const outputDir = path.join(process.cwd(), 'assets/maps');
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
     }
@@ -42,11 +42,13 @@ async function generateAllSampleMaps() {
         console.log(`  - Paths: ${mapData.paths.length}`);
         console.log(`  - Environment objects: ${mapData.environment.length}`);
         
+        // Create map entry for index
         generatedMaps.push({
-            theme: themeKey,
+            id: themeKey.toLowerCase(),
             name: theme.name,
-            filename,
-            filepath,
+            description: theme.description,
+            filename: filename,
+            preview: `images/map-previews/${themeKey.toLowerCase()}.jpg`,
             stats: {
                 zones: mapData.zones.length,
                 structures: mapData.structures.length,
@@ -59,8 +61,7 @@ async function generateAllSampleMaps() {
     // Generate index file
     const indexData = {
         generated: new Date().toISOString(),
-        maps: generatedMaps,
-        themes: MAP_THEMES
+        maps: generatedMaps
     };
     
     const indexPath = path.join(outputDir, 'index.json');
@@ -95,10 +96,62 @@ function generateCustomMap(themeName, options = {}) {
     const mapData = generator.generateMap(themeName, options);
     
     const filename = options.filename || `${themeName.toLowerCase()}_custom_${Date.now()}.json`;
-    const filepath = generator.saveToFile(filename);
+    
+    // Save to assets/maps directory
+    const outputDir = path.join(process.cwd(), 'assets/maps');
+    if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+    }
+    
+    const filepath = path.join(outputDir, filename);
+    fs.writeFileSync(filepath, generator.exportToJSON());
+    
+    // Update index.json with the new map
+    updateMapIndex(themeName, filename, mapData);
     
     console.log(`Custom map generated: ${filepath}`);
     return { mapData, filepath };
+}
+
+/**
+ * Update the maps index.json file with a new map
+ */
+function updateMapIndex(themeName, filename, mapData) {
+    const indexPath = path.join(process.cwd(), 'assets/maps/index.json');
+    let indexData = { maps: [] };
+    
+    // Read existing index if it exists
+    if (fs.existsSync(indexPath)) {
+        try {
+            indexData = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+        } catch (error) {
+            console.error('Error reading index file:', error);
+        }
+    }
+    
+    // Create map entry
+    const theme = MAP_THEMES[themeName];
+    const mapEntry = {
+        id: `${themeName.toLowerCase()}_custom_${Date.now()}`,
+        name: `Custom ${theme.name}`,
+        description: theme.description,
+        filename: filename,
+        preview: `images/map-previews/${themeName.toLowerCase()}.jpg`,
+        stats: {
+            zones: mapData.zones.length,
+            structures: mapData.structures.length,
+            paths: mapData.paths.length,
+            environment: mapData.environment.length
+        }
+    };
+    
+    // Add to maps array
+    indexData.maps.push(mapEntry);
+    indexData.generated = new Date().toISOString();
+    
+    // Write updated index
+    fs.writeFileSync(indexPath, JSON.stringify(indexData, null, 2));
+    console.log(`Index file updated with new map: ${mapEntry.name}`);
 }
 
 /**

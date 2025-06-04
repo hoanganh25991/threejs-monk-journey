@@ -739,7 +739,7 @@ class MapGenerator {
      */
     saveToFile(filename) {
         
-        const outputDir = path.join(process.cwd(), 'generated-maps');
+        const outputDir = path.join(process.cwd(), 'assets/maps');
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir, { recursive: true });
         }

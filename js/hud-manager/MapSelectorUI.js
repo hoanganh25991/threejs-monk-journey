@@ -10,50 +10,48 @@ export class MapSelectorUI extends UIComponent {
         this.game = game;
         this.isVisible = false;
         
-        // Available maps (will be populated from server or local files)
-        this.availableMaps = [
-            {
-                id: 'dark_forest',
-                name: 'Dark Forest',
-                description: 'Dense forest with winding paths, hidden villages, and ancient towers',
-                filename: 'dark_forest_sample.json',
-                preview: 'images/map-previews/dark_forest.jpg'
-            },
-            {
-                id: 'frozen_mountains',
-                name: 'Frozen Mountains',
-                description: 'Icy peaks with mountain villages, watchtowers, and treacherous paths',
-                filename: 'frozen_mountains_sample.json',
-                preview: 'images/map-previews/frozen_mountains.jpg'
-            },
-            {
-                id: 'lava_zone',
-                name: 'Lava Zone',
-                description: 'Volcanic landscape with lava flows, dark sanctums, and fire-resistant structures',
-                filename: 'lava_zone_sample.json',
-                preview: 'images/map-previews/lava_zone.jpg'
-            },
-            {
-                id: 'mystical_swamp',
-                name: 'Mystical Swamp',
-                description: 'Mysterious wetlands with floating bridges, ancient ruins, and hidden paths',
-                filename: 'mystical_swamp_sample.json',
-                preview: 'images/map-previews/mystical_swamp.jpg'
-            },
-            {
-                id: 'ancient_ruins',
-                name: 'Ancient Ruins',
-                description: 'Vast archaeological site with connected ruins, overgrown paths, and forgotten towers',
-                filename: 'ancient_ruins_sample.json',
-                preview: 'images/map-previews/ancient_ruins.jpg'
-            }
-        ];
-        
+        // Available maps (will be loaded from index.json)
+        this.availableMaps = [];
         this.selectedMap = null;
         this.isLoading = false;
         
-        this.createElement();
-        this.setupEventListeners();
+        // Load maps from index.json
+        this.loadMapIndex();
+    }
+    
+    /**
+     * Load map index from assets/maps/index.json
+     */
+    async loadMapIndex() {
+        try {
+            const response = await fetch('assets/maps/index.json');
+            if (!response.ok) {
+                throw new Error(`Failed to load map index: ${response.status} ${response.statusText}`);
+            }
+            
+            const indexData = await response.json();
+            this.availableMaps = indexData.maps || [];
+            
+            console.log(`Loaded ${this.availableMaps.length} maps from index.json`);
+            
+            // Create UI after maps are loaded
+            this.createElement();
+            this.setupEventListeners();
+        } catch (error) {
+            console.error('Error loading map index:', error);
+            
+            // Set empty maps array instead of using hardcoded fallback
+            this.availableMaps = [];
+            
+            // Create UI with empty maps array
+            this.createElement();
+            this.setupEventListeners();
+            
+            // Show error message in UI
+            if (this.game.ui) {
+                this.game.ui.showMessage('Failed to load map data. Please check your connection and try again.', 5000);
+            }
+        }
     }
 
     createElement() {
@@ -61,6 +59,37 @@ export class MapSelectorUI extends UIComponent {
         this.element = document.createElement('div');
         this.element.className = 'map-selector-overlay';
         this.element.style.display = 'none';
+        
+        // Generate map grid content based on available maps
+        let mapGridContent = '';
+        
+        if (this.availableMaps.length > 0) {
+            mapGridContent = this.availableMaps.map(map => `
+                <div class="map-card" data-map-id="${map.id}">
+                    <div class="map-preview">
+                        <div class="map-preview-placeholder">
+                            <span class="map-icon">🗺️</span>
+                        </div>
+                    </div>
+                    <div class="map-info">
+                        <h4 class="map-name">${map.name}</h4>
+                        <p class="map-description">${map.description}</p>
+                        <button class="load-map-button" data-map-id="${map.id}">
+                            Load Map
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            mapGridContent = `
+                <div class="no-maps-message">
+                    <p>No maps available. Please check that assets/maps/index.json exists and is properly formatted.</p>
+                    <button class="action-button secondary" id="retryLoadMaps">
+                        Retry Loading Maps
+                    </button>
+                </div>
+            `;
+        }
         
         this.element.innerHTML = `
             <div class="map-selector-modal">
@@ -79,29 +108,14 @@ export class MapSelectorUI extends UIComponent {
                     </div>
                     
                     <div class="map-grid">
-                        ${this.availableMaps.map(map => `
-                            <div class="map-card" data-map-id="${map.id}">
-                                <div class="map-preview">
-                                    <div class="map-preview-placeholder">
-                                        <span class="map-icon">🗺️</span>
-                                    </div>
-                                </div>
-                                <div class="map-info">
-                                    <h4 class="map-name">${map.name}</h4>
-                                    <p class="map-description">${map.description}</p>
-                                    <button class="load-map-button" data-map-id="${map.id}">
-                                        Load Map
-                                    </button>
-                                </div>
-                            </div>
-                        `).join('')}
+                        ${mapGridContent}
                     </div>
                     
                     <div class="map-actions">
                         <button class="action-button secondary" id="clearCurrentMap">
                             Return to Procedural World
                         </button>
-                        <button class="action-button primary" id="generateRandomMap">
+                        <button class="action-button primary" id="generateRandomMap" ${this.availableMaps.length === 0 ? 'disabled' : ''}>
                             Generate Random Map
                         </button>
                     </div>
@@ -129,7 +143,7 @@ export class MapSelectorUI extends UIComponent {
             }
         });
         
-        // Map card selection
+        // Map card selection (only if maps are available)
         const mapCards = this.element.querySelectorAll('.map-card');
         mapCards.forEach(card => {
             card.addEventListener('click', (e) => {
@@ -139,7 +153,7 @@ export class MapSelectorUI extends UIComponent {
             });
         });
         
-        // Load map buttons
+        // Load map buttons (only if maps are available)
         const loadButtons = this.element.querySelectorAll('.load-map-button');
         loadButtons.forEach(button => {
             button.addEventListener('click', (e) => {
@@ -147,6 +161,20 @@ export class MapSelectorUI extends UIComponent {
                 this.loadMap(button.dataset.mapId);
             });
         });
+        
+        // Retry loading maps button (only shown when maps failed to load)
+        const retryButton = this.element.querySelector('#retryLoadMaps');
+        if (retryButton) {
+            retryButton.addEventListener('click', async () => {
+                // Remove the current UI
+                if (this.element && this.element.parentNode) {
+                    this.element.parentNode.removeChild(this.element);
+                }
+                
+                // Try loading maps again
+                await this.loadMapIndex();
+            });
+        }
         
         // Clear current map button
         const clearButton = this.element.querySelector('#clearCurrentMap');
@@ -213,7 +241,7 @@ export class MapSelectorUI extends UIComponent {
         
         try {
             // Construct the path to the map file
-            const mapPath = `generated-maps/${map.filename}`;
+            const mapPath = `assets/maps/${map.filename}`;
             
             // Load the map using WorldManager
             const success = await this.game.worldManager.loadPreGeneratedMapFromFile(mapPath);
@@ -269,6 +297,14 @@ export class MapSelectorUI extends UIComponent {
     async generateRandomMap() {
         if (this.isLoading) return;
         
+        // Check if maps are available
+        if (this.availableMaps.length === 0) {
+            if (this.game.ui) {
+                this.game.ui.showMessage('No maps available to generate from. Please check assets/maps/index.json', 3000);
+            }
+            return;
+        }
+        
         // Select a random map theme
         const randomMap = this.availableMaps[Math.floor(Math.random() * this.availableMaps.length)];
         
@@ -281,6 +317,10 @@ export class MapSelectorUI extends UIComponent {
         } catch (error) {
             console.error('Error generating random map:', error);
             this.setLoading(false);
+            
+            if (this.game.ui) {
+                this.game.ui.showMessage('Error generating random map', 3000);
+            }
         }
     }
 

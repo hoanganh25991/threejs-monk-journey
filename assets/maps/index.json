@@ -1,0 +1,70 @@
+{
+  "generated": "2025-06-04T14:28:21.951Z",
+  "maps": [
+    {
+      "id": "dark_forest",
+      "name": "Dark Forest",
+      "description": "Dense forest with winding paths, hidden villages, and ancient towers",
+      "filename": "dark_forest_sample.json",
+      "preview": "images/map-previews/dark_forest.jpg",
+      "stats": {
+        "zones": 5,
+        "structures": 14,
+        "paths": 15,
+        "environment": 384
+      }
+    },
+    {
+      "id": "frozen_mountains",
+      "name": "Frozen Mountains",
+      "description": "Icy peaks with mountain villages, watchtowers, and treacherous paths",
+      "filename": "frozen_mountains_sample.json",
+      "preview": "images/map-previews/frozen_mountains.jpg",
+      "stats": {
+        "zones": 5,
+        "structures": 17,
+        "paths": 19,
+        "environment": 140
+      }
+    },
+    {
+      "id": "lava_zone",
+      "name": "Lava Zone",
+      "description": "Volcanic landscape with lava flows, dark sanctums, and fire-resistant structures",
+      "filename": "lava_zone_sample.json",
+      "preview": "images/map-previews/lava_zone.jpg",
+      "stats": {
+        "zones": 5,
+        "structures": 10,
+        "paths": 12,
+        "environment": 130
+      }
+    },
+    {
+      "id": "mystical_swamp",
+      "name": "Mystical Swamp",
+      "description": "Mysterious wetlands with floating bridges, ancient ruins, and hidden paths",
+      "filename": "mystical_swamp_sample.json",
+      "preview": "images/map-previews/mystical_swamp.jpg",
+      "stats": {
+        "zones": 5,
+        "structures": 20,
+        "paths": 24,
+        "environment": 135
+      }
+    },
+    {
+      "id": "ancient_ruins",
+      "name": "Ancient Ruins",
+      "description": "Vast archaeological site with connected ruins, overgrown paths, and forgotten towers",
+      "filename": "ancient_ruins_sample.json",
+      "preview": "images/map-previews/ancient_ruins.jpg",
+      "stats": {
+        "zones": 5,
+        "structures": 22,
+        "paths": 20,
+        "environment": 120
+      }
+    }
+  ]
+}
