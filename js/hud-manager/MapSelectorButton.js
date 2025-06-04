@@ -7,18 +7,8 @@ import { UIComponent } from '../UIComponent.js';
  */
 export class MapSelectorButton extends UIComponent {
     constructor(game) {
-        super();
-        this.game = game;
+        super('map-selector-button', game);
         this.isVisible = true;
-        
-        // Get the button element from the DOM instead of creating it
-        this.element = document.getElementById('map-selector-button');
-        
-        if (!this.element) {
-            console.error('Map selector button not found in the DOM. Make sure to add it to your HTML.');
-            return;
-        }
-        
         this.setupEventListeners();
     }
 
@@ -33,7 +23,7 @@ export class MapSelectorButton extends UIComponent {
             if (e.key === 'm' || e.key === 'M') {
                 // Only trigger if no input is focused and game is running
                 if (!document.activeElement.matches('input, textarea') && 
-                    this.game.gameState.currentState === 'playing') {
+                    this.game.gameState && this.game.gameState.isRunning()) {
                     e.preventDefault();
                     this.toggleMapSelector();
                 }
@@ -65,13 +55,12 @@ export class MapSelectorButton extends UIComponent {
         // Update button state based on game state
         if (!this.element) return;
         
-        const gameState = this.game.gameState.currentState;
-        
-        if (gameState === 'playing') {
-            this.show();
-        } else {
-            this.hide();
-        }
+        // // Check if game is running using the gameState methods
+        // if (this.game.gameState && this.game.gameState.isRunning()) {
+        //     this.show();
+        // } else {
+        //     this.hide();
+        // }
     }
 
     destroy() {

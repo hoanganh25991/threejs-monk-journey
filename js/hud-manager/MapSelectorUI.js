@@ -6,7 +6,7 @@ import { UIComponent } from '../UIComponent.js';
  */
 export class MapSelectorUI extends UIComponent {
     constructor(game) {
-        super();
+        super("map-selector-overlay", game);
         this.game = game;
         this.isVisible = false;
         
@@ -326,24 +326,30 @@ export class MapSelectorUI extends UIComponent {
 
     updateCurrentMapDisplay() {
         const currentMapDisplay = this.element.querySelector('#currentMapDisplay');
-        const mapInfo = this.game.worldManager.getCurrentMapInfo();
         
-        if (mapInfo) {
-            currentMapDisplay.innerHTML = `
-                <span class="current-map-name">${mapInfo.theme}</span>
-                <span class="current-map-description">${mapInfo.description}</span>
-                <div class="current-map-stats">
-                    Structures: ${mapInfo.objectCounts.structures} | 
-                    Paths: ${mapInfo.objectCounts.paths} | 
-                    Environment: ${mapInfo.objectCounts.environment}
-                </div>
-            `;
-        } else {
-            currentMapDisplay.innerHTML = `
-                <span class="current-map-name">Procedural World</span>
-                <span class="current-map-description">Randomly generated world</span>
-            `;
+        // Check if worldManager exists before trying to access it
+        if (this.game && this.game.worldManager) {
+            const mapInfo = this.game.worldManager.getCurrentMapInfo();
+            
+            if (mapInfo) {
+                currentMapDisplay.innerHTML = `
+                    <span class="current-map-name">${mapInfo.theme}</span>
+                    <span class="current-map-description">${mapInfo.description}</span>
+                    <div class="current-map-stats">
+                        Structures: ${mapInfo.objectCounts.structures} | 
+                        Paths: ${mapInfo.objectCounts.paths} | 
+                        Environment: ${mapInfo.objectCounts.environment}
+                    </div>
+                `;
+                return;
+            }
         }
+        
+        // Default display if no worldManager or no mapInfo
+        currentMapDisplay.innerHTML = `
+            <span class="current-map-name">Procedural World</span>
+            <span class="current-map-description">Randomly generated world</span>
+        `;
     }
 
     setLoading(loading, message = 'Loading...') {
