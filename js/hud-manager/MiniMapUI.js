@@ -59,6 +59,12 @@ export class MiniMapUI extends UIComponent {
         this.staticMapCtx = null;
         this.staticMapGenerated = false;
         this.staticMapImage = null;
+        
+        // For pre-rendered map from JSON
+        this.minimapData = null;
+        this.preRenderedMapImage = null;
+        this.preRenderedMapLoaded = false;
+        this.currentMapId = null;
     }
     
     /**
@@ -217,11 +223,17 @@ export class MiniMapUI extends UIComponent {
         // Add CSS for map controls
         this.addMapControlStyles();
         
-        // Generate the static map once the world is loaded
+        // Try to load pre-rendered minimap first
         if (this.game.world) {
             // Use setTimeout to ensure the world is fully loaded
             setTimeout(() => {
-                this.generateStaticMap();
+                // Try to load the pre-rendered minimap for the current world
+                this.loadMinimapForCurrentWorld();
+                
+                // If no pre-rendered minimap is available, generate one dynamically
+                if (!this.preRenderedMapLoaded) {
+                    this.generateStaticMap();
+                }
             }, 500);
         }
         
@@ -241,6 +253,14 @@ export class MiniMapUI extends UIComponent {
                     
                     return result;
                 };
+            }
+            
+            // Also listen for world changes to load the appropriate minimap
+            if (this.game.eventBus) {
+                this.game.eventBus.subscribe('worldChanged', (worldData) => {
+                    // Load the minimap for the new world
+                    this.loadMinimapForCurrentWorld();
+                });
             }
         }
         
@@ -297,6 +317,123 @@ export class MiniMapUI extends UIComponent {
                 font-size: 16px !important;
             }
         `;
+    }
+    
+    /**
+     * Load the minimap data and image for the current world
+     */
+    loadMinimapForCurrentWorld() {
+        // Get the current world ID or name
+        const worldId = this.getCurrentWorldId();
+        if (!worldId) return false;
+        
+        // Check if we already loaded this map
+        if (this.currentMapId === worldId && this.preRenderedMapLoaded) {
+            return true;
+        }
+        
+        // Reset state
+        this.preRenderedMapLoaded = false;
+        this.preRenderedMapImage = null;
+        this.minimapData = null;
+        this.currentMapId = worldId;
+        
+        // Construct the path to the minimap JSON file
+        const minimapJsonPath = `assets/maps/minimaps/${worldId}_minimap.json`;
+        
+        // Try to load the minimap data
+        return this.loadMinimapData(minimapJsonPath);
+    }
+    
+    /**
+     * Get the current world ID or name
+     * @returns {string|null} - The current world ID or null if not available
+     */
+    getCurrentWorldId() {
+        if (!this.game.world) return null;
+        
+        // Try to get the world ID from the world manager
+        if (this.game.world.worldId) {
+            return this.game.world.worldId;
+        }
+        
+        // Try to get the world name from the world manager
+        if (this.game.world.worldName) {
+            return this.game.world.worldName.toLowerCase().replace(/\s+/g, '_');
+        }
+        
+        // Default to "ancient_ruins_sample" if no ID is available
+        return "ancient_ruins_sample";
+    }
+    
+    /**
+     * Load minimap data from a JSON file
+     * @param {string} jsonPath - Path to the minimap JSON file
+     * @returns {boolean} - True if the data was loaded successfully
+     */
+    loadMinimapData(jsonPath) {
+        console.log(`Loading minimap data from ${jsonPath}...`);
+        
+        return new Promise((resolve, reject) => {
+            fetch(jsonPath)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Failed to load minimap data: ${response.status} ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    this.minimapData = data;
+                    console.log('Minimap data loaded successfully');
+                    
+                    // Load the pre-rendered image if available
+                    if (data.images && data.images.length > 0) {
+                        const imageData = data.images[0];
+                        const imagePath = imageData.path.startsWith('/') 
+                            ? imageData.path.substring(imageData.path.indexOf('/assets/'))
+                            : imageData.path;
+                        
+                        this.loadMinimapImage(imagePath);
+                        resolve(true);
+                    } else {
+                        console.log('No pre-rendered minimap image found in the data');
+                        resolve(false);
+                    }
+                })
+                .catch(error => {
+                    console.warn(`Error loading minimap data: ${error.message}`);
+                    resolve(false);
+                });
+        });
+    }
+    
+    /**
+     * Load a pre-rendered minimap image
+     * @param {string} imagePath - Path to the minimap image
+     * @returns {boolean} - True if the image was loaded successfully
+     */
+    loadMinimapImage(imagePath) {
+        console.log(`Loading minimap image from ${imagePath}...`);
+        
+        return new Promise((resolve, reject) => {
+            const image = new Image();
+            
+            image.onload = () => {
+                this.preRenderedMapImage = image;
+                this.preRenderedMapLoaded = true;
+                console.log('Minimap image loaded successfully');
+                resolve(true);
+            };
+            
+            image.onerror = (error) => {
+                console.warn(`Error loading minimap image: ${error}`);
+                this.preRenderedMapLoaded = false;
+                resolve(false);
+            };
+            
+            // Set the source to load the image
+            image.src = imagePath;
+        });
     }
     
     /**
@@ -727,17 +864,23 @@ export class MiniMapUI extends UIComponent {
         this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
         this.ctx.clip();
         
-        // Generate static map if not already generated
-        if (!this.staticMapGenerated) {
-            this.generateStaticMap();
-        }
-        
-        // Use the pre-generated static map as background if available
-        if (this.staticMapGenerated && this.staticMapImage) {
+        // Check if we have a pre-rendered map from JSON
+        if (this.preRenderedMapLoaded && this.preRenderedMapImage) {
+            // Draw the pre-rendered map image
+            this.ctx.drawImage(this.preRenderedMapImage, 0, 0, this.mapSize, this.mapSize);
+        } 
+        // Otherwise, use the dynamically generated static map if available
+        else if (this.staticMapGenerated && this.staticMapImage) {
+            // Generate static map if not already generated
+            if (!this.staticMapGenerated) {
+                this.generateStaticMap();
+            }
+            
             // Draw the static map image
             this.ctx.drawImage(this.staticMapImage, 0, 0, this.mapSize, this.mapSize);
-        } else {
-            // Fallback to dynamic rendering if static map is not available
+        } 
+        // Fallback to dynamic rendering if no pre-rendered maps are available
+        else {
             // Draw background
             this.ctx.fillStyle = 'rgba(10, 10, 15, 0.75)'; // Darker, more opaque background
             this.ctx.fillRect(0, 0, this.mapSize, this.mapSize);

@@ -104,12 +104,50 @@ export class MapLoader {
         }
         
         // Convert map zones to ZoneManager format
-        const convertedZones = zones.map(zone => ({
-            name: zone.name,
-            center: new THREE.Vector3(zone.center.x, zone.center.y, zone.center.z),
-            radius: zone.radius,
-            color: zone.color
-        }));
+        const convertedZones = zones.map(zone => {
+            // Handle zones with 'center' property
+            if (zone.center) {
+                return {
+                    name: zone.name,
+                    center: new THREE.Vector3(zone.center.x, zone.center.y, zone.center.z),
+                    radius: zone.radius,
+                    color: zone.color
+                };
+            } 
+            // Handle zones with 'points' property (like boundary zones)
+            else if (zone.points && zone.points.length > 0) {
+                // Calculate center from points
+                const center = new THREE.Vector3(0, 0, 0);
+                zone.points.forEach(point => {
+                    center.x += point.x;
+                    center.y += point.y;
+                    center.z += point.z;
+                });
+                center.divideScalar(zone.points.length);
+                
+                // Calculate radius as distance to furthest point
+                let maxDistance = 0;
+                zone.points.forEach(point => {
+                    const distance = Math.sqrt(
+                        Math.pow(point.x - center.x, 2) + 
+                        Math.pow(point.z - center.z, 2)
+                    );
+                    maxDistance = Math.max(maxDistance, distance);
+                });
+                
+                return {
+                    name: zone.name,
+                    center: center,
+                    radius: maxDistance,
+                    color: zone.color
+                };
+            }
+            // Skip zones with invalid format
+            else {
+                console.warn(`Skipping zone "${zone.name}" with invalid format`);
+                return null;
+            }
+        }).filter(zone => zone !== null); // Remove any null zones
         
         // Update zone manager with new zones
         this.worldManager.zoneManager.zones = convertedZones;

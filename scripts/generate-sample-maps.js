@@ -33,7 +33,25 @@ async function generateAllSampleMaps() {
         console.log(`\n=== Generating ${theme.name} ===`);
         
         const generator = new MapGenerator();
-        const mapData = generator.generateMap(themeKey);
+        
+        // Apply special handling for Dark Forest to reduce file size
+        let options = {};
+        if (themeKey === 'DARK_FOREST') {
+            options = {
+                features: {
+                    // Reduce tree density for sample map to prevent excessive file size
+                    treeDensity: 0.2,  // Reduced from 0.8
+                    pathWidth: 2,
+                    villageCount: 3,
+                    towerCount: 5,
+                    ruinsCount: 2,
+                    bridgeCount: 4
+                }
+            };
+            console.log('  - Applying reduced tree density for Dark Forest sample');
+        }
+        
+        const mapData = generator.generateMap(themeKey, options);
         
         // Create filename
         const filename = `${themeKey.toLowerCase()}_sample.json`;
@@ -207,10 +225,19 @@ async function generateRandomMaps(count = 20) {
         console.log(`Seed: ${seed}`);
         
         // Create custom options by combining theme features with variation
+        let themeFeatures = { ...theme.features };
+        
+        // Apply special handling for Dark Forest to reduce file size
+        if (themeKey === 'DARK_FOREST') {
+            // Reduce tree density for Dark Forest to prevent excessive file size
+            themeFeatures.treeDensity = Math.min(themeFeatures.treeDensity, 0.2);
+            console.log('  - Applying reduced tree density for Dark Forest');
+        }
+        
         const options = {
             seed: seed,
             mapSize: mapSize,
-            features: { ...theme.features, ...variation.features }
+            features: { ...themeFeatures, ...variation.features }
         };
         
         // Generate unique map name
@@ -298,10 +325,19 @@ async function generateRandomMaps(count = 20) {
         console.log(`Seed: ${seed}`);
         
         // Create custom options
+        let baseThemeFeatures = { ...MAP_THEMES[customTheme.baseTheme].features };
+        
+        // Apply special handling for Dark Forest to reduce file size
+        if (customTheme.baseTheme === 'DARK_FOREST' || customTheme.mixinTheme === 'DARK_FOREST') {
+            // Reduce tree density for Dark Forest to prevent excessive file size
+            baseThemeFeatures.treeDensity = Math.min(baseThemeFeatures.treeDensity || 0, 0.2);
+            console.log('  - Applying reduced tree density for Dark Forest component');
+        }
+        
         const options = {
             seed: seed,
             mapSize: mapSize,
-            features: { ...MAP_THEMES[customTheme.baseTheme].features, ...customTheme.features },
+            features: { ...baseThemeFeatures, ...customTheme.features },
             customTheme: {
                 name: customTheme.name,
                 description: customTheme.description,
