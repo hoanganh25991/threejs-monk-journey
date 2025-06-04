@@ -95,12 +95,12 @@ async function generateAllSampleMaps() {
             description: theme.description,
             filename: filename,
             // Use the highest resolution minimap image as preview if available
-            preview: highestResImage ? `minimaps/${path.basename(highestResImage.path)}` : `images/map-previews/${themeKey.toLowerCase()}.jpg`,
+            preview: highestResImage ? `assets/maps/minimaps/${path.basename(highestResImage.path)}` : `images/map-previews/${themeKey.toLowerCase()}.jpg`,
             minimap: {
                 // Reference the JSON data file directly for minimap
-                data: `minimaps/${baseFilename}_minimap.json`,
+                data: `assets/maps/minimaps/${baseFilename}_minimap.json`,
                 // Keep image references for backward compatibility
-                images: minimapResult.imageFiles.map(img => `minimaps/${path.basename(img.path)}`)
+                images: minimapResult.imageFiles.map(img => `assets/maps/minimaps/${path.basename(img.path)}`)
             },
             stats: {
                 zones: mapData.zones.length,
@@ -309,12 +309,12 @@ async function generateRandomMaps(count = 20) {
             description: `${variation.name} variation of ${theme.description}`,
             filename: filename,
             // Use the highest resolution minimap image as preview if available
-            preview: highestResImage ? `minimaps/${path.basename(highestResImage.path)}` : `images/map-previews/${themeKey.toLowerCase()}.jpg`,
+            preview: highestResImage ? `assets/maps/minimaps/${path.basename(highestResImage.path)}` : `images/map-previews/${themeKey.toLowerCase()}.jpg`,
             minimap: {
                 // Reference the JSON data file directly for minimap
-                data: `minimaps/${baseFilename}_minimap.json`,
+                data: `assets/maps/minimaps/${baseFilename}_minimap.json`,
                 // Keep image references for backward compatibility
-                images: minimapResult.imageFiles.map(img => `minimaps/${path.basename(img.path)}`)
+                images: minimapResult.imageFiles.map(img => `assets/maps/minimaps/${path.basename(img.path)}`)
             },
             seed: seed,
             mapSize: mapSize,
@@ -418,12 +418,12 @@ async function generateRandomMaps(count = 20) {
             description: customTheme.description,
             filename: filename,
             // Use the highest resolution minimap image as preview if available
-            preview: highestResImage ? `minimaps/${path.basename(highestResImage.path)}` : `images/map-previews/${customTheme.baseTheme.toLowerCase()}.jpg`,
+            preview: highestResImage ? `assets/maps/minimaps/${path.basename(highestResImage.path)}` : `images/map-previews/${customTheme.baseTheme.toLowerCase()}.jpg`,
             minimap: {
                 // Reference the JSON data file directly for minimap
-                data: `minimaps/${baseFilename}_minimap.json`,
+                data: `assets/maps/minimaps/${baseFilename}_minimap.json`,
                 // Keep image references for backward compatibility
-                images: minimapResult.imageFiles.map(img => `minimaps/${path.basename(img.path)}`)
+                images: minimapResult.imageFiles.map(img => `assets/maps/minimaps/${path.basename(img.path)}`)
             },
             seed: seed,
             mapSize: mapSize,
@@ -566,12 +566,12 @@ function updateMapIndex(themeName, filename, mapData, minimapResult = null) {
         
         // Use the highest resolution minimap image as preview
         if (highestResImage) {
-            mapEntry.preview = `minimaps/${path.basename(highestResImage.path)}`;
+            mapEntry.preview = `assets/maps/minimaps/${path.basename(highestResImage.path)}`;
         }
         
         mapEntry.minimap = {
-            data: `minimaps/${baseFilename}_minimap.json`,
-            images: minimapResult.imageFiles.map(img => `minimaps/${path.basename(img.path)}`)
+            data: `assets/maps/minimaps/${baseFilename}_minimap.json`,
+            images: minimapResult.imageFiles.map(img => `assets/maps/minimaps/${path.basename(img.path)}`)
         };
     }
     
@@ -777,12 +777,12 @@ async function generateRandomThemedMaps(count = 20) {
             description: description,
             filename: filename,
             // Use the highest resolution minimap image as preview if available
-            preview: highestResImage ? `minimaps/${path.basename(highestResImage.path)}` : null,
+            preview: highestResImage ? `assets/maps/minimaps/${path.basename(highestResImage.path)}` : null,
             minimap: {
                 // Reference the JSON data file directly for minimap
-                data: `minimaps/${baseFilename}_minimap.json`,
+                data: `assets/maps/minimaps/${baseFilename}_minimap.json`,
                 // Keep image references for backward compatibility
-                images: minimapResult.imageFiles.map(img => `minimaps/${path.basename(img.path)}`)
+                images: minimapResult.imageFiles.map(img => `assets/maps/minimaps/${path.basename(img.path)}`)
             },
             seed: seed,
             mapSize: mapSize,
