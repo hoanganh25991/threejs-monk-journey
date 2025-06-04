@@ -76,6 +76,254 @@ async function generateAllSampleMaps() {
 }
 
 /**
+ * Generate multiple random maps with unique variations
+ * Creates a set of maps with randomized parameters for each theme
+ */
+async function generateRandomMaps(count = 20) {
+    console.log(`Generating ${count} random maps with unique variations...\n`);
+    
+    const outputDir = path.join(process.cwd(), 'assets/maps');
+    if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+    }
+    
+    const generatedMaps = [];
+    const themeKeys = Object.keys(MAP_THEMES);
+    
+    // Unique variations to apply to maps
+    const variations = [
+        { name: "Dense", features: { treeDensity: 1.2, villageCount: 5, towerCount: 8 } },
+        { name: "Sparse", features: { treeDensity: 0.4, villageCount: 1, towerCount: 2 } },
+        { name: "Ruined", features: { ruinsCount: 15, villageCount: 0, towerCount: 1 } },
+        { name: "Fortified", features: { towerCount: 12, bridgeCount: 8, villageCount: 3 } },
+        { name: "Wilderness", features: { treeDensity: 1.5, villageCount: 0, towerCount: 0, ruinsCount: 0 } },
+        { name: "Populated", features: { villageCount: 8, pathWidth: 4, bridgeCount: 10 } },
+        { name: "Ancient", features: { ruinsCount: 20, darkSanctumCount: 5 } },
+        { name: "Mystical", features: { darkSanctumCount: 8, lavaDensity: 0.8 } },
+        { name: "Mountainous", features: { mountainDensity: 1.5, bridgeCount: 12 } },
+        { name: "Flooded", features: { waterDensity: 1.2, bridgeCount: 15 } },
+        { name: "Hybrid", features: { treeDensity: 0.7, mountainDensity: 0.7, waterDensity: 0.7, lavaDensity: 0.3 } },
+        { name: "Extreme", features: { treeDensity: 2.0, villageCount: 10, towerCount: 15, ruinsCount: 20, bridgeCount: 20 } },
+        { name: "Minimal", features: { treeDensity: 0.2, villageCount: 1, towerCount: 1, ruinsCount: 1, bridgeCount: 1 } },
+        { name: "Chaotic", features: { pathWidth: 5, villageCount: Math.floor(Math.random() * 10), towerCount: Math.floor(Math.random() * 15) } },
+        { name: "Peaceful", features: { villageCount: 6, towerCount: 0, darkSanctumCount: 0 } }
+    ];
+    
+    // Map size variations
+    const mapSizes = [800, 1000, 1200, 1500, 2000, 2500];
+    
+    // Custom theme combinations (mixing elements from different themes)
+    const customThemeCombinations = [
+        {
+            name: "Volcanic Forest",
+            description: "A forest gradually being consumed by volcanic activity",
+            baseTheme: "DARK_FOREST",
+            mixinTheme: "LAVA_ZONE",
+            mixRatio: 0.4, // 40% lava, 60% forest
+            features: { treeDensity: 0.6, lavaDensity: 0.5, darkSanctumCount: 2, ruinsCount: 5 }
+        },
+        {
+            name: "Frozen Ruins",
+            description: "Ancient ruins covered in ice and snow",
+            baseTheme: "ANCIENT_RUINS",
+            mixinTheme: "FROZEN_MOUNTAINS",
+            mixRatio: 0.6, // 60% mountains, 40% ruins
+            features: { ruinsDensity: 0.7, mountainDensity: 0.8, bridgeCount: 10 }
+        },
+        {
+            name: "Swamp Sanctum",
+            description: "Dark sanctums rising from murky swamp waters",
+            baseTheme: "MYSTICAL_SWAMP",
+            mixinTheme: "LAVA_ZONE",
+            mixRatio: 0.3, // 30% lava zone elements, 70% swamp
+            features: { waterDensity: 0.9, darkSanctumCount: 7, bridgeCount: 12 }
+        },
+        {
+            name: "Mountain Forest",
+            description: "Dense forests growing on steep mountain slopes",
+            baseTheme: "FROZEN_MOUNTAINS",
+            mixinTheme: "DARK_FOREST",
+            mixRatio: 0.5, // 50/50 mix
+            features: { treeDensity: 1.0, mountainDensity: 1.0, villageCount: 4, towerCount: 6 }
+        },
+        {
+            name: "Ruined Desert",
+            description: "Ancient ruins scattered across a vast desert landscape",
+            baseTheme: "ANCIENT_RUINS",
+            mixinTheme: "LAVA_ZONE",
+            mixRatio: 0.4, // 40% lava zone (desert), 60% ruins
+            features: { ruinsDensity: 1.2, villageCount: 2, towerCount: 8 }
+        }
+    ];
+    
+    // Generate maps with standard variations
+    for (let i = 0; i < Math.floor(count * 0.7); i++) {
+        // Select a random theme and variation
+        const themeKey = themeKeys[Math.floor(Math.random() * themeKeys.length)];
+        const theme = MAP_THEMES[themeKey];
+        const variation = variations[Math.floor(Math.random() * variations.length)];
+        const mapSize = mapSizes[Math.floor(Math.random() * mapSizes.length)];
+        
+        // Create a unique seed
+        const seed = Math.floor(Math.random() * 1000000);
+        
+        console.log(`\n=== Generating Random Map ${i+1}/${count} ===`);
+        console.log(`Theme: ${theme.name}`);
+        console.log(`Variation: ${variation.name}`);
+        console.log(`Map Size: ${mapSize}`);
+        console.log(`Seed: ${seed}`);
+        
+        // Create custom options by combining theme features with variation
+        const options = {
+            seed: seed,
+            mapSize: mapSize,
+            features: { ...theme.features, ...variation.features }
+        };
+        
+        // Generate unique map name
+        const mapName = `${variation.name} ${theme.name}`;
+        const mapId = `random_${themeKey.toLowerCase()}_${variation.name.toLowerCase()}_${i}`;
+        const filename = `${mapId}.json`;
+        
+        // Generate the map
+        const generator = new MapGenerator();
+        generator.seed = seed;
+        generator.rng = generator.createSeededRandom(seed);
+        generator.mapSize = mapSize;
+        
+        const mapData = generator.generateMap(themeKey, options);
+        
+        // Save map
+        const filepath = path.join(outputDir, filename);
+        fs.writeFileSync(filepath, generator.exportToJSON());
+        
+        console.log(`✓ ${mapName} saved to: ${filename}`);
+        console.log(`  - Zones: ${mapData.zones.length}`);
+        console.log(`  - Structures: ${mapData.structures.length}`);
+        console.log(`  - Paths: ${mapData.paths.length}`);
+        console.log(`  - Environment objects: ${mapData.environment.length}`);
+        
+        // Create map entry for index
+        generatedMaps.push({
+            id: mapId,
+            name: mapName,
+            description: `${variation.name} variation of ${theme.description}`,
+            filename: filename,
+            preview: `images/map-previews/${themeKey.toLowerCase()}.jpg`,
+            seed: seed,
+            mapSize: mapSize,
+            variation: variation.name,
+            stats: {
+                zones: mapData.zones.length,
+                structures: mapData.structures.length,
+                paths: mapData.paths.length,
+                environment: mapData.environment.length
+            }
+        });
+    }
+    
+    // Generate maps with custom theme combinations
+    const remainingCount = count - Math.floor(count * 0.7);
+    for (let i = 0; i < remainingCount; i++) {
+        const customTheme = customThemeCombinations[i % customThemeCombinations.length];
+        const mapSize = mapSizes[Math.floor(Math.random() * mapSizes.length)];
+        
+        // Create a unique seed
+        const seed = Math.floor(Math.random() * 1000000);
+        
+        console.log(`\n=== Generating Custom Theme Map ${Math.floor(count * 0.7) + i + 1}/${count} ===`);
+        console.log(`Theme: ${customTheme.name}`);
+        console.log(`Description: ${customTheme.description}`);
+        console.log(`Map Size: ${mapSize}`);
+        console.log(`Seed: ${seed}`);
+        
+        // Create custom options
+        const options = {
+            seed: seed,
+            mapSize: mapSize,
+            features: { ...MAP_THEMES[customTheme.baseTheme].features, ...customTheme.features },
+            customTheme: {
+                name: customTheme.name,
+                description: customTheme.description,
+                mixinTheme: customTheme.mixinTheme,
+                mixRatio: customTheme.mixRatio
+            }
+        };
+        
+        // Generate unique map name and ID
+        const mapName = customTheme.name;
+        const mapId = `custom_${customTheme.name.toLowerCase().replace(/\s+/g, '_')}_${i}`;
+        const filename = `${mapId}.json`;
+        
+        // Generate the map
+        const generator = new MapGenerator();
+        generator.seed = seed;
+        generator.rng = generator.createSeededRandom(seed);
+        generator.mapSize = mapSize;
+        
+        // For custom themes, we'll use the base theme but apply special modifications
+        const mapData = generator.generateMap(customTheme.baseTheme, options);
+        
+        // Save map
+        const filepath = path.join(outputDir, filename);
+        fs.writeFileSync(filepath, generator.exportToJSON());
+        
+        console.log(`✓ ${mapName} saved to: ${filename}`);
+        console.log(`  - Zones: ${mapData.zones.length}`);
+        console.log(`  - Structures: ${mapData.structures.length}`);
+        console.log(`  - Paths: ${mapData.paths.length}`);
+        console.log(`  - Environment objects: ${mapData.environment.length}`);
+        
+        // Create map entry for index
+        generatedMaps.push({
+            id: mapId,
+            name: mapName,
+            description: customTheme.description,
+            filename: filename,
+            preview: `images/map-previews/${customTheme.baseTheme.toLowerCase()}.jpg`,
+            seed: seed,
+            mapSize: mapSize,
+            customTheme: true,
+            baseTheme: customTheme.baseTheme,
+            mixinTheme: customTheme.mixinTheme,
+            stats: {
+                zones: mapData.zones.length,
+                structures: mapData.structures.length,
+                paths: mapData.paths.length,
+                environment: mapData.environment.length
+            }
+        });
+    }
+    
+    // Update index file with new maps
+    const indexPath = path.join(outputDir, 'index.json');
+    let indexData = { maps: [] };
+    
+    // Read existing index if it exists
+    if (fs.existsSync(indexPath)) {
+        try {
+            indexData = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+        } catch (error) {
+            console.error('Error reading index file:', error);
+        }
+    }
+    
+    // Add new maps to index
+    indexData.maps = [...indexData.maps, ...generatedMaps];
+    indexData.generated = new Date().toISOString();
+    
+    // Write updated index
+    fs.writeFileSync(indexPath, JSON.stringify(indexData, null, 2));
+    
+    console.log(`\n=== Random Map Generation Complete ===`);
+    console.log(`Generated ${generatedMaps.length} random maps`);
+    console.log(`Index file updated: index.json`);
+    console.log(`All files saved to: ${outputDir}`);
+    
+    return generatedMaps;
+}
+
+/**
  * Generate a custom map with specific parameters
  */
 function generateCustomMap(themeName, options = {}) {
@@ -166,6 +414,11 @@ function main() {
             generateAllSampleMaps();
             break;
             
+        case 'random':
+            const count = args[1] ? parseInt(args[1]) : 20;
+            generateRandomMaps(count);
+            break;
+            
         case 'custom':
             const themeName = args[1];
             if (!themeName || !MAP_THEMES[themeName.toUpperCase()]) {
@@ -207,6 +460,7 @@ function main() {
         default:
             console.log('Map Generator Commands:');
             console.log('  all                           - Generate sample maps for all themes');
+            console.log('  random [count]                - Generate multiple random maps with variations (default: 20)');
             console.log('  custom <THEME> [options]      - Generate a custom map');
             console.log('  list                          - List available themes');
             console.log('');
@@ -217,13 +471,14 @@ function main() {
             console.log('');
             console.log('Examples:');
             console.log('  node generate-sample-maps.js all');
+            console.log('  node generate-sample-maps.js random 30');
             console.log('  node generate-sample-maps.js custom DARK_FOREST --seed 12345');
             console.log('  node generate-sample-maps.js custom LAVA_ZONE --size 2000 --filename my_lava_map.json');
     }
 }
 
 // Export for use as module
-export { generateAllSampleMaps, generateCustomMap };
+export { generateAllSampleMaps, generateCustomMap, generateRandomMaps };
 
 // Run CLI if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {

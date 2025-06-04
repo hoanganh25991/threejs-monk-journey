@@ -140,24 +140,70 @@ export class MapLoader {
         // Create path geometry
         const pathGeometry = this.createPathGeometry(points, width);
         
-        // Create path material
+        // Get the zone at the first point of the path to determine color
+        const zoneAt = this.worldManager.zoneManager.getZoneAt(points[0]);
+        const zoneName = zoneAt ? zoneAt.name : 'Terrant';
+        
+        // Get zone colors from the current map theme
+        let pathColor = 0x8B7355; // Default brown path color
+        
+        if (this.currentMap && this.currentMap.theme) {
+            const themeColors = this.currentMap.theme.colors;
+            
+            // Use zone-specific path color if available
+            if (themeColors && themeColors.path) {
+                // Convert hex string to number
+                pathColor = parseInt(themeColors.path.replace('#', '0x'), 16);
+            } else if (zoneName === 'Desert' && themeColors.sand) {
+                pathColor = parseInt(themeColors.sand.replace('#', '0x'), 16);
+            } else if (zoneName === 'Forest' && themeColors.ground) {
+                pathColor = parseInt(themeColors.ground.replace('#', '0x'), 16);
+            } else if (zoneName === 'Mountains' && themeColors.rock) {
+                pathColor = parseInt(themeColors.rock.replace('#', '0x'), 16);
+            }
+        }
+        
+        // Create path material with zone-appropriate color
         const pathMaterial = new THREE.MeshLambertMaterial({
-            color: 0x8B7355, // Brown path color
+            color: pathColor,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9, // Increased from 0.8 for better visibility
+            roughness: 0.8,
+            metalness: 0.1
         });
         
         // Create path mesh
         const pathMesh = new THREE.Mesh(pathGeometry, pathMaterial);
         pathMesh.receiveShadow = true;
-        pathMesh.userData = {
+        
+        // Add path border/edge for better definition
+        const borderWidth = width + 0.3;
+        const borderGeometry = this.createPathGeometry(points, borderWidth);
+        const borderMaterial = new THREE.MeshLambertMaterial({
+            color: 0x000000,
+            transparent: true,
+            opacity: 0.2,
+            roughness: 0.9
+        });
+        
+        const borderMesh = new THREE.Mesh(borderGeometry, borderMaterial);
+        borderMesh.position.y = -0.05; // Slightly below the main path
+        borderMesh.receiveShadow = true;
+        
+        // Create a group for the path and its border
+        const pathGroup = new THREE.Group();
+        pathGroup.add(borderMesh);
+        pathGroup.add(pathMesh);
+        
+        pathGroup.userData = {
             type: 'path',
             id: pathData.id,
-            pattern: pathData.pattern
+            pattern: pathData.pattern,
+            zone: zoneName
         };
         
-        this.scene.add(pathMesh);
-        this.loadedObjects.push(pathMesh);
+        this.scene.add(pathGroup);
+        this.loadedObjects.push(pathGroup);
     }
 
     /**
@@ -291,7 +337,7 @@ export class MapLoader {
     }
 
     /**
-     * Create a village from map data
+     * Create a village from map data with enhanced features
      * @param {Object} villageData - Village configuration
      * @returns {THREE.Group} - Village group object
      */
@@ -300,26 +346,548 @@ export class MapLoader {
         villageGroup.userData = {
             type: 'village',
             mapId: villageData.id,
-            theme: villageData.theme
+            theme: villageData.theme,
+            style: villageData.style || 0
         };
         
-        // Create buildings
+        // Create buildings with proper rotation and style
         for (const buildingData of villageData.buildings) {
+            // Get zone colors for theming
+            const zoneAt = this.worldManager.zoneManager.getZoneAt(
+                new THREE.Vector3(buildingData.position.x, 0, buildingData.position.z)
+            );
+            const zoneName = zoneAt ? zoneAt.name : 'Terrant';
+            
+            // Create the building with appropriate parameters
             const building = this.worldManager.structureManager.createBuilding(
                 buildingData.position.x,
                 buildingData.position.z,
                 buildingData.width,
                 buildingData.depth,
-                buildingData.height
+                buildingData.height,
+                buildingData.type || 'house',
+                buildingData.style || 0,
+                zoneName
             );
             
             if (building) {
+                // Apply rotation if specified
+                if (buildingData.rotation !== undefined) {
+                    building.rotation.y = buildingData.rotation;
+                }
+                
+                // Apply height position if specified (for terraced villages)
+                if (buildingData.position.y !== undefined && buildingData.position.y > 0) {
+                    building.position.y = buildingData.position.y;
+                }
+                
                 villageGroup.add(building);
+            }
+        }
+        
+        // Create village paths
+        if (villageData.paths && villageData.paths.length > 0) {
+            for (const pathData of villageData.paths) {
+                let pathMesh = null;
+                
+                if (pathData.type === 'circle') {
+                    // Create circular path
+                    const points = [];
+                    const segments = 16;
+                    
+                    for (let i = 0; i <= segments; i++) {
+                        const angle = (i / segments) * Math.PI * 2;
+                        points.push(new THREE.Vector3(
+                            pathData.center.x + Math.cos(angle) * pathData.radius,
+                            pathData.center.y || 0,
+                            pathData.center.z + Math.sin(angle) * pathData.radius
+                        ));
+                    }
+                    
+                    pathMesh = this.createPathFromPoints(points, pathData.width || 2, villageData.theme);
+                } else if (pathData.type === 'line' && pathData.points && pathData.points.length >= 2) {
+                    // Create linear path
+                    const points = pathData.points.map(p => new THREE.Vector3(p.x, p.y || 0, p.z));
+                    pathMesh = this.createPathFromPoints(points, pathData.width || 2, villageData.theme);
+                }
+                
+                if (pathMesh) {
+                    villageGroup.add(pathMesh);
+                }
+            }
+        }
+        
+        // Create decorations
+        if (villageData.decorations && villageData.decorations.length > 0) {
+            for (const decorData of villageData.decorations) {
+                let decorMesh = null;
+                
+                switch (decorData.type) {
+                    case 'statue':
+                        decorMesh = this.createStatue(decorData);
+                        break;
+                    case 'fountain':
+                        decorMesh = this.createFountain(decorData);
+                        break;
+                    case 'well':
+                        decorMesh = this.createWell(decorData);
+                        break;
+                    case 'tree':
+                        decorMesh = this.worldManager.environmentManager.createTree(
+                            decorData.position.x, 
+                            decorData.position.z,
+                            null,
+                            decorData.size || 1
+                        );
+                        break;
+                    case 'bush':
+                        decorMesh = this.worldManager.environmentManager.createBush(
+                            decorData.position.x, 
+                            decorData.position.z
+                        );
+                        break;
+                    case 'rock':
+                        decorMesh = this.worldManager.environmentManager.createRock(
+                            decorData.position.x, 
+                            decorData.position.z,
+                            decorData.size || 1
+                        );
+                        break;
+                    case 'stairs':
+                        decorMesh = this.createStairs(decorData);
+                        break;
+                }
+                
+                if (decorMesh) {
+                    // Apply position and rotation if needed
+                    if (decorData.position.y !== undefined && decorData.position.y > 0) {
+                        decorMesh.position.y = decorData.position.y;
+                    }
+                    
+                    if (decorData.rotation !== undefined) {
+                        decorMesh.rotation.y = decorData.rotation;
+                    }
+                    
+                    villageGroup.add(decorMesh);
+                }
+            }
+        }
+        
+        // Create central feature if defined
+        if (villageData.centralFeature) {
+            const feature = villageData.centralFeature;
+            let featureMesh = null;
+            
+            switch (feature.type) {
+                case 'plaza':
+                    featureMesh = this.createPlaza(feature);
+                    break;
+                case 'square':
+                    featureMesh = this.createSquare(feature);
+                    break;
+                case 'market':
+                    featureMesh = this.createMarket(feature);
+                    break;
+                case 'temple':
+                    // Temple is already created as a building
+                    break;
+            }
+            
+            if (featureMesh) {
+                // Apply position if needed
+                if (feature.position.y !== undefined && feature.position.y > 0) {
+                    featureMesh.position.y = feature.position.y;
+                }
+                
+                villageGroup.add(featureMesh);
             }
         }
         
         this.scene.add(villageGroup);
         return villageGroup;
+    }
+    
+    /**
+     * Create a path from points
+     * @param {Array<THREE.Vector3>} points - Path points
+     * @param {number} width - Path width
+     * @param {string} theme - Theme name
+     * @returns {THREE.Group} - Path group
+     */
+    createPathFromPoints(points, width, theme) {
+        // Get theme colors
+        let pathColor = 0x8B7355; // Default brown path color
+        
+        if (this.currentMap && this.currentMap.theme) {
+            const themeColors = this.currentMap.theme.colors;
+            
+            // Use theme-specific path color if available
+            if (themeColors && themeColors.path) {
+                // Convert hex string to number
+                pathColor = parseInt(themeColors.path.replace('#', '0x'), 16);
+            }
+        }
+        
+        // Create path geometry
+        const pathGeometry = this.createPathGeometry(points, width);
+        
+        // Create path material
+        const pathMaterial = new THREE.MeshLambertMaterial({
+            color: pathColor,
+            transparent: true,
+            opacity: 0.9,
+            roughness: 0.8
+        });
+        
+        // Create path mesh
+        const pathMesh = new THREE.Mesh(pathGeometry, pathMaterial);
+        pathMesh.receiveShadow = true;
+        
+        // Create a group for the path
+        const pathGroup = new THREE.Group();
+        pathGroup.add(pathMesh);
+        pathGroup.userData = { type: 'path' };
+        
+        return pathGroup;
+    }
+    
+    /**
+     * Create a statue decoration
+     * @param {Object} data - Statue data
+     * @returns {THREE.Mesh} - Statue mesh
+     */
+    createStatue(data) {
+        // Create a simple statue (can be enhanced later)
+        const baseGeometry = new THREE.CylinderGeometry(data.size * 0.5, data.size * 0.7, data.size * 0.5, 8);
+        const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.7 });
+        const base = new THREE.Mesh(baseGeometry, baseMaterial);
+        
+        const statueGeometry = new THREE.CylinderGeometry(data.size * 0.2, data.size * 0.2, data.size * 2, 8);
+        const statueMaterial = new THREE.MeshStandardMaterial({ color: 0xAAAAAA, roughness: 0.5 });
+        const statue = new THREE.Mesh(statueGeometry, statueMaterial);
+        statue.position.y = data.size * 1.25;
+        
+        const group = new THREE.Group();
+        group.add(base);
+        group.add(statue);
+        
+        group.position.set(data.position.x, 0, data.position.z);
+        group.userData = { type: 'statue' };
+        
+        return group;
+    }
+    
+    /**
+     * Create a fountain decoration
+     * @param {Object} data - Fountain data
+     * @returns {THREE.Mesh} - Fountain mesh
+     */
+    createFountain(data) {
+        // Create a simple fountain (can be enhanced later)
+        const baseGeometry = new THREE.CylinderGeometry(data.size * 1.5, data.size * 1.8, data.size * 0.5, 16);
+        const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.7 });
+        const base = new THREE.Mesh(baseGeometry, baseMaterial);
+        
+        const waterGeometry = new THREE.CylinderGeometry(data.size * 1.2, data.size * 1.2, data.size * 0.2, 16);
+        const waterMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x3399FF, 
+            roughness: 0.1,
+            metalness: 0.3,
+            transparent: true,
+            opacity: 0.8
+        });
+        const water = new THREE.Mesh(waterGeometry, waterMaterial);
+        water.position.y = data.size * 0.35;
+        
+        const centerGeometry = new THREE.CylinderGeometry(data.size * 0.3, data.size * 0.4, data.size * 0.8, 8);
+        const centerMaterial = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.6 });
+        const center = new THREE.Mesh(centerGeometry, centerMaterial);
+        center.position.y = data.size * 0.65;
+        
+        const group = new THREE.Group();
+        group.add(base);
+        group.add(water);
+        group.add(center);
+        
+        group.position.set(data.position.x, 0, data.position.z);
+        group.userData = { type: 'fountain' };
+        
+        return group;
+    }
+    
+    /**
+     * Create a well decoration
+     * @param {Object} data - Well data
+     * @returns {THREE.Mesh} - Well mesh
+     */
+    createWell(data) {
+        // Create a simple well
+        const wellSize = data.size || 1;
+        const wellGeometry = new THREE.CylinderGeometry(wellSize, wellSize, wellSize * 1.2, 12);
+        const wellMaterial = new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.9 });
+        const well = new THREE.Mesh(wellGeometry, wellMaterial);
+        
+        // Create water inside
+        const waterGeometry = new THREE.CylinderGeometry(wellSize * 0.8, wellSize * 0.8, 0.1, 12);
+        const waterMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x3377AA, 
+            roughness: 0.1,
+            transparent: true,
+            opacity: 0.7
+        });
+        const water = new THREE.Mesh(waterGeometry, waterMaterial);
+        water.position.y = wellSize * 0.5;
+        
+        // Create roof structure
+        const roofGeometry = new THREE.ConeGeometry(wellSize * 1.5, wellSize, 4);
+        const roofMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
+        const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+        roof.position.y = wellSize * 2.2;
+        
+        // Create support posts
+        const postGeometry = new THREE.BoxGeometry(0.3, wellSize * 2, 0.3);
+        const postMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
+        
+        const post1 = new THREE.Mesh(postGeometry, postMaterial);
+        post1.position.set(wellSize * 0.7, wellSize * 0.9, wellSize * 0.7);
+        
+        const post2 = new THREE.Mesh(postGeometry, postMaterial);
+        post2.position.set(-wellSize * 0.7, wellSize * 0.9, wellSize * 0.7);
+        
+        const post3 = new THREE.Mesh(postGeometry, postMaterial);
+        post3.position.set(wellSize * 0.7, wellSize * 0.9, -wellSize * 0.7);
+        
+        const post4 = new THREE.Mesh(postGeometry, postMaterial);
+        post4.position.set(-wellSize * 0.7, wellSize * 0.9, -wellSize * 0.7);
+        
+        const group = new THREE.Group();
+        group.add(well);
+        group.add(water);
+        group.add(roof);
+        group.add(post1);
+        group.add(post2);
+        group.add(post3);
+        group.add(post4);
+        
+        group.position.set(data.position.x, 0, data.position.z);
+        group.userData = { type: 'well' };
+        
+        return group;
+    }
+    
+    /**
+     * Create stairs for terraced villages
+     * @param {Object} data - Stairs data
+     * @returns {THREE.Mesh} - Stairs mesh
+     */
+    createStairs(data) {
+        const width = data.width || 4;
+        const height = data.height || 2;
+        const steps = 5; // Number of steps
+        const stepHeight = height / steps;
+        const stepDepth = width / steps;
+        
+        const stairsGroup = new THREE.Group();
+        
+        // Create each step
+        for (let i = 0; i < steps; i++) {
+            const stepGeometry = new THREE.BoxGeometry(width, stepHeight, stepDepth);
+            const stepMaterial = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.8 });
+            const step = new THREE.Mesh(stepGeometry, stepMaterial);
+            
+            // Position each step
+            step.position.set(
+                0,
+                i * stepHeight + stepHeight / 2,
+                i * stepDepth - width / 2 + stepDepth / 2
+            );
+            
+            stairsGroup.add(step);
+        }
+        
+        stairsGroup.position.set(data.position.x, data.position.y || 0, data.position.z);
+        
+        if (data.rotation !== undefined) {
+            stairsGroup.rotation.y = data.rotation;
+        }
+        
+        stairsGroup.userData = { type: 'stairs' };
+        
+        return stairsGroup;
+    }
+    
+    /**
+     * Create a plaza for circular villages
+     * @param {Object} data - Plaza data
+     * @returns {THREE.Mesh} - Plaza mesh
+     */
+    createPlaza(data) {
+        const radius = data.radius || 8;
+        
+        // Create plaza ground
+        const plazaGeometry = new THREE.CircleGeometry(radius, 32);
+        
+        // Get theme colors
+        let plazaColor = 0xCCCCCC; // Default plaza color
+        
+        if (this.currentMap && this.currentMap.theme) {
+            const themeColors = this.currentMap.theme.colors;
+            
+            // Use theme-specific path color if available
+            if (themeColors && themeColors.path) {
+                // Convert hex string to number
+                plazaColor = parseInt(themeColors.path.replace('#', '0x'), 16);
+            }
+        }
+        
+        const plazaMaterial = new THREE.MeshStandardMaterial({ 
+            color: plazaColor,
+            roughness: 0.7
+        });
+        
+        const plaza = new THREE.Mesh(plazaGeometry, plazaMaterial);
+        plaza.rotation.x = -Math.PI / 2; // Rotate to be horizontal
+        plaza.position.set(data.position.x, 0.05, data.position.z); // Slightly above ground
+        
+        plaza.userData = { type: 'plaza' };
+        
+        return plaza;
+    }
+    
+    /**
+     * Create a square for grid villages
+     * @param {Object} data - Square data
+     * @returns {THREE.Mesh} - Square mesh
+     */
+    createSquare(data) {
+        const size = data.size || 10;
+        
+        // Create square ground
+        const squareGeometry = new THREE.PlaneGeometry(size, size);
+        
+        // Get theme colors
+        let squareColor = 0xCCCCCC; // Default square color
+        
+        if (this.currentMap && this.currentMap.theme) {
+            const themeColors = this.currentMap.theme.colors;
+            
+            // Use theme-specific path color if available
+            if (themeColors && themeColors.path) {
+                // Convert hex string to number
+                squareColor = parseInt(themeColors.path.replace('#', '0x'), 16);
+            }
+        }
+        
+        const squareMaterial = new THREE.MeshStandardMaterial({ 
+            color: squareColor,
+            roughness: 0.7
+        });
+        
+        const square = new THREE.Mesh(squareGeometry, squareMaterial);
+        square.rotation.x = -Math.PI / 2; // Rotate to be horizontal
+        square.position.set(data.position.x, 0.05, data.position.z); // Slightly above ground
+        
+        square.userData = { type: 'square' };
+        
+        return square;
+    }
+    
+    /**
+     * Create a market for riverside villages
+     * @param {Object} data - Market data
+     * @returns {THREE.Group} - Market group
+     */
+    createMarket(data) {
+        const size = data.size || 8;
+        const marketGroup = new THREE.Group();
+        
+        // Create market ground
+        const groundGeometry = new THREE.PlaneGeometry(size, size);
+        
+        // Get theme colors
+        let groundColor = 0xCCCCCC; // Default ground color
+        
+        if (this.currentMap && this.currentMap.theme) {
+            const themeColors = this.currentMap.theme.colors;
+            
+            // Use theme-specific path color if available
+            if (themeColors && themeColors.path) {
+                // Convert hex string to number
+                groundColor = parseInt(themeColors.path.replace('#', '0x'), 16);
+            }
+        }
+        
+        const groundMaterial = new THREE.MeshStandardMaterial({ 
+            color: groundColor,
+            roughness: 0.7
+        });
+        
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2; // Rotate to be horizontal
+        ground.position.y = 0.05; // Slightly above ground
+        
+        marketGroup.add(ground);
+        
+        // Add market stalls
+        const stallCount = 3 + Math.floor(Math.random() * 3);
+        
+        for (let i = 0; i < stallCount; i++) {
+            const stallSize = 1 + Math.random() * 0.5;
+            
+            // Create stall base
+            const baseGeometry = new THREE.BoxGeometry(stallSize * 2, stallSize * 0.5, stallSize * 2);
+            const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
+            const base = new THREE.Mesh(baseGeometry, baseMaterial);
+            
+            // Create stall roof
+            const roofGeometry = new THREE.BoxGeometry(stallSize * 2.5, stallSize * 0.2, stallSize * 2.5);
+            const roofMaterial = new THREE.MeshStandardMaterial({ color: 0xA52A2A, roughness: 0.7 });
+            const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+            roof.position.y = stallSize * 1.5;
+            
+            // Create stall posts
+            const postGeometry = new THREE.CylinderGeometry(stallSize * 0.1, stallSize * 0.1, stallSize * 1.5, 6);
+            const postMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
+            
+            const posts = [];
+            const postPositions = [
+                { x: stallSize * 0.8, z: stallSize * 0.8 },
+                { x: -stallSize * 0.8, z: stallSize * 0.8 },
+                { x: stallSize * 0.8, z: -stallSize * 0.8 },
+                { x: -stallSize * 0.8, z: -stallSize * 0.8 }
+            ];
+            
+            for (const pos of postPositions) {
+                const post = new THREE.Mesh(postGeometry, postMaterial);
+                post.position.set(pos.x, stallSize * 0.75, pos.z);
+                posts.push(post);
+            }
+            
+            // Create stall group
+            const stall = new THREE.Group();
+            stall.add(base);
+            stall.add(roof);
+            posts.forEach(post => stall.add(post));
+            
+            // Position stall in market
+            const angle = (i / stallCount) * Math.PI * 2;
+            const distance = size * 0.3;
+            stall.position.set(
+                Math.cos(angle) * distance,
+                0,
+                Math.sin(angle) * distance
+            );
+            
+            // Random rotation
+            stall.rotation.y = Math.random() * Math.PI * 2;
+            
+            marketGroup.add(stall);
+        }
+        
+        marketGroup.position.set(data.position.x, data.position.y || 0, data.position.z);
+        marketGroup.userData = { type: 'market' };
+        
+        return marketGroup;
     }
 
     /**

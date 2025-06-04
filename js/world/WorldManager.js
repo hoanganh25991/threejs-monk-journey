@@ -544,19 +544,8 @@ export class WorldManager {
         });
         
         // Unload environment objects in this chunk
-        this.environmentManager.environmentObjects = this.environmentManager.environmentObjects.filter(envObj => {
-            // Keep objects that don't have a chunkKey or are in a different chunk
-            if (!envObj.chunkKey || envObj.chunkKey !== chunkKey) {
-                return true;
-            }
-            
-            // Remove the object from the scene
-            if (envObj.object && envObj.object.parent) {
-                this.scene.remove(envObj.object);
-            }
-            
-            return false;
-        });
+        // Use the proper method from EnvironmentManager to remove objects from a chunk
+        this.environmentManager.removeChunkObjects(chunkKey, false);
     }
     
     /**
@@ -759,12 +748,18 @@ export class WorldManager {
                 
                 // If object was created, add it to tracking and mark as generated
                 if (envObject) {
-                    // Add to environment objects array for tracking
-                    this.environmentManager.environmentObjects.push({
+                    // Get or create the array for this chunk
+                    const chunkKey = envData.chunkKey || "default";
+                    if (!this.environmentManager.environmentObjects[chunkKey]) {
+                        this.environmentManager.environmentObjects[chunkKey] = [];
+                    }
+                    
+                    // Add to environment objects array for the appropriate chunk
+                    this.environmentManager.environmentObjects[chunkKey].push({
                         type: envData.type,
                         object: envObject,
                         position: position,
-                        chunkKey: envData.chunkKey
+                        chunkKey: chunkKey
                     });
                     
                     // Mark as generated to prevent recreation

@@ -47,53 +47,59 @@ class Vector3 {
     }
 }
 
-// Color definitions (copied from colors.js to avoid import issues)
+// Enhanced color definitions with more distinctive zone colors
 const ZONE_COLORS = {
     'Forest': {
-        'foliage': '#2F4F4F',
-        'trunk': '#8B4513',
-        'ground': '#8F9779',
+        'foliage': '#1E5631', // Deeper, richer green for forest foliage
+        'trunk': '#8B4513',   // Classic brown for trunks
+        'ground': '#5E7742',  // More vibrant forest floor green
         'rock': '#708090',
         'structure': '#36454F',
-        'accent': '#6B8E23'
+        'accent': '#FFCC00',  // Golden accent for forest (sunlight through trees)
+        'path': '#A0522D'     // Brown dirt path
     },
     'Desert': {
-        'sand': '#F4A460',
+        'sand': '#E9BE62',    // Warmer, more vibrant sand color
         'rock': '#A0522D',
-        'vegetation': '#6B8E23',
+        'vegetation': '#7D9C42', // Brighter desert vegetation
         'sky': '#87CEEB',
-        'structure': '#EDC9AF',
-        'accent': '#FF4500'
+        'structure': '#D2B48C', // Lighter sandstone structures
+        'accent': '#FF4500',    // Bright orange accent (desert sunset)
+        'path': '#D2B48C'       // Sandy path
     },
     'Mountains': {
-        'snow': '#FFFAFA',
-        'ice': '#B0E0E6',
-        'rock': '#A9A9A9',
-        'structure': '#ADD8E6',
+        'snow': '#FFFFFF',      // Pure white snow
+        'ice': '#A5D8E6',       // More vibrant ice blue
+        'rock': '#6D6552',      // Darker, more defined mountain rock
+        'structure': '#8CADD6', // Blueish mountain structures
         'vegetation': '#2E8B57',
-        'accent': '#8FBC8F'
+        'accent': '#C9E4CA',    // Pale green accent (alpine meadows)
+        'path': '#8E7F6D'       // Rocky mountain path
     },
     'Swamp': {
-        'water': '#4682B4',
-        'vegetation': '#556B2F',
-        'ground': '#8F9779',
+        'water': '#3A7D7D',     // Deeper, murkier swamp water
+        'vegetation': '#4A6C2F', // Darker swamp vegetation
+        'ground': '#4D5645',    // Darker, muddier swamp ground
         'structure': '#708090',
         'rock': '#36454F',
-        'accent': '#40E0D0'
+        'accent': '#40E0D0',    // Cyan accent (glowing swamp elements)
+        'path': '#5D4037'       // Dark muddy path
     },
     'Ruins': {
-        'stone': '#A9A9A9',
-        'ground': '#8F9779',
+        'stone': '#7D7D7D',     // Darker stone for more dramatic ruins
+        'ground': '#6D7254',    // Darker ground around ruins
         'vegetation': '#556B2F',
-        'structure': '#708090',
-        'accent': '#D8BFD8'
+        'structure': '#4A4A4A', // Darker structure color for ruins
+        'accent': '#9370DB',    // Purple accent (magical ruins elements)
+        'path': '#696969'       // Ancient stone path
     },
     'Dark Sanctum': {
         'structure': '#0C0C0C',
         'fire': '#FF4500',
-        'ground': '#5C4033',
+        'ground': '#3D2B22',    // Darker ground for more ominous feel
         'accent': '#8B0000',
-        'glow': '#E3CF57'
+        'glow': '#E3CF57',
+        'path': '#2A0A0A'       // Dark red-black path
     },
     'Terrant': {
         'soil': '#E5C09A',
@@ -103,17 +109,19 @@ const ZONE_COLORS = {
         'structure': '#4A4A4A',
         'accent': '#DAA520',
         'water': '#1E90FF',
-        'glow': '#32CD32'
+        'glow': '#32CD32',
+        'path': '#B8A888'       // Light dirt path
     }
 };
 
 const HOT_ZONE_COLORS = {
-    'lava': '#FF4500',
-    'magma': '#FF6347',
-    'ground': '#2F4F4F',
+    'lava': '#FF5722',      // Brighter, more vibrant lava
+    'magma': '#FF8A65',     // Lighter magma for contrast
+    'ground': '#2D2D2D',    // Darker ground for contrast with lava
     'ash': '#BEBEBE',
-    'glow': '#FFD700',
-    'ember': '#FF8C00'
+    'glow': '#FFEB3B',      // Brighter yellow glow
+    'ember': '#FF9800',     // Brighter orange ember
+    'path': '#3E2723'       // Dark volcanic path
 };
 
 // Import Node.js modules
@@ -498,7 +506,7 @@ class MapGenerator {
     }
 
     /**
-     * Create a village structure
+     * Create a village structure with more unique and structured layout
      */
     createVillage(position, id, theme) {
         const village = {
@@ -506,29 +514,417 @@ class MapGenerator {
             type: 'village',
             position,
             theme: theme.name,
-            buildings: []
+            buildings: [],
+            decorations: [],
+            paths: []
         };
 
-        // Generate 5-12 buildings in the village
-        const buildingCount = 5 + Math.floor(this.rng() * 8);
+        // Determine village style based on theme and random factor
+        // 0: Circular village, 1: Grid village, 2: Riverside village, 3: Mountain village
+        const villageStyle = Math.floor(this.rng() * 4);
         
-        for (let i = 0; i < buildingCount; i++) {
-            const angle = (i / buildingCount) * Math.PI * 2;
-            const distance = 10 + this.rng() * 20;
+        // Generate more buildings for a substantial village
+        const buildingCount = 8 + Math.floor(this.rng() * 10); // 8-17 buildings
+        
+        // Add a central feature based on village style
+        let centralFeature = null;
+        
+        switch(villageStyle) {
+            case 0: // Circular village with central plaza
+                centralFeature = {
+                    type: 'plaza',
+                    position: { x: position.x, y: 0, z: position.z },
+                    radius: 8 + this.rng() * 4
+                };
+                
+                // Create buildings in a circle around the plaza
+                for (let i = 0; i < buildingCount; i++) {
+                    const angle = (i / buildingCount) * Math.PI * 2;
+                    const distance = centralFeature.radius + 5 + this.rng() * 10;
+                    
+                    // Vary building sizes and types
+                    const buildingType = this.rng() < 0.8 ? 'house' : (this.rng() < 0.5 ? 'shop' : 'temple');
+                    const buildingSize = buildingType === 'temple' ? 1.5 : (buildingType === 'shop' ? 1.2 : 1.0);
+                    
+                    village.buildings.push({
+                        type: buildingType,
+                        position: {
+                            x: position.x + Math.cos(angle) * distance,
+                            y: 0,
+                            z: position.z + Math.sin(angle) * distance
+                        },
+                        rotation: angle + Math.PI, // Face toward plaza
+                        width: (3 + this.rng() * 3) * buildingSize,
+                        depth: (3 + this.rng() * 3) * buildingSize,
+                        height: (2 + this.rng() * 2) * buildingSize,
+                        style: Math.floor(this.rng() * 3) // 0-2 different building styles
+                    });
+                }
+                
+                // Add decorative elements to the plaza
+                for (let i = 0; i < 3 + Math.floor(this.rng() * 3); i++) {
+                    const angle = this.rng() * Math.PI * 2;
+                    const distance = this.rng() * centralFeature.radius * 0.7;
+                    
+                    village.decorations.push({
+                        type: this.rng() < 0.5 ? 'statue' : 'fountain',
+                        position: {
+                            x: position.x + Math.cos(angle) * distance,
+                            y: 0,
+                            z: position.z + Math.sin(angle) * distance
+                        },
+                        size: 1 + this.rng() * 1.5
+                    });
+                }
+                
+                // Create circular path around the plaza
+                village.paths.push({
+                    type: 'circle',
+                    center: { x: position.x, y: 0, z: position.z },
+                    radius: centralFeature.radius + 2,
+                    width: 2 + this.rng()
+                });
+                break;
+                
+            case 1: // Grid village with streets
+                // Create a grid of buildings
+                const gridSize = Math.floor(Math.sqrt(buildingCount)) + 1;
+                const gridSpacing = 12 + this.rng() * 4;
+                const gridOffset = (gridSize - 1) * gridSpacing / 2;
+                
+                // Create main square in the center
+                centralFeature = {
+                    type: 'square',
+                    position: { x: position.x, y: 0, z: position.z },
+                    size: gridSpacing * 1.5
+                };
+                
+                // Add buildings in a grid pattern
+                let buildingIndex = 0;
+                for (let row = 0; row < gridSize; row++) {
+                    for (let col = 0; col < gridSize; col++) {
+                        // Skip the center for the main square
+                        if (row === Math.floor(gridSize/2) && col === Math.floor(gridSize/2)) {
+                            continue;
+                        }
+                        
+                        if (buildingIndex < buildingCount) {
+                            const buildingX = position.x - gridOffset + col * gridSpacing;
+                            const buildingZ = position.z - gridOffset + row * gridSpacing;
+                            
+                            // Add some randomness to grid positions
+                            const offsetX = (this.rng() - 0.5) * 3;
+                            const offsetZ = (this.rng() - 0.5) * 3;
+                            
+                            // Vary building types
+                            const buildingType = this.rng() < 0.7 ? 'house' : (this.rng() < 0.5 ? 'shop' : 'temple');
+                            const buildingSize = buildingType === 'temple' ? 1.5 : (buildingType === 'shop' ? 1.2 : 1.0);
+                            
+                            // Determine building rotation (face the street)
+                            let rotation = 0;
+                            if (row === 0) rotation = Math.PI / 2; // Face south
+                            else if (col === 0) rotation = 0; // Face east
+                            else if (row === gridSize - 1) rotation = -Math.PI / 2; // Face north
+                            else if (col === gridSize - 1) rotation = Math.PI; // Face west
+                            else rotation = Math.floor(this.rng() * 4) * (Math.PI / 2); // Random cardinal direction
+                            
+                            village.buildings.push({
+                                type: buildingType,
+                                position: {
+                                    x: buildingX + offsetX,
+                                    y: 0,
+                                    z: buildingZ + offsetZ
+                                },
+                                rotation: rotation,
+                                width: (3 + this.rng() * 3) * buildingSize,
+                                depth: (3 + this.rng() * 3) * buildingSize,
+                                height: (2 + this.rng() * 2) * buildingSize,
+                                style: Math.floor(this.rng() * 3) // 0-2 different building styles
+                            });
+                            
+                            buildingIndex++;
+                        }
+                    }
+                }
+                
+                // Create grid of streets
+                for (let i = 0; i <= gridSize; i++) {
+                    // Horizontal streets
+                    village.paths.push({
+                        type: 'line',
+                        points: [
+                            { x: position.x - gridOffset - 5, y: 0, z: position.z - gridOffset + i * gridSpacing },
+                            { x: position.x + gridOffset + 5, y: 0, z: position.z - gridOffset + i * gridSpacing }
+                        ],
+                        width: i === Math.floor(gridSize/2) ? 4 : 3 // Main street is wider
+                    });
+                    
+                    // Vertical streets
+                    village.paths.push({
+                        type: 'line',
+                        points: [
+                            { x: position.x - gridOffset + i * gridSpacing, y: 0, z: position.z - gridOffset - 5 },
+                            { x: position.x - gridOffset + i * gridSpacing, y: 0, z: position.z + gridOffset + 5 }
+                        ],
+                        width: i === Math.floor(gridSize/2) ? 4 : 3 // Main street is wider
+                    });
+                }
+                
+                // Add decorations to the main square
+                for (let i = 0; i < 2 + Math.floor(this.rng() * 3); i++) {
+                    village.decorations.push({
+                        type: this.rng() < 0.6 ? 'statue' : (this.rng() < 0.5 ? 'fountain' : 'well'),
+                        position: {
+                            x: position.x + (this.rng() - 0.5) * centralFeature.size * 0.6,
+                            y: 0,
+                            z: position.z + (this.rng() - 0.5) * centralFeature.size * 0.6
+                        },
+                        size: 1 + this.rng() * 1.5
+                    });
+                }
+                break;
+                
+            case 2: // Riverside/linear village
+                // Create a main street along a curve
+                const pathPoints = [];
+                const pathLength = 60 + this.rng() * 40;
+                const pathSegments = 5 + Math.floor(this.rng() * 3);
+                
+                // Generate a curved path
+                for (let i = 0; i <= pathSegments; i++) {
+                    const t = i / pathSegments;
+                    const pathX = position.x + (t - 0.5) * pathLength;
+                    // Create a gentle curve
+                    const pathZ = position.z + Math.sin(t * Math.PI) * (10 + this.rng() * 15) * (this.rng() < 0.5 ? 1 : -1);
+                    
+                    pathPoints.push({ x: pathX, y: 0, z: pathZ });
+                }
+                
+                // Create the main street
+                village.paths.push({
+                    type: 'line',
+                    points: pathPoints,
+                    width: 4
+                });
+                
+                // Place buildings along the path
+                for (let i = 0; i < buildingCount; i++) {
+                    // Choose a random segment of the path
+                    const segmentIndex = Math.floor(this.rng() * pathSegments);
+                    const t = this.rng(); // Position along the segment
+                    
+                    const startPoint = pathPoints[segmentIndex];
+                    const endPoint = pathPoints[segmentIndex + 1];
+                    
+                    // Interpolate position along the segment
+                    const buildingX = startPoint.x + (endPoint.x - startPoint.x) * t;
+                    const buildingZ = startPoint.z + (endPoint.z - startPoint.z) * t;
+                    
+                    // Determine which side of the path to place the building
+                    const side = this.rng() < 0.5 ? 1 : -1;
+                    
+                    // Calculate perpendicular direction to path
+                    const pathDirX = endPoint.x - startPoint.x;
+                    const pathDirZ = endPoint.z - startPoint.z;
+                    const perpX = -pathDirZ;
+                    const perpZ = pathDirX;
+                    
+                    // Normalize perpendicular vector
+                    const perpLength = Math.sqrt(perpX * perpX + perpZ * perpZ);
+                    const normPerpX = perpX / perpLength;
+                    const normPerpZ = perpZ / perpLength;
+                    
+                    // Distance from path
+                    const distance = 6 + this.rng() * 4;
+                    
+                    // Building position
+                    const finalX = buildingX + normPerpX * distance * side;
+                    const finalZ = buildingZ + normPerpZ * distance * side;
+                    
+                    // Calculate rotation to face the path
+                    const rotation = Math.atan2(normPerpX, normPerpZ) + (side > 0 ? Math.PI : 0);
+                    
+                    // Vary building types
+                    const buildingType = this.rng() < 0.7 ? 'house' : (this.rng() < 0.5 ? 'shop' : 'temple');
+                    const buildingSize = buildingType === 'temple' ? 1.5 : (buildingType === 'shop' ? 1.2 : 1.0);
+                    
+                    village.buildings.push({
+                        type: buildingType,
+                        position: {
+                            x: finalX,
+                            y: 0,
+                            z: finalZ
+                        },
+                        rotation: rotation,
+                        width: (3 + this.rng() * 3) * buildingSize,
+                        depth: (3 + this.rng() * 3) * buildingSize,
+                        height: (2 + this.rng() * 2) * buildingSize,
+                        style: Math.floor(this.rng() * 3) // 0-2 different building styles
+                    });
+                }
+                
+                // Add a central feature (like a market or temple) somewhere along the path
+                const centralIndex = Math.floor(pathSegments / 2);
+                const centralPoint = pathPoints[centralIndex];
+                
+                centralFeature = {
+                    type: 'market',
+                    position: {
+                        x: centralPoint.x,
+                        y: 0,
+                        z: centralPoint.z + (this.rng() < 0.5 ? 10 : -10)
+                    },
+                    size: 8 + this.rng() * 4
+                };
+                
+                // Add decorations near the central feature
+                for (let i = 0; i < 2 + Math.floor(this.rng() * 2); i++) {
+                    village.decorations.push({
+                        type: this.rng() < 0.5 ? 'well' : 'statue',
+                        position: {
+                            x: centralFeature.position.x + (this.rng() - 0.5) * 10,
+                            y: 0,
+                            z: centralFeature.position.z + (this.rng() - 0.5) * 10
+                        },
+                        size: 1 + this.rng() * 1
+                    });
+                }
+                break;
+                
+            case 3: // Mountain/hillside village with terraced layout
+                // Create a terraced layout with buildings at different heights
+                const terraceCount = 3 + Math.floor(this.rng() * 2);
+                const terraceRadius = 15 + this.rng() * 10;
+                const terraceStep = 2; // Height difference between terraces
+                
+                // Central feature is a temple or shrine at the top
+                centralFeature = {
+                    type: 'temple',
+                    position: {
+                        x: position.x,
+                        y: terraceCount * terraceStep,
+                        z: position.z
+                    },
+                    size: 6 + this.rng() * 3
+                };
+                
+                // Add the central temple/shrine
+                village.buildings.push({
+                    type: 'temple',
+                    position: centralFeature.position,
+                    rotation: this.rng() * Math.PI * 2,
+                    width: 6 + this.rng() * 2,
+                    depth: 6 + this.rng() * 2,
+                    height: 5 + this.rng() * 2,
+                    style: Math.floor(this.rng() * 3)
+                });
+                
+                // Distribute remaining buildings on terraces
+                const buildingsPerTerrace = Math.floor(buildingCount / terraceCount);
+                
+                for (let terrace = 0; terrace < terraceCount; terrace++) {
+                    const terraceHeight = terrace * terraceStep;
+                    const currentRadius = terraceRadius + (terraceCount - terrace) * 8;
+                    
+                    // Create a circular path for this terrace
+                    village.paths.push({
+                        type: 'circle',
+                        center: { x: position.x, y: terraceHeight, z: position.z },
+                        radius: currentRadius,
+                        width: 2.5
+                    });
+                    
+                    // Add buildings on this terrace
+                    const currentBuildingCount = terrace === 0 ? buildingsPerTerrace + (buildingCount % terraceCount) : buildingsPerTerrace;
+                    
+                    for (let i = 0; i < currentBuildingCount; i++) {
+                        const angle = (i / currentBuildingCount) * Math.PI * 2 + (this.rng() - 0.5) * 0.2;
+                        const distance = currentRadius - 3 - this.rng() * 2;
+                        
+                        // Vary building types, with more important buildings on higher terraces
+                        const typeRandom = this.rng();
+                        const buildingType = terrace >= terraceCount - 2 ? 
+                            (typeRandom < 0.6 ? 'house' : (typeRandom < 0.8 ? 'shop' : 'temple')) :
+                            (typeRandom < 0.8 ? 'house' : 'shop');
+                            
+                        const buildingSize = buildingType === 'temple' ? 1.4 : (buildingType === 'shop' ? 1.1 : 1.0);
+                        
+                        village.buildings.push({
+                            type: buildingType,
+                            position: {
+                                x: position.x + Math.cos(angle) * distance,
+                                y: terraceHeight,
+                                z: position.z + Math.sin(angle) * distance
+                            },
+                            rotation: angle + Math.PI, // Face inward
+                            width: (2.5 + this.rng() * 2) * buildingSize,
+                            depth: (2.5 + this.rng() * 2) * buildingSize,
+                            height: (2 + this.rng() * 1.5) * buildingSize,
+                            style: Math.floor(this.rng() * 3)
+                        });
+                    }
+                }
+                
+                // Add stairs connecting terraces
+                for (let terrace = 0; terrace < terraceCount; terrace++) {
+                    const stairAngle = (terrace / terraceCount) * Math.PI * 2;
+                    
+                    village.decorations.push({
+                        type: 'stairs',
+                        position: {
+                            x: position.x + Math.cos(stairAngle) * (terraceRadius + (terraceCount - terrace) * 8),
+                            y: terrace * terraceStep,
+                            z: position.z + Math.sin(stairAngle) * (terraceRadius + (terraceCount - terrace) * 8)
+                        },
+                        rotation: stairAngle + Math.PI,
+                        width: 4 + this.rng(),
+                        height: terraceStep
+                    });
+                }
+                
+                // Add decorative elements
+                for (let i = 0; i < 3 + Math.floor(this.rng() * 3); i++) {
+                    const terrace = Math.floor(this.rng() * terraceCount);
+                    const terraceHeight = terrace * terraceStep;
+                    const angle = this.rng() * Math.PI * 2;
+                    const distance = (terraceRadius + (terraceCount - terrace) * 8) * 0.8 * this.rng();
+                    
+                    village.decorations.push({
+                        type: this.rng() < 0.7 ? 'statue' : 'fountain',
+                        position: {
+                            x: position.x + Math.cos(angle) * distance,
+                            y: terraceHeight,
+                            z: position.z + Math.sin(angle) * distance
+                        },
+                        size: 1 + this.rng()
+                    });
+                }
+                break;
+        }
+        
+        // Add village-specific environment objects
+        const environmentObjectCount = 5 + Math.floor(this.rng() * 10);
+        for (let i = 0; i < environmentObjectCount; i++) {
+            const angle = this.rng() * Math.PI * 2;
+            const distance = 20 + this.rng() * 15;
             
-            village.buildings.push({
-                type: 'house',
+            const envType = this.rng() < 0.5 ? 'tree' : (this.rng() < 0.7 ? 'bush' : 'rock');
+            
+            village.decorations.push({
+                type: envType,
                 position: {
                     x: position.x + Math.cos(angle) * distance,
                     y: 0,
                     z: position.z + Math.sin(angle) * distance
                 },
-                width: 3 + this.rng() * 4,
-                depth: 3 + this.rng() * 4,
-                height: 2 + this.rng() * 3
+                size: 0.8 + this.rng() * 0.4
             });
         }
-
+        
+        // Store the village style and central feature
+        village.style = villageStyle;
+        village.centralFeature = centralFeature;
+        
         this.mapData.structures.push(village);
     }
 
@@ -599,26 +995,78 @@ class MapGenerator {
                         Math.pow(nextPoint.z - point.z, 2)
                     );
                     
-                    const treeCount = Math.floor(distance * density / 10);
+                    // Significantly increase tree density along paths
+                    const treeCount = Math.floor(distance * density / 5); // Doubled density
                     
                     for (let i = 0; i < treeCount; i++) {
                         const t = i / treeCount;
                         const x = point.x + (nextPoint.x - point.x) * t;
                         const z = point.z + (nextPoint.z - point.z) * t;
                         
-                        // Offset trees to sides of path
-                        const offset = path.width + 2 + this.rng() * 5;
-                        const side = this.rng() < 0.5 ? -1 : 1;
-                        
-                        this.mapData.environment.push({
-                            type: 'tree',
-                            position: {
-                                x: x + side * offset,
-                                y: 0,
-                                z: z + side * offset
-                            },
-                            theme: theme.name
-                        });
+                        // Create dense tree lines on both sides of the path
+                        for (let side = -1; side <= 1; side += 2) { // Both sides of the path
+                            // Vary the offset to create a more natural forest edge
+                            const baseOffset = path.width + 2;
+                            const variableOffset = this.rng() * 15; // Increased from 5 to 15
+                            const offset = baseOffset + variableOffset;
+                            
+                            // Add trees with varying sizes
+                            const treeSize = 0.7 + this.rng() * 0.6; // 0.7 to 1.3 size multiplier
+                            
+                            this.mapData.environment.push({
+                                type: 'tree',
+                                position: {
+                                    x: x + side * offset,
+                                    y: 0,
+                                    z: z + side * offset
+                                },
+                                theme: theme.name,
+                                size: treeSize
+                            });
+                            
+                            // Add a second row of trees for denser forest
+                            if (this.rng() < 0.7) { // 70% chance for second row
+                                const secondRowOffset = offset + 5 + this.rng() * 10;
+                                this.mapData.environment.push({
+                                    type: 'tree',
+                                    position: {
+                                        x: x + side * secondRowOffset,
+                                        y: 0,
+                                        z: z + side * secondRowOffset
+                                    },
+                                    theme: theme.name,
+                                    size: 0.8 + this.rng() * 0.4
+                                });
+                            }
+                            
+                            // Add occasional bushes and rocks near trees
+                            if (this.rng() < 0.3) {
+                                const bushOffset = offset + (this.rng() - 0.5) * 5;
+                                this.mapData.environment.push({
+                                    type: 'bush',
+                                    position: {
+                                        x: x + side * bushOffset,
+                                        y: 0,
+                                        z: z + side * bushOffset
+                                    },
+                                    theme: theme.name
+                                });
+                            }
+                            
+                            if (this.rng() < 0.15) {
+                                const rockOffset = offset + (this.rng() - 0.5) * 5;
+                                this.mapData.environment.push({
+                                    type: 'rock',
+                                    position: {
+                                        x: x + side * rockOffset,
+                                        y: 0,
+                                        z: z + side * rockOffset
+                                    },
+                                    theme: theme.name,
+                                    size: 0.5 + this.rng() * 0.5
+                                });
+                            }
+                        }
                     }
                 }
             });

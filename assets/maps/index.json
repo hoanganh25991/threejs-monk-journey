@@ -1,5 +1,5 @@
 {
-  "generated": "2025-06-04T14:28:21.951Z",
+  "generated": "2025-06-04T15:36:58.874Z",
   "maps": [
     {
       "id": "dark_forest",
@@ -10,8 +10,8 @@
       "stats": {
         "zones": 5,
         "structures": 14,
-        "paths": 15,
-        "environment": 384
+        "paths": 13,
+        "environment": 2384
       }
     },
     {
@@ -23,7 +23,7 @@
       "stats": {
         "zones": 5,
         "structures": 17,
-        "paths": 19,
+        "paths": 18,
         "environment": 140
       }
     },
@@ -36,7 +36,7 @@
       "stats": {
         "zones": 5,
         "structures": 10,
-        "paths": 12,
+        "paths": 10,
         "environment": 130
       }
     },
@@ -49,7 +49,7 @@
       "stats": {
         "zones": 5,
         "structures": 20,
-        "paths": 24,
+        "paths": 16,
         "environment": 135
       }
     },
@@ -62,8 +62,340 @@
       "stats": {
         "zones": 5,
         "structures": 22,
-        "paths": 20,
+        "paths": 19,
         "environment": 120
+      }
+    },
+    {
+      "id": "random_ancient_ruins_dense_0",
+      "name": "Dense Ancient Ruins",
+      "description": "Dense variation of Vast archaeological site with connected ruins, overgrown paths, and forgotten towers",
+      "filename": "random_ancient_ruins_dense_0.json",
+      "preview": "images/map-previews/ancient_ruins.jpg",
+      "seed": 31424,
+      "mapSize": 2000,
+      "variation": "Dense",
+      "stats": {
+        "zones": 5,
+        "structures": 22,
+        "paths": 23,
+        "environment": 120
+      }
+    },
+    {
+      "id": "random_mystical_swamp_dense_1",
+      "name": "Dense Mystical Swamp",
+      "description": "Dense variation of Mysterious wetlands with floating bridges, ancient ruins, and hidden paths",
+      "filename": "random_mystical_swamp_dense_1.json",
+      "preview": "images/map-previews/mystical_swamp.jpg",
+      "seed": 985960,
+      "mapSize": 1500,
+      "variation": "Dense",
+      "stats": {
+        "zones": 5,
+        "structures": 20,
+        "paths": 19,
+        "environment": 135
+      }
+    },
+    {
+      "id": "random_dark_forest_mystical_2",
+      "name": "Mystical Dark Forest",
+      "description": "Mystical variation of Dense forest with winding paths, hidden villages, and ancient towers",
+      "filename": "random_dark_forest_mystical_2.json",
+      "preview": "images/map-previews/dark_forest.jpg",
+      "seed": 16368,
+      "mapSize": 2500,
+      "variation": "Mystical",
+      "stats": {
+        "zones": 5,
+        "structures": 14,
+        "paths": 11,
+        "environment": 2369
+      }
+    },
+    {
+      "id": "random_ancient_ruins_extreme_3",
+      "name": "Extreme Ancient Ruins",
+      "description": "Extreme variation of Vast archaeological site with connected ruins, overgrown paths, and forgotten towers",
+      "filename": "random_ancient_ruins_extreme_3.json",
+      "preview": "images/map-previews/ancient_ruins.jpg",
+      "seed": 29765,
+      "mapSize": 800,
+      "variation": "Extreme",
+      "stats": {
+        "zones": 5,
+        "structures": 22,
+        "paths": 19,
+        "environment": 120
+      }
+    },
+    {
+      "id": "random_frozen_mountains_wilderness_4",
+      "name": "Wilderness Frozen Mountains",
+      "description": "Wilderness variation of Icy peaks with mountain villages, watchtowers, and treacherous paths",
+      "filename": "random_frozen_mountains_wilderness_4.json",
+      "preview": "images/map-previews/frozen_mountains.jpg",
+      "seed": 731428,
+      "mapSize": 1200,
+      "variation": "Wilderness",
+      "stats": {
+        "zones": 5,
+        "structures": 17,
+        "paths": 15,
+        "environment": 140
+      }
+    },
+    {
+      "id": "random_mystical_swamp_mystical_5",
+      "name": "Mystical Mystical Swamp",
+      "description": "Mystical variation of Mysterious wetlands with floating bridges, ancient ruins, and hidden paths",
+      "filename": "random_mystical_swamp_mystical_5.json",
+      "preview": "images/map-previews/mystical_swamp.jpg",
+      "seed": 765084,
+      "mapSize": 1000,
+      "variation": "Mystical",
+      "stats": {
+        "zones": 5,
+        "structures": 20,
+        "paths": 18,
+        "environment": 135
+      }
+    },
+    {
+      "id": "random_ancient_ruins_mountainous_6",
+      "name": "Mountainous Ancient Ruins",
+      "description": "Mountainous variation of Vast archaeological site with connected ruins, overgrown paths, and forgotten towers",
+      "filename": "random_ancient_ruins_mountainous_6.json",
+      "preview": "images/map-previews/ancient_ruins.jpg",
+      "seed": 414578,
+      "mapSize": 1000,
+      "variation": "Mountainous",
+      "stats": {
+        "zones": 5,
+        "structures": 22,
+        "paths": 23,
+        "environment": 120
+      }
+    },
+    {
+      "id": "random_dark_forest_flooded_7",
+      "name": "Flooded Dark Forest",
+      "description": "Flooded variation of Dense forest with winding paths, hidden villages, and ancient towers",
+      "filename": "random_dark_forest_flooded_7.json",
+      "preview": "images/map-previews/dark_forest.jpg",
+      "seed": 380916,
+      "mapSize": 2000,
+      "variation": "Flooded",
+      "stats": {
+        "zones": 5,
+        "structures": 14,
+        "paths": 16,
+        "environment": 2352
+      }
+    },
+    {
+      "id": "random_frozen_mountains_mountainous_8",
+      "name": "Mountainous Frozen Mountains",
+      "description": "Mountainous variation of Icy peaks with mountain villages, watchtowers, and treacherous paths",
+      "filename": "random_frozen_mountains_mountainous_8.json",
+      "preview": "images/map-previews/frozen_mountains.jpg",
+      "seed": 995781,
+      "mapSize": 1000,
+      "variation": "Mountainous",
+      "stats": {
+        "zones": 5,
+        "structures": 17,
+        "paths": 18,
+        "environment": 140
+      }
+    },
+    {
+      "id": "random_dark_forest_minimal_9",
+      "name": "Minimal Dark Forest",
+      "description": "Minimal variation of Dense forest with winding paths, hidden villages, and ancient towers",
+      "filename": "random_dark_forest_minimal_9.json",
+      "preview": "images/map-previews/dark_forest.jpg",
+      "seed": 203239,
+      "mapSize": 2000,
+      "variation": "Minimal",
+      "stats": {
+        "zones": 5,
+        "structures": 14,
+        "paths": 10,
+        "environment": 2383
+      }
+    },
+    {
+      "id": "random_ancient_ruins_wilderness_10",
+      "name": "Wilderness Ancient Ruins",
+      "description": "Wilderness variation of Vast archaeological site with connected ruins, overgrown paths, and forgotten towers",
+      "filename": "random_ancient_ruins_wilderness_10.json",
+      "preview": "images/map-previews/ancient_ruins.jpg",
+      "seed": 455330,
+      "mapSize": 1000,
+      "variation": "Wilderness",
+      "stats": {
+        "zones": 5,
+        "structures": 22,
+        "paths": 17,
+        "environment": 120
+      }
+    },
+    {
+      "id": "random_dark_forest_flooded_11",
+      "name": "Flooded Dark Forest",
+      "description": "Flooded variation of Dense forest with winding paths, hidden villages, and ancient towers",
+      "filename": "random_dark_forest_flooded_11.json",
+      "preview": "images/map-previews/dark_forest.jpg",
+      "seed": 70629,
+      "mapSize": 1200,
+      "variation": "Flooded",
+      "stats": {
+        "zones": 5,
+        "structures": 14,
+        "paths": 13,
+        "environment": 2323
+      }
+    },
+    {
+      "id": "random_frozen_mountains_extreme_12",
+      "name": "Extreme Frozen Mountains",
+      "description": "Extreme variation of Icy peaks with mountain villages, watchtowers, and treacherous paths",
+      "filename": "random_frozen_mountains_extreme_12.json",
+      "preview": "images/map-previews/frozen_mountains.jpg",
+      "seed": 563070,
+      "mapSize": 1500,
+      "variation": "Extreme",
+      "stats": {
+        "zones": 5,
+        "structures": 17,
+        "paths": 17,
+        "environment": 140
+      }
+    },
+    {
+      "id": "random_mystical_swamp_hybrid_13",
+      "name": "Hybrid Mystical Swamp",
+      "description": "Hybrid variation of Mysterious wetlands with floating bridges, ancient ruins, and hidden paths",
+      "filename": "random_mystical_swamp_hybrid_13.json",
+      "preview": "images/map-previews/mystical_swamp.jpg",
+      "seed": 285769,
+      "mapSize": 1500,
+      "variation": "Hybrid",
+      "stats": {
+        "zones": 5,
+        "structures": 20,
+        "paths": 14,
+        "environment": 135
+      }
+    },
+    {
+      "id": "custom_volcanic_forest_0",
+      "name": "Volcanic Forest",
+      "description": "A forest gradually being consumed by volcanic activity",
+      "filename": "custom_volcanic_forest_0.json",
+      "preview": "images/map-previews/dark_forest.jpg",
+      "seed": 460559,
+      "mapSize": 1000,
+      "customTheme": true,
+      "baseTheme": "DARK_FOREST",
+      "mixinTheme": "LAVA_ZONE",
+      "stats": {
+        "zones": 5,
+        "structures": 14,
+        "paths": 12,
+        "environment": 2381
+      }
+    },
+    {
+      "id": "custom_frozen_ruins_1",
+      "name": "Frozen Ruins",
+      "description": "Ancient ruins covered in ice and snow",
+      "filename": "custom_frozen_ruins_1.json",
+      "preview": "images/map-previews/ancient_ruins.jpg",
+      "seed": 19529,
+      "mapSize": 2000,
+      "customTheme": true,
+      "baseTheme": "ANCIENT_RUINS",
+      "mixinTheme": "FROZEN_MOUNTAINS",
+      "stats": {
+        "zones": 5,
+        "structures": 22,
+        "paths": 22,
+        "environment": 120
+      }
+    },
+    {
+      "id": "custom_swamp_sanctum_2",
+      "name": "Swamp Sanctum",
+      "description": "Dark sanctums rising from murky swamp waters",
+      "filename": "custom_swamp_sanctum_2.json",
+      "preview": "images/map-previews/mystical_swamp.jpg",
+      "seed": 206774,
+      "mapSize": 1500,
+      "customTheme": true,
+      "baseTheme": "MYSTICAL_SWAMP",
+      "mixinTheme": "LAVA_ZONE",
+      "stats": {
+        "zones": 5,
+        "structures": 20,
+        "paths": 19,
+        "environment": 135
+      }
+    },
+    {
+      "id": "custom_mountain_forest_3",
+      "name": "Mountain Forest",
+      "description": "Dense forests growing on steep mountain slopes",
+      "filename": "custom_mountain_forest_3.json",
+      "preview": "images/map-previews/frozen_mountains.jpg",
+      "seed": 894834,
+      "mapSize": 1200,
+      "customTheme": true,
+      "baseTheme": "FROZEN_MOUNTAINS",
+      "mixinTheme": "DARK_FOREST",
+      "stats": {
+        "zones": 5,
+        "structures": 17,
+        "paths": 17,
+        "environment": 140
+      }
+    },
+    {
+      "id": "custom_ruined_desert_4",
+      "name": "Ruined Desert",
+      "description": "Ancient ruins scattered across a vast desert landscape",
+      "filename": "custom_ruined_desert_4.json",
+      "preview": "images/map-previews/ancient_ruins.jpg",
+      "seed": 298104,
+      "mapSize": 800,
+      "customTheme": true,
+      "baseTheme": "ANCIENT_RUINS",
+      "mixinTheme": "LAVA_ZONE",
+      "stats": {
+        "zones": 5,
+        "structures": 22,
+        "paths": 16,
+        "environment": 120
+      }
+    },
+    {
+      "id": "custom_volcanic_forest_5",
+      "name": "Volcanic Forest",
+      "description": "A forest gradually being consumed by volcanic activity",
+      "filename": "custom_volcanic_forest_5.json",
+      "preview": "images/map-previews/dark_forest.jpg",
+      "seed": 194720,
+      "mapSize": 2000,
+      "customTheme": true,
+      "baseTheme": "DARK_FOREST",
+      "mixinTheme": "LAVA_ZONE",
+      "stats": {
+        "zones": 5,
+        "structures": 14,
+        "paths": 12,
+        "environment": 2369
       }
     }
   ]
