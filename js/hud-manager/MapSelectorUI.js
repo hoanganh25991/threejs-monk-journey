@@ -103,15 +103,9 @@ export class MapSelectorUI extends UIComponent {
                 <div class="map-selector-header">
                     <h2>Select Map</h2>
                     <div class="header-buttons">
-                        <button class="header-button" id="clearCurrentMap" title="Return to Procedural World">
-                            <span class="map-icon">🔄</span>
-                        </button>
-                        <button class="header-button" id="generateRandomMap" title="Generate New Map">
-                            <span class="map-icon">🗺️</span>
-                        </button>
-                        <button class="close-button" id="closeMapSelector" title="Save & Close">
-                            <span class="map-icon">💾</span>
-                        </button>
+                        <button class="circle-btn" id="clearCurrentMap" title="Return to Procedural World">🔄</button>
+                        <button class="circle-btn" id="generateRandomMap" title="Generate New Map">🗺️</button>
+                        <button class="circle-btn" id="closeMapSelector" title="Save & Close">💾</button>
                     </div>
                 </div>
                 
@@ -134,8 +128,6 @@ export class MapSelectorUI extends UIComponent {
                         
                         <div class="map-detail-container">
                             <div class="selected-map-info" id="selectedMapInfo">
-                                <h3>Selected Map</h3>
-                                <div id="currentMapDisplay" class="current-map-display"></div>
                                 <div class="map-preview-large">
                                     <div class="map-preview-placeholder">
                                         <span class="map-icon">🗺️</span>
@@ -254,7 +246,6 @@ export class MapSelectorUI extends UIComponent {
     show() {
         this.isVisible = true;
         this.element.style.display = 'flex';
-        this.updateCurrentMapDisplay();
         
         // Add show animation
         requestAnimationFrame(() => {
@@ -348,7 +339,6 @@ export class MapSelectorUI extends UIComponent {
             const success = await this.game.world.loadPreGeneratedMapFromFile(mapPath);
             
             if (success) {
-                this.updateCurrentMapDisplay();
                 this.hide();
                 
                 // Show success message
@@ -381,7 +371,6 @@ export class MapSelectorUI extends UIComponent {
             const success = await this.game.world.clearCurrentMap();
             
             if (success) {
-                this.updateCurrentMapDisplay();
                 this.hide();
             }
         } catch (error) {
@@ -423,40 +412,6 @@ export class MapSelectorUI extends UIComponent {
                 this.game.ui.showMessage('Error generating random map', 3000);
             }
         }
-    }
-
-    updateCurrentMapDisplay() {
-        const currentMapDisplay = this.element.querySelector('#currentMapDisplay');
-        
-        // Check if the element exists
-        if (!currentMapDisplay) {
-            console.warn('Current map display element not found');
-            return;
-        }
-        
-        // Check if world exists before trying to access it
-        if (this.game && this.game.world) {
-            const mapInfo = this.game.world.getCurrentMapInfo();
-            
-            if (mapInfo) {
-                currentMapDisplay.innerHTML = `
-                    <span class="current-map-name">${mapInfo.theme}</span>
-                    <span class="current-map-description">${mapInfo.description}</span>
-                    <div class="current-map-stats">
-                        Structures: ${mapInfo.objectCounts.structures} | 
-                        Paths: ${mapInfo.objectCounts.paths} | 
-                        Environment: ${mapInfo.objectCounts.environment}
-                    </div>
-                `;
-                return;
-            }
-        }
-        
-        // Default display if no worldManager or no mapInfo
-        currentMapDisplay.innerHTML = `
-            <span class="current-map-name">Procedural World</span>
-            <span class="current-map-description">Randomly generated world</span>
-        `;
     }
 
     setLoading(loading, message = 'Loading...') {

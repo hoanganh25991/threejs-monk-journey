@@ -40,9 +40,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 20px;
-    border-bottom: 1px solid #8a6d3b; /* Match skill-tree header border */
+    padding: var(--padding-medium) var(--padding-large);
     background-color: rgba(138, 109, 59, 0.3); /* Match skill-tree header background */
+    border-bottom: 1px solid #8a6d3b; /* Match skill-tree header border */
 }
 
 .map-selector-header h2 {
@@ -53,106 +53,49 @@
     text-shadow: 0 0 5px rgba(255, 204, 0, 0.5); /* Match skill-tree title shadow */
 }
 
+
 .header-buttons {
     display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.header-button {
-    background-color: rgba(255, 204, 0, 0.7);
-    color: #4a3000;
-    border: 2px solid rgba(255, 230, 150, 0.8);
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    padding: 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
-}
-
-.header-button:hover {
-    background-color: rgba(255, 215, 0, 0.8);
-    transform: translateY(-2px);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
-}
-
-.header-button:active {
-    transform: translateY(1px);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 -1px 2px rgba(139, 101, 0, 0.2);
-}
-
-.close-button {
-    background: none;
-    border: none;
-    color: #ccc;
-    font-size: 18px;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.close-button:hover {
-    background: rgba(138, 109, 59, 0.3);
-    color: #ffcc00;
 }
 
 .map-selector-content {
-    padding: 16px;
-    height: calc(100vh - 80px); /* Subtract header height and padding */
+    height: 100%;
     overflow: hidden;
 }
 
 /* New layout for landscape mode */
 .map-selector-layout {
     display: flex;
-    gap: 16px;
+    gap: var(--padding-large);
     height: 100%;
-}
-
-.map-list-container {
-    flex: 0 0 30%;
-    max-width: 30%;
-    border-right: 1px solid rgba(138, 109, 59, 0.5); /* Match skill-tree border */
-    padding-right: 16px;
-    height: 100%; /* Ensure it takes full height */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* Prevent container from scrolling */
 }
 
 .map-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--padding-small);
     flex: 1; /* Take remaining space */
-    padding-right: 8px; /* Add some padding for the scrollbar */
-    margin-right: -8px; /* Offset the padding */
     scrollbar-width: thin; /* For Firefox */
     overflow-y: auto; /* Ensure the list itself is scrollable */
     height: 100%; /* Take full height */
+}
+
+.map-list-container {
+    flex: 0 0 30%;
+    border-right: 1px solid rgba(138, 109, 59, 0.5);
+    height: calc(100% - 40px - var(--padding-medium) - 1px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevent container from scrolling */
+    padding: var(--padding-medium);
 }
 
 .map-detail-container {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 16px;
     overflow-y: auto; /* Allow scrolling if content is too tall */
     height: 100%; /* Take full height */
-    padding: var(--padding-large, 16px);
     background-color: rgba(0, 0, 0, 0.6); /* Match skill-tree details background */
 }
 
@@ -165,14 +108,13 @@
 .map-list-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px;
-    border-radius: 8px;
+    gap: var(--padding-large);
+    padding: var(--padding-small);
+    border-radius: var(--padding-medium);
     background-color: rgba(0, 0, 0, 0.5); /* Match skill-tree node background */
     border: 1px solid rgba(255, 255, 255, 0.2); /* Match skill-tree node border */
     cursor: pointer;
     transition: all 0.2s ease;
-    margin-bottom: 8px;
 }
 
 .map-list-item:hover {
@@ -280,9 +222,8 @@
 .current-map-display {
     padding: 12px 16px;
     background-color: rgba(20, 20, 20, 0.7);
-    border-radius: 8px;
+    border-radius: var(--padding-medium);
     border: 1px solid rgba(138, 109, 59, 0.5);
-    margin: 8px 16px;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -307,12 +248,12 @@
 
 .selected-map-info {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 16px;
+    height: 100%;
+    width: 100%;
+    flex-direction: row;
+    padding: var(--padding-medium);
+    gap: var(--padding-medium);
     background-color: rgba(20, 20, 20, 0.7); /* Match skill-tree background */
-    border-radius: 8px;
-    border: 1px solid rgba(138, 109, 59, 0.5); /* Match skill-tree border */
 }
 
 .selected-map-info h3 {
@@ -322,23 +263,18 @@
 }
 
 .map-preview-large {
-    height: 180px;
-    background: var(--bg-tertiary, #1a1a1a);
-    border-radius: 8px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 220px;
+    height: 220px;
 }
 
 .map-preview-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    width: 220px;
+    height: 220px;
 }
 
 .map-detail-content {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 12px;
 }
@@ -549,159 +485,4 @@
 .no-maps-message p {
     margin: 0 0 16px 0;
     color: var(--text-secondary, #ccc);
-}
-
-/* Mobile Portrait Mode */
-@media (max-width: 768px) and (orientation: portrait) {
-    .map-selector-layout {
-        flex-direction: column;
-        max-height: none;
-    }
-    
-    .map-list-container {
-        flex: 0 0 auto;
-        max-width: 100%;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color, #444);
-        padding-right: 0;
-        padding-bottom: 16px;
-        margin-bottom: 16px;
-        height: auto;
-        max-height: 30vh;
-    }
-    
-    .map-list {
-        flex-direction: row;
-        overflow-x: auto;
-        overflow-y: hidden;
-        padding-bottom: 8px;
-        flex-wrap: nowrap;
-    }
-    
-    .map-list-item {
-        flex: 0 0 auto;
-        width: 120px;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        margin-right: 8px;
-    }
-    
-    .map-list-item.generate-new-map {
-        position: static;
-        width: 120px;
-        margin-bottom: 0;
-    }
-    
-    .map-list-preview {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .map-preview-large {
-        height: 140px;
-    }
-    
-    .map-stats {
-        grid-template-columns: 1fr;
-    }
-    
-    .map-actions {
-        flex-direction: column;
-    }
-    
-    .map-detail-container {
-        overflow-y: auto;
-        max-height: 60vh;
-    }
-}
-
-/* Mobile Landscape Mode - Optimized Layout */
-@media (max-width: 900px) and (orientation: landscape) {
-    .map-selector-modal {
-        width: 95vw;
-        height: 90vh;
-    }
-    
-    .map-selector-content {
-        padding: 12px;
-    }
-    
-    .map-selector-layout {
-        max-height: calc(90vh - 100px);
-    }
-    
-    .map-list-container {
-        flex: 0 0 35%;
-        max-width: 35%;
-    }
-    
-    .map-list {
-        max-height: calc(90vh - 120px);
-    }
-    
-    .map-list-item.generate-new-map {
-        margin-bottom: 12px;
-    }
-    
-    .map-preview-large {
-        height: 120px;
-    }
-    
-    .current-map-info,
-    .selected-map-info {
-        padding: 12px;
-    }
-    
-    .map-detail-container {
-        overflow-y: auto;
-        padding-right: 4px;
-    }
-    
-    .map-actions {
-        margin-top: 8px;
-    }
-}
-
-/* Small screens */
-@media (max-width: 480px) {
-    .map-selector-header {
-        padding: 12px;
-    }
-    
-    .map-selector-header h2 {
-        font-size: 1.2rem;
-    }
-    
-    .map-name {
-        font-size: 1rem;
-    }
-    
-    .map-description {
-        font-size: 0.85rem;
-    }
-}
-
-/* Dark theme adjustments */
-@media (prefers-color-scheme: dark) {
-    .map-selector-overlay {
-        background: rgba(0, 0, 0, 0.9);
-    }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-    .map-list-item {
-        border-width: 3px;
-    }
-    
-    .map-list-item:hover,
-    .map-list-item.selected {
-        border-width: 3px;
-    }
-    
-    .load-map-button,
-    .action-button {
-        border: 2px solid currentColor;
-    }
 }
