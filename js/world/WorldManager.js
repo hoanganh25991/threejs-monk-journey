@@ -1183,33 +1183,46 @@ export class WorldManager {
         
         // Clean up environment objects
         if (this.environmentManager && this.environmentManager.environmentObjects) {
-            const envObjectsCount = this.environmentManager.environmentObjects.length;
-            this.environmentManager.environmentObjects = this.environmentManager.environmentObjects.filter(obj => {
-                if (!obj || !obj.position) return false;
+            let environmentObjectsTotal = 0;
+            
+            // Process each chunk of environment objects
+            for (const chunkKey in this.environmentManager.environmentObjects) {
+                const chunkObjects = this.environmentManager.environmentObjects[chunkKey];
+                environmentObjectsTotal += chunkObjects.length;
                 
-                const distance = playerPosition.distanceTo(obj.position);
-                if (distance > effectiveCleanupDistance) {
-                    // Remove from scene
-                    if (obj.object && obj.object.parent) {
-                        this.scene.remove(obj.object);
-                    }
+                // Filter objects in this chunk
+                this.environmentManager.environmentObjects[chunkKey] = chunkObjects.filter(obj => {
+                    if (!obj || !obj.position) return false;
                     
-                    // Also remove from type-specific arrays
-                    if (obj.type === 'tree') {
-                        this.environmentManager.trees = this.environmentManager.trees.filter(t => t !== obj.object);
-                    } else if (obj.type === 'rock') {
-                        this.environmentManager.rocks = this.environmentManager.rocks.filter(r => r !== obj.object);
-                    } else if (obj.type === 'bush') {
-                        this.environmentManager.bushes = this.environmentManager.bushes.filter(b => b !== obj.object);
-                    } else if (obj.type === 'flower') {
-                        this.environmentManager.flowers = this.environmentManager.flowers.filter(f => f !== obj.object);
+                    const distance = playerPosition.distanceTo(obj.position);
+                    if (distance > effectiveCleanupDistance) {
+                        // Remove from scene
+                        if (obj.object && obj.object.parent) {
+                            this.scene.remove(obj.object);
+                        }
+                        
+                        // Also remove from type-specific arrays
+                        if (obj.type === 'tree') {
+                            this.environmentManager.trees = this.environmentManager.trees.filter(t => t !== obj.object);
+                        } else if (obj.type === 'rock') {
+                            this.environmentManager.rocks = this.environmentManager.rocks.filter(r => r !== obj.object);
+                        } else if (obj.type === 'bush') {
+                            this.environmentManager.bushes = this.environmentManager.bushes.filter(b => b !== obj.object);
+                        } else if (obj.type === 'flower') {
+                            this.environmentManager.flowers = this.environmentManager.flowers.filter(f => f !== obj.object);
+                        }
+                        
+                        environmentObjectsRemoved++;
+                        return false;
                     }
-                    
-                    environmentObjectsRemoved++;
-                    return false;
+                    return true;
+                });
+                
+                // Remove empty chunks
+                if (this.environmentManager.environmentObjects[chunkKey].length === 0) {
+                    delete this.environmentManager.environmentObjects[chunkKey];
                 }
-                return true;
-            });
+            }
         }
         
         // Clean up interactive objects if the method exists
@@ -1539,7 +1552,15 @@ export class WorldManager {
         console.log(`Loading map from file: ${mapFilePath}`);
         
         try {
-            return await this.mapLoader.loadMapFromFile(mapFilePath);
+            const result = await this.mapLoader.loadMapFromFile(mapFilePath);
+            
+            // Ensure terrain colors are updated after map is loaded
+            if (result && this.zoneManager) {
+                console.log('Updating terrain colors after map load...');
+                this.zoneManager.updateTerrainColors();
+            }
+            
+            return result;
         } catch (error) {
             console.error('Error loading map from file:', error);
             return false;

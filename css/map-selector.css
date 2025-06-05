@@ -23,9 +23,8 @@
     background: var(--bg-primary, #2a2a2a);
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    max-width: 95vw;
-    max-height: 95vh;
-    width: 900px;
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
     position: relative;
     transform: scale(0.9);

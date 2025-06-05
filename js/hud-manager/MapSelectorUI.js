@@ -67,10 +67,10 @@ export class MapSelectorUI extends UIComponent {
         const generateNewMapButton = `
             <div class="map-list-item generate-new-map" id="generateNewMapBtn">
                 <div class="map-list-preview">
-                    <div class="map-preview-placeholder">
-                        <span class="map-icon">➕</span>
-                    </div>
                 </div>
+                <button class="action-button secondary" id="clearCurrentMap">
+                    Return to Procedural World
+                </button>
                 <div class="map-list-name">Generate New Map</div>
             </div>
         `;
@@ -156,15 +156,6 @@ export class MapSelectorUI extends UIComponent {
                                         Load Map
                                     </button>
                                 </div>
-                            </div>
-                            
-                            <div class="map-actions">
-                                <button class="action-button secondary" id="clearCurrentMap">
-                                    Return to Procedural World
-                                </button>
-                                <button class="action-button secondary" id="generateRandomMap" ${this.availableMaps.length === 0 ? 'disabled' : ''}>
-                                    Generate Random Map
-                                </button>
                             </div>
                         </div>
                     </div>

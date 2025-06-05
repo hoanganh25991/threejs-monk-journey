@@ -153,7 +153,12 @@ export class MapLoader {
         this.worldManager.zoneManager.zones = convertedZones;
         this.worldManager.zoneManager.buildSimpleZoneCache();
         this.worldManager.zoneManager.visualizeZones();
+        
+        // Update terrain colors based on zones (using ZoneManager's implementation)
+        this.worldManager.zoneManager.updateTerrainColors();
     }
+
+
 
     /**
      * Load paths from map data

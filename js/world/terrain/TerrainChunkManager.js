@@ -187,7 +187,7 @@ export class TerrainChunkManager {
         }
         
         // Notify environment manager about saved environment objects
-        if (chunkData.environmentObjects && chunkData.environmentObjects.length > 0 && 
+        if (chunkData.environmentObjects && Array.isArray(chunkData.environmentObjects) && chunkData.environmentObjects.length > 0 && 
             this.worldManager && this.worldManager.environmentManager) {
             this.worldManager.environmentManager.loadEnvironmentObjectsForChunk(chunkX, chunkZ, chunkData.environmentObjects);
         }

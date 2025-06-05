@@ -28,6 +28,92 @@ export class ZoneManager {
      */
     init() {
         this.createZones();
+        
+        // Build zone cache for faster lookups
+        this.buildSimpleZoneCache();
+    }
+    
+    /**
+     * Update terrain colors based on current zones
+     * This ensures terrain colors match the zone types
+     */
+    updateTerrainColors() {
+        console.log('Updating terrain colors based on zones...');
+        
+        if (!this.worldManager || !this.worldManager.terrainManager) {
+            console.warn('TerrainManager not available for color updates');
+            return;
+        }
+        
+        // Get all visible terrain chunks
+        const terrainChunks = this.worldManager.terrainManager.terrainChunks;
+        if (!terrainChunks) {
+            console.warn('No terrain chunks available for color updates');
+            return;
+        }
+        
+        // Determine the main theme zone (should cover 70% of the map)
+        let mainZone = null;
+        if (this.zones.length > 0) {
+            // Sort zones by radius (descending) to find the largest zone
+            const sortedZones = [...this.zones].sort((a, b) => b.radius - a.radius);
+            mainZone = sortedZones[0];
+            console.log(`Main theme zone: ${mainZone.name} with radius ${mainZone.radius}`);
+        }
+        
+        // Update each terrain chunk's color based on its position
+        Object.values(terrainChunks).forEach(chunk => {
+            if (chunk && !chunk.isPlaceholder) {
+                // Get chunk position
+                const chunkX = chunk.position.x;
+                const chunkZ = chunk.position.z;
+                
+                // Determine zone for this chunk
+                let zoneType = 'Terrant'; // Default
+                
+                if (mainZone) {
+                    // Calculate distance from chunk to main zone center
+                    const distance = Math.sqrt(
+                        Math.pow(chunkX - mainZone.center.x, 2) + 
+                        Math.pow(chunkZ - mainZone.center.z, 2)
+                    );
+                    
+                    // If within 70% of the main zone's radius, use the main zone type
+                    // This ensures approximately 70% of the map uses the main theme color
+                    if (distance <= mainZone.radius * 1.2) {
+                        zoneType = mainZone.name;
+                    } else {
+                        // Otherwise, find the closest zone
+                        const closestZone = this.getZoneAt(
+                            new THREE.Vector3(chunkX, 0, chunkZ)
+                        );
+                        if (closestZone) {
+                            zoneType = closestZone.name;
+                        }
+                    }
+                } else {
+                    // If no main zone, use the zone manager to determine zone
+                    const zone = this.getZoneAt(
+                        new THREE.Vector3(chunkX, 0, chunkZ)
+                    );
+                    if (zone) {
+                        zoneType = zone.name;
+                    }
+                }
+                
+                // Apply the zone-appropriate color to the terrain chunk
+                this.worldManager.terrainManager.colorTerrainUniform(chunk, zoneType);
+            }
+        });
+        
+        // Also update the base terrain if it exists
+        if (this.worldManager.terrainManager.terrain) {
+            const baseTerrain = this.worldManager.terrainManager.terrain;
+            const mainZoneType = mainZone ? mainZone.name : 'Terrant';
+            this.worldManager.terrainManager.colorTerrainUniform(baseTerrain, mainZoneType);
+        }
+        
+        console.log('Terrain colors updated successfully');
     }
     
     /**
