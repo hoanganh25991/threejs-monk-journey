@@ -13,13 +13,14 @@ export class TerrainColoringManager {
      * Apply consistent terrain coloring based on zone type with minimal variation
      * @param {THREE.Mesh} terrain - The terrain mesh to color
      * @param {string} zoneType - The type of zone (Forest, Desert, etc.)
+     * @param {Object} themeColors - Optional theme colors from loaded map
      */
-    colorTerrainUniform(terrain, zoneType = 'Terrant') {
+    colorTerrainUniform(terrain, zoneType = 'Terrant', themeColors = null) {
         const colors = [];
         const positions = terrain.geometry.attributes.position.array;
         
-        // Get colors from the config based on zone type
-        const zoneColors = ZONE_COLORS[zoneType] || ZONE_COLORS['Terrant'];
+        // Get colors from theme colors if available, otherwise use config
+        const zoneColors = themeColors || ZONE_COLORS[zoneType] || ZONE_COLORS['Terrant'];
         
         // Define base colors for each zone type
         let baseColorHex;

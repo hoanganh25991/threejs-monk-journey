@@ -69,7 +69,8 @@ export class TerrainChunkManager {
         terrain.castShadow = true;
         
         // Apply terrain coloring with variations based on zone type
-        this.coloringManager.colorTerrainUniform(terrain, zoneType);
+        const themeColors = this.worldManager.zoneManager ? this.worldManager.zoneManager.currentThemeColors : null;
+        this.coloringManager.colorTerrainUniform(terrain, zoneType, themeColors);
         
         // Store zone type on the terrain for later reference
         terrain.userData.zoneType = zoneType;

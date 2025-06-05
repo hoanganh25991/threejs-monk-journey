@@ -229,9 +229,10 @@ export class TerrainManager {
      * Apply terrain coloring based on zone type with natural variations
      * @param {THREE.Mesh} terrain - The terrain mesh to color
      * @param {string} zoneType - The type of zone (Forest, Desert, etc.)
+     * @param {Object} themeColors - Optional theme colors from loaded map
      */
-    colorTerrainUniform(terrain, zoneType = 'Terrant') {
-        this.coloringManager.colorTerrainUniform(terrain, zoneType);
+    colorTerrainUniform(terrain, zoneType = 'Terrant', themeColors = null) {
+        this.coloringManager.colorTerrainUniform(terrain, zoneType, themeColors);
     }
 
     /**

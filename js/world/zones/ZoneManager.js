@@ -13,6 +13,9 @@ export class ZoneManager {
         // Zone collections
         this.zones = [];
         this.zoneMarkers = [];
+        
+        // Theme colors from loaded map (if any)
+        this.currentThemeColors = null;
     }
     
     /**
@@ -21,6 +24,15 @@ export class ZoneManager {
      */
     setGame(game) {
         this.game = game;
+    }
+    
+    /**
+     * Set theme colors from a loaded map
+     * @param {Object} themeColors - Theme colors from map data
+     */
+    setThemeColors(themeColors) {
+        this.currentThemeColors = themeColors;
+        console.log('Theme colors set:', themeColors);
     }
     
     /**
@@ -102,7 +114,7 @@ export class ZoneManager {
                 }
                 
                 // Apply the zone-appropriate color to the terrain chunk
-                this.worldManager.terrainManager.colorTerrainUniform(chunk, zoneType);
+                this.worldManager.terrainManager.colorTerrainUniform(chunk, zoneType, this.currentThemeColors);
             }
         });
         
@@ -110,7 +122,7 @@ export class ZoneManager {
         if (this.worldManager.terrainManager.terrain) {
             const baseTerrain = this.worldManager.terrainManager.terrain;
             const mainZoneType = mainZone ? mainZone.name : 'Terrant';
-            this.worldManager.terrainManager.colorTerrainUniform(baseTerrain, mainZoneType);
+            this.worldManager.terrainManager.colorTerrainUniform(baseTerrain, mainZoneType, this.currentThemeColors);
         }
         
         console.log('Terrain colors updated successfully');

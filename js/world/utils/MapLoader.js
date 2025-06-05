@@ -30,6 +30,11 @@ export class MapLoader {
             // Store current map reference
             this.currentMap = mapData;
             
+            // Set theme colors in zone manager if available
+            if (mapData.theme && mapData.theme.colors) {
+                this.worldManager.zoneManager.setThemeColors(mapData.theme.colors);
+            }
+            
             // Load map components in order
             await this.loadZones(mapData.zones);
             await this.loadPaths(mapData.paths);
@@ -77,9 +82,10 @@ export class MapLoader {
             this.worldManager.environmentManager.clear();
         }
         
-        // Clear existing zones
+        // Clear existing zones and theme colors
         if (this.worldManager.zoneManager) {
             this.worldManager.zoneManager.clear();
+            this.worldManager.zoneManager.setThemeColors(null);
         }
         
         // Clear our tracked objects
