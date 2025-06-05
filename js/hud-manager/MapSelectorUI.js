@@ -77,12 +77,22 @@ export class MapSelectorUI extends UIComponent {
         // Clear existing content
         mapListElement.innerHTML = '';
         
+        console.log('Updating map list with', this.availableMaps.length, 'maps');
+        
         if (this.availableMaps.length > 0) {
             // Add maps to the list
             this.availableMaps.forEach(map => {
+                console.log('Adding map to list:', map.id, map.name);
+                
                 const mapItem = document.createElement('div');
                 mapItem.className = 'map-list-item';
-                mapItem.dataset.mapId = map.id;
+                mapItem.setAttribute('data-map-id', map.id); // Use setAttribute for better compatibility
+                
+                // Add a click handler directly to each item for better reliability
+                mapItem.addEventListener('click', () => {
+                    console.log('Map item clicked directly:', map.id);
+                    this.selectMap(map.id);
+                });
                 
                 mapItem.innerHTML = `
                     <div class="map-list-preview">
@@ -135,9 +145,17 @@ export class MapSelectorUI extends UIComponent {
         // Map list item selection - use event delegation for dynamically created items
         const mapList = this.element.querySelector('#map-list');
         if (mapList) {
-            mapList.addEventListener('click', (e) => {
+            // Remove any existing event listeners by cloning and replacing
+            const newMapList = mapList.cloneNode(true);
+            mapList.parentNode.replaceChild(newMapList, mapList);
+            
+            // Add new event listener with debug logging
+            newMapList.addEventListener('click', (e) => {
+                console.log('Map list clicked', e.target);
                 const mapItem = e.target.closest('.map-list-item[data-map-id]');
+                console.log('Found map item:', mapItem);
                 if (mapItem) {
+                    console.log('Map ID:', mapItem.dataset.mapId);
                     this.selectMap(mapItem.dataset.mapId);
                 }
             });
@@ -213,6 +231,8 @@ export class MapSelectorUI extends UIComponent {
     }
 
     selectMap(mapId) {
+        console.log('Selecting map with ID:', mapId);
+        
         // Remove previous selection
         const previousSelected = this.element.querySelector('.map-list-item.selected');
         if (previousSelected) {
@@ -221,9 +241,12 @@ export class MapSelectorUI extends UIComponent {
         
         // Add selection to new item
         const selectedItem = this.element.querySelector(`.map-list-item[data-map-id="${mapId}"]`);
+        console.log('Found selected item:', selectedItem);
+        
         if (selectedItem) {
             selectedItem.classList.add('selected');
             this.selectedMap = this.availableMaps.find(map => map.id === mapId);
+            console.log('Selected map data:', this.selectedMap);
             
             // Update the selected map details
             if (this.selectedMap) {
@@ -232,7 +255,7 @@ export class MapSelectorUI extends UIComponent {
                 
                 // Update map details
                 if (selectedMapName) selectedMapName.textContent = this.selectedMap.name;
-                if (selectedMapDescription) selectedMapDescription.textContent = this.selectedMap.description;
+                if (selectedMapDescription) selectedMapDescription.textContent = this.selectedMap.description || 'No description available';
                 
                 // Update map stats if available
                 const mapSizeStat = this.element.querySelector('#mapSizeStat');
@@ -250,6 +273,11 @@ export class MapSelectorUI extends UIComponent {
                     if (structuresStat) structuresStat.textContent = this.selectedMap.stats.structures || 0;
                     if (pathsStat) pathsStat.textContent = this.selectedMap.stats.paths || 0;
                     if (environmentStat) environmentStat.textContent = this.selectedMap.stats.environment || 0;
+                } else {
+                    // Set default values if stats are not available
+                    if (structuresStat) structuresStat.textContent = '-';
+                    if (pathsStat) pathsStat.textContent = '-';
+                    if (environmentStat) environmentStat.textContent = '-';
                 }
                 
                 // Update preview image if available
@@ -264,6 +292,8 @@ export class MapSelectorUI extends UIComponent {
                     `;
                 }
             }
+        } else {
+            console.error('Could not find map item with ID:', mapId);
         }
     }
 
