@@ -1195,8 +1195,20 @@ class MapGenerator {
      */
     generateScatteredObjects(theme) {
         // Number of scattered objects based on map size - significantly increased
-        const objectCount = Math.floor(this.mapSize * 1.5); // Was this.mapSize / 2
+        const objectCount = Math.floor(this.mapSize * 2.0); // Increased even more for density
         
+        // Define theme-specific object types with weights
+        const objectTypes = this.getThemeSpecificScatteredObjects(theme);
+        
+        // Create weighted selection array
+        const weightedTypes = [];
+        objectTypes.forEach(item => {
+            for (let i = 0; i < item.weight; i++) {
+                weightedTypes.push(item);
+            }
+        });
+        
+        // Generate objects
         for (let i = 0; i < objectCount; i++) {
             const position = this.getRandomPosition(20, this.mapSize / 2);
             
@@ -1206,20 +1218,137 @@ class MapGenerator {
                 continue;
             }
             
-            // Randomly choose object type
-            const objectType = this.rng() < 0.5 ? 'tree' : 
-                             (this.rng() < 0.5 ? 'bush' : 
-                             (this.rng() < 0.5 ? 'rock' : 'flower'));
+            // Select object type based on weighted distribution
+            const typeInfo = weightedTypes[Math.floor(this.rng() * weightedTypes.length)];
             
-            // Add the object
-            this.mapData.environment.push({
-                type: objectType,
-                position,
-                theme: theme.name,
-                size: 0.5 + this.rng() * 0.7,
-                scattered: true // Mark as scattered fill object
-            });
+            // Determine if this should be a cluster
+            const shouldCluster = typeInfo.canCluster && this.rng() < 0.3; // 30% chance for clustering
+            
+            if (shouldCluster) {
+                // Create a small cluster of 2-5 objects
+                const clusterSize = 2 + Math.floor(this.rng() * 4);
+                const clusterRadius = 1 + this.rng() * 3;
+                
+                for (let j = 0; j < clusterSize; j++) {
+                    const clusterPos = this.getNearbyPosition(position, 0.5, clusterRadius);
+                    
+                    // Add variation to size within the cluster
+                    const sizeVariation = 0.8 + (this.rng() * 0.4); // 80-120% of base size
+                    const objectSize = (typeInfo.minSize + this.rng() * (typeInfo.maxSize - typeInfo.minSize)) * sizeVariation;
+                    
+                    this.mapData.environment.push({
+                        type: typeInfo.type,
+                        position: clusterPos,
+                        theme: theme.name,
+                        size: objectSize,
+                        variant: Math.floor(this.rng() * typeInfo.variants),
+                        rotation: this.rng() * Math.PI * 2, // Random rotation
+                        scattered: true, // Mark as scattered fill object
+                        clustered: true, // Mark as part of a cluster
+                        glowing: typeInfo.canGlow && this.rng() < 0.1 // 10% chance of glowing for applicable objects
+                    });
+                }
+            } else {
+                // Add single object
+                this.mapData.environment.push({
+                    type: typeInfo.type,
+                    position,
+                    theme: theme.name,
+                    size: typeInfo.minSize + this.rng() * (typeInfo.maxSize - typeInfo.minSize),
+                    variant: Math.floor(this.rng() * typeInfo.variants),
+                    rotation: this.rng() * Math.PI * 2, // Random rotation
+                    scattered: true, // Mark as scattered fill object
+                    glowing: typeInfo.canGlow && this.rng() < 0.05 // 5% chance of glowing for applicable objects
+                });
+            }
         }
+    }
+    
+    /**
+     * Get theme-specific scattered object types
+     * @param {Object} theme - The current theme
+     * @returns {Array} - Array of object type definitions with weights
+     */
+    getThemeSpecificScatteredObjects(theme) {
+        // Common objects for all themes
+        const commonObjects = [
+            { type: 'rock', minSize: 0.4, maxSize: 1.2, weight: 5, variants: 5, canCluster: true, canGlow: false },
+            { type: 'bush', minSize: 0.5, maxSize: 1.5, weight: 5, variants: 3, canCluster: true, canGlow: false },
+            { type: 'flower', minSize: 0.3, maxSize: 0.8, weight: 4, variants: 6, canCluster: true, canGlow: true },
+            { type: 'tall_grass', minSize: 0.4, maxSize: 1.0, weight: 4, variants: 3, canCluster: true, canGlow: false },
+            { type: 'small_plant', minSize: 0.3, maxSize: 0.9, weight: 3, variants: 4, canCluster: true, canGlow: false }
+        ];
+        
+        // Theme-specific objects
+        let themeObjects = [];
+        
+        switch (theme.primaryZone) {
+            case 'Forest':
+                themeObjects = [
+                    { type: 'tree', minSize: 0.8, maxSize: 2.0, weight: 8, variants: 5, canCluster: false, canGlow: false },
+                    { type: 'stump', minSize: 0.5, maxSize: 1.2, weight: 3, variants: 3, canCluster: false, canGlow: false },
+                    { type: 'fern', minSize: 0.4, maxSize: 1.0, weight: 4, variants: 3, canCluster: true, canGlow: false },
+                    { type: 'mushroom', minSize: 0.3, maxSize: 0.7, weight: 5, variants: 4, canCluster: true, canGlow: true },
+                    { type: 'forest_debris', minSize: 0.4, maxSize: 0.9, weight: 3, variants: 3, canCluster: false, canGlow: false },
+                    { type: 'berry_bush', minSize: 0.5, maxSize: 1.2, weight: 3, variants: 2, canCluster: true, canGlow: false }
+                ];
+                break;
+                
+            case 'Mountains':
+                themeObjects = [
+                    { type: 'snow_patch', minSize: 0.6, maxSize: 1.8, weight: 6, variants: 3, canCluster: true, canGlow: false },
+                    { type: 'ice_shard', minSize: 0.5, maxSize: 1.5, weight: 4, variants: 3, canCluster: true, canGlow: true },
+                    { type: 'mountain_rock', minSize: 0.7, maxSize: 2.0, weight: 7, variants: 4, canCluster: true, canGlow: false },
+                    { type: 'pine_tree', minSize: 0.8, maxSize: 2.2, weight: 5, variants: 3, canCluster: false, canGlow: false },
+                    { type: 'alpine_flower', minSize: 0.3, maxSize: 0.6, weight: 3, variants: 4, canCluster: true, canGlow: false }
+                ];
+                break;
+                
+            case 'Desert':
+                themeObjects = [
+                    { type: 'lava_rock', minSize: 0.5, maxSize: 1.5, weight: 6, variants: 3, canCluster: true, canGlow: true },
+                    { type: 'obsidian', minSize: 0.4, maxSize: 1.2, weight: 4, variants: 2, canCluster: true, canGlow: false },
+                    { type: 'ember_vent', minSize: 0.3, maxSize: 0.8, weight: 3, variants: 2, canCluster: false, canGlow: true },
+                    { type: 'ash_pile', minSize: 0.5, maxSize: 1.3, weight: 5, variants: 3, canCluster: true, canGlow: false },
+                    { type: 'desert_plant', minSize: 0.4, maxSize: 1.0, weight: 3, variants: 3, canCluster: false, canGlow: false }
+                ];
+                break;
+                
+            case 'Swamp':
+                themeObjects = [
+                    { type: 'swamp_plant', minSize: 0.5, maxSize: 1.4, weight: 6, variants: 4, canCluster: true, canGlow: false },
+                    { type: 'lily_pad', minSize: 0.4, maxSize: 1.0, weight: 5, variants: 3, canCluster: true, canGlow: false },
+                    { type: 'cattail', minSize: 0.6, maxSize: 1.2, weight: 4, variants: 2, canCluster: true, canGlow: false },
+                    { type: 'swamp_mushroom', minSize: 0.3, maxSize: 0.9, weight: 5, variants: 4, canCluster: true, canGlow: true },
+                    { type: 'twisted_root', minSize: 0.5, maxSize: 1.5, weight: 3, variants: 3, canCluster: false, canGlow: false },
+                    { type: 'swamp_light', minSize: 0.3, maxSize: 0.7, weight: 2, variants: 2, canCluster: false, canGlow: true }
+                ];
+                break;
+                
+            case 'Ruins':
+                themeObjects = [
+                    { type: 'rubble', minSize: 0.5, maxSize: 1.3, weight: 7, variants: 4, canCluster: true, canGlow: false },
+                    { type: 'broken_stone', minSize: 0.4, maxSize: 1.2, weight: 6, variants: 5, canCluster: true, canGlow: false },
+                    { type: 'ancient_debris', minSize: 0.3, maxSize: 0.9, weight: 5, variants: 3, canCluster: true, canGlow: false },
+                    { type: 'overgrown_statue', minSize: 0.7, maxSize: 1.8, weight: 3, variants: 2, canCluster: false, canGlow: false },
+                    { type: 'rune_stone', minSize: 0.5, maxSize: 1.0, weight: 4, variants: 3, canCluster: false, canGlow: true },
+                    { type: 'magical_remnant', minSize: 0.3, maxSize: 0.7, weight: 2, variants: 2, canCluster: false, canGlow: true }
+                ];
+                break;
+                
+            default: // Terrant or other zones
+                themeObjects = [
+                    { type: 'tree', minSize: 0.7, maxSize: 1.8, weight: 5, variants: 4, canCluster: false, canGlow: false },
+                    { type: 'crystal', minSize: 0.4, maxSize: 1.0, weight: 3, variants: 3, canCluster: true, canGlow: true },
+                    { type: 'strange_plant', minSize: 0.5, maxSize: 1.2, weight: 4, variants: 4, canCluster: true, canGlow: true },
+                    { type: 'magical_stone', minSize: 0.6, maxSize: 1.5, weight: 3, variants: 2, canCluster: false, canGlow: true }
+                ];
+                break;
+        }
+        
+        // Combine common and theme-specific objects
+        return [...commonObjects, ...themeObjects];
+    }
     }
 
     /**
@@ -2591,34 +2720,137 @@ class MapGenerator {
      * This method handles the theme-specific special features
      */
     generateSpecialEnvironmentFeatures(theme, boundaryHalfSize) {
-        // Determine count based on theme
-        let count = 15; // Default count
+        // Determine count based on theme - significantly increased for more interesting maps
+        let count = 30; // Default count doubled from 15
         
         if (theme.features && theme.features.specialFeatureCount) {
-            count = theme.features.specialFeatureCount;
+            // If specified in theme, use that value but increase it by 50%
+            count = Math.ceil(theme.features.specialFeatureCount * 1.5);
         }
+        
+        console.log(`Generating ${count} special environment features for ${theme.name}...`);
         
         // Generate different special features based on theme
         switch (theme.primaryZone) {
             case 'Forest':
                 this.generateForestSpecialFeatures(count, theme);
+                // Add some generic features for variety (20% of the count)
+                this.generateGenericSpecialFeatures(Math.ceil(count * 0.2), theme);
                 break;
             case 'Mountains':
                 this.generateMountainSpecialFeatures(count, theme);
+                // Add some generic features for variety (20% of the count)
+                this.generateGenericSpecialFeatures(Math.ceil(count * 0.2), theme);
                 break;
             case 'Desert':
                 this.generateDesertSpecialFeatures(count, theme);
+                // Add some generic features for variety (20% of the count)
+                this.generateGenericSpecialFeatures(Math.ceil(count * 0.2), theme);
                 break;
             case 'Swamp':
                 this.generateSwampSpecialFeatures(count, theme);
+                // Add some generic features for variety (20% of the count)
+                this.generateGenericSpecialFeatures(Math.ceil(count * 0.2), theme);
                 break;
             case 'Ruins':
                 this.generateRuinsSpecialFeatures(count, theme);
+                // Add some generic features for variety (20% of the count)
+                this.generateGenericSpecialFeatures(Math.ceil(count * 0.2), theme);
                 break;
             default:
                 // For any other theme, generate generic special features
                 this.generateGenericSpecialFeatures(count, theme);
                 break;
+        }
+        
+        // Add some cross-theme features for more variety (10% of the count)
+        // This adds features from other themes to create more interesting and diverse maps
+        this.generateCrossThemeFeatures(Math.ceil(count * 0.1), theme);
+    }
+    
+    /**
+     * Generate cross-theme features - adds features from other themes for variety
+     */
+    generateCrossThemeFeatures(count, theme) {
+        // Skip the current theme's primary zone
+        const availableZones = ['Forest', 'Mountains', 'Desert', 'Swamp', 'Ruins'].filter(
+            zone => zone !== theme.primaryZone
+        );
+        
+        for (let i = 0; i < count; i++) {
+            // Select a random zone different from the current theme
+            const randomZone = availableZones[Math.floor(this.rng() * availableZones.length)];
+            const position = this.getRandomPosition(150, 400); // Place further out
+            
+            // Generate a feature based on the selected zone
+            switch (randomZone) {
+                case 'Forest':
+                    const forestTypes = ['ancient_tree', 'fairy_circle', 'mushroom_cluster', 'forest_shrine'];
+                    const forestType = forestTypes[Math.floor(this.rng() * forestTypes.length)];
+                    this.mapData.environment.push({
+                        type: forestType,
+                        position,
+                        theme: theme.name,
+                        size: 3 + this.rng() * 8,
+                        variant: Math.floor(this.rng() * 3),
+                        crossTheme: true // Mark as cross-theme feature
+                    });
+                    break;
+                    
+                case 'Mountains':
+                    const mountainTypes = ['ice_formation', 'crystal_outcrop', 'mountain_cave'];
+                    const mountainType = mountainTypes[Math.floor(this.rng() * mountainTypes.length)];
+                    this.mapData.environment.push({
+                        type: mountainType,
+                        position,
+                        theme: theme.name,
+                        size: 4 + this.rng() * 8,
+                        variant: Math.floor(this.rng() * 3),
+                        crossTheme: true
+                    });
+                    break;
+                    
+                case 'Desert':
+                    const desertTypes = ['oasis', 'obsidian_formation', 'desert_shrine'];
+                    const desertType = desertTypes[Math.floor(this.rng() * desertTypes.length)];
+                    this.mapData.environment.push({
+                        type: desertType,
+                        position,
+                        theme: theme.name,
+                        size: 4 + this.rng() * 7,
+                        variant: Math.floor(this.rng() * 3),
+                        crossTheme: true
+                    });
+                    break;
+                    
+                case 'Swamp':
+                    const swampTypes = ['swamp_light', 'giant_mushroom', 'bog_pit'];
+                    const swampType = swampTypes[Math.floor(this.rng() * swampTypes.length)];
+                    this.mapData.environment.push({
+                        type: swampType,
+                        position,
+                        theme: theme.name,
+                        size: 3 + this.rng() * 6,
+                        variant: Math.floor(this.rng() * 3),
+                        glowing: swampType === 'swamp_light' || this.rng() < 0.3,
+                        crossTheme: true
+                    });
+                    break;
+                    
+                case 'Ruins':
+                    const ruinsTypes = ['ancient_statue', 'ruined_arch', 'magic_circle'];
+                    const ruinsType = ruinsTypes[Math.floor(this.rng() * ruinsTypes.length)];
+                    this.mapData.environment.push({
+                        type: ruinsType,
+                        position,
+                        theme: theme.name,
+                        size: 3 + this.rng() * 7,
+                        variant: Math.floor(this.rng() * 3),
+                        glowing: ruinsType === 'magic_circle' || this.rng() < 0.2,
+                        crossTheme: true
+                    });
+                    break;
+            }
         }
     }
     
@@ -2626,14 +2858,72 @@ class MapGenerator {
      * Generate forest-specific special features
      */
     generateForestSpecialFeatures(count, theme) {
+        // Forest special features
+        const forestSpecialTypes = [
+            { type: 'ancient_tree', minSize: 8, maxSize: 20, weight: 3 },
+            { type: 'fairy_circle', minSize: 4, maxSize: 8, weight: 2 },
+            { type: 'mushroom_cluster', minSize: 2, maxSize: 5, weight: 3 },
+            { type: 'fallen_log', minSize: 5, maxSize: 12, weight: 2 },
+            { type: 'forest_shrine', minSize: 3, maxSize: 7, weight: 1 },
+            { type: 'glowing_flowers', minSize: 2, maxSize: 4, weight: 2 },
+            { type: 'treehouse', minSize: 6, maxSize: 10, weight: 1 }
+        ];
+        
+        // Create weighted selection array
+        const weightedTypes = [];
+        forestSpecialTypes.forEach(item => {
+            for (let i = 0; i < item.weight; i++) {
+                weightedTypes.push(item);
+            }
+        });
+        
+        // Generate the features
         for (let i = 0; i < count; i++) {
             const position = this.getRandomPosition(80, 350);
-            this.mapData.environment.push({
-                type: 'ancient_tree',
-                position,
-                theme: theme.name,
-                size: 8 + this.rng() * 12
-            });
+            const typeInfo = weightedTypes[Math.floor(this.rng() * weightedTypes.length)];
+            
+            // Create feature clusters for some types
+            if (typeInfo.type === 'mushroom_cluster' || typeInfo.type === 'glowing_flowers') {
+                // Create a cluster of 3-8 objects
+                const clusterSize = 3 + Math.floor(this.rng() * 6);
+                const clusterRadius = 2 + this.rng() * 4;
+                
+                for (let j = 0; j < clusterSize; j++) {
+                    const clusterPos = this.getNearbyPosition(position, 0.5, clusterRadius);
+                    this.mapData.environment.push({
+                        type: typeInfo.type,
+                        position: clusterPos,
+                        theme: theme.name,
+                        size: typeInfo.minSize + this.rng() * (typeInfo.maxSize - typeInfo.minSize),
+                        variant: Math.floor(this.rng() * 3) // Add variants for visual diversity
+                    });
+                }
+            } else {
+                // Add single feature
+                this.mapData.environment.push({
+                    type: typeInfo.type,
+                    position,
+                    theme: theme.name,
+                    size: typeInfo.minSize + this.rng() * (typeInfo.maxSize - typeInfo.minSize),
+                    variant: Math.floor(this.rng() * 3) // Add variants for visual diversity
+                });
+                
+                // Add smaller decorative elements around some features
+                if (typeInfo.type === 'ancient_tree' || typeInfo.type === 'forest_shrine') {
+                    const decorCount = 2 + Math.floor(this.rng() * 4);
+                    for (let j = 0; j < decorCount; j++) {
+                        const decorPos = this.getNearbyPosition(position, 1, 3);
+                        const decorType = this.rng() < 0.5 ? 'small_mushroom' : 'forest_flower';
+                        this.mapData.environment.push({
+                            type: decorType,
+                            position: decorPos,
+                            theme: theme.name,
+                            size: 0.5 + this.rng() * 1.0,
+                            variant: Math.floor(this.rng() * 3)
+                        });
+                    }
+                }
+            }
         }
     }
     
@@ -2641,14 +2931,54 @@ class MapGenerator {
      * Generate mountain-specific special features
      */
     generateMountainSpecialFeatures(count, theme) {
+        // Mountain special features
+        const mountainSpecialTypes = [
+            { type: 'ice_formation', minSize: 5, maxSize: 15, weight: 3 },
+            { type: 'snow_drift', minSize: 4, maxSize: 10, weight: 2 },
+            { type: 'mountain_cave', minSize: 6, maxSize: 12, weight: 2 },
+            { type: 'frozen_waterfall', minSize: 8, maxSize: 18, weight: 1 },
+            { type: 'crystal_outcrop', minSize: 4, maxSize: 9, weight: 2 },
+            { type: 'mountain_shrine', minSize: 5, maxSize: 8, weight: 1 },
+            { type: 'alpine_hut', minSize: 4, maxSize: 7, weight: 1 }
+        ];
+        
+        // Create weighted selection array
+        const weightedTypes = [];
+        mountainSpecialTypes.forEach(item => {
+            for (let i = 0; i < item.weight; i++) {
+                weightedTypes.push(item);
+            }
+        });
+        
+        // Generate the features
         for (let i = 0; i < count; i++) {
             const position = this.getRandomPosition(100, 350);
+            const typeInfo = weightedTypes[Math.floor(this.rng() * weightedTypes.length)];
+            
+            // Add the feature
             this.mapData.environment.push({
-                type: 'ice_formation',
+                type: typeInfo.type,
                 position,
                 theme: theme.name,
-                size: 5 + this.rng() * 10
+                size: typeInfo.minSize + this.rng() * (typeInfo.maxSize - typeInfo.minSize),
+                variant: Math.floor(this.rng() * 3) // Add variants for visual diversity
             });
+            
+            // Add snow drifts or ice patches around some features
+            if (typeInfo.type === 'mountain_cave' || typeInfo.type === 'frozen_waterfall' || typeInfo.type === 'alpine_hut') {
+                const decorCount = 2 + Math.floor(this.rng() * 3);
+                for (let j = 0; j < decorCount; j++) {
+                    const decorPos = this.getNearbyPosition(position, 1, 4);
+                    const decorType = this.rng() < 0.6 ? 'snow_patch' : 'ice_shard';
+                    this.mapData.environment.push({
+                        type: decorType,
+                        position: decorPos,
+                        theme: theme.name,
+                        size: 1 + this.rng() * 2,
+                        variant: Math.floor(this.rng() * 3)
+                    });
+                }
+            }
         }
     }
     
@@ -2656,14 +2986,69 @@ class MapGenerator {
      * Generate desert-specific special features
      */
     generateDesertSpecialFeatures(count, theme) {
+        // Desert special features
+        const desertSpecialTypes = [
+            { type: 'oasis', minSize: 6, maxSize: 14, weight: 2 },
+            { type: 'lava_pool', minSize: 5, maxSize: 12, weight: 3 },
+            { type: 'volcanic_vent', minSize: 3, maxSize: 8, weight: 2 },
+            { type: 'obsidian_formation', minSize: 4, maxSize: 10, weight: 2 },
+            { type: 'fire_pit', minSize: 3, maxSize: 6, weight: 1 },
+            { type: 'desert_shrine', minSize: 5, maxSize: 9, weight: 1 },
+            { type: 'ash_dune', minSize: 7, maxSize: 15, weight: 2 }
+        ];
+        
+        // Create weighted selection array
+        const weightedTypes = [];
+        desertSpecialTypes.forEach(item => {
+            for (let i = 0; i < item.weight; i++) {
+                weightedTypes.push(item);
+            }
+        });
+        
+        // Generate the features
         for (let i = 0; i < count; i++) {
             const position = this.getRandomPosition(100, 350);
+            const typeInfo = weightedTypes[Math.floor(this.rng() * weightedTypes.length)];
+            
+            // Add the feature
             this.mapData.environment.push({
-                type: 'oasis',
+                type: typeInfo.type,
                 position,
                 theme: theme.name,
-                size: 6 + this.rng() * 8
+                size: typeInfo.minSize + this.rng() * (typeInfo.maxSize - typeInfo.minSize),
+                variant: Math.floor(this.rng() * 3) // Add variants for visual diversity
             });
+            
+            // Add special decorations around oases and shrines
+            if (typeInfo.type === 'oasis' || typeInfo.type === 'desert_shrine') {
+                const palmCount = 2 + Math.floor(this.rng() * 4);
+                for (let j = 0; j < palmCount; j++) {
+                    const palmPos = this.getNearbyPosition(position, 1, 5);
+                    this.mapData.environment.push({
+                        type: 'desert_palm',
+                        position: palmPos,
+                        theme: theme.name,
+                        size: 2 + this.rng() * 3,
+                        variant: Math.floor(this.rng() * 3)
+                    });
+                }
+            }
+            
+            // Add lava rocks around volcanic features
+            if (typeInfo.type === 'lava_pool' || typeInfo.type === 'volcanic_vent') {
+                const rockCount = 3 + Math.floor(this.rng() * 5);
+                for (let j = 0; j < rockCount; j++) {
+                    const rockPos = this.getNearbyPosition(position, 1, 4);
+                    this.mapData.environment.push({
+                        type: 'lava_rock',
+                        position: rockPos,
+                        theme: theme.name,
+                        size: 1 + this.rng() * 2,
+                        variant: Math.floor(this.rng() * 3),
+                        glowing: this.rng() < 0.3 // Some rocks glow
+                    });
+                }
+            }
         }
     }
     
@@ -2671,14 +3056,58 @@ class MapGenerator {
      * Generate swamp-specific special features
      */
     generateSwampSpecialFeatures(count, theme) {
+        // Swamp special features
+        const swampSpecialTypes = [
+            { type: 'swamp_light', minSize: 3, maxSize: 8, weight: 3 },
+            { type: 'giant_mushroom', minSize: 5, maxSize: 12, weight: 2 },
+            { type: 'hanging_vines', minSize: 4, maxSize: 9, weight: 2 },
+            { type: 'bog_pit', minSize: 6, maxSize: 14, weight: 2 },
+            { type: 'witch_hut', minSize: 5, maxSize: 8, weight: 1 },
+            { type: 'swamp_idol', minSize: 4, maxSize: 7, weight: 1 },
+            { type: 'twisted_tree', minSize: 7, maxSize: 15, weight: 2 }
+        ];
+        
+        // Create weighted selection array
+        const weightedTypes = [];
+        swampSpecialTypes.forEach(item => {
+            for (let i = 0; i < item.weight; i++) {
+                weightedTypes.push(item);
+            }
+        });
+        
+        // Generate the features
         for (let i = 0; i < count; i++) {
             const position = this.getRandomPosition(80, 350);
+            const typeInfo = weightedTypes[Math.floor(this.rng() * weightedTypes.length)];
+            
+            // Add the feature
             this.mapData.environment.push({
-                type: 'swamp_light',
+                type: typeInfo.type,
                 position,
                 theme: theme.name,
-                size: 3 + this.rng() * 6
+                size: typeInfo.minSize + this.rng() * (typeInfo.maxSize - typeInfo.minSize),
+                variant: Math.floor(this.rng() * 3), // Add variants for visual diversity
+                glowing: typeInfo.type === 'swamp_light' || this.rng() < 0.2 // Swamp lights and some other features glow
             });
+            
+            // Add clusters of smaller swamp elements
+            if (typeInfo.type === 'bog_pit' || typeInfo.type === 'witch_hut' || typeInfo.type === 'swamp_idol') {
+                const decorCount = 3 + Math.floor(this.rng() * 5);
+                for (let j = 0; j < decorCount; j++) {
+                    const decorPos = this.getNearbyPosition(position, 1, 4);
+                    const decorTypes = ['swamp_flower', 'small_mushroom', 'lily_pad', 'cattail'];
+                    const decorType = decorTypes[Math.floor(this.rng() * decorTypes.length)];
+                    
+                    this.mapData.environment.push({
+                        type: decorType,
+                        position: decorPos,
+                        theme: theme.name,
+                        size: 0.8 + this.rng() * 1.5,
+                        variant: Math.floor(this.rng() * 3),
+                        glowing: this.rng() < 0.15 // Some small elements glow
+                    });
+                }
+            }
         }
     }
     
@@ -2686,14 +3115,82 @@ class MapGenerator {
      * Generate ruins-specific special features
      */
     generateRuinsSpecialFeatures(count, theme) {
+        // Ruins special features
+        const ruinsSpecialTypes = [
+            { type: 'ancient_statue', minSize: 4, maxSize: 12, weight: 3 },
+            { type: 'broken_column', minSize: 3, maxSize: 8, weight: 3 },
+            { type: 'ruined_arch', minSize: 5, maxSize: 10, weight: 2 },
+            { type: 'stone_altar', minSize: 4, maxSize: 7, weight: 2 },
+            { type: 'forgotten_tomb', minSize: 6, maxSize: 12, weight: 1 },
+            { type: 'magic_circle', minSize: 5, maxSize: 9, weight: 1 },
+            { type: 'ancient_mechanism', minSize: 3, maxSize: 6, weight: 1 }
+        ];
+        
+        // Create weighted selection array
+        const weightedTypes = [];
+        ruinsSpecialTypes.forEach(item => {
+            for (let i = 0; i < item.weight; i++) {
+                weightedTypes.push(item);
+            }
+        });
+        
+        // Generate the features
         for (let i = 0; i < count; i++) {
             const position = this.getRandomPosition(100, 350);
+            const typeInfo = weightedTypes[Math.floor(this.rng() * weightedTypes.length)];
+            
+            // Add the feature
             this.mapData.environment.push({
-                type: 'ancient_statue',
+                type: typeInfo.type,
                 position,
                 theme: theme.name,
-                size: 4 + this.rng() * 8
+                size: typeInfo.minSize + this.rng() * (typeInfo.maxSize - typeInfo.minSize),
+                variant: Math.floor(this.rng() * 3), // Add variants for visual diversity
+                glowing: typeInfo.type === 'magic_circle' || typeInfo.type === 'ancient_mechanism' || this.rng() < 0.2
             });
+            
+            // Add rubble and smaller ruins around major features
+            if (typeInfo.type !== 'broken_column') {
+                const rubbleCount = 3 + Math.floor(this.rng() * 4);
+                for (let j = 0; j < rubbleCount; j++) {
+                    const rubblePos = this.getNearbyPosition(position, 1, 5);
+                    const rubbleTypes = ['stone_rubble', 'broken_tile', 'small_statue', 'ancient_debris'];
+                    const rubbleType = rubbleTypes[Math.floor(this.rng() * rubbleTypes.length)];
+                    
+                    this.mapData.environment.push({
+                        type: rubbleType,
+                        position: rubblePos,
+                        theme: theme.name,
+                        size: 0.8 + this.rng() * 1.5,
+                        variant: Math.floor(this.rng() * 3),
+                        glowing: this.rng() < 0.1 // Some pieces might glow with ancient magic
+                    });
+                }
+            }
+            
+            // Create column formations for certain types
+            if (typeInfo.type === 'ruined_arch' || typeInfo.type === 'stone_altar' || typeInfo.type === 'forgotten_tomb') {
+                const columnCount = 2 + Math.floor(this.rng() * 3);
+                const columnRadius = 3 + this.rng() * 3;
+                
+                for (let j = 0; j < columnCount; j++) {
+                    const angle = (j / columnCount) * Math.PI * 2;
+                    const columnPos = {
+                        x: position.x + Math.cos(angle) * columnRadius,
+                        y: position.y,
+                        z: position.z + Math.sin(angle) * columnRadius
+                    };
+                    
+                    this.mapData.environment.push({
+                        type: 'broken_column',
+                        position: columnPos,
+                        theme: theme.name,
+                        size: 2 + this.rng() * 4,
+                        variant: Math.floor(this.rng() * 3),
+                        rotation: angle // Add rotation for better arrangement
+                    });
+                }
+            }
         }
     }
     
@@ -2701,17 +3198,95 @@ class MapGenerator {
      * Generate generic special features for any theme
      */
     generateGenericSpecialFeatures(count, theme) {
+        // Generic special features that work in any theme
+        const genericSpecialTypes = [
+            { type: 'crystal_formation', minSize: 3, maxSize: 8, weight: 2 },
+            { type: 'rare_plant', minSize: 2, maxSize: 6, weight: 2 },
+            { type: 'magical_stone', minSize: 3, maxSize: 7, weight: 2 },
+            { type: 'ancient_artifact', minSize: 2, maxSize: 5, weight: 1 },
+            { type: 'mysterious_portal', minSize: 4, maxSize: 8, weight: 1 },
+            { type: 'enchanted_pool', minSize: 5, maxSize: 10, weight: 1 },
+            { type: 'stone_circle', minSize: 6, maxSize: 12, weight: 1 },
+            { type: 'abandoned_camp', minSize: 4, maxSize: 8, weight: 1 },
+            { type: 'strange_monolith', minSize: 5, maxSize: 10, weight: 1 }
+        ];
+        
+        // Create weighted selection array
+        const weightedTypes = [];
+        genericSpecialTypes.forEach(item => {
+            for (let i = 0; i < item.weight; i++) {
+                weightedTypes.push(item);
+            }
+        });
+        
+        // Generate the features
         for (let i = 0; i < count; i++) {
             const position = this.getRandomPosition(100, 350);
-            const types = ['crystal_formation', 'rare_plant', 'magical_stone', 'ancient_artifact'];
-            const type = types[Math.floor(this.rng() * types.length)];
+            const typeInfo = weightedTypes[Math.floor(this.rng() * weightedTypes.length)];
             
+            // Add the feature
             this.mapData.environment.push({
-                type,
+                type: typeInfo.type,
                 position,
                 theme: theme.name,
-                size: 3 + this.rng() * 7
+                size: typeInfo.minSize + this.rng() * (typeInfo.maxSize - typeInfo.minSize),
+                variant: Math.floor(this.rng() * 3), // Add variants for visual diversity
+                glowing: typeInfo.type === 'crystal_formation' || 
+                         typeInfo.type === 'magical_stone' || 
+                         typeInfo.type === 'mysterious_portal' || 
+                         this.rng() < 0.3
             });
+            
+            // Add decorative elements around some features
+            if (typeInfo.type === 'stone_circle' || 
+                typeInfo.type === 'enchanted_pool' || 
+                typeInfo.type === 'mysterious_portal') {
+                
+                const decorCount = 3 + Math.floor(this.rng() * 4);
+                const decorRadius = 3 + this.rng() * 2;
+                
+                // Create a circle of decorative elements
+                for (let j = 0; j < decorCount; j++) {
+                    const angle = (j / decorCount) * Math.PI * 2;
+                    const decorPos = {
+                        x: position.x + Math.cos(angle) * decorRadius,
+                        y: position.y,
+                        z: position.z + Math.sin(angle) * decorRadius
+                    };
+                    
+                    const decorTypes = ['small_crystal', 'magical_flower', 'rune_stone', 'glowing_mushroom'];
+                    const decorType = decorTypes[Math.floor(this.rng() * decorTypes.length)];
+                    
+                    this.mapData.environment.push({
+                        type: decorType,
+                        position: decorPos,
+                        theme: theme.name,
+                        size: 0.8 + this.rng() * 1.2,
+                        variant: Math.floor(this.rng() * 3),
+                        glowing: this.rng() < 0.5, // Higher chance of glowing
+                        rotation: angle // Add rotation for better arrangement
+                    });
+                }
+            }
+            
+            // Add scattered objects for abandoned camp
+            if (typeInfo.type === 'abandoned_camp') {
+                const itemCount = 4 + Math.floor(this.rng() * 5);
+                for (let j = 0; j < itemCount; j++) {
+                    const itemPos = this.getNearbyPosition(position, 0.5, 3);
+                    const campItems = ['tent', 'campfire', 'crate', 'barrel', 'backpack', 'bedroll'];
+                    const itemType = campItems[Math.floor(this.rng() * campItems.length)];
+                    
+                    this.mapData.environment.push({
+                        type: itemType,
+                        position: itemPos,
+                        theme: theme.name,
+                        size: 0.8 + this.rng() * 1.0,
+                        variant: Math.floor(this.rng() * 3),
+                        glowing: itemType === 'campfire' // Only campfires glow
+                    });
+                }
+            }
         }
     }
 

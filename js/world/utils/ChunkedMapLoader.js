@@ -22,6 +22,12 @@ export class ChunkedMapLoader {
         this.lastPlayerChunk = null; // Last player chunk coordinates for change detection
         this.lastPlayerDirection = null; // Last player direction for selective chunk loading
         
+        // Anti-eager loading settings
+        this.lastUpdateTime = 0;  // Last time chunks were updated
+        this.updateCooldown = 3000; // Minimum time between chunk updates (ms)
+        this.lastPlayerPosition = null; // Last player position for distance-based updates
+        this.minMoveDistance = 10; // Minimum distance player must move to trigger update
+        
         // Map storage settings
         this.storageEnabled = true;
         this.storageKeyPrefix = 'monk_journey_map_';
@@ -72,7 +78,7 @@ export class ChunkedMapLoader {
             
             // Initial load of chunks around starting position (usually 0,0,0)
             const startPosition = new THREE.Vector3(0, 0, 0);
-            await this.updateLoadedChunksForPosition(startPosition);
+            await this.initialChunkLoad(startPosition);
             
             console.log(`Map "${mapData.theme.name}" loaded successfully (chunked mode)`);
             return true;
@@ -113,7 +119,7 @@ export class ChunkedMapLoader {
                 
                 // Initial load of chunks around starting position
                 const startPosition = new THREE.Vector3(0, 0, 0);
-                await this.updateLoadedChunksForPosition(startPosition);
+                await this.initialChunkLoad(startPosition);
                 
                 console.log(`Map "${mapName}" loaded from cache successfully`);
                 return true;
@@ -383,12 +389,85 @@ export class ChunkedMapLoader {
     }
 
     /**
-     * Update loaded chunks based on player position
+     * Initial load of chunks around a position - used when first loading a map
+     * This loads a larger area than regular updates to ensure the player has enough content
+     * @param {THREE.Vector3} position - Position to load chunks around
+     */
+    async initialChunkLoad(position) {
+        if (!this.currentMapMetadata) {
+            return; // No map loaded
+        }
+        
+        console.log("Performing initial chunk load...");
+        
+        // Initialize tracking variables
+        this.lastPlayerPosition = position.clone();
+        this.lastUpdateTime = Date.now();
+        
+        // Get current chunk
+        const chunkX = Math.floor(position.x / this.chunkSize);
+        const chunkZ = Math.floor(position.z / this.chunkSize);
+        const chunkKey = `${chunkX}_${chunkZ}`;
+        this.lastPlayerChunk = chunkKey;
+        
+        // Get map bounds if available
+        let minChunkX = -Infinity;
+        let maxChunkX = Infinity;
+        let minChunkZ = -Infinity;
+        let maxChunkZ = Infinity;
+        
+        if (this.currentMapMetadata.bounds) {
+            minChunkX = Math.floor(this.currentMapMetadata.bounds.minX / this.chunkSize);
+            maxChunkX = Math.ceil(this.currentMapMetadata.bounds.maxX / this.chunkSize);
+            minChunkZ = Math.floor(this.currentMapMetadata.bounds.minZ / this.chunkSize);
+            maxChunkZ = Math.ceil(this.currentMapMetadata.bounds.maxZ / this.chunkSize);
+        }
+        
+        // Use a larger initial radius for first load
+        const initialRadius = this.loadRadius + 1;
+        const chunksToLoad = {};
+        
+        // Load chunks in all directions for initial load
+        for (let xOffset = -initialRadius; xOffset <= initialRadius; xOffset++) {
+            for (let zOffset = -initialRadius; zOffset <= initialRadius; zOffset++) {
+                const targetChunkX = chunkX + xOffset;
+                const targetChunkZ = chunkZ + zOffset;
+                
+                // Only load chunks within map bounds
+                if (targetChunkX >= minChunkX && targetChunkX <= maxChunkX && 
+                    targetChunkZ >= minChunkZ && targetChunkZ <= maxChunkZ) {
+                    const targetChunkKey = `${targetChunkX}_${targetChunkZ}`;
+                    chunksToLoad[targetChunkKey] = true;
+                }
+            }
+        }
+        
+        // Load all initial chunks
+        for (const chunkKey in chunksToLoad) {
+            if (!this.loadedChunks[chunkKey]) {
+                await this.loadChunk(chunkKey);
+            }
+        }
+        
+        console.log(`Initial chunk load complete (${Object.keys(chunksToLoad).length} chunks)`);
+    }
+    
+    /**
+     * Update loaded chunks based on player position with anti-eager loading
      * @param {THREE.Vector3} playerPosition - Current player position
      */
     async updateLoadedChunksForPosition(playerPosition) {
         if (!this.currentMapMetadata) {
             return; // No map loaded
+        }
+        
+        // Special case for first load - initialize position tracking
+        if (!this.lastPlayerPosition) {
+            this.lastPlayerPosition = playerPosition.clone();
+            this.lastUpdateTime = Date.now();
+            
+            // For first load, we'll do a full chunk load
+            console.log("Initial chunk loading...");
         }
         
         // Get current player chunk
@@ -409,16 +488,39 @@ export class ChunkedMapLoader {
             }
         }
         
+        // Calculate time since last update and distance moved
+        const currentTime = Date.now();
+        const timeSinceLastUpdate = currentTime - this.lastUpdateTime;
+        const distanceMoved = this.lastPlayerPosition ? 
+            playerPosition.distanceTo(this.lastPlayerPosition) : 0;
+            
         // Skip if player hasn't moved to a new chunk and direction hasn't changed significantly
         const directionChanged = playerDirection && this.lastPlayerDirection && 
             playerDirection.angleTo(this.lastPlayerDirection) > 0.3; // ~17 degrees threshold
             
-        if (this.lastPlayerChunk === playerChunkKey && !directionChanged) {
+        // Check if we should update chunks based on multiple criteria
+        const inSameChunk = this.lastPlayerChunk === playerChunkKey;
+        const cooldownActive = timeSinceLastUpdate < this.updateCooldown;
+        const notMovedEnough = distanceMoved < this.minMoveDistance;
+        
+        // Skip update if all these conditions are true:
+        // 1. Player is in the same chunk as before
+        // 2. Direction hasn't changed significantly
+        // 3. Either the cooldown is still active OR player hasn't moved enough
+        if (inSameChunk && !directionChanged && (cooldownActive || notMovedEnough)) {
             return;
         }
         
-        console.log(`Player moved to chunk ${playerChunkKey}, updating loaded chunks...`);
+        // If we're here, we need to update chunks
+        console.log(`Updating chunks: ${inSameChunk ? 'Same chunk' : 'New chunk'}, ` +
+                    `Distance moved: ${distanceMoved.toFixed(2)}, ` +
+                    `Time since last update: ${(timeSinceLastUpdate/1000).toFixed(1)}s`);
+                    
+        // Update tracking variables
         this.lastPlayerChunk = playerChunkKey;
+        this.lastUpdateTime = currentTime;
+        this.lastPlayerPosition = playerPosition.clone();
+        
         if (playerDirection) {
             this.lastPlayerDirection = playerDirection.clone();
         }

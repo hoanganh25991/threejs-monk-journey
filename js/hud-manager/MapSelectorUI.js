@@ -88,9 +88,11 @@ export class MapSelectorUI extends UIComponent {
                 mapItem.className = 'map-list-item';
                 mapItem.setAttribute('data-map-id', map.id); // Use setAttribute for better compatibility
                 
-                // Add a click handler directly to each item for better reliability
-                mapItem.addEventListener('click', () => {
-                    console.log('Map item clicked directly:', map.id);
+                // Add a direct click handler for immediate functionality
+                mapItem.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Map item clicked directly from updateMapList:', map.id);
                     this.selectMap(map.id);
                 });
                 
@@ -105,6 +107,14 @@ export class MapSelectorUI extends UIComponent {
                 
                 mapListElement.appendChild(mapItem);
             });
+            
+            // Add a small delay to ensure the list is properly rendered before allowing scrolling
+            setTimeout(() => {
+                const mapList = this.element.querySelector('#map-list');
+                if (mapList) {
+                    mapList.style.overflowY = 'auto';
+                }
+            }, 100);
         } else {
             // Show no maps message
             const noMapsMessage = document.createElement('div');
@@ -145,18 +155,36 @@ export class MapSelectorUI extends UIComponent {
         // Map list item selection - use event delegation for dynamically created items
         const mapList = this.element.querySelector('#map-list');
         if (mapList) {
-            // Remove any existing event listeners by cloning and replacing
+            // Remove all existing event listeners to prevent duplicates
             const newMapList = mapList.cloneNode(true);
             mapList.parentNode.replaceChild(newMapList, mapList);
             
-            // Add new event listener with debug logging
+            // Add direct click handlers to each map item for maximum compatibility
+            const mapItems = newMapList.querySelectorAll('.map-list-item');
+            mapItems.forEach(item => {
+                if (item.hasAttribute('data-map-id')) {
+                    const mapId = item.getAttribute('data-map-id');
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Map item clicked directly:', mapId);
+                        this.selectMap(mapId);
+                    });
+                }
+            });
+            
+            // Also add event delegation as a fallback
             newMapList.addEventListener('click', (e) => {
                 console.log('Map list clicked', e.target);
-                const mapItem = e.target.closest('.map-list-item[data-map-id]');
+                
+                // Find the closest map-list-item parent from the clicked element
+                const mapItem = e.target.closest('.map-list-item');
                 console.log('Found map item:', mapItem);
-                if (mapItem) {
-                    console.log('Map ID:', mapItem.dataset.mapId);
-                    this.selectMap(mapItem.dataset.mapId);
+                
+                if (mapItem && mapItem.hasAttribute('data-map-id')) {
+                    const mapId = mapItem.getAttribute('data-map-id');
+                    console.log('Map ID from delegation:', mapId);
+                    this.selectMap(mapId);
                 }
             });
         }
@@ -207,6 +235,21 @@ export class MapSelectorUI extends UIComponent {
         // Add show animation
         requestAnimationFrame(() => {
             this.element.classList.add('show');
+            
+            // Ensure map list is scrollable
+            setTimeout(() => {
+                const mapList = this.element.querySelector('#map-list');
+                if (mapList) {
+                    // Force a reflow to ensure scrolling works
+                    mapList.style.overflowY = 'hidden';
+                    setTimeout(() => {
+                        mapList.style.overflowY = 'auto';
+                    }, 50);
+                }
+                
+                // Re-attach click handlers to ensure they work
+                this.setupEventListeners();
+            }, 100);
         });
     }
 
@@ -239,12 +282,14 @@ export class MapSelectorUI extends UIComponent {
             previousSelected.classList.remove('selected');
         }
         
-        // Add selection to new item
+        // Add selection to new item - use attribute selector for better compatibility
         const selectedItem = this.element.querySelector(`.map-list-item[data-map-id="${mapId}"]`);
         console.log('Found selected item:', selectedItem);
         
         if (selectedItem) {
             selectedItem.classList.add('selected');
+            
+            // Find the map data in our available maps array
             this.selectedMap = this.availableMaps.find(map => map.id === mapId);
             console.log('Selected map data:', this.selectedMap);
             

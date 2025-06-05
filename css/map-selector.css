@@ -60,7 +60,7 @@
 }
 
 .map-selector-content {
-    height: 100%;
+    height: calc(100vh - 60px); /* Subtract header height */
     overflow: hidden;
 }
 
@@ -68,6 +68,7 @@
 .map-selector-layout {
     display: flex;
     height: 100%;
+    overflow: hidden; /* Prevent layout overflow */
 }
 
 .map-list {
@@ -78,16 +79,18 @@
     scrollbar-width: thin; /* For Firefox */
     overflow-y: auto; /* Ensure the list itself is scrollable */
     height: 100%; /* Take full height */
+    padding-right: 5px; /* Add some padding for scrollbar */
 }
 
 .map-list-container {
     flex: 0 0 30%;
     border-right: 1px solid rgba(138, 109, 59, 0.5);
-    height: calc(100% - 40px - var(--padding-medium) - 1px);
+    height: 100%; /* Take full height */
     display: flex;
     flex-direction: column;
     overflow: hidden; /* Prevent container from scrolling */
     padding: var(--padding-medium);
+    padding-right: 0; /* Remove right padding to accommodate scrollbar */
 }
 
 .map-detail-container {
@@ -115,6 +118,10 @@
     border: 1px solid rgba(255, 255, 255, 0.2); /* Match skill-tree node border */
     cursor: pointer;
     transition: all 0.2s ease;
+    position: relative; /* Ensure position context for z-index */
+    z-index: 1; /* Ensure it's above other elements */
+    user-select: none; /* Prevent text selection which can interfere with clicks */
+    margin-bottom: 8px; /* Add space between items */
 }
 
 .map-list-item:hover {
@@ -127,6 +134,24 @@
     border: 1px solid #ffcc00; /* Match skill-tree selected item */
     box-shadow: 0 0 10px rgba(255, 204, 0, 0.5); /* Match skill-tree selected item glow */
     background-color: rgba(50, 40, 0, 0.3); /* Match skill-selection selected item */
+}
+
+/* Make sure child elements don't interfere with clicks */
+.map-list-item * {
+    pointer-events: none; /* This ensures clicks pass through to the parent item */
+}
+
+/* Add a visual indicator to show items are clickable */
+.map-list-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--padding-medium);
+    pointer-events: auto; /* Ensure this layer captures clicks */
+    z-index: 0; /* Behind content but above background */
 }
 
 /* Map action buttons container - for Return and Generate buttons */

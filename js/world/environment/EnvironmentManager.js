@@ -5,6 +5,8 @@ import { Bush } from './Bush.js';
 import { Flower } from './Flower.js';
 import { TallGrass } from './TallGrass.js';
 import { AncientTree } from './AncientTree.js';
+import { Waterfall } from './Waterfall.js';
+import { CrystalFormation } from './CrystalFormation.js';
 import { RandomGenerator } from '../utils/RandomGenerator.js';
 
 /**
@@ -24,7 +26,7 @@ export class EnvironmentManager {
         // Environment object types (no longer using config)
         this.environmentObjectTypes = [
             'tree', 'rock', 'bush', 'flower', 'tall_grass', 'ancient_tree', 'small_plant',
-            'fallen_log', 'mushroom', 'rock_formation', 'shrine', 'stump'
+            'fallen_log', 'mushroom', 'rock_formation', 'shrine', 'stump', 'waterfall', 'crystal_formation'
         ];
         
         // For minimap functionality
@@ -40,6 +42,8 @@ export class EnvironmentManager {
         this.rockFormations = [];
         this.shrines = [];
         this.stumps = [];
+        this.waterfalls = [];
+        this.crystalFormations = [];
         
         // Last player position for distance tracking
         this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
@@ -55,7 +59,9 @@ export class EnvironmentManager {
             'flower': 0.9,      // 90% chance that flowers will be in groups
             'tall_grass': 0.95, // 95% chance that tall grass will be in groups
             'ancient_tree': 0.1, // 10% chance that ancient trees will be in groups (usually solitary)
-            'small_plant': 0.85 // 85% chance that small plants will be in groups
+            'small_plant': 0.85, // 85% chance that small plants will be in groups
+            'waterfall': 0.2,   // 20% chance that waterfalls will be in groups (usually solitary)
+            'crystal_formation': 0.7 // 70% chance that crystal formations will be in groups
         };
         
         this.groupSizes = {
@@ -65,7 +71,9 @@ export class EnvironmentManager {
             'flower': { min: 5, max: 15 },     // Flowers come in groups of 5-15
             'tall_grass': { min: 8, max: 20 }, // Tall grass comes in patches of 8-20
             'ancient_tree': { min: 1, max: 3 }, // Ancient trees are usually solitary, max 3
-            'small_plant': { min: 6, max: 18 } // Small plants come in groups of 6-18
+            'small_plant': { min: 6, max: 18 }, // Small plants come in groups of 6-18
+            'waterfall': { min: 1, max: 3 },   // Waterfalls come in groups of 1-3
+            'crystal_formation': { min: 3, max: 8 } // Crystal formations come in groups of 3-8
         };
         
         // Group spread determines how tightly packed the groups are
@@ -76,7 +84,9 @@ export class EnvironmentManager {
             'flower': 4,       // Flowers spread up to 4 units from center
             'tall_grass': 8,   // Tall grass spreads up to 8 units from center
             'ancient_tree': 20, // Ancient trees spread up to 20 units from center (when grouped)
-            'small_plant': 5   // Small plants spread up to 5 units from center
+            'small_plant': 5,  // Small plants spread up to 5 units from center
+            'waterfall': 30,   // Waterfalls spread up to 30 units from center (when grouped)
+            'crystal_formation': 10 // Crystal formations spread up to 10 units from center
         };
         
         // Create some initial environment objects
@@ -279,6 +289,14 @@ export class EnvironmentManager {
                         object = this.createSmallPlant(objectX, objectZ);
                         if (object) this.smallPlants.push(object);
                         break;
+                    case 'waterfall':
+                        object = this.createWaterfall(objectX, objectZ);
+                        if (object) this.waterfalls.push(object);
+                        break;
+                    case 'crystal_formation':
+                        object = this.createCrystalFormation(objectX, objectZ);
+                        if (object) this.crystalFormations.push(object);
+                        break;
                 }
                 
                 if (object) {
@@ -327,6 +345,14 @@ export class EnvironmentManager {
                 case 'small_plant':
                     object = this.createSmallPlant(centerX, centerZ);
                     if (object) this.smallPlants.push(object);
+                    break;
+                case 'waterfall':
+                    object = this.createWaterfall(centerX, centerZ);
+                    if (object) this.waterfalls.push(object);
+                    break;
+                case 'crystal_formation':
+                    object = this.createCrystalFormation(centerX, centerZ);
+                    if (object) this.crystalFormations.push(object);
                     break;
             }
             
