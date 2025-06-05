@@ -16,6 +16,22 @@ const require = createRequire(import.meta.url);
 const MinimapGenerator = require('./minimap-generator.js');
 
 /**
+ * Ensure map data has theme information for proper coloring
+ * @param {Object} mapData - The map data
+ * @param {Object} theme - The theme information
+ */
+function ensureMapThemeInfo(mapData, theme) {
+    if (!mapData.theme) {
+        mapData.theme = {
+            name: theme.name,
+            primaryZone: theme.primaryZone,
+            colors: theme.colors
+        };
+    }
+    return mapData;
+}
+
+/**
  * Generate all sample maps
  */
 async function generateAllSampleMaps() {

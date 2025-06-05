@@ -227,7 +227,9 @@ export class MapSelectorUI extends UIComponent {
         
         // Generate random map button (bottom button)
         const generateButton = this.element.querySelector('#generateRandomMap');
-        generateButton.addEventListener('click', () => this.generateRandomMap());
+        if (generateButton) {
+            generateButton.addEventListener('click', () => this.generateRandomMap());
+        }
         
         // Escape key to close
         document.addEventListener('keydown', (e) => {

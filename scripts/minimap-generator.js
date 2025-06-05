@@ -560,6 +560,39 @@ class MinimapGenerator {
      * Get color for zone type
      */
     getZoneColor(zoneType) {
+        // First check if we have theme-specific colors in the map data
+        if (this.mapData.theme && this.mapData.theme.colors) {
+            const themeColors = this.mapData.theme.colors;
+            
+            // Convert zone type to lowercase for case-insensitive matching
+            const zoneLower = zoneType.toLowerCase();
+            
+            // Check for direct matches in theme colors
+            if (zoneLower === 'forest' && themeColors.foliage) {
+                return themeColors.foliage;
+            } else if (zoneLower === 'mountains' && themeColors.snow) {
+                return themeColors.snow;
+            } else if (zoneLower === 'swamp' && themeColors.vegetation) {
+                return themeColors.vegetation;
+            } else if (zoneLower === 'desert' && themeColors.sand) {
+                return themeColors.sand;
+            } else if (zoneLower === 'ruins' && themeColors.stone) {
+                return themeColors.stone;
+            } else if (zoneLower === 'lava' && themeColors.lava) {
+                return themeColors.lava;
+            } else if (zoneLower === 'terrant' && themeColors.ground) {
+                return themeColors.ground;
+            }
+            
+            // If we have a primary color defined, use it for the main theme
+            if (this.mapData.theme.primaryZone && 
+                this.mapData.theme.primaryZone.toLowerCase() === zoneLower && 
+                themeColors.primary) {
+                return themeColors.primary;
+            }
+        }
+        
+        // Fallback to default colors if theme colors aren't available
         const colors = {
             'forest': '#1a5c1a',
             'mountains': '#6b6b6b',
@@ -568,16 +601,58 @@ class MinimapGenerator {
             'ruins': '#8c8c8c',
             'lava': '#8c3c00',
             'snow': '#e0e0e0',
+            'terrant': '#8F9779',
             'default': '#3c3c3c'
         };
         
-        return colors[zoneType] || colors.default;
+        // Convert to lowercase for case-insensitive matching
+        const zoneLower = zoneType.toLowerCase();
+        return colors[zoneLower] || colors.default;
     }
     
     /**
      * Get color for terrain type
      */
     getTerrainColor(terrainType, density = 1) {
+        // First check if we have theme-specific colors in the map data
+        if (this.mapData.theme && this.mapData.theme.colors) {
+            const themeColors = this.mapData.theme.colors;
+            
+            // Convert terrain type to lowercase for case-insensitive matching
+            const terrainLower = terrainType.toLowerCase();
+            
+            // Check for direct matches in theme colors
+            if (terrainLower === 'forest' && themeColors.foliage) {
+                return this.adjustColorBrightness(themeColors.foliage, density * 0.7 + 0.3);
+            } else if (terrainLower === 'mountains' && themeColors.snow) {
+                return this.adjustColorBrightness(themeColors.snow, density * 0.7 + 0.3);
+            } else if (terrainLower === 'water' && themeColors.water) {
+                return this.adjustColorBrightness(themeColors.water, density * 0.7 + 0.3);
+            } else if (terrainLower === 'lava' && themeColors.lava) {
+                return this.adjustColorBrightness(themeColors.lava, density * 0.7 + 0.3);
+            } else if (terrainLower === 'rocky' && themeColors.rock) {
+                return this.adjustColorBrightness(themeColors.rock, density * 0.7 + 0.3);
+            }
+            
+            // If we have a primary zone defined, use its color for the main terrain
+            if (this.mapData.theme.primaryZone) {
+                const primaryZone = this.mapData.theme.primaryZone.toLowerCase();
+                
+                if (primaryZone === 'forest' && themeColors.foliage) {
+                    return this.adjustColorBrightness(themeColors.foliage, density * 0.7 + 0.3);
+                } else if (primaryZone === 'mountains' && themeColors.snow) {
+                    return this.adjustColorBrightness(themeColors.snow, density * 0.7 + 0.3);
+                } else if (primaryZone === 'swamp' && themeColors.vegetation) {
+                    return this.adjustColorBrightness(themeColors.vegetation, density * 0.7 + 0.3);
+                } else if (primaryZone === 'desert' && themeColors.sand) {
+                    return this.adjustColorBrightness(themeColors.sand, density * 0.7 + 0.3);
+                } else if (primaryZone === 'ruins' && themeColors.stone) {
+                    return this.adjustColorBrightness(themeColors.stone, density * 0.7 + 0.3);
+                }
+            }
+        }
+        
+        // Fallback to default colors if theme colors aren't available
         const colors = {
             'forest': '#0d4d0d',
             'mountains': '#4d4d4d',
@@ -587,7 +662,9 @@ class MinimapGenerator {
             'default': '#3c3c3c'
         };
         
-        const baseColor = colors[terrainType] || colors.default;
+        // Convert to lowercase for case-insensitive matching
+        const terrainLower = terrainType.toLowerCase();
+        const baseColor = colors[terrainLower] || colors.default;
         
         // Adjust color based on density
         return this.adjustColorBrightness(baseColor, density * 0.7 + 0.3);

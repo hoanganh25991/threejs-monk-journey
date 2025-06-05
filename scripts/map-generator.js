@@ -463,11 +463,11 @@ class MapGenerator {
         
         this.mapData.zones.push(boundaryZone);
         
-        // Create a central zone
+        // Create a central zone that covers 70% of the map
         const centerZone = {
             name: theme.primaryZone,
             center: { x: 0, y: 0, z: 0 },
-            radius: boundaryHalfSize * 0.5, // Half the boundary half-size
+            radius: boundaryHalfSize * 0.7, // 70% of the map area
             color: theme.colors.ground || theme.colors.soil || theme.colors.sand
         };
         

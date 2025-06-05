@@ -1,0 +1,457 @@
+{
+  "maps": [
+    {
+      "id": "random_dark_forest_sparse_0",
+      "name": "Sparse Dark Forest",
+      "description": "Sparse variation of Dense forest with winding paths, hidden villages, and ancient towers",
+      "filename": "random_dark_forest_sparse_0.json",
+      "preview": "assets/maps/minimaps/random_dark_forest_sparse_0_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_dark_forest_sparse_0_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_dark_forest_sparse_0_256x256.png"
+        ]
+      },
+      "seed": 339949,
+      "mapSize": 1200,
+      "variation": "Sparse",
+      "stats": {
+        "zones": 18,
+        "structures": 31,
+        "paths": 32,
+        "environment": 29253
+      }
+    },
+    {
+      "id": "random_dark_forest_minimal_1",
+      "name": "Minimal Dark Forest",
+      "description": "Minimal variation of Dense forest with winding paths, hidden villages, and ancient towers",
+      "filename": "random_dark_forest_minimal_1.json",
+      "preview": "assets/maps/minimaps/random_dark_forest_minimal_1_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_dark_forest_minimal_1_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_dark_forest_minimal_1_256x256.png"
+        ]
+      },
+      "seed": 996378,
+      "mapSize": 1200,
+      "variation": "Minimal",
+      "stats": {
+        "zones": 21,
+        "structures": 32,
+        "paths": 34,
+        "environment": 29966
+      }
+    },
+    {
+      "id": "random_dark_forest_flooded_2",
+      "name": "Flooded Dark Forest",
+      "description": "Flooded variation of Dense forest with winding paths, hidden villages, and ancient towers",
+      "filename": "random_dark_forest_flooded_2.json",
+      "preview": "assets/maps/minimaps/random_dark_forest_flooded_2_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_dark_forest_flooded_2_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_dark_forest_flooded_2_256x256.png"
+        ]
+      },
+      "seed": 34322,
+      "mapSize": 1500,
+      "variation": "Flooded",
+      "stats": {
+        "zones": 24,
+        "structures": 32,
+        "paths": 31,
+        "environment": 37939
+      }
+    },
+    {
+      "id": "random_ancient_ruins_sparse_3",
+      "name": "Sparse Ancient Ruins",
+      "description": "Sparse variation of Vast archaeological site with connected ruins, overgrown paths, and forgotten towers",
+      "filename": "random_ancient_ruins_sparse_3.json",
+      "preview": "assets/maps/minimaps/random_ancient_ruins_sparse_3_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_ancient_ruins_sparse_3_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_ancient_ruins_sparse_3_256x256.png"
+        ]
+      },
+      "seed": 441229,
+      "mapSize": 800,
+      "variation": "Sparse",
+      "stats": {
+        "zones": 24,
+        "structures": 48,
+        "paths": 104,
+        "environment": 3006
+      }
+    },
+    {
+      "id": "random_frozen_mountains_extreme_4",
+      "name": "Extreme Frozen Mountains",
+      "description": "Extreme variation of Icy peaks with mountain villages, watchtowers, and treacherous paths",
+      "filename": "random_frozen_mountains_extreme_4.json",
+      "preview": "assets/maps/minimaps/random_frozen_mountains_extreme_4_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_frozen_mountains_extreme_4_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_frozen_mountains_extreme_4_256x256.png"
+        ]
+      },
+      "seed": 953924,
+      "mapSize": 1500,
+      "variation": "Extreme",
+      "stats": {
+        "zones": 21,
+        "structures": 37,
+        "paths": 33,
+        "environment": 11654
+      }
+    },
+    {
+      "id": "random_lava_zone_flooded_5",
+      "name": "Flooded Lava Zone",
+      "description": "Flooded variation of Volcanic landscape with lava flows, dark sanctums, and fire-resistant structures",
+      "filename": "random_lava_zone_flooded_5.json",
+      "preview": "assets/maps/minimaps/random_lava_zone_flooded_5_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_lava_zone_flooded_5_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_lava_zone_flooded_5_256x256.png"
+        ]
+      },
+      "seed": 204462,
+      "mapSize": 1000,
+      "variation": "Flooded",
+      "stats": {
+        "zones": 15,
+        "structures": 39,
+        "paths": 56,
+        "environment": 4824
+      }
+    },
+    {
+      "id": "random_dark_forest_fortified_6",
+      "name": "Fortified Dark Forest",
+      "description": "Fortified variation of Dense forest with winding paths, hidden villages, and ancient towers",
+      "filename": "random_dark_forest_fortified_6.json",
+      "preview": "assets/maps/minimaps/random_dark_forest_fortified_6_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_dark_forest_fortified_6_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_dark_forest_fortified_6_256x256.png"
+        ]
+      },
+      "seed": 169360,
+      "mapSize": 500,
+      "variation": "Fortified",
+      "stats": {
+        "zones": 20,
+        "structures": 32,
+        "paths": 88,
+        "environment": 12272
+      }
+    },
+    {
+      "id": "random_frozen_mountains_hybrid_7",
+      "name": "Hybrid Frozen Mountains",
+      "description": "Hybrid variation of Icy peaks with mountain villages, watchtowers, and treacherous paths",
+      "filename": "random_frozen_mountains_hybrid_7.json",
+      "preview": "assets/maps/minimaps/random_frozen_mountains_hybrid_7_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_frozen_mountains_hybrid_7_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_frozen_mountains_hybrid_7_256x256.png"
+        ]
+      },
+      "seed": 506998,
+      "mapSize": 1000,
+      "variation": "Hybrid",
+      "stats": {
+        "zones": 20,
+        "structures": 36,
+        "paths": 46,
+        "environment": 4936
+      }
+    },
+    {
+      "id": "random_mystical_swamp_flooded_8",
+      "name": "Flooded Mystical Swamp",
+      "description": "Flooded variation of Mysterious wetlands with floating bridges, ancient ruins, and hidden paths",
+      "filename": "random_mystical_swamp_flooded_8.json",
+      "preview": "assets/maps/minimaps/random_mystical_swamp_flooded_8_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_mystical_swamp_flooded_8_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_mystical_swamp_flooded_8_256x256.png"
+        ]
+      },
+      "seed": 633764,
+      "mapSize": 1200,
+      "variation": "Flooded",
+      "stats": {
+        "zones": 22,
+        "structures": 41,
+        "paths": 42,
+        "environment": 7383
+      }
+    },
+    {
+      "id": "random_frozen_mountains_fortified_9",
+      "name": "Fortified Frozen Mountains",
+      "description": "Fortified variation of Icy peaks with mountain villages, watchtowers, and treacherous paths",
+      "filename": "random_frozen_mountains_fortified_9.json",
+      "preview": "assets/maps/minimaps/random_frozen_mountains_fortified_9_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_frozen_mountains_fortified_9_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_frozen_mountains_fortified_9_256x256.png"
+        ]
+      },
+      "seed": 632483,
+      "mapSize": 1500,
+      "variation": "Fortified",
+      "stats": {
+        "zones": 22,
+        "structures": 37,
+        "paths": 37,
+        "environment": 11655
+      }
+    },
+    {
+      "id": "random_frozen_mountains_sparse_10",
+      "name": "Sparse Frozen Mountains",
+      "description": "Sparse variation of Icy peaks with mountain villages, watchtowers, and treacherous paths",
+      "filename": "random_frozen_mountains_sparse_10.json",
+      "preview": "assets/maps/minimaps/random_frozen_mountains_sparse_10_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_frozen_mountains_sparse_10_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_frozen_mountains_sparse_10_256x256.png"
+        ]
+      },
+      "seed": 14318,
+      "mapSize": 500,
+      "variation": "Sparse",
+      "stats": {
+        "zones": 23,
+        "structures": 37,
+        "paths": 109,
+        "environment": 1180
+      }
+    },
+    {
+      "id": "random_lava_zone_fortified_11",
+      "name": "Fortified Lava Zone",
+      "description": "Fortified variation of Volcanic landscape with lava flows, dark sanctums, and fire-resistant structures",
+      "filename": "random_lava_zone_fortified_11.json",
+      "preview": "assets/maps/minimaps/random_lava_zone_fortified_11_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_lava_zone_fortified_11_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_lava_zone_fortified_11_256x256.png"
+        ]
+      },
+      "seed": 83329,
+      "mapSize": 800,
+      "variation": "Fortified",
+      "stats": {
+        "zones": 20,
+        "structures": 39,
+        "paths": 69,
+        "environment": 3053
+      }
+    },
+    {
+      "id": "random_lava_zone_minimal_12",
+      "name": "Minimal Lava Zone",
+      "description": "Minimal variation of Volcanic landscape with lava flows, dark sanctums, and fire-resistant structures",
+      "filename": "random_lava_zone_minimal_12.json",
+      "preview": "assets/maps/minimaps/random_lava_zone_minimal_12_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_lava_zone_minimal_12_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_lava_zone_minimal_12_256x256.png"
+        ]
+      },
+      "seed": 462075,
+      "mapSize": 1500,
+      "variation": "Minimal",
+      "stats": {
+        "zones": 19,
+        "structures": 39,
+        "paths": 34,
+        "environment": 11526
+      }
+    },
+    {
+      "id": "random_dark_forest_fortified_13",
+      "name": "Fortified Dark Forest",
+      "description": "Fortified variation of Dense forest with winding paths, hidden villages, and ancient towers",
+      "filename": "random_dark_forest_fortified_13.json",
+      "preview": "assets/maps/minimaps/random_dark_forest_fortified_13_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/random_dark_forest_fortified_13_minimap.json",
+        "images": [
+          "assets/maps/minimaps/random_dark_forest_fortified_13_256x256.png"
+        ]
+      },
+      "seed": 169168,
+      "mapSize": 500,
+      "variation": "Fortified",
+      "stats": {
+        "zones": 18,
+        "structures": 31,
+        "paths": 80,
+        "environment": 12203
+      }
+    },
+    {
+      "id": "custom_volcanic_forest_0",
+      "name": "Volcanic Forest",
+      "description": "A forest gradually being consumed by volcanic activity",
+      "filename": "custom_volcanic_forest_0.json",
+      "preview": "assets/maps/minimaps/custom_volcanic_forest_0_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/custom_volcanic_forest_0_minimap.json",
+        "images": [
+          "assets/maps/minimaps/custom_volcanic_forest_0_256x256.png"
+        ]
+      },
+      "seed": 851943,
+      "mapSize": 500,
+      "customTheme": true,
+      "baseTheme": "DARK_FOREST",
+      "mixinTheme": "LAVA_ZONE",
+      "stats": {
+        "zones": 24,
+        "structures": 32,
+        "paths": 77,
+        "environment": 12180
+      }
+    },
+    {
+      "id": "custom_frozen_ruins_1",
+      "name": "Frozen Ruins",
+      "description": "Ancient ruins covered in ice and snow",
+      "filename": "custom_frozen_ruins_1.json",
+      "preview": "assets/maps/minimaps/custom_frozen_ruins_1_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/custom_frozen_ruins_1_minimap.json",
+        "images": [
+          "assets/maps/minimaps/custom_frozen_ruins_1_256x256.png"
+        ]
+      },
+      "seed": 17661,
+      "mapSize": 800,
+      "customTheme": true,
+      "baseTheme": "ANCIENT_RUINS",
+      "mixinTheme": "FROZEN_MOUNTAINS",
+      "stats": {
+        "zones": 15,
+        "structures": 48,
+        "paths": 96,
+        "environment": 2853
+      }
+    },
+    {
+      "id": "custom_swamp_sanctum_2",
+      "name": "Swamp Sanctum",
+      "description": "Dark sanctums rising from murky swamp waters",
+      "filename": "custom_swamp_sanctum_2.json",
+      "preview": "assets/maps/minimaps/custom_swamp_sanctum_2_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/custom_swamp_sanctum_2_minimap.json",
+        "images": [
+          "assets/maps/minimaps/custom_swamp_sanctum_2_256x256.png"
+        ]
+      },
+      "seed": 881847,
+      "mapSize": 1200,
+      "customTheme": true,
+      "baseTheme": "MYSTICAL_SWAMP",
+      "mixinTheme": "LAVA_ZONE",
+      "stats": {
+        "zones": 16,
+        "structures": 41,
+        "paths": 43,
+        "environment": 7390
+      }
+    },
+    {
+      "id": "custom_mountain_forest_3",
+      "name": "Mountain Forest",
+      "description": "Dense forests growing on steep mountain slopes",
+      "filename": "custom_mountain_forest_3.json",
+      "preview": "assets/maps/minimaps/custom_mountain_forest_3_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/custom_mountain_forest_3_minimap.json",
+        "images": [
+          "assets/maps/minimaps/custom_mountain_forest_3_256x256.png"
+        ]
+      },
+      "seed": 999960,
+      "mapSize": 1500,
+      "customTheme": true,
+      "baseTheme": "FROZEN_MOUNTAINS",
+      "mixinTheme": "DARK_FOREST",
+      "stats": {
+        "zones": 23,
+        "structures": 39,
+        "paths": 34,
+        "environment": 11974
+      }
+    },
+    {
+      "id": "custom_ruined_desert_4",
+      "name": "Ruined Desert",
+      "description": "Ancient ruins scattered across a vast desert landscape",
+      "filename": "custom_ruined_desert_4.json",
+      "preview": "assets/maps/minimaps/custom_ruined_desert_4_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/custom_ruined_desert_4_minimap.json",
+        "images": [
+          "assets/maps/minimaps/custom_ruined_desert_4_256x256.png"
+        ]
+      },
+      "seed": 658676,
+      "mapSize": 800,
+      "customTheme": true,
+      "baseTheme": "ANCIENT_RUINS",
+      "mixinTheme": "LAVA_ZONE",
+      "stats": {
+        "zones": 16,
+        "structures": 48,
+        "paths": 82,
+        "environment": 2885
+      }
+    },
+    {
+      "id": "custom_volcanic_forest_5",
+      "name": "Volcanic Forest",
+      "description": "A forest gradually being consumed by volcanic activity",
+      "filename": "custom_volcanic_forest_5.json",
+      "preview": "assets/maps/minimaps/custom_volcanic_forest_5_256x256.png",
+      "minimap": {
+        "data": "assets/maps/minimaps/custom_volcanic_forest_5_minimap.json",
+        "images": [
+          "assets/maps/minimaps/custom_volcanic_forest_5_256x256.png"
+        ]
+      },
+      "seed": 965449,
+      "mapSize": 500,
+      "customTheme": true,
+      "baseTheme": "DARK_FOREST",
+      "mixinTheme": "LAVA_ZONE",
+      "stats": {
+        "zones": 15,
+        "structures": 31,
+        "paths": 66,
+        "environment": 12382
+      }
+    }
+  ],
+  "generated": "2025-06-05T00:34:23.835Z"
+}

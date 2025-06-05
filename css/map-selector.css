@@ -20,9 +20,10 @@
 }
 
 .map-selector-modal {
-    background: var(--bg-primary, #2a2a2a);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0); /* Match skill-tree background */
+    border: 2px solid #8a6d3b; /* Match skill-tree border */
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7); /* Match skill-tree shadow */
     width: 100vw;
     height: 100vh;
     overflow: hidden;
@@ -40,21 +41,22 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    border-bottom: 1px solid var(--border-color, #444);
-    background: var(--bg-secondary, #333);
+    border-bottom: 1px solid #8a6d3b; /* Match skill-tree header border */
+    background-color: rgba(138, 109, 59, 0.3); /* Match skill-tree header background */
 }
 
 .map-selector-header h2 {
     margin: 0;
-    color: var(--text-primary, #fff);
-    font-size: 1.4rem;
-    font-weight: 600;
+    color: #ffcc00; /* Match skill-tree title color */
+    font-size: 24px;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(255, 204, 0, 0.5); /* Match skill-tree title shadow */
 }
 
 .close-button {
     background: none;
     border: none;
-    color: var(--text-secondary, #ccc);
+    color: #ccc; /* Match skill-tree text color */
     font-size: 24px;
     cursor: pointer;
     padding: 4px 8px;
@@ -63,8 +65,8 @@
 }
 
 .close-button:hover {
-    background: var(--bg-hover, #555);
-    color: var(--text-primary, #fff);
+    background: rgba(138, 109, 59, 0.3); /* Match skill-tree hover color */
+    color: #ffcc00; /* Match skill-tree accent color */
 }
 
 .map-selector-content {
@@ -84,19 +86,23 @@
 .map-list-container {
     flex: 0 0 30%;
     max-width: 30%;
-    border-right: 1px solid var(--border-color, #444);
+    border-right: 1px solid rgba(138, 109, 59, 0.5); /* Match skill-tree border */
     padding-right: 16px;
     height: 100%; /* Ensure it takes full height */
     display: flex;
     flex-direction: column;
+    overflow-y: auto; /* Changed from scroll to auto for better cross-browser behavior */
 }
 
 .map-list {
-    overflow-y: auto; /* Make only the list scrollable */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     flex: 1; /* Take remaining space */
     padding-right: 8px; /* Add some padding for the scrollbar */
     margin-right: -8px; /* Offset the padding */
     scrollbar-width: thin; /* For Firefox */
+    overflow-y: auto; /* Ensure the list itself is scrollable */
 }
 
 .map-detail-container {
@@ -106,6 +112,8 @@
     gap: 16px;
     overflow-y: auto; /* Allow scrolling if content is too tall */
     max-height: 100%; /* Limit to container height */
+    padding: var(--padding-large, 16px);
+    background-color: rgba(0, 0, 0, 0.6); /* Match skill-tree details background */
 }
 
 .map-list {
@@ -120,40 +128,104 @@
     gap: 12px;
     padding: 8px;
     border-radius: 8px;
-    background: var(--bg-secondary, #333);
-    border: 2px solid var(--border-color, #444);
+    background-color: rgba(0, 0, 0, 0.5); /* Match skill-tree node background */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Match skill-tree node border */
     cursor: pointer;
     transition: all 0.2s ease;
     margin-bottom: 8px;
 }
 
 .map-list-item:hover {
-    border-color: var(--accent-color, #4CAF50);
-    transform: translateX(2px);
+    background-color: rgba(30, 30, 30, 0.7); /* Match skill-tree node hover */
+    transform: translateY(-2px); /* Match skill-tree node hover transform */
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3); /* Match skill-tree node hover shadow */
 }
 
 .map-list-item.selected {
-    border-color: var(--accent-color, #4CAF50);
-    background: var(--bg-selected, #2a4a2a);
+    border: 1px solid #ffcc00; /* Match skill-tree selected item */
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.5); /* Match skill-tree selected item glow */
+    background-color: rgba(50, 40, 0, 0.3); /* Match skill-selection selected item */
 }
 
-/* Generate New Map button styling */
-.map-list-item.generate-new-map {
-    background: var(--bg-tertiary, #1a1a1a);
-    border: 2px dashed var(--accent-color, #4CAF50);
+/* Map action buttons container - for Return and Generate buttons */
+.map-action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     margin-bottom: 16px;
     position: sticky;
     top: 0;
     z-index: 5;
+    padding: 8px 0;
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
 }
 
-.map-list-item.generate-new-map:hover {
-    background: var(--bg-selected, #2a4a2a);
-    transform: translateX(2px) scale(1.02);
+/* Return to Procedural Map button */
+.return-to-map-button {
+    background-color: rgba(255, 204, 0, 0.7); /* Match settings-button */
+    color: #4a3000; /* Match settings-button */
+    border: 2px solid rgba(255, 230, 150, 0.8); /* Match settings-button */
+    padding: 8px 15px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+    position: relative;
+    overflow: hidden;
 }
 
-.map-list-item.generate-new-map .map-icon {
-    color: var(--accent-color, #4CAF50);
+.return-to-map-button:hover {
+    background-color: rgba(255, 215, 0, 0.8); /* Match settings-button hover */
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+}
+
+.return-to-map-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 -1px 2px rgba(139, 101, 0, 0.2);
+}
+
+/* Generate New Map button styling */
+.generate-new-map-button {
+    background-color: rgba(255, 204, 0, 0.7); /* Match settings-button */
+    color: #4a3000; /* Match settings-button */
+    border: 2px solid rgba(255, 230, 150, 0.8); /* Match settings-button */
+    padding: 8px 15px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.generate-new-map-button:hover {
+    background-color: rgba(255, 215, 0, 0.8); /* Match settings-button hover */
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+}
+
+.generate-new-map-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 -1px 2px rgba(139, 101, 0, 0.2);
+}
+
+.generate-new-map-button .map-icon,
+.return-to-map-button .map-icon {
+    color: #4a3000;
+    font-size: 1.2rem;
 }
 
 .map-list-preview {
@@ -166,7 +238,7 @@
 
 .map-list-name {
     font-weight: 500;
-    color: var(--text-primary, #fff);
+    color: #fff; /* Match skill-tree text color */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -174,20 +246,20 @@
 
 .current-map-info {
     padding: 12px;
-    background: var(--bg-tertiary, #1a1a1a);
+    background-color: rgba(20, 20, 20, 0.7); /* Match skill-tree background */
     border-radius: 8px;
-    border: 1px solid var(--border-color, #444);
+    border: 1px solid rgba(138, 109, 59, 0.5); /* Match skill-tree border */
 }
 
 .current-map-info h3 {
     margin: 0 0 8px 0;
-    color: var(--text-primary, #fff);
+    color: #ffcc00; /* Match skill-tree title color */
     font-size: 1.1rem;
 }
 
 .current-map-name {
     display: block;
-    color: var(--accent-color, #4CAF50);
+    color: #ffcc00; /* Match skill-tree accent color */
     font-weight: 600;
     font-size: 1rem;
     margin-bottom: 4px;
@@ -195,13 +267,13 @@
 
 .current-map-description {
     display: block;
-    color: var(--text-secondary, #ccc);
+    color: #ccc; /* Match skill-tree description color */
     font-size: 0.9rem;
     margin-bottom: 8px;
 }
 
 .current-map-stats {
-    color: var(--text-tertiary, #999);
+    color: #999; /* Match skill-tree tertiary text */
     font-size: 0.8rem;
 }
 
@@ -210,14 +282,14 @@
     flex-direction: column;
     gap: 16px;
     padding: 16px;
-    background: var(--bg-secondary, #333);
+    background-color: rgba(20, 20, 20, 0.7); /* Match skill-tree background */
     border-radius: 8px;
-    border: 1px solid var(--border-color, #444);
+    border: 1px solid rgba(138, 109, 59, 0.5); /* Match skill-tree border */
 }
 
 .selected-map-info h3 {
     margin: 0 0 8px 0;
-    color: var(--text-primary, #fff);
+    color: #ffcc00; /* Match skill-tree title color */
     font-size: 1.1rem;
 }
 
@@ -255,17 +327,18 @@
     justify-content: space-between;
     align-items: center;
     padding: 4px 8px;
-    background: var(--bg-tertiary, #1a1a1a);
+    background-color: rgba(30, 30, 30, 0.7); /* Match skill-tree background */
     border-radius: 4px;
+    border: 1px solid rgba(138, 109, 59, 0.3); /* Light border to match theme */
 }
 
 .stat-label {
-    color: var(--text-secondary, #ccc);
+    color: #ccc; /* Match skill-tree secondary text */
     font-size: 0.85rem;
 }
 
 .stat-value {
-    color: var(--text-primary, #fff);
+    color: #ffcc00; /* Match skill-tree accent color */
     font-weight: 500;
     font-size: 0.9rem;
 }
@@ -286,41 +359,55 @@
 
 .map-name {
     margin: 0;
-    color: var(--text-primary, #fff);
+    color: #ffcc00; /* Match skill-tree name color */
     font-size: 1.1rem;
     font-weight: 600;
 }
 
 .map-description {
     margin: 0;
-    color: var(--text-secondary, #ccc);
+    color: #ccc; /* Match skill-tree description color */
     font-size: 0.9rem;
     line-height: 1.4;
 }
 
 .load-map-button {
-    background: var(--accent-color, #4CAF50);
-    color: white;
-    border: none;
+    background-color: rgba(255, 204, 0, 0.7); /* Match settings-button */
+    color: #4a3000; /* Match settings-button */
+    border: 2px solid rgba(255, 230, 150, 0.8); /* Match settings-button */
     padding: 10px 16px;
-    border-radius: 4px;
+    border-radius: 15px;
     cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
     width: 100%;
     margin-top: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+    position: relative;
+    overflow: hidden;
 }
 
 .load-map-button:hover {
-    background: var(--accent-hover, #45a049);
-    transform: translateY(-1px);
+    background-color: rgba(255, 215, 0, 0.8); /* Match settings-button hover */
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+}
+
+.load-map-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 -1px 2px rgba(139, 101, 0, 0.2);
 }
 
 .load-map-button:disabled {
-    background: var(--bg-disabled, #666);
+    border-color: #3D3D3D;
+    color: #666;
     cursor: not-allowed;
+    box-shadow: none;
     transform: none;
+    background-color: rgba(100, 100, 100, 0.3);
 }
 
 .map-actions {
@@ -331,41 +418,61 @@
 
 .action-button {
     padding: 10px 16px;
-    border: none;
-    border-radius: 6px;
+    border-radius: 15px;
     cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
     flex: 1;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
 }
 
 .action-button.primary {
-    background: var(--accent-color, #4CAF50);
-    color: white;
+    background-color: rgba(255, 204, 0, 0.7); /* Match settings-button */
+    color: #4a3000; /* Match settings-button */
+    border: 2px solid rgba(255, 230, 150, 0.8); /* Match settings-button */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
 }
 
 .action-button.primary:hover {
-    background: var(--accent-hover, #45a049);
-    transform: translateY(-1px);
+    background-color: rgba(255, 215, 0, 0.8); /* Match settings-button hover */
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+}
+
+.action-button.primary:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 -1px 2px rgba(139, 101, 0, 0.2);
 }
 
 .action-button.secondary {
-    background: var(--bg-secondary, #333);
-    color: var(--text-primary, #fff);
-    border: 1px solid var(--border-color, #444);
+    background-color: rgba(138, 109, 59, 0.5); /* Match skill-tree button */
+    color: #fff;
+    border: 1px solid #8a6d3b;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .action-button.secondary:hover {
-    background: var(--bg-hover, #555);
-    border-color: var(--accent-color, #4CAF50);
+    background-color: rgba(138, 109, 59, 0.7);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.action-button.secondary:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .action-button:disabled {
-    background: var(--bg-disabled, #666);
-    color: var(--text-disabled, #999);
+    border-color: #3D3D3D;
+    color: #666;
     cursor: not-allowed;
+    box-shadow: none;
     transform: none;
+    background-color: rgba(100, 100, 100, 0.3);
 }
 
 .loading-overlay {
