@@ -3,6 +3,8 @@ import { Tree } from './Tree.js';
 import { Rock } from './Rock.js';
 import { Bush } from './Bush.js';
 import { Flower } from './Flower.js';
+import { TallGrass } from './TallGrass.js';
+import { AncientTree } from './AncientTree.js';
 import { RandomGenerator } from '../utils/RandomGenerator.js';
 
 /**
@@ -20,13 +22,15 @@ export class EnvironmentManager {
         this.visibleChunks = {}; // Empty object for compatibility with old system
         
         // Environment object types (no longer using config)
-        this.environmentObjectTypes = ['tree', 'rock', 'bush', 'flower'];
+        this.environmentObjectTypes = ['tree', 'rock', 'bush', 'flower', 'tall_grass', 'ancient_tree'];
         
         // For minimap functionality
         this.trees = [];
         this.rocks = [];
         this.bushes = [];
         this.flowers = [];
+        this.tallGrass = [];
+        this.ancientTrees = [];
         
         // Last player position for distance tracking
         this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
@@ -36,25 +40,31 @@ export class EnvironmentManager {
         
         // Natural grouping settings
         this.groupingProbabilities = {
-            'tree': 0.9,   // Increased from 80% to 90% chance that trees will be in groups
-            'rock': 0.6,   // 60% chance that rocks will be in groups
-            'bush': 0.7,   // 70% chance that bushes will be in groups
-            'flower': 0.9   // 90% chance that flowers will be in groups
+            'tree': 0.9,        // Increased from 80% to 90% chance that trees will be in groups
+            'rock': 0.6,        // 60% chance that rocks will be in groups
+            'bush': 0.7,        // 70% chance that bushes will be in groups
+            'flower': 0.9,      // 90% chance that flowers will be in groups
+            'tall_grass': 0.95, // 95% chance that tall grass will be in groups
+            'ancient_tree': 0.1 // 10% chance that ancient trees will be in groups (usually solitary)
         };
         
         this.groupSizes = {
-            'tree': { min: 10, max: 30 },   // Increased from 6-24 to 10-30 for more visible tree groups
-            'rock': { min: 2, max: 6 },     // Rocks come in groups of 2-6
-            'bush': { min: 3, max: 10 },    // Increased from 2-8 to 3-10
-            'flower': { min: 5, max: 15 }   // Flowers come in groups of 5-15
+            'tree': { min: 10, max: 30 },      // Increased from 6-24 to 10-30 for more visible tree groups
+            'rock': { min: 2, max: 6 },        // Rocks come in groups of 2-6
+            'bush': { min: 3, max: 10 },       // Increased from 2-8 to 3-10
+            'flower': { min: 5, max: 15 },     // Flowers come in groups of 5-15
+            'tall_grass': { min: 8, max: 20 }, // Tall grass comes in patches of 8-20
+            'ancient_tree': { min: 1, max: 3 } // Ancient trees are usually solitary, max 3
         };
         
         // Group spread determines how tightly packed the groups are
         this.groupSpread = {
-            'tree': 12,     // Increased from 8 to 12 to spread trees more
-            'rock': 5,      // Rocks spread up to 5 units from center
-            'bush': 6,      // Bushes spread up to 6 units from center
-            'flower': 4     // Flowers spread up to 4 units from center
+            'tree': 12,        // Increased from 8 to 12 to spread trees more
+            'rock': 5,         // Rocks spread up to 5 units from center
+            'bush': 6,         // Bushes spread up to 6 units from center
+            'flower': 4,       // Flowers spread up to 4 units from center
+            'tall_grass': 8,   // Tall grass spreads up to 8 units from center
+            'ancient_tree': 20 // Ancient trees spread up to 20 units from center (when grouped)
         };
         
         // Create some initial environment objects
@@ -245,6 +255,14 @@ export class EnvironmentManager {
                         object = this.createFlower(objectX, objectZ);
                         if (object) this.flowers.push(object);
                         break;
+                    case 'tall_grass':
+                        object = this.createTallGrass(objectX, objectZ);
+                        if (object) this.tallGrass.push(object);
+                        break;
+                    case 'ancient_tree':
+                        object = this.createAncientTree(objectX, objectZ);
+                        if (object) this.ancientTrees.push(object);
+                        break;
                 }
                 
                 if (object) {
@@ -281,6 +299,14 @@ export class EnvironmentManager {
                 case 'flower':
                     object = this.createFlower(centerX, centerZ);
                     if (object) this.flowers.push(object);
+                    break;
+                case 'tall_grass':
+                    object = this.createTallGrass(centerX, centerZ);
+                    if (object) this.tallGrass.push(object);
+                    break;
+                case 'ancient_tree':
+                    object = this.createAncientTree(centerX, centerZ);
+                    if (object) this.ancientTrees.push(object);
                     break;
             }
             
@@ -553,6 +579,30 @@ export class EnvironmentManager {
                 case 'flower':
                     object = this.createFlower(x, z);
                     break;
+                case 'tall_grass':
+                    object = this.createTallGrass(x, z);
+                    break;
+                case 'ancient_tree':
+                    object = this.createAncientTree(x, z);
+                    break;
+                case 'small_plant':
+                    object = this.createSmallPlant(x, z);
+                    break;
+                case 'fallen_log':
+                    object = this.createFallenLog(x, z);
+                    break;
+                case 'mushroom':
+                    object = this.createMushroom(x, z);
+                    break;
+                case 'rock_formation':
+                    object = this.createRockFormation(x, z);
+                    break;
+                case 'shrine':
+                    object = this.createShrine(x, z);
+                    break;
+                case 'stump':
+                    object = this.createStump(x, z);
+                    break;
             }
             
             if (object) {
@@ -674,6 +724,254 @@ export class EnvironmentManager {
         this.scene.add(flowerGroup);
         
         return flowerGroup;
+    }
+
+    /**
+     * Create tall grass at the specified position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @param {string} zoneType - The type of zone (Forest, Desert, etc.)
+     * @returns {THREE.Group} - The tall grass group
+     */
+    createTallGrass(x, z, zoneType = 'Forest') {
+        const tallGrass = new TallGrass(zoneType);
+        const grassGroup = tallGrass.createMesh();
+        
+        // Position tall grass on terrain
+        grassGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(grassGroup);
+        
+        return grassGroup;
+    }
+
+    /**
+     * Create an ancient tree at the specified position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @param {string} zoneType - The type of zone (Forest, Desert, etc.)
+     * @returns {THREE.Group} - The ancient tree group
+     */
+    createAncientTree(x, z, zoneType = 'Forest') {
+        const ancientTree = new AncientTree(zoneType);
+        const treeGroup = ancientTree.createMesh();
+        
+        // Position ancient tree on terrain
+        treeGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(treeGroup);
+        
+        return treeGroup;
+    }
+
+    /**
+     * Create a small plant at the specified position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @returns {THREE.Group} - The small plant group
+     */
+    createSmallPlant(x, z) {
+        // Create a simple small plant using a scaled-down bush
+        const bush = new Bush();
+        const plantGroup = bush.createMesh();
+        
+        // Scale it down to make it a small plant
+        plantGroup.scale.set(0.3, 0.3, 0.3);
+        
+        // Position on terrain
+        plantGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(plantGroup);
+        
+        return plantGroup;
+    }
+
+    /**
+     * Create a fallen log at the specified position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @returns {THREE.Group} - The fallen log group
+     */
+    createFallenLog(x, z) {
+        const logGroup = new THREE.Group();
+        
+        // Create a horizontal cylinder for the log
+        const logGeometry = new THREE.CylinderGeometry(0.3, 0.4, 4, 8);
+        const logMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+        const log = new THREE.Mesh(logGeometry, logMaterial);
+        
+        // Rotate to make it horizontal
+        log.rotation.z = Math.PI / 2;
+        log.rotation.y = Math.random() * Math.PI * 2;
+        
+        // Position on terrain
+        log.position.y = 0.2;
+        log.castShadow = true;
+        log.receiveShadow = true;
+        
+        logGroup.add(log);
+        logGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(logGroup);
+        
+        return logGroup;
+    }
+
+    /**
+     * Create a mushroom at the specified position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @returns {THREE.Group} - The mushroom group
+     */
+    createMushroom(x, z) {
+        const mushroomGroup = new THREE.Group();
+        
+        // Stem
+        const stemGeometry = new THREE.CylinderGeometry(0.05, 0.08, 0.4, 6);
+        const stemMaterial = new THREE.MeshLambertMaterial({ color: 0xF5DEB3 });
+        const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+        stem.position.y = 0.2;
+        
+        // Cap
+        const capGeometry = new THREE.SphereGeometry(0.2, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2);
+        const capColors = [0x8B4513, 0xA0522D, 0xCD853F, 0xD2691E, 0xFF6347];
+        const capColor = capColors[Math.floor(Math.random() * capColors.length)];
+        const capMaterial = new THREE.MeshLambertMaterial({ color: capColor });
+        const cap = new THREE.Mesh(capGeometry, capMaterial);
+        cap.position.y = 0.4;
+        
+        mushroomGroup.add(stem);
+        mushroomGroup.add(cap);
+        
+        // Position on terrain
+        mushroomGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(mushroomGroup);
+        
+        return mushroomGroup;
+    }
+
+    /**
+     * Create a rock formation at the specified position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @returns {THREE.Group} - The rock formation group
+     */
+    createRockFormation(x, z) {
+        const formationGroup = new THREE.Group();
+        
+        // Create multiple rocks in a formation
+        const rockCount = 3 + Math.floor(Math.random() * 4);
+        
+        for (let i = 0; i < rockCount; i++) {
+            const rock = new Rock();
+            const rockMesh = rock.createMesh();
+            
+            // Position rocks in a cluster
+            const angle = (i / rockCount) * Math.PI * 2;
+            const distance = Math.random() * 2;
+            rockMesh.position.x = Math.cos(angle) * distance;
+            rockMesh.position.z = Math.sin(angle) * distance;
+            
+            // Vary the scale
+            const scale = 0.8 + Math.random() * 0.6;
+            rockMesh.scale.set(scale, scale, scale);
+            
+            formationGroup.add(rockMesh);
+        }
+        
+        // Position on terrain
+        formationGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(formationGroup);
+        
+        return formationGroup;
+    }
+
+    /**
+     * Create a shrine at the specified position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @returns {THREE.Group} - The shrine group
+     */
+    createShrine(x, z) {
+        const shrineGroup = new THREE.Group();
+        
+        // Base
+        const baseGeometry = new THREE.CylinderGeometry(1, 1.2, 0.3, 8);
+        const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x696969 });
+        const base = new THREE.Mesh(baseGeometry, baseMaterial);
+        base.position.y = 0.15;
+        
+        // Pillar
+        const pillarGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1.5, 8);
+        const pillarMaterial = new THREE.MeshLambertMaterial({ color: 0x808080 });
+        const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+        pillar.position.y = 1.05;
+        
+        // Top ornament
+        const ornamentGeometry = new THREE.SphereGeometry(0.3, 8, 6);
+        const ornamentMaterial = new THREE.MeshLambertMaterial({ 
+            color: 0xFFD700,
+            emissive: 0xFFD700,
+            emissiveIntensity: 0.1
+        });
+        const ornament = new THREE.Mesh(ornamentGeometry, ornamentMaterial);
+        ornament.position.y = 1.8;
+        
+        shrineGroup.add(base);
+        shrineGroup.add(pillar);
+        shrineGroup.add(ornament);
+        
+        // Position on terrain
+        shrineGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(shrineGroup);
+        
+        return shrineGroup;
+    }
+
+    /**
+     * Create a stump at the specified position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @returns {THREE.Group} - The stump group
+     */
+    createStump(x, z) {
+        const stumpGroup = new THREE.Group();
+        
+        // Main stump
+        const stumpGeometry = new THREE.CylinderGeometry(0.6, 0.8, 0.8, 8);
+        const stumpMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+        const stump = new THREE.Mesh(stumpGeometry, stumpMaterial);
+        stump.position.y = 0.4;
+        
+        // Add some texture with rings
+        const ringGeometry = new THREE.CylinderGeometry(0.65, 0.65, 0.05, 8);
+        const ringMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
+        
+        for (let i = 0; i < 3; i++) {
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            ring.position.y = 0.2 + i * 0.2;
+            stumpGroup.add(ring);
+        }
+        
+        stumpGroup.add(stump);
+        
+        // Position on terrain
+        stumpGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
+        
+        // Add to scene
+        this.scene.add(stumpGroup);
+        
+        return stumpGroup;
     }
     
     /**

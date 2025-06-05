@@ -1121,6 +1121,38 @@ export class MapLoader {
                 envObject = environmentManager.createFlower(position.x, position.z);
                 break;
                 
+            case 'tall_grass':
+                envObject = environmentManager.createTallGrass(position.x, position.z);
+                break;
+                
+            case 'ancient_tree':
+                envObject = environmentManager.createAncientTree(position.x, position.z);
+                break;
+                
+            case 'small_plant':
+                envObject = environmentManager.createSmallPlant(position.x, position.z);
+                break;
+                
+            case 'fallen_log':
+                envObject = environmentManager.createFallenLog(position.x, position.z);
+                break;
+                
+            case 'mushroom':
+                envObject = environmentManager.createMushroom(position.x, position.z);
+                break;
+                
+            case 'rock_formation':
+                envObject = environmentManager.createRockFormation(position.x, position.z);
+                break;
+                
+            case 'shrine':
+                envObject = environmentManager.createShrine(position.x, position.z);
+                break;
+                
+            case 'stump':
+                envObject = environmentManager.createStump(position.x, position.z);
+                break;
+                
             case 'mountain':
                 envObject = this.worldManager.structureManager.createMountain(position.x, position.z);
                 break;
@@ -1131,6 +1163,31 @@ export class MapLoader {
                 
             case 'lava':
                 envObject = this.createLavaFeature(position, envData.size || 5);
+                break;
+                
+            case 'tree_cluster':
+                envObject = this.createTreeCluster(envData);
+                break;
+                
+            // Handle special/magical environment objects
+            case 'crystal_formation':
+                envObject = this.createCrystalFormation(position, envData.size || 3);
+                break;
+                
+            case 'rare_plant':
+                envObject = this.createRarePlant(position, envData.size || 1);
+                break;
+                
+            case 'magical_stone':
+                envObject = this.createMagicalStone(position, envData.size || 2);
+                break;
+                
+            case 'ancient_artifact':
+                envObject = this.createAncientArtifact(position, envData.size || 2);
+                break;
+                
+            case 'moss':
+                envObject = this.createMoss(position, envData.size || 1);
                 break;
                 
             default:
@@ -1201,6 +1258,72 @@ export class MapLoader {
         this.scene.add(lava);
         
         return lava;
+    }
+
+    /**
+     * Create a tree cluster from map data
+     * @param {Object} clusterData - Tree cluster configuration
+     * @returns {THREE.Group} - Tree cluster group
+     */
+    createTreeCluster(clusterData) {
+        const clusterGroup = new THREE.Group();
+        const position = clusterData.position;
+        const environmentManager = this.worldManager.environmentManager;
+        
+        // Set cluster position
+        clusterGroup.position.set(position.x, position.y || 0, position.z);
+        
+        // Create individual trees based on the cluster data
+        if (clusterData.trees && clusterData.trees.length > 0) {
+            // Use the stored tree positions from the map data
+            clusterData.trees.forEach(treeData => {
+                const tree = environmentManager.createTree(
+                    treeData.relativePosition.x,
+                    treeData.relativePosition.z,
+                    clusterData.theme || 'Forest',
+                    treeData.size || 1.0
+                );
+                
+                // Position is relative to cluster center
+                tree.position.set(
+                    treeData.relativePosition.x,
+                    treeData.relativePosition.y || 0,
+                    treeData.relativePosition.z
+                );
+                
+                clusterGroup.add(tree);
+            });
+        } else {
+            // Fallback: create trees in a circular pattern if no tree data is provided
+            const treeCount = clusterData.treeCount || 5;
+            const radius = clusterData.radius || 10;
+            
+            for (let i = 0; i < treeCount; i++) {
+                const angle = (i / treeCount) * Math.PI * 2;
+                const distance = Math.random() * radius;
+                const x = Math.cos(angle) * distance;
+                const z = Math.sin(angle) * distance;
+                
+                const tree = environmentManager.createTree(
+                    position.x + x,
+                    position.z + z,
+                    clusterData.theme || 'Forest',
+                    clusterData.avgSize || 1.0
+                );
+                
+                tree.position.set(x, 0, z);
+                clusterGroup.add(tree);
+            }
+        }
+        
+        clusterGroup.userData = {
+            type: 'tree_cluster',
+            theme: clusterData.theme,
+            treeCount: clusterData.treeCount
+        };
+        
+        this.scene.add(clusterGroup);
+        return clusterGroup;
     }
 
     /**
