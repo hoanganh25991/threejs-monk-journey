@@ -22,7 +22,10 @@ export class EnvironmentManager {
         this.visibleChunks = {}; // Empty object for compatibility with old system
         
         // Environment object types (no longer using config)
-        this.environmentObjectTypes = ['tree', 'rock', 'bush', 'flower', 'tall_grass', 'ancient_tree'];
+        this.environmentObjectTypes = [
+            'tree', 'rock', 'bush', 'flower', 'tall_grass', 'ancient_tree', 'small_plant',
+            'fallen_log', 'mushroom', 'rock_formation', 'shrine', 'stump'
+        ];
         
         // For minimap functionality
         this.trees = [];
@@ -31,6 +34,12 @@ export class EnvironmentManager {
         this.flowers = [];
         this.tallGrass = [];
         this.ancientTrees = [];
+        this.smallPlants = [];
+        this.fallenLogs = [];
+        this.mushrooms = [];
+        this.rockFormations = [];
+        this.shrines = [];
+        this.stumps = [];
         
         // Last player position for distance tracking
         this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
@@ -45,7 +54,8 @@ export class EnvironmentManager {
             'bush': 0.7,        // 70% chance that bushes will be in groups
             'flower': 0.9,      // 90% chance that flowers will be in groups
             'tall_grass': 0.95, // 95% chance that tall grass will be in groups
-            'ancient_tree': 0.1 // 10% chance that ancient trees will be in groups (usually solitary)
+            'ancient_tree': 0.1, // 10% chance that ancient trees will be in groups (usually solitary)
+            'small_plant': 0.85 // 85% chance that small plants will be in groups
         };
         
         this.groupSizes = {
@@ -54,7 +64,8 @@ export class EnvironmentManager {
             'bush': { min: 3, max: 10 },       // Increased from 2-8 to 3-10
             'flower': { min: 5, max: 15 },     // Flowers come in groups of 5-15
             'tall_grass': { min: 8, max: 20 }, // Tall grass comes in patches of 8-20
-            'ancient_tree': { min: 1, max: 3 } // Ancient trees are usually solitary, max 3
+            'ancient_tree': { min: 1, max: 3 }, // Ancient trees are usually solitary, max 3
+            'small_plant': { min: 6, max: 18 } // Small plants come in groups of 6-18
         };
         
         // Group spread determines how tightly packed the groups are
@@ -64,7 +75,8 @@ export class EnvironmentManager {
             'bush': 6,         // Bushes spread up to 6 units from center
             'flower': 4,       // Flowers spread up to 4 units from center
             'tall_grass': 8,   // Tall grass spreads up to 8 units from center
-            'ancient_tree': 20 // Ancient trees spread up to 20 units from center (when grouped)
+            'ancient_tree': 20, // Ancient trees spread up to 20 units from center (when grouped)
+            'small_plant': 5   // Small plants spread up to 5 units from center
         };
         
         // Create some initial environment objects
@@ -263,6 +275,10 @@ export class EnvironmentManager {
                         object = this.createAncientTree(objectX, objectZ);
                         if (object) this.ancientTrees.push(object);
                         break;
+                    case 'small_plant':
+                        object = this.createSmallPlant(objectX, objectZ);
+                        if (object) this.smallPlants.push(object);
+                        break;
                 }
                 
                 if (object) {
@@ -307,6 +323,10 @@ export class EnvironmentManager {
                 case 'ancient_tree':
                     object = this.createAncientTree(centerX, centerZ);
                     if (object) this.ancientTrees.push(object);
+                    break;
+                case 'small_plant':
+                    object = this.createSmallPlant(centerX, centerZ);
+                    if (object) this.smallPlants.push(object);
                     break;
             }
             
@@ -786,6 +806,9 @@ export class EnvironmentManager {
         // Add to scene
         this.scene.add(plantGroup);
         
+        // Add to tracking array
+        this.smallPlants.push(plantGroup);
+        
         return plantGroup;
     }
 
@@ -817,6 +840,9 @@ export class EnvironmentManager {
         
         // Add to scene
         this.scene.add(logGroup);
+        
+        // Add to tracking array
+        this.fallenLogs.push(logGroup);
         
         return logGroup;
     }
@@ -852,6 +878,9 @@ export class EnvironmentManager {
         
         // Add to scene
         this.scene.add(mushroomGroup);
+        
+        // Add to tracking array
+        this.mushrooms.push(mushroomGroup);
         
         return mushroomGroup;
     }
@@ -890,6 +919,9 @@ export class EnvironmentManager {
         
         // Add to scene
         this.scene.add(formationGroup);
+        
+        // Add to tracking array
+        this.rockFormations.push(formationGroup);
         
         return formationGroup;
     }
@@ -935,6 +967,9 @@ export class EnvironmentManager {
         // Add to scene
         this.scene.add(shrineGroup);
         
+        // Add to tracking array
+        this.shrines.push(shrineGroup);
+        
         return shrineGroup;
     }
 
@@ -971,6 +1006,9 @@ export class EnvironmentManager {
         // Add to scene
         this.scene.add(stumpGroup);
         
+        // Add to tracking array
+        this.stumps.push(stumpGroup);
+        
         return stumpGroup;
     }
     
@@ -990,6 +1028,20 @@ export class EnvironmentManager {
         // Reset collections
         this.environmentObjects = {};
         this.visibleChunks = {};
+        
+        // Reset tracking arrays
+        this.trees = [];
+        this.rocks = [];
+        this.bushes = [];
+        this.flowers = [];
+        this.tallGrass = [];
+        this.ancientTrees = [];
+        this.smallPlants = [];
+        this.fallenLogs = [];
+        this.mushrooms = [];
+        this.rockFormations = [];
+        this.shrines = [];
+        this.stumps = [];
     }
     
     /**

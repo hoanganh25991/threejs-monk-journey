@@ -1149,6 +1149,40 @@ export class ChunkedMapLoader {
                 envObject = this.worldManager.structureManager.createMountain(position.x, position.z);
                 break;
                 
+            case 'tree_cluster':
+                envObject = this.createTreeCluster(envData);
+                break;
+                
+            case 'small_plant':
+                envObject = environmentManager.createSmallPlant(position.x, position.z);
+                break;
+                
+            case 'water':
+                // For now, we'll skip water objects as they require special handling
+                // This prevents the warning from appearing in the console
+                console.debug(`Skipping water object at position (${position.x}, ${position.z})`);
+                break;
+                
+            case 'fallen_log':
+                envObject = environmentManager.createFallenLog(position.x, position.z);
+                break;
+                
+            case 'mushroom':
+                envObject = environmentManager.createMushroom(position.x, position.z);
+                break;
+                
+            case 'rock_formation':
+                envObject = environmentManager.createRockFormation(position.x, position.z);
+                break;
+                
+            case 'shrine':
+                envObject = environmentManager.createShrine(position.x, position.z);
+                break;
+                
+            case 'stump':
+                envObject = environmentManager.createStump(position.x, position.z);
+                break;
+                
             default:
                 console.warn(`Unknown environment object type: ${envData.type}`);
         }
@@ -1161,6 +1195,72 @@ export class ChunkedMapLoader {
         }
         
         return envObject;
+    }
+    
+    /**
+     * Create a cluster of trees at the specified position
+     * @param {Object} clusterData - Data for the tree cluster
+     * @returns {THREE.Group} - Group containing the tree cluster
+     */
+    createTreeCluster(clusterData) {
+        const clusterGroup = new THREE.Group();
+        const position = clusterData.position;
+        const environmentManager = this.worldManager.environmentManager;
+        
+        // Set cluster position
+        clusterGroup.position.set(position.x, position.y || 0, position.z);
+        
+        // Create individual trees based on the cluster data
+        if (clusterData.trees && clusterData.trees.length > 0) {
+            // Use the stored tree positions from the map data
+            clusterData.trees.forEach(treeData => {
+                const tree = environmentManager.createTree(
+                    treeData.relativePosition.x,
+                    treeData.relativePosition.z,
+                    clusterData.theme || 'Forest',
+                    treeData.size || 1.0
+                );
+                
+                // Position is relative to cluster center
+                tree.position.set(
+                    treeData.relativePosition.x,
+                    treeData.relativePosition.y || 0,
+                    treeData.relativePosition.z
+                );
+                
+                clusterGroup.add(tree);
+            });
+        } else {
+            // Fallback: create trees in a circular pattern if no tree data is provided
+            const treeCount = clusterData.treeCount || 5;
+            const radius = clusterData.radius || 10;
+            
+            for (let i = 0; i < treeCount; i++) {
+                const angle = (i / treeCount) * Math.PI * 2;
+                const distance = Math.random() * radius;
+                const x = Math.cos(angle) * distance;
+                const z = Math.sin(angle) * distance;
+                
+                const tree = environmentManager.createTree(
+                    position.x + x,
+                    position.z + z,
+                    clusterData.theme || 'Forest',
+                    clusterData.avgSize || 1.0
+                );
+                
+                tree.position.set(x, 0, z);
+                clusterGroup.add(tree);
+            }
+        }
+        
+        clusterGroup.userData = {
+            type: 'tree_cluster',
+            theme: clusterData.theme,
+            treeCount: clusterData.treeCount
+        };
+        
+        this.scene.add(clusterGroup);
+        return clusterGroup;
     }
 
     /**
