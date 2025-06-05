@@ -887,6 +887,11 @@ export class WorldManager {
      * @param {THREE.Vector3} playerPosition - Current player position
      */
     generatePathSegment(playerPosition) {
+        // Don't generate procedural paths if map paths are loaded
+        if (this.mapPathsLoaded) {
+            return;
+        }
+        
         // Check if player has moved far enough to generate a new path segment
         const distanceMoved = playerPosition.distanceTo(this.lastPathGenerationPosition);
         
@@ -1091,6 +1096,76 @@ export class WorldManager {
             // Generate tree
             this.environmentManager.generateRandomObject(new THREE.Vector3(finalX, 0, finalZ));
         }
+    }
+    
+    /**
+     * Get all available paths (both procedural and loaded map paths)
+     * @returns {Array} Array of path objects
+     */
+    getAllPaths() {
+        const allPaths = [];
+        
+        // Add procedural paths
+        this.paths.forEach((pathMesh, index) => {
+            if (pathMesh && pathMesh.userData) {
+                allPaths.push({
+                    id: `procedural_${index}`,
+                    type: 'procedural',
+                    mesh: pathMesh,
+                    isMapPath: false
+                });
+            }
+        });
+        
+        // Add loaded map paths
+        if (this.loadedMapPaths) {
+            this.loadedMapPaths.forEach(mapPath => {
+                allPaths.push({
+                    id: mapPath.id,
+                    type: mapPath.type,
+                    points: mapPath.points,
+                    width: mapPath.width,
+                    pathGroup: mapPath.pathGroup,
+                    isMapPath: true
+                });
+            });
+        }
+        
+        return allPaths;
+    }
+    
+    /**
+     * Get the nearest path to a given position
+     * @param {THREE.Vector3} position - Position to check
+     * @param {number} maxDistance - Maximum distance to search (default: 50)
+     * @returns {Object|null} Nearest path object or null if none found
+     */
+    getNearestPath(position, maxDistance = 50) {
+        const allPaths = this.getAllPaths();
+        let nearestPath = null;
+        let nearestDistance = maxDistance;
+        
+        allPaths.forEach(path => {
+            if (path.isMapPath && path.points) {
+                // For map paths, check distance to each point
+                path.points.forEach(point => {
+                    const distance = position.distanceTo(point);
+                    if (distance < nearestDistance) {
+                        nearestDistance = distance;
+                        nearestPath = path;
+                    }
+                });
+            } else if (path.mesh && path.mesh.position) {
+                // For procedural paths, check distance to mesh position
+                const distance = position.distanceTo(path.mesh.position);
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestPath = path;
+                }
+            }
+        });
+        
+        return nearestPath;
     }
     
     /**

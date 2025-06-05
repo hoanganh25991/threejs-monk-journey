@@ -88,6 +88,9 @@ export class MapLoader {
             this.worldManager.zoneManager.setThemeColors(null);
         }
         
+        // Clear existing procedural paths from WorldManager
+        this.clearProceduralPaths();
+        
         // Clear our tracked objects
         this.loadedObjects.forEach(obj => {
             if (obj.parent) {
@@ -95,6 +98,55 @@ export class MapLoader {
             }
         });
         this.loadedObjects = [];
+    }
+
+    /**
+     * Clear procedural paths from WorldManager
+     */
+    clearProceduralPaths() {
+        if (this.worldManager.paths && this.worldManager.paths.length > 0) {
+            console.log(`Clearing ${this.worldManager.paths.length} procedural paths...`);
+            
+            // Remove all procedural path meshes from scene
+            this.worldManager.paths.forEach(pathMesh => {
+                if (pathMesh && pathMesh.parent) {
+                    this.scene.remove(pathMesh);
+                }
+                // Dispose of geometry and material to free memory
+                if (pathMesh.geometry) {
+                    pathMesh.geometry.dispose();
+                }
+                if (pathMesh.material) {
+                    if (Array.isArray(pathMesh.material)) {
+                        pathMesh.material.forEach(mat => mat.dispose());
+                    } else {
+                        pathMesh.material.dispose();
+                    }
+                }
+            });
+            
+            // Clear the paths array
+            this.worldManager.paths = [];
+        }
+        
+        // Clear loaded map paths
+        if (this.worldManager.loadedMapPaths && this.worldManager.loadedMapPaths.length > 0) {
+            console.log(`Clearing ${this.worldManager.loadedMapPaths.length} loaded map paths...`);
+            this.worldManager.loadedMapPaths = [];
+        }
+        
+        // Clear path nodes to prevent future connections
+        if (this.worldManager.pathNodes) {
+            this.worldManager.pathNodes = [];
+        }
+        
+        // Reset path generation position to prevent immediate regeneration
+        if (this.worldManager.lastPathGenerationPosition) {
+            this.worldManager.lastPathGenerationPosition.set(0, 0, 0);
+        }
+        
+        // Re-enable procedural path generation for when returning to procedural maps
+        this.enableProceduralPathGeneration();
     }
 
     /**
@@ -173,9 +225,17 @@ export class MapLoader {
     async loadPaths(paths) {
         console.log(`Loading ${paths.length} paths...`);
         
+        // Disable procedural path generation while loading map paths
+        this.disableProceduralPathGeneration();
+        
         paths.forEach(pathData => {
-            this.createPath(pathData);
+            const pathGroup = this.createPath(pathData);
+            
+            // Register path points with WorldManager for navigation and AI
+            this.registerPathWithWorldManager(pathData, pathGroup);
         });
+        
+        console.log(`Loaded ${paths.length} map paths successfully`);
     }
 
     /**
@@ -253,6 +313,8 @@ export class MapLoader {
         
         this.scene.add(pathGroup);
         this.loadedObjects.push(pathGroup);
+        
+        return pathGroup;
     }
 
     /**
@@ -320,6 +382,82 @@ export class MapLoader {
         geometry.computeVertexNormals();
         
         return geometry;
+    }
+
+    /**
+     * Disable procedural path generation to prevent conflicts with loaded paths
+     */
+    disableProceduralPathGeneration() {
+        if (this.worldManager) {
+            // Set a flag to indicate that map paths are loaded
+            this.worldManager.mapPathsLoaded = true;
+            
+            // Increase the path generation distance to effectively disable it
+            this.worldManager.originalPathGenerationDistance = this.worldManager.pathGenerationDistance;
+            this.worldManager.pathGenerationDistance = Number.MAX_SAFE_INTEGER;
+            
+            console.log('Procedural path generation disabled - using map paths');
+        }
+    }
+
+    /**
+     * Re-enable procedural path generation (for when returning to procedural maps)
+     */
+    enableProceduralPathGeneration() {
+        if (this.worldManager) {
+            // Clear the flag
+            this.worldManager.mapPathsLoaded = false;
+            
+            // Restore original path generation distance
+            if (this.worldManager.originalPathGenerationDistance !== undefined) {
+                this.worldManager.pathGenerationDistance = this.worldManager.originalPathGenerationDistance;
+            } else {
+                this.worldManager.pathGenerationDistance = 30; // Default value
+            }
+            
+            console.log('Procedural path generation re-enabled');
+        }
+    }
+
+    /**
+     * Register loaded path with WorldManager for navigation and AI systems
+     * @param {Object} pathData - Original path data
+     * @param {THREE.Group} pathGroup - Created path group
+     */
+    registerPathWithWorldManager(pathData, pathGroup) {
+        if (!this.worldManager || !pathData.points) {
+            return;
+        }
+
+        // Add path points as navigation nodes for AI and pathfinding
+        pathData.points.forEach((point, index) => {
+            const position = new THREE.Vector3(point.x, point.y, point.z);
+            
+            // Add to path nodes for potential connections (but don't auto-connect)
+            this.worldManager.pathNodes.push({
+                position: position.clone(),
+                type: 'map_path',
+                pathId: pathData.id,
+                pointIndex: index,
+                timestamp: Date.now(),
+                isMapPath: true // Flag to distinguish from procedural paths
+            });
+        });
+
+        // Store reference to the loaded path in WorldManager
+        if (!this.worldManager.loadedMapPaths) {
+            this.worldManager.loadedMapPaths = [];
+        }
+        
+        this.worldManager.loadedMapPaths.push({
+            id: pathData.id,
+            points: pathData.points.map(p => new THREE.Vector3(p.x, p.y, p.z)),
+            width: pathData.width || 3,
+            type: pathData.type || 'road',
+            pathGroup: pathGroup
+        });
+
+        console.log(`Registered path ${pathData.id} with ${pathData.points.length} points`);
     }
 
     /**
