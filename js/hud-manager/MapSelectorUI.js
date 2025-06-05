@@ -135,6 +135,7 @@ export class MapSelectorUI extends UIComponent {
                         <div class="map-detail-container">
                             <div class="selected-map-info" id="selectedMapInfo">
                                 <h3>Selected Map</h3>
+                                <div id="currentMapDisplay" class="current-map-display"></div>
                                 <div class="map-preview-large">
                                     <div class="map-preview-placeholder">
                                         <span class="map-icon">🗺️</span>
@@ -426,6 +427,12 @@ export class MapSelectorUI extends UIComponent {
 
     updateCurrentMapDisplay() {
         const currentMapDisplay = this.element.querySelector('#currentMapDisplay');
+        
+        // Check if the element exists
+        if (!currentMapDisplay) {
+            console.warn('Current map display element not found');
+            return;
+        }
         
         // Check if world exists before trying to access it
         if (this.game && this.game.world) {

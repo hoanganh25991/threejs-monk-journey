@@ -276,7 +276,34 @@
     text-overflow: ellipsis;
 }
 
-/* Current map section removed */
+/* Current map display */
+.current-map-display {
+    padding: 12px 16px;
+    background-color: rgba(20, 20, 20, 0.7);
+    border-radius: 8px;
+    border: 1px solid rgba(138, 109, 59, 0.5);
+    margin: 8px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.current-map-name {
+    color: #ffcc00;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.current-map-description {
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.current-map-stats {
+    margin-top: 4px;
+    color: #aaa;
+    font-size: 0.8rem;
+}
 
 .selected-map-info {
     display: flex;
