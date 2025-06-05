@@ -405,10 +405,30 @@ export class ChunkedMapLoader {
         
         // Determine which chunks should be loaded
         const chunksToLoad = {};
+        
+        // Get map bounds if available
+        let minChunkX = -Infinity;
+        let maxChunkX = Infinity;
+        let minChunkZ = -Infinity;
+        let maxChunkZ = Infinity;
+        
+        if (this.currentMapMetadata.bounds) {
+            minChunkX = Math.floor(this.currentMapMetadata.bounds.minX / this.chunkSize);
+            maxChunkX = Math.ceil(this.currentMapMetadata.bounds.maxX / this.chunkSize);
+            minChunkZ = Math.floor(this.currentMapMetadata.bounds.minZ / this.chunkSize);
+            maxChunkZ = Math.ceil(this.currentMapMetadata.bounds.maxZ / this.chunkSize);
+        }
+        
         for (let xOffset = -this.loadRadius; xOffset <= this.loadRadius; xOffset++) {
             for (let zOffset = -this.loadRadius; zOffset <= this.loadRadius; zOffset++) {
-                const chunkKey = `${playerChunkX + xOffset}_${playerChunkZ + zOffset}`;
-                chunksToLoad[chunkKey] = true;
+                const chunkX = playerChunkX + xOffset;
+                const chunkZ = playerChunkZ + zOffset;
+                
+                // Only load chunks within map bounds
+                if (chunkX >= minChunkX && chunkX <= maxChunkX && chunkZ >= minChunkZ && chunkZ <= maxChunkZ) {
+                    const chunkKey = `${chunkX}_${chunkZ}`;
+                    chunksToLoad[chunkKey] = true;
+                }
             }
         }
         
@@ -436,6 +456,22 @@ export class ChunkedMapLoader {
             return; // Already loaded or no map
         }
         
+        // Check if chunk is within map bounds
+        if (this.currentMapMetadata.bounds) {
+            const [chunkX, chunkZ] = chunkKey.split('_').map(Number);
+            const minChunkX = Math.floor(this.currentMapMetadata.bounds.minX / this.chunkSize);
+            const maxChunkX = Math.ceil(this.currentMapMetadata.bounds.maxX / this.chunkSize);
+            const minChunkZ = Math.floor(this.currentMapMetadata.bounds.minZ / this.chunkSize);
+            const maxChunkZ = Math.ceil(this.currentMapMetadata.bounds.maxZ / this.chunkSize);
+            
+            // If chunk is outside map bounds, mark as empty and return
+            if (chunkX < minChunkX || chunkX > maxChunkX || chunkZ < minChunkZ || chunkZ > maxChunkZ) {
+                // Mark as loaded with empty data to prevent repeated attempts
+                this.loadedChunks[chunkKey] = { paths: [], structures: [], environment: [] };
+                return;
+            }
+        }
+        
         console.log(`Loading chunk ${chunkKey}...`);
         
         // Get map name from metadata
@@ -445,7 +481,7 @@ export class ChunkedMapLoader {
         const chunkData = this.getStoredMapChunk(mapName, chunkKey);
         
         if (!chunkData) {
-            console.warn(`No data found for chunk ${chunkKey}`);
+            console.log(`No data found for chunk ${chunkKey}, creating empty chunk`);
             // Mark as loaded even if empty to prevent repeated attempts
             this.loadedChunks[chunkKey] = { paths: [], structures: [], environment: [] };
             return;
