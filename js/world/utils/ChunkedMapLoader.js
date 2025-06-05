@@ -17,9 +17,10 @@ export class ChunkedMapLoader {
         this.loadedChunks = {};   // Track which chunks are currently loaded
         
         // Chunking settings
-        this.chunkSize = 100;     // Size of each chunk in world units (matching terrain chunk size)
+        this.chunkSize = 25;      // Size of each chunk in world units (reduced to 1/4 of original size)
         this.loadRadius = 2;      // How many chunks to load in each direction from player
         this.lastPlayerChunk = null; // Last player chunk coordinates for change detection
+        this.lastPlayerDirection = null; // Last player direction for selective chunk loading
         
         // Map storage settings
         this.storageEnabled = true;
@@ -395,13 +396,32 @@ export class ChunkedMapLoader {
         const playerChunkZ = Math.floor(playerPosition.z / this.chunkSize);
         const playerChunkKey = `${playerChunkX}_${playerChunkZ}`;
         
-        // Skip if player hasn't moved to a new chunk
-        if (this.lastPlayerChunk === playerChunkKey) {
+        // Get player direction if available (from camera or player object)
+        let playerDirection = null;
+        if (this.game && this.game.player && this.game.player.getDirection) {
+            playerDirection = this.game.player.getDirection();
+        } else if (this.game && this.game.camera) {
+            // Extract direction from camera if player direction not available
+            const camera = this.game.camera;
+            if (camera.getWorldDirection) {
+                playerDirection = new THREE.Vector3();
+                camera.getWorldDirection(playerDirection);
+            }
+        }
+        
+        // Skip if player hasn't moved to a new chunk and direction hasn't changed significantly
+        const directionChanged = playerDirection && this.lastPlayerDirection && 
+            playerDirection.angleTo(this.lastPlayerDirection) > 0.3; // ~17 degrees threshold
+            
+        if (this.lastPlayerChunk === playerChunkKey && !directionChanged) {
             return;
         }
         
         console.log(`Player moved to chunk ${playerChunkKey}, updating loaded chunks...`);
         this.lastPlayerChunk = playerChunkKey;
+        if (playerDirection) {
+            this.lastPlayerDirection = playerDirection.clone();
+        }
         
         // Determine which chunks should be loaded
         const chunksToLoad = {};
@@ -419,15 +439,49 @@ export class ChunkedMapLoader {
             maxChunkZ = Math.ceil(this.currentMapMetadata.bounds.maxZ / this.chunkSize);
         }
         
-        for (let xOffset = -this.loadRadius; xOffset <= this.loadRadius; xOffset++) {
-            for (let zOffset = -this.loadRadius; zOffset <= this.loadRadius; zOffset++) {
-                const chunkX = playerChunkX + xOffset;
-                const chunkZ = playerChunkZ + zOffset;
-                
-                // Only load chunks within map bounds
-                if (chunkX >= minChunkX && chunkX <= maxChunkX && chunkZ >= minChunkZ && chunkZ <= maxChunkZ) {
-                    const chunkKey = `${chunkX}_${chunkZ}`;
-                    chunksToLoad[chunkKey] = true;
+        // Always load the current chunk
+        chunksToLoad[playerChunkKey] = true;
+        
+        // Determine loading pattern based on player direction
+        if (playerDirection) {
+            // Normalize direction to get primary direction
+            const dirX = Math.round(playerDirection.x);
+            const dirZ = Math.round(playerDirection.z);
+            
+            // Load chunks in front of player (in direction of travel/view)
+            for (let xOffset = -this.loadRadius; xOffset <= this.loadRadius; xOffset++) {
+                for (let zOffset = -this.loadRadius; zOffset <= this.loadRadius; zOffset++) {
+                    // Prioritize chunks in the direction player is facing
+                    // Skip chunks that are behind the player (opposite to direction)
+                    if ((dirX > 0 && xOffset < -1) || (dirX < 0 && xOffset > 1) || 
+                        (dirZ > 0 && zOffset < -1) || (dirZ < 0 && zOffset > 1)) {
+                        continue; // Skip chunks behind player
+                    }
+                    
+                    const chunkX = playerChunkX + xOffset;
+                    const chunkZ = playerChunkZ + zOffset;
+                    
+                    // Only load chunks within map bounds
+                    if (chunkX >= minChunkX && chunkX <= maxChunkX && chunkZ >= minChunkZ && chunkZ <= maxChunkZ) {
+                        const chunkKey = `${chunkX}_${chunkZ}`;
+                        chunksToLoad[chunkKey] = true;
+                    }
+                }
+            }
+        } else {
+            // Fallback to standard loading pattern if direction not available
+            // But with a smaller radius to reduce memory usage
+            const reducedRadius = Math.max(1, this.loadRadius - 1);
+            for (let xOffset = -reducedRadius; xOffset <= reducedRadius; xOffset++) {
+                for (let zOffset = -reducedRadius; zOffset <= reducedRadius; zOffset++) {
+                    const chunkX = playerChunkX + xOffset;
+                    const chunkZ = playerChunkZ + zOffset;
+                    
+                    // Only load chunks within map bounds
+                    if (chunkX >= minChunkX && chunkX <= maxChunkX && chunkZ >= minChunkZ && chunkZ <= maxChunkZ) {
+                        const chunkKey = `${chunkX}_${chunkZ}`;
+                        chunksToLoad[chunkKey] = true;
+                    }
                 }
             }
         }
