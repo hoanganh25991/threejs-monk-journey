@@ -164,7 +164,6 @@ export class HUDManager {
         this.components.homeButton.update(delta);
         this.components.skillTreeButton.update(delta);
         this.components.inventoryButton.update(delta);
-        this.components.miniMapButton.update(delta);
         this.components.mapSelectorButton.update(delta);
     }
     
