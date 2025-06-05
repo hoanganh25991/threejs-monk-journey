@@ -155,10 +155,6 @@ export class MapSelectorUI extends UIComponent {
                                             <span class="stat-value" id="environmentStat">-</span>
                                         </div>
                                     </div>
-                                    
-                                    <button class="load-map-button" id="loadSelectedMap" disabled>
-                                        Load Map
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -176,9 +172,9 @@ export class MapSelectorUI extends UIComponent {
     }
 
     setupEventListeners() {
-        // Close button
+        // Save & Close button - now handles loading the selected map
         const closeButton = this.element.querySelector('#closeMapSelector');
-        closeButton.addEventListener('click', () => this.hide());
+        closeButton.addEventListener('click', () => this.saveAndClose());
         
         // Click outside to close
         this.element.addEventListener('click', (e) => {
@@ -199,16 +195,6 @@ export class MapSelectorUI extends UIComponent {
         const generateNewMapBtn = this.element.querySelector('#generateRandomMap');
         if (generateNewMapBtn) {
             generateNewMapBtn.addEventListener('click', () => this.generateRandomMap());
-        }
-        
-        // Load selected map button
-        const loadSelectedMapButton = this.element.querySelector('#loadSelectedMap');
-        if (loadSelectedMapButton) {
-            loadSelectedMapButton.addEventListener('click', () => {
-                if (this.selectedMap) {
-                    this.loadMap(this.selectedMap.id);
-                }
-            });
         }
         
         // Retry loading maps button (only shown when maps failed to load)
@@ -263,6 +249,16 @@ export class MapSelectorUI extends UIComponent {
         }, 300);
     }
 
+    async saveAndClose() {
+        // If a map is selected, load it before closing
+        if (this.selectedMap) {
+            await this.loadMap(this.selectedMap.id);
+        } else {
+            // If no map is selected, just close
+            this.hide();
+        }
+    }
+
     selectMap(mapId) {
         // Remove previous selection
         const previousSelected = this.element.querySelector('.map-list-item.selected');
@@ -280,12 +276,10 @@ export class MapSelectorUI extends UIComponent {
             if (this.selectedMap) {
                 const selectedMapName = this.element.querySelector('#selectedMapName');
                 const selectedMapDescription = this.element.querySelector('#selectedMapDescription');
-                const loadSelectedMapButton = this.element.querySelector('#loadSelectedMap');
                 
                 // Update map details
                 if (selectedMapName) selectedMapName.textContent = this.selectedMap.name;
                 if (selectedMapDescription) selectedMapDescription.textContent = this.selectedMap.description;
-                if (loadSelectedMapButton) loadSelectedMapButton.disabled = false;
                 
                 // Update map stats if available
                 const mapSizeStat = this.element.querySelector('#mapSizeStat');
