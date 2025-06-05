@@ -53,7 +53,7 @@
 }
 
 /* Home/Settings Button and Fullscreen Button */
-#home-button, #skill-selection-button, #mini-map-button {
+#home-button, #skill-selection-button {
     position: relative;
 }
 

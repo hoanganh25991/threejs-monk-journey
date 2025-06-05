@@ -14,7 +14,7 @@ import { MiniMapUI } from './MiniMapUI.js';
 import { HomeButton } from './HomeUI.js';
 import { FullscreenButton } from './SkillSelectionButton.js';
 import { SkillTreeButton } from './SkillTreeButton.js';
-import { MiniMapButton } from './MiniMapButton.js';
+
 import { InventoryButton } from './InventoryButton.js';
 import { MapSelectorUI } from './MapSelectorUI.js';
 import { MapSelectorButton } from './MapSelectorButton.js';
@@ -132,7 +132,7 @@ export class HUDManager {
         this.components.fullscreenButton = new FullscreenButton(this.game);
         this.components.skillTreeButton = new SkillTreeButton(this.game);
         this.components.inventoryButton = new InventoryButton(this.game);
-        this.components.miniMapButton = new MiniMapButton(this.game);
+
         this.components.mapSelectorButton = new MapSelectorButton(this.game);
         // Note: These buttons initialize themselves in their constructors
     }
@@ -347,7 +347,6 @@ export class HUDManager {
         const fullscreenButton = document.getElementById('skill-selection-button');
         const skillTreeButton = document.getElementById('skill-tree-button');
         const inventoryButton = document.getElementById('inventory-button');
-        const miniMapButton = document.getElementById('mini-map-button');
         const mapSelectorButton = document.getElementById('map-selector-button');
         
         if (homeButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
@@ -364,10 +363,6 @@ export class HUDManager {
         
         if (inventoryButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
             inventoryButton.style.display = 'none';
-        }
-        
-        if (miniMapButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
-            miniMapButton.style.display = 'none';
         }
         
         if (mapSelectorButton && (!settingsMenu || settingsMenu.style.display === 'none')) {
@@ -402,11 +397,6 @@ export class HUDManager {
         const inventoryButton = document.getElementById('inventory-button');
         if (inventoryButton) {
             inventoryButton.style.display = 'block';
-        }
-        
-        const miniMapButton = document.getElementById('mini-map-button');
-        if (miniMapButton) {
-            miniMapButton.style.display = 'block';
         }
         
         const mapSelectorButton = document.getElementById('map-selector-button');

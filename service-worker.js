@@ -223,7 +223,6 @@ const ASSETS_TO_CACHE = [
   'js/hud-manager/HomeUI.js',
   'js/hud-manager/InventoryButton.js',
   'js/hud-manager/InventoryUI.js',
-  'js/hud-manager/MiniMapButton.js',
   'js/hud-manager/MiniMapUI.js',
   'js/hud-manager/NotificationsUI.js',
   'js/hud-manager/PlayerUI.js',
@@ -541,7 +540,7 @@ const FILE_SIZES =   {
     "js/hud-manager/HomeUI.js": 4118,
     "js/hud-manager/InventoryButton.js": 1863,
     "js/hud-manager/InventoryUI.js": 12891,
-    "js/hud-manager/MiniMapButton.js": 2061,
+
     "js/hud-manager/MiniMapUI.js": 50767,
     "js/hud-manager/NotificationsUI.js": 18719,
     "js/hud-manager/PlayerUI.js": 3867,
