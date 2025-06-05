@@ -1231,6 +1231,250 @@ export class MapLoader {
         
         return water;
     }
+    
+    /**
+     * Create a moss patch
+     * @param {Object} position - Position object
+     * @param {number} size - Size of the moss patch
+     * @returns {THREE.Mesh} - Moss mesh
+     */
+    createMoss(position, size) {
+        const geometry = new THREE.CircleGeometry(size, 8);
+        const material = new THREE.MeshLambertMaterial({
+            color: 0x2E8B57, // Sea green color for moss
+            transparent: true,
+            opacity: 0.9
+        });
+        
+        const moss = new THREE.Mesh(geometry, material);
+        moss.rotation.x = -Math.PI / 2;
+        moss.position.set(
+            position.x,
+            this.worldManager.getTerrainHeight(position.x, position.z) + 0.05, // Slightly above terrain
+            position.z
+        );
+        
+        moss.userData = { type: 'moss' };
+        this.scene.add(moss);
+        
+        return moss;
+    }
+    
+    /**
+     * Create a crystal formation
+     * @param {Object} position - Position object
+     * @param {number} size - Size of the crystal formation
+     * @returns {THREE.Group} - Crystal formation group
+     */
+    createCrystalFormation(position, size) {
+        const group = new THREE.Group();
+        
+        // Create multiple crystal shards
+        const numCrystals = Math.floor(3 + Math.random() * 5); // 3-7 crystals
+        
+        for (let i = 0; i < numCrystals; i++) {
+            // Create a crystal shard
+            const height = size * (0.5 + Math.random() * 1.5);
+            const geometry = new THREE.ConeGeometry(size * 0.3, height, 5);
+            
+            // Random crystal color (blue/purple hues)
+            const hue = 0.6 + Math.random() * 0.2; // Blue to purple
+            const saturation = 0.7 + Math.random() * 0.3;
+            const lightness = 0.5 + Math.random() * 0.3;
+            
+            const color = new THREE.Color().setHSL(hue, saturation, lightness);
+            
+            const material = new THREE.MeshStandardMaterial({
+                color: color,
+                transparent: true,
+                opacity: 0.8,
+                roughness: 0.2,
+                metalness: 0.8
+            });
+            
+            const crystal = new THREE.Mesh(geometry, material);
+            
+            // Position within the group
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.random() * size * 0.7;
+            crystal.position.set(
+                Math.cos(angle) * distance,
+                height * 0.5,
+                Math.sin(angle) * distance
+            );
+            
+            // Random rotation
+            crystal.rotation.x = (Math.random() - 0.5) * 0.5;
+            crystal.rotation.z = (Math.random() - 0.5) * 0.5;
+            
+            group.add(crystal);
+        }
+        
+        // Position the group
+        group.position.set(
+            position.x,
+            this.worldManager.getTerrainHeight(position.x, position.z),
+            position.z
+        );
+        
+        group.userData = { type: 'crystal_formation' };
+        this.scene.add(group);
+        
+        return group;
+    }
+    
+    /**
+     * Create a rare plant
+     * @param {Object} position - Position object
+     * @param {number} size - Size of the rare plant
+     * @returns {THREE.Group} - Rare plant group
+     */
+    createRarePlant(position, size) {
+        const group = new THREE.Group();
+        
+        // Create stem
+        const stemHeight = size * 2;
+        const stemGeometry = new THREE.CylinderGeometry(size * 0.1, size * 0.15, stemHeight, 8);
+        const stemMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 });
+        const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+        stem.position.y = stemHeight * 0.5;
+        group.add(stem);
+        
+        // Create flower/bloom
+        const bloomGeometry = new THREE.SphereGeometry(size * 0.5, 8, 8);
+        const bloomMaterial = new THREE.MeshLambertMaterial({ 
+            color: 0xFF1493, // Deep pink for rare flower
+            emissive: 0x800080,
+            emissiveIntensity: 0.3
+        });
+        const bloom = new THREE.Mesh(bloomGeometry, bloomMaterial);
+        bloom.position.y = stemHeight + size * 0.3;
+        group.add(bloom);
+        
+        // Add some leaves
+        const numLeaves = 3 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < numLeaves; i++) {
+            const leafGeometry = new THREE.PlaneGeometry(size * 0.8, size * 0.4);
+            const leafMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x32CD32,
+                side: THREE.DoubleSide
+            });
+            const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
+            
+            // Position leaf along stem
+            const heightPercent = 0.3 + (i / numLeaves) * 0.7;
+            leaf.position.y = stemHeight * heightPercent;
+            
+            // Rotate leaf
+            const angle = (i / numLeaves) * Math.PI * 2;
+            leaf.rotation.y = angle;
+            leaf.rotation.x = Math.PI * 0.25;
+            
+            group.add(leaf);
+        }
+        
+        // Position the group
+        group.position.set(
+            position.x,
+            this.worldManager.getTerrainHeight(position.x, position.z),
+            position.z
+        );
+        
+        group.userData = { type: 'rare_plant' };
+        this.scene.add(group);
+        
+        return group;
+    }
+    
+    /**
+     * Create a magical stone
+     * @param {Object} position - Position object
+     * @param {number} size - Size of the magical stone
+     * @returns {THREE.Group} - Magical stone group
+     */
+    createMagicalStone(position, size) {
+        const group = new THREE.Group();
+        
+        // Create the main stone
+        const stoneGeometry = new THREE.DodecahedronGeometry(size, 0);
+        const stoneMaterial = new THREE.MeshStandardMaterial({
+            color: 0x696969,
+            roughness: 0.7,
+            metalness: 0.2
+        });
+        const stone = new THREE.Mesh(stoneGeometry, stoneMaterial);
+        
+        // Add some random rotation
+        stone.rotation.x = Math.random() * Math.PI;
+        stone.rotation.y = Math.random() * Math.PI;
+        stone.rotation.z = Math.random() * Math.PI;
+        
+        group.add(stone);
+        
+        // Add glowing runes/symbols
+        const runeGeometry = new THREE.TorusGeometry(size * 0.7, size * 0.05, 8, 16);
+        const runeMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00FFFF,
+            transparent: true,
+            opacity: 0.8
+        });
+        const rune = new THREE.Mesh(runeGeometry, runeMaterial);
+        rune.rotation.x = Math.PI * 0.5;
+        group.add(rune);
+        
+        // Position the group
+        group.position.set(
+            position.x,
+            this.worldManager.getTerrainHeight(position.x, position.z) + size * 0.5,
+            position.z
+        );
+        
+        group.userData = { type: 'magical_stone' };
+        this.scene.add(group);
+        
+        return group;
+    }
+    
+    /**
+     * Create an ancient artifact
+     * @param {Object} position - Position object
+     * @param {number} size - Size of the ancient artifact
+     * @returns {THREE.Group} - Ancient artifact group
+     */
+    createAncientArtifact(position, size) {
+        const group = new THREE.Group();
+        
+        // Create base/pedestal
+        const baseGeometry = new THREE.CylinderGeometry(size * 0.8, size, size * 0.5, 8);
+        const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+        const base = new THREE.Mesh(baseGeometry, baseMaterial);
+        base.position.y = size * 0.25;
+        group.add(base);
+        
+        // Create artifact
+        const artifactGeometry = new THREE.OctahedronGeometry(size * 0.5, 0);
+        const artifactMaterial = new THREE.MeshStandardMaterial({
+            color: 0xFFD700,
+            roughness: 0.3,
+            metalness: 0.8
+        });
+        const artifact = new THREE.Mesh(artifactGeometry, artifactMaterial);
+        artifact.position.y = size * 1.0;
+        artifact.rotation.y = Math.PI * 0.25;
+        group.add(artifact);
+        
+        // Position the group
+        group.position.set(
+            position.x,
+            this.worldManager.getTerrainHeight(position.x, position.z),
+            position.z
+        );
+        
+        group.userData = { type: 'ancient_artifact' };
+        this.scene.add(group);
+        
+        return group;
+    }
 
     /**
      * Create a lava feature
