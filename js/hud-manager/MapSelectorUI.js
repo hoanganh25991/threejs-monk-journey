@@ -102,26 +102,37 @@ export class MapSelectorUI extends UIComponent {
             <div class="map-selector-modal">
                 <div class="map-selector-header">
                     <h2>Select Map</h2>
-                    <button class="close-button" id="closeMapSelector">×</button>
+                    <div class="header-buttons">
+                        <button class="header-button" id="clearCurrentMap" title="Return to Procedural World">
+                            <span class="map-icon">🔄</span>
+                        </button>
+                        <button class="header-button" id="generateRandomMap" title="Generate New Map">
+                            <span class="map-icon">🗺️</span>
+                        </button>
+                        <button class="close-button" id="closeMapSelector" title="Save & Close">
+                            <span class="map-icon">💾</span>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="map-selector-content">
                     <div class="map-selector-layout">
                         <div class="map-list-container">
                             <div class="map-list">
-                                ${mapListContent}
+                                ${this.availableMaps.map(map => `
+                                    <div class="map-list-item" data-map-id="${map.id}">
+                                        <div class="map-list-preview">
+                                            <div class="map-preview-placeholder">
+                                                <span class="map-icon">🗺️</span>
+                                            </div>
+                                        </div>
+                                        <div class="map-list-name">${map.name}</div>
+                                    </div>
+                                `).join('')}
                             </div>
                         </div>
                         
                         <div class="map-detail-container">
-                            <div class="current-map-info">
-                                <h3>Current Map</h3>
-                                <div id="currentMapDisplay">
-                                    <span class="current-map-name">Procedural World</span>
-                                    <span class="current-map-description">Randomly generated world</span>
-                                </div>
-                            </div>
-                            
                             <div class="selected-map-info" id="selectedMapInfo">
                                 <h3>Selected Map</h3>
                                 <div class="map-preview-large">
@@ -191,8 +202,8 @@ export class MapSelectorUI extends UIComponent {
             });
         });
         
-        // Generate New Map button in the list
-        const generateNewMapBtn = this.element.querySelector('#generateNewMapBtn');
+        // Generate New Map button
+        const generateNewMapBtn = this.element.querySelector('#generateRandomMap');
         if (generateNewMapBtn) {
             generateNewMapBtn.addEventListener('click', () => this.generateRandomMap());
         }

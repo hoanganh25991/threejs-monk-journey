@@ -53,26 +53,66 @@
     text-shadow: 0 0 5px rgba(255, 204, 0, 0.5); /* Match skill-tree title shadow */
 }
 
+.header-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.header-button {
+    background-color: rgba(255, 204, 0, 0.7);
+    color: #4a3000;
+    border: 2px solid rgba(255, 230, 150, 0.8);
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    padding: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+}
+
+.header-button:hover {
+    background-color: rgba(255, 215, 0, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), inset 0 -1px 3px rgba(139, 101, 0, 0.2);
+}
+
+.header-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 -1px 2px rgba(139, 101, 0, 0.2);
+}
+
 .close-button {
     background: none;
     border: none;
-    color: #ccc; /* Match skill-tree text color */
-    font-size: 24px;
+    color: #ccc;
+    font-size: 18px;
     cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
+    padding: 4px;
+    border-radius: 50%;
     transition: all 0.2s ease;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .close-button:hover {
-    background: rgba(138, 109, 59, 0.3); /* Match skill-tree hover color */
-    color: #ffcc00; /* Match skill-tree accent color */
+    background: rgba(138, 109, 59, 0.3);
+    color: #ffcc00;
 }
 
 .map-selector-content {
     padding: 16px;
-    max-height: calc(95vh - 100px);
-    overflow: hidden; /* Changed from overflow-y: auto to prevent entire content scrolling */
+    height: calc(100vh - 80px); /* Subtract header height and padding */
+    overflow: hidden;
 }
 
 /* New layout for landscape mode */
@@ -80,7 +120,6 @@
     display: flex;
     gap: 16px;
     height: 100%;
-    max-height: calc(95vh - 132px); /* Account for header and padding */
 }
 
 .map-list-container {
@@ -91,7 +130,7 @@
     height: 100%; /* Ensure it takes full height */
     display: flex;
     flex-direction: column;
-    overflow-y: auto; /* Changed from scroll to auto for better cross-browser behavior */
+    overflow: hidden; /* Prevent container from scrolling */
 }
 
 .map-list {
@@ -103,6 +142,7 @@
     margin-right: -8px; /* Offset the padding */
     scrollbar-width: thin; /* For Firefox */
     overflow-y: auto; /* Ensure the list itself is scrollable */
+    height: 100%; /* Take full height */
 }
 
 .map-detail-container {
@@ -111,7 +151,7 @@
     flex-direction: column;
     gap: 16px;
     overflow-y: auto; /* Allow scrolling if content is too tall */
-    max-height: 100%; /* Limit to container height */
+    height: 100%; /* Take full height */
     padding: var(--padding-large, 16px);
     background-color: rgba(0, 0, 0, 0.6); /* Match skill-tree details background */
 }
@@ -149,15 +189,7 @@
 
 /* Map action buttons container - for Return and Generate buttons */
 .map-action-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 16px;
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    padding: 8px 0;
-    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+    display: none; /* Hide the buttons as they're now in the header */
 }
 
 /* Return to Procedural Map button */
@@ -244,38 +276,7 @@
     text-overflow: ellipsis;
 }
 
-.current-map-info {
-    padding: 12px;
-    background-color: rgba(20, 20, 20, 0.7); /* Match skill-tree background */
-    border-radius: 8px;
-    border: 1px solid rgba(138, 109, 59, 0.5); /* Match skill-tree border */
-}
-
-.current-map-info h3 {
-    margin: 0 0 8px 0;
-    color: #ffcc00; /* Match skill-tree title color */
-    font-size: 1.1rem;
-}
-
-.current-map-name {
-    display: block;
-    color: #ffcc00; /* Match skill-tree accent color */
-    font-weight: 600;
-    font-size: 1rem;
-    margin-bottom: 4px;
-}
-
-.current-map-description {
-    display: block;
-    color: #ccc; /* Match skill-tree description color */
-    font-size: 0.9rem;
-    margin-bottom: 8px;
-}
-
-.current-map-stats {
-    color: #999; /* Match skill-tree tertiary text */
-    font-size: 0.8rem;
-}
+/* Current map section removed */
 
 .selected-map-info {
     display: flex;
