@@ -348,7 +348,67 @@
         <!-- Mini Map -->
         <div id="mini-map"></div>
 
-        <div id="map-selector-overlay" class="map-selector-overlay"></div>
+        <!-- Map Selector UI -->
+        <div id="map-selector-overlay" class="map-selector-overlay">
+            <div class="map-selector-modal">
+                <div class="map-selector-header">
+                    <h2>Select Map</h2>
+                    <div class="header-buttons">
+                        <button class="circle-btn" id="clearCurrentMap" title="Return to Procedural World">🏕️</button>
+                        <button class="circle-btn" id="generateRandomMap" title="Generate New Map">👨‍🎨</button>
+                        <button class="circle-btn" id="closeMapSelector" title="Save & Close">💾</button>
+                    </div>
+                </div>
+                
+                <div class="map-selector-content">
+                    <div class="map-selector-layout">
+                        <div class="map-list-container">
+                            <div class="map-list" id="map-list">
+                                <!-- Map list items will be populated dynamically -->
+                            </div>
+                        </div>
+                        
+                        <div class="map-detail-container">
+                            <div class="selected-map-info" id="selectedMapInfo">
+                                <div class="map-preview-large" id="map-preview-large">
+                                    <div class="map-preview-placeholder">
+                                        <span class="map-icon">🗺️</span>
+                                    </div>
+                                </div>
+                                <div class="map-detail-content">
+                                    <h4 class="map-name" id="selectedMapName">Select a map</h4>
+                                    <p class="map-description" id="selectedMapDescription">Choose a map from the list to view details</p>
+                                    
+                                    <div class="map-stats" id="selectedMapStats">
+                                        <div class="map-stat">
+                                            <span class="stat-label">Size:</span>
+                                            <span class="stat-value" id="mapSizeStat">-</span>
+                                        </div>
+                                        <div class="map-stat">
+                                            <span class="stat-label">Structures:</span>
+                                            <span class="stat-value" id="structuresStat">-</span>
+                                        </div>
+                                        <div class="map-stat">
+                                            <span class="stat-label">Paths:</span>
+                                            <span class="stat-value" id="pathsStat">-</span>
+                                        </div>
+                                        <div class="map-stat">
+                                            <span class="stat-label">Environment:</span>
+                                            <span class="stat-value" id="environmentStat">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="loading-overlay" id="mapLoadingOverlay" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Loading map...</div>
+                </div>
+            </div>
+        </div>
 
         <!-- Enemy UI -->
         <div id="enemy-health-container"></div>

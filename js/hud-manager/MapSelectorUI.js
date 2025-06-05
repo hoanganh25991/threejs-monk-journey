@@ -3,6 +3,7 @@ import { UIComponent } from '../UIComponent.js';
 /**
  * Map Selector UI Component
  * Allows players to select and load different pre-generated maps
+ * Uses declarative HTML structure defined in index.html
  */
 export class MapSelectorUI extends UIComponent {
     constructor(game) {
@@ -14,6 +15,14 @@ export class MapSelectorUI extends UIComponent {
         this.availableMaps = [];
         this.selectedMap = null;
         this.isLoading = false;
+        
+        // Get reference to the existing element in the DOM
+        this.element = document.getElementById('map-selector-overlay');
+        
+        // Set initial display style
+        if (this.element) {
+            this.element.style.display = 'none';
+        }
         
         // Load maps from index.json
         this.loadMapIndex();
@@ -34,17 +43,17 @@ export class MapSelectorUI extends UIComponent {
             
             console.log(`Loaded ${this.availableMaps.length} maps from index.json`);
             
-            // Create UI after maps are loaded
-            this.createElement();
+            // Update the map list with available maps
+            this.updateMapList();
             this.setupEventListeners();
         } catch (error) {
             console.error('Error loading map index:', error);
             
-            // Set empty maps array instead of using hardcoded fallback
+            // Set empty maps array
             this.availableMaps = [];
             
-            // Create UI with empty maps array
-            this.createElement();
+            // Update UI with empty maps array
+            this.updateMapList();
             this.setupEventListeners();
             
             // Show error message in UI
@@ -54,127 +63,67 @@ export class MapSelectorUI extends UIComponent {
         }
     }
 
-    createElement() {
-        // Create main container
-        this.element = document.createElement('div');
-        this.element.className = 'map-selector-overlay';
-        this.element.style.display = 'none';
+    /**
+     * Update the map list with available maps
+     */
+    updateMapList() {
+        const mapListElement = this.element.querySelector('#map-list');
         
-        // Generate map list content based on available maps
-        let mapListContent = '';
+        if (!mapListElement) {
+            console.error('Map list element not found in the DOM');
+            return;
+        }
         
-        // Add "Generate New Map" button at the top of the list
-        const generateNewMapButton = `
-            <div class="map-list-item generate-new-map" id="generateNewMapBtn">
-                <div class="map-list-preview">
-                </div>
-                <button class="action-button secondary" id="clearCurrentMap">
-                    Return to Procedural World
-                </button>
-                <div class="map-list-name">Generate New Map</div>
-            </div>
-        `;
+        // Clear existing content
+        mapListElement.innerHTML = '';
         
         if (this.availableMaps.length > 0) {
-            // Add the generate button followed by the map list
-            mapListContent = generateNewMapButton + this.availableMaps.map(map => `
-                <div class="map-list-item" data-map-id="${map.id}">
+            // Add maps to the list
+            this.availableMaps.forEach(map => {
+                const mapItem = document.createElement('div');
+                mapItem.className = 'map-list-item';
+                mapItem.dataset.mapId = map.id;
+                
+                mapItem.innerHTML = `
                     <div class="map-list-preview">
                         <div class="map-preview-placeholder">
                             <span class="map-icon">🗺️</span>
                         </div>
                     </div>
                     <div class="map-list-name">${map.name}</div>
-                </div>
-            `).join('');
+                `;
+                
+                mapListElement.appendChild(mapItem);
+            });
         } else {
-            mapListContent = `
-                <div class="no-maps-message">
-                    <p>No maps available. Please check that assets/maps/index.json exists and is properly formatted.</p>
-                    <button class="action-button secondary" id="retryLoadMaps">
-                        Retry Loading Maps
-                    </button>
-                </div>
+            // Show no maps message
+            const noMapsMessage = document.createElement('div');
+            noMapsMessage.className = 'no-maps-message';
+            noMapsMessage.innerHTML = `
+                <p>No maps available. Please check that assets/maps/index.json exists and is properly formatted.</p>
+                <button class="action-button secondary" id="retryLoadMaps">
+                    Retry Loading Maps
+                </button>
             `;
+            
+            mapListElement.appendChild(noMapsMessage);
         }
-        
-        this.element.innerHTML = `
-            <div class="map-selector-modal">
-                <div class="map-selector-header">
-                    <h2>Select Map</h2>
-                    <div class="header-buttons">
-                        <button class="circle-btn" id="clearCurrentMap" title="Return to Procedural World">🔄</button>
-                        <button class="circle-btn" id="generateRandomMap" title="Generate New Map">🗺️</button>
-                        <button class="circle-btn" id="closeMapSelector" title="Save & Close">💾</button>
-                    </div>
-                </div>
-                
-                <div class="map-selector-content">
-                    <div class="map-selector-layout">
-                        <div class="map-list-container">
-                            <div class="map-list">
-                                ${this.availableMaps.map(map => `
-                                    <div class="map-list-item" data-map-id="${map.id}">
-                                        <div class="map-list-preview">
-                                            <div class="map-preview-placeholder">
-                                                <span class="map-icon">🗺️</span>
-                                            </div>
-                                        </div>
-                                        <div class="map-list-name">${map.name}</div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                        
-                        <div class="map-detail-container">
-                            <div class="selected-map-info" id="selectedMapInfo">
-                                <div class="map-preview-large">
-                                    <div class="map-preview-placeholder">
-                                        <span class="map-icon">🗺️</span>
-                                    </div>
-                                </div>
-                                <div class="map-detail-content">
-                                    <h4 class="map-name" id="selectedMapName">Select a map</h4>
-                                    <p class="map-description" id="selectedMapDescription">Choose a map from the list to view details</p>
-                                    
-                                    <div class="map-stats" id="selectedMapStats">
-                                        <div class="map-stat">
-                                            <span class="stat-label">Size:</span>
-                                            <span class="stat-value" id="mapSizeStat">-</span>
-                                        </div>
-                                        <div class="map-stat">
-                                            <span class="stat-label">Structures:</span>
-                                            <span class="stat-value" id="structuresStat">-</span>
-                                        </div>
-                                        <div class="map-stat">
-                                            <span class="stat-label">Paths:</span>
-                                            <span class="stat-value" id="pathsStat">-</span>
-                                        </div>
-                                        <div class="map-stat">
-                                            <span class="stat-label">Environment:</span>
-                                            <span class="stat-value" id="environmentStat">-</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="loading-overlay" id="mapLoadingOverlay" style="display: none;">
-                    <div class="loading-spinner"></div>
-                    <div class="loading-text">Loading map...</div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(this.element);
     }
 
     setupEventListeners() {
-        // Save & Close button - now handles loading the selected map
+        if (!this.element) {
+            console.error('Map selector element not found in the DOM');
+            return;
+        }
+        
+        // Save & Close button - handles loading the selected map
         const closeButton = this.element.querySelector('#closeMapSelector');
-        closeButton.addEventListener('click', () => this.saveAndClose());
+        if (closeButton) {
+            // Remove any existing event listeners
+            closeButton.replaceWith(closeButton.cloneNode(true));
+            // Add new event listener
+            this.element.querySelector('#closeMapSelector').addEventListener('click', () => this.saveAndClose());
+        }
         
         // Click outside to close
         this.element.addEventListener('click', (e) => {
@@ -183,29 +132,30 @@ export class MapSelectorUI extends UIComponent {
             }
         });
         
-        // Map list item selection
-        const mapListItems = this.element.querySelectorAll('.map-list-item[data-map-id]');
-        mapListItems.forEach(item => {
-            item.addEventListener('click', () => {
-                this.selectMap(item.dataset.mapId);
+        // Map list item selection - use event delegation for dynamically created items
+        const mapList = this.element.querySelector('#map-list');
+        if (mapList) {
+            mapList.addEventListener('click', (e) => {
+                const mapItem = e.target.closest('.map-list-item[data-map-id]');
+                if (mapItem) {
+                    this.selectMap(mapItem.dataset.mapId);
+                }
             });
-        });
+        }
         
         // Generate New Map button
         const generateNewMapBtn = this.element.querySelector('#generateRandomMap');
         if (generateNewMapBtn) {
-            generateNewMapBtn.addEventListener('click', () => this.generateRandomMap());
+            // Remove any existing event listeners
+            generateNewMapBtn.replaceWith(generateNewMapBtn.cloneNode(true));
+            // Add new event listener
+            this.element.querySelector('#generateRandomMap').addEventListener('click', () => this.generateRandomMap());
         }
         
         // Retry loading maps button (only shown when maps failed to load)
         const retryButton = this.element.querySelector('#retryLoadMaps');
         if (retryButton) {
             retryButton.addEventListener('click', async () => {
-                // Remove the current UI
-                if (this.element && this.element.parentNode) {
-                    this.element.parentNode.removeChild(this.element);
-                }
-                
                 // Try loading maps again
                 await this.loadMapIndex();
             });
@@ -213,20 +163,23 @@ export class MapSelectorUI extends UIComponent {
         
         // Clear current map button
         const clearButton = this.element.querySelector('#clearCurrentMap');
-        clearButton.addEventListener('click', () => this.clearCurrentMap());
-        
-        // Generate random map button (bottom button)
-        const generateButton = this.element.querySelector('#generateRandomMap');
-        if (generateButton) {
-            generateButton.addEventListener('click', () => this.generateRandomMap());
+        if (clearButton) {
+            // Remove any existing event listeners
+            clearButton.replaceWith(clearButton.cloneNode(true));
+            // Add new event listener
+            this.element.querySelector('#clearCurrentMap').addEventListener('click', () => this.clearCurrentMap());
         }
         
         // Escape key to close
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isVisible) {
-                this.hide();
-            }
-        });
+        // Use a named function to avoid adding multiple listeners
+        if (!this._escapeKeyHandler) {
+            this._escapeKeyHandler = (e) => {
+                if (e.key === 'Escape' && this.isVisible) {
+                    this.hide();
+                }
+            };
+            document.addEventListener('keydown', this._escapeKeyHandler);
+        }
     }
 
     show() {
@@ -436,8 +389,22 @@ export class MapSelectorUI extends UIComponent {
     }
 
     destroy() {
-        if (this.element && this.element.parentNode) {
-            this.element.parentNode.removeChild(this.element);
+        // Remove event listeners
+        if (this._escapeKeyHandler) {
+            document.removeEventListener('keydown', this._escapeKeyHandler);
+            this._escapeKeyHandler = null;
+        }
+        
+        // Since we're using the declarative HTML structure, we don't remove the element
+        // Just hide it and clean up any dynamic content
+        if (this.element) {
+            this.hide();
+            
+            // Clear map list
+            const mapList = this.element.querySelector('#map-list');
+            if (mapList) {
+                mapList.innerHTML = '';
+            }
         }
     }
 }
