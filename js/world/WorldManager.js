@@ -9,6 +9,7 @@ import { FogManager } from './environment/FogManager.js';
 import { SkyManager } from './environment/SkyManager.js';
 import { TeleportManager } from './teleport/TeleportManager.js';
 import { MapLoader } from './utils/MapLoader.js';
+import { ChunkedMapLoader } from './utils/ChunkedMapLoader.js';
 
 /**
  * Main World Manager class that coordinates all world-related systems
@@ -42,7 +43,10 @@ export class WorldManager {
         this.interactiveManager = new InteractiveObjectManager(scene, this, game);
         this.zoneManager = new ZoneManager(scene, this, game);
         this.teleportManager = new TeleportManager(scene, this, game);
+        
+        // Map loaders - both traditional and chunked versions
         this.mapLoader = new MapLoader(this);
+        this.chunkedMapLoader = new ChunkedMapLoader(this);
         
         // Load cached terrain data if available
         this.loadTerrainCache();
@@ -449,6 +453,11 @@ export class WorldManager {
         
         // Always update terrain chunks (but they have their own optimization)
         this.terrainManager.updateForPlayer(playerPosition, effectiveDrawDistance);
+        
+        // Update chunked map loader if a map is loaded
+        if (this.chunkedMapLoader && this.chunkedMapLoader.currentMapMetadata) {
+            this.chunkedMapLoader.updateLoadedChunksForPosition(playerPosition);
+        }
         
         // Track player movement for predictive generation
         this.updatePlayerMovementTracking(playerPosition);
@@ -1583,14 +1592,23 @@ export class WorldManager {
     /**
      * Load a pre-generated map
      * @param {Object} mapData - The map data to load
+     * @param {boolean} useChunking - Whether to use chunked loading (for large maps)
      * @returns {Promise<boolean>} - True if loading was successful
      */
-    async loadPreGeneratedMap(mapData) {
-        console.log('Loading pre-generated map...');
+    async loadPreGeneratedMap(mapData, useChunking = false) {
+        console.log(`Loading pre-generated map${useChunking ? ' (chunked mode)' : ''}...`);
         
         try {
-            // Use the map loader to load the map
-            const success = await this.mapLoader.loadMap(mapData);
+            let success;
+            
+            // Determine which loader to use based on map size and chunking flag
+            if (useChunking || this.shouldUseChunkedLoading(mapData)) {
+                console.log('Using chunked map loader for large map');
+                success = await this.chunkedMapLoader.loadMap(mapData);
+            } else {
+                // Use the traditional map loader for smaller maps
+                success = await this.mapLoader.loadMap(mapData);
+            }
             
             if (success) {
                 // Update terrain cache to mark as pre-generated
@@ -1619,15 +1637,63 @@ export class WorldManager {
     }
     
     /**
+     * Determine if chunked loading should be used based on map size
+     * @param {Object} mapData - The map data to analyze
+     * @returns {boolean} - True if chunked loading should be used
+     */
+    shouldUseChunkedLoading(mapData) {
+        // Check if map data is large enough to warrant chunked loading
+        let totalObjects = 0;
+        
+        if (mapData.structures) totalObjects += mapData.structures.length;
+        if (mapData.paths) totalObjects += mapData.paths.length;
+        if (mapData.environment) totalObjects += mapData.environment.length;
+        
+        // Use chunked loading if there are more than 1000 objects
+        const useChunking = totalObjects > 1000;
+        
+        console.log(`Map contains ${totalObjects} objects. ${useChunking ? 'Using' : 'Not using'} chunked loading.`);
+        return useChunking;
+    }
+    
+    /**
      * Load a pre-generated map from a file
      * @param {string} mapFilePath - Path to the map JSON file
+     * @param {boolean} useChunking - Whether to use chunked loading (for large maps)
      * @returns {Promise<boolean>} - True if loading was successful
      */
-    async loadPreGeneratedMapFromFile(mapFilePath) {
-        console.log(`Loading map from file: ${mapFilePath}`);
+    async loadPreGeneratedMapFromFile(mapFilePath, useChunking = false) {
+        console.log(`Loading map from file: ${mapFilePath}${useChunking ? ' (chunked mode)' : ''}`);
         
         try {
-            const result = await this.mapLoader.loadMapFromFile(mapFilePath);
+            let result;
+            
+            // Check file size to determine if chunking should be used
+            if (useChunking) {
+                console.log('Using chunked map loader for large map file');
+                result = await this.chunkedMapLoader.loadMapFromFile(mapFilePath);
+            } else {
+                // Try to load a small portion of the file first to check size
+                try {
+                    const response = await fetch(mapFilePath, {
+                        method: 'HEAD'
+                    });
+                    
+                    // Check Content-Length header if available
+                    const contentLength = response.headers.get('Content-Length');
+                    if (contentLength && parseInt(contentLength) > 5 * 1024 * 1024) { // > 5MB
+                        console.log(`Large map detected (${Math.round(parseInt(contentLength)/1024/1024)}MB), using chunked loader`);
+                        result = await this.chunkedMapLoader.loadMapFromFile(mapFilePath);
+                    } else {
+                        // Use traditional loader for smaller maps
+                        result = await this.mapLoader.loadMapFromFile(mapFilePath);
+                    }
+                } catch (headerError) {
+                    // If HEAD request fails, fall back to traditional loading
+                    console.warn('Could not determine map size, using traditional loader:', headerError);
+                    result = await this.mapLoader.loadMapFromFile(mapFilePath);
+                }
+            }
             
             // Ensure terrain colors are updated after map is loaded
             if (result && this.zoneManager) {
