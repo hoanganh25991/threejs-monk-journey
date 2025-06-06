@@ -4,6 +4,11 @@
  * Generate Sample Maps Script
  * Creates sample maps for each theme and saves them to the generated-maps directory
  * Also generates minimaps and map images
+ * 
+ * Optimized with tree clustering for better performance:
+ * - Trees are grouped into clusters to reduce the number of objects
+ * - Each cluster is rendered as a single entity with LOD (Level of Detail)
+ * - This significantly improves performance on maps with many trees
  */
 
 import { MapGenerator, MAP_THEMES } from './map-generator.js';
@@ -50,13 +55,13 @@ async function generateAllSampleMaps() {
         
         const generator = new MapGenerator();
         
-        // Apply special handling for Dark Forest to reduce file size
+        // Apply special handling for Dark Forest to reduce file size and improve performance
         let options = {};
         if (themeKey === 'DARK_FOREST') {
             options = {
                 features: {
-                    // Reduce tree density for sample map to prevent excessive file size
-                    treeDensity: 0.2,  // Reduced from 0.8
+                    // Reduce tree density for sample map to prevent excessive file size and improve performance
+                    treeDensity: 0.15,  // Further reduced from 0.2 (originally 0.8)
                     pathWidth: 2,
                     villageCount: 3,
                     towerCount: 5,
@@ -64,7 +69,7 @@ async function generateAllSampleMaps() {
                     bridgeCount: 4
                 }
             };
-            console.log('  - Applying reduced tree density for Dark Forest sample');
+            console.log('  - Applying significantly reduced tree density for Dark Forest sample');
         }
         
         const mapData = generator.generateMap(themeKey, options);
@@ -260,11 +265,11 @@ async function generateRandomMaps(count = 20) {
         // Create custom options by combining theme features with variation
         let themeFeatures = { ...theme.features };
         
-        // Apply special handling for Dark Forest to reduce file size
+        // Apply special handling for Dark Forest to reduce file size and improve performance
         if (themeKey === 'DARK_FOREST') {
-            // Reduce tree density for Dark Forest to prevent excessive file size
-            themeFeatures.treeDensity = Math.min(themeFeatures.treeDensity, 0.2);
-            console.log('  - Applying reduced tree density for Dark Forest');
+            // Reduce tree density for Dark Forest to prevent excessive file size and improve performance
+            themeFeatures.treeDensity = Math.min(themeFeatures.treeDensity, 0.15);
+            console.log('  - Applying significantly reduced tree density for Dark Forest');
         }
         
         const options = {

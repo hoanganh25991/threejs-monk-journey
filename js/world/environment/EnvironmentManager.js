@@ -7,11 +7,13 @@ import { TallGrass } from './TallGrass.js';
 import { AncientTree } from './AncientTree.js';
 import { Waterfall } from './Waterfall.js';
 import { CrystalFormation } from './CrystalFormation.js';
+import { TreeCluster } from './TreeCluster.js';
 import { RandomGenerator } from '../utils/RandomGenerator.js';
 
 /**
  * Manages environment objects like trees, rocks, bushes, etc.
  * Fully randomized with natural grouping of similar objects
+ * Optimized with tree clustering for better performance
  */
 export class EnvironmentManager {
     constructor(scene, worldManager, game = null) {
@@ -25,12 +27,13 @@ export class EnvironmentManager {
         
         // Environment object types (no longer using config)
         this.environmentObjectTypes = [
-            'tree', 'rock', 'bush', 'flower', 'tall_grass', 'ancient_tree', 'small_plant',
+            'tree', 'tree_cluster', 'rock', 'bush', 'flower', 'tall_grass', 'ancient_tree', 'small_plant',
             'fallen_log', 'mushroom', 'rock_formation', 'shrine', 'stump', 'waterfall', 'crystal_formation'
         ];
         
         // For minimap functionality
         this.trees = [];
+        this.treeClusters = []; // New array for tree clusters
         this.rocks = [];
         this.bushes = [];
         this.flowers = [];
@@ -44,6 +47,12 @@ export class EnvironmentManager {
         this.stumps = [];
         this.waterfalls = [];
         this.crystalFormations = [];
+        
+        // Performance optimization settings
+        this.useTreeClustering = true; // Enable tree clustering by default
+        this.clusterThreshold = 5; // Minimum number of trees to form a cluster
+        this.maxTreesPerCluster = 30; // Maximum number of trees in a single cluster
+        this.clusterRadius = 20; // Maximum radius for a tree cluster
         
         // Last player position for distance tracking
         this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
@@ -1105,12 +1114,121 @@ export class EnvironmentManager {
     }
     
     /**
+     * Create a tree cluster from an array of tree positions
+     * @param {Array} treePositions - Array of tree positions
+     * @param {string} zoneType - Zone type for tree appearance
+     * @returns {TreeCluster} - The created tree cluster
+     */
+    createTreeCluster(treePositions, zoneType = 'Forest') {
+        // Create tree cluster with the given positions
+        const cluster = new TreeCluster(zoneType, treePositions, {
+            useLOD: true,
+            highDetailDistance: 50,
+            mediumDetailDistance: 100,
+            lowDetailDistance: 200
+        });
+        
+        // Add cluster to scene
+        const clusterMesh = cluster.getMesh();
+        this.scene.add(clusterMesh);
+        
+        // Add to tree clusters array
+        this.treeClusters.push(cluster);
+        
+        return cluster;
+    }
+    
+    /**
+     * Process tree positions into clusters for better performance
+     * @param {Array} treePositions - Array of tree positions
+     * @param {string} zoneType - Zone type for tree appearance
+     * @returns {Array} - Array of created objects (clusters and individual trees)
+     */
+    processTreesIntoClusters(treePositions, zoneType = 'Forest') {
+        if (!this.useTreeClustering || treePositions.length < this.clusterThreshold) {
+            // If clustering is disabled or not enough trees, create individual trees
+            const trees = [];
+            treePositions.forEach(pos => {
+                const tree = this.createTree(pos.x, pos.z, zoneType);
+                if (tree) {
+                    trees.push({
+                        type: 'tree',
+                        object: tree,
+                        position: new THREE.Vector3(pos.x, 0, pos.z)
+                    });
+                }
+            });
+            return trees;
+        }
+        
+        // Group trees by proximity
+        const clusters = [];
+        const processedTrees = new Set();
+        const createdObjects = [];
+        
+        // Process each tree position
+        for (let i = 0; i < treePositions.length; i++) {
+            if (processedTrees.has(i)) continue;
+            
+            const pos = treePositions[i];
+            const clusterTrees = [pos];
+            processedTrees.add(i);
+            
+            // Find nearby trees
+            for (let j = 0; j < treePositions.length; j++) {
+                if (i === j || processedTrees.has(j)) continue;
+                
+                const otherPos = treePositions[j];
+                const distance = Math.sqrt(
+                    Math.pow(pos.x - otherPos.x, 2) + 
+                    Math.pow(pos.z - otherPos.z, 2)
+                );
+                
+                if (distance <= this.clusterRadius && clusterTrees.length < this.maxTreesPerCluster) {
+                    clusterTrees.push(otherPos);
+                    processedTrees.add(j);
+                }
+            }
+            
+            // Create a cluster if enough trees were found
+            if (clusterTrees.length >= this.clusterThreshold) {
+                const cluster = this.createTreeCluster(clusterTrees, zoneType);
+                clusters.push(cluster);
+                
+                createdObjects.push({
+                    type: 'tree_cluster',
+                    object: cluster.getMesh(),
+                    cluster: cluster,
+                    position: cluster.centerPosition,
+                    treeCount: clusterTrees.length
+                });
+            } else {
+                // Not enough trees for a cluster, create individual trees
+                clusterTrees.forEach(treePos => {
+                    const tree = this.createTree(treePos.x, treePos.z, zoneType);
+                    if (tree) {
+                        createdObjects.push({
+                            type: 'tree',
+                            object: tree,
+                            position: new THREE.Vector3(treePos.x, 0, treePos.z)
+                        });
+                    }
+                });
+            }
+        }
+        
+        console.debug(`Created ${clusters.length} tree clusters from ${treePositions.length} trees`);
+        return createdObjects;
+    }
+    
+    /**
      * Update the collections of environment objects for the minimap
      * This should be called before accessing the collections
      */
     updateEnvironmentCollections() {
         // Clear existing collections
         this.trees = [];
+        this.treeClusters = [];
         this.rocks = [];
         this.bushes = [];
         this.flowers = [];
@@ -1124,6 +1242,18 @@ export class EnvironmentManager {
                             this.trees.push({
                                 position: item.position
                             });
+                            break;
+                        case 'tree_cluster':
+                            // For tree clusters, add each individual tree position for the minimap
+                            if (item.cluster && item.cluster.getIndividualTrees) {
+                                const individualTrees = item.cluster.getIndividualTrees();
+                                individualTrees.forEach(tree => {
+                                    this.trees.push({
+                                        position: tree.position
+                                    });
+                                });
+                            }
+                            this.treeClusters.push(item.cluster);
                             break;
                         case 'rock':
                             this.rocks.push({

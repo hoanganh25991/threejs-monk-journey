@@ -74,7 +74,20 @@ export class EnemyManager {
         this.enemyChunks = {}; // Track enemies per chunk
         this.enemiesPerChunk = 5; // Number of enemies to spawn per chunk
         this.chunkSpawnRadius = 80; // Radius within chunk to spawn enemies
-        this.enemyGroupSize = { min: 2, max: 5 }; // Enemies spawn in groups
+        // Increased group size for more dangerous encounters
+        this.enemyGroupSize = { min: 3, max: 20 }; // Enemies can now spawn in much larger groups
+        
+        // Wave system configuration
+        this.waveSystem = {
+            enabled: true,
+            currentWave: 0,
+            maxWaves: 3,
+            waveTimer: 0,
+            waveInterval: 30, // Seconds between waves
+            enemiesPerWave: { min: 10, max: 20 }, // More enemies in each wave
+            waveInProgress: false,
+            dangerousGroupChance: 0.3 // 30% chance to spawn a dangerous large group
+        };
         
         // Import enemy configuration from config/enemies.js
         this.zoneEnemies = ZONE_ENEMIES;
@@ -100,8 +113,12 @@ export class EnemyManager {
         
         // Boss spawning configuration
         this.bossSpawnTimer = 0;
-        this.bossSpawnInterval = 60; // Spawn boss every 60 seconds (1 minute) - increased rate
-        this.bossSpawnChance = 0.4; // 40% chance to spawn a boss when timer is up - increased rate
+        this.bossSpawnInterval = 12; // Spawn boss every 12 seconds (5x more frequent than original 60 seconds)
+        this.bossSpawnChance = 0.8; // 80% chance to spawn a boss when timer is up (doubled from original 40%)
+        
+        // Track enemy kills for boss spawning
+        this.enemyKillCount = 0;
+        this.killsPerBossSpawn = 20; // Spawn a boss after every 20 enemy kills
         
         // Item generation
         this.itemGenerator = new ItemGenerator(game);
@@ -171,29 +188,79 @@ export class EnemyManager {
             // Update regular enemy spawn timer
             this.spawnTimer += delta;
             
-            // Spawn new enemies if needed
+            // Update wave system timer
+            if (this.waveSystem.enabled) {
+                this.waveSystem.waveTimer += delta;
+                
+                // Check if it's time to start a new wave
+                if (!this.waveSystem.waveInProgress && 
+                    this.waveSystem.waveTimer >= this.waveSystem.waveInterval && 
+                    this.waveSystem.currentWave < this.waveSystem.maxWaves) {
+                    
+                    // Start a new wave
+                    this.waveSystem.currentWave++;
+                    this.waveSystem.waveInProgress = true;
+                    this.waveSystem.waveTimer = 0;
+                    
+                    console.debug(`Starting enemy wave ${this.waveSystem.currentWave}/${this.waveSystem.maxWaves}`);
+                    
+                    // Spawn a wave of enemies
+                    this.spawnEnemyWave();
+                }
+                
+                // Reset wave system after all waves are complete
+                if (this.waveSystem.currentWave >= this.waveSystem.maxWaves && 
+                    this.waveSystem.waveTimer >= this.waveSystem.waveInterval * 2) {
+                    this.waveSystem.currentWave = 0;
+                    this.waveSystem.waveInProgress = false;
+                    this.waveSystem.waveTimer = 0;
+                    console.debug('Wave system reset, ready for new waves');
+                }
+            }
+            
+            // Regular enemy spawning (still happens between waves)
             if (this.spawnTimer >= this.spawnInterval && this.enemies.size < this.maxEnemies) {
-                this.spawnEnemy();
+                // Chance to spawn a dangerous large group instead of a single enemy
+                if (Math.random() < this.waveSystem.dangerousGroupChance) {
+                    console.debug('Spawning a dangerous large group of enemies!');
+                    this.spawnDangerousGroup();
+                } else {
+                    // Regular single enemy spawn
+                    this.spawnEnemy();
+                }
                 this.spawnTimer = 0;
             }
             
             // Update boss spawn timer
             this.bossSpawnTimer += delta;
             
-            // Check if it's time to potentially spawn a boss
+            // Check if it's time to potentially spawn a boss (time-based spawning)
             if (this.bossSpawnTimer >= this.bossSpawnInterval) {
                 // Reset timer regardless of whether a boss is spawned
                 this.bossSpawnTimer = 0;
                 
-                // Random chance to spawn a boss
+                // Random chance to spawn a boss (increased chance)
                 if (Math.random() < this.bossSpawnChance) {
-                    console.debug('Spawning random boss...');
+                    console.debug('Spawning random boss (time-based)...');
                     this.spawnRandomBoss();
                     
                     // Play boss theme if available
                     if (this.game && this.game.audioManager) {
                         this.game.audioManager.playMusic('bossTheme');
                     }
+                }
+            }
+            
+            // Check if we should spawn a boss based on kill count
+            // This provides a more predictable boss encounter rate
+            if (this.enemyKillCount >= this.killsPerBossSpawn) {
+                console.debug(`Spawning boss after ${this.enemyKillCount} enemy kills`);
+                this.enemyKillCount = 0; // Reset kill counter
+                this.spawnRandomBoss();
+                
+                // Play boss theme if available
+                if (this.game && this.game.audioManager) {
+                    this.game.audioManager.playMusic('bossTheme');
                 }
             }
         }
@@ -222,6 +289,12 @@ export class EnemyManager {
                     
                     // Check for item drops
                     this.handleEnemyDrop(enemy);
+                    
+                    // Increment kill counter for boss spawning (only for non-boss enemies)
+                    if (!enemy.isBoss) {
+                        this.enemyKillCount++;
+                        console.debug(`Enemy killed. Kill count: ${this.enemyKillCount}/${this.killsPerBossSpawn}`);
+                    }
                 }
                 
                 // Check if death animation is still in progress
@@ -631,6 +704,147 @@ export class EnemyManager {
     }
 
     // Removed duplicate spawnEnemy method that was causing conflicts
+    
+    /**
+     * Spawns a wave of enemies around the player
+     * Creates multiple groups of enemies that attack from different directions
+     */
+    spawnEnemyWave() {
+        // Get player position
+        const playerPosition = this.game.player.position.clone();
+        
+        // Temporarily increase max enemies to allow for larger waves
+        const originalMaxEnemies = this.maxEnemies;
+        this.maxEnemies = Math.min(200, this.maxEnemies * 2);
+        
+        // Determine number of groups in this wave (3-5 groups)
+        const numGroups = 3 + Math.floor(Math.random() * 3);
+        
+        // Determine total enemies in this wave
+        const minEnemies = this.waveSystem.enemiesPerWave.min;
+        const maxEnemies = this.waveSystem.enemiesPerWave.max;
+        const totalEnemies = minEnemies + Math.floor(Math.random() * (maxEnemies - minEnemies + 1));
+        
+        // Calculate enemies per group
+        const enemiesPerGroup = Math.ceil(totalEnemies / numGroups);
+        
+        console.debug(`Spawning wave with ${totalEnemies} enemies in ${numGroups} groups (${enemiesPerGroup} per group)`);
+        
+        // Distribute groups evenly around the player for a surrounding effect
+        const angleStep = (Math.PI * 2) / numGroups;
+        let startAngle = Math.random() * Math.PI * 2;
+        
+        // Get available zones
+        const availableZones = Object.keys(this.zoneEnemies);
+        
+        for (let g = 0; g < numGroups; g++) {
+            // Select a random zone for this group
+            const randomZone = availableZones[Math.floor(Math.random() * availableZones.length)];
+            const zoneEnemyTypes = this.zoneEnemies[randomZone];
+            
+            // Select a random enemy type from the zone for this group
+            const groupEnemyType = zoneEnemyTypes[Math.floor(Math.random() * zoneEnemyTypes.length)];
+            
+            // Calculate group position (surrounding the player)
+            const groupAngle = startAngle + (angleStep * g);
+            const groupDistance = 25 + Math.random() * 15; // 25-40 units away
+            
+            const groupX = playerPosition.x + Math.cos(groupAngle) * groupDistance;
+            const groupZ = playerPosition.z + Math.sin(groupAngle) * groupDistance;
+            
+            // Spawn the group of enemies
+            for (let i = 0; i < enemiesPerGroup; i++) {
+                // Skip if we've reached max enemies
+                if (this.enemies.size >= this.maxEnemies) {
+                    break;
+                }
+                
+                // Calculate position within group (random spread)
+                const spreadRadius = 5 + Math.random() * 5; // 5-10 units spread
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * spreadRadius;
+                const x = groupX + Math.cos(angle) * distance;
+                const z = groupZ + Math.sin(angle) * distance;
+                
+                // Get terrain height at position
+                const y = this.game.world.getTerrainHeight(x, z);
+                
+                // Spawn enemy
+                const position = new THREE.Vector3(x, y, z);
+                this.spawnEnemy(groupEnemyType, position);
+            }
+        }
+        
+        // Restore original max enemies
+        this.maxEnemies = originalMaxEnemies;
+        
+        // Play a warning sound if available
+        if (this.game && this.game.audioManager) {
+            this.game.audioManager.playSound('enemyWave', 0.7);
+        }
+        
+        // Mark the wave as complete after a delay
+        setTimeout(() => {
+            this.waveSystem.waveInProgress = false;
+            console.debug(`Wave ${this.waveSystem.currentWave} complete`);
+        }, 5000); // 5 seconds delay
+    }
+    
+    /**
+     * Spawns a dangerous large group of enemies (10-20) in a single location
+     * Creates a concentrated threat that feels dangerous
+     */
+    spawnDangerousGroup() {
+        // Get player position
+        const playerPosition = this.game.player.position.clone();
+        
+        // Determine group size (10-20 enemies)
+        const groupSize = 10 + Math.floor(Math.random() * 11);
+        
+        // Get available zones
+        const availableZones = Object.keys(this.zoneEnemies);
+        const randomZone = availableZones[Math.floor(Math.random() * availableZones.length)];
+        const zoneEnemyTypes = this.zoneEnemies[randomZone];
+        
+        // Select a random enemy type from the zone for this group
+        const groupEnemyType = zoneEnemyTypes[Math.floor(Math.random() * zoneEnemyTypes.length)];
+        
+        // Calculate group position (in front of the player)
+        const playerDirection = this.game.player.getDirection();
+        const groupDistance = 20 + Math.random() * 10; // 20-30 units away
+        
+        const groupX = playerPosition.x + playerDirection.x * groupDistance;
+        const groupZ = playerPosition.z + playerDirection.z * groupDistance;
+        
+        console.debug(`Spawning dangerous group of ${groupSize} enemies`);
+        
+        // Spawn the group of enemies
+        for (let i = 0; i < groupSize; i++) {
+            // Skip if we've reached max enemies
+            if (this.enemies.size >= this.maxEnemies) {
+                break;
+            }
+            
+            // Calculate position within group (tight formation)
+            const spreadRadius = 8; // Tight formation
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.random() * spreadRadius;
+            const x = groupX + Math.cos(angle) * distance;
+            const z = groupZ + Math.sin(angle) * distance;
+            
+            // Get terrain height at position
+            const y = this.game.world.getTerrainHeight(x, z);
+            
+            // Spawn enemy
+            const position = new THREE.Vector3(x, y, z);
+            this.spawnEnemy(groupEnemyType, position);
+        }
+        
+        // Play a warning sound if available
+        if (this.game && this.game.audioManager) {
+            this.game.audioManager.playSound('dangerWarning', 0.7);
+        }
+    }
 
     applyDifficultyScaling(enemy, difficultySettings) {
         // Scale health

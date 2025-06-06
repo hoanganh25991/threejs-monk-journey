@@ -1349,7 +1349,6 @@ class MapGenerator {
         // Combine common and theme-specific objects
         return [...commonObjects, ...themeObjects];
     }
-    }
 
     /**
      * Connect structures with smaller paths
@@ -2059,10 +2058,14 @@ class MapGenerator {
     }
 
     /**
-     * Generate trees along paths
+     * Generate trees along paths using tree clusters for better performance
      */
     generateTreesAlongPaths(density, theme) {
-        this.mapData.paths.forEach(path => {
+        // Process each path segment
+        this.mapData.paths.forEach((path, pathIndex) => {
+            // Create clusters for each path segment
+            const pathClusters = [];
+            
             path.points.forEach((point, index) => {
                 if (index < path.points.length - 1) {
                     const nextPoint = path.points[index + 1];
@@ -2071,16 +2074,20 @@ class MapGenerator {
                         Math.pow(nextPoint.z - point.z, 2)
                     );
                     
-                    // Significantly increase tree density along paths
-                    const treeCount = Math.floor(distance * density / 3); // Higher density
+                    // Reduce tree density for better performance
+                    const treeCount = Math.floor(distance * density / 4); // Lower density
+                    
+                    // Create tree positions for left and right sides of the path
+                    const leftSideTrees = [];
+                    const rightSideTrees = [];
                     
                     for (let i = 0; i < treeCount; i++) {
                         const t = i / treeCount;
                         const x = point.x + (nextPoint.x - point.x) * t;
                         const z = point.z + (nextPoint.z - point.z) * t;
                         
-                        // Create dense tree lines on both sides of the path
-                        for (let side = -1; side <= 1; side += 2) { // Both sides of the path
+                        // Create trees on both sides of the path
+                        for (let side = -1; side <= 1; side += 2) { // -1 = left, 1 = right
                             // Vary the offset to create a more natural forest edge
                             const baseOffset = path.width + 2;
                             const variableOffset = this.rng() * 8; // Smaller variation for tighter grouping
@@ -2089,79 +2096,206 @@ class MapGenerator {
                             // Add trees with varying sizes
                             const treeSize = 0.7 + this.rng() * 0.6; // 0.7 to 1.3 size multiplier
                             
-                            this.mapData.environment.push({
-                                type: 'tree',
-                                position: {
-                                    x: x + side * offset,
-                                    y: 0,
-                                    z: z + side * offset
-                                },
-                                theme: theme.name,
+                            // Create tree position
+                            const treePosition = {
+                                x: x + side * offset,
+                                y: 0,
+                                z: z + side * offset,
                                 size: treeSize
-                            });
+                            };
                             
-                            // Add multiple rows of trees for denser forest
-                            for (let row = 1; row <= 3; row++) { // Up to 3 additional rows
-                                if (this.rng() < 0.85 - (row * 0.15)) { // Decreasing chance for each row
-                                    const rowOffset = offset + (row * 3) + this.rng() * 4; // Tighter spacing
+                            // Add to appropriate side collection
+                            if (side < 0) {
+                                leftSideTrees.push(treePosition);
+                            } else {
+                                rightSideTrees.push(treePosition);
+                            }
+                            
+                            // Add multiple rows of trees for denser forest (but fewer than before)
+                            for (let row = 1; row <= 2; row++) { // Reduced from 3 to 2 rows
+                                if (this.rng() < 0.7 - (row * 0.2)) { // Lower chance for additional rows
+                                    const rowOffset = offset + (row * 3) + this.rng() * 4;
                                     
                                     // Add slight lateral variation
                                     const lateralShift = this.rng() * 4 - 2; // -2 to 2 units shift
                                     
-                                    this.mapData.environment.push({
-                                        type: 'tree',
-                                        position: {
-                                            x: x + side * rowOffset + lateralShift,
-                                            y: 0,
-                                            z: z + side * rowOffset + lateralShift
-                                        },
-                                        theme: theme.name,
+                                    // Create additional tree position
+                                    const additionalTreePosition = {
+                                        x: x + side * rowOffset + lateralShift,
+                                        y: 0,
+                                        z: z + side * rowOffset + lateralShift,
                                         size: 0.6 + this.rng() * 0.8 // More size variation
-                                    });
+                                    };
+                                    
+                                    // Add to appropriate side collection
+                                    if (side < 0) {
+                                        leftSideTrees.push(additionalTreePosition);
+                                    } else {
+                                        rightSideTrees.push(additionalTreePosition);
+                                    }
                                 }
-                            }
-                            
-                            // Add occasional bushes and rocks near trees
-                            if (this.rng() < 0.4) { // Increased chance
-                                const bushOffset = offset + (this.rng() - 0.5) * 3; // Tighter clustering
-                                this.mapData.environment.push({
-                                    type: 'bush',
-                                    position: {
-                                        x: x + side * bushOffset,
-                                        y: 0,
-                                        z: z + side * bushOffset
-                                    },
-                                    theme: theme.name,
-                                    size: 0.4 + this.rng() * 0.3 // Smaller bushes
-                                });
-                            }
-                            
-                            if (this.rng() < 0.2) { // Slightly increased chance
-                                const rockOffset = offset + (this.rng() - 0.5) * 3;
-                                this.mapData.environment.push({
-                                    type: 'rock',
-                                    position: {
-                                        x: x + side * rockOffset,
-                                        y: 0,
-                                        z: z + side * rockOffset
-                                    },
-                                    theme: theme.name,
-                                    size: 0.5 + this.rng() * 0.5
-                                });
                             }
                         }
                     }
+                    
+                    // Create tree clusters for each side if there are enough trees
+                    if (leftSideTrees.length >= 5) {
+                        const clusterCenter = this.calculateCenter(leftSideTrees);
+                        pathClusters.push({
+                            position: clusterCenter,
+                            treePositions: leftSideTrees,
+                            clusterName: `path_${pathIndex}_segment_${index}_left`
+                        });
+                    } else {
+                        // Add individual trees if not enough for a cluster
+                        leftSideTrees.forEach(treePos => {
+                            this.mapData.environment.push({
+                                type: 'tree',
+                                position: {
+                                    x: treePos.x,
+                                    y: treePos.y,
+                                    z: treePos.z
+                                },
+                                theme: theme.name,
+                                size: treePos.size
+                            });
+                        });
+                    }
+                    
+                    if (rightSideTrees.length >= 5) {
+                        const clusterCenter = this.calculateCenter(rightSideTrees);
+                        pathClusters.push({
+                            position: clusterCenter,
+                            treePositions: rightSideTrees,
+                            clusterName: `path_${pathIndex}_segment_${index}_right`
+                        });
+                    } else {
+                        // Add individual trees if not enough for a cluster
+                        rightSideTrees.forEach(treePos => {
+                            this.mapData.environment.push({
+                                type: 'tree',
+                                position: {
+                                    x: treePos.x,
+                                    y: treePos.y,
+                                    z: treePos.z
+                                },
+                                theme: theme.name,
+                                size: treePos.size
+                            });
+                        });
+                    }
                 }
+            });
+            
+            // Add all path clusters to the environment
+            pathClusters.forEach(cluster => {
+                this.mapData.environment.push({
+                    type: 'tree_cluster',
+                    position: cluster.position,
+                    theme: theme.name,
+                    treePositions: cluster.treePositions,
+                    clusterName: cluster.clusterName
+                });
             });
         });
     }
     
     /**
+     * Calculate the center position of a group of tree positions
+     * @param {Array} positions - Array of position objects with x, y, z properties
+     * @returns {Object} - Center position
+     */
+    calculateCenter(positions) {
+        if (positions.length === 0) {
+            return { x: 0, y: 0, z: 0 };
+        }
+        
+        let sumX = 0, sumY = 0, sumZ = 0;
+        
+        positions.forEach(pos => {
+            sumX += pos.x;
+            sumY += pos.y || 0;
+            sumZ += pos.z;
+        });
+        
+        return {
+            x: sumX / positions.length,
+            y: sumY / positions.length,
+            z: sumZ / positions.length
+        };
+    }
+    
+    /**
+     * Add vegetation along paths
+     * @param {Object} path - Path object
+     * @param {Object} theme - Theme object
+     */
+    addVegetationAlongPath(path, theme) {
+        path.points.forEach((point, index) => {
+            if (index < path.points.length - 1) {
+                const nextPoint = path.points[index + 1];
+                const distance = Math.sqrt(
+                    Math.pow(nextPoint.x - point.x, 2) +
+                    Math.pow(nextPoint.z - point.z, 2)
+                );
+                
+                const vegetationCount = Math.floor(distance / 5);
+                
+                for (let i = 0; i < vegetationCount; i++) {
+                    const t = i / vegetationCount;
+                    const x = point.x + (nextPoint.x - point.x) * t;
+                    const z = point.z + (nextPoint.z - point.z) * t;
+                    
+                    // Add vegetation on both sides of the path
+                    for (let side = -1; side <= 1; side += 2) {
+                        // Vary the offset
+                        const baseOffset = path.width + 1;
+                        const variableOffset = this.rng() * 2;
+                        const offset = baseOffset + variableOffset;
+                        
+                        // Add bushes
+                        if (this.rng() < 0.2) {
+                            const bushOffset = offset + (this.rng() - 0.5) * 3;
+                            this.mapData.environment.push({
+                                type: 'bush',
+                                position: {
+                                    x: x + side * bushOffset,
+                                    y: 0,
+                                    z: z + side * bushOffset
+                                },
+                                theme: theme.name,
+                                size: 0.4 + this.rng() * 0.3 // Smaller bushes
+                            });
+                        }
+                        
+                        // Add rocks
+                        if (this.rng() < 0.1) {
+                            const rockOffset = offset + (this.rng() - 0.5) * 3;
+                            this.mapData.environment.push({
+                                type: 'rock',
+                                position: {
+                                    x: x + side * rockOffset,
+                                    y: 0,
+                                    z: z + side * rockOffset
+                                },
+                                theme: theme.name,
+                                size: 0.5 + this.rng() * 0.5
+                            });
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    /**
      * Generate dense forest clusters throughout the map
+     * Optimized to use tree_cluster objects for better performance
      */
     generateForestClusters(density, theme) {
         // Number of forest clusters based on map size and density
-        const clusterCount = Math.floor((this.mapSize / 100) * density);
+        // Reduce the number of clusters but make each one larger for better performance
+        const clusterCount = Math.floor((this.mapSize / 100) * density * 0.7); // 30% fewer clusters
         
         for (let i = 0; i < clusterCount; i++) {
             // Create forest clusters away from paths and structures
@@ -2172,9 +2306,13 @@ class MapGenerator {
                 continue;
             }
             
-            // Determine forest cluster size
-            const clusterSize = 20 + Math.floor(this.rng() * 30); // 20-50 trees per cluster
+            // Determine forest cluster size - larger clusters for better performance
+            const clusterSize = 15 + Math.floor(this.rng() * 20); // 15-35 trees per cluster (reduced)
             const clusterRadius = 15 + this.rng() * 25; // 15-40 units radius
+            
+            // Create a tree cluster object with tree positions
+            const treePositions = [];
+            const undergrowthObjects = [];
             
             // Generate trees in the cluster with tight spacing
             for (let j = 0; j < clusterSize; j++) {
@@ -2191,22 +2329,22 @@ class MapGenerator {
                 // Add some randomness to tree size - smaller trees more common
                 const treeSize = 0.6 + this.rng() * this.rng() * 0.8; // 0.6-1.4 with bias toward smaller
                 
-                this.mapData.environment.push({
-                    type: 'tree',
-                    position: treePosition,
-                    theme: theme.name,
-                    size: treeSize,
-                    cluster: `forest_${i}` // Tag trees as part of a cluster
+                // Add tree to positions array
+                treePositions.push({
+                    x: treePosition.x,
+                    y: treePosition.y,
+                    z: treePosition.z,
+                    size: treeSize
                 });
                 
                 // Add undergrowth - bushes, flowers, fallen logs, etc.
-                if (this.rng() < 0.4) {
+                if (this.rng() < 0.3) { // Reduced undergrowth density
                     const undergrowthType = this.rng() < 0.6 ? 'bush' : 
                                           (this.rng() < 0.5 ? 'flower' : 'fallen_log');
                     
                     const undergrowthPosition = this.getNearbyPosition(treePosition, 1, 3);
                     
-                    this.mapData.environment.push({
+                    undergrowthObjects.push({
                         type: undergrowthType,
                         position: undergrowthPosition,
                         theme: theme.name,
@@ -2214,6 +2352,23 @@ class MapGenerator {
                         cluster: `forest_${i}`
                     });
                 }
+            }
+            
+            // Create a tree cluster object instead of individual trees
+            if (treePositions.length > 0) {
+                this.mapData.environment.push({
+                    type: 'tree_cluster',
+                    position: clusterCenter, // Center position of the cluster
+                    theme: theme.name,
+                    treePositions: treePositions,
+                    clusterName: `forest_${i}`,
+                    clusterRadius: clusterRadius
+                });
+                
+                // Add undergrowth objects separately
+                undergrowthObjects.forEach(obj => {
+                    this.mapData.environment.push(obj);
+                });
             }
             
             // Add some clearings within the forest
