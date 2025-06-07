@@ -49,6 +49,11 @@ export class WorldManager {
         // Track if map is loaded
         this.mapLoaded = false;
         
+        // Track current map information
+        this.currentMapId = null;
+        this.currentMapName = null;
+        this.currentMapFilename = null;
+        
         // Default map path
         this.defaultMapPath = '/assets/default-map.json';
     }
@@ -102,7 +107,19 @@ export class WorldManager {
         
         if (success) {
             this.mapLoaded = true;
+            this.currentMapId = 'default-map';
+            this.currentMapName = 'Default Map';
+            this.currentMapFilename = 'default-map.json';
             console.debug("Default map loaded successfully");
+            
+            // Notify other systems that the world has changed
+            if (this.game && this.game.events) {
+                this.game.events.emit('worldChanged', {
+                    mapId: this.currentMapId,
+                    mapName: this.currentMapName,
+                    filename: this.currentMapFilename
+                });
+            }
         } else {
             console.error("Failed to load default map");
         }
@@ -157,9 +174,62 @@ export class WorldManager {
         
         if (success) {
             this.mapLoaded = true;
+            
+            // Extract map ID from filename (remove .json extension)
+            this.currentMapFilename = mapFilename;
+            this.currentMapId = mapFilename.replace('.json', '');
+            this.currentMapName = this.currentMapId; // Will be updated if we have map metadata
+            
             console.debug(`Map ${mapFilename} loaded successfully`);
+            
+            // Notify other systems that the world has changed
+            if (this.game && this.game.events) {
+                this.game.events.emit('worldChanged', {
+                    mapId: this.currentMapId,
+                    mapName: this.currentMapName,
+                    filename: this.currentMapFilename
+                });
+            }
         } else {
             console.error(`Failed to load map: ${mapFilename}`);
+        }
+        
+        return success;
+    }
+    
+    /**
+     * Clear the current map and return to the default map
+     * @returns {Promise<boolean>} - True if clearing was successful
+     */
+    async clearCurrentMap() {
+        console.debug("Clearing current map and returning to default...");
+        
+        // Show loading message if UI is available
+        if (this.game && this.game.ui) {
+            this.game.ui.showMessage("Loading default world...", 0);
+        }
+        
+        // Load the default map
+        const success = await this.loadDefaultMap();
+        
+        // Hide loading message
+        if (this.game && this.game.ui) {
+            this.game.ui.hideMessage();
+        }
+        
+        if (success) {
+            console.debug("Successfully returned to default map");
+            
+            // Notify other systems that the world has changed
+            if (this.game && this.game.events) {
+                this.game.events.emit('worldChanged', {
+                    mapId: this.currentMapId,
+                    mapName: this.currentMapName,
+                    filename: this.currentMapFilename
+                });
+            }
+        } else {
+            console.error("Failed to return to default map");
         }
         
         return success;
@@ -215,6 +285,9 @@ export class WorldManager {
     save() {
         return {
             mapLoaded: this.mapLoaded,
+            currentMapId: this.currentMapId,
+            currentMapName: this.currentMapName,
+            currentMapFilename: this.currentMapFilename,
             terrainFeatures: this.terrainFeatures,
             trees: this.trees,
             rocks: this.rocks,
@@ -231,6 +304,9 @@ export class WorldManager {
         if (!worldState) return;
         
         this.mapLoaded = worldState.mapLoaded || false;
+        this.currentMapId = worldState.currentMapId || null;
+        this.currentMapName = worldState.currentMapName || null;
+        this.currentMapFilename = worldState.currentMapFilename || null;
         this.terrainFeatures = worldState.terrainFeatures || [];
         this.trees = worldState.trees || [];
         this.rocks = worldState.rocks || [];

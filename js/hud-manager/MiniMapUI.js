@@ -3,6 +3,8 @@ import { UIComponent } from '../UIComponent.js';
 /**
  * Mini Map UI component - Clean rewrite
  * Displays a simplified top-down view of the game world using pre-generated minimap data
+ * 
+ * Convention: For a map file "mapname.json", the minimap data is at "minimaps/mapname_minimap.json"
  */
 export class MiniMapUI extends UIComponent {
     /**
@@ -69,284 +71,79 @@ export class MiniMapUI extends UIComponent {
         this.loadCurrentWorldMinimap();
         
         // Listen for world changes
-        if (this.game.eventBus) {
-            this.game.eventBus.subscribe('worldChanged', () => {
+        if (this.game.events) {
+            this.game.events.addEventListener('worldChanged', () => {
                 this.loadCurrentWorldMinimap();
             });
         }
         
         return true;
     }
-        
-        // Create a hidden canvas for the static map
-        this.staticMapCanvas = document.createElement('canvas');
-        this.staticMapCanvas.width = this.canvasSize;
-        this.staticMapCanvas.height = this.canvasSize;
-        this.staticMapCtx = this.staticMapCanvas.getContext('2d');
-        
-        // Add event listener to the opacity toggle checkbox
-        const opacityToggle = document.getElementById('mini-map-opacity-toggle');
-        if (opacityToggle) {
-            // Store the timeout ID so we can clear it if needed
-            let opacityTimeoutId = null;
-            
-            opacityToggle.addEventListener('change', (e) => {
-                if (opacityToggle.checked) {
-                    // Clear any existing timeout
-                    if (opacityTimeoutId) {
-                        clearTimeout(opacityTimeoutId);
-                    }
-                    
-                    // Set a new timeout to uncheck after 3 seconds
-                    opacityTimeoutId = setTimeout(() => {
-                        opacityToggle.checked = false;
-                        opacityTimeoutId = null;
-                    }, 3000);
-                }
-            });
+    
+    /**
+     * Update the component
+     * @param {number} delta - Time since last update in seconds
+     */
+    update(delta) {
+        const now = Date.now();
+        if (now - this.lastRenderTime >= this.renderInterval) {
+            this.renderMinimap();
+            this.lastRenderTime = now;
         }
-        
-        // Add event listeners for map dragging
-        this.canvas.addEventListener('mousedown', this.onMapDragStart.bind(this));
-        this.canvas.addEventListener('touchstart', this.onMapDragStart.bind(this), { passive: false });
-        
-        window.addEventListener('mousemove', this.onMapDragMove.bind(this));
-        window.addEventListener('touchmove', this.onMapDragMove.bind(this), { passive: false });
-        
-        window.addEventListener('mouseup', this.onMapDragEnd.bind(this));
-        window.addEventListener('touchend', this.onMapDragEnd.bind(this));
-        
-        // Add event listeners for map zooming
-        const zoomInBtn = document.getElementById('mini-map-zoom-in-btn');
-        const zoomOutBtn = document.getElementById('mini-map-zoom-out-btn');
-        const centerBtn = document.getElementById('mini-map-center-btn');
-        
-        if (zoomInBtn) {
-            zoomInBtn.addEventListener('click', (e) => {
-                this.decreaseScale(); // Zoom in (decrease scale)
-                e.stopPropagation();
-            });
-        }
-        
-        if (zoomOutBtn) {
-            zoomOutBtn.addEventListener('click', (e) => {
-                this.increaseScale(); // Zoom out (increase scale)
-                e.stopPropagation();
-            });
-        }
-        
-        if (centerBtn) {
-            centerBtn.addEventListener('click', (e) => {
-                this.resetMapPosition(); // Center the map
-                e.stopPropagation();
-            });
-        }
-        
-        // Add wheel event for zooming
-        this.canvas.addEventListener('wheel', (e) => {
-            if (e.deltaY < 0) {
-                // Scroll up - zoom in
-                this.decreaseScale();
-            } else {
-                // Scroll down - zoom out
-                this.increaseScale();
-            }
-            e.preventDefault();
-        });
-        
-        // Add click handler for teleport portals
-        this.canvas.addEventListener('click', (e) => {
-            // Get click position relative to canvas
-            const rect = this.canvas.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
-            
-            // Check if a teleport portal was clicked
-            const portal = this.checkPortalClick(clickX, clickY);
-            if (portal) {
-                // Highlight the portal and its destination
-                this.highlightedPortal = portal;
-                
-                // Show portal info
-                if (this.game && this.game.hudManager) {
-                    this.game.hudManager.showNotification(
-                        `Teleport Portal: ${portal.name} → ${portal.targetName}`,
-                        3000
-                    );
-                }
-                
-                // Force a redraw
-                this.renderMiniMap();
-                
-                // Prevent the event from bubbling up
-                e.stopPropagation();
-                return;
-            }
-            
-            // If no portal was clicked and opacity toggle exists, toggle it
-            const opacityToggle = document.getElementById('mini-map-opacity-toggle');
-            if (opacityToggle) {
-                // Toggle the checkbox state
-                opacityToggle.checked = true;
-                
-                // Manually trigger the change event
-                const changeEvent = new Event('change');
-                opacityToggle.dispatchEvent(changeEvent);
-            }
-            
-            // Prevent the event from bubbling up
-            e.stopPropagation();
-        });
-        
-        // Add window resize listener to adjust map size on screen size changes
-        // window.addEventListener('resize', () => {
-        //     // Check if we're on mobile
-        //     const mobile = window.innerWidth <= 768;
-        //     // Update map size based on device
-        //     this.mapSize = mobile ? 100 : 200;
-        //     this.canvasSize = this.mapSize;
-        //     // Force a re-render of the map
-        //     this.renderMiniMap();
-        // });
-        
-        // Add CSS for map controls
-        this.addMapControlStyles();
-        
-        // Try to load pre-rendered minimap first
-        if (this.game.world) {
-            // Use setTimeout to ensure the world is fully loaded
-            setTimeout(() => {
-                // Try to load the pre-rendered minimap for the current world
-                this.loadMinimapForCurrentWorld();
-                
-                // If no pre-rendered minimap is available, generate one dynamically
-                if (!this.preRenderedMapLoaded) {
-                    this.generateStaticMap();
-                }
-            }, 500);
-        }
-        
-        // Add a method to the world manager to regenerate the map when the world changes
-        if (this.game.world) {
-            // Store the original method
-            const originalAddStructure = this.game.world.addStructure;
-            
-            // Override the method to regenerate the map when structures change
-            if (originalAddStructure) {
-                this.game.world.addStructure = (...args) => {
-                    // Call the original method
-                    const result = originalAddStructure.apply(this.game.world, args);
-                    
-                    // Regenerate the map
-                    this.staticMapGenerated = false;
-                    
-                    return result;
-                };
-            }
-            
-            // Also listen for world changes to load the appropriate minimap
-            if (this.game.eventBus) {
-                this.game.eventBus.subscribe('worldChanged', (worldData) => {
-                    // Load the minimap for the new world
-                    this.loadMinimapForCurrentWorld();
-                });
-            }
-        }
-        
-        return true;
     }
     
     /**
-     * Add CSS styles for map controls
+     * Load minimap data for the current world
      */
-    addMapControlStyles() {
-        // Create a style element if it doesn't exist
-        let styleEl = document.getElementById('mini-map-control-styles');
-        if (!styleEl) {
-            styleEl = document.createElement('style');
-            styleEl.id = 'mini-map-control-styles';
-            document.head.appendChild(styleEl);
-        }
-        
-        // Add CSS rules
-        styleEl.textContent = `
-            #mini-map-controls {
-                position: absolute;
-                top: 5px;
-                right: 5px;
-                z-index: 10;
-                display: flex;
-                flex-direction: column;
-            }
-            
-            #mini-map-controls button {
-                width: 24px;
-                height: 24px;
-                margin-bottom: 5px;
-                background: rgba(0, 0, 0, 0.6);
-                color: white;
-                border: 1px solid rgba(255, 255, 255, 0.4);
-                border-radius: 3px;
-                font-size: 14px;
-                line-height: 1;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0;
-                transition: background 0.2s;
-            }
-            
-            #mini-map-controls button:hover {
-                background: rgba(0, 0, 0, 0.8);
-                border-color: rgba(255, 255, 255, 0.6);
-            }
-            
-            #mini-map-center-btn {
-                font-size: 16px !important;
-            }
-        `;
-    }
-    
-    /**
-     * Load the minimap data and image for the current world
-     */
-    loadMinimapForCurrentWorld() {
-        // Get the current world ID or name
+    async loadCurrentWorldMinimap() {
         const worldId = this.getCurrentWorldId();
-        if (!worldId) return false;
-        
-        // Check if we already loaded this map
-        if (this.currentMapId === worldId && this.preRenderedMapLoaded) {
-            return true;
+        if (!worldId || worldId === this.currentMapId) {
+            return;
         }
         
-        // Reset state
-        this.preRenderedMapLoaded = false;
-        this.preRenderedMapImage = null;
-        this.minimapData = null;
         this.currentMapId = worldId;
+        this.minimapData = null;
         
-        // Construct the path to the minimap JSON file
-        const minimapJsonPath = `assets/maps/minimaps/${worldId}_minimap.json`;
-        
-        // Try to load the minimap data
-        return this.loadMinimapData(minimapJsonPath);
+        try {
+            const minimapPath = `assets/maps/minimaps/${worldId}_minimap.json`;
+            const response = await fetch(minimapPath);
+            
+            if (response.ok) {
+                this.minimapData = await response.json();
+                console.log(`Loaded minimap for ${worldId}`);
+            } else {
+                console.warn(`No minimap found for ${worldId}`);
+            }
+        } catch (error) {
+            console.warn(`Failed to load minimap for ${worldId}:`, error);
+        }
     }
     
     /**
-     * Get the current world ID or name
+     * Get the current world ID
      * @returns {string|null} - The current world ID or null if not available
      */
     getCurrentWorldId() {
         if (!this.game.world) return null;
         
-        // Try to get the world ID from the world manager
+        // Try different ways to get the world ID
+        if (this.game.world.currentMapId) {
+            return this.game.world.currentMapId;
+        }
+        
+        if (this.game.world.mapId) {
+            return this.game.world.mapId;
+        }
+        
+        if (this.game.world.name) {
+            return this.game.world.name;
+        }
+        
+        // Try to get from world manager
         if (this.game.world.worldId) {
             return this.game.world.worldId;
         }
         
-        // Try to get the world name from the world manager
         if (this.game.world.worldName) {
             return this.game.world.worldName.toLowerCase().replace(/\s+/g, '_');
         }
@@ -355,1435 +152,198 @@ export class MiniMapUI extends UIComponent {
     }
     
     /**
-     * Load minimap data from a JSON file
-     * @param {string} jsonPath - Path to the minimap JSON file
-     * @returns {boolean} - True if the data was loaded successfully
+     * Render the minimap
      */
-    loadMinimapData(jsonPath) {
-        console.debug(`Loading minimap data from ${jsonPath}...`);
+    renderMinimap() {
+        if (!this.ctx) return;
         
-        return new Promise((resolve, reject) => {
-            fetch(jsonPath)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Failed to load minimap data: ${response.status} ${response.statusText}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    this.minimapData = data;
-                    console.debug('Minimap data loaded successfully');
-                    
-                    // Load the pre-rendered image if available
-                    if (data.images && data.images.length > 0) {
-                        const imageData = data.images[0];
-                        const imagePath = imageData.path.startsWith('/') 
-                            ? imageData.path.substring(imageData.path.indexOf('/assets/'))
-                            : imageData.path;
-                        
-                        this.loadMinimapImage(imagePath);
-                        resolve(true);
-                    } else {
-                        console.debug('No pre-rendered minimap image found in the data');
-                        resolve(false);
-                    }
-                })
-                .catch(error => {
-                    console.warn(`Error loading minimap data: ${error.message}`);
-                    resolve(false);
-                });
-        });
-    }
-    
-    /**
-     * Load a pre-rendered minimap image
-     * @param {string} imagePath - Path to the minimap image
-     * @returns {boolean} - True if the image was loaded successfully
-     */
-    loadMinimapImage(imagePath) {
-        console.debug(`Loading minimap image from ${imagePath}...`);
-        
-        return new Promise((resolve, reject) => {
-            const image = new Image();
-            
-            image.onload = () => {
-                this.preRenderedMapImage = image;
-                this.preRenderedMapLoaded = true;
-                console.debug('Minimap image loaded successfully');
-                resolve(true);
-            };
-            
-            image.onerror = (error) => {
-                console.warn(`Error loading minimap image: ${error}`);
-                this.preRenderedMapLoaded = false;
-                resolve(false);
-            };
-            
-            // Set the source to load the image
-            image.src = imagePath;
-        });
-    }
-    
-    /**
-     * Generate the static map background
-     * This is called once when the world is loaded
-     */
-    generateStaticMap() {
-        if (!this.staticMapCtx || !this.game.world) return;
-        
-        console.debug('Generating static minimap...');
-        
-        // Clear the canvas
-        this.staticMapCtx.clearRect(0, 0, this.mapSize, this.mapSize);
-        
-        // Center of the mini map
-        const centerX = this.mapSize / 2;
-        const centerY = this.mapSize / 2;
-        const radius = this.mapSize / 2 - 2; // Slightly smaller than half the canvas
-        
-        // Create circular clipping path
-        this.staticMapCtx.save();
-        this.staticMapCtx.beginPath();
-        this.staticMapCtx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        this.staticMapCtx.clip();
-        
-        // Draw background
-        this.staticMapCtx.fillStyle = 'rgba(10, 10, 15, 0.75)'; // Darker, more opaque background
-        this.staticMapCtx.fillRect(0, 0, this.mapSize, this.mapSize);
-        
-        // Add a subtle radial gradient for depth
-        const gradient = this.staticMapCtx.createRadialGradient(
-            centerX, centerY, radius * 0.1,
-            centerX, centerY, radius
-        );
-        gradient.addColorStop(0, 'rgba(30, 30, 40, 0.1)');
-        gradient.addColorStop(1, 'rgba(5, 5, 10, 0.3)');
-        this.staticMapCtx.fillStyle = gradient;
-        this.staticMapCtx.fillRect(0, 0, this.mapSize, this.mapSize);
-        
-        // Draw grid lines for reference
-        this.drawGrid(centerX, centerY, radius, this.staticMapCtx);
-        
-        // Get world reference
-        const world = this.game.world;
-        
-        // Draw terrain features (walls, obstacles, trees, etc.)
-        if (world.getTerrainFeatures) {
-            const features = world.getTerrainFeatures();
-            
-            // Group features by type for batch rendering
-            const featuresByType = {
-                wall: [],
-                door: [],
-                water: [],
-                tree: [],
-                rock: [],
-                path: [],
-                other: []
-            };
-            
-            // Process all features (no need to limit for static map)
-            features.forEach(feature => {
-                const type = feature.type || 'other';
-                const group = featuresByType[type] || featuresByType.other;
-                
-                group.push({
-                    x: centerX + feature.position.x * this.scale,
-                    y: centerY + feature.position.z * this.scale
-                });
-            });
-            
-            // Batch render each feature type
-            // Walls
-            if (featuresByType.wall.length > 0) {
-                this.staticMapCtx.fillStyle = 'rgba(85, 85, 85, 0.8)';
-                featuresByType.wall.forEach(pos => {
-                    this.staticMapCtx.fillRect(pos.x - 2, pos.y - 2, 4, 4);
-                });
-            }
-            
-            // Doors
-            if (featuresByType.door.length > 0) {
-                this.staticMapCtx.fillStyle = 'rgba(136, 85, 85, 0.8)';
-                featuresByType.door.forEach(pos => {
-                    this.staticMapCtx.beginPath();
-                    this.staticMapCtx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
-                    this.staticMapCtx.fill();
-                });
-            }
-            
-            // Water
-            if (featuresByType.water.length > 0) {
-                this.staticMapCtx.fillStyle = 'rgba(85, 85, 255, 0.5)';
-                featuresByType.water.forEach(pos => {
-                    this.staticMapCtx.fillRect(pos.x - 3, pos.y - 3, 6, 6);
-                });
-            }
-            
-            // Trees
-            if (featuresByType.tree.length > 0) {
-                this.staticMapCtx.fillStyle = 'rgba(34, 139, 34, 0.7)';
-                featuresByType.tree.forEach(pos => {
-                    this.staticMapCtx.beginPath();
-                    this.staticMapCtx.arc(pos.x, pos.y, 2, 0, Math.PI * 2);
-                    this.staticMapCtx.fill();
-                });
-            }
-            
-            // Rocks
-            if (featuresByType.rock.length > 0) {
-                this.staticMapCtx.fillStyle = 'rgba(128, 128, 128, 0.7)';
-                featuresByType.rock.forEach(pos => {
-                    this.staticMapCtx.beginPath();
-                    this.staticMapCtx.arc(pos.x, pos.y, 1.5, 0, Math.PI * 2);
-                    this.staticMapCtx.fill();
-                });
-            }
-            
-            // Paths
-            if (featuresByType.path.length > 0) {
-                this.staticMapCtx.fillStyle = 'rgba(210, 180, 140, 0.6)';
-                featuresByType.path.forEach(pos => {
-                    this.staticMapCtx.fillRect(pos.x - 2, pos.y - 2, 4, 4);
-                });
-            }
-            
-            // Other features
-            if (featuresByType.other.length > 0) {
-                this.staticMapCtx.fillStyle = 'rgba(200, 200, 200, 0.5)';
-                featuresByType.other.forEach(pos => {
-                    this.staticMapCtx.fillRect(pos.x - 1, pos.y - 1, 2, 2);
-                });
-            }
-        }
-        
-        // Draw teleport portals (static ones)
-        const portals = this.game.world.getTeleportPortals ? 
-            this.game.world.getTeleportPortals() : [];
-            
-        if (portals && portals.length > 0) {
-            // Draw portal markers
-            portals.forEach(portal => {
-                // Calculate position
-                const screenX = centerX + portal.position.x * this.scale;
-                const screenY = centerY + portal.position.z * this.scale;
-                
-                // Draw portal marker
-                this.staticMapCtx.fillStyle = this.teleportPortalColor;
-                this.staticMapCtx.beginPath();
-                this.staticMapCtx.arc(screenX, screenY, this.teleportPortalSize, 0, Math.PI * 2);
-                this.staticMapCtx.fill();
-                
-                // Add a white border
-                this.staticMapCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-                this.staticMapCtx.lineWidth = 1.5;
-                this.staticMapCtx.beginPath();
-                this.staticMapCtx.arc(screenX, screenY, this.teleportPortalSize, 0, Math.PI * 2);
-                this.staticMapCtx.stroke();
-                
-                // Draw portal icon (teleport symbol)
-                this.staticMapCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                this.staticMapCtx.beginPath();
-                this.staticMapCtx.arc(screenX, screenY, this.teleportPortalSize * 0.6, 0, Math.PI * 2);
-                this.staticMapCtx.fill();
-                
-                // Draw "T" letter
-                this.staticMapCtx.fillStyle = 'white';
-                this.staticMapCtx.font = 'bold 8px Arial';
-                this.staticMapCtx.textAlign = 'center';
-                this.staticMapCtx.textBaseline = 'middle';
-                this.staticMapCtx.fillText('T', screenX, screenY);
-            });
-        }
-        
-        // Restore context
-        this.staticMapCtx.restore();
-        
-        // Draw circular border with gradient
-        const borderGradient = this.staticMapCtx.createLinearGradient(
-            centerX - radius, centerY - radius,
-            centerX + radius, centerY + radius
-        );
-        borderGradient.addColorStop(0, 'rgba(100, 100, 180, 0.7)');
-        borderGradient.addColorStop(0.5, 'rgba(200, 200, 255, 0.7)');
-        borderGradient.addColorStop(1, 'rgba(100, 100, 180, 0.7)');
-        
-        this.staticMapCtx.strokeStyle = borderGradient;
-        this.staticMapCtx.lineWidth = 2;
-        this.staticMapCtx.beginPath();
-        this.staticMapCtx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        this.staticMapCtx.stroke();
-        
-        // Draw cardinal directions
-        this.drawCardinalDirections(centerX, centerY, radius, this.staticMapCtx);
-        
-        // Create an image from the canvas
-        this.staticMapImage = new Image();
-        this.staticMapImage.src = this.staticMapCanvas.toDataURL();
-        
-        // Mark as generated
-        this.staticMapGenerated = true;
-        console.debug('Static minimap generation complete');
-    }
-    
-    /**
-     * Handle map drag start
-     * @param {Event} e - Mouse or touch event
-     */
-    onMapDragStart(e) {
-        e.preventDefault();
-        
-        // Only allow dragging when map is visible
-        if (!this.visible) return;
-        
-        this.isDragging = true;
-        
-        // Get start position
-        if (e.type === 'touchstart') {
-            this.dragStartX = e.touches[0].clientX;
-            this.dragStartY = e.touches[0].clientY;
-        } else {
-            this.dragStartX = e.clientX;
-            this.dragStartY = e.clientY;
-        }
-    }
-    
-    /**
-     * Handle map drag move
-     * @param {Event} e - Mouse or touch event
-     */
-    onMapDragMove(e) {
-        // Only process if dragging
-        if (!this.isDragging) return;
-        
-        e.preventDefault();
-        
-        // Get current position
-        let currentX, currentY;
-        if (e.type === 'touchmove') {
-            currentX = e.touches[0].clientX;
-            currentY = e.touches[0].clientY;
-        } else {
-            currentX = e.clientX;
-            currentY = e.clientY;
-        }
-        
-        // Calculate drag distance
-        const deltaX = currentX - this.dragStartX;
-        const deltaY = currentY - this.dragStartY;
-        
-        // Update map offset
-        this.mapOffsetX += deltaX;
-        this.mapOffsetY += deltaY;
-        
-        // Limit offset to prevent dragging too far
-        this.mapOffsetX = Math.max(-this.maxMapOffset, Math.min(this.mapOffsetX, this.maxMapOffset));
-        this.mapOffsetY = Math.max(-this.maxMapOffset, Math.min(this.mapOffsetY, this.maxMapOffset));
-        
-        // Update drag start position
-        this.dragStartX = currentX;
-        this.dragStartY = currentY;
-        
-        // Render the map with the new offset
-        this.renderMiniMap();
-    }
-    
-    /**
-     * Handle map drag end
-     */
-    onMapDragEnd() {
-        this.isDragging = false;
-    }
-    
-    /**
-     * Reset map position (center it)
-     */
-    resetMapPosition() {
-        this.mapOffsetX = 0;
-        this.mapOffsetY = 0;
-        this.renderMiniMap();
-        
-        // Show notification
-        if (this.game && this.game.hudManager) {
-            this.game.hudManager.showNotification('Map centered', 1500);
-        }
-    }
-    
-    /**
-     * Check if a teleport portal was clicked
-     * @param {number} x - Click X position on canvas
-     * @param {number} y - Click Y position on canvas
-     * @returns {Object|null} - The clicked portal or null
-     */
-    checkPortalClick(x, y) {
-        // Get player position
-        const player = this.game.player;
-        if (!player) return null;
-        
-        const playerX = player.getPosition().x;
-        const playerY = player.getPosition().z; // Using z as y for top-down view
-        
-        // Center of the mini map
-        const centerX = this.mapSize / 2;
-        const centerY = this.mapSize / 2;
-        
-        // Get teleport portals
-        const portals = this.game.world.getTeleportPortals ? 
-            this.game.world.getTeleportPortals() : [];
-        
-        // Check each portal
-        for (const portal of portals) {
-            // Calculate position relative to player
-            const relX = (portal.position.x - playerX) * this.scale;
-            const relY = (portal.position.z - playerY) * this.scale;
-            
-            // Apply map offset
-            const screenX = centerX + relX + this.mapOffsetX;
-            const screenY = centerY + relY + this.mapOffsetY;
-            
-            // Check if click is within portal radius
-            const clickDistance = Math.sqrt(
-                Math.pow(x - screenX, 2) + 
-                Math.pow(y - screenY, 2)
-            );
-            
-            if (clickDistance <= this.teleportPortalSize + 2) {
-                return portal;
-            }
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Update the mini map
-     * @param {number} delta - Time since last update in seconds
-     */
-    update(delta) {
-        // Skip updates if map is not visible
-        if (!this.visible) {
+        if (!this.minimapData) {
+            this.renderEmpty();
             return;
         }
         
-        const currentTime = Date.now();
+        // Clear canvas
+        this.ctx.clearRect(0, 0, this.canvasSize, this.canvasSize);
         
-        // Only render every renderInterval ms for performance
-        if (currentTime - this.lastRenderTime >= this.renderInterval) {
-            // Check if player has moved significantly before rendering
-            const player = this.game.player;
-            if (player) {
-                // Store last position for movement detection
-                if (!this._lastPlayerPos) {
-                    this._lastPlayerPos = new THREE.Vector3();
-                    this._lastPlayerPos.copy(player.getPosition());
-                    this.renderMiniMap();
-                } else {
-                    // Only render if player has moved at least 1 unit or rotated
-                    const currentPos = player.getPosition();
-                    const currentRot = player.getRotation().y;
-                    
-                    // Track camera rotation for orbit controls
-                    let cameraRotation = 0;
-                    if (this.game.controls && this.game.controls.enabled) {
-                        // Get camera's forward direction
-                        const cameraDirection = new THREE.Vector3(0, 0, -1);
-                        cameraDirection.applyQuaternion(this.game.camera.quaternion);
-                        
-                        // Project onto the XZ plane and normalize
-                        cameraDirection.y = 0;
-                        cameraDirection.normalize();
-                        
-                        // Calculate the angle in the XZ plane
-                        cameraRotation = Math.atan2(cameraDirection.x, cameraDirection.z);
-                    }
-                    
-                    if (!this._lastPlayerRot) {
-                        this._lastPlayerRot = currentRot;
-                    }
-                    
-                    if (!this._lastCameraRot) {
-                        this._lastCameraRot = cameraRotation;
-                    }
-                    
-                    const hasMoved = this._lastPlayerPos.distanceTo(currentPos) > 1;
-                    const hasRotated = Math.abs(this._lastPlayerRot - currentRot) > 0.1;
-                    const hasCameraRotated = Math.abs(this._lastCameraRot - cameraRotation) > 0.05;
-                    
-                    if (hasMoved || hasRotated || hasCameraRotated) {
-                        this.renderMiniMap();
-                        this._lastPlayerPos.copy(currentPos);
-                        this._lastPlayerRot = currentRot;
-                        this._lastCameraRot = cameraRotation;
-                    }
-                }
-            } else {
-                // No player, just render on interval
-                this.renderMiniMap();
-            }
-            
-            this.lastRenderTime = currentTime;
-        }
-    }
-    
-    /**
-     * Render the mini map
-     */
-    renderMiniMap() {
-        if (!this.ctx || !this.game.world) return;
-        
-        // Clear the canvas
-        this.ctx.clearRect(0, 0, this.mapSize, this.mapSize);
-        
-        // Get player position
-        const player = this.game.player;
-        if (!player) return;
-        
-        const playerX = player.getPosition().x;
-        const playerY = player.getPosition().z; // Using z as y for top-down view
-        
-        // Center of the mini map
-        const centerX = this.mapSize / 2;
-        const centerY = this.mapSize / 2;
-        const radius = this.mapSize / 2 - 2; // Slightly smaller than half the canvas
-        
-        // Create circular clipping path
+        // Create circular clipping mask
         this.ctx.save();
         this.ctx.beginPath();
-        this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        this.ctx.arc(this.canvasSize / 2, this.canvasSize / 2, this.canvasSize / 2, 0, Math.PI * 2);
         this.ctx.clip();
         
-        // Check if we have a pre-rendered map from JSON
-        if (this.preRenderedMapLoaded && this.preRenderedMapImage) {
-            // Draw the pre-rendered map image
-            this.ctx.drawImage(this.preRenderedMapImage, 0, 0, this.mapSize, this.mapSize);
-        } 
-        // Otherwise, use the dynamically generated static map if available
-        else if (this.staticMapGenerated && this.staticMapImage) {
-            // Generate static map if not already generated
-            if (!this.staticMapGenerated) {
-                this.generateStaticMap();
-            }
-            
-            // Draw the static map image
-            this.ctx.drawImage(this.staticMapImage, 0, 0, this.mapSize, this.mapSize);
-        } 
-        // Fallback to dynamic rendering if no pre-rendered maps are available
-        else {
-            // Draw background
-            this.ctx.fillStyle = 'rgba(10, 10, 15, 0.75)'; // Darker, more opaque background
-            this.ctx.fillRect(0, 0, this.mapSize, this.mapSize);
-            
-            // Add a subtle radial gradient for depth
-            const gradient = this.ctx.createRadialGradient(
-                centerX, centerY, radius * 0.1,
-                centerX, centerY, radius
-            );
-            gradient.addColorStop(0, 'rgba(30, 30, 40, 0.1)');
-            gradient.addColorStop(1, 'rgba(5, 5, 10, 0.3)');
-            this.ctx.fillStyle = gradient;
-            this.ctx.fillRect(0, 0, this.mapSize, this.mapSize);
-            
-            // Draw grid lines for reference
-            this.drawGrid(centerX, centerY, radius);
-            
-            // Draw terrain/environment
-            this.drawEnvironment(playerX, playerY, centerX, centerY);
-            
-            // Draw teleport portals (static ones)
-            this.drawTeleportPortals(playerX, playerY, centerX, centerY);
-        }
+        // Render the minimap grid
+        this.renderMinimapGrid();
         
-        // Draw dynamic elements that change frequently
+        // Render player position
+        this.renderPlayer();
         
-        // Draw NPCs and enemies (always dynamic)
-        this.drawEntities(playerX, playerY, centerX, centerY);
-        
-        // Apply map offset for player position
-        const offsetCenterX = centerX + this.mapOffsetX;
-        const offsetCenterY = centerY + this.mapOffsetY;
-        
-        // Draw player (always in center unless map is dragged)
-        // First draw a white halo/glow effect
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        this.ctx.beginPath();
-        this.ctx.arc(offsetCenterX, offsetCenterY, 6, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // Draw player marker
-        this.ctx.fillStyle = '#00ff00'; // Bright green
-        this.ctx.beginPath();
-        this.ctx.arc(offsetCenterX, offsetCenterY, 4, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // Add a white border to make it pop
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-        this.ctx.lineWidth = 1;
-        this.ctx.beginPath();
-        this.ctx.arc(offsetCenterX, offsetCenterY, 4, 0, Math.PI * 2);
-        this.ctx.stroke();
-        
-        // Draw player direction indicator
-        // Get direction from camera or player rotation depending on which is active
-        let directionAngle;
-        
-        if (this.game.controls && this.game.controls.enabled) {
-            // When orbit controls are active, use camera's horizontal rotation
-            // Create a vector pointing in the camera's forward direction
-            const cameraDirection = new THREE.Vector3(0, 0, -1);
-            cameraDirection.applyQuaternion(this.game.camera.quaternion);
-            
-            // Project onto the XZ plane and normalize
-            cameraDirection.y = 0;
-            cameraDirection.normalize();
-            
-            // Calculate the angle in the XZ plane
-            directionAngle = Math.atan2(cameraDirection.x, cameraDirection.z);
-        } else {
-            // Use player's rotation when orbit controls are not active
-            directionAngle = player.getRotation().y;
-        }
-        
-        this.ctx.strokeStyle = '#00ff00';
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-        this.ctx.moveTo(offsetCenterX, offsetCenterY);
-        this.ctx.lineTo(
-            offsetCenterX + Math.sin(directionAngle) * 10,
-            offsetCenterY + Math.cos(directionAngle) * 10
-        );
-        this.ctx.stroke();
-        
-        // Restore context and draw border
         this.ctx.restore();
         
-        // Draw circular border with gradient
-        const borderGradient = this.ctx.createLinearGradient(
-            centerX - radius, centerY - radius,
-            centerX + radius, centerY + radius
-        );
-        borderGradient.addColorStop(0, 'rgba(100, 100, 180, 0.7)');
-        borderGradient.addColorStop(0.5, 'rgba(200, 200, 255, 0.7)');
-        borderGradient.addColorStop(1, 'rgba(100, 100, 180, 0.7)');
+        // Draw border
+        this.drawBorder();
+    }
+    
+    /**
+     * Render empty minimap when no data is available
+     */
+    renderEmpty() {
+        if (!this.ctx) return;
         
-        this.ctx.strokeStyle = borderGradient;
+        this.ctx.clearRect(0, 0, this.canvasSize, this.canvasSize);
+        
+        // Create circular clipping mask
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(this.canvasSize / 2, this.canvasSize / 2, this.canvasSize / 2, 0, Math.PI * 2);
+        this.ctx.clip();
+        
+        // Fill with dark background
+        this.ctx.fillStyle = '#1a1a1a';
+        this.ctx.fillRect(0, 0, this.canvasSize, this.canvasSize);
+        
+        // Draw "No Map" text
+        this.ctx.fillStyle = '#666666';
+        this.ctx.font = '12px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('No Map', this.canvasSize / 2, this.canvasSize / 2);
+        
+        this.ctx.restore();
+        this.drawBorder();
+    }
+    
+    /**
+     * Render the minimap grid from the loaded data
+     */
+    renderMinimapGrid() {
+        if (!this.minimapData || !this.minimapData.grid) return;
+        
+        const grid = this.minimapData.grid;
+        const gridSize = grid.length;
+        const cellSize = this.canvasSize / gridSize;
+        
+        for (let row = 0; row < gridSize; row++) {
+            for (let col = 0; col < gridSize; col++) {
+                const cell = grid[row][col];
+                if (!cell) continue;
+                
+                const x = col * cellSize;
+                const y = row * cellSize;
+                
+                // Get color for this cell
+                const color = this.getCellColor(cell);
+                
+                // Draw cell
+                this.ctx.fillStyle = color;
+                this.ctx.fillRect(x, y, cellSize, cellSize);
+            }
+        }
+    }
+    
+    /**
+     * Get color for a minimap cell
+     * @param {Object} cell - Cell data from minimap
+     * @returns {string} - Color string
+     */
+    getCellColor(cell) {
+        if (cell.type === 'zone' && cell.zoneType) {
+            return this.zoneColors[cell.zoneType] || this.zoneColors.default;
+        }
+        
+        if (cell.type === 'structure') {
+            return '#8b4513'; // Brown for structures
+        }
+        
+        if (cell.type === 'water') {
+            return this.zoneColors.water;
+        }
+        
+        if (cell.type === 'path') {
+            return '#a0522d'; // Brown for paths
+        }
+        
+        return this.zoneColors.default;
+    }
+    
+    /**
+     * Render player position on the minimap
+     */
+    renderPlayer() {
+        if (!this.game.player) return;
+        
+        const player = this.game.player;
+        const playerPos = player.position;
+        
+        if (!playerPos) return;
+        
+        // Convert world position to minimap coordinates
+        const mapCoords = this.worldToMapCoordinates(playerPos.x, playerPos.z);
+        
+        if (mapCoords) {
+            // Draw player dot
+            this.ctx.fillStyle = this.playerColor;
+            this.ctx.beginPath();
+            this.ctx.arc(mapCoords.x, mapCoords.y, this.playerSize, 0, Math.PI * 2);
+            this.ctx.fill();
+            
+            // Draw player direction indicator
+            if (player.rotation) {
+                const angle = player.rotation.y;
+                const length = this.playerSize + 2;
+                const endX = mapCoords.x + Math.sin(angle) * length;
+                const endY = mapCoords.y - Math.cos(angle) * length;
+                
+                this.ctx.strokeStyle = this.playerColor;
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.moveTo(mapCoords.x, mapCoords.y);
+                this.ctx.lineTo(endX, endY);
+                this.ctx.stroke();
+            }
+        }
+    }
+    
+    /**
+     * Convert world coordinates to minimap coordinates
+     * @param {number} worldX - World X coordinate
+     * @param {number} worldZ - World Z coordinate
+     * @returns {Object|null} - Minimap coordinates {x, y} or null if out of bounds
+     */
+    worldToMapCoordinates(worldX, worldZ) {
+        // Assume world bounds are -400 to 400 (adjust based on your world size)
+        const worldSize = 800;
+        const worldMin = -400;
+        
+        // Normalize to 0-1 range
+        const normalizedX = (worldX - worldMin) / worldSize;
+        const normalizedZ = (worldZ - worldMin) / worldSize;
+        
+        // Check bounds
+        if (normalizedX < 0 || normalizedX > 1 || normalizedZ < 0 || normalizedZ > 1) {
+            return null;
+        }
+        
+        // Convert to canvas coordinates
+        return {
+            x: normalizedX * this.canvasSize,
+            y: normalizedZ * this.canvasSize
+        };
+    }
+    
+    /**
+     * Draw border around the minimap
+     */
+    drawBorder() {
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         this.ctx.lineWidth = 2;
         this.ctx.beginPath();
-        this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        this.ctx.arc(this.canvasSize / 2, this.canvasSize / 2, this.canvasSize / 2 - 1, 0, Math.PI * 2);
         this.ctx.stroke();
-        
-        // Draw cardinal directions
-        this.drawCardinalDirections(centerX, centerY, radius);
-        
-        // Update last render time
-        this.lastRenderTime = Date.now();
     }
     
     /**
-     * Draw teleport portals on the minimap
-     * @param {number} playerX - Player's X position in the world
-     * @param {number} playerY - Player's Y position in the world (Z in 3D space)
-     * @param {number} centerX - Center X of the mini map
-     * @param {number} centerY - Center Y of the mini map
+     * Remove event listeners
      */
-    drawTeleportPortals(playerX, playerY, centerX, centerY) {
-        // Get teleport portals
-        const portals = this.game.world.getTeleportPortals ? 
-            this.game.world.getTeleportPortals() : [];
-        
-        if (!portals || portals.length === 0) return;
-        
-        // First draw connection lines between portals
-        if (this.showTeleportLines) {
-            this.ctx.strokeStyle = this.teleportLineColor;
-            this.ctx.lineWidth = 1.5;
-            this.ctx.setLineDash([5, 3]); // Dashed line
-            
-            portals.forEach(portal => {
-                // Calculate source position relative to player
-                const sourceRelX = (portal.position.x - playerX) * this.scale;
-                const sourceRelY = (portal.position.z - playerY) * this.scale;
-                
-                // Calculate target position relative to player
-                const targetRelX = (portal.targetPosition.x - playerX) * this.scale;
-                const targetRelY = (portal.targetPosition.z - playerY) * this.scale;
-                
-                // Apply map offset
-                const sourceScreenX = centerX + sourceRelX + this.mapOffsetX;
-                const sourceScreenY = centerY + sourceRelY + this.mapOffsetY;
-                const targetScreenX = centerX + targetRelX + this.mapOffsetX;
-                const targetScreenY = centerY + targetRelY + this.mapOffsetY;
-                
-                // Calculate distance from center (for circular bounds check)
-                const sourceDistFromCenter = Math.sqrt(
-                    Math.pow(sourceScreenX - centerX, 2) + 
-                    Math.pow(sourceScreenY - centerY, 2)
-                );
-                
-                const targetDistFromCenter = Math.sqrt(
-                    Math.pow(targetScreenX - centerX, 2) + 
-                    Math.pow(targetScreenY - centerY, 2)
-                );
-                
-                // Only draw if at least one end is within circular mini map bounds
-                const maxDist = this.mapSize / 2 - 2;
-                if (sourceDistFromCenter <= maxDist || targetDistFromCenter <= maxDist) {
-                    // Draw connection line
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(sourceScreenX, sourceScreenY);
-                    this.ctx.lineTo(targetScreenX, targetScreenY);
-                    this.ctx.stroke();
-                    
-                    // Draw direction arrow
-                    const arrowLength = 8;
-                    const dx = targetScreenX - sourceScreenX;
-                    const dy = targetScreenY - sourceScreenY;
-                    const angle = Math.atan2(dy, dx);
-                    
-                    // Calculate arrow position (halfway between source and target)
-                    const arrowX = sourceScreenX + dx * 0.5;
-                    const arrowY = sourceScreenY + dy * 0.5;
-                    
-                    // Draw arrow
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(arrowX, arrowY);
-                    this.ctx.lineTo(
-                        arrowX - arrowLength * Math.cos(angle - Math.PI / 6),
-                        arrowY - arrowLength * Math.sin(angle - Math.PI / 6)
-                    );
-                    this.ctx.moveTo(arrowX, arrowY);
-                    this.ctx.lineTo(
-                        arrowX - arrowLength * Math.cos(angle + Math.PI / 6),
-                        arrowY - arrowLength * Math.sin(angle + Math.PI / 6)
-                    );
-                    this.ctx.stroke();
-                }
-            });
-            
-            // Reset line dash
-            this.ctx.setLineDash([]);
-        }
-        
-        // Now draw the portal markers
-        portals.forEach(portal => {
-            // Calculate position relative to player
-            const relX = (portal.position.x - playerX) * this.scale;
-            const relY = (portal.position.z - playerY) * this.scale;
-            
-            // Apply map offset
-            const screenX = centerX + relX + this.mapOffsetX;
-            const screenY = centerY + relY + this.mapOffsetY;
-            
-            // Calculate distance from center (for circular bounds check)
-            const distFromCenter = Math.sqrt(
-                Math.pow(screenX - centerX, 2) + 
-                Math.pow(screenY - centerY, 2)
-            );
-            
-            // Only draw if within circular mini map bounds
-            if (distFromCenter <= (this.mapSize / 2 - 2)) {
-                // Check if this is the highlighted portal
-                const isHighlighted = this.highlightedPortal && 
-                    this.highlightedPortal.position.x === portal.position.x && 
-                    this.highlightedPortal.position.z === portal.position.z;
-                
-                // Draw portal glow
-                if (isHighlighted) {
-                    // Pulsating glow for highlighted portal
-                    const pulseSize = 1.5 + Math.sin(Date.now() / 200) * 0.5;
-                    this.ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
-                    this.ctx.beginPath();
-                    this.ctx.arc(screenX, screenY, this.teleportPortalSize * pulseSize, 0, Math.PI * 2);
-                    this.ctx.fill();
-                } else {
-                    // Normal glow
-                    this.ctx.fillStyle = 'rgba(0, 255, 255, 0.2)';
-                    this.ctx.beginPath();
-                    this.ctx.arc(screenX, screenY, this.teleportPortalSize * 1.3, 0, Math.PI * 2);
-                    this.ctx.fill();
-                }
-                
-                // Draw portal marker
-                this.ctx.fillStyle = this.teleportPortalColor;
-                this.ctx.beginPath();
-                this.ctx.arc(screenX, screenY, this.teleportPortalSize, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Add a white border
-                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-                this.ctx.lineWidth = 1.5;
-                this.ctx.beginPath();
-                this.ctx.arc(screenX, screenY, this.teleportPortalSize, 0, Math.PI * 2);
-                this.ctx.stroke();
-                
-                // Draw portal icon (teleport symbol)
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                this.ctx.beginPath();
-                this.ctx.arc(screenX, screenY, this.teleportPortalSize * 0.6, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Draw "T" letter
-                this.ctx.fillStyle = 'white';
-                this.ctx.font = 'bold 8px Arial';
-                this.ctx.textAlign = 'center';
-                this.ctx.textBaseline = 'middle';
-                this.ctx.fillText('T', screenX, screenY);
-                
-                // If highlighted, also highlight the destination
-                if (isHighlighted) {
-                    // Calculate target position relative to player
-                    const targetRelX = (portal.targetPosition.x - playerX) * this.scale;
-                    const targetRelY = (portal.targetPosition.z - playerY) * this.scale;
-                    
-                    // Apply map offset
-                    const targetScreenX = centerX + targetRelX + this.mapOffsetX;
-                    const targetScreenY = centerY + targetRelY + this.mapOffsetY;
-                    
-                    // Calculate distance from center (for circular bounds check)
-                    const targetDistFromCenter = Math.sqrt(
-                        Math.pow(targetScreenX - centerX, 2) + 
-                        Math.pow(targetScreenY - centerY, 2)
-                    );
-                    
-                    // Only draw if within circular mini map bounds
-                    if (targetDistFromCenter <= (this.mapSize / 2 - 2)) {
-                        // Draw destination marker
-                        this.ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
-                        this.ctx.beginPath();
-                        this.ctx.arc(targetScreenX, targetScreenY, this.teleportPortalSize * 1.5, 0, Math.PI * 2);
-                        this.ctx.fill();
-                        
-                        // Draw X marker
-                        this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)';
-                        this.ctx.lineWidth = 2;
-                        this.ctx.beginPath();
-                        this.ctx.moveTo(targetScreenX - 5, targetScreenY - 5);
-                        this.ctx.lineTo(targetScreenX + 5, targetScreenY + 5);
-                        this.ctx.moveTo(targetScreenX + 5, targetScreenY - 5);
-                        this.ctx.lineTo(targetScreenX - 5, targetScreenY + 5);
-                        this.ctx.stroke();
-                    }
-                }
-            }
-        });
-    }
-    
-    /**
-     * Draw grid lines on the map
-     * @param {number} centerX - Center X of the mini map
-     * @param {number} centerY - Center Y of the mini map
-     * @param {number} radius - Radius of the mini map
-     * @param {CanvasRenderingContext2D} [ctx=this.ctx] - Canvas context to draw on
-     */
-    drawGrid(centerX, centerY, radius, ctx = this.ctx) {
-        // Enhanced grid lines for better visibility
-        ctx.lineWidth = 1.5; // Increased line width
-        
-        // Draw concentric circles
-        for (let r = radius / 4; r <= radius; r += radius / 4) {
-            // Make outer circles more visible
-            const opacity = 0.15 + (r / radius) * 0.1; // Gradually increase opacity for outer circles
-            ctx.strokeStyle = `rgba(120, 140, 200, ${opacity})`;
-            
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
-            ctx.stroke();
-        }
-        
-        // Draw radial lines
-        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
-            // Make cardinal directions more visible
-            if (angle % (Math.PI/2) < 0.01) {
-                // Cardinal directions (N, E, S, W)
-                ctx.strokeStyle = 'rgba(150, 150, 220, 0.35)';
-                ctx.lineWidth = 2; // Thicker lines for cardinal directions
-            } else if (angle % (Math.PI/4) < 0.01) {
-                // Intercardinal directions (NE, SE, SW, NW)
-                ctx.strokeStyle = 'rgba(120, 120, 180, 0.25)';
-                ctx.lineWidth = 1.5;
-            } else {
-                // Other angles
-                ctx.strokeStyle = 'rgba(100, 100, 150, 0.18)';
-                ctx.lineWidth = 1;
-            }
-            
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY);
-            ctx.lineTo(
-                centerX + Math.cos(angle) * radius,
-                centerY + Math.sin(angle) * radius
-            );
-            ctx.stroke();
-        }
-    }
-    
-    /**
-     * Draw cardinal directions (N, E, S, W)
-     * @param {number} centerX - Center X of the mini map
-     * @param {number} centerY - Center Y of the mini map
-     * @param {number} radius - Radius of the mini map
-     * @param {CanvasRenderingContext2D} [ctx=this.ctx] - Canvas context to draw on
-     */
-    drawCardinalDirections(centerX, centerY, radius, ctx = this.ctx) {
-        // Create a glow effect for the text
-        ctx.shadowColor = 'rgba(100, 100, 255, 0.8)';
-        ctx.shadowBlur = 4;
-        ctx.fillStyle = 'rgba(220, 220, 255, 0.9)';
-        ctx.font = 'bold 12px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // North
-        ctx.fillText('N', centerX, centerY - radius + 10);
-        
-        // East
-        ctx.fillText('E', centerX + radius - 10, centerY);
-        
-        // South
-        ctx.fillText('S', centerX, centerY + radius - 10);
-        
-        // West
-        ctx.fillText('W', centerX - radius + 10, centerY);
-        
-        // Reset shadow
-        ctx.shadowBlur = 0;
-    }
-    
-    /**
-     * Draw environment elements on the mini map
-     * @param {number} playerX - Player's X position in the world
-     * @param {number} playerY - Player's Y position in the world (Z in 3D space)
-     * @param {number} centerX - Center X of the mini map
-     * @param {number} centerY - Center Y of the mini map
-     */
-    drawEnvironment(playerX, playerY, centerX, centerY) {
-        // Get world reference
-        const world = this.game.world;
-        
-        // Draw terrain features (walls, obstacles, trees, etc.)
-        if (world.getTerrainFeatures) {
-            const features = world.getTerrainFeatures();
-            
-            // Limit the number of features to draw for performance
-            const maxFeatures = 100; // Limit to 100 features
-            const featuresToDraw = features.length > maxFeatures ? 
-                features.slice(0, maxFeatures) : features;
-            
-            // Group features by type for batch rendering
-            const featuresByType = {
-                wall: [],
-                door: [],
-                water: [],
-                tree: [],
-                rock: [],
-                path: [],
-                other: []
-            };
-            
-            // Pre-calculate positions and filter out-of-bounds features
-            featuresToDraw.forEach(feature => {
-                // Calculate position relative to player
-                const relX = (feature.position.x - playerX) * this.scale;
-                const relY = (feature.position.z - playerY) * this.scale;
-                
-                // Calculate screen position
-                const screenX = centerX + relX;
-                const screenY = centerY + relY;
-                
-                // Fast distance check (avoid sqrt for performance)
-                const distSquared = (screenX - centerX) * (screenX - centerX) + 
-                                   (screenY - centerY) * (screenY - centerY);
-                const maxDistSquared = (this.mapSize / 2 - 2) * (this.mapSize / 2 - 2);
-                
-                // Only include if within circular mini map bounds
-                if (distSquared <= maxDistSquared) {
-                    const type = feature.type || 'other';
-                    const group = featuresByType[type] || featuresByType.other;
-                    
-                    group.push({
-                        x: screenX,
-                        y: screenY
-                    });
-                }
-            });
-            
-            // Batch render each feature type
-            // Walls
-            if (featuresByType.wall.length > 0) {
-                this.ctx.fillStyle = 'rgba(85, 85, 85, 0.8)';
-                featuresByType.wall.forEach(pos => {
-                    this.ctx.fillRect(pos.x - 2, pos.y - 2, 4, 4);
-                });
-            }
-            
-            // Doors
-            if (featuresByType.door.length > 0) {
-                this.ctx.fillStyle = 'rgba(136, 85, 85, 0.8)';
-                featuresByType.door.forEach(pos => {
-                    this.ctx.beginPath();
-                    this.ctx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
-                    this.ctx.fill();
-                });
-            }
-            
-            // Water
-            if (featuresByType.water.length > 0) {
-                this.ctx.fillStyle = 'rgba(85, 85, 255, 0.5)';
-                featuresByType.water.forEach(pos => {
-                    this.ctx.fillRect(pos.x - 3, pos.y - 3, 6, 6);
-                });
-            }
-            
-            // Trees
-            if (featuresByType.tree.length > 0) {
-                this.ctx.fillStyle = 'rgba(34, 139, 34, 0.7)';
-                featuresByType.tree.forEach(pos => {
-                    this.ctx.beginPath();
-                    this.ctx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
-                    this.ctx.fill();
-                });
-            }
-            
-            // Rocks
-            if (featuresByType.rock.length > 0) {
-                this.ctx.fillStyle = 'rgba(120, 120, 120, 0.7)';
-                featuresByType.rock.forEach(pos => {
-                    this.ctx.beginPath();
-                    this.ctx.arc(pos.x, pos.y, 2, 0, Math.PI * 2);
-                    this.ctx.fill();
-                });
-            }
-            
-            // Paths
-            if (featuresByType.path.length > 0) {
-                this.ctx.fillStyle = 'rgba(210, 180, 140, 0.5)';
-                featuresByType.path.forEach(pos => {
-                    this.ctx.fillRect(pos.x - 2, pos.y - 2, 4, 4);
-                });
-            }
-            
-            // Other features
-            if (featuresByType.other.length > 0) {
-                this.ctx.fillStyle = 'rgba(119, 119, 119, 0.5)';
-                featuresByType.other.forEach(pos => {
-                    this.ctx.fillRect(pos.x - 1, pos.y - 1, 2, 2);
-                });
-            }
-        }
-        
-        // Only draw additional world elements if the map is visible
-        if (this.visible) {
-            this.drawWorldElements(playerX, playerY, centerX, centerY);
-        }
-    }
-    
-    /**
-     * Draw additional world elements if available
-     * @param {number} playerX - Player's X position in the world
-     * @param {number} playerY - Player's Y position in the world (Z in 3D space)
-     * @param {number} centerX - Center X of the mini map
-     * @param {number} centerY - Center Y of the mini map
-     */
-    drawWorldElements(playerX, playerY, centerX, centerY) {
-        const world = this.game.world;
-        
-        // Draw remote players if in multiplayer mode
-        this.drawRemotePlayers(playerX, playerY, centerX, centerY);
-        
-        // Draw trees if available
-        if (world.getTrees) {
-            const trees = world.getTrees();
-            this.drawFeatureGroup(trees, playerX, playerY, centerX, centerY, 'rgba(34, 139, 34, 0.6)', 3);
-        }
-        
-        // Draw rocks if available
-        if (world.getRocks) {
-            const rocks = world.getRocks();
-            this.drawFeatureGroup(rocks, playerX, playerY, centerX, centerY, 'rgba(120, 120, 120, 0.6)', 2);
-        }
-        
-        // Draw buildings if available
-        if (world.getBuildings) {
-            const buildings = world.getBuildings();
-            this.drawFeatureGroup(buildings, playerX, playerY, centerX, centerY, 'rgba(139, 69, 19, 0.7)', 4);
-        }
-        
-        // Draw paths if available
-        if (world.getPaths) {
-            const paths = world.getPaths();
-            this.drawFeatureGroup(paths, playerX, playerY, centerX, centerY, 'rgba(210, 180, 140, 0.5)', 2, true);
-        }
-    }
-    
-    /**
-     * Draw remote players on the mini map
-     * @param {number} playerX - Player's X position in the world
-     * @param {number} playerY - Player's Y position in the world (Z in 3D space)
-     * @param {number} centerX - Center X of the mini map
-     * @param {number} centerY - Center Y of the mini map
-     */
-    drawRemotePlayers(playerX, playerY, centerX, centerY) {
-        // Check if we have a multiplayer manager with remote players
-        if (!this.game.multiplayerManager || !this.game.multiplayerManager.remotePlayerManager) {
-            return;
-        }
-        
-        const remotePlayerManager = this.game.multiplayerManager.remotePlayerManager;
-        const remotePlayers = remotePlayerManager.getPlayers();
-        
-        // Skip if no remote players
-        if (!remotePlayers || remotePlayers.size === 0) {
-            return;
-        }
-        
-        // Draw each remote player
-        remotePlayers.forEach((remotePlayer, peerId) => {
-            // Skip if player doesn't have a position
-            if (!remotePlayer.group) return;
-            
-            // Get position from the group
-            const position = remotePlayer.group.position;
-            
-            // Calculate position relative to player
-            const relX = (position.x - playerX) * this.scale;
-            const relY = (position.z - playerY) * this.scale;
-            
-            // Apply map offset
-            const screenX = centerX + relX + this.mapOffsetX;
-            const screenY = centerY + relY + this.mapOffsetY;
-            
-            // Calculate distance from center (for circular bounds check)
-            const distFromCenter = Math.sqrt(
-                Math.pow(screenX - centerX, 2) + 
-                Math.pow(screenY - centerY, 2)
-            );
-            
-            // Only draw if within circular mini map bounds
-            if (distFromCenter <= (this.mapSize / 2 - 2)) {
-                // Get player color from remote player
-                const playerColor = remotePlayer.playerColor || '#FFFFFF';
-                
-                // Draw a glow effect
-                this.ctx.fillStyle = `${playerColor}40`; // 25% opacity version of the color
-                this.ctx.beginPath();
-                this.ctx.arc(screenX, screenY, 7, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Draw player marker with their color
-                this.ctx.fillStyle = playerColor;
-                this.ctx.beginPath();
-                this.ctx.arc(screenX, screenY, 4, 0, Math.PI * 2);
-                this.ctx.fill();
-                
-                // Add a white border to make it pop
-                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-                this.ctx.lineWidth = 1;
-                this.ctx.beginPath();
-                this.ctx.arc(screenX, screenY, 4, 0, Math.PI * 2);
-                this.ctx.stroke();
-                
-                // Draw player direction indicator if rotation is available
-                if (remotePlayer.targetRotation) {
-                    const rotation = remotePlayer.targetRotation.y;
-                    this.ctx.strokeStyle = playerColor;
-                    this.ctx.lineWidth = 2;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(screenX, screenY);
-                    this.ctx.lineTo(
-                        screenX + Math.sin(rotation) * 8,
-                        screenY + Math.cos(rotation) * 8
-                    );
-                    this.ctx.stroke();
-                }
-            }
-        });
-    }
-    
-    /**
-     * Draw a group of similar features
-     * @param {Array} features - Array of features to draw
-     * @param {number} playerX - Player's X position in the world
-     * @param {number} playerY - Player's Y position in the world (Z in 3D space)
-     * @param {number} centerX - Center X of the mini map
-     * @param {number} centerY - Center Y of the mini map
-     * @param {string} color - Color to use for drawing
-     * @param {number} size - Size of the feature
-     * @param {boolean} isPath - Whether the feature is a path (drawn as lines)
-     */
-    drawFeatureGroup(features, playerX, playerY, centerX, centerY, color, size, isPath = false) {
-        if (!features || !features.length) return;
-        
-        this.ctx.fillStyle = color;
-        this.ctx.strokeStyle = color;
-        
-        features.forEach(feature => {
-            // Calculate position relative to player
-            const relX = (feature.position.x - playerX) * this.scale;
-            const relY = (feature.position.z - playerY) * this.scale;
-            
-            // Calculate screen position
-            const screenX = centerX + relX;
-            const screenY = centerY + relY;
-            
-            // Calculate distance from center (for circular bounds check)
-            const distFromCenter = Math.sqrt(
-                Math.pow(screenX - centerX, 2) + 
-                Math.pow(screenY - centerY, 2)
-            );
-            
-            // Only draw if within circular mini map bounds
-            if (distFromCenter <= (this.mapSize / 2 - 2)) {
-                if (isPath) {
-                    // Draw as a line if it's a path and has a next point
-                    if (feature.nextPoint) {
-                        const nextRelX = (feature.nextPoint.x - playerX) * this.scale;
-                        const nextRelY = (feature.nextPoint.z - playerY) * this.scale;
-                        const nextScreenX = centerX + nextRelX;
-                        const nextScreenY = centerY + nextRelY;
-                        
-                        this.ctx.lineWidth = size;
-                        this.ctx.beginPath();
-                        this.ctx.moveTo(screenX, screenY);
-                        this.ctx.lineTo(nextScreenX, nextScreenY);
-                        this.ctx.stroke();
-                    } else {
-                        // Draw as a point if no next point
-                        this.ctx.beginPath();
-                        this.ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
-                        this.ctx.fill();
-                    }
-                } else {
-                    // Draw as a circle
-                    this.ctx.beginPath();
-                    this.ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
-                    this.ctx.fill();
-                }
-            }
-        });
-    }
-    
-    /**
-     * Draw entities (NPCs, enemies) on the mini map
-     * @param {number} playerX - Player's X position in the world
-     * @param {number} playerY - Player's Y position in the world (Z in 3D space)
-     * @param {number} centerX - Center X of the mini map
-     * @param {number} centerY - Center Y of the mini map
-     */
-    drawEntities(playerX, playerY, centerX, centerY) {
-        // Get all entities
-        const entities = this.game.world.getEntities ? this.game.world.getEntities() : [];
-        
-        // Limit the number of entities to draw for performance
-        const maxEntities = 50; // Limit to 50 entities
-        const entitiesToDraw = entities.length > maxEntities ? 
-            entities.slice(0, maxEntities) : entities;
-        
-        // Group entities by type for batch rendering
-        const enemyEntities = [];
-        const npcEntities = [];
-        const itemEntities = [];
-        const otherEntities = [];
-        
-        // Reset any shadow effects before starting
-        this.ctx.shadowBlur = 0;
-        
-        // Pre-calculate positions and filter out-of-bounds entities
-        entitiesToDraw.forEach(entity => {
-            // Skip player entity
-            if (entity === this.game.player) return;
-            
-            // Skip entities without position
-            if (!entity.getPosition) return;
-            
-            // Calculate position relative to player
-            const relX = (entity.getPosition().x - playerX) * this.scale;
-            const relY = (entity.getPosition().z - playerY) * this.scale;
-            
-            // Calculate screen position
-            const screenX = centerX + relX;
-            const screenY = centerY + relY;
-            
-            // Fast distance check (avoid sqrt for performance)
-            const distSquared = (screenX - centerX) * (screenX - centerX) + 
-                               (screenY - centerY) * (screenY - centerY);
-            const maxDistSquared = (this.mapSize / 2 - 2) * (this.mapSize / 2 - 2);
-            
-            // Only include if within circular mini map bounds
-            if (distSquared <= maxDistSquared) {
-                const entityData = {
-                    x: screenX,
-                    y: screenY,
-                    size: 2 // Default size
-                };
-                
-                // Group by entity type
-                if (entity.isEnemy) {
-                    enemyEntities.push(entityData);
-                } else if (entity.isNPC) {
-                    npcEntities.push(entityData);
-                } else if (entity.isItem) {
-                    itemEntities.push(entityData);
-                } else {
-                    otherEntities.push(entityData);
-                }
-            }
-        });
-        
-        // Batch render each entity type
-        // Enemies - no glow effects for better performance
-        if (enemyEntities.length > 0) {
-            this.ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
-            enemyEntities.forEach(entity => {
-                this.ctx.beginPath();
-                this.ctx.arc(entity.x, entity.y, entity.size, 0, Math.PI * 2);
-                this.ctx.fill();
-            });
-            
-            // Draw outlines in a single batch
-            this.ctx.strokeStyle = 'rgba(255, 50, 50, 0.9)';
-            this.ctx.lineWidth = 1;
-            enemyEntities.forEach(entity => {
-                this.ctx.beginPath();
-                this.ctx.arc(entity.x, entity.y, entity.size, 0, Math.PI * 2);
-                this.ctx.stroke();
-            });
-        }
-        
-        // NPCs
-        if (npcEntities.length > 0) {
-            this.ctx.fillStyle = 'rgba(200, 200, 0, 0.6)';
-            npcEntities.forEach(entity => {
-                this.ctx.beginPath();
-                this.ctx.arc(entity.x, entity.y, entity.size, 0, Math.PI * 2);
-                this.ctx.fill();
-            });
-            
-            // Draw outlines in a single batch
-            this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.7)';
-            this.ctx.lineWidth = 1;
-            npcEntities.forEach(entity => {
-                this.ctx.beginPath();
-                this.ctx.arc(entity.x, entity.y, entity.size + 1, 0, Math.PI * 2);
-                this.ctx.stroke();
-            });
-        }
-        
-        // Items
-        if (itemEntities.length > 0) {
-            this.ctx.fillStyle = 'rgba(0, 180, 180, 0.6)';
-            itemEntities.forEach(entity => {
-                this.ctx.beginPath();
-                this.ctx.arc(entity.x, entity.y, entity.size, 0, Math.PI * 2);
-                this.ctx.fill();
-            });
-        }
-        
-        // Other entities
-        if (otherEntities.length > 0) {
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            otherEntities.forEach(entity => {
-                this.ctx.beginPath();
-                this.ctx.arc(entity.x, entity.y, entity.size, 0, Math.PI * 2);
-                this.ctx.fill();
-            });
-        }
-        
-        // No shadow effects for better performance
-        this.ctx.shadowBlur = 0;
-        this.ctx.shadowColor = 'transparent';
-    }
-    
-    /**
-     * Set the scale factor for the mini map
-     * @param {number} scale - New scale factor
-     */
-    setScale(scale) {
-        // Ensure scale is within defined bounds
-        if (scale < this.minScale) scale = this.minScale;
-        if (scale > this.maxScale) scale = this.maxScale;
-        
-        this.scale = scale;
-        
-        // Recalculate maxDrawDistance based on current scale
-        this.maxDrawDistance = this.mapSize / 2 - 2;
-        
-        // Force a redraw of the minimap
-        this.renderMiniMap();
-        
-        // Show notification if scale changed significantly
-        if (this.game && this.game.hudManager && Math.abs(this.defaultScale - scale) > 0.3) {
-            const zoomLevel = scale < this.defaultScale ? 
-                `Zoomed in (${(this.defaultScale/scale).toFixed(1)}x)` : 
-                `Zoomed out (${(scale/this.defaultScale).toFixed(1)}x)`;
-            
-            this.game.hudManager.showNotification(zoomLevel, 1500);
-        }
-        
-        console.debug(`Mini map scale set to: ${scale}`);
-    }
-    
-    /**
-     * Resize the minimap
-     * @param {number} size - New size in pixels
-     */
-    resize(size) {
-        // Update sizes
-        this.mapSize = size;
-        this.canvasSize = size;
-        
-        // Update container dimensions
-        this.mapElement.style.width = `${this.mapSize}px`;
-        this.mapElement.style.height = `${this.mapSize}px`;
-        
-        // Update canvas dimensions
-        this.canvas.width = this.canvasSize;
-        this.canvas.height = this.canvasSize;
-        
-        // Recalculate maxDrawDistance
-        this.maxDrawDistance = this.mapSize / 2 - 2;
-        
-        // Force a redraw
-        this.renderMiniMap();
-    }
-    
-    /**
-     * Increase the scale factor (zoom out)
-     */
-    increaseScale() {
-        this.setScale(this.scale * 1.2);
-    }
-    
-    /**
-     * Decrease the scale factor (zoom in)
-     */
-    decreaseScale() {
-        this.setScale(this.scale / 1.2);
-    }
-    
-    /**
-     * Toggle the mini map visibility
-     * @returns {boolean} - New visibility state
-     */
-    toggleMiniMap() {
-        // Toggle only the map element, not the header
-        if (this.mapElement) {
-            // Get current visibility state
-            
-            // Toggle visibility
-            const newVisibility = !this.visible;
-            this.mapElement.style.display = newVisibility ? 'block' : 'none';
-            
-            // If becoming visible, force a render
-            if (newVisibility) {
-                this.renderMiniMap();
-            } else {
-                // If becoming invisible, clear any cached data to free memory
-                this._lastPlayerPos = null;
-                this._lastPlayerRot = null;
-            }
-            
-            console.debug(`Mini map visibility set to: ${newVisibility}`);
-            return newVisibility;
-        }
-        return false;
+    removeEventListeners() {
+        // Clean up any event listeners if added in the future
     }
 }

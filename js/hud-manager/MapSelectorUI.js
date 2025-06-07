@@ -348,7 +348,7 @@ export class MapSelectorUI extends UIComponent {
             const mapPath = `assets/maps/${map.filename}`;
             
             // Load the map using WorldManager (accessed via this.game.world)
-            const success = await this.game.world.loadPreGeneratedMapFromFile(mapPath);
+            const success = await this.game.world.loadMap(map.filename);
             
             if (success) {
                 this.hide();
