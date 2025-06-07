@@ -251,4 +251,30 @@ export class WorldManager {
         }
         return [];
     }
+
+    /**
+     * Hint the JavaScript engine to perform garbage collection
+     * This is called after significant cleanup operations to help free memory
+     */
+    hintGarbageCollection() {
+        // Try to hint garbage collection if available
+        if (typeof window !== 'undefined' && window.gc) {
+            // Manual garbage collection is available (Chrome with --js-flags="--expose-gc")
+            try {
+                window.gc();
+                console.debug('Manual garbage collection triggered');
+            } catch (e) {
+                console.debug('Manual garbage collection failed:', e.message);
+            }
+        } else {
+            // Fallback: create a small delay to allow natural garbage collection
+            // This gives the JS engine a chance to clean up during the next idle period
+            setTimeout(() => {
+                // Force a small allocation to potentially trigger GC
+                const temp = new Array(1000).fill(null);
+                temp.length = 0;
+            }, 0);
+            console.debug('Garbage collection hint scheduled');
+        }
+    }
 }
