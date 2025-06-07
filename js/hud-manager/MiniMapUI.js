@@ -1,15 +1,8 @@
 import { UIComponent } from '../UIComponent.js';
-import * as THREE from 'three';
 
 /**
- * Mini Map UI component
- * Displays a simplified top-down view of the game world
- * 
- * CSS classes used:
- * - #mini-map-container: Outer container for the mini map and header
- * - #mini-map-header: Header text for the mini map (stays visible when map is toggled)
- * - #mini-map: Container for the mini map canvas (can be toggled)
- * - #mini-map-canvas: Canvas element for rendering the circular map
+ * Mini Map UI component - Clean rewrite
+ * Displays a simplified top-down view of the game world using pre-generated minimap data
  */
 export class MiniMapUI extends UIComponent {
     /**
@@ -18,53 +11,38 @@ export class MiniMapUI extends UIComponent {
      */
     constructor(game) {
         super('mini-map', game);
-        this.mapElement = null;
-        this.headerElement = null;
+        
+        // Core properties
         this.canvas = null;
         this.ctx = null;
-        
-        // Adjust map size based on device
-        this.mapSize = this.mobile ? 160 : 200; // Smaller size on mobile
-        this.canvasSize = this.mapSize; // Canvas size matches map size
-        this.scale = 1; // Increased scale factor for better world coverage
-        this.lastRenderTime = 0;
-        this.renderInterval = 250; // Increased to 250ms for better performance
-        this.maxDrawDistance = this.mapSize / 2 - 2; // Maximum draw distance from center
-        
-        // For teleport portals
-        this.showTeleportLines = true; // Show lines between teleport portals
-        this.teleportLineColor = 'rgba(0, 255, 255, 0.4)'; // Cyan color for teleport lines
-        this.teleportPortalColor = 'rgba(0, 255, 255, 0.8)'; // Cyan color for teleport portals
-        this.teleportPortalSize = 6; // Size of teleport portals on minimap
-        
-        // For map dragging
-        this.isDragging = false;
-        this.dragStartX = 0;
-        this.dragStartY = 0;
-        this.mapOffsetX = 0;
-        this.mapOffsetY = 0;
-        this.maxMapOffset = 100; // Maximum map offset in any direction
-        
-        // For map zooming
-        this.minScale = 0.5; // Minimum zoom level
-        this.maxScale = 3.0; // Maximum zoom level
-        this.defaultScale = 1.0; // Default zoom level
-        
-        // For teleport visualization
-        this.highlightedPortal = null; // Currently highlighted portal
-        this.teleportAnimationTime = 0; // For teleport animation
-        
-        // For pre-generated map
-        this.staticMapCanvas = null;
-        this.staticMapCtx = null;
-        this.staticMapGenerated = false;
-        this.staticMapImage = null;
-        
-        // For pre-rendered map from JSON
         this.minimapData = null;
-        this.preRenderedMapImage = null;
-        this.preRenderedMapLoaded = false;
         this.currentMapId = null;
+        
+        // Display settings
+        this.mapSize = this.mobile ? 120 : 200;
+        this.canvasSize = this.mapSize;
+        
+        // Rendering
+        this.lastRenderTime = 0;
+        this.renderInterval = 100; // Render every 100ms
+        
+        // Zone colors mapping
+        this.zoneColors = {
+            forest: '#2d5016',
+            mountains: '#8b7355',
+            desert: '#daa520',
+            swamp: '#556b2f',
+            lava: '#dc143c',
+            ice: '#b0e0e6',
+            ruins: '#696969',
+            water: '#4682b4',
+            plains: '#9acd32',
+            default: '#404040'
+        };
+        
+        // Player representation
+        this.playerColor = '#ffff00';
+        this.playerSize = 4;
     }
     
     /**
@@ -73,21 +51,32 @@ export class MiniMapUI extends UIComponent {
      */
     init() {
         const template = `
-            <div id="mini-map-controls">
-                <button id="mini-map-center-btn" title="Center Map">⌖</button>
-                <button id="mini-map-zoom-in-btn" title="Zoom In">+</button>
-                <button id="mini-map-zoom-out-btn" title="Zoom Out">−</button>
-            </div>
             <canvas id="mini-map-canvas" width="${this.canvasSize}" height="${this.canvasSize}"></canvas>
         `;
         
-        // Render the template
         this.render(template);
         
-        // Store references to elements we need to update
-        this.mapElement = document.getElementById('mini-map');
+        // Get canvas and context
         this.canvas = document.getElementById('mini-map-canvas');
         this.ctx = this.canvas.getContext('2d');
+        
+        if (!this.canvas || !this.ctx) {
+            console.error('Failed to initialize minimap canvas');
+            return false;
+        }
+        
+        // Load minimap for current world
+        this.loadCurrentWorldMinimap();
+        
+        // Listen for world changes
+        if (this.game.eventBus) {
+            this.game.eventBus.subscribe('worldChanged', () => {
+                this.loadCurrentWorldMinimap();
+            });
+        }
+        
+        return true;
+    }
         
         // Create a hidden canvas for the static map
         this.staticMapCanvas = document.createElement('canvas');
