@@ -144,6 +144,14 @@ export class EffectsManager {
     }
     
     /**
+     * Get all active effects
+     * @returns {Array} - Array of active effects
+     */
+    getActiveEffects() {
+        return this.effects;
+    }
+    
+    /**
      * Clean up all effects
      * Should be called when changing scenes or shutting down the game
      */

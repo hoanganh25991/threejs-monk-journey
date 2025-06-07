@@ -379,8 +379,8 @@ export const NORMAL_SKILLS = [
         manaCost: 45, // Higher mana cost for powerful ability
         cooldown: 0.2, // Standard cooldown
         range: 0, // Centered on player
-        radius: 15, // Large radius for clones to operate in
-        duration: 12, // Duration in seconds
+        radius: 5, // Large radius for clones to operate in
+        duration: 20, // Duration in seconds
         get color() { return SKILL_ICONS["Shadow Allies"]?.color || "#ffdd00"; }, // Yellow theme color
         get icon() { return SKILL_ICONS["Shadow Allies"]?.emoji || "👥"; }, // Shadow emoji as fallback
         sounds: {

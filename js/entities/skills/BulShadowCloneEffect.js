@@ -15,7 +15,7 @@ export class BulShadowCloneEffect extends SkillEffect {
         
         // Clone properties from skill config
         this.allyCount = skill.allyCount || 5;
-        this.cloneHealth = skill.cloneHealth || 50;
+        this.cloneHealth = skill.cloneHealth || 200;
         this.cloneAttackDamage = skill.cloneAttackDamage || 15;
         this.cloneSpeed = skill.cloneSpeed || 8;
         this.cloneTransparency = skill.cloneTransparency || 0.7;
@@ -37,7 +37,7 @@ export class BulShadowCloneEffect extends SkillEffect {
         // Find the model configuration
         const modelConfig = CHARACTER_MODELS.find(m => m.path === this.modelPath);
         if (modelConfig) {
-            this.modelScale = modelConfig.baseScale * 0.8; // Slightly smaller than player
+            this.modelScale = modelConfig.baseScale * 1.0; // Slightly smaller than player
         }
     }
 
@@ -344,21 +344,89 @@ export class BulShadowCloneEffect extends SkillEffect {
                 // Add to scene
                 this.skill.game.scene.add(cloneGroup);
                 
-                // Store clone data
-                this.clones.push({
+                // Create clone object with takeDamage method
+                const clone = {
                     group: cloneGroup,
                     model: cloneModel,
                     mixer: mixer,
                     animations: animations,
                     currentAnimation: currentAnimation,
                     health: this.cloneHealth,
+                    maxHealth: this.cloneHealth,
                     target: null,
                     state: 'idle', // idle, seeking, attacking
                     lastAttackTime: 0,
                     attackCooldown: 1.0, // 1 second between attacks
                     index: index,
-                    followPlayer: true // Default to following player when no enemies
-                });
+                    followPlayer: true, // Default to following player when no enemies
+                    
+                    // Method to handle damage from enemies
+                    takeDamage: function(amount) {
+                        try {
+                            console.log(`CLONE DAMAGE: Clone ${this.index} taking ${amount} damage`);
+                            
+                            // Reduce health
+                            this.health -= amount;
+                            console.log(`CLONE HEALTH: Clone ${this.index} health now ${this.health}/${this.maxHealth}`);
+                            
+                            // Create damage effect
+                            if (this.group && this.group.position) {
+                                console.log(`CLONE EFFECT: Creating visual effect for clone ${this.index}`);
+                                
+                                // Flash the clone red briefly
+                                if (this.model) {
+                                    this.model.traverse((node) => {
+                                        if (node.isMesh && node.material) {
+                                            // Store original color if not already stored
+                                            if (!node.userData.originalColor) {
+                                                node.userData.originalColor = node.material.color.clone();
+                                            }
+                                            
+                                            // Flash red
+                                            node.material.color.set(0xff0000);
+                                            
+                                            // Reset color after a short delay
+                                            setTimeout(() => {
+                                                if (node.material) {
+                                                    node.material.color.copy(node.userData.originalColor);
+                                                }
+                                            }, 150);
+                                        }
+                                    });
+                                } else {
+                                    // For simple clones without a model
+                                    this.group.traverse((node) => {
+                                        if (node.isMesh && node.material) {
+                                            // Store original color if not already stored
+                                            if (!node.userData.originalColor) {
+                                                node.userData.originalColor = node.material.color.clone();
+                                            }
+                                            
+                                            // Flash red
+                                            node.material.color.set(0xff0000);
+                                            
+                                            // Reset color after a short delay
+                                            setTimeout(() => {
+                                                if (node.material) {
+                                                    node.material.color.copy(node.userData.originalColor);
+                                                }
+                                            }, 150);
+                                        }
+                                    });
+                                }
+                            }
+                            
+                            // Return true if clone is still alive, false if dead
+                            return this.health > 0;
+                        } catch (error) {
+                            console.error(`Error in clone takeDamage: ${error.message}`);
+                            return false;
+                        }
+                    }
+                };
+                
+                // Add clone to the array
+                this.clones.push(clone);
             },
             // Progress callback
             (xhr) => {
@@ -374,18 +442,65 @@ export class BulShadowCloneEffect extends SkillEffect {
                 // Add to scene
                 this.skill.game.scene.add(cloneGroup);
                 
-                // Store clone data
-                this.clones.push({
+                // Create clone object with takeDamage method
+                const clone = {
                     group: cloneGroup,
                     model: null,
                     mixer: null,
                     health: this.cloneHealth,
+                    maxHealth: this.cloneHealth,
                     target: null,
                     state: 'idle', // idle, seeking, attacking
                     lastAttackTime: 0,
                     attackCooldown: 1.0, // 1 second between attacks
-                    index: index
-                });
+                    index: index,
+                    followPlayer: true, // Default to following player when no enemies
+                    
+                    // Method to handle damage from enemies
+                    takeDamage: function(amount) {
+                        try {
+                            console.log(`SIMPLE CLONE DAMAGE: Clone ${this.index} taking ${amount} damage`);
+                            
+                            // Reduce health
+                            this.health -= amount;
+                            console.log(`SIMPLE CLONE HEALTH: Clone ${this.index} health now ${this.health}/${this.maxHealth}`);
+                            
+                            // Create damage effect
+                            if (this.group && this.group.position) {
+                                console.log(`SIMPLE CLONE EFFECT: Creating visual effect for clone ${this.index}`);
+                                
+                                // Flash the clone red briefly
+                                this.group.traverse((node) => {
+                                    if (node.isMesh && node.material) {
+                                        // Store original color if not already stored
+                                        if (!node.userData.originalColor) {
+                                            node.userData.originalColor = node.material.color.clone();
+                                        }
+                                        
+                                        // Flash red
+                                        node.material.color.set(0xff0000);
+                                        
+                                        // Reset color after a short delay
+                                        setTimeout(() => {
+                                            if (node.material) {
+                                                node.material.color.copy(node.userData.originalColor);
+                                            }
+                                        }, 150);
+                                    }
+                                });
+                            }
+                            
+                            // Return true if clone is still alive, false if dead
+                            return this.health > 0;
+                        } catch (error) {
+                            console.error(`Error in simple clone takeDamage: ${error.message}`);
+                            return false;
+                        }
+                    }
+                };
+                
+                // Add clone to the array
+                this.clones.push(clone);
             }
         );
     }
@@ -473,6 +588,12 @@ export class BulShadowCloneEffect extends SkillEffect {
      */
     _clearClones() {
         for (const clone of this.clones) {
+            // Stop and dispose of animation mixer if it exists
+            if (clone.mixer) {
+                clone.mixer.stopAllAction();
+                clone.mixer.uncacheRoot(clone.model);
+            }
+            
             if (clone.group && clone.group.parent) {
                 clone.group.parent.remove(clone.group);
             }
@@ -984,11 +1105,9 @@ export class BulShadowCloneEffect extends SkillEffect {
     update(delta) {
         // Override parent update to prevent duration check
         // We're not calling super.update(delta) to avoid the duration check
-        
+        super.update(delta);
+
         if (!this.isActive || !this.effect) return;
-        
-        // Update elapsed time for animations
-        this.elapsedTime += delta;
         
         // IMPORTANT: Update the skill's position property to match the effect's position
         // This is crucial for collision detection in CollisionManager
@@ -1123,5 +1242,78 @@ export class BulShadowCloneEffect extends SkillEffect {
             this.summoningGroup.parent.remove(this.summoningGroup);
             this.summoningGroup = null;
         }
+    }
+    
+    /**
+     * Dispose of the effect and clean up resources
+     * Overrides the parent class dispose method to ensure proper cleanup of clones
+     */
+    dispose() {
+        // First clear all clones
+        this._clearClones();
+        
+        // Clear summoning effect
+        if (this.summoningGroup && this.summoningGroup.parent) {
+            this.summoningGroup.parent.remove(this.summoningGroup);
+            
+            // Dispose of geometries and materials in the summoning group
+            this.summoningGroup.traverse(child => {
+                if (child.geometry) {
+                    child.geometry.dispose();
+                }
+                
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(material => material.dispose());
+                    } else {
+                        child.material.dispose();
+                    }
+                }
+            });
+            
+            this.summoningGroup = null;
+        }
+        
+        // Remove clones from the scene
+        for (const clone of this.clones) {
+            if (clone.mixer) {
+                clone.mixer.stopAllAction();
+                clone.mixer.uncacheRoot(clone.model);
+            }
+            
+            if (clone.group && clone.group.parent) {
+                clone.group.parent.remove(clone.group);
+            }
+        }
+        
+        // Clear the clones array
+        this.clones = [];
+        
+        // Call the parent class dispose method to handle the main effect
+        super.dispose();
+    }
+    
+    /**
+     * Reset the effect to its initial state
+     * This allows the effect to be reused without creating a new instance
+     * Overrides the parent class reset method to ensure proper cleanup of clones
+     */
+    reset() {
+        // Clear all clones
+        this._clearClones();
+        
+        // Clear summoning effect
+        if (this.summoningGroup && this.summoningGroup.parent) {
+            this.summoningGroup.parent.remove(this.summoningGroup);
+            this.summoningGroup = null;
+        }
+        
+        // Reset state variables
+        this.summonStage = 'portal';
+        this.stageTime = 0;
+        this.lastTargetUpdate = 0;
+        
+        // Call the parent class reset method
+        super.reset();
     }
 }
