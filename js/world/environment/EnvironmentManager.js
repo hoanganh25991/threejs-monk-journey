@@ -6,13 +6,11 @@ import { Flower } from './Flower.js';
 import { TallGrass } from './TallGrass.js';
 import { AncientTree } from './AncientTree.js';
 import { TreeCluster } from './TreeCluster.js';
-import { RandomGenerator } from '../utils/RandomGenerator.js';
 import { EnvironmentFactory } from './EnvironmentFactory.js';
 
 /**
  * Manages environment objects like trees, rocks, bushes, etc.
- * Fully randomized with natural grouping of similar objects
- * Optimized with tree clustering for better performance
+ * Simplified to focus only on loading environment objects from map data
  */
 export class EnvironmentManager {
     constructor(scene, worldManager, game = null) {
@@ -24,8 +22,7 @@ export class EnvironmentManager {
         this.environmentFactory = new EnvironmentFactory(scene, worldManager);
         
         // Environment object collections
-        this.environmentObjects = {}; // Object to track environment objects by chunk key
-        this.visibleChunks = {}; // Empty object for compatibility with old system
+        this.environmentObjects = [];
         
         // Get environment object types from factory and add traditional types
         const factoryTypes = this.environmentFactory.getRegisteredTypes();
@@ -39,7 +36,233 @@ export class EnvironmentManager {
         
         // For minimap functionality
         this.trees = [];
-        this.treeClusters = []; // New array for tree clusters
+        this.rocks = [];
+        this.bushes = [];
+        this.flowers = [];
+        this.tallGrass = [];
+        this.ancientTrees = [];
+        this.smallPlants = [];
+        this.fallenLogs = [];
+        this.mushrooms = [];
+        this.rockFormations = [];
+        this.shrines = [];
+        this.stumps = [];
+        this.waterfalls = [];
+        this.crystalFormations = [];
+        this.mosses = [];
+    }
+
+    /**
+     * Initialize the environment manager
+     */
+    init() {
+        console.debug('Environment manager initialized');
+    }
+
+    /**
+     * Load environment objects from map data
+     * @param {Array} environmentData - Array of environment object data from map
+     */
+    loadFromMapData(environmentData) {
+        if (!environmentData || !Array.isArray(environmentData)) {
+            console.warn('No environment data provided to load');
+            return;
+        }
+
+        console.debug(`Loading ${environmentData.length} environment objects from map data`);
+
+        // Clear existing environment objects
+        this.clear();
+
+        environmentData.forEach(envData => {
+            if (envData.position && envData.type) {
+                const object = this.createEnvironmentObject(
+                    envData.type, 
+                    envData.position.x, 
+                    envData.position.z,
+                    envData.scale || 1.0
+                );
+
+                if (object) {
+                    // Apply rotation if specified
+                    if (envData.rotation !== undefined) {
+                        object.rotation.y = envData.rotation;
+                    }
+                    
+                    // Add to environment objects
+                    this.environmentObjects.push({
+                        type: envData.type,
+                        object: object,
+                        position: new THREE.Vector3(
+                            envData.position.x, 
+                            envData.position.y || 0, 
+                            envData.position.z
+                        ),
+                        scale: envData.scale || 1.0,
+                        id: envData.id,
+                        groupId: envData.groupId
+                    });
+                    
+                    // Add to type-specific collections for minimap
+                    this.addToTypeCollection(envData.type, object);
+                }
+            }
+        });
+
+        console.debug(`Successfully loaded ${this.environmentObjects.length} environment objects`);
+    }
+    
+    /**
+     * Add object to the appropriate type-specific collection
+     * @param {string} type - Type of environment object
+     * @param {THREE.Object3D} object - The object to add
+     */
+    addToTypeCollection(type, object) {
+        switch (type) {
+            case 'tree':
+                this.trees.push(object);
+                break;
+            case 'rock':
+                this.rocks.push(object);
+                break;
+            case 'bush':
+                this.bushes.push(object);
+                break;
+            case 'flower':
+                this.flowers.push(object);
+                break;
+            case 'tall_grass':
+                this.tallGrass.push(object);
+                break;
+            case 'ancient_tree':
+                this.ancientTrees.push(object);
+                break;
+            case 'small_plant':
+                this.smallPlants.push(object);
+                break;
+            case 'fallen_log':
+                this.fallenLogs.push(object);
+                break;
+            case 'mushroom':
+                this.mushrooms.push(object);
+                break;
+            case 'rock_formation':
+                this.rockFormations.push(object);
+                break;
+            case 'shrine':
+                this.shrines.push(object);
+                break;
+            case 'stump':
+                this.stumps.push(object);
+                break;
+            case 'waterfall':
+                this.waterfalls.push(object);
+                break;
+            case 'crystal_formation':
+                this.crystalFormations.push(object);
+                break;
+            case 'moss':
+                this.mosses.push(object);
+                break;
+        }
+    }
+    
+    /**
+     * Create an environment object using the factory
+     * @param {string} type - Type of environment object
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @param {number} scale - Scale factor
+     * @returns {THREE.Object3D} - The created object
+     */
+    createEnvironmentObject(type, x, z, scale = 1.0) {
+        let object = null;
+        
+        // Use the terrain height at this position
+        const y = this.worldManager.getTerrainHeight(x, z);
+        
+        // Try to create the object using the factory first
+        if (this.environmentFactory.canCreate(type)) {
+            object = this.environmentFactory.create(type, x, y, z, scale);
+        } else {
+            // Fall back to direct creation for traditional types
+            switch (type) {
+                case 'tree':
+                    const tree = new Tree();
+                    object = tree.createMesh();
+                    break;
+                case 'rock':
+                    const rock = new Rock();
+                    object = rock.createMesh();
+                    break;
+                case 'bush':
+                    const bush = new Bush();
+                    object = bush.createMesh();
+                    break;
+                case 'flower':
+                    const flower = new Flower();
+                    object = flower.createMesh();
+                    break;
+                case 'tall_grass':
+                    const tallGrass = new TallGrass();
+                    object = tallGrass.createMesh();
+                    break;
+                case 'ancient_tree':
+                    const ancientTree = new AncientTree();
+                    object = ancientTree.createMesh();
+                    break;
+                default:
+                    console.warn(`Unknown environment object type: ${type}`);
+                    return null;
+            }
+        }
+        
+        if (object) {
+            // Position the object on the terrain
+            object.position.set(x, y, z);
+            
+            // Apply scale
+            object.scale.set(scale, scale, scale);
+            
+            // Add to scene
+            this.scene.add(object);
+        }
+        
+        return object;
+    }
+    
+    /**
+     * Clear all environment objects
+     */
+    clear() {
+        // Remove all environment objects from the scene
+        this.environmentObjects.forEach(info => {
+            if (info.object && info.object.parent) {
+                this.scene.remove(info.object);
+            }
+            
+            // Dispose of geometries and materials to free memory
+            if (info.object) {
+                if (info.object.traverse) {
+                    info.object.traverse(obj => {
+                        if (obj.geometry) {
+                            obj.geometry.dispose();
+                        }
+                        if (obj.material) {
+                            if (Array.isArray(obj.material)) {
+                                obj.material.forEach(mat => mat.dispose());
+                            } else {
+                                obj.material.dispose();
+                            }
+                        }
+                    });
+                }
+            }
+        });
+        
+        // Reset environment collections
+        this.environmentObjects = [];
+        this.trees = [];
         this.rocks = [];
         this.bushes = [];
         this.flowers = [];
@@ -55,329 +278,40 @@ export class EnvironmentManager {
         this.crystalFormations = [];
         this.mosses = [];
         
-        // Performance optimization settings
-        this.useTreeClustering = true; // Enable tree clustering by default
-        this.clusterThreshold = 5; // Minimum number of trees to form a cluster
-        this.maxTreesPerCluster = 30; // Maximum number of trees in a single cluster
-        this.clusterRadius = 20; // Maximum radius for a tree cluster
-        
-        // Last player position for distance tracking
-        this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
-        this.minDistanceForNewObject = 80; // Increased from 30 to 80 for mobile performance
-        this.lastObjectTime = 0;
-        this.objectCooldown = 5000; // Increased from 1000ms to 5000ms for mobile performance
-        
-        // Natural grouping settings
-        this.groupingProbabilities = {
-            'tree': 0.9,        // Increased from 80% to 90% chance that trees will be in groups
-            'rock': 0.6,        // 60% chance that rocks will be in groups
-            'bush': 0.7,        // 70% chance that bushes will be in groups
-            'flower': 0.9,      // 90% chance that flowers will be in groups
-            'tall_grass': 0.95, // 95% chance that tall grass will be in groups
-            'ancient_tree': 0.1, // 10% chance that ancient trees will be in groups (usually solitary)
-            'small_plant': 0.85, // 85% chance that small plants will be in groups
-            'waterfall': 0.2,   // 20% chance that waterfalls will be in groups (usually solitary)
-            'crystal_formation': 0.7 // 70% chance that crystal formations will be in groups
+        console.debug("All environment objects cleared");
+    }
+    
+    /**
+     * Save environment state
+     * @returns {object} - The saved environment state
+     */
+    save() {
+        return {
+            objects: this.environmentObjects.map(info => ({
+                type: info.type,
+                position: {
+                    x: info.position.x,
+                    y: info.position.y,
+                    z: info.position.z
+                },
+                scale: info.scale,
+                id: info.id,
+                groupId: info.groupId,
+                rotation: info.object ? info.object.rotation.y : 0
+            }))
         };
-        
-        this.groupSizes = {
-            'tree': { min: 10, max: 30 },      // Increased from 6-24 to 10-30 for more visible tree groups
-            'rock': { min: 2, max: 6 },        // Rocks come in groups of 2-6
-            'bush': { min: 3, max: 10 },       // Increased from 2-8 to 3-10
-            'flower': { min: 5, max: 15 },     // Flowers come in groups of 5-15
-            'tall_grass': { min: 8, max: 20 }, // Tall grass comes in patches of 8-20
-            'ancient_tree': { min: 1, max: 3 }, // Ancient trees are usually solitary, max 3
-            'small_plant': { min: 6, max: 18 }, // Small plants come in groups of 6-18
-            'waterfall': { min: 1, max: 3 },   // Waterfalls come in groups of 1-3
-            'crystal_formation': { min: 3, max: 8 } // Crystal formations come in groups of 3-8
-        };
-        
-        // Group spread determines how tightly packed the groups are
-        this.groupSpread = {
-            'tree': 12,        // Increased from 8 to 12 to spread trees more
-            'rock': 5,         // Rocks spread up to 5 units from center
-            'bush': 6,         // Bushes spread up to 6 units from center
-            'flower': 4,       // Flowers spread up to 4 units from center
-            'tall_grass': 8,   // Tall grass spreads up to 8 units from center
-            'ancient_tree': 20, // Ancient trees spread up to 20 units from center (when grouped)
-            'small_plant': 5,  // Small plants spread up to 5 units from center
-            'waterfall': 30,   // Waterfalls spread up to 30 units from center (when grouped)
-            'crystal_formation': 10 // Crystal formations spread up to 10 units from center
-        };
-        
-        // Create some initial environment objects
-        this.createInitialEnvironment();
     }
     
     /**
-     * Create initial environment objects around the starting area
+     * Load environment state
+     * @param {object} environmentState - The environment state to load
      */
-    createInitialEnvironment() {
-        // Use a specific chunk key for the starting area
-        const startingChunkKey = "starting-area";
-        const startingAreaObjects = [];
+    load(environmentState) {
+        if (!environmentState || !environmentState.objects) return;
         
-        // Create a larger forest near the starting position (3x more trees)
-        for (let i = 0; i < 30; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const distance = 10 + Math.random() * 20; // Reduced distance
-            const x = Math.cos(angle) * distance;
-            const z = Math.sin(angle) * distance;
-            
-            const tree = this.createEnvironmentObject('tree', x, z);
-            if (tree) {
-                startingAreaObjects.push({
-                    type: 'tree',
-                    object: tree,
-                    position: new THREE.Vector3(x, 0, z)
-                });
-                this.trees.push(tree);
-            }
-        }
-        
-        // Add some rocks
-        for (let i = 0; i < 8; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const distance = 15 + Math.random() * 15; // Reduced distance
-            const x = Math.cos(angle) * distance;
-            const z = Math.sin(angle) * distance;
-            
-            const rock = this.createEnvironmentObject('rock', x, z);
-            if (rock) {
-                startingAreaObjects.push({
-                    type: 'rock',
-                    object: rock,
-                    position: new THREE.Vector3(x, 0, z)
-                });
-                this.rocks.push(rock);
-            }
-        }
-        
-        // Store the starting area objects in the environmentObjects object
-        this.environmentObjects[startingChunkKey] = startingAreaObjects;
-        
-        console.debug("Initial environment objects created");
+        // Load environment objects from saved state
+        this.loadFromMapData(environmentState.objects);
     }
-    
-    /**
-     * Update environment objects based on player position
-     * @param {THREE.Vector3} playerPosition - The player's current position
-     * @param {number} drawDistanceMultiplier - Multiplier for draw distance (not used in simplified version)
-     */
-    updateForPlayer(playerPosition, drawDistanceMultiplier = 1.0) {
-        // Check if player has moved far enough to generate a new random object
-        this.checkForRandomObject(playerPosition);
-    }
-    
-    /**
-     * Check if player has moved far enough to generate a new random environment object
-     * @param {THREE.Vector3} playerPosition - Current player position
-     */
-    checkForRandomObject(playerPosition) {
-        // Calculate distance moved since last object
-        const distanceMoved = playerPosition.distanceTo(this.lastPlayerPosition);
-        const currentTime = Date.now();
-        const timeSinceLastObject = currentTime - this.lastObjectTime;
-        
-        // Only generate a new object if player has moved far enough and enough time has passed
-        if (distanceMoved >= this.minDistanceForNewObject && timeSinceLastObject >= this.objectCooldown) {
-            // Update last position and time
-            this.lastPlayerPosition.copy(playerPosition);
-            this.lastObjectTime = currentTime;
-            
-            // 20% chance to generate an object when conditions are met (reduced from 40%)
-            if (Math.random() < 1) {
-                this.generateRandomObject(playerPosition);
-                return true;
-            }
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Generate a random environment object or group near the player
-     * @param {THREE.Vector3} playerPosition - Current player position
-     */
-    generateRandomObject(playerPosition) {
-        // Choose a random object type with higher probability for trees
-        // 60% chance for trees, 40% chance for other object types
-        const randomValue = Math.random();
-        let randomType;
-        
-        if (randomValue < 0.6) {
-            // 60% chance to generate a tree
-            randomType = 'tree';
-        } else {
-            // Get all available types from both traditional and factory methods
-            const availableTypes = [...this.environmentObjectTypes];
-            
-            // Add factory-specific types that might not be in the traditional list
-            const factoryTypes = this.environmentFactory.getRegisteredTypes();
-            factoryTypes.forEach(type => {
-                if (!availableTypes.includes(type)) {
-                    availableTypes.push(type);
-                }
-            });
-            
-            // Filter out 'tree' since we already handled it
-            const otherTypes = availableTypes.filter(type => type !== 'tree');
-            randomType = otherTypes[Math.floor(Math.random() * otherTypes.length)];
-        }
-        
-        // Generate a position that's visible but not too close to the player
-        // Random angle and distance between 30-100 units from player
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 30 + Math.random() * 70;
-        
-        const centerX = playerPosition.x + Math.cos(angle) * distance;
-        const centerZ = playerPosition.z + Math.sin(angle) * distance;
-        
-        // Create a chunk key for this random object
-        // Use a grid-based approach to determine the chunk
-        const chunkSize = 100; // Size of each chunk in world units
-        const chunkX = Math.floor(centerX / chunkSize);
-        const chunkZ = Math.floor(centerZ / chunkSize);
-        const chunkKey = `${chunkX},${chunkZ}`;
-        
-        // Initialize the chunk if it doesn't exist
-        if (!this.environmentObjects[chunkKey]) {
-            this.environmentObjects[chunkKey] = [];
-        }
-        
-        // Determine if we should create a group or a single object
-        const createGroup = Math.random() < this.groupingProbabilities[randomType];
-        
-        if (createGroup) {
-            // Create a group of objects
-            const groupSize = Math.floor(
-                this.groupSizes[randomType].min + 
-                Math.random() * (this.groupSizes[randomType].max - this.groupSizes[randomType].min)
-            );
-            
-            const spread = this.groupSpread[randomType];
-            const groupObjects = [];
-            
-            console.debug(`Generating a group of ${groupSize} ${randomType}s at (${centerX.toFixed(1)}, ${centerZ.toFixed(1)})`);
-            
-            // Create objects in a natural-looking group pattern
-            for (let i = 0; i < groupSize; i++) {
-                // For natural grouping, use a combination of random and patterned placement
-                let objectX, objectZ;
-                
-                if (i === 0) {
-                    // First object at center
-                    objectX = centerX;
-                    objectZ = centerZ;
-                } else {
-                    // Subsequent objects in a natural pattern
-                    // Use polar coordinates for more natural grouping
-                    const groupAngle = Math.random() * Math.PI * 2;
-                    
-                    // Distance from center increases slightly with each object
-                    // but with some randomness for natural look
-                    const groupDistance = Math.random() * spread * (i / groupSize + 0.3);
-                    
-                    objectX = centerX + Math.cos(groupAngle) * groupDistance;
-                    objectZ = centerZ + Math.sin(groupAngle) * groupDistance;
-                }
-                
-                // Create the object
-                let object = null;
-                
-                // Vary sizes slightly within a group for natural look
-                const scaleFactor = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
-                
-                // Create the object using the factory
-                object = this.createEnvironmentObject(randomType, objectX, objectZ, scaleFactor);
-                
-                if (object) {
-                    // Add to environment objects for this chunk
-                    this.environmentObjects[chunkKey].push({
-                        type: randomType,
-                        object: object,
-                        position: new THREE.Vector3(objectX, 0, objectZ),
-                        groupId: `group_${Date.now()}_${randomType}` // Track group membership
-                    });
-                    
-                    groupObjects.push(object);
-                }
-            }
-            
-            console.debug(`Created group of ${groupObjects.length} ${randomType}s`);
-        } else {
-            // Create a single object
-            let object = null;
-            
-            // Create the object using the factory
-            object = this.createEnvironmentObject(randomType, centerX, centerZ);
-            
-            if (object) {
-                console.debug(`Generated single ${randomType} at (${centerX.toFixed(1)}, ${centerZ.toFixed(1)})`);
-                
-                // Add to environment objects for this chunk
-                this.environmentObjects[chunkKey].push({
-                    type: randomType,
-                    object: object,
-                    position: new THREE.Vector3(centerX, 0, centerZ)
-                });
-            }
-        }
-        
-        // Limit the number of environment objects to prevent memory issues
-        // Count total objects across all chunks
-        let totalObjects = 0;
-        for (const key in this.environmentObjects) {
-            totalObjects += this.environmentObjects[key].length;
-        }
-        
-        const maxObjects = 500; // Increased from 150 to 500 to accommodate more trees
-        if (totalObjects > maxObjects) {
-            // Find the oldest chunk (assuming the first one added is the oldest)
-            const oldestChunkKey = Object.keys(this.environmentObjects)[0];
-            if (oldestChunkKey && this.environmentObjects[oldestChunkKey]) {
-                // Remove objects from the oldest chunk
-                const objectsToRemove = totalObjects - maxObjects;
-                const chunkObjects = this.environmentObjects[oldestChunkKey];
-                
-                // Remove objects up to the number needed or all in the chunk
-                const removeCount = Math.min(objectsToRemove, chunkObjects.length);
-                
-                for (let i = 0; i < removeCount; i++) {
-                    if (chunkObjects.length > 0) {
-                        const oldestObject = chunkObjects.shift();
-                        if (oldestObject && oldestObject.object && oldestObject.object.parent) {
-                            this.scene.remove(oldestObject.object);
-                            
-                            // Also remove from type-specific arrays
-                            switch (oldestObject.type) {
-                                case 'tree':
-                                    this.trees = this.trees.filter(t => t !== oldestObject.object);
-                                    break;
-                                case 'rock':
-                                    this.rocks = this.rocks.filter(r => r !== oldestObject.object);
-                                    break;
-                                case 'bush':
-                                    this.bushes = this.bushes.filter(b => b !== oldestObject.object);
-                                    break;
-                                case 'flower':
-                                    this.flowers = this.flowers.filter(f => f !== oldestObject.object);
-                                    break;
-                            }
-                        }
-                    }
-                }
-                
-                // If the chunk is now empty, remove it
-                if (chunkObjects.length === 0) {
-                    delete this.environmentObjects[oldestChunkKey];
-                }
-            }
-        }
-    }
-    
-    // The generateEnvironmentObjects method has been removed
-    // Environment objects are now created using the factory system
     
     /**
      * Remove environment objects for a specific chunk

@@ -6,11 +6,10 @@ import { DarkSanctum } from './DarkSanctum.js';
 import { Mountain } from './Mountain.js';
 import { Bridge } from './Bridge.js';
 import { Village } from './Village.js';
-import { RandomGenerator } from '../utils/RandomGenerator.js';
 
 /**
- * Manages structure generation and placement
- * Fully randomized with natural grouping of similar structures
+ * Manages structure loading and placement from map data
+ * Simplified to focus only on loading existing structures from map data
  */
 export class StructureManager {
     constructor(scene, worldManager, game = null) {
@@ -21,274 +20,225 @@ export class StructureManager {
         // Structure collections
         this.structures = [];
         this.specialStructures = {}; // Track special structures like Dark Sanctum
-        this.structuresPlaced = {}; // Empty object for compatibility with old system
         
-        // Structure types (no longer using config)
+        // Structure types
         this.structureTypes = [
             'house', 'tower', 'ruins', 'darkSanctum', 
-            'mountain', 'bridge', 'village'
+            'mountain', 'bridge', 'village', 'tavern',
+            'temple', 'shop', 'fortress', 'altar'
         ];
-        
-        // Last player position for distance tracking
-        this.lastPlayerPosition = new THREE.Vector3(0, 0, 0);
-        this.minDistanceForNewStructure = 150; // Increased from 100 to 150 for mobile performance
-        this.lastStructureTime = 0;
-        this.structureCooldown = 15000; // Increased from 8s to 15s for mobile performance
-        
-        // Natural grouping settings
-        this.groupingProbabilities = {
-            'house': 0.85,      // 85% chance that houses will be in groups (villages)
-            'tower': 0.4,       // 40% chance that towers will be in groups (fortifications)
-            'ruins': 0.6,       // 60% chance that ruins will be in groups (ancient cities)
-            'darkSanctum': 0.1, // 10% chance for multiple sanctums (rare)
-            'mountain': 0.9,    // 90% chance for mountain ranges
-            'bridge': 0.2,      // 20% chance for multiple bridges
-            'village': 1.0      // Villages are always groups by definition
-        };
-        
-        this.groupSizes = {
-            'house': { min: 3, max: 8 },      // Houses come in groups of 3-8
-            'tower': { min: 2, max: 4 },      // Towers come in groups of 2-4
-            'ruins': { min: 2, max: 6 },      // Ruins come in groups of 2-6
-            'darkSanctum': { min: 2, max: 3 }, // Sanctums come in groups of 2-3 (rare)
-            'mountain': { min: 3, max: 7 },    // Mountains come in ranges of 3-7
-            'bridge': { min: 2, max: 3 },      // Bridges come in groups of 2-3
-            'village': { min: 5, max: 12 }     // Villages have 5-12 buildings
-        };
-        
-        // Group spread determines how tightly packed the groups are
-        this.groupSpread = {
-            'house': 15,        // Houses spread up to 15 units from center
-            'tower': 30,        // Towers spread up to 30 units from center
-            'ruins': 25,        // Ruins spread up to 25 units from center
-            'darkSanctum': 50,  // Sanctums spread up to 50 units from center
-            'mountain': 40,     // Mountains spread up to 40 units from center
-            'bridge': 35,       // Bridges spread up to 35 units from center
-            'village': 25       // Villages spread up to 25 units from center
-        };
-        
-        // Maximum number of structures to keep in memory
-        this.maxStructures = 50; // Increased from 20 to account for groups
     }
     
     /**
-     * Initialize the structure system with static structures
+     * Initialize the structure system
+     * @param {boolean} createInitialStructures - Whether to create initial structures (default: false)
      */
-    init() {
-        // Create initial structures near the player's starting position
-        this.createRuins(0, 0);
-        
-        // Create Dark Sanctum as a landmark
-        this.createDarkSanctum(0, -40);
-        
-        // Mark these initial structures as placed
-        this.specialStructures['initial_ruins'] = { x: 0, z: 0, type: 'ruins' };
-        this.specialStructures['initial_darkSanctum'] = { x: 0, z: -40, type: 'darkSanctum' };
-        
-        console.debug("Initial structures created");
-    }
-    
-    /**
-     * Check if player has moved far enough to generate a new random structure
-     * @param {THREE.Vector3} playerPosition - Current player position
-     */
-    checkForRandomStructure(playerPosition) {
-        // Calculate distance moved since last structure
-        const distanceMoved = playerPosition.distanceTo(this.lastPlayerPosition);
-        const currentTime = Date.now();
-        const timeSinceLastStructure = currentTime - this.lastStructureTime;
-        
-        // Only generate a new structure if player has moved far enough and enough time has passed
-        if (distanceMoved >= this.minDistanceForNewStructure && timeSinceLastStructure >= this.structureCooldown) {
-            // Update last position and time
-            this.lastPlayerPosition.copy(playerPosition);
-            this.lastStructureTime = currentTime;
+    init(createInitialStructures = false) {
+        // Only create initial structures if specifically requested
+        if (createInitialStructures) {
+            // Create initial structures near the player's starting position
+            this.createRuins(0, 0);
+            this.createDarkSanctum(0, -40);
             
-            // 30% chance to generate a structure when conditions are met
-            if (Math.random() < 0.3) {
-                this.generateRandomStructure(playerPosition);
-                return true;
-            }
+            // Mark these initial structures as placed
+            this.specialStructures['initial_ruins'] = { x: 0, z: 0, type: 'ruins' };
+            this.specialStructures['initial_darkSanctum'] = { x: 0, z: -40, type: 'darkSanctum' };
+            
+            console.debug("Initial structures created");
+        } else {
+            console.debug("Structure manager initialized without initial structures");
         }
-        
-        return false;
     }
     
     /**
-     * Generate a random structure or structure group near the player
-     * @param {THREE.Vector3} playerPosition - Current player position
-     * @returns {Object|null} - Information about the generated structure or null if none was created
+     * Load structures from map data
+     * @param {Array} structuresData - Array of structure data from map
      */
-    generateRandomStructure(playerPosition) {
-        // Choose a random structure type
-        const randomType = this.structureTypes[Math.floor(Math.random() * this.structureTypes.length)];
-        
-        // Generate a position that's visible but not too close to the player
-        // Random angle and distance between 50-150 units from player
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 50 + Math.random() * 100;
-        
-        const centerX = playerPosition.x + Math.cos(angle) * distance;
-        const centerZ = playerPosition.z + Math.sin(angle) * distance;
-        
-        // Determine if we should create a group or a single structure
-        const createGroup = Math.random() < this.groupingProbabilities[randomType];
-        
-        if (createGroup) {
-            // Create a group of structures
-            const groupSize = Math.floor(
-                this.groupSizes[randomType].min + 
-                Math.random() * (this.groupSizes[randomType].max - this.groupSizes[randomType].min)
-            );
-            
-            const spread = this.groupSpread[randomType];
-            const groupObjects = [];
-            const groupId = `group_${Date.now()}_${randomType}`;
-            
-            console.debug(`Generating a group of ${groupSize} ${randomType}s at (${centerX.toFixed(1)}, ${centerZ.toFixed(1)})`);
-            
-            // Special handling for villages which need a more organized layout
-            if (randomType === 'village') {
-                const villageInfo = this.createVillageGroup(centerX, centerZ, groupSize);
-                return villageInfo;
-            }
-            
-            // Special handling for mountain ranges which need a more natural formation
-            if (randomType === 'mountain') {
-                const mountainInfo = this.createMountainRange(centerX, centerZ, groupSize);
-                return mountainInfo;
-            }
-            
-            // Create structures in a natural-looking group pattern
-            for (let i = 0; i < groupSize; i++) {
-                // For natural grouping, use a combination of random and patterned placement
-                let structureX, structureZ;
-                
-                if (i === 0) {
-                    // First structure at center
-                    structureX = centerX;
-                    structureZ = centerZ;
-                } else {
-                    // Subsequent structures in a natural pattern
-                    // Use polar coordinates for more natural grouping
-                    const groupAngle = Math.random() * Math.PI * 2;
-                    
-                    // Distance from center increases slightly with each structure
-                    // but with some randomness for natural look
-                    const groupDistance = Math.random() * spread * (i / groupSize + 0.3);
-                    
-                    structureX = centerX + Math.cos(groupAngle) * groupDistance;
-                    structureZ = centerZ + Math.sin(groupAngle) * groupDistance;
-                }
-                
-                // Create the structure
+    loadFromMapData(structuresData) {
+        if (!structuresData || !Array.isArray(structuresData)) {
+            console.warn('No structure data provided to load');
+            return;
+        }
+
+        console.debug(`Loading ${structuresData.length} structures from map data`);
+
+        // Clear existing structures
+        this.clear();
+
+        structuresData.forEach(structureData => {
+            if (structureData.type && structureData.position) {
                 let structure = null;
-                
-                switch (randomType) {
+
+                // Create the appropriate structure based on type
+                switch (structureData.type) {
                     case 'house':
-                        // Vary house sizes slightly within a group for natural look
-                        const width = 3 + Math.random() * 5;
-                        const depth = 3 + Math.random() * 5;
-                        const height = 2 + Math.random() * 5;
-                        structure = this.createBuilding(structureX, structureZ, width, depth, height);
+                        const width = structureData.width || 5;
+                        const depth = structureData.depth || 5;
+                        const height = structureData.height || 3;
+                        structure = this.createBuilding(
+                            structureData.position.x,
+                            structureData.position.z,
+                            width, depth, height
+                        );
                         break;
                     case 'tower':
-                        structure = this.createTower(structureX, structureZ);
+                        structure = this.createTower(
+                            structureData.position.x,
+                            structureData.position.z
+                        );
                         break;
                     case 'ruins':
-                        structure = this.createRuins(structureX, structureZ);
+                        structure = this.createRuins(
+                            structureData.position.x,
+                            structureData.position.z
+                        );
                         break;
                     case 'darkSanctum':
-                        structure = this.createDarkSanctum(structureX, structureZ);
+                        structure = this.createDarkSanctum(
+                            structureData.position.x,
+                            structureData.position.z
+                        );
+                        break;
+                    case 'mountain':
+                        structure = this.createMountain(
+                            structureData.position.x,
+                            structureData.position.z
+                        );
                         break;
                     case 'bridge':
-                        structure = this.createBridge(structureX, structureZ);
+                        structure = this.createBridge(
+                            structureData.position.x,
+                            structureData.position.z
+                        );
                         break;
+                    case 'village':
+                        structure = this.createVillage(
+                            structureData.position.x,
+                            structureData.position.z
+                        );
+                        break;
+                    case 'tavern':
+                    case 'temple':
+                    case 'shop':
+                    case 'fortress':
+                    case 'altar':
+                        // These are all building types, so create a building with appropriate dimensions
+                        const bWidth = structureData.width || 6;
+                        const bDepth = structureData.depth || 6;
+                        const bHeight = structureData.height || 4;
+                        structure = this.createBuilding(
+                            structureData.position.x,
+                            structureData.position.z,
+                            bWidth, bDepth, bHeight,
+                            structureData.type // Use type as style
+                        );
+                        break;
+                    default:
+                        console.warn(`Unknown structure type: ${structureData.type}`);
                 }
-                
+
                 if (structure) {
+                    // Apply rotation if specified
+                    if (structureData.rotation !== undefined) {
+                        structure.rotation.y = structureData.rotation;
+                    }
+                    
                     // Create structure info
                     const structureInfo = {
-                        type: randomType,
+                        type: structureData.type,
                         object: structure,
-                        position: new THREE.Vector3(structureX, 0, structureZ),
-                        groupId: groupId
+                        position: new THREE.Vector3(
+                            structureData.position.x,
+                            structureData.position.y || 0,
+                            structureData.position.z
+                        ),
+                        id: structureData.id,
+                        groupId: structureData.groupId
                     };
                     
                     // Add to structures array for tracking
                     this.structures.push(structureInfo);
                     
-                    groupObjects.push(structure);
-                }
-            }
-            
-            console.debug(`Created group of ${groupObjects.length} ${randomType}s`);
-            
-            // Return info about the group
-            return {
-                type: randomType,
-                isGroup: true,
-                groupId: groupId,
-                position: new THREE.Vector3(centerX, 0, centerZ),
-                count: groupObjects.length
-            };
-        } else {
-            // Create a single structure
-            let structure = null;
-            
-            switch (randomType) {
-                case 'house':
-                    const width = 3 + Math.random() * 5;
-                    const depth = 3 + Math.random() * 5;
-                    const height = 2 + Math.random() * 5;
-                    structure = this.createBuilding(centerX, centerZ, width, depth, height);
-                    break;
-                case 'tower':
-                    structure = this.createTower(centerX, centerZ);
-                    break;
-                case 'ruins':
-                    structure = this.createRuins(centerX, centerZ);
-                    break;
-                case 'darkSanctum':
-                    structure = this.createDarkSanctum(centerX, centerZ);
-                    break;
-                case 'mountain':
-                    structure = this.createMountain(centerX, centerZ);
-                    break;
-                case 'bridge':
-                    structure = this.createBridge(centerX, centerZ);
-                    break;
-                case 'village':
-                    structure = this.createVillage(centerX, centerZ);
-                    break;
-            }
-            
-            if (structure) {
-                console.debug(`Generated single ${randomType} at (${centerX.toFixed(1)}, ${centerZ.toFixed(1)})`);
-                
-                // Create structure info
-                const structureInfo = {
-                    type: randomType,
-                    object: structure,
-                    position: new THREE.Vector3(centerX, 0, centerZ)
-                };
-                
-                // Add to structures array for tracking
-                this.structures.push(structureInfo);
-                
-                // Limit the number of structures to prevent memory issues
-                if (this.structures.length > this.maxStructures) {
-                    const oldestStructure = this.structures.shift();
-                    if (oldestStructure.object && oldestStructure.object.parent) {
-                        this.scene.remove(oldestStructure.object);
+                    // If it's a special structure, add to special structures
+                    if (structureData.isSpecial) {
+                        this.specialStructures[structureData.id] = {
+                            x: structureData.position.x,
+                            z: structureData.position.z,
+                            type: structureData.type
+                        };
                     }
                 }
-                
-                return structureInfo;
             }
-        }
+        });
+
+        console.debug(`Successfully loaded ${this.structures.length} structures`);
+    }
+    
+    /**
+     * Clear all structures
+     */
+    clear() {
+        // Remove all structures from the scene
+        this.structures.forEach(structureInfo => {
+            if (structureInfo.object && structureInfo.object.parent) {
+                this.scene.remove(structureInfo.object);
+            }
+            
+            // Dispose of geometries and materials to free memory
+            if (structureInfo.object) {
+                if (structureInfo.object.traverse) {
+                    structureInfo.object.traverse(obj => {
+                        if (obj.geometry) {
+                            obj.geometry.dispose();
+                        }
+                        if (obj.material) {
+                            if (Array.isArray(obj.material)) {
+                                obj.material.forEach(mat => mat.dispose());
+                            } else {
+                                obj.material.dispose();
+                            }
+                        }
+                    });
+                }
+            }
+        });
         
-        return null;
+        // Reset structures collections
+        this.structures = [];
+        this.specialStructures = {};
+        
+        console.debug("All structures cleared");
+    }
+    
+    /**
+     * Save structure state
+     * @returns {object} - The saved structure state
+     */
+    save() {
+        return {
+            structures: this.structures.map(info => ({
+                type: info.type,
+                position: {
+                    x: info.position.x,
+                    y: info.position.y,
+                    z: info.position.z
+                },
+                id: info.id,
+                groupId: info.groupId,
+                isSpecial: !!this.specialStructures[info.id]
+            }))
+        };
+    }
+    
+    /**
+     * Load structure state
+     * @param {object} structureState - The structure state to load
+     */
+    load(structureState) {
+        if (!structureState || !structureState.structures) return;
+        
+        // Load structures from saved state
+        this.loadFromMapData(structureState.structures);
     }
     
     /**
