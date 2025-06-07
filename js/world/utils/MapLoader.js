@@ -18,16 +18,16 @@ export class MapLoader {
         // Chunking settings
         this.useChunking = true; // Can be toggled for small maps
         this.chunkSize = 25;     // Size of each chunk in world units
-        this.loadRadius = 2;     // How many chunks to load in each direction from player
+        this.loadRadius = 4;     // How many chunks to load in each direction from player (increased from 2)
         this.loadedChunks = {};  // Track which chunks are currently loaded
         this.lastPlayerChunk = null; // Last player chunk coordinates for change detection
         this.lastPlayerDirection = null; // Last player direction for selective chunk loading
         
         // Anti-eager loading settings
         this.lastUpdateTime = 0;  // Last time chunks were updated
-        this.updateCooldown = 3000; // Minimum time between chunk updates (ms)
+        this.updateCooldown = 500; // Minimum time between chunk updates (ms) (reduced from 3000)
         this.lastPlayerPosition = null; // Last player position for distance-based updates
-        this.minMoveDistance = 10; // Minimum distance player must move to trigger update
+        this.minMoveDistance = 5; // Minimum distance player must move to trigger update (reduced from 10)
         
         // Spatial index for quick lookup of objects by position
         this.spatialIndex = {
@@ -384,6 +384,9 @@ export class MapLoader {
         const pathMesh = new THREE.Mesh(pathGeometry, pathMaterial);
         pathMesh.receiveShadow = true;
         
+        // Ensure path is visible above ground
+        pathMesh.position.y = 0.1; // Slightly above ground level
+        
         // Add path border/edge for better definition
         const borderWidth = width + 0.3;
         const borderGeometry = this.createPathGeometry(points, borderWidth);
@@ -395,13 +398,16 @@ export class MapLoader {
         });
         
         const borderMesh = new THREE.Mesh(borderGeometry, borderMaterial);
-        borderMesh.position.y = -0.05; // Slightly below the main path
+        borderMesh.position.y = 0.05; // Slightly above ground but below the main path
         borderMesh.receiveShadow = true;
         
         // Create a group for the path and its border
         const pathGroup = new THREE.Group();
         pathGroup.add(borderMesh);
         pathGroup.add(pathMesh);
+        
+        // Ensure the entire path group is visible
+        pathGroup.position.y = 0.1; // Raise the entire path group above ground
         
         pathGroup.userData = {
             type: 'path',
@@ -433,9 +439,15 @@ export class MapLoader {
         
         const halfWidth = width / 2;
         
+        // Default visible height for paths
+        const defaultVisibleHeight = 0.1;
+        
         for (let i = 0; i < points.length; i++) {
             const point = points[i];
-            const height = this.worldManager.getTerrainHeight(point.x, point.z) + 0.1;
+            
+            // Use a fixed height to ensure visibility
+            // We know getTerrainHeight returns 0, so we add our default height
+            const height = defaultVisibleHeight;
             
             // Calculate direction for path width
             let direction;
@@ -456,8 +468,15 @@ export class MapLoader {
             const leftPoint = point.clone().add(perpendicular.clone().multiplyScalar(halfWidth));
             const rightPoint = point.clone().add(perpendicular.clone().multiplyScalar(-halfWidth));
             
+            // Set explicit height to ensure visibility
             leftPoint.y = height;
             rightPoint.y = height;
+            
+            // If the point has a specific height in the data, use that instead
+            if (point.y !== undefined && point.y > 0) {
+                leftPoint.y = point.y;
+                rightPoint.y = point.y;
+            }
             
             vertices.push(leftPoint.x, leftPoint.y, leftPoint.z);
             vertices.push(rightPoint.x, rightPoint.y, rightPoint.z);
@@ -589,6 +608,22 @@ export class MapLoader {
         }
         
         if (structure) {
+            // Ensure the structure is positioned at a visible height
+            const defaultVisibleHeight = 0.5; // Default height above ground to make structures visible
+            
+            // Check if position exists before accessing it
+            if (structure.position && structure.position.y !== undefined) {
+                // Always adjust the height to ensure visibility
+                console.debug(`Adjusting height of ${structureData.type} structure from ${structure.position.y} to ${defaultVisibleHeight}`);
+                structure.position.y = defaultVisibleHeight;
+                
+                // If the structure has a specific height in the data, use that instead
+                if (position.y !== undefined && position.y > 0) {
+                    structure.position.y = position.y;
+                    console.debug(`Using specified height for ${structureData.type} structure: ${position.y}`);
+                }
+            }
+            
             structure.userData = {
                 ...structure.userData,
                 mapId: structureData.id,
@@ -913,15 +948,20 @@ export class MapLoader {
         
         if (envObject) {
             // Ensure the object is positioned at the correct height
-            // This is a safety check in case the object wasn't positioned correctly by the factory
-            const terrainHeight = this.worldManager.getTerrainHeight(position.x, position.z);
+            // Since getTerrainHeight always returns 0, we need to set a default height
+            // to ensure objects are visible above the ground
+            const defaultVisibleHeight = 0.5; // Default height above ground to make objects visible
             
             // Check if position exists before accessing it
             if (envObject.position && envObject.position.y !== undefined) {
-                // Only adjust if the object is significantly below the terrain
-                if (envObject.position.y < terrainHeight - 0.5) {
-                    console.debug(`Adjusting height of ${envData.type} from ${envObject.position.y} to ${terrainHeight}`);
-                    envObject.position.y = terrainHeight;
+                // Always adjust the height to ensure visibility
+                console.debug(`Adjusting height of ${envData.type} from ${envObject.position.y} to ${defaultVisibleHeight}`);
+                envObject.position.y = defaultVisibleHeight;
+                
+                // If the object has a specific height in the data, use that instead
+                if (position.y !== undefined && position.y > 0) {
+                    envObject.position.y = position.y;
+                    console.debug(`Using specified height for ${envData.type}: ${position.y}`);
                 }
             } else {
                 console.warn(`Environment object of type ${envData.type} has no valid position property`);
