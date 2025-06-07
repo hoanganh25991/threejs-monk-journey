@@ -54,10 +54,11 @@ export class FoodModel extends ItemModel {
         bread.castShadow = true;
         bread.receiveShadow = true;
         
+        // Add bread to group first
+        group.add(bread);
+        
         // Round the edges of the bread
         this.roundEdges(bread);
-        
-        group.add(bread);
         
         // Add bread details (cuts on top)
         this.addBreadDetails(group);
@@ -179,8 +180,13 @@ export class FoodModel extends ItemModel {
             roundedMesh.position.copy(mesh.position);
             
             // Replace the original mesh with the rounded one
-            mesh.parent.remove(mesh);
-            mesh.parent.add(roundedMesh);
+            // Check if mesh has a parent before trying to remove it
+            if (mesh.parent) {
+                mesh.parent.remove(mesh);
+                mesh.parent.add(roundedMesh);
+            } else {
+                console.warn('Cannot round edges: mesh has no parent');
+            }
         }
     }
     

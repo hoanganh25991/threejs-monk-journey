@@ -28,6 +28,17 @@ export class MiniMapUI extends UIComponent {
         this.lastRenderTime = 0;
         this.renderInterval = 100; // Render every 100ms
         
+        // Grid settings
+        this.showGrid = true;
+        this.gridCellCount = 8; // Number of cells in each direction
+        this.gridColor = 'rgba(255, 255, 255, 0.4)'; // Increased opacity for better visibility
+        
+        // Direction indicators
+        this.showDirections = true;
+        this.directionColor = '#ffffff';
+        this.directionFont = '12px Arial';
+        this.directionPadding = 10; // Padding from the edge of the minimap
+        
         // Zone colors mapping
         this.zoneColors = {
             forest: '#2d5016',
@@ -45,6 +56,29 @@ export class MiniMapUI extends UIComponent {
         // Player representation
         this.playerColor = '#ffff00';
         this.playerSize = 4;
+        
+        // Indicator settings
+        this.indicatorColors = {
+            enemy: '#ff0000',       // Red for enemies
+            boss: '#ff00ff',        // Magenta for bosses
+            quest: '#00ffff',       // Cyan for quest objectives
+            npc: '#00ff00',         // Green for NPCs
+            item: '#ff8800',        // Orange for items
+            point_of_interest: '#ffffff' // White for points of interest
+        };
+        
+        // Indicator sizes
+        this.indicatorSizes = {
+            enemy: 3,
+            boss: 5,
+            quest: 4,
+            npc: 3,
+            item: 3,
+            point_of_interest: 4
+        };
+        
+        // Store active indicators
+        this.indicators = [];
     }
     
     /**
@@ -174,13 +208,123 @@ export class MiniMapUI extends UIComponent {
         // Render the minimap grid
         this.renderMinimapGrid();
         
-        // Render player position
+        // Draw grid if enabled
+        if (this.showGrid) {
+            this.drawGrid();
+        }
+        
+        // Render indicators
+        this.renderIndicators();
+        
+        // Render player position (on top of everything)
         this.renderPlayer();
         
         this.ctx.restore();
         
         // Draw border
         this.drawBorder();
+        
+        // Draw direction indicators if enabled
+        if (this.showDirections) {
+            this.drawDirectionIndicators();
+        }
+    }
+    
+    /**
+     * Draw grid on the minimap
+     */
+    drawGrid() {
+        const cellSize = this.canvasSize / this.gridCellCount;
+        
+        this.ctx.strokeStyle = this.gridColor;
+        this.ctx.lineWidth = 1;
+        
+        // Draw vertical lines
+        for (let i = 0; i <= this.gridCellCount; i++) {
+            const x = i * cellSize;
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, this.canvasSize);
+            this.ctx.stroke();
+        }
+        
+        // Draw horizontal lines
+        for (let i = 0; i <= this.gridCellCount; i++) {
+            const y = i * cellSize;
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(this.canvasSize, y);
+            this.ctx.stroke();
+        }
+    }
+    
+    /**
+     * Draw direction indicators (N, S, E, W) around the minimap
+     */
+    drawDirectionIndicators() {
+        const center = this.canvasSize / 2;
+        const radius = this.canvasSize / 2;
+        
+        this.ctx.fillStyle = this.directionColor;
+        this.ctx.font = this.directionFont;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        
+        // North (top)
+        this.ctx.fillText('N', center, this.directionPadding);
+        
+        // South (bottom)
+        this.ctx.fillText('S', center, this.canvasSize - this.directionPadding);
+        
+        // East (right)
+        this.ctx.fillText('E', this.canvasSize - this.directionPadding, center);
+        
+        // West (left)
+        this.ctx.fillText('W', this.directionPadding, center);
+    }
+    
+    /**
+     * Render all active indicators on the minimap
+     */
+    renderIndicators() {
+        if (!this.indicators || this.indicators.length === 0) return;
+        
+        // Update and render each indicator
+        this.indicators.forEach(indicator => {
+            // Skip indicators that don't have a position
+            if (!indicator.position) return;
+            
+            // Convert world position to minimap coordinates
+            const mapCoords = this.worldToMapCoordinates(indicator.position.x, indicator.position.z);
+            if (!mapCoords) return;
+            
+            // Get indicator properties
+            const color = this.indicatorColors[indicator.type] || this.indicatorColors.point_of_interest;
+            const size = this.indicatorSizes[indicator.type] || 3;
+            
+            // Draw indicator based on its type
+            switch (indicator.type) {
+                case 'quest':
+                    this.drawQuestIndicator(mapCoords, color, size);
+                    break;
+                case 'boss':
+                    this.drawBossIndicator(mapCoords, color, size);
+                    break;
+                case 'enemy':
+                    this.drawEnemyIndicator(mapCoords, color, size);
+                    break;
+                case 'npc':
+                    this.drawNPCIndicator(mapCoords, color, size);
+                    break;
+                case 'item':
+                    this.drawItemIndicator(mapCoords, color, size);
+                    break;
+                case 'point_of_interest':
+                default:
+                    this.drawPointOfInterestIndicator(mapCoords, color, size);
+                    break;
+            }
+        });
     }
     
     /**
@@ -197,18 +341,34 @@ export class MiniMapUI extends UIComponent {
         this.ctx.arc(this.canvasSize / 2, this.canvasSize / 2, this.canvasSize / 2, 0, Math.PI * 2);
         this.ctx.clip();
         
-        // Fill with dark background
-        this.ctx.fillStyle = '#1a1a1a';
-        this.ctx.fillRect(0, 0, this.canvasSize, this.canvasSize);
+        // Draw grid if enabled
+        if (this.showGrid) {
+            this.drawGrid();
+        }
         
-        // Draw "No Map" text
-        this.ctx.fillStyle = '#666666';
+        // Draw "No Map" text with a subtle background to make it readable
+        const textX = this.canvasSize / 2;
+        const textY = this.canvasSize / 2;
+        
+        // Add a semi-transparent background for the text
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        this.ctx.fillRect(textX - 30, textY - 10, 60, 20);
+        
+        // Draw the text
+        this.ctx.fillStyle = '#ffffff';
         this.ctx.font = '12px Arial';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('No Map', this.canvasSize / 2, this.canvasSize / 2);
+        this.ctx.fillText('No Map', textX, textY);
         
         this.ctx.restore();
+        
+        // Draw border
         this.drawBorder();
+        
+        // Draw direction indicators if enabled
+        if (this.showDirections) {
+            this.drawDirectionIndicators();
+        }
     }
     
     /**
@@ -221,20 +381,25 @@ export class MiniMapUI extends UIComponent {
         const gridSize = grid.length;
         const cellSize = this.canvasSize / gridSize;
         
+        // We're not filling the cells with color to keep the background transparent
+        // Only special elements like water, paths, or structures will be drawn
         for (let row = 0; row < gridSize; row++) {
             for (let col = 0; col < gridSize; col++) {
                 const cell = grid[row][col];
                 if (!cell) continue;
                 
-                const x = col * cellSize;
-                const y = row * cellSize;
-                
-                // Get color for this cell
-                const color = this.getCellColor(cell);
-                
-                // Draw cell
-                this.ctx.fillStyle = color;
-                this.ctx.fillRect(x, y, cellSize, cellSize);
+                // Only draw special elements, not regular terrain
+                if (cell.type === 'water' || cell.type === 'path' || cell.type === 'structure') {
+                    const x = col * cellSize;
+                    const y = row * cellSize;
+                    
+                    // Get color for this cell
+                    const color = this.getCellColor(cell);
+                    
+                    // Draw cell with semi-transparency
+                    this.ctx.fillStyle = color.replace(')', ', 0.5)').replace('rgb', 'rgba');
+                    this.ctx.fillRect(x, y, cellSize, cellSize);
+                }
             }
         }
     }
@@ -338,6 +503,273 @@ export class MiniMapUI extends UIComponent {
         this.ctx.beginPath();
         this.ctx.arc(this.canvasSize / 2, this.canvasSize / 2, this.canvasSize / 2 - 1, 0, Math.PI * 2);
         this.ctx.stroke();
+    }
+    
+    /**
+     * Draw a quest indicator (diamond shape)
+     * @param {Object} position - Position {x, y} on the minimap
+     * @param {string} color - Color of the indicator
+     * @param {number} size - Size of the indicator
+     */
+    drawQuestIndicator(position, color, size) {
+        this.ctx.fillStyle = color;
+        this.ctx.beginPath();
+        // Draw diamond shape
+        this.ctx.moveTo(position.x, position.y - size);
+        this.ctx.lineTo(position.x + size, position.y);
+        this.ctx.lineTo(position.x, position.y + size);
+        this.ctx.lineTo(position.x - size, position.y);
+        this.ctx.closePath();
+        this.ctx.fill();
+        
+        // Add pulsing effect
+        const pulseSize = size + 2;
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.moveTo(position.x, position.y - pulseSize);
+        this.ctx.lineTo(position.x + pulseSize, position.y);
+        this.ctx.lineTo(position.x, position.y + pulseSize);
+        this.ctx.lineTo(position.x - pulseSize, position.y);
+        this.ctx.closePath();
+        this.ctx.stroke();
+    }
+    
+    /**
+     * Draw a boss indicator (skull-like shape)
+     * @param {Object} position - Position {x, y} on the minimap
+     * @param {string} color - Color of the indicator
+     * @param {number} size - Size of the indicator
+     */
+    drawBossIndicator(position, color, size) {
+        // Draw a skull-like shape for bosses
+        this.ctx.fillStyle = color;
+        
+        // Draw circle for the base
+        this.ctx.beginPath();
+        this.ctx.arc(position.x, position.y, size, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Draw X inside the circle
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 1.5;
+        this.ctx.beginPath();
+        this.ctx.moveTo(position.x - size/2, position.y - size/2);
+        this.ctx.lineTo(position.x + size/2, position.y + size/2);
+        this.ctx.moveTo(position.x + size/2, position.y - size/2);
+        this.ctx.lineTo(position.x - size/2, position.y + size/2);
+        this.ctx.stroke();
+    }
+    
+    /**
+     * Draw an enemy indicator (small red dot)
+     * @param {Object} position - Position {x, y} on the minimap
+     * @param {string} color - Color of the indicator
+     * @param {number} size - Size of the indicator
+     */
+    drawEnemyIndicator(position, color, size) {
+        this.ctx.fillStyle = color;
+        this.ctx.beginPath();
+        this.ctx.arc(position.x, position.y, size, 0, Math.PI * 2);
+        this.ctx.fill();
+    }
+    
+    /**
+     * Draw an NPC indicator (green triangle)
+     * @param {Object} position - Position {x, y} on the minimap
+     * @param {string} color - Color of the indicator
+     * @param {number} size - Size of the indicator
+     */
+    drawNPCIndicator(position, color, size) {
+        this.ctx.fillStyle = color;
+        this.ctx.beginPath();
+        // Draw triangle pointing up
+        this.ctx.moveTo(position.x, position.y - size);
+        this.ctx.lineTo(position.x + size, position.y + size);
+        this.ctx.lineTo(position.x - size, position.y + size);
+        this.ctx.closePath();
+        this.ctx.fill();
+    }
+    
+    /**
+     * Draw an item indicator (small square)
+     * @param {Object} position - Position {x, y} on the minimap
+     * @param {string} color - Color of the indicator
+     * @param {number} size - Size of the indicator
+     */
+    drawItemIndicator(position, color, size) {
+        this.ctx.fillStyle = color;
+        this.ctx.fillRect(position.x - size/2, position.y - size/2, size, size);
+    }
+    
+    /**
+     * Draw a point of interest indicator (star shape)
+     * @param {Object} position - Position {x, y} on the minimap
+     * @param {string} color - Color of the indicator
+     * @param {number} size - Size of the indicator
+     */
+    drawPointOfInterestIndicator(position, color, size) {
+        this.ctx.fillStyle = color;
+        
+        // Draw a simple star shape
+        this.ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+            const angle = (Math.PI * 2 * i / 5) - Math.PI / 2;
+            const x = position.x + Math.cos(angle) * size;
+            const y = position.y + Math.sin(angle) * size;
+            
+            if (i === 0) {
+                this.ctx.moveTo(x, y);
+            } else {
+                this.ctx.lineTo(x, y);
+            }
+            
+            // Draw inner points of the star
+            const innerAngle = angle + Math.PI / 5;
+            const innerX = position.x + Math.cos(innerAngle) * (size / 2);
+            const innerY = position.y + Math.sin(innerAngle) * (size / 2);
+            this.ctx.lineTo(innerX, innerY);
+        }
+        this.ctx.closePath();
+        this.ctx.fill();
+    }
+    
+    /**
+     * Add an indicator to the minimap
+     * @param {string} type - Type of indicator ('enemy', 'boss', 'quest', 'npc', 'item', 'point_of_interest')
+     * @param {Object} position - World position {x, y, z}
+     * @param {string} id - Unique identifier for the indicator
+     * @param {Object} options - Additional options for the indicator
+     * @returns {Object} - The created indicator
+     */
+    addIndicator(type, position, id, options = {}) {
+        // Create indicator object
+        const indicator = {
+            id: id || `indicator_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            type: type || 'point_of_interest',
+            position: position,
+            options: options
+        };
+        
+        // Add to indicators array
+        this.indicators.push(indicator);
+        
+        return indicator;
+    }
+    
+    /**
+     * Update an existing indicator
+     * @param {string} id - Indicator ID
+     * @param {Object} updates - Properties to update
+     * @returns {boolean} - True if indicator was found and updated
+     */
+    updateIndicator(id, updates) {
+        const index = this.indicators.findIndex(indicator => indicator.id === id);
+        
+        if (index === -1) return false;
+        
+        // Update indicator properties
+        this.indicators[index] = {
+            ...this.indicators[index],
+            ...updates
+        };
+        
+        return true;
+    }
+    
+    /**
+     * Remove an indicator from the minimap
+     * @param {string} id - Indicator ID
+     * @returns {boolean} - True if indicator was found and removed
+     */
+    removeIndicator(id) {
+        const index = this.indicators.findIndex(indicator => indicator.id === id);
+        
+        if (index === -1) return false;
+        
+        // Remove indicator
+        this.indicators.splice(index, 1);
+        
+        return true;
+    }
+    
+    /**
+     * Clear all indicators of a specific type
+     * @param {string} type - Type of indicators to clear (optional, if not provided, clears all)
+     */
+    clearIndicators(type) {
+        if (type) {
+            this.indicators = this.indicators.filter(indicator => indicator.type !== type);
+        } else {
+            this.indicators = [];
+        }
+    }
+    
+    /**
+     * Update indicators from game entities
+     * This method should be called periodically to update indicators based on game state
+     */
+    updateIndicatorsFromGameState() {
+        // Clear existing enemy indicators
+        this.clearIndicators('enemy');
+        this.clearIndicators('boss');
+        
+        // Add enemy indicators if enemy manager exists
+        if (this.game.enemyManager && this.game.enemyManager.enemies) {
+            this.game.enemyManager.enemies.forEach(enemy => {
+                if (!enemy || enemy.isDead()) return;
+                
+                const position = enemy.getPosition();
+                if (!position) return;
+                
+                // Determine if this is a boss
+                const isBoss = enemy.isBoss || (enemy.type && enemy.type.includes('boss'));
+                const type = isBoss ? 'boss' : 'enemy';
+                
+                this.addIndicator(type, position, `enemy_${enemy.id || Math.random()}`, {
+                    name: enemy.getName ? enemy.getName() : 'Enemy'
+                });
+            });
+        }
+        
+        // Add quest indicators if quest manager exists
+        if (this.game.questManager && this.game.questManager.activeQuests) {
+            this.game.questManager.activeQuests.forEach(quest => {
+                if (!quest.objective || !quest.objective.position) return;
+                
+                this.addIndicator('quest', quest.objective.position, `quest_${quest.id}`, {
+                    name: quest.name,
+                    description: quest.objective.description
+                });
+            });
+        }
+        
+        // Add NPC indicators if NPC manager exists
+        if (this.game.npcManager && this.game.npcManager.npcs) {
+            this.game.npcManager.npcs.forEach(npc => {
+                if (!npc || !npc.position) return;
+                
+                this.addIndicator('npc', npc.position, `npc_${npc.id}`, {
+                    name: npc.name
+                });
+            });
+        }
+    }
+    
+    /**
+     * Update method - called every frame
+     * @param {number} delta - Time since last update in seconds
+     */
+    update(delta) {
+        const now = Date.now();
+        if (now - this.lastRenderTime >= this.renderInterval) {
+            // Update indicators from game state
+            this.updateIndicatorsFromGameState();
+            
+            // Render the minimap
+            this.renderMinimap();
+            this.lastRenderTime = now;
+        }
     }
     
     /**

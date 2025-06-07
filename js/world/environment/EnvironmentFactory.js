@@ -367,7 +367,7 @@ export class EnvironmentFactory {
     /**
      * Create an environment object
      * @param {string} type - The type of environment object to create
-     * @param {Object} position - Position object
+     * @param {THREE.Vector3} position - Position vector with x, y, z coordinates
      * @param {number} size - Size of the object
      * @param {Object} data - Additional data for complex objects
      * @returns {THREE.Object3D} - The created environment object
@@ -383,6 +383,12 @@ export class EnvironmentFactory {
         // For objects that need the full data object (like tree_cluster)
         if (type === 'tree_cluster') {
             return creator(data);
+        }
+        
+        // Ensure position is a valid Vector3
+        if (!(position instanceof THREE.Vector3)) {
+            console.warn(`Invalid position for environment object ${type}. Using default position.`);
+            position = new THREE.Vector3(0, 0, 0);
         }
         
         // For standard objects that just need position and size

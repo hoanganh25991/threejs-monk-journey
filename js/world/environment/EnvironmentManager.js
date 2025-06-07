@@ -183,7 +183,9 @@ export class EnvironmentManager {
         
         // Try to create the object using the factory first
         if (this.environmentFactory.canCreate(type)) {
-            object = this.environmentFactory.create(type, x, y, z, scale);
+            // Create a position object with the correct terrain height
+            const position = new THREE.Vector3(x, y, z);
+            object = this.environmentFactory.create(type, position, scale);
         } else {
             // Fall back to direct creation for traditional types
             switch (type) {
@@ -218,14 +220,21 @@ export class EnvironmentManager {
         }
         
         if (object) {
-            // Position the object on the terrain
-            object.position.set(x, y, z);
+            // Position the object on the terrain (only for traditional objects)
+            // Factory-created objects already have their position set
+            if (!this.environmentFactory.canCreate(type)) {
+                object.position.set(x, y, z);
+            }
             
-            // Apply scale
-            object.scale.set(scale, scale, scale);
+            // Apply scale (only if not already applied by factory)
+            if (!this.environmentFactory.canCreate(type)) {
+                object.scale.set(scale, scale, scale);
+            }
             
-            // Add to scene
-            this.scene.add(object);
+            // Add to scene (only if not already added by factory)
+            if (object.parent === null) {
+                this.scene.add(object);
+            }
         }
         
         return object;
