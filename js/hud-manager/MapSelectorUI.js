@@ -41,7 +41,7 @@ export class MapSelectorUI extends UIComponent {
             const indexData = await response.json();
             this.availableMaps = indexData.maps || [];
             
-            console.log(`Loaded ${this.availableMaps.length} maps from index.json`);
+            console.debug(`Loaded ${this.availableMaps.length} maps from index.json`);
             
             // Update the map list with available maps
             this.updateMapList();
@@ -77,12 +77,12 @@ export class MapSelectorUI extends UIComponent {
         // Clear existing content
         mapListElement.innerHTML = '';
         
-        console.log('Updating map list with', this.availableMaps.length, 'maps');
+        console.debug('Updating map list with', this.availableMaps.length, 'maps');
         
         if (this.availableMaps.length > 0) {
             // Add maps to the list
             this.availableMaps.forEach(map => {
-                console.log('Adding map to list:', map.id, map.name);
+                console.debug('Adding map to list:', map.id, map.name);
                 
                 const mapItem = document.createElement('div');
                 mapItem.className = 'map-list-item';
@@ -92,7 +92,7 @@ export class MapSelectorUI extends UIComponent {
                 mapItem.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Map item clicked directly from updateMapList:', map.id);
+                    console.debug('Map item clicked directly from updateMapList:', map.id);
                     this.selectMap(map.id);
                 });
                 
@@ -167,7 +167,7 @@ export class MapSelectorUI extends UIComponent {
                     item.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('Map item clicked directly:', mapId);
+                        console.debug('Map item clicked directly:', mapId);
                         this.selectMap(mapId);
                     });
                 }
@@ -175,15 +175,15 @@ export class MapSelectorUI extends UIComponent {
             
             // Also add event delegation as a fallback
             newMapList.addEventListener('click', (e) => {
-                console.log('Map list clicked', e.target);
+                console.debug('Map list clicked', e.target);
                 
                 // Find the closest map-list-item parent from the clicked element
                 const mapItem = e.target.closest('.map-list-item');
-                console.log('Found map item:', mapItem);
+                console.debug('Found map item:', mapItem);
                 
                 if (mapItem && mapItem.hasAttribute('data-map-id')) {
                     const mapId = mapItem.getAttribute('data-map-id');
-                    console.log('Map ID from delegation:', mapId);
+                    console.debug('Map ID from delegation:', mapId);
                     this.selectMap(mapId);
                 }
             });
@@ -238,16 +238,6 @@ export class MapSelectorUI extends UIComponent {
             
             // Ensure map list is scrollable
             setTimeout(() => {
-                const mapList = this.element.querySelector('#map-list');
-                if (mapList) {
-                    // Force a reflow to ensure scrolling works
-                    mapList.style.overflowY = 'hidden';
-                    setTimeout(() => {
-                        mapList.style.overflowY = 'auto';
-                    }, 50);
-                }
-                
-                // Re-attach click handlers to ensure they work
                 this.setupEventListeners();
             }, 100);
         });
@@ -274,7 +264,7 @@ export class MapSelectorUI extends UIComponent {
     }
 
     selectMap(mapId) {
-        console.log('Selecting map with ID:', mapId);
+        console.debug('Selecting map with ID:', mapId);
         
         // Remove previous selection
         const previousSelected = this.element.querySelector('.map-list-item.selected');
@@ -284,14 +274,14 @@ export class MapSelectorUI extends UIComponent {
         
         // Add selection to new item - use attribute selector for better compatibility
         const selectedItem = this.element.querySelector(`.map-list-item[data-map-id="${mapId}"]`);
-        console.log('Found selected item:', selectedItem);
+        console.debug('Found selected item:', selectedItem);
         
         if (selectedItem) {
             selectedItem.classList.add('selected');
             
             // Find the map data in our available maps array
             this.selectedMap = this.availableMaps.find(map => map.id === mapId);
-            console.log('Selected map data:', this.selectedMap);
+            console.debug('Selected map data:', this.selectedMap);
             
             // Update the selected map details
             if (this.selectedMap) {

@@ -47,7 +47,7 @@ export class ChunkedMapLoader {
      * @returns {Promise<boolean>} - True if loading was successful
      */
     async loadMap(mapData) {
-        console.log(`Loading map: ${mapData.theme.name}`);
+        console.debug(`Loading map: ${mapData.theme.name}`);
         
         try {
             // Clear existing world content
@@ -80,7 +80,7 @@ export class ChunkedMapLoader {
             const startPosition = new THREE.Vector3(0, 0, 0);
             await this.initialChunkLoad(startPosition);
             
-            console.log(`Map "${mapData.theme.name}" loaded successfully (chunked mode)`);
+            console.debug(`Map "${mapData.theme.name}" loaded successfully (chunked mode)`);
             return true;
             
         } catch (error) {
@@ -101,7 +101,7 @@ export class ChunkedMapLoader {
             const cachedMetadata = this.getStoredMapMetadata(mapName);
             
             if (cachedMetadata) {
-                console.log(`Loading map "${mapName}" from cache`);
+                console.debug(`Loading map "${mapName}" from cache`);
                 
                 // Set the current map metadata
                 this.currentMapMetadata = cachedMetadata;
@@ -121,11 +121,11 @@ export class ChunkedMapLoader {
                 const startPosition = new THREE.Vector3(0, 0, 0);
                 await this.initialChunkLoad(startPosition);
                 
-                console.log(`Map "${mapName}" loaded from cache successfully`);
+                console.debug(`Map "${mapName}" loaded from cache successfully`);
                 return true;
             } else {
                 // Not in cache, load from file
-                console.log(`Map "${mapName}" not found in cache, loading from file`);
+                console.debug(`Map "${mapName}" not found in cache, loading from file`);
                 const response = await fetch(mapFilePath);
                 const mapData = await response.json();
                 return await this.loadMap(mapData);
@@ -336,7 +336,7 @@ export class ChunkedMapLoader {
                 );
             }
             
-            console.log(`Map "${mapName}" stored in localStorage (${Object.keys(chunkedData.chunks).length} chunks)`);
+            console.debug(`Map "${mapName}" stored in localStorage (${Object.keys(chunkedData.chunks).length} chunks)`);
         } catch (error) {
             console.warn('Failed to store map data in localStorage:', error);
         }
@@ -398,7 +398,7 @@ export class ChunkedMapLoader {
             return; // No map loaded
         }
         
-        console.log("Performing initial chunk load...");
+        console.debug("Performing initial chunk load...");
         
         // Initialize tracking variables
         this.lastPlayerPosition = position.clone();
@@ -449,7 +449,7 @@ export class ChunkedMapLoader {
             }
         }
         
-        console.log(`Initial chunk load complete (${Object.keys(chunksToLoad).length} chunks)`);
+        console.debug(`Initial chunk load complete (${Object.keys(chunksToLoad).length} chunks)`);
     }
     
     /**
@@ -467,7 +467,7 @@ export class ChunkedMapLoader {
             this.lastUpdateTime = Date.now();
             
             // For first load, we'll do a full chunk load
-            console.log("Initial chunk loading...");
+            console.debug("Initial chunk loading...");
         }
         
         // Get current player chunk
@@ -512,7 +512,7 @@ export class ChunkedMapLoader {
         }
         
         // If we're here, we need to update chunks
-        console.log(`Updating chunks: ${inSameChunk ? 'Same chunk' : 'New chunk'}, ` +
+        console.debug(`Updating chunks: ${inSameChunk ? 'Same chunk' : 'New chunk'}, ` +
                     `Distance moved: ${distanceMoved.toFixed(2)}, ` +
                     `Time since last update: ${(timeSinceLastUpdate/1000).toFixed(1)}s`);
                     
@@ -628,7 +628,7 @@ export class ChunkedMapLoader {
             }
         }
         
-        console.log(`Loading chunk ${chunkKey}...`);
+        console.debug(`Loading chunk ${chunkKey}...`);
         
         // Get map name from metadata
         const mapName = this.currentMapMetadata.theme.name;
@@ -637,7 +637,7 @@ export class ChunkedMapLoader {
         const chunkData = this.getStoredMapChunk(mapName, chunkKey);
         
         if (!chunkData) {
-            console.log(`No data found for chunk ${chunkKey}, creating empty chunk`);
+            console.debug(`No data found for chunk ${chunkKey}, creating empty chunk`);
             // Mark as loaded even if empty to prevent repeated attempts
             this.loadedChunks[chunkKey] = { paths: [], structures: [], environment: [] };
             return;
@@ -661,7 +661,7 @@ export class ChunkedMapLoader {
         
         // Mark chunk as loaded
         this.loadedChunks[chunkKey] = chunkData;
-        console.log(`Chunk ${chunkKey} loaded successfully`);
+        console.debug(`Chunk ${chunkKey} loaded successfully`);
     }
 
     /**
@@ -673,7 +673,7 @@ export class ChunkedMapLoader {
             return; // Not loaded
         }
         
-        console.log(`Unloading chunk ${chunkKey}...`);
+        console.debug(`Unloading chunk ${chunkKey}...`);
         
         // Remove all objects in this chunk from the scene
         if (this.loadedObjects[chunkKey]) {
@@ -707,7 +707,7 @@ export class ChunkedMapLoader {
         
         // Mark chunk as unloaded
         delete this.loadedChunks[chunkKey];
-        console.log(`Chunk ${chunkKey} unloaded successfully`);
+        console.debug(`Chunk ${chunkKey} unloaded successfully`);
     }
 
     /**
@@ -744,7 +744,7 @@ export class ChunkedMapLoader {
      * Clear the existing world
      */
     async clearWorld() {
-        console.log('Clearing existing world...');
+        console.debug('Clearing existing world...');
         
         // Clear existing structures
         if (this.worldManager.structureManager) {
@@ -787,7 +787,7 @@ export class ChunkedMapLoader {
      */
     clearProceduralPaths() {
         if (this.worldManager.paths && this.worldManager.paths.length > 0) {
-            console.log(`Clearing ${this.worldManager.paths.length} procedural paths...`);
+            console.debug(`Clearing ${this.worldManager.paths.length} procedural paths...`);
             
             // Remove all procedural path meshes from scene
             this.worldManager.paths.forEach(pathMesh => {
@@ -813,7 +813,7 @@ export class ChunkedMapLoader {
         
         // Clear loaded map paths
         if (this.worldManager.loadedMapPaths && this.worldManager.loadedMapPaths.length > 0) {
-            console.log(`Clearing ${this.worldManager.loadedMapPaths.length} loaded map paths...`);
+            console.debug(`Clearing ${this.worldManager.loadedMapPaths.length} loaded map paths...`);
             this.worldManager.loadedMapPaths = [];
         }
         
@@ -843,7 +843,7 @@ export class ChunkedMapLoader {
             this.worldManager.originalPathGenerationDistance = this.worldManager.pathGenerationDistance;
             this.worldManager.pathGenerationDistance = Number.MAX_SAFE_INTEGER;
             
-            console.log('Procedural path generation disabled - using map paths');
+            console.debug('Procedural path generation disabled - using map paths');
         }
     }
 
@@ -862,7 +862,7 @@ export class ChunkedMapLoader {
                 this.worldManager.pathGenerationDistance = 30; // Default value
             }
             
-            console.log('Procedural path generation re-enabled');
+            console.debug('Procedural path generation re-enabled');
         }
     }
 
@@ -871,7 +871,7 @@ export class ChunkedMapLoader {
      * @param {Array} zones - Zone data array
      */
     async loadZones(zones) {
-        console.log(`Loading ${zones.length} zones...`);
+        console.debug(`Loading ${zones.length} zones...`);
         
         if (!this.worldManager.zoneManager) {
             console.warn('ZoneManager not available');
@@ -939,7 +939,7 @@ export class ChunkedMapLoader {
      * @param {string} chunkKey - Chunk key
      */
     async loadPaths(paths, chunkKey) {
-        console.log(`Loading ${paths.length} paths for chunk ${chunkKey}...`);
+        console.debug(`Loading ${paths.length} paths for chunk ${chunkKey}...`);
         
         // Disable procedural path generation while loading map paths
         this.disableProceduralPathGeneration();
@@ -959,7 +959,7 @@ export class ChunkedMapLoader {
             this.loadedObjects[chunkKey].paths.push(pathGroup);
         });
         
-        console.log(`Loaded ${paths.length} map paths for chunk ${chunkKey} successfully`);
+        console.debug(`Loaded ${paths.length} map paths for chunk ${chunkKey} successfully`);
     }
 
     /**
@@ -1153,7 +1153,7 @@ export class ChunkedMapLoader {
      * @param {string} chunkKey - Chunk key
      */
     async loadStructures(structures, chunkKey) {
-        console.log(`Loading ${structures.length} structures for chunk ${chunkKey}...`);
+        console.debug(`Loading ${structures.length} structures for chunk ${chunkKey}...`);
         
         if (!this.worldManager.structureManager) {
             console.warn('StructureManager not available');
@@ -1281,7 +1281,7 @@ export class ChunkedMapLoader {
      * @param {string} chunkKey - Chunk key
      */
     async loadEnvironment(environment, chunkKey) {
-        console.log(`Loading ${environment.length} environment objects for chunk ${chunkKey}...`);
+        console.debug(`Loading ${environment.length} environment objects for chunk ${chunkKey}...`);
         
         if (!this.worldManager.environmentManager) {
             console.warn('EnvironmentManager not available');
@@ -1502,7 +1502,7 @@ export class ChunkedMapLoader {
         if (this.currentMapMetadata) {
             await this.clearWorld();
             this.currentMapMetadata = null;
-            console.log('Current map cleared');
+            console.debug('Current map cleared');
         }
     }
 }

@@ -67,8 +67,17 @@
 /* New layout for landscape mode */
 .map-selector-layout {
     display: flex;
-    height: 100%;
+    height: calc(100vh - 40px - var(--padding-medium));
     overflow: hidden; /* Prevent layout overflow */
+}
+
+.map-list-container {
+    flex: 0 0 30%;
+    border-right: 1px solid rgba(138, 109, 59, 0.5);
+    height: 100%; /* Take full height */
+    display: flex;
+    flex-direction: column;
+    padding: var(--padding-medium);
 }
 
 .map-list {
@@ -78,20 +87,9 @@
     flex: 1; /* Take remaining space */
     scrollbar-width: thin; /* For Firefox */
     overflow-y: auto; /* Ensure the list itself is scrollable */
-    height: 100%; /* Take full height */
-    padding-right: 5px; /* Add some padding for scrollbar */
 }
 
-.map-list-container {
-    flex: 0 0 30%;
-    border-right: 1px solid rgba(138, 109, 59, 0.5);
-    height: 100%; /* Take full height */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* Prevent container from scrolling */
-    padding: var(--padding-medium);
-    padding-right: 0; /* Remove right padding to accommodate scrollbar */
-}
+
 
 .map-detail-container {
     flex: 1;
@@ -100,12 +98,6 @@
     overflow-y: auto; /* Allow scrolling if content is too tall */
     height: 100%; /* Take full height */
     background-color: rgba(0, 0, 0, 0.6); /* Match skill-tree details background */
-}
-
-.map-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
 }
 
 .map-list-item {

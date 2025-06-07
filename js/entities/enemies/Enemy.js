@@ -257,28 +257,28 @@ export class Enemy {
         
         // Check if target (player or clone) is in attack range
         if (distanceToPlayer <= this.attackRange) {
-            console.log(`Enemy ${this.id} in attack range of target, distance: ${distanceToPlayer.toFixed(2)}, attack range: ${this.attackRange.toFixed(2)}, cooldown: ${this.state.attackCooldown.toFixed(2)}`);
+            console.debug(`Enemy ${this.id} in attack range of target, distance: ${distanceToPlayer.toFixed(2)}, attack range: ${this.attackRange.toFixed(2)}, cooldown: ${this.state.attackCooldown.toFixed(2)}`);
             
             // Stop moving when in attack range
             this.state.isMoving = false;
             
             // If targeting a clone, make sure we stay in place
             if (this.targetPlayer !== this.player) {
-                console.log(`Enemy ${this.id} STOPPING to attack clone at distance: ${distanceToPlayer.toFixed(2)}`);
+                console.debug(`Enemy ${this.id} STOPPING to attack clone at distance: ${distanceToPlayer.toFixed(2)}`);
             }
             
             // Attack target if cooldown is ready
             if (this.state.attackCooldown <= 0) {
-                console.log(`Enemy ${this.id} attacking target, cooldown ready`);
+                console.debug(`Enemy ${this.id} attacking target, cooldown ready`);
                 this.attackPlayer(); // This will attack whatever is set as targetPlayer (player or clone)
                 this.state.attackCooldown = 1 / this.attackSpeed;
                 
                 // Debug message to confirm attack on clone
                 if (this.targetPlayer !== this.player) {
-                    console.log(`Enemy ${this.id} ATTACKING A CLONE`);
+                    console.debug(`Enemy ${this.id} ATTACKING A CLONE`);
                 }
             } else {
-                console.log(`Enemy ${this.id} waiting for attack cooldown: ${this.state.attackCooldown.toFixed(2)}`);
+                console.debug(`Enemy ${this.id} waiting for attack cooldown: ${this.state.attackCooldown.toFixed(2)}`);
             }
             
             // Set aggressive state when target is in attack range
@@ -322,10 +322,10 @@ export class Enemy {
                 if (!isTargetingClone || (isTargetingClone && distanceToPlayer > this.attackRange * 0.9)) {
                     // Only move if we're not targeting a clone or if we're not close enough to attack it
                     this.setPosition(newPosition.x, newPosition.y, newPosition.z);
-                    console.log(`Enemy ${this.id} moving toward ${isTargetingClone ? 'CLONE' : 'player'}, distance: ${distanceToPlayer.toFixed(2)}`);
+                    console.debug(`Enemy ${this.id} moving toward ${isTargetingClone ? 'CLONE' : 'player'}, distance: ${distanceToPlayer.toFixed(2)}`);
                 } else {
                     // We're targeting a clone and we're close enough to attack, so don't move
-                    console.log(`Enemy ${this.id} STAYING IN PLACE to attack clone, distance: ${distanceToPlayer.toFixed(2)}`);
+                    console.debug(`Enemy ${this.id} STAYING IN PLACE to attack clone, distance: ${distanceToPlayer.toFixed(2)}`);
                     this.state.isMoving = false;
                 }
                 
@@ -400,7 +400,7 @@ export class Enemy {
                                     return new THREE.Vector3(0, 0, 0);
                                 },
                                 takeDamage: function(amount) {
-                                    console.log(`ENEMY ATTACKING CLONE: Enemy ${this.id} dealing ${amount} damage to clone`);
+                                    console.debug(`ENEMY ATTACKING CLONE: Enemy ${this.id} dealing ${amount} damage to clone`);
                                     
                                     // Apply damage to the clone
                                     if (targetClone && typeof targetClone.takeDamage === 'function') {
@@ -408,7 +408,7 @@ export class Enemy {
                                     } else if (targetClone) {
                                         // Directly reduce health if no takeDamage method
                                         targetClone.health -= amount;
-                                        console.log(`DIRECT DAMAGE: Clone took ${amount} damage, health: ${targetClone.health}`);
+                                        console.debug(`DIRECT DAMAGE: Clone took ${amount} damage, health: ${targetClone.health}`);
                                     } else {
                                         console.error(`Enemy ${this.id} tried to damage a clone that no longer exists`);
                                     }
@@ -466,7 +466,7 @@ export class Enemy {
     attackPlayer() {
         // Set attack state
         this.state.isAttacking = true;
-        console.log(`ENEMY ATTACK: Enemy ${this.id} executing attack`);
+        console.debug(`ENEMY ATTACK: Enemy ${this.id} executing attack`);
         
         // Play attack animation
         this.playAttackAnimation();
@@ -474,18 +474,18 @@ export class Enemy {
         // Deal damage to target (player, remote player, or clone)
         if (this.targetPlayer) {
             const isClone = this.targetPlayer !== this.player;
-            console.log(`ENEMY TARGET: Enemy ${this.id} has target: ${isClone ? 'CLONE' : 'PLAYER'}`);
+            console.debug(`ENEMY TARGET: Enemy ${this.id} has target: ${isClone ? 'CLONE' : 'PLAYER'}`);
             
             if (typeof this.targetPlayer.takeDamage === 'function') {
                 try {
-                    console.log(`ENEMY DAMAGE: Enemy ${this.id} dealing ${this.damage} damage to ${isClone ? 'CLONE' : 'PLAYER'}`);
+                    console.debug(`ENEMY DAMAGE: Enemy ${this.id} dealing ${this.damage} damage to ${isClone ? 'CLONE' : 'PLAYER'}`);
                     
                     // Apply damage to the target
                     this.targetPlayer.takeDamage(this.damage);
                     
                     // Visual feedback for attack
                     if (isClone) {
-                        console.log(`ENEMY EFFECT: Creating visual effect for clone attack`);
+                        console.debug(`ENEMY EFFECT: Creating visual effect for clone attack`);
                         
                         // If attacking a clone, create a visual effect
                         const targetPos = this.targetPlayer.getPosition();

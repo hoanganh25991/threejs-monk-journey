@@ -363,15 +363,15 @@ export class BulShadowCloneEffect extends SkillEffect {
                     // Method to handle damage from enemies
                     takeDamage: function(amount) {
                         try {
-                            console.log(`CLONE DAMAGE: Clone ${this.index} taking ${amount} damage`);
+                            console.debug(`CLONE DAMAGE: Clone ${this.index} taking ${amount} damage`);
                             
                             // Reduce health
                             this.health -= amount;
-                            console.log(`CLONE HEALTH: Clone ${this.index} health now ${this.health}/${this.maxHealth}`);
+                            console.debug(`CLONE HEALTH: Clone ${this.index} health now ${this.health}/${this.maxHealth}`);
                             
                             // Create damage effect
                             if (this.group && this.group.position) {
-                                console.log(`CLONE EFFECT: Creating visual effect for clone ${this.index}`);
+                                console.debug(`CLONE EFFECT: Creating visual effect for clone ${this.index}`);
                                 
                                 // Flash the clone red briefly
                                 if (this.model) {
@@ -459,15 +459,15 @@ export class BulShadowCloneEffect extends SkillEffect {
                     // Method to handle damage from enemies
                     takeDamage: function(amount) {
                         try {
-                            console.log(`SIMPLE CLONE DAMAGE: Clone ${this.index} taking ${amount} damage`);
+                            console.debug(`SIMPLE CLONE DAMAGE: Clone ${this.index} taking ${amount} damage`);
                             
                             // Reduce health
                             this.health -= amount;
-                            console.log(`SIMPLE CLONE HEALTH: Clone ${this.index} health now ${this.health}/${this.maxHealth}`);
+                            console.debug(`SIMPLE CLONE HEALTH: Clone ${this.index} health now ${this.health}/${this.maxHealth}`);
                             
                             // Create damage effect
                             if (this.group && this.group.position) {
-                                console.log(`SIMPLE CLONE EFFECT: Creating visual effect for clone ${this.index}`);
+                                console.debug(`SIMPLE CLONE EFFECT: Creating visual effect for clone ${this.index}`);
                                 
                                 // Flash the clone red briefly
                                 this.group.traverse((node) => {

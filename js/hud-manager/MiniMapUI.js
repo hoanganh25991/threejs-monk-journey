@@ -371,7 +371,7 @@ export class MiniMapUI extends UIComponent {
      * @returns {boolean} - True if the data was loaded successfully
      */
     loadMinimapData(jsonPath) {
-        console.log(`Loading minimap data from ${jsonPath}...`);
+        console.debug(`Loading minimap data from ${jsonPath}...`);
         
         return new Promise((resolve, reject) => {
             fetch(jsonPath)
@@ -383,7 +383,7 @@ export class MiniMapUI extends UIComponent {
                 })
                 .then(data => {
                     this.minimapData = data;
-                    console.log('Minimap data loaded successfully');
+                    console.debug('Minimap data loaded successfully');
                     
                     // Load the pre-rendered image if available
                     if (data.images && data.images.length > 0) {
@@ -395,7 +395,7 @@ export class MiniMapUI extends UIComponent {
                         this.loadMinimapImage(imagePath);
                         resolve(true);
                     } else {
-                        console.log('No pre-rendered minimap image found in the data');
+                        console.debug('No pre-rendered minimap image found in the data');
                         resolve(false);
                     }
                 })
@@ -412,7 +412,7 @@ export class MiniMapUI extends UIComponent {
      * @returns {boolean} - True if the image was loaded successfully
      */
     loadMinimapImage(imagePath) {
-        console.log(`Loading minimap image from ${imagePath}...`);
+        console.debug(`Loading minimap image from ${imagePath}...`);
         
         return new Promise((resolve, reject) => {
             const image = new Image();
@@ -420,7 +420,7 @@ export class MiniMapUI extends UIComponent {
             image.onload = () => {
                 this.preRenderedMapImage = image;
                 this.preRenderedMapLoaded = true;
-                console.log('Minimap image loaded successfully');
+                console.debug('Minimap image loaded successfully');
                 resolve(true);
             };
             
@@ -442,7 +442,7 @@ export class MiniMapUI extends UIComponent {
     generateStaticMap() {
         if (!this.staticMapCtx || !this.game.world) return;
         
-        console.log('Generating static minimap...');
+        console.debug('Generating static minimap...');
         
         // Clear the canvas
         this.staticMapCtx.clearRect(0, 0, this.mapSize, this.mapSize);
@@ -634,7 +634,7 @@ export class MiniMapUI extends UIComponent {
         
         // Mark as generated
         this.staticMapGenerated = true;
-        console.log('Static minimap generation complete');
+        console.debug('Static minimap generation complete');
     }
     
     /**
