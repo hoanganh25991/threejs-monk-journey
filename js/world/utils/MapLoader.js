@@ -3,6 +3,7 @@ import * as THREE from 'three';
 /**
  * Map Loader - Loads pre-generated maps into the world
  * Integrates with existing WorldManager, StructureManager, and EnvironmentManager
+ * Supports chunked loading for better performance with large maps
  */
 export class MapLoader {
     constructor(worldManager) {
@@ -12,16 +13,39 @@ export class MapLoader {
         
         // Track loaded map data
         this.currentMap = null;
-        this.loadedObjects = [];
+        this.loadedObjects = {}; // Organized by chunk key
+        
+        // Chunking settings
+        this.useChunking = true; // Can be toggled for small maps
+        this.chunkSize = 25;     // Size of each chunk in world units
+        this.loadRadius = 2;     // How many chunks to load in each direction from player
+        this.loadedChunks = {};  // Track which chunks are currently loaded
+        this.lastPlayerChunk = null; // Last player chunk coordinates for change detection
+        this.lastPlayerDirection = null; // Last player direction for selective chunk loading
+        
+        // Anti-eager loading settings
+        this.lastUpdateTime = 0;  // Last time chunks were updated
+        this.updateCooldown = 3000; // Minimum time between chunk updates (ms)
+        this.lastPlayerPosition = null; // Last player position for distance-based updates
+        this.minMoveDistance = 10; // Minimum distance player must move to trigger update
+        
+        // Spatial index for quick lookup of objects by position
+        this.spatialIndex = {
+            zones: {},
+            paths: {},
+            structures: {},
+            environment: {}
+        };
     }
 
     /**
      * Load a map from JSON data
      * @param {Object} mapData - The map data to load
+     * @param {boolean} useChunking - Whether to use chunking (defaults to this.useChunking)
      * @returns {Promise<boolean>} - True if loading was successful
      */
-    async loadMap(mapData) {
-        console.debug(`Loading map: ${mapData.theme.name}`);
+    async loadMap(mapData, useChunking = this.useChunking) {
+        console.debug(`Loading map: ${mapData.theme.name} (chunking: ${useChunking})`);
         
         try {
             // Clear existing world content
@@ -35,13 +59,31 @@ export class MapLoader {
                 this.worldManager.zoneManager.setThemeColors(mapData.theme.colors);
             }
             
-            // Load map components in order
+            // Always load zones globally (zones affect the entire map and are usually small in data size)
             await this.loadZones(mapData.zones);
-            await this.loadPaths(mapData.paths);
-            await this.loadStructures(mapData.structures);
-            await this.loadEnvironment(mapData.environment);
             
-            console.debug(`Map "${mapData.theme.name}" loaded successfully`);
+            if (useChunking) {
+                // Process and chunk the map data
+                const chunkedData = this.chunkifyMapData(mapData);
+                
+                // Store map metadata and chunked data
+                this.currentMap.chunkedData = chunkedData;
+                this.currentMap.bounds = this.calculateMapBounds(mapData);
+                
+                // Initial load of chunks around starting position (usually 0,0,0)
+                const startPosition = new THREE.Vector3(0, 0, 0);
+                await this.initialChunkLoad(startPosition);
+                
+                console.debug(`Map "${mapData.theme.name}" loaded successfully (chunked mode)`);
+            } else {
+                // Load all map components in order (non-chunked mode)
+                await this.loadPaths(mapData.paths);
+                await this.loadStructures(mapData.structures);
+                await this.loadEnvironment(mapData.environment);
+                
+                console.debug(`Map "${mapData.theme.name}" loaded successfully (non-chunked mode)`);
+            }
+            
             return true;
             
         } catch (error) {
@@ -91,13 +133,68 @@ export class MapLoader {
         // Clear existing procedural paths from WorldManager
         this.clearProceduralPaths();
         
-        // Clear our tracked objects
-        this.loadedObjects.forEach(obj => {
-            if (obj.parent) {
-                this.scene.remove(obj);
+        // Clear our tracked objects (handle both chunked and non-chunked modes)
+        if (Array.isArray(this.loadedObjects)) {
+            // Non-chunked mode
+            this.loadedObjects.forEach(obj => {
+                if (obj && obj.parent) {
+                    this.scene.remove(obj);
+                    this.disposeObject(obj);
+                }
+            });
+            this.loadedObjects = [];
+        } else {
+            // Chunked mode
+            for (const chunkKey in this.loadedObjects) {
+                const chunkObjects = this.loadedObjects[chunkKey];
+                
+                // Clear paths
+                if (chunkObjects.paths) {
+                    chunkObjects.paths.forEach(obj => {
+                        if (obj && obj.parent) {
+                            this.scene.remove(obj);
+                            this.disposeObject(obj);
+                        }
+                    });
+                }
+                
+                // Clear structures
+                if (chunkObjects.structures) {
+                    chunkObjects.structures.forEach(obj => {
+                        if (obj && obj.parent) {
+                            this.scene.remove(obj);
+                            this.disposeObject(obj);
+                        }
+                    });
+                }
+                
+                // Clear environment objects
+                if (chunkObjects.environment) {
+                    chunkObjects.environment.forEach(obj => {
+                        if (obj && obj.parent) {
+                            this.scene.remove(obj);
+                            this.disposeObject(obj);
+                        }
+                    });
+                }
             }
-        });
-        this.loadedObjects = [];
+            this.loadedObjects = {};
+        }
+        
+        // Reset chunking state
+        this.loadedChunks = {};
+        this.lastPlayerChunk = null;
+        this.lastPlayerPosition = null;
+        this.lastPlayerDirection = null;
+        this.lastUpdateTime = 0;
+        
+        // Clear spatial index
+        this.spatialIndex = {
+            zones: {},
+            paths: {},
+            structures: {},
+            environment: {}
+        };
     }
 
     /**
@@ -216,17 +313,25 @@ export class MapLoader {
 
 
     /**
-     * Load paths from map data
+     * Load paths from map data (non-chunked mode)
      * @param {Array} paths - Path data array
      */
     async loadPaths(paths) {
-        console.debug(`Loading ${paths.length} paths...`);
+        console.debug(`Loading ${paths.length} paths (non-chunked mode)...`);
+        
+        // Initialize loadedObjects as array for non-chunked mode if it's not already
+        if (!Array.isArray(this.loadedObjects)) {
+            this.loadedObjects = [];
+        }
         
         paths.forEach(pathData => {
             const pathGroup = this.createPath(pathData);
             
             // Register path points with WorldManager for navigation and AI
             this.registerPathWithWorldManager(pathData, pathGroup);
+            
+            // Track in non-chunked array
+            this.loadedObjects.push(pathGroup);
         });
         
         console.debug(`Loaded ${paths.length} map paths successfully`);
@@ -306,7 +411,10 @@ export class MapLoader {
         };
         
         this.scene.add(pathGroup);
-        this.loadedObjects.push(pathGroup);
+        
+        // Note: We no longer track objects here directly
+        // They are now tracked in the chunk-specific arrays in loadChunkPaths
+        // or in a temporary array for non-chunked mode
         
         return pathGroup;
     }
@@ -420,19 +528,28 @@ export class MapLoader {
     }
 
     /**
-     * Load structures from map data
+     * Load structures from map data (non-chunked mode)
      * @param {Array} structures - Structure data array
      */
     async loadStructures(structures) {
-        console.debug(`Loading ${structures.length} structures...`);
+        console.debug(`Loading ${structures.length} structures (non-chunked mode)...`);
         
         if (!this.worldManager.structureManager) {
             console.warn('StructureManager not available');
             return;
         }
         
+        // Initialize loadedObjects as array for non-chunked mode if it's not already
+        if (!Array.isArray(this.loadedObjects)) {
+            this.loadedObjects = [];
+        }
+        
         for (const structureData of structures) {
-            await this.createStructure(structureData);
+            const structure = await this.createStructure(structureData);
+            if (structure) {
+                // Track in non-chunked array
+                this.loadedObjects.push(structure);
+            }
         }
     }
 
@@ -478,8 +595,13 @@ export class MapLoader {
                 theme: structureData.theme
             };
             
-            this.loadedObjects.push(structure);
+            // Note: We no longer track objects here directly
+            // They are now tracked in the chunk-specific arrays or in the non-chunked array
+            
+            return structure;
         }
+        
+        return null;
     }
 
     /**
@@ -735,19 +857,28 @@ export class MapLoader {
     }
     
     /**
-     * Load environment objects from map data
+     * Load environment objects from map data (non-chunked mode)
      * @param {Array} environment - Environment data array
      */
     async loadEnvironment(environment) {
-        console.debug(`Loading ${environment.length} environment objects...`);
+        console.debug(`Loading ${environment.length} environment objects (non-chunked mode)...`);
         
         if (!this.worldManager.environmentManager) {
             console.warn('EnvironmentManager not available');
             return;
         }
         
+        // Initialize loadedObjects as array for non-chunked mode if it's not already
+        if (!Array.isArray(this.loadedObjects)) {
+            this.loadedObjects = [];
+        }
+        
         for (const envData of environment) {
-            await this.createEnvironmentObject(envData);
+            const envObject = await this.createEnvironmentObject(envData);
+            if (envObject) {
+                // Track in non-chunked array
+                this.loadedObjects.push(envObject);
+            }
         }
     }
 
@@ -801,8 +932,13 @@ export class MapLoader {
                 theme: envData.theme
             };
             
-            this.loadedObjects.push(envObject);
+            // Note: We no longer track objects here directly
+            // They are now tracked in the chunk-specific arrays or in the non-chunked array
+            
+            return envObject;
         }
+        
+        return null;
     }
 
     /**
@@ -836,5 +972,593 @@ export class MapLoader {
             this.currentMap = null;
             console.debug('Current map cleared');
         }
+    }
+    
+    /**
+     * Dispose of a Three.js object to free memory
+     * @param {THREE.Object3D} object - Object to dispose
+     */
+    disposeObject(object) {
+        if (!object) return;
+        
+        // Recursively dispose of all children
+        if (object.children && object.children.length > 0) {
+            // Create a copy of the children array to avoid modification during iteration
+            const children = [...object.children];
+            children.forEach(child => {
+                this.disposeObject(child);
+            });
+        }
+        
+        // Dispose of geometries and materials
+        if (object.geometry) {
+            object.geometry.dispose();
+        }
+        
+        if (object.material) {
+            if (Array.isArray(object.material)) {
+                object.material.forEach(material => {
+                    if (material.map) material.map.dispose();
+                    material.dispose();
+                });
+            } else {
+                if (object.material.map) object.material.map.dispose();
+                object.material.dispose();
+            }
+        }
+    }
+    
+    /**
+     * Calculate the bounds of the map from all objects
+     * @param {Object} mapData - The map data
+     * @returns {Object} - Bounds object with min and max coordinates
+     */
+    calculateMapBounds(mapData) {
+        const bounds = {
+            minX: Infinity,
+            maxX: -Infinity,
+            minZ: Infinity,
+            maxZ: -Infinity
+        };
+        
+        // Process zones
+        if (mapData.zones) {
+            mapData.zones.forEach(zone => {
+                if (zone.center) {
+                    bounds.minX = Math.min(bounds.minX, zone.center.x - zone.radius);
+                    bounds.maxX = Math.max(bounds.maxX, zone.center.x + zone.radius);
+                    bounds.minZ = Math.min(bounds.minZ, zone.center.z - zone.radius);
+                    bounds.maxZ = Math.max(bounds.maxZ, zone.center.z + zone.radius);
+                } else if (zone.points) {
+                    zone.points.forEach(point => {
+                        bounds.minX = Math.min(bounds.minX, point.x);
+                        bounds.maxX = Math.max(bounds.maxX, point.x);
+                        bounds.minZ = Math.min(bounds.minZ, point.z);
+                        bounds.maxZ = Math.max(bounds.maxZ, point.z);
+                    });
+                }
+            });
+        }
+        
+        // Process paths
+        if (mapData.paths) {
+            mapData.paths.forEach(path => {
+                if (path.points) {
+                    path.points.forEach(point => {
+                        bounds.minX = Math.min(bounds.minX, point.x);
+                        bounds.maxX = Math.max(bounds.maxX, point.x);
+                        bounds.minZ = Math.min(bounds.minZ, point.z);
+                        bounds.maxZ = Math.max(bounds.maxZ, point.z);
+                    });
+                }
+            });
+        }
+        
+        // Process structures
+        if (mapData.structures) {
+            mapData.structures.forEach(structure => {
+                if (structure.position) {
+                    bounds.minX = Math.min(bounds.minX, structure.position.x);
+                    bounds.maxX = Math.max(bounds.maxX, structure.position.x);
+                    bounds.minZ = Math.min(bounds.minZ, structure.position.z);
+                    bounds.maxZ = Math.max(bounds.maxZ, structure.position.z);
+                }
+            });
+        }
+        
+        // Process environment objects
+        if (mapData.environment) {
+            mapData.environment.forEach(env => {
+                if (env.position) {
+                    bounds.minX = Math.min(bounds.minX, env.position.x);
+                    bounds.maxX = Math.max(bounds.maxX, env.position.x);
+                    bounds.minZ = Math.min(bounds.minZ, env.position.z);
+                    bounds.maxZ = Math.max(bounds.maxZ, env.position.z);
+                }
+            });
+        }
+        
+        // Add padding to bounds
+        const padding = this.chunkSize;
+        bounds.minX -= padding;
+        bounds.maxX += padding;
+        bounds.minZ -= padding;
+        bounds.maxZ += padding;
+        
+        return bounds;
+    }
+    
+    /**
+     * Divide map data into chunks for efficient loading
+     * @param {Object} mapData - The map data to chunk
+     * @returns {Object} - Map data organized by chunks
+     */
+    chunkifyMapData(mapData) {
+        const chunkedData = {
+            zones: mapData.zones, // Zones are kept global
+            chunks: {}
+        };
+        
+        // Process paths
+        if (mapData.paths) {
+            mapData.paths.forEach(path => {
+                // For paths that span multiple chunks, we need to assign them to all relevant chunks
+                if (path.points && path.points.length > 0) {
+                    const affectedChunks = new Set();
+                    
+                    // Find all chunks this path touches
+                    path.points.forEach(point => {
+                        const chunkKey = this.getChunkKeyFromPosition(point.x, point.z);
+                        affectedChunks.add(chunkKey);
+                    });
+                    
+                    // Add path to all affected chunks
+                    affectedChunks.forEach(chunkKey => {
+                        if (!chunkedData.chunks[chunkKey]) {
+                            chunkedData.chunks[chunkKey] = { paths: [], structures: [], environment: [] };
+                        }
+                        
+                        chunkedData.chunks[chunkKey].paths.push(path);
+                    });
+                }
+            });
+        }
+        
+        // Process structures
+        if (mapData.structures) {
+            mapData.structures.forEach(structure => {
+                if (structure.position) {
+                    const chunkKey = this.getChunkKeyFromPosition(structure.position.x, structure.position.z);
+                    
+                    if (!chunkedData.chunks[chunkKey]) {
+                        chunkedData.chunks[chunkKey] = { paths: [], structures: [], environment: [] };
+                    }
+                    
+                    chunkedData.chunks[chunkKey].structures.push(structure);
+                }
+            });
+        }
+        
+        // Process environment objects
+        if (mapData.environment) {
+            mapData.environment.forEach(env => {
+                if (env.position) {
+                    const chunkKey = this.getChunkKeyFromPosition(env.position.x, env.position.z);
+                    
+                    if (!chunkedData.chunks[chunkKey]) {
+                        chunkedData.chunks[chunkKey] = { paths: [], structures: [], environment: [] };
+                    }
+                    
+                    chunkedData.chunks[chunkKey].environment.push(env);
+                }
+            });
+        }
+        
+        return chunkedData;
+    }
+    
+    /**
+     * Get chunk key from world position
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @returns {string} - Chunk key in format "x_z"
+     */
+    getChunkKeyFromPosition(x, z) {
+        const chunkX = Math.floor(x / this.chunkSize);
+        const chunkZ = Math.floor(z / this.chunkSize);
+        return `${chunkX}_${chunkZ}`;
+    }
+    
+    /**
+     * Initial load of chunks around a position - used when first loading a map
+     * @param {THREE.Vector3} position - Position to load chunks around
+     */
+    async initialChunkLoad(position) {
+        if (!this.currentMap || !this.currentMap.chunkedData) {
+            return; // No map loaded or not in chunked mode
+        }
+        
+        console.debug("Performing initial chunk load...");
+        
+        // Initialize tracking variables
+        this.lastPlayerPosition = position.clone();
+        this.lastUpdateTime = Date.now();
+        
+        // Get current chunk
+        const chunkX = Math.floor(position.x / this.chunkSize);
+        const chunkZ = Math.floor(position.z / this.chunkSize);
+        const chunkKey = `${chunkX}_${chunkZ}`;
+        this.lastPlayerChunk = chunkKey;
+        
+        // Get map bounds if available
+        let minChunkX = -Infinity;
+        let maxChunkX = Infinity;
+        let minChunkZ = -Infinity;
+        let maxChunkZ = Infinity;
+        
+        if (this.currentMap.bounds) {
+            minChunkX = Math.floor(this.currentMap.bounds.minX / this.chunkSize);
+            maxChunkX = Math.ceil(this.currentMap.bounds.maxX / this.chunkSize);
+            minChunkZ = Math.floor(this.currentMap.bounds.minZ / this.chunkSize);
+            maxChunkZ = Math.ceil(this.currentMap.bounds.maxZ / this.chunkSize);
+        }
+        
+        // Use a larger initial radius for first load
+        const initialRadius = this.loadRadius + 1;
+        const chunksToLoad = {};
+        
+        // Load chunks in all directions for initial load
+        for (let xOffset = -initialRadius; xOffset <= initialRadius; xOffset++) {
+            for (let zOffset = -initialRadius; zOffset <= initialRadius; zOffset++) {
+                const targetChunkX = chunkX + xOffset;
+                const targetChunkZ = chunkZ + zOffset;
+                
+                // Only load chunks within map bounds
+                if (targetChunkX >= minChunkX && targetChunkX <= maxChunkX && 
+                    targetChunkZ >= minChunkZ && targetChunkZ <= maxChunkZ) {
+                    const targetChunkKey = `${targetChunkX}_${targetChunkZ}`;
+                    chunksToLoad[targetChunkKey] = true;
+                }
+            }
+        }
+        
+        // Load all initial chunks
+        for (const chunkKey in chunksToLoad) {
+            if (!this.loadedChunks[chunkKey]) {
+                await this.loadChunk(chunkKey);
+            }
+        }
+        
+        console.debug(`Initial chunk load complete (${Object.keys(chunksToLoad).length} chunks)`);
+    }
+    
+    /**
+     * Update loaded chunks based on player position with anti-eager loading
+     * @param {THREE.Vector3} playerPosition - Current player position
+     */
+    async updateLoadedChunksForPosition(playerPosition) {
+        if (!this.currentMap || !this.currentMap.chunkedData) {
+            return; // No map loaded or not in chunked mode
+        }
+        
+        // Special case for first load - initialize position tracking
+        if (!this.lastPlayerPosition) {
+            this.lastPlayerPosition = playerPosition.clone();
+            this.lastUpdateTime = Date.now();
+            
+            // For first load, we'll do a full chunk load
+            await this.initialChunkLoad(playerPosition);
+            return;
+        }
+        
+        // Get current player chunk
+        const playerChunkX = Math.floor(playerPosition.x / this.chunkSize);
+        const playerChunkZ = Math.floor(playerPosition.z / this.chunkSize);
+        const playerChunkKey = `${playerChunkX}_${playerChunkZ}`;
+        
+        // Get player direction if available (from camera or player object)
+        let playerDirection = null;
+        if (this.game && this.game.player && this.game.player.getDirection) {
+            playerDirection = this.game.player.getDirection();
+        } else if (this.game && this.game.camera) {
+            // Extract direction from camera if player direction not available
+            const camera = this.game.camera;
+            if (camera.getWorldDirection) {
+                playerDirection = new THREE.Vector3();
+                camera.getWorldDirection(playerDirection);
+            }
+        }
+        
+        // Calculate time since last update and distance moved
+        const currentTime = Date.now();
+        const timeSinceLastUpdate = currentTime - this.lastUpdateTime;
+        const distanceMoved = this.lastPlayerPosition ? 
+            playerPosition.distanceTo(this.lastPlayerPosition) : 0;
+            
+        // Skip if player hasn't moved to a new chunk and direction hasn't changed significantly
+        const directionChanged = playerDirection && this.lastPlayerDirection && 
+            playerDirection.angleTo(this.lastPlayerDirection) > 0.3; // ~17 degrees threshold
+            
+        // Check if we should update chunks based on multiple criteria
+        const inSameChunk = this.lastPlayerChunk === playerChunkKey;
+        const tooSoon = timeSinceLastUpdate < this.updateCooldown;
+        const notMovedEnough = distanceMoved < this.minMoveDistance;
+        
+        if (inSameChunk && tooSoon && notMovedEnough && !directionChanged) {
+            return; // Skip update - no significant change in player state
+        }
+        
+        console.debug(`Updating chunks for player at ${playerPosition.x.toFixed(1)}, ${playerPosition.z.toFixed(1)} (chunk ${playerChunkKey})`);
+        
+        // Get map bounds if available
+        let minChunkX = -Infinity;
+        let maxChunkX = Infinity;
+        let minChunkZ = -Infinity;
+        let maxChunkZ = Infinity;
+        
+        if (this.currentMap.bounds) {
+            minChunkX = Math.floor(this.currentMap.bounds.minX / this.chunkSize);
+            maxChunkX = Math.ceil(this.currentMap.bounds.maxX / this.chunkSize);
+            minChunkZ = Math.floor(this.currentMap.bounds.minZ / this.chunkSize);
+            maxChunkZ = Math.ceil(this.currentMap.bounds.maxZ / this.chunkSize);
+        }
+        
+        // Determine chunks to load based on player position and direction
+        const chunksToLoad = {};
+        
+        // If we have player direction, prioritize chunks in that direction
+        if (playerDirection) {
+            // Normalize to XZ plane for chunk loading
+            playerDirection.y = 0;
+            playerDirection.normalize();
+            
+            // Calculate forward vector in chunk space
+            const forwardX = Math.round(playerDirection.x);
+            const forwardZ = Math.round(playerDirection.z);
+            
+            // Load chunks in a cone in front of the player
+            for (let xOffset = -this.loadRadius; xOffset <= this.loadRadius; xOffset++) {
+                for (let zOffset = -this.loadRadius; zOffset <= this.loadRadius; zOffset++) {
+                    const targetChunkX = playerChunkX + xOffset;
+                    const targetChunkZ = playerChunkZ + zOffset;
+                    
+                    // Calculate distance from player chunk in chunk units
+                    const chunkDistance = Math.sqrt(xOffset * xOffset + zOffset * zOffset);
+                    
+                    // Calculate dot product to determine if chunk is in front of player
+                    const dirX = xOffset / (chunkDistance || 1); // Avoid division by zero
+                    const dirZ = zOffset / (chunkDistance || 1);
+                    const dotProduct = dirX * playerDirection.x + dirZ * playerDirection.z;
+                    
+                    // Load chunks that are either:
+                    // 1. Close to the player (within inner radius)
+                    // 2. In the direction the player is facing (within view cone)
+                    const inInnerRadius = chunkDistance <= 1;
+                    const inViewCone = dotProduct > 0.5 && chunkDistance <= this.loadRadius;
+                    
+                    if (inInnerRadius || inViewCone) {
+                        // Only load chunks within map bounds
+                        if (targetChunkX >= minChunkX && targetChunkX <= maxChunkX && 
+                            targetChunkZ >= minChunkZ && targetChunkZ <= maxChunkZ) {
+                            const targetChunkKey = `${targetChunkX}_${targetChunkZ}`;
+                            chunksToLoad[targetChunkKey] = true;
+                        }
+                    }
+                }
+            }
+        } else {
+            // No direction available, load chunks in a square around player
+            for (let xOffset = -this.loadRadius; xOffset <= this.loadRadius; xOffset++) {
+                for (let zOffset = -this.loadRadius; zOffset <= this.loadRadius; zOffset++) {
+                    const targetChunkX = playerChunkX + xOffset;
+                    const targetChunkZ = playerChunkZ + zOffset;
+                    
+                    // Only load chunks within map bounds
+                    if (targetChunkX >= minChunkX && targetChunkX <= maxChunkX && 
+                        targetChunkZ >= minChunkZ && targetChunkZ <= maxChunkZ) {
+                        const targetChunkKey = `${targetChunkX}_${targetChunkZ}`;
+                        chunksToLoad[targetChunkKey] = true;
+                    }
+                }
+            }
+        }
+        
+        // Unload chunks that are no longer needed
+        for (const chunkKey in this.loadedChunks) {
+            if (!chunksToLoad[chunkKey]) {
+                await this.unloadChunk(chunkKey);
+            }
+        }
+        
+        // Load new chunks
+        for (const chunkKey in chunksToLoad) {
+            if (!this.loadedChunks[chunkKey]) {
+                await this.loadChunk(chunkKey);
+            }
+        }
+        
+        // Update tracking variables
+        this.lastPlayerChunk = playerChunkKey;
+        this.lastPlayerPosition = playerPosition.clone();
+        this.lastUpdateTime = currentTime;
+        if (playerDirection) {
+            this.lastPlayerDirection = playerDirection.clone();
+        }
+    }
+    
+    /**
+     * Load a specific chunk
+     * @param {string} chunkKey - Chunk key to load
+     */
+    async loadChunk(chunkKey) {
+        if (!this.currentMap || !this.currentMap.chunkedData || this.loadedChunks[chunkKey]) {
+            return; // Already loaded or no map
+        }
+        
+        // Check if chunk is within map bounds
+        if (this.currentMap.bounds) {
+            const [chunkX, chunkZ] = chunkKey.split('_').map(Number);
+            const minChunkX = Math.floor(this.currentMap.bounds.minX / this.chunkSize);
+            const maxChunkX = Math.ceil(this.currentMap.bounds.maxX / this.chunkSize);
+            const minChunkZ = Math.floor(this.currentMap.bounds.minZ / this.chunkSize);
+            const maxChunkZ = Math.ceil(this.currentMap.bounds.maxZ / this.chunkSize);
+            
+            // If chunk is outside map bounds, mark as empty and return
+            if (chunkX < minChunkX || chunkX > maxChunkX || chunkZ < minChunkZ || chunkZ > maxChunkZ) {
+                // Mark as loaded with empty data to prevent repeated attempts
+                this.loadedChunks[chunkKey] = { paths: [], structures: [], environment: [] };
+                return;
+            }
+        }
+        
+        console.debug(`Loading chunk ${chunkKey}...`);
+        
+        // Get chunk data directly from the chunked map data
+        const chunkData = this.currentMap.chunkedData?.chunks?.[chunkKey];
+        
+        if (!chunkData) {
+            console.debug(`No data found for chunk ${chunkKey}, creating empty chunk`);
+            // Mark as loaded even if empty to prevent repeated attempts
+            this.loadedChunks[chunkKey] = { paths: [], structures: [], environment: [] };
+            return;
+        }
+        
+        // Initialize tracking for this chunk
+        this.loadedObjects[chunkKey] = { paths: [], structures: [], environment: [] };
+        
+        // Load chunk components in order
+        if (chunkData.paths && chunkData.paths.length > 0) {
+            await this.loadChunkPaths(chunkData.paths, chunkKey);
+        }
+        
+        if (chunkData.structures && chunkData.structures.length > 0) {
+            await this.loadChunkStructures(chunkData.structures, chunkKey);
+        }
+        
+        if (chunkData.environment && chunkData.environment.length > 0) {
+            await this.loadChunkEnvironment(chunkData.environment, chunkKey);
+        }
+        
+        // Mark chunk as loaded
+        this.loadedChunks[chunkKey] = chunkData;
+        console.debug(`Chunk ${chunkKey} loaded successfully`);
+    }
+    
+    /**
+     * Unload a specific chunk
+     * @param {string} chunkKey - Chunk key to unload
+     */
+    async unloadChunk(chunkKey) {
+        if (!this.loadedChunks[chunkKey]) {
+            return; // Not loaded
+        }
+        
+        console.debug(`Unloading chunk ${chunkKey}...`);
+        
+        // Remove all objects in this chunk from the scene
+        if (this.loadedObjects[chunkKey]) {
+            // Remove paths
+            this.loadedObjects[chunkKey].paths.forEach(pathGroup => {
+                if (pathGroup && pathGroup.parent) {
+                    this.scene.remove(pathGroup);
+                    this.disposeObject(pathGroup);
+                }
+            });
+            
+            // Remove structures
+            this.loadedObjects[chunkKey].structures.forEach(structure => {
+                if (structure && structure.parent) {
+                    this.scene.remove(structure);
+                    this.disposeObject(structure);
+                }
+            });
+            
+            // Remove environment objects
+            this.loadedObjects[chunkKey].environment.forEach(envObject => {
+                if (envObject && envObject.parent) {
+                    this.scene.remove(envObject);
+                    this.disposeObject(envObject);
+                }
+            });
+            
+            // Clear tracking arrays
+            delete this.loadedObjects[chunkKey];
+        }
+        
+        // Mark chunk as unloaded
+        delete this.loadedChunks[chunkKey];
+        console.debug(`Chunk ${chunkKey} unloaded successfully`);
+    }
+    
+    /**
+     * Load paths from map data for a specific chunk
+     * @param {Array} paths - Path data array
+     * @param {string} chunkKey - Chunk key
+     */
+    async loadChunkPaths(paths, chunkKey) {
+        console.debug(`Loading ${paths.length} paths for chunk ${chunkKey}...`);
+        
+        // Initialize tracking array if needed
+        if (!this.loadedObjects[chunkKey]) {
+            this.loadedObjects[chunkKey] = { paths: [], structures: [], environment: [] };
+        }
+        
+        paths.forEach(pathData => {
+            const pathGroup = this.createPath(pathData);
+            
+            // Register path points with WorldManager for navigation and AI
+            this.registerPathWithWorldManager(pathData, pathGroup);
+            
+            // Track this path in the loaded objects for this chunk
+            this.loadedObjects[chunkKey].paths.push(pathGroup);
+        });
+        
+        console.debug(`Loaded ${paths.length} map paths for chunk ${chunkKey} successfully`);
+    }
+    
+    /**
+     * Load structures from map data for a specific chunk
+     * @param {Array} structures - Structure data array
+     * @param {string} chunkKey - Chunk key
+     */
+    async loadChunkStructures(structures, chunkKey) {
+        console.debug(`Loading ${structures.length} structures for chunk ${chunkKey}...`);
+        
+        // Initialize tracking array if needed
+        if (!this.loadedObjects[chunkKey]) {
+            this.loadedObjects[chunkKey] = { paths: [], structures: [], environment: [] };
+        }
+        
+        for (const structureData of structures) {
+            const structure = await this.createStructure(structureData);
+            if (structure) {
+                this.loadedObjects[chunkKey].structures.push(structure);
+            }
+        }
+        
+        console.debug(`Loaded ${structures.length} structures for chunk ${chunkKey} successfully`);
+    }
+    
+    /**
+     * Load environment objects from map data for a specific chunk
+     * @param {Array} environment - Environment data array
+     * @param {string} chunkKey - Chunk key
+     */
+    async loadChunkEnvironment(environment, chunkKey) {
+        console.debug(`Loading ${environment.length} environment objects for chunk ${chunkKey}...`);
+        
+        // Initialize tracking array if needed
+        if (!this.loadedObjects[chunkKey]) {
+            this.loadedObjects[chunkKey] = { paths: [], structures: [], environment: [] };
+        }
+        
+        for (const envData of environment) {
+            const envObject = await this.createEnvironmentObject(envData);
+            if (envObject) {
+                this.loadedObjects[chunkKey].environment.push(envObject);
+            }
+        }
+        
+        console.debug(`Loaded ${environment.length} environment objects for chunk ${chunkKey} successfully`);
     }
 }
