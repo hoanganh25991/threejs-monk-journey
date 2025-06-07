@@ -35,7 +35,7 @@ class MinimapGenerator {
      * Generate all minimap assets
      */
     generate(outputBaseName) {
-        console.log('Generating minimap assets...');
+        console.debug('Generating minimap assets...');
         
         // Generate simplified minimap data
         const minimapData = this.generateMinimapData();
@@ -50,8 +50,8 @@ class MinimapGenerator {
             images: imageFiles
         }, null, 2));
         
-        console.log(`✓ Minimap data saved to: ${minimapFilename}`);
-        console.log(`✓ Generated ${imageFiles.length} minimap images`);
+        console.debug(`✓ Minimap data saved to: ${minimapFilename}`);
+        console.debug(`✓ Generated ${imageFiles.length} minimap images`);
         
         return {
             minimapData,
@@ -415,7 +415,7 @@ class MinimapGenerator {
                 path: filePath
             });
             
-            console.log(`✓ Generated minimap image: ${filePath}`);
+            console.debug(`✓ Generated minimap image: ${filePath}`);
         }
         
         return imageFiles;

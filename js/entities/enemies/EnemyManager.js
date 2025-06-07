@@ -113,12 +113,14 @@ export class EnemyManager {
         
         // Boss spawning configuration
         this.bossSpawnTimer = 0;
-        this.bossSpawnInterval = 12; // Spawn boss every 12 seconds (5x more frequent than original 60 seconds)
-        this.bossSpawnChance = 0.8; // 80% chance to spawn a boss when timer is up (doubled from original 40%)
+        this.bossSpawnInterval = 60; // Spawn boss every 60 seconds (reduced frequency)
+        this.bossSpawnChance = 0.2; // 20% chance to spawn a boss when timer is up (reduced from 80%)
+        this.maxActiveBosses = 3; // Maximum number of bosses that can be active at once
+        this.activeBossCount = 0; // Current number of active bosses
         
         // Track enemy kills for boss spawning
         this.enemyKillCount = 0;
-        this.killsPerBossSpawn = 20; // Spawn a boss after every 20 enemy kills
+        this.killsPerBossSpawn = 100; // Spawn a boss after every 100 enemy kills
         
         // Item generation
         this.itemGenerator = new ItemGenerator(game);
@@ -234,33 +236,52 @@ export class EnemyManager {
             // Update boss spawn timer
             this.bossSpawnTimer += delta;
             
+            // Count active bosses
+            this.activeBossCount = 0;
+            for (const [id, enemy] of this.enemies.entries()) {
+                if (enemy.isBoss && !enemy.isDead()) {
+                    this.activeBossCount++;
+                }
+            }
+            
             // Check if it's time to potentially spawn a boss (time-based spawning)
             if (this.bossSpawnTimer >= this.bossSpawnInterval) {
                 // Reset timer regardless of whether a boss is spawned
                 this.bossSpawnTimer = 0;
                 
-                // Random chance to spawn a boss (increased chance)
-                if (Math.random() < this.bossSpawnChance) {
-                    console.debug('Spawning random boss (time-based)...');
-                    this.spawnRandomBoss();
-                    
-                    // Play boss theme if available
-                    if (this.game && this.game.audioManager) {
-                        this.game.audioManager.playMusic('bossTheme');
+                // Only spawn a boss if we're under the maximum limit
+                if (this.activeBossCount < this.maxActiveBosses) {
+                    // Random chance to spawn a boss (reduced chance)
+                    if (Math.random() < this.bossSpawnChance) {
+                        console.debug(`Spawning random boss (time-based)... Active bosses: ${this.activeBossCount}/${this.maxActiveBosses}`);
+                        this.spawnRandomBoss();
+                        
+                        // Play boss theme if available
+                        if (this.game && this.game.audioManager) {
+                            this.game.audioManager.playMusic('bossTheme');
+                        }
                     }
+                } else {
+                    console.debug(`Maximum number of bosses already active (${this.activeBossCount}/${this.maxActiveBosses}). Skipping time-based boss spawn.`);
                 }
             }
             
             // Check if we should spawn a boss based on kill count
             // This provides a more predictable boss encounter rate
             if (this.enemyKillCount >= this.killsPerBossSpawn) {
-                console.debug(`Spawning boss after ${this.enemyKillCount} enemy kills`);
-                this.enemyKillCount = 0; // Reset kill counter
-                this.spawnRandomBoss();
-                
-                // Play boss theme if available
-                if (this.game && this.game.audioManager) {
-                    this.game.audioManager.playMusic('bossTheme');
+                // Only spawn a boss if we're under the maximum limit
+                if (this.activeBossCount < this.maxActiveBosses) {
+                    console.debug(`Spawning boss after ${this.enemyKillCount} enemy kills. Active bosses: ${this.activeBossCount}/${this.maxActiveBosses}`);
+                    this.enemyKillCount = 0; // Reset kill counter
+                    this.spawnRandomBoss();
+                    
+                    // Play boss theme if available
+                    if (this.game && this.game.audioManager) {
+                        this.game.audioManager.playMusic('bossTheme');
+                    }
+                } else {
+                    console.debug(`Maximum number of bosses already active (${this.activeBossCount}/${this.maxActiveBosses}). Kill count at ${this.enemyKillCount}/${this.killsPerBossSpawn}.`);
+                    // Don't reset the kill counter, so it will try again next update
                 }
             }
         }
@@ -301,6 +322,13 @@ export class EnemyManager {
                 if (!enemy.deathAnimationInProgress) {
                     // Remove enemy only after death animation is complete
                     enemy.remove();
+                    
+                    // If this was a boss, decrement the active boss count
+                    if (enemy.isBoss) {
+                        this.activeBossCount = Math.max(0, this.activeBossCount - 1);
+                        console.debug(`Boss defeated. Active bosses: ${this.activeBossCount}/${this.maxActiveBosses}`);
+                    }
+                    
                     this.enemies.delete(id);
                     
                     // Clean up processed drops entry for this enemy
@@ -711,7 +739,7 @@ export class EnemyManager {
      */
     spawnEnemyWave() {
         // Get player position
-        const playerPosition = this.game.player.position.clone();
+        const playerPosition = this.game.player.getPosition().clone();
         
         // Temporarily increase max enemies to allow for larger waves
         const originalMaxEnemies = this.maxEnemies;
@@ -796,10 +824,18 @@ export class EnemyManager {
      */
     spawnDangerousGroup() {
         // Get player position
-        const playerPosition = this.game.player.position.clone();
+        const playerPosition = this.player.getPosition().clone();
         
-        // Determine group size (10-20 enemies)
-        const groupSize = 10 + Math.floor(Math.random() * 11);
+        // Determine group size (20-50 enemies with 30% chance, otherwise 10-20)
+        let groupSize;
+        if (Math.random() < 0.3) {
+            // 30% chance for a large group (20-50 enemies)
+            groupSize = 20 + Math.floor(Math.random() * 31);
+            console.debug(`Spawning a LARGE dangerous group of ${groupSize} enemies!`);
+        } else {
+            // 70% chance for a regular group (10-20 enemies)
+            groupSize = 10 + Math.floor(Math.random() * 11);
+        }
         
         // Get available zones
         const availableZones = Object.keys(this.zoneEnemies);
@@ -810,7 +846,12 @@ export class EnemyManager {
         const groupEnemyType = zoneEnemyTypes[Math.floor(Math.random() * zoneEnemyTypes.length)];
         
         // Calculate group position (in front of the player)
-        const playerDirection = this.game.player.getDirection();
+        // Calculate direction from player's rotation
+        const playerRotation = this.game.player.getRotation();
+        const playerDirection = {
+            x: Math.sin(playerRotation.y),
+            z: Math.cos(playerRotation.y)
+        };
         const groupDistance = 20 + Math.random() * 10; // 20-30 units away
         
         const groupX = playerPosition.x + playerDirection.x * groupDistance;
@@ -1230,14 +1271,14 @@ export class EnemyManager {
         }
         
         // Adjust position to terrain height if world is available
-        if (this.game && this.game.world) {
-            const terrainHeight = this.game.world.getTerrainHeight(spawnPosition.x, spawnPosition.z);
-            if (terrainHeight !== null) {
-                // Use the boss's height offset for proper positioning
-                const bossHeightOffset = (scaledBossConfig.scale || 1) * 0.4; // Same calculation as in Enemy constructor
-                spawnPosition.y = terrainHeight + bossHeightOffset;
-            }
-        }
+        // if (this.game && this.game.world) {
+        //     const terrainHeight = this.game.world.getTerrainHeight(spawnPosition.x, spawnPosition.z);
+        //     if (terrainHeight !== null) {
+        //         // Use the boss's height offset for proper positioning
+        //         const bossHeightOffset = (scaledBossConfig.scale || 1) * 0.4; // Same calculation as in Enemy constructor
+        //         spawnPosition.y = terrainHeight + bossHeightOffset;
+        //     }
+        // }
         
         // Use the existing spawnEnemy method to ensure consistent positioning
         const boss = this.spawnEnemy(bossType, spawnPosition, `boss_${this.nextEnemyId++}`);
@@ -1294,9 +1335,22 @@ export class EnemyManager {
             spawnPosition = this.getRandomSpawnPosition();
         }
         
+        // Check if we're already at the maximum number of bosses
+        if (this.activeBossCount >= this.maxActiveBosses) {
+            console.debug(`Cannot spawn boss: maximum number of bosses (${this.maxActiveBosses}) already active.`);
+            return null;
+        }
+        
         // Spawn the boss using the existing spawnBoss method
         // The spawnBoss method will handle terrain height adjustment properly
-        return this.spawnBoss(randomBossType.type, spawnPosition);
+        const boss = this.spawnBoss(randomBossType.type, spawnPosition);
+        
+        // Update active boss count if boss was successfully spawned
+        if (boss) {
+            this.activeBossCount++;
+        }
+        
+        return boss;
     }
     
     getClosestEnemy(position, maxDistance = Infinity) {

@@ -979,6 +979,11 @@ const BASE_SKILL_TREES = {
     variants: {},
     buffs: {},
   },
+  "Bul Shadow Clone": {
+    baseDescription: "Creates multiple shadow clones of the monk in yellow theme color. These transparent clones automatically seek out enemies, attack them, and can absorb damage.",
+    variants: {},
+    buffs: {},
+  }
 };
 
 // Apply buffs to variants by reference

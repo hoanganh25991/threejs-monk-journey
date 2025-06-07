@@ -416,7 +416,7 @@ class MapGenerator {
             throw new Error(`Unknown theme: ${themeName}`);
         }
 
-        console.log(`Generating ${theme.name} map...`);
+        console.debug(`Generating ${theme.name} map...`);
         
         this.mapData.theme = theme;
         this.mapData.metadata = {
@@ -440,7 +440,7 @@ class MapGenerator {
      * Generate zone layout for the map
      */
     generateZones(theme) {
-        console.log('Generating zones...');
+        console.debug('Generating zones...');
         
         // Create a square boundary for the map
         const mapHalfSize = this.mapSize / 2;
@@ -562,14 +562,14 @@ class MapGenerator {
             this.mapData.zones.push(subZone);
         }
         
-        console.log(`Created ${this.mapData.zones.length} zones`);
+        console.debug(`Created ${this.mapData.zones.length} zones`);
     }
 
     /**
      * Generate main road network
      */
     generateMainPaths(theme) {
-        console.log('Generating main paths...');
+        console.debug('Generating main paths...');
         
         const pathWidth = theme.features.pathWidth || 3;
         const boundarySize = this.mapSize * 0.95;
@@ -765,7 +765,7 @@ class MapGenerator {
      * Generate structures based on theme
      */
     generateStructures(theme) {
-        console.log('Generating structures...');
+        console.debug('Generating structures...');
         
         const features = theme.features;
         const boundarySize = this.mapSize * 0.95;
@@ -966,7 +966,7 @@ class MapGenerator {
      * Generate environment objects
      */
     generateEnvironment(theme) {
-        console.log('Generating environment...');
+        console.debug('Generating environment...');
         
         const features = theme.features;
         const boundarySize = this.mapSize * 0.95;
@@ -1354,7 +1354,7 @@ class MapGenerator {
      * Connect structures with smaller paths
      */
     connectStructuresWithPaths(theme) {
-        console.log('Connecting structures with paths...');
+        console.debug('Connecting structures with paths...');
         
         const structures = this.mapData.structures;
         const pathWidth = theme.features.pathWidth * 0.6;
@@ -2883,7 +2883,7 @@ class MapGenerator {
             count = Math.ceil(theme.features.specialFeatureCount * 1.5);
         }
         
-        console.log(`Generating ${count} special environment features for ${theme.name}...`);
+        console.debug(`Generating ${count} special environment features for ${theme.name}...`);
         
         // Generate different special features based on theme
         switch (theme.primaryZone) {
@@ -3595,7 +3595,7 @@ class MapGenerator {
             return;
         }
 
-        console.log('Batching trees to reduce file size...');
+        console.debug('Batching trees to reduce file size...');
         
         // Separate trees from other environment objects
         const trees = this.mapData.environment.filter(obj => obj.type === 'tree');
@@ -3606,7 +3606,7 @@ class MapGenerator {
             return;
         }
         
-        console.log(`Found ${trees.length} trees to batch`);
+        console.debug(`Found ${trees.length} trees to batch`);
         
         // Create grid for spatial partitioning
         const gridSize = 20; // Size of each grid cell
@@ -3690,7 +3690,7 @@ class MapGenerator {
             });
         });
         
-        console.log(`Created ${treeClusters.length} tree clusters from ${trees.length} trees`);
+        console.debug(`Created ${treeClusters.length} tree clusters from ${trees.length} trees`);
         
         // Replace environment with batched trees
         this.mapData.environment = [...otherObjects, ...treeClusters];
@@ -3706,7 +3706,7 @@ class MapGenerator {
             compressionRatio: trees.length / (treeClusters.length + otherObjects.filter(obj => obj.type === 'tree').length)
         };
         
-        console.log(`Tree compression ratio: ${this.mapData.metadata.treeBatching.compressionRatio.toFixed(2)}x`);
+        console.debug(`Tree compression ratio: ${this.mapData.metadata.treeBatching.compressionRatio.toFixed(2)}x`);
     }
 
     /**
@@ -3732,7 +3732,7 @@ class MapGenerator {
         const filepath = path.join(outputDir, filename);
         fs.writeFileSync(filepath, this.exportToJSON());
         
-        console.log(`Map saved to: ${filepath}`);
+        console.debug(`Map saved to: ${filepath}`);
         return filepath;
     }
 }
@@ -3744,12 +3744,12 @@ function main() {
     const args = process.argv.slice(2);
     
     if (args.length === 0) {
-        console.log('Available map themes:');
+        console.debug('Available map themes:');
         Object.keys(MAP_THEMES).forEach(key => {
             const theme = MAP_THEMES[key];
-            console.log(`  ${key}: ${theme.description}`);
+            console.debug(`  ${key}: ${theme.description}`);
         });
-        console.log('\nUsage: node map-generator.js <THEME_NAME> [output_filename]');
+        console.debug('\nUsage: node map-generator.js <THEME_NAME> [output_filename]');
         return;
     }
 
@@ -3758,24 +3758,24 @@ function main() {
 
     if (!MAP_THEMES[themeName]) {
         console.error(`Unknown theme: ${themeName}`);
-        console.log('Available themes:', Object.keys(MAP_THEMES).join(', '));
+        console.debug('Available themes:', Object.keys(MAP_THEMES).join(', '));
         return;
     }
 
-    console.log(`Generating ${MAP_THEMES[themeName].name} map...`);
+    console.debug(`Generating ${MAP_THEMES[themeName].name} map...`);
     
     const generator = new MapGenerator();
     const mapData = generator.generateMap(themeName);
     
     const filepath = generator.saveToFile(outputFilename);
     
-    console.log('\nMap generation complete!');
-    console.log(`Theme: ${mapData.theme.name}`);
-    console.log(`Zones: ${mapData.zones.length}`);
-    console.log(`Structures: ${mapData.structures.length}`);
-    console.log(`Paths: ${mapData.paths.length}`);
-    console.log(`Environment objects: ${mapData.environment.length}`);
-    console.log(`Saved to: ${filepath}`);
+    console.debug('\nMap generation complete!');
+    console.debug(`Theme: ${mapData.theme.name}`);
+    console.debug(`Zones: ${mapData.zones.length}`);
+    console.debug(`Structures: ${mapData.structures.length}`);
+    console.debug(`Paths: ${mapData.paths.length}`);
+    console.debug(`Environment objects: ${mapData.environment.length}`);
+    console.debug(`Saved to: ${filepath}`);
 }
 
 // Export for use as module

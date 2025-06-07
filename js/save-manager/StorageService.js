@@ -424,7 +424,7 @@ export class StorageService {
      * @private
      */
     async handleGoogleSignIn() {
-        console.log("handleGoogleSignIn")
+        console.debug("handleGoogleSignIn")
         console.debug('Google sign-in detected, syncing data');
         this.isSigningIn = true;
         
@@ -453,7 +453,7 @@ export class StorageService {
         if (this.isSyncFromGoogleDrive) {
             return
         }
-        console.log("syncFromGoogleDrive")
+        console.debug("syncFromGoogleDrive")
         console.debug('Syncing data from Google Drive to localStorage');
         this.isSyncFromGoogleDrive = true;
         // Define keys that should not be synced from Google Drive
@@ -539,7 +539,7 @@ export class StorageService {
         if (!this.isSignedInToGoogle()) {
             return;
         }
-        console.log("syncToGoogleDrive")
+        console.debug("syncToGoogleDrive")
         console.debug('Syncing data from localStorage to Google Drive');
         
         // Get all keys from localStorage that start with 'monk_journey_'

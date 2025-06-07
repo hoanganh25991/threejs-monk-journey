@@ -21,16 +21,16 @@ export class WorldManager {
         this.loadingManager = loadingManager;
         this.game = game;
         
-        // Terrain caching system
+        // Terrain caching system - optimized for memory only, no localStorage
         this.terrainCache = {
             chunks: {},
             structures: {},
             environment: {},
             preGenerated: false,
             chunkSize: 100, // Size of each terrain chunk in world units
-            maxCachedChunks: 100, // Maximum number of chunks to keep in memory
-            saveToLocalStorage: true, // Whether to save terrain to localStorage
-            localStorageKey: 'monk_journey_terrain_cache'
+            maxCachedChunks: 25, // Only keep chunks that are near the player
+            saveToLocalStorage: false, // Disable localStorage caching completely
+            dynamicLoading: true // Enable dynamic loading of chunks based on player position
         };
         
         // Initialize managers
@@ -150,7 +150,7 @@ export class WorldManager {
         if (!this.terrainCache.preGenerated) {
             await this.preGenerateTerrain();
         } else {
-            console.log("Using cached terrain data");
+            console.debug("Using cached terrain data");
         }
         
         console.debug("World initialization complete");
@@ -158,11 +158,11 @@ export class WorldManager {
     }
     
     /**
-     * Pre-generate terrain in a large area around the starting point
-     * @returns {Promise} - Resolves when terrain generation is complete
+     * Generate only the necessary terrain around the player's starting position
+     * @returns {Promise} - Resolves when initial terrain generation is complete
      */
     async preGenerateTerrain() {
-        console.log("Pre-generating terrain and cleaning up duplicate structures...");
+        console.debug("Generating initial terrain around player...");
         
         // Clean up any duplicate structures that might exist
         this.cleanupDuplicateStructures();
@@ -172,10 +172,13 @@ export class WorldManager {
             this.game.ui.showMessage("Generating world...", 0);
         }
         
-        // Reduced pre-generation area for mobile performance
-        const preGenRadius = 200; // Reduced from 500 to 200 units
+        // Only generate a small area around the player for initial loading
+        const visibleRadius = 150; // Only generate what's immediately visible
         const chunkSize = this.terrainCache.chunkSize;
-        const chunksPerSide = Math.ceil(preGenRadius * 2 / chunkSize);
+        
+        // Calculate how many chunks we need to cover the visible area
+        const chunksRadius = Math.ceil(visibleRadius / chunkSize);
+        const chunksPerSide = chunksRadius * 2 + 1; // +1 for the center chunk
         
         // Track progress
         let totalChunks = chunksPerSide * chunksPerSide;
@@ -186,16 +189,15 @@ export class WorldManager {
             // Use requestAnimationFrame for better performance
             const generateNextBatch = () => {
                 if (chunksGenerated >= totalChunks) {
-                    // All chunks generated
+                    // Initial chunks generated
                     this.terrainCache.preGenerated = true;
-                    this.saveTerrainCache();
                     
                     // Hide loading message
                     if (this.game.ui) {
                         this.game.ui.hideMessage();
                     }
                     
-                    console.log("Terrain pre-generation complete!");
+                    console.debug("Initial terrain generation complete!");
                     resolve();
                     return;
                 }
@@ -208,8 +210,8 @@ export class WorldManager {
                     const z = chunksGenerated % chunksPerSide;
                     
                     // Convert to world coordinates (centered around origin)
-                    const worldX = (x - chunksPerSide/2) * chunkSize;
-                    const worldZ = (z - chunksPerSide/2) * chunkSize;
+                    const worldX = (x - chunksRadius) * chunkSize;
+                    const worldZ = (z - chunksRadius) * chunkSize;
                     
                     // Generate and cache the chunk
                     this.generateTerrainChunk(worldX, worldZ);
@@ -374,7 +376,7 @@ export class WorldManager {
     }
     
     /**
-     * Save the terrain cache to localStorage
+     * Save the terrain cache to localStorage with compression and quota management
      */
     saveTerrainCache() {
         if (!this.terrainCache.saveToLocalStorage) {
@@ -392,23 +394,93 @@ export class WorldManager {
             const centralChunks = Object.keys(this.terrainCache.chunks)
                 .filter(key => {
                     const [x, z] = key.split('_').map(Number);
-                    return Math.abs(x) <= 5 && Math.abs(z) <= 5; // Only save chunks within 5 chunks of origin
+                    return Math.abs(x) <= 3 && Math.abs(z) <= 3; // Reduced from 5 to 3 chunks of origin
                 })
-                .slice(0, 50); // Maximum 50 chunks
+                .slice(0, 25); // Reduced from 50 to 25 maximum chunks
             
             centralChunks.forEach(key => {
                 cacheToSave.chunks[key] = this.terrainCache.chunks[key];
             });
             
-            localStorage.setItem(this.terrainCache.localStorageKey, JSON.stringify(cacheToSave));
-            console.log("Terrain cache saved to localStorage");
+            // Compress the data before storing
+            this.storeWithFallback(cacheToSave);
+            console.debug("Terrain cache saved to storage");
         } catch (e) {
-            console.warn("Failed to save terrain cache to localStorage:", e);
+            console.warn("Failed to save terrain cache:", e);
+            // Mark as not pre-generated so it will regenerate next time
+            this.terrainCache.preGenerated = false;
         }
     }
     
     /**
-     * Load the terrain cache from localStorage
+     * Store data with compression and fallback mechanisms
+     * @param {Object} data - The data to store
+     * @returns {boolean} - True if storage was successful in some form
+     */
+    storeWithFallback(data) {
+        // If we've already hit storage limits and haven't cleared them, skip storage attempts
+        if (this.terrainCache.storageQuotaExceeded) {
+            console.debug("Skipping localStorage save due to previous quota issues");
+            return false;
+        }
+        
+        // Try to compress the data using JSON.stringify with minimal whitespace
+        const jsonString = JSON.stringify(data);
+        
+        try {
+            // Try to store in localStorage first
+            localStorage.setItem(this.terrainCache.localStorageKey, jsonString);
+            // Reset the quota exceeded flag if we succeed
+            this.terrainCache.storageQuotaExceeded = false;
+            return true;
+        } catch (e) {
+            // If localStorage fails, try to store a smaller subset
+            console.warn("localStorage quota exceeded, trying with reduced data");
+            
+            // Create an even smaller subset with just the preGenerated flag and minimal chunks
+            const reducedData = {
+                preGenerated: data.preGenerated,
+                chunks: {}
+            };
+            
+            // Take only the first 5 chunks (reduced from 10)
+            const minimalChunks = Object.keys(data.chunks).slice(0, 5);
+            minimalChunks.forEach(key => {
+                reducedData.chunks[key] = data.chunks[key];
+            });
+            
+            try {
+                // Try again with the reduced dataset
+                localStorage.setItem(this.terrainCache.localStorageKey, JSON.stringify(reducedData));
+                console.debug("Saved reduced terrain cache to localStorage");
+                return true;
+            } catch (e2) {
+                // If that still fails, try with just the preGenerated flag
+                try {
+                    localStorage.setItem(this.terrainCache.localStorageKey, JSON.stringify({ preGenerated: data.preGenerated }));
+                    console.debug("Saved minimal terrain cache to localStorage");
+                    return true;
+                } catch (e3) {
+                    // If all storage attempts fail, we'll have to regenerate next time
+                    console.warn("All storage attempts failed, terrain will be regenerated next time");
+                    
+                    // Set the quota exceeded flag to avoid repeated failed attempts
+                    this.terrainCache.storageQuotaExceeded = true;
+                    
+                    // Try to clear the item to free up space for next time
+                    try {
+                        localStorage.removeItem(this.terrainCache.localStorageKey);
+                    } catch (e4) {
+                        // At this point, we've done all we can
+                    }
+                    return false;
+                }
+            }
+        }
+    }
+    
+    /**
+     * Load the terrain cache from localStorage with error handling
      */
     loadTerrainCache() {
         if (!this.terrainCache.saveToLocalStorage) {
@@ -418,13 +490,40 @@ export class WorldManager {
         try {
             const cachedData = localStorage.getItem(this.terrainCache.localStorageKey);
             if (cachedData) {
-                const parsedData = JSON.parse(cachedData);
-                this.terrainCache.preGenerated = parsedData.preGenerated;
-                this.terrainCache.chunks = parsedData.chunks || {};
-                console.log("Terrain cache loaded from localStorage");
+                try {
+                    const parsedData = JSON.parse(cachedData);
+                    
+                    // Validate the data structure before using it
+                    if (typeof parsedData === 'object' && parsedData !== null) {
+                        // Set preGenerated flag if it exists
+                        if (typeof parsedData.preGenerated === 'boolean') {
+                            this.terrainCache.preGenerated = parsedData.preGenerated;
+                        }
+                        
+                        // Load chunks if they exist and are valid
+                        if (parsedData.chunks && typeof parsedData.chunks === 'object') {
+                            this.terrainCache.chunks = parsedData.chunks;
+                            console.debug(`Loaded ${Object.keys(parsedData.chunks).length} terrain chunks from localStorage`);
+                        }
+                        
+                        console.debug("Terrain cache loaded from localStorage");
+                    } else {
+                        console.warn("Invalid terrain cache format in localStorage");
+                        this.terrainCache.preGenerated = false;
+                    }
+                } catch (parseError) {
+                    console.warn("Failed to parse terrain cache from localStorage:", parseError);
+                    // Clear the corrupted data
+                    localStorage.removeItem(this.terrainCache.localStorageKey);
+                    this.terrainCache.preGenerated = false;
+                }
+            } else {
+                console.debug("No terrain cache found in localStorage");
+                this.terrainCache.preGenerated = false;
             }
         } catch (e) {
-            console.warn("Failed to load terrain cache from localStorage:", e);
+            console.warn("Failed to access localStorage for terrain cache:", e);
+            this.terrainCache.preGenerated = false;
         }
     }
     
@@ -473,7 +572,7 @@ export class WorldManager {
     }
     
     /**
-     * Load cached terrain data for the player's current area
+     * Dynamically load and unload terrain chunks based on player position
      * @param {THREE.Vector3} playerPosition - The player's current position
      */
     loadCachedTerrainForPlayer(playerPosition) {
@@ -485,9 +584,16 @@ export class WorldManager {
         // Track which chunks should be active
         const newActiveChunks = {};
         
+        // Determine visible radius based on performance settings
+        const visibleRadius = this.lowPerformanceMode ? 1 : this.chunkLoadRadius;
+        
         // Check if we have cached data for this chunk and surrounding chunks within load radius
-        for (let xOffset = -this.chunkLoadRadius; xOffset <= this.chunkLoadRadius; xOffset++) {
-            for (let zOffset = -this.chunkLoadRadius; zOffset <= this.chunkLoadRadius; zOffset++) {
+        for (let xOffset = -visibleRadius; xOffset <= visibleRadius; xOffset++) {
+            for (let zOffset = -visibleRadius; zOffset <= visibleRadius; zOffset++) {
+                // Skip chunks that are too far (create a circular loading area)
+                const distance = Math.sqrt(xOffset * xOffset + zOffset * zOffset);
+                if (distance > visibleRadius + 0.5) continue; // +0.5 to smooth the circle edge
+                
                 const chunkX = (playerChunkX + xOffset) * chunkSize;
                 const chunkZ = (playerChunkZ + zOffset) * chunkSize;
                 const chunkKey = `${playerChunkX + xOffset}_${playerChunkZ + zOffset}`;
@@ -502,7 +608,7 @@ export class WorldManager {
                 
                 // Only load objects if this chunk wasn't already active
                 if (!this.activeChunks[chunkKey]) {
-                    console.debug(`Loading chunk ${chunkKey} - reusing cached data`);
+                    console.debug(`Loading chunk ${chunkKey}`);
                     
                     // Use requestAnimationFrame to spread object creation across frames
                     requestAnimationFrame(() => {
@@ -530,31 +636,99 @@ export class WorldManager {
         
         // Update active chunks
         this.activeChunks = newActiveChunks;
+        
+        // Clean up excess chunks from memory if we have too many
+        this.limitCacheSize();
     }
     
     /**
-     * Unload objects from a chunk that is no longer active
+     * Unload a chunk and its objects from the scene
      * @param {string} chunkKey - The key of the chunk to unload
      */
     unloadChunk(chunkKey) {
-        // Unload structures in this chunk
-        this.structureManager.structures = this.structureManager.structures.filter(structure => {
-            // Keep structures that don't have a chunkKey or are in a different chunk
-            if (!structure.chunkKey || structure.chunkKey !== chunkKey) {
-                return true;
-            }
-            
-            // Remove the structure from the scene
-            if (structure.object && structure.object.parent) {
-                this.scene.remove(structure.object);
-            }
-            
-            return false;
-        });
+        // If we have cached structures for this chunk, mark them as not generated
+        if (this.terrainCache.chunks[chunkKey] && this.terrainCache.chunks[chunkKey].structures) {
+            this.terrainCache.chunks[chunkKey].structures.forEach(structure => {
+                if (structure.generated && structure.object) {
+                    // Remove the structure from the scene
+                    this.scene.remove(structure.object);
+                    structure.generated = false;
+                    structure.object = null;
+                }
+            });
+        }
         
-        // Unload environment objects in this chunk
-        // Use the proper method from EnvironmentManager to remove objects from a chunk
-        this.environmentManager.removeChunkObjects(chunkKey, false);
+        // If we have cached environment objects for this chunk, mark them as not generated
+        if (this.terrainCache.chunks[chunkKey] && this.terrainCache.chunks[chunkKey].environment) {
+            this.terrainCache.chunks[chunkKey].environment.forEach(envObj => {
+                if (envObj.generated && envObj.object) {
+                    // Remove the environment object from the scene
+                    this.scene.remove(envObj.object);
+                    envObj.generated = false;
+                    envObj.object = null;
+                }
+            });
+        }
+        
+        // Also clean up any structures in the structure manager
+        if (this.structureManager && this.structureManager.structures) {
+            this.structureManager.structures = this.structureManager.structures.filter(structure => {
+                // Keep structures that don't have a chunkKey or are in a different chunk
+                if (!structure.chunkKey || structure.chunkKey !== chunkKey) {
+                    return true;
+                }
+                
+                // Remove the structure from the scene
+                if (structure.object && structure.object.parent) {
+                    this.scene.remove(structure.object);
+                }
+                
+                return false;
+            });
+        }
+        
+        // Use the environment manager to remove objects from this chunk
+        if (this.environmentManager) {
+            this.environmentManager.removeChunkObjects(chunkKey, false);
+        }
+    }
+    
+    /**
+     * Manage memory by limiting the number of cached chunks
+     */
+    limitCacheSize() {
+        const chunks = Object.keys(this.terrainCache.chunks);
+        if (chunks.length > this.terrainCache.maxCachedChunks) {
+            console.debug(`Cleaning up excess chunks: ${chunks.length} > ${this.terrainCache.maxCachedChunks}`);
+            
+            // Sort chunks by distance from origin (player's starting point)
+            const sortedChunks = chunks.sort((a, b) => {
+                const [ax, az] = a.split('_').map(Number);
+                const [bx, bz] = b.split('_').map(Number);
+                
+                // Calculate distance from origin
+                const distA = Math.sqrt(ax * ax + az * az);
+                const distB = Math.sqrt(bx * bx + bz * bz);
+                
+                // Sort by distance (farthest first)
+                return distB - distA;
+            });
+            
+            // Remove chunks that are farthest from the origin
+            const chunksToRemove = chunks.length - this.terrainCache.maxCachedChunks;
+            for (let i = 0; i < chunksToRemove; i++) {
+                const chunkToRemove = sortedChunks[i];
+                
+                // Make sure we're not removing an active chunk
+                if (!this.activeChunks[chunkToRemove]) {
+                    // Unload the chunk first to clean up any objects
+                    this.unloadChunk(chunkToRemove);
+                    
+                    // Then remove it from the cache
+                    delete this.terrainCache.chunks[chunkToRemove];
+                }
+            }
+        }
     }
     
     /**
@@ -1596,14 +1770,14 @@ export class WorldManager {
      * @returns {Promise<boolean>} - True if loading was successful
      */
     async loadPreGeneratedMap(mapData, useChunking = false) {
-        console.log(`Loading pre-generated map${useChunking ? ' (chunked mode)' : ''}...`);
+        console.debug(`Loading pre-generated map${useChunking ? ' (chunked mode)' : ''}...`);
         
         try {
             let success;
             
             // Determine which loader to use based on map size and chunking flag
             if (useChunking || this.shouldUseChunkedLoading(mapData)) {
-                console.log('Using chunked map loader for large map');
+                console.debug('Using chunked map loader for large map');
                 success = await this.chunkedMapLoader.loadMap(mapData);
             } else {
                 // Use the traditional map loader for smaller maps
@@ -1615,7 +1789,7 @@ export class WorldManager {
                 this.terrainCache.preGenerated = true;
                 this.saveTerrainCache();
                 
-                console.log('Pre-generated map loaded successfully');
+                console.debug('Pre-generated map loaded successfully');
                 
                 // Show success message
                 if (this.game.ui) {
@@ -1652,7 +1826,7 @@ export class WorldManager {
         // Use chunked loading if there are more than 1000 objects
         const useChunking = totalObjects > 1000;
         
-        console.log(`Map contains ${totalObjects} objects. ${useChunking ? 'Using' : 'Not using'} chunked loading.`);
+        console.debug(`Map contains ${totalObjects} objects. ${useChunking ? 'Using' : 'Not using'} chunked loading.`);
         return useChunking;
     }
     
@@ -1663,14 +1837,14 @@ export class WorldManager {
      * @returns {Promise<boolean>} - True if loading was successful
      */
     async loadPreGeneratedMapFromFile(mapFilePath, useChunking = false) {
-        console.log(`Loading map from file: ${mapFilePath}${useChunking ? ' (chunked mode)' : ''}`);
+        console.debug(`Loading map from file: ${mapFilePath}${useChunking ? ' (chunked mode)' : ''}`);
         
         try {
             let result;
             
             // Check file size to determine if chunking should be used
             if (useChunking) {
-                console.log('Using chunked map loader for large map file');
+                console.debug('Using chunked map loader for large map file');
                 result = await this.chunkedMapLoader.loadMapFromFile(mapFilePath);
             } else {
                 // Try to load a small portion of the file first to check size
@@ -1682,7 +1856,7 @@ export class WorldManager {
                     // Check Content-Length header if available
                     const contentLength = response.headers.get('Content-Length');
                     if (contentLength && parseInt(contentLength) > 5 * 1024 * 1024) { // > 5MB
-                        console.log(`Large map detected (${Math.round(parseInt(contentLength)/1024/1024)}MB), using chunked loader`);
+                        console.debug(`Large map detected (${Math.round(parseInt(contentLength)/1024/1024)}MB), using chunked loader`);
                         result = await this.chunkedMapLoader.loadMapFromFile(mapFilePath);
                     } else {
                         // Use traditional loader for smaller maps
@@ -1697,7 +1871,7 @@ export class WorldManager {
             
             // Ensure terrain colors are updated after map is loaded
             if (result && this.zoneManager) {
-                console.log('Updating terrain colors after map load...');
+                console.debug('Updating terrain colors after map load...');
                 this.zoneManager.updateTerrainColors();
             }
             
@@ -1733,7 +1907,7 @@ export class WorldManager {
             // Reinitialize the world with procedural generation
             await this.init();
             
-            console.log('Map cleared, returned to procedural generation');
+            console.debug('Map cleared, returned to procedural generation');
             
             if (this.game.ui) {
                 this.game.ui.showMessage('Returned to procedural world', 3000);

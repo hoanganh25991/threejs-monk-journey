@@ -40,7 +40,7 @@ function ensureMapThemeInfo(mapData, theme) {
  * Generate all sample maps
  */
 async function generateAllSampleMaps() {
-    console.log('Generating sample maps for all themes...\n');
+    console.debug('Generating sample maps for all themes...\n');
     
     const outputDir = path.join(process.cwd(), 'assets/maps');
     if (!fs.existsSync(outputDir)) {
@@ -51,7 +51,7 @@ async function generateAllSampleMaps() {
     
     // Generate a map for each theme
     for (const [themeKey, theme] of Object.entries(MAP_THEMES)) {
-        console.log(`\n=== Generating ${theme.name} ===`);
+        console.debug(`\n=== Generating ${theme.name} ===`);
         
         const generator = new MapGenerator();
         
@@ -69,7 +69,7 @@ async function generateAllSampleMaps() {
                     bridgeCount: 4
                 }
             };
-            console.log('  - Applying significantly reduced tree density for Dark Forest sample');
+            console.debug('  - Applying significantly reduced tree density for Dark Forest sample');
         }
         
         const mapData = generator.generateMap(themeKey, options);
@@ -97,12 +97,12 @@ async function generateAllSampleMaps() {
         // Generate minimap data and images
         const minimapResult = minimapGenerator.generate(baseFilename);
         
-        console.log(`✓ ${theme.name} saved to: ${filename}`);
-        console.log(`  - Zones: ${mapData.zones.length}`);
-        console.log(`  - Structures: ${mapData.structures.length}`);
-        console.log(`  - Paths: ${mapData.paths.length}`);
-        console.log(`  - Environment objects: ${mapData.environment.length}`);
-        console.log(`  - Minimap generated: ${minimapResult.imageFiles.length} images`);
+        console.debug(`✓ ${theme.name} saved to: ${filename}`);
+        console.debug(`  - Zones: ${mapData.zones.length}`);
+        console.debug(`  - Structures: ${mapData.structures.length}`);
+        console.debug(`  - Paths: ${mapData.paths.length}`);
+        console.debug(`  - Environment objects: ${mapData.environment.length}`);
+        console.debug(`  - Minimap generated: ${minimapResult.imageFiles.length} images`);
         
         // Get the highest resolution minimap image for preview
         const highestResImage = minimapResult.imageFiles.reduce((highest, current) => {
@@ -141,10 +141,10 @@ async function generateAllSampleMaps() {
     const indexPath = path.join(outputDir, 'index.json');
     fs.writeFileSync(indexPath, JSON.stringify(indexData, null, 2));
     
-    console.log(`\n=== Generation Complete ===`);
-    console.log(`Generated ${generatedMaps.length} sample maps`);
-    console.log(`Index file created: index.json`);
-    console.log(`All files saved to: ${outputDir}`);
+    console.debug(`\n=== Generation Complete ===`);
+    console.debug(`Generated ${generatedMaps.length} sample maps`);
+    console.debug(`Index file created: index.json`);
+    console.debug(`All files saved to: ${outputDir}`);
     
     return generatedMaps;
 }
@@ -154,7 +154,7 @@ async function generateAllSampleMaps() {
  * Creates a set of maps with randomized parameters for each theme
  */
 async function generateRandomMaps(count = 20) {
-    console.log(`Generating ${count} random maps with unique variations...\n`);
+    console.debug(`Generating ${count} random maps with unique variations...\n`);
     
     const outputDir = path.join(process.cwd(), 'assets/maps');
     if (!fs.existsSync(outputDir)) {
@@ -256,11 +256,11 @@ async function generateRandomMaps(count = 20) {
         // Create a unique seed
         const seed = Math.floor(Math.random() * 1000000);
         
-        console.log(`\n=== Generating Random Map ${i+1}/${count} ===`);
-        console.log(`Theme: ${theme.name}`);
-        console.log(`Variation: ${variation.name}`);
-        console.log(`Map Size: ${mapSize}`);
-        console.log(`Seed: ${seed}`);
+        console.debug(`\n=== Generating Random Map ${i+1}/${count} ===`);
+        console.debug(`Theme: ${theme.name}`);
+        console.debug(`Variation: ${variation.name}`);
+        console.debug(`Map Size: ${mapSize}`);
+        console.debug(`Seed: ${seed}`);
         
         // Create custom options by combining theme features with variation
         let themeFeatures = { ...theme.features };
@@ -269,7 +269,7 @@ async function generateRandomMaps(count = 20) {
         if (themeKey === 'DARK_FOREST') {
             // Reduce tree density for Dark Forest to prevent excessive file size and improve performance
             themeFeatures.treeDensity = Math.min(themeFeatures.treeDensity, 0.15);
-            console.log('  - Applying significantly reduced tree density for Dark Forest');
+            console.debug('  - Applying significantly reduced tree density for Dark Forest');
         }
         
         const options = {
@@ -311,12 +311,12 @@ async function generateRandomMaps(count = 20) {
         // Generate minimap data and images
         const minimapResult = minimapGenerator.generate(baseFilename);
         
-        console.log(`✓ ${mapName} saved to: ${filename}`);
-        console.log(`  - Zones: ${mapData.zones.length}`);
-        console.log(`  - Structures: ${mapData.structures.length}`);
-        console.log(`  - Paths: ${mapData.paths.length}`);
-        console.log(`  - Environment objects: ${mapData.environment.length}`);
-        console.log(`  - Minimap generated: ${minimapResult.imageFiles.length} images`);
+        console.debug(`✓ ${mapName} saved to: ${filename}`);
+        console.debug(`  - Zones: ${mapData.zones.length}`);
+        console.debug(`  - Structures: ${mapData.structures.length}`);
+        console.debug(`  - Paths: ${mapData.paths.length}`);
+        console.debug(`  - Environment objects: ${mapData.environment.length}`);
+        console.debug(`  - Minimap generated: ${minimapResult.imageFiles.length} images`);
         
         // Get the highest resolution minimap image for preview
         const highestResImage = minimapResult.imageFiles.reduce((highest, current) => {
@@ -358,11 +358,11 @@ async function generateRandomMaps(count = 20) {
         // Create a unique seed
         const seed = Math.floor(Math.random() * 1000000);
         
-        console.log(`\n=== Generating Custom Theme Map ${Math.floor(count * 0.7) + i + 1}/${count} ===`);
-        console.log(`Theme: ${customTheme.name}`);
-        console.log(`Description: ${customTheme.description}`);
-        console.log(`Map Size: ${mapSize}`);
-        console.log(`Seed: ${seed}`);
+        console.debug(`\n=== Generating Custom Theme Map ${Math.floor(count * 0.7) + i + 1}/${count} ===`);
+        console.debug(`Theme: ${customTheme.name}`);
+        console.debug(`Description: ${customTheme.description}`);
+        console.debug(`Map Size: ${mapSize}`);
+        console.debug(`Seed: ${seed}`);
         
         // Create custom options
         let baseThemeFeatures = { ...MAP_THEMES[customTheme.baseTheme].features };
@@ -371,7 +371,7 @@ async function generateRandomMaps(count = 20) {
         if (customTheme.baseTheme === 'DARK_FOREST' || customTheme.mixinTheme === 'DARK_FOREST') {
             // Reduce tree density for Dark Forest to prevent excessive file size
             baseThemeFeatures.treeDensity = Math.min(baseThemeFeatures.treeDensity || 0, 0.2);
-            console.log('  - Applying reduced tree density for Dark Forest component');
+            console.debug('  - Applying reduced tree density for Dark Forest component');
         }
         
         const options = {
@@ -425,12 +425,12 @@ async function generateRandomMaps(count = 20) {
             return (!highest || current.resolution > highest.resolution) ? current : highest;
         }, null);
         
-        console.log(`✓ ${mapName} saved to: ${filename}`);
-        console.log(`  - Minimap generated: ${minimapResult.imageFiles.length} images`);
-        console.log(`  - Zones: ${mapData.zones.length}`);
-        console.log(`  - Structures: ${mapData.structures.length}`);
-        console.log(`  - Paths: ${mapData.paths.length}`);
-        console.log(`  - Environment objects: ${mapData.environment.length}`);
+        console.debug(`✓ ${mapName} saved to: ${filename}`);
+        console.debug(`  - Minimap generated: ${minimapResult.imageFiles.length} images`);
+        console.debug(`  - Zones: ${mapData.zones.length}`);
+        console.debug(`  - Structures: ${mapData.structures.length}`);
+        console.debug(`  - Paths: ${mapData.paths.length}`);
+        console.debug(`  - Environment objects: ${mapData.environment.length}`);
         
         // Create map entry for index
         generatedMaps.push({
@@ -480,10 +480,10 @@ async function generateRandomMaps(count = 20) {
     // Write updated index
     fs.writeFileSync(indexPath, JSON.stringify(indexData, null, 2));
     
-    console.log(`\n=== Random Map Generation Complete ===`);
-    console.log(`Generated ${generatedMaps.length} random maps`);
-    console.log(`Index file updated: index.json`);
-    console.log(`All files saved to: ${outputDir}`);
+    console.debug(`\n=== Random Map Generation Complete ===`);
+    console.debug(`Generated ${generatedMaps.length} random maps`);
+    console.debug(`Index file updated: index.json`);
+    console.debug(`All files saved to: ${outputDir}`);
     
     return generatedMaps;
 }
@@ -492,7 +492,7 @@ async function generateRandomMaps(count = 20) {
  * Generate a custom map with specific parameters
  */
 function generateCustomMap(themeName, options = {}) {
-    console.log(`Generating custom ${themeName} map...`);
+    console.debug(`Generating custom ${themeName} map...`);
     
     const generator = new MapGenerator();
     
@@ -538,8 +538,8 @@ function generateCustomMap(themeName, options = {}) {
     // Update index.json with the new map
     updateMapIndex(themeName, filename, mapData, minimapResult);
     
-    console.log(`Custom map generated: ${filepath}`);
-    console.log(`Minimap generated: ${minimapResult.imageFiles.length} images`);
+    console.debug(`Custom map generated: ${filepath}`);
+    console.debug(`Minimap generated: ${minimapResult.imageFiles.length} images`);
     
     return { mapData, filepath, minimap: minimapResult };
 }
@@ -602,7 +602,7 @@ function updateMapIndex(themeName, filename, mapData, minimapResult = null) {
     
     // Write updated index
     fs.writeFileSync(indexPath, JSON.stringify(indexData, null, 2));
-    console.log(`Index file updated with new map: ${mapEntry.name}`);
+    console.debug(`Index file updated with new map: ${mapEntry.name}`);
 }
 
 /**
@@ -632,7 +632,7 @@ function main() {
             const themeName = args[1];
             if (!themeName || !MAP_THEMES[themeName.toUpperCase()]) {
                 console.error('Please specify a valid theme name');
-                console.log('Available themes:', Object.keys(MAP_THEMES).join(', '));
+                console.debug('Available themes:', Object.keys(MAP_THEMES).join(', '));
                 return;
             }
             
@@ -660,31 +660,31 @@ function main() {
             break;
             
         case 'list':
-            console.log('Available map themes:');
+            console.debug('Available map themes:');
             Object.entries(MAP_THEMES).forEach(([key, theme]) => {
-                console.log(`  ${key}: ${theme.description}`);
+                console.debug(`  ${key}: ${theme.description}`);
             });
             break;
             
         default:
-            console.log('Map Generator Commands:');
-            console.log('  all                           - Generate sample maps for all themes');
-            console.log('  random [count]                - Generate multiple random maps with variations (default: 20)');
-            console.log('  random-themes [count]         - Generate maps with completely random themes and colors (default: 20)');
-            console.log('  custom <THEME> [options]      - Generate a custom map');
-            console.log('  list                          - List available themes');
-            console.log('');
-            console.log('Custom map options:');
-            console.log('  --seed <number>               - Set random seed');
-            console.log('  --size <number>               - Set map size');
-            console.log('  --filename <name>             - Set output filename');
-            console.log('');
-            console.log('Examples:');
-            console.log('  node generate-sample-maps.js all');
-            console.log('  node generate-sample-maps.js random 30');
-            console.log('  node generate-sample-maps.js random-themes 5');
-            console.log('  node generate-sample-maps.js custom DARK_FOREST --seed 12345');
-            console.log('  node generate-sample-maps.js custom LAVA_ZONE --size 2000 --filename my_lava_map.json');
+            console.debug('Map Generator Commands:');
+            console.debug('  all                           - Generate sample maps for all themes');
+            console.debug('  random [count]                - Generate multiple random maps with variations (default: 20)');
+            console.debug('  random-themes [count]         - Generate maps with completely random themes and colors (default: 20)');
+            console.debug('  custom <THEME> [options]      - Generate a custom map');
+            console.debug('  list                          - List available themes');
+            console.debug('');
+            console.debug('Custom map options:');
+            console.debug('  --seed <number>               - Set random seed');
+            console.debug('  --size <number>               - Set map size');
+            console.debug('  --filename <name>             - Set output filename');
+            console.debug('');
+            console.debug('Examples:');
+            console.debug('  node generate-sample-maps.js all');
+            console.debug('  node generate-sample-maps.js random 30');
+            console.debug('  node generate-sample-maps.js random-themes 5');
+            console.debug('  node generate-sample-maps.js custom DARK_FOREST --seed 12345');
+            console.debug('  node generate-sample-maps.js custom LAVA_ZONE --size 2000 --filename my_lava_map.json');
     }
 }
 
@@ -693,7 +693,7 @@ function main() {
  * Creates a set of maps with randomized themes, colors, and parameters
  */
 async function generateRandomThemedMaps(count = 20) {
-    console.log(`Generating ${count} completely random themed maps...\n`);
+    console.debug(`Generating ${count} completely random themed maps...\n`);
     
     const outputDir = path.join(process.cwd(), 'assets/maps');
     if (!fs.existsSync(outputDir)) {
@@ -728,7 +728,7 @@ async function generateRandomThemedMaps(count = 20) {
         // Create a description
         const description = `A unique ${themeNameSuffixes[suffixIndex].toLowerCase()} with ${themeNamePrefixes[prefixIndex].toLowerCase()} characteristics`;
         
-        console.log(`\n=== Generating Random Theme ${i+1}/${count}: ${themeName} ===`);
+        console.debug(`\n=== Generating Random Theme ${i+1}/${count}: ${themeName} ===`);
         
         // Create a random seed
         const seed = Math.floor(Math.random() * 1000000);
@@ -743,9 +743,9 @@ async function generateRandomThemedMaps(count = 20) {
         const mapSize = mapSizes[Math.floor(Math.random() * mapSizes.length)];
         generator.mapSize = mapSize;
         
-        console.log(`Theme: ${themeName}`);
-        console.log(`Map Size: ${mapSize}`);
-        console.log(`Seed: ${seed}`);
+        console.debug(`Theme: ${themeName}`);
+        console.debug(`Map Size: ${mapSize}`);
+        console.debug(`Seed: ${seed}`);
         
         // Generate a completely random theme
         const randomTheme = generator.generateRandomTheme(themeName, description);
@@ -779,12 +779,12 @@ async function generateRandomThemedMaps(count = 20) {
         // Generate minimap data and images
         const minimapResult = minimapGenerator.generate(baseFilename);
         
-        console.log(`✓ ${themeName} saved to: ${filename}`);
-        console.log(`  - Zones: ${mapData.zones.length}`);
-        console.log(`  - Structures: ${mapData.structures.length}`);
-        console.log(`  - Paths: ${mapData.paths.length}`);
-        console.log(`  - Environment objects: ${mapData.environment.length}`);
-        console.log(`  - Minimap generated: ${minimapResult.imageFiles.length} images`);
+        console.debug(`✓ ${themeName} saved to: ${filename}`);
+        console.debug(`  - Zones: ${mapData.zones.length}`);
+        console.debug(`  - Structures: ${mapData.structures.length}`);
+        console.debug(`  - Paths: ${mapData.paths.length}`);
+        console.debug(`  - Environment objects: ${mapData.environment.length}`);
+        console.debug(`  - Minimap generated: ${minimapResult.imageFiles.length} images`);
         
         // Get the highest resolution minimap image for preview
         const highestResImage = minimapResult.imageFiles.reduce((highest, current) => {
@@ -827,10 +827,10 @@ async function generateRandomThemedMaps(count = 20) {
         maps: generatedMaps
     }, null, 2));
     
-    console.log(`\n=== Random Theme Generation Complete ===`);
-    console.log(`Generated ${generatedMaps.length} random themed maps`);
-    console.log(`Index file created: random_themes_index.json`);
-    console.log(`All files saved to: ${outputDir}`);
+    console.debug(`\n=== Random Theme Generation Complete ===`);
+    console.debug(`Generated ${generatedMaps.length} random themed maps`);
+    console.debug(`Index file created: random_themes_index.json`);
+    console.debug(`All files saved to: ${outputDir}`);
     
     return generatedMaps;
 }

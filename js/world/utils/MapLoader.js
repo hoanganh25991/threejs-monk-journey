@@ -21,7 +21,7 @@ export class MapLoader {
      * @returns {Promise<boolean>} - True if loading was successful
      */
     async loadMap(mapData) {
-        console.log(`Loading map: ${mapData.theme.name}`);
+        console.debug(`Loading map: ${mapData.theme.name}`);
         
         try {
             // Clear existing world content
@@ -41,7 +41,7 @@ export class MapLoader {
             await this.loadStructures(mapData.structures);
             await this.loadEnvironment(mapData.environment);
             
-            console.log(`Map "${mapData.theme.name}" loaded successfully`);
+            console.debug(`Map "${mapData.theme.name}" loaded successfully`);
             return true;
             
         } catch (error) {
@@ -70,7 +70,7 @@ export class MapLoader {
      * Clear the existing world
      */
     async clearWorld() {
-        console.log('Clearing existing world...');
+        console.debug('Clearing existing world...');
         
         // Clear existing structures
         if (this.worldManager.structureManager) {
@@ -105,7 +105,7 @@ export class MapLoader {
      */
     clearProceduralPaths() {
         if (this.worldManager.paths && this.worldManager.paths.length > 0) {
-            console.log(`Clearing ${this.worldManager.paths.length} procedural paths...`);
+            console.debug(`Clearing ${this.worldManager.paths.length} procedural paths...`);
             
             // Remove all procedural path meshes from scene
             this.worldManager.paths.forEach(pathMesh => {
@@ -131,7 +131,7 @@ export class MapLoader {
         
         // Clear loaded map paths
         if (this.worldManager.loadedMapPaths && this.worldManager.loadedMapPaths.length > 0) {
-            console.log(`Clearing ${this.worldManager.loadedMapPaths.length} loaded map paths...`);
+            console.debug(`Clearing ${this.worldManager.loadedMapPaths.length} loaded map paths...`);
             this.worldManager.loadedMapPaths = [];
         }
         
@@ -154,7 +154,7 @@ export class MapLoader {
      * @param {Array} zones - Zone data array
      */
     async loadZones(zones) {
-        console.log(`Loading ${zones.length} zones...`);
+        console.debug(`Loading ${zones.length} zones...`);
         
         if (!this.worldManager.zoneManager) {
             console.warn('ZoneManager not available');
@@ -223,7 +223,7 @@ export class MapLoader {
      * @param {Array} paths - Path data array
      */
     async loadPaths(paths) {
-        console.log(`Loading ${paths.length} paths...`);
+        console.debug(`Loading ${paths.length} paths...`);
         
         // Disable procedural path generation while loading map paths
         this.disableProceduralPathGeneration();
@@ -235,7 +235,7 @@ export class MapLoader {
             this.registerPathWithWorldManager(pathData, pathGroup);
         });
         
-        console.log(`Loaded ${paths.length} map paths successfully`);
+        console.debug(`Loaded ${paths.length} map paths successfully`);
     }
 
     /**
@@ -396,7 +396,7 @@ export class MapLoader {
             this.worldManager.originalPathGenerationDistance = this.worldManager.pathGenerationDistance;
             this.worldManager.pathGenerationDistance = Number.MAX_SAFE_INTEGER;
             
-            console.log('Procedural path generation disabled - using map paths');
+            console.debug('Procedural path generation disabled - using map paths');
         }
     }
 
@@ -415,7 +415,7 @@ export class MapLoader {
                 this.worldManager.pathGenerationDistance = 30; // Default value
             }
             
-            console.log('Procedural path generation re-enabled');
+            console.debug('Procedural path generation re-enabled');
         }
     }
 
@@ -457,7 +457,7 @@ export class MapLoader {
             pathGroup: pathGroup
         });
 
-        console.log(`Registered path ${pathData.id} with ${pathData.points.length} points`);
+        console.debug(`Registered path ${pathData.id} with ${pathData.points.length} points`);
     }
 
     /**
@@ -465,7 +465,7 @@ export class MapLoader {
      * @param {Array} structures - Structure data array
      */
     async loadStructures(structures) {
-        console.log(`Loading ${structures.length} structures...`);
+        console.debug(`Loading ${structures.length} structures...`);
         
         if (!this.worldManager.structureManager) {
             console.warn('StructureManager not available');
@@ -1082,7 +1082,7 @@ export class MapLoader {
      * @param {Array} environment - Environment data array
      */
     async loadEnvironment(environment) {
-        console.log(`Loading ${environment.length} environment objects...`);
+        console.debug(`Loading ${environment.length} environment objects...`);
         
         if (!this.worldManager.environmentManager) {
             console.warn('EnvironmentManager not available');
@@ -1599,7 +1599,7 @@ export class MapLoader {
         if (this.currentMap) {
             await this.clearWorld();
             this.currentMap = null;
-            console.log('Current map cleared');
+            console.debug('Current map cleared');
         }
     }
 }

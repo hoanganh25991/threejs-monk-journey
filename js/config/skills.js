@@ -371,6 +371,32 @@ export const NORMAL_SKILLS = [
         speedBoostDuration: 5, // 10 seconds of speed boost
         isCustomSkill: true,
     },
+    {
+        name: 'Bul Shadow Clone',
+        description: 'Creates multiple shadow clones of the monk in yellow theme color. These transparent clones automatically seek out enemies, attack them, and can absorb damage.',
+        type: 'summon',
+        damage: 25, // Moderate damage for each clone
+        manaCost: 45, // Higher mana cost for powerful ability
+        cooldown: 0.2, // Standard cooldown
+        range: 0, // Centered on player
+        radius: 15, // Large radius for clones to operate in
+        duration: 12, // Duration in seconds
+        get color() { return SKILL_ICONS["Shadow Allies"]?.color || "#ffdd00"; }, // Yellow theme color
+        get icon() { return SKILL_ICONS["Shadow Allies"]?.emoji || "👥"; }, // Shadow emoji as fallback
+        sounds: {
+            cast: SKILL_SOUNDS.mysticAlly.id, // Mystical summoning sound
+            impact: SKILL_SOUNDS.allySummonComplete.id, // Sound of clone materializing
+            end: SKILL_SOUNDS.allyDismiss.id // Sound of clones disappearing
+        },
+        allyCount: 5, // Number of shadow clones to summon
+        cloneHealth: 50, // Health points for each clone
+        cloneAttackDamage: 15, // Attack damage for each clone
+        cloneSpeed: 8, // Movement speed of clones
+        cloneTransparency: 0.7, // Transparency level (0-1)
+        cloneColor: "#ffdd00", // Yellow theme color
+        autoTargetEnemies: true, // Clones automatically target enemies
+        isCustomSkill: true,
+    },
     // TODO: Add more skills here
 ];
 

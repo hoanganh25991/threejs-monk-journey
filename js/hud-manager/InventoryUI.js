@@ -1084,7 +1084,7 @@ export class InventoryUI extends UIComponent {
             // Close inventory after teleporting
             this.toggleInventory();
             
-            console.log('Player teleported to origin (0,0,0)');
+            console.debug('Player teleported to origin (0,0,0)');
         } else {
             console.error('Cannot teleport: Game or player not available');
             if (this.game.hudManager) {

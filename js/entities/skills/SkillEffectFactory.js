@@ -15,6 +15,7 @@ import { DeadlyReachEffect } from './DeadlyReachEffect.js';
 import { ImprisonedFistsEffect } from './ImprisonedFistsEffect.js';
 import { BulPalmEffect } from './BulPalmEffect.js';
 import { BulBreathOfHeavenEffect } from './BulBreathOfHeavenEffect.js';
+import { BulShadowCloneEffect } from './BulShadowCloneEffect.js';
 
 // Import Breath of Heaven variant effects
 import { CircleOfLifeEffect } from './variants/BreathOfHeaven/CircleOfLifeEffect.js';
@@ -223,6 +224,10 @@ export class SkillEffectFactory {
             case 'Bul Breath Of Heaven':
                 console.debug(`Creating BulBreathOfHeavnEffect for ${skill.name}`);
                 effect = new BulBreathOfHeavenEffect(skill);
+                break;
+            case 'Bul Shadow Clone':
+                console.debug(`Creating BulShadowCloneEffect for ${skill.name}`);
+                effect = new BulShadowCloneEffect(skill);
                 break;
             default:
                 console.debug(`Creating default SkillEffect for ${skill.name}`);

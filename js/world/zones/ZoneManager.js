@@ -32,7 +32,7 @@ export class ZoneManager {
      */
     setThemeColors(themeColors) {
         this.currentThemeColors = themeColors;
-        console.log('Theme colors set:', themeColors);
+        console.debug('Theme colors set:', themeColors);
     }
     
     /**
@@ -50,7 +50,7 @@ export class ZoneManager {
      * This ensures terrain colors match the zone types
      */
     updateTerrainColors() {
-        console.log('Updating terrain colors based on zones...');
+        console.debug('Updating terrain colors based on zones...');
         
         if (!this.worldManager || !this.worldManager.terrainManager) {
             console.warn('TerrainManager not available for color updates');
@@ -70,7 +70,7 @@ export class ZoneManager {
             // Sort zones by radius (descending) to find the largest zone
             const sortedZones = [...this.zones].sort((a, b) => b.radius - a.radius);
             mainZone = sortedZones[0];
-            console.log(`Main theme zone: ${mainZone.name} with radius ${mainZone.radius}`);
+            console.debug(`Main theme zone: ${mainZone.name} with radius ${mainZone.radius}`);
         }
         
         // Update each terrain chunk's color based on its position
@@ -125,7 +125,7 @@ export class ZoneManager {
             this.worldManager.terrainManager.colorTerrainUniform(baseTerrain, mainZoneType, this.currentThemeColors);
         }
         
-        console.log('Terrain colors updated successfully');
+        console.debug('Terrain colors updated successfully');
     }
     
     /**
