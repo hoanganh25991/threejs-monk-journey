@@ -114,7 +114,7 @@ export class WorldManager {
             
             // Notify other systems that the world has changed
             if (this.game && this.game.events) {
-                this.game.events.emit('worldChanged', {
+                this.game.events.dispatch('worldChanged', {
                     mapId: this.currentMapId,
                     mapName: this.currentMapName,
                     filename: this.currentMapFilename
@@ -184,7 +184,7 @@ export class WorldManager {
             
             // Notify other systems that the world has changed
             if (this.game && this.game.events) {
-                this.game.events.emit('worldChanged', {
+                this.game.events.dispatch('worldChanged', {
                     mapId: this.currentMapId,
                     mapName: this.currentMapName,
                     filename: this.currentMapFilename
@@ -222,7 +222,7 @@ export class WorldManager {
             
             // Notify other systems that the world has changed
             if (this.game && this.game.events) {
-                this.game.events.emit('worldChanged', {
+                this.game.events.dispatch('worldChanged', {
                     mapId: this.currentMapId,
                     mapName: this.currentMapName,
                     filename: this.currentMapFilename
