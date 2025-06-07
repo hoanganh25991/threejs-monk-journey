@@ -535,8 +535,38 @@ function generateCustomMap(themeName, options = {}) {
         generator.rng = generator.createSeededRandom(options.seed);
     }
     
+    // Handle map size and scale features appropriately
     if (options.mapSize) {
         generator.mapSize = options.mapSize;
+        
+        // For very small maps (less than 100 units), scale down object density
+        if (options.mapSize < 100) {
+            console.debug(`Small map detected (size: ${options.mapSize}). Scaling down object density...`);
+            
+            // If no features object exists, create one
+            if (!options.features) {
+                options.features = {};
+            }
+            
+            // Calculate scale factor based on map size (smaller maps need more aggressive scaling)
+            const scaleFactor = Math.max(0.05, options.mapSize / 500);
+            console.debug(`Using scale factor: ${scaleFactor.toFixed(3)}`);
+            
+            // Scale down density parameters
+            options.features.treeDensity = (options.features.treeDensity || 0.8) * scaleFactor;
+            options.features.villageCount = Math.max(1, Math.floor((options.features.villageCount || 3) * scaleFactor));
+            options.features.towerCount = Math.max(1, Math.floor((options.features.towerCount || 5) * scaleFactor));
+            options.features.ruinsCount = Math.max(0, Math.floor((options.features.ruinsCount || 2) * scaleFactor));
+            options.features.bridgeCount = Math.max(0, Math.floor((options.features.bridgeCount || 4) * scaleFactor));
+            
+            // Always enable tree clustering for small maps
+            options.features.useTreeClustering = true;
+            options.features.clusterThreshold = 3; // Lower threshold for small maps
+            options.features.clusterRadius = Math.min(10, options.mapSize / 10); // Scale radius with map size
+            options.features.maxTreesPerCluster = Math.min(10, options.mapSize / 5); // Scale max trees with map size
+            
+            console.debug(`Adjusted parameters for small map:`, options.features);
+        }
     }
     
     const mapData = generator.generateMap(themeName, options);

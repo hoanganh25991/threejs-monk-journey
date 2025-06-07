@@ -9,13 +9,20 @@ import { LOD } from 'three';
 export class TreeCluster {
     /**
      * Create a new tree cluster
-     * @param {string} zoneType - The type of zone (Forest, Desert, etc.)
-     * @param {Array} treePositions - Array of positions for trees in the cluster
-     * @param {Object} options - Additional options for the cluster
+     * @param {THREE.Scene} scene - The scene to add the cluster to
+     * @param {Object} worldManager - The world manager
+     * @param {Object} data - Data object containing cluster configuration
      */
-    constructor(zoneType = 'Forest', treePositions = [], options = {}) {
-        this.zoneType = zoneType;
-        this.treePositions = treePositions;
+    constructor(scene, worldManager, data = null) {
+        this.scene = scene;
+        this.worldManager = worldManager;
+        
+        // Ensure data is an object
+        const safeData = data || {};
+        
+        // Extract data from the data object
+        this.zoneType = safeData.zoneType || 'Forest';
+        this.treePositions = Array.isArray(safeData.positions) ? safeData.positions : [];
         this.options = Object.assign({
             minSize: 0.7,
             maxSize: 1.3,
@@ -23,7 +30,7 @@ export class TreeCluster {
             highDetailDistance: 50,
             mediumDetailDistance: 100,
             lowDetailDistance: 200
-        }, options);
+        }, safeData.options || {});
         
         // The main group containing all trees
         this.group = new THREE.Group();
@@ -75,6 +82,13 @@ export class TreeCluster {
         
         // Calculate bounding box
         this.boundingBox.setFromObject(this.group);
+        
+        // Add the group to the scene
+        if (this.scene) {
+            this.scene.add(this.group);
+        }
+        
+        return this.group;
     }
     
     /**

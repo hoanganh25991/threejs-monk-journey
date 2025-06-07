@@ -23,7 +23,8 @@ export class MagicalStone extends EnvironmentObject {
         this.pulseEffect = Math.random() > 0.3; // 70% chance to have pulsing effect
         
         // Get zone type from world manager if available
-        this.zoneType = worldManager?.getCurrentZoneType() || 'Forest';
+        const zone = worldManager?.getZoneAt?.(position);
+        this.zoneType = zone?.name || 'Forest';
         
         // Create the stone
         this.object = this.create();

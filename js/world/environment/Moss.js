@@ -22,8 +22,16 @@ export class Moss extends EnvironmentObject {
         this.hasMushrooms = Math.random() > 0.6; // 40% chance to have small mushrooms
         this.hasGlow = Math.random() > 0.7; // 30% chance to have bioluminescent properties
         
-        // Get zone type from world manager if available
-        this.zoneType = worldManager?.getCurrentZoneType() || 'Forest';
+        // Get zone type from world manager's zone manager if available
+        this.zoneType = 'Forest'; // Default to Forest
+        
+        // Try to get the zone type from the zone manager
+        if (worldManager && worldManager.zoneManager) {
+            const zone = worldManager.zoneManager.getZoneAt(position);
+            if (zone && zone.name) {
+                this.zoneType = zone.name;
+            }
+        }
         
         // Create the moss
         this.object = this.create();

@@ -1081,8 +1081,21 @@ class MapGenerator {
      * Generate final scattered objects to fill any remaining gaps
      */
     generateScatteredObjects(theme) {
-        // Number of scattered objects based on map size - significantly increased
-        const objectCount = Math.floor(this.mapSize * 2.0); // Increased even more for density
+        // Determine if this is a small map that needs special handling
+        const isSmallMap = this.mapSize < 100;
+        
+        // Calculate object count based on map size with quadratic scaling for small maps
+        // This ensures very small maps (e.g., size 50) have proportionally fewer objects
+        let objectCount;
+        if (isSmallMap) {
+            // For small maps, use quadratic scaling to reduce object count more aggressively
+            const scaleFactor = Math.pow(this.mapSize / 500, 2);
+            objectCount = Math.floor(this.mapSize * 2.0 * scaleFactor);
+            console.debug(`Small map detected (${this.mapSize}). Reducing scattered objects to ${objectCount} (scale: ${scaleFactor.toFixed(3)})`);
+        } else {
+            // For normal maps, use linear scaling
+            objectCount = Math.floor(this.mapSize * 2.0);
+        }
         
         // Define theme-specific object types with weights
         const objectTypes = this.getThemeSpecificScatteredObjects(theme);
@@ -1915,6 +1928,18 @@ class MapGenerator {
         const clusterRadius = theme.features?.clusterRadius || 20;
         const maxTreesPerCluster = theme.features?.maxTreesPerCluster || 25;
         
+        // Determine if this is a small map that needs special handling
+        const isSmallMap = this.mapSize < 100;
+        
+        // Adjust density for small maps
+        let adjustedDensity = density;
+        if (isSmallMap) {
+            // For small maps, use quadratic scaling to reduce tree density more aggressively
+            const scaleFactor = Math.pow(this.mapSize / 500, 2);
+            adjustedDensity = density * scaleFactor;
+            console.debug(`Small map detected (${this.mapSize}). Reducing path tree density to ${adjustedDensity.toFixed(3)} (scale: ${scaleFactor.toFixed(3)})`);
+        }
+        
         console.debug(`Generating trees along paths with tree clustering ${useTreeClustering ? 'enabled' : 'disabled'}`);
         
         // Process each path segment
@@ -1930,8 +1955,8 @@ class MapGenerator {
                         Math.pow(nextPoint.z - point.z, 2)
                     );
                     
-                    // Reduce tree density for better performance
-                    const treeCount = Math.floor(distance * density / 4); // Lower density
+                    // Calculate tree count based on adjusted density
+                    const treeCount = Math.floor(distance * adjustedDensity / 4); // Lower density
                     
                     // Create tree positions for left and right sides of the path
                     const leftSideTrees = [];
@@ -2163,9 +2188,21 @@ class MapGenerator {
         const clusterRadius = theme.features?.clusterRadius || 20;
         const maxTreesPerCluster = theme.features?.maxTreesPerCluster || 25;
         
+        // Determine if this is a small map that needs special handling
+        const isSmallMap = this.mapSize < 100;
+        
         // Number of forest clusters based on map size and density
-        // Reduce the number of clusters but make each one larger for better performance
-        const clusterCount = Math.floor((this.mapSize / 100) * density * 0.7); // 30% fewer clusters
+        let clusterCount;
+        
+        if (isSmallMap) {
+            // For small maps, use cubic scaling to reduce cluster count even more aggressively
+            const scaleFactor = Math.pow(this.mapSize / 500, 3);
+            clusterCount = Math.max(1, Math.floor((this.mapSize / 100) * density * 0.7 * scaleFactor));
+            console.debug(`Small map detected (${this.mapSize}). Reducing forest clusters to ${clusterCount} (scale: ${scaleFactor.toFixed(3)})`);
+        } else {
+            // For normal maps, use standard calculation with 30% fewer clusters
+            clusterCount = Math.floor((this.mapSize / 100) * density * 0.7);
+        }
         
         console.debug(`Generating ${clusterCount} forest clusters with tree clustering ${useTreeClustering ? 'enabled' : 'disabled'}`);
         
