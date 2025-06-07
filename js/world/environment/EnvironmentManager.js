@@ -9,6 +9,7 @@ import { Waterfall } from './Waterfall.js';
 import { CrystalFormation } from './CrystalFormation.js';
 import { TreeCluster } from './TreeCluster.js';
 import { RandomGenerator } from '../utils/RandomGenerator.js';
+import { EnvironmentFactory } from './EnvironmentFactory.js';
 
 /**
  * Manages environment objects like trees, rocks, bushes, etc.
@@ -21,15 +22,22 @@ export class EnvironmentManager {
         this.worldManager = worldManager;
         this.game = game;
         
+        // Initialize the environment factory
+        this.environmentFactory = new EnvironmentFactory(scene, worldManager);
+        
         // Environment object collections
         this.environmentObjects = {}; // Object to track environment objects by chunk key
         this.visibleChunks = {}; // Empty object for compatibility with old system
         
-        // Environment object types (no longer using config)
-        this.environmentObjectTypes = [
-            'tree', 'tree_cluster', 'rock', 'bush', 'flower', 'tall_grass', 'ancient_tree', 'small_plant',
-            'fallen_log', 'mushroom', 'rock_formation', 'shrine', 'stump', 'waterfall', 'crystal_formation'
+        // Get environment object types from factory and add traditional types
+        const factoryTypes = this.environmentFactory.getRegisteredTypes();
+        const traditionalTypes = [
+            'tree', 'rock', 'bush', 'flower', 'tall_grass', 'ancient_tree', 'small_plant',
+            'fallen_log', 'mushroom', 'rock_formation', 'shrine', 'stump', 'waterfall'
         ];
+        
+        // Combine both sets of types, removing duplicates
+        this.environmentObjectTypes = [...new Set([...traditionalTypes, ...factoryTypes])];
         
         // For minimap functionality
         this.trees = [];
@@ -202,8 +210,19 @@ export class EnvironmentManager {
             // 60% chance to generate a tree
             randomType = 'tree';
         } else {
-            // 40% chance to generate other object types
-            const otherTypes = this.environmentObjectTypes.filter(type => type !== 'tree');
+            // Get all available types from both traditional and factory methods
+            const availableTypes = [...this.environmentObjectTypes];
+            
+            // Add factory-specific types that might not be in the traditional list
+            const factoryTypes = this.environmentFactory.getRegisteredTypes();
+            factoryTypes.forEach(type => {
+                if (!availableTypes.includes(type)) {
+                    availableTypes.push(type);
+                }
+            });
+            
+            // Filter out 'tree' since we already handled it
+            const otherTypes = availableTypes.filter(type => type !== 'tree');
             randomType = otherTypes[Math.floor(Math.random() * otherTypes.length)];
         }
         
@@ -267,46 +286,11 @@ export class EnvironmentManager {
                 // Create the object
                 let object = null;
                 
-                switch (randomType) {
-                    case 'tree':
-                        // Vary tree sizes slightly within a group for natural look
-                        const scaleFactor = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
-                        object = this.createTree(objectX, objectZ, null, scaleFactor);
-                        if (object) this.trees.push(object);
-                        break;
-                    case 'rock':
-                        object = this.createRock(objectX, objectZ);
-                        if (object) this.rocks.push(object);
-                        break;
-                    case 'bush':
-                        object = this.createBush(objectX, objectZ);
-                        if (object) this.bushes.push(object);
-                        break;
-                    case 'flower':
-                        object = this.createFlower(objectX, objectZ);
-                        if (object) this.flowers.push(object);
-                        break;
-                    case 'tall_grass':
-                        object = this.createTallGrass(objectX, objectZ);
-                        if (object) this.tallGrass.push(object);
-                        break;
-                    case 'ancient_tree':
-                        object = this.createAncientTree(objectX, objectZ);
-                        if (object) this.ancientTrees.push(object);
-                        break;
-                    case 'small_plant':
-                        object = this.createSmallPlant(objectX, objectZ);
-                        if (object) this.smallPlants.push(object);
-                        break;
-                    case 'waterfall':
-                        object = this.createWaterfall(objectX, objectZ);
-                        if (object) this.waterfalls.push(object);
-                        break;
-                    case 'crystal_formation':
-                        object = this.createCrystalFormation(objectX, objectZ);
-                        if (object) this.crystalFormations.push(object);
-                        break;
-                }
+                // Vary sizes slightly within a group for natural look
+                const scaleFactor = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
+                
+                // Create the object using the factory
+                object = this.createEnvironmentObject(randomType, objectX, objectZ, scaleFactor);
                 
                 if (object) {
                     // Add to environment objects for this chunk
@@ -326,44 +310,8 @@ export class EnvironmentManager {
             // Create a single object
             let object = null;
             
-            switch (randomType) {
-                case 'tree':
-                    object = this.createTree(centerX, centerZ);
-                    if (object) this.trees.push(object);
-                    break;
-                case 'rock':
-                    object = this.createRock(centerX, centerZ);
-                    if (object) this.rocks.push(object);
-                    break;
-                case 'bush':
-                    object = this.createBush(centerX, centerZ);
-                    if (object) this.bushes.push(object);
-                    break;
-                case 'flower':
-                    object = this.createFlower(centerX, centerZ);
-                    if (object) this.flowers.push(object);
-                    break;
-                case 'tall_grass':
-                    object = this.createTallGrass(centerX, centerZ);
-                    if (object) this.tallGrass.push(object);
-                    break;
-                case 'ancient_tree':
-                    object = this.createAncientTree(centerX, centerZ);
-                    if (object) this.ancientTrees.push(object);
-                    break;
-                case 'small_plant':
-                    object = this.createSmallPlant(centerX, centerZ);
-                    if (object) this.smallPlants.push(object);
-                    break;
-                case 'waterfall':
-                    object = this.createWaterfall(centerX, centerZ);
-                    if (object) this.waterfalls.push(object);
-                    break;
-                case 'crystal_formation':
-                    object = this.createCrystalFormation(centerX, centerZ);
-                    if (object) this.crystalFormations.push(object);
-                    break;
-            }
+            // Create the object using the factory
+            object = this.createEnvironmentObject(randomType, centerX, centerZ);
             
             if (object) {
                 console.debug(`Generated single ${randomType} at (${centerX.toFixed(1)}, ${centerZ.toFixed(1)})`);
@@ -620,45 +568,10 @@ export class EnvironmentManager {
             let object;
             const x = objData.position.x;
             const z = objData.position.z;
+            const size = objData.size || 1;
             
-            switch (objData.type) {
-                case 'tree':
-                    object = this.createTree(x, z);
-                    break;
-                case 'rock':
-                    object = this.createRock(x, z);
-                    break;
-                case 'bush':
-                    object = this.createBush(x, z);
-                    break;
-                case 'flower':
-                    object = this.createFlower(x, z);
-                    break;
-                case 'tall_grass':
-                    object = this.createTallGrass(x, z);
-                    break;
-                case 'ancient_tree':
-                    object = this.createAncientTree(x, z);
-                    break;
-                case 'small_plant':
-                    object = this.createSmallPlant(x, z);
-                    break;
-                case 'fallen_log':
-                    object = this.createFallenLog(x, z);
-                    break;
-                case 'mushroom':
-                    object = this.createMushroom(x, z);
-                    break;
-                case 'rock_formation':
-                    object = this.createRockFormation(x, z);
-                    break;
-                case 'shrine':
-                    object = this.createShrine(x, z);
-                    break;
-                case 'stump':
-                    object = this.createStump(x, z);
-                    break;
-            }
+            // Create the object using the factory
+            object = this.createEnvironmentObject(objData.type, x, z, size, objData.data);
             
             if (object) {
                 // Store object with its type and position for persistence
@@ -819,6 +732,62 @@ export class EnvironmentManager {
         this.scene.add(treeGroup);
         
         return treeGroup;
+    }
+    
+    /**
+     * Create an environment object using the factory
+     * @param {string} type - The type of environment object to create
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @param {number} size - Size of the object (optional)
+     * @param {Object} data - Additional data for complex objects (optional)
+     * @returns {THREE.Object3D} - The created environment object
+     */
+    createEnvironmentObject(type, x, z, size = 1, data = null) {
+        // Create position object with terrain height
+        const position = new THREE.Vector3(
+            x, 
+            this.worldManager.getTerrainHeight(x, z), 
+            z
+        );
+        
+        // Check if the factory supports this type
+        if (!this.environmentFactory.hasType(type)) {
+            console.warn(`Environment type ${type} not registered in factory`);
+            return null;
+        }
+        
+        // Create the object using the factory
+        const object = this.environmentFactory.create(type, position, size, data);
+        
+        if (object) {
+            // Add to the appropriate tracking array if it exists
+            const trackingArrayName = this.getTrackingArrayName(type);
+            if (this[trackingArrayName]) {
+                this[trackingArrayName].push(object);
+            }
+            
+            return object;
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get the name of the tracking array for a given environment object type
+     * @param {string} type - The type of environment object
+     * @returns {string} - The name of the tracking array
+     */
+    getTrackingArrayName(type) {
+        // Convert type to camelCase for array name (e.g., 'crystal_formation' -> 'crystalFormations')
+        const parts = type.split('_');
+        const camelCase = parts.map((part, index) => {
+            if (index === 0) return part;
+            return part.charAt(0).toUpperCase() + part.slice(1);
+        }).join('');
+        
+        // Add 's' for plural
+        return camelCase + 's';
     }
 
     /**
@@ -1112,6 +1081,14 @@ export class EnvironmentManager {
         
         this.savedEnvironmentObjects = environmentState.objects;
     }
+    
+    /**
+     * Optimize forest map by converting individual trees into tree clusters
+     * @param {string} mapType - The type of map (e.g., 'forest', 'desert', etc.)
+     * @returns {number} - Number of clusters created
+     */
+    // The optimizeForestMap and groupTreesByProximity methods have been removed
+    // as they were not being used anywhere in the codebase
     
     /**
      * Create a tree cluster from an array of tree positions

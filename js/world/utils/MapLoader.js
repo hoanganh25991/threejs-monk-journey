@@ -1101,109 +1101,26 @@ export class MapLoader {
     async createEnvironmentObject(envData) {
         const position = envData.position;
         const environmentManager = this.worldManager.environmentManager;
-        
+        const size = envData.size || 1;
         let envObject = null;
         
-        switch (envData.type) {
-            case 'tree':
-                envObject = environmentManager.createTree(position.x, position.z);
-                break;
-                
-            case 'rock':
-                envObject = environmentManager.createRock(position.x, position.z);
-                break;
-                
-            case 'bush':
-                envObject = environmentManager.createBush(position.x, position.z);
-                break;
-                
-            case 'flower':
-                envObject = environmentManager.createFlower(position.x, position.z);
-                break;
-                
-            case 'tall_grass':
-                envObject = environmentManager.createTallGrass(position.x, position.z);
-                break;
-                
-            case 'ancient_tree':
-                envObject = environmentManager.createAncientTree(position.x, position.z);
-                break;
-                
-            case 'small_plant':
-                envObject = environmentManager.createSmallPlant(position.x, position.z);
-                break;
-                
-            case 'fallen_log':
-                envObject = environmentManager.createFallenLog(position.x, position.z);
-                break;
-                
-            case 'mushroom':
-                envObject = environmentManager.createMushroom(position.x, position.z);
-                break;
-                
-            case 'rock_formation':
-                envObject = environmentManager.createRockFormation(position.x, position.z);
-                break;
-                
-            case 'shrine':
-                envObject = environmentManager.createShrine(position.x, position.z);
-                break;
-                
-            case 'stump':
-                envObject = environmentManager.createStump(position.x, position.z);
-                break;
-                
-            case 'mountain':
-                envObject = this.worldManager.structureManager.createMountain(position.x, position.z);
-                break;
-                
-            case 'water':
-                envObject = this.createWaterFeature(position, envData.size || 5);
-                break;
-                
-            case 'lava':
-                envObject = this.createLavaFeature(position, envData.size || 5);
-                break;
-                
-            case 'tree_cluster':
-                envObject = this.createTreeCluster(envData);
-                break;
-                
-            // Handle special/magical environment objects
-            case 'crystal_formation':
-                envObject = this.createCrystalFormation(position, envData.size || 3);
-                break;
-                
-            case 'rare_plant':
-                envObject = this.createRarePlant(position, envData.size || 1);
-                break;
-                
-            case 'magical_stone':
-                envObject = this.createMagicalStone(position, envData.size || 2);
-                break;
-                
-            case 'ancient_artifact':
-                envObject = this.createAncientArtifact(position, envData.size || 2);
-                break;
-                
-            case 'moss':
-                envObject = this.createMoss(position, envData.size || 1);
-                break;
-                
-            case 'oasis':
-                envObject = this.createOasis(position, envData.size || 8);
-                break;
-                
-            case 'obsidian_formation':
-                envObject = this.createObsidianFormation(position, envData.size || 5);
-                break;
-                
-            case 'desert_shrine':
-                envObject = this.createDesertShrine(position, envData.size || 6);
-                break;
-                
-            default:
-                console.warn(`Unknown environment object type: ${envData.type}`);
+        // Handle special case for mountain which is a structure, not an environment object
+        if (envData.type === 'mountain') {
+            envObject = this.worldManager.structureManager.createMountain(position.x, position.z);
+        } else {
+            // Use the environment manager's createEnvironmentObject method
+            // which uses the factory internally for all environment objects
+            envObject = environmentManager.createEnvironmentObject(
+                envData.type, 
+                position.x, 
+                position.z,
+                size,
+                envData.data
+            );
+            
+            if (!envObject) {
+                console.warn(`Failed to create environment object of type: ${envData.type}`);
+            }
         }
         
         if (envObject) {

@@ -66,10 +66,16 @@ async function generateAllSampleMaps() {
                     villageCount: 3,
                     towerCount: 5,
                     ruinsCount: 2,
-                    bridgeCount: 4
+                    bridgeCount: 4,
+                    // Enable tree clustering for better performance
+                    useTreeClustering: true,
+                    clusterThreshold: 5,  // Minimum trees to form a cluster
+                    clusterRadius: 20,    // Maximum distance between trees in a cluster
+                    maxTreesPerCluster: 25 // Maximum trees per cluster
                 }
             };
             console.debug('  - Applying significantly reduced tree density for Dark Forest sample');
+            console.debug('  - Enabling tree clustering for better performance');
         }
         
         const mapData = generator.generateMap(themeKey, options);
@@ -194,7 +200,17 @@ async function generateRandomMaps(count = 20) {
             baseTheme: "DARK_FOREST",
             mixinTheme: "LAVA_ZONE",
             mixRatio: 0.4, // 40% lava, 60% forest
-            features: { treeDensity: 0.6, lavaDensity: 0.5, darkSanctumCount: 2, ruinsCount: 5 }
+            features: { 
+                treeDensity: 0.6, 
+                lavaDensity: 0.5, 
+                darkSanctumCount: 2, 
+                ruinsCount: 5,
+                // Enable tree clustering for better performance
+                useTreeClustering: true,
+                clusterThreshold: 5,
+                clusterRadius: 20,
+                maxTreesPerCluster: 25
+            }
         },
         {
             name: "Frozen Ruins",
@@ -218,7 +234,17 @@ async function generateRandomMaps(count = 20) {
             baseTheme: "FROZEN_MOUNTAINS",
             mixinTheme: "DARK_FOREST",
             mixRatio: 0.5, // 50/50 mix
-            features: { treeDensity: 1.0, mountainDensity: 1.0, villageCount: 4, towerCount: 6 }
+            features: { 
+                treeDensity: 1.0, 
+                mountainDensity: 1.0, 
+                villageCount: 4, 
+                towerCount: 6,
+                // Enable tree clustering for better performance
+                useTreeClustering: true,
+                clusterThreshold: 5,
+                clusterRadius: 20,
+                maxTreesPerCluster: 25
+            }
         },
         {
             name: "Ruined Desert",
@@ -270,6 +296,13 @@ async function generateRandomMaps(count = 20) {
             // Reduce tree density for Dark Forest to prevent excessive file size and improve performance
             themeFeatures.treeDensity = Math.min(themeFeatures.treeDensity, 0.15);
             console.debug('  - Applying significantly reduced tree density for Dark Forest');
+            
+            // Enable tree clustering for better performance
+            themeFeatures.useTreeClustering = true;
+            themeFeatures.clusterThreshold = 5;  // Minimum trees to form a cluster
+            themeFeatures.clusterRadius = 20;    // Maximum distance between trees in a cluster
+            themeFeatures.maxTreesPerCluster = 25; // Maximum trees per cluster
+            console.debug('  - Enabling tree clustering for better performance');
         }
         
         const options = {

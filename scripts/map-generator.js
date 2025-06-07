@@ -2061,6 +2061,14 @@ class MapGenerator {
      * Generate trees along paths using tree clusters for better performance
      */
     generateTreesAlongPaths(density, theme) {
+        // Check if tree clustering is enabled in the theme features
+        const useTreeClustering = theme.features?.useTreeClustering === true;
+        const clusterThreshold = theme.features?.clusterThreshold || 5;
+        const clusterRadius = theme.features?.clusterRadius || 20;
+        const maxTreesPerCluster = theme.features?.maxTreesPerCluster || 25;
+        
+        console.debug(`Generating trees along paths with tree clustering ${useTreeClustering ? 'enabled' : 'disabled'}`);
+        
         // Process each path segment
         this.mapData.paths.forEach((path, pathIndex) => {
             // Create clusters for each path segment
@@ -2138,16 +2146,20 @@ class MapGenerator {
                         }
                     }
                     
-                    // Create tree clusters for each side if there are enough trees
-                    if (leftSideTrees.length >= 5) {
+                    // Create tree clusters for each side if there are enough trees and clustering is enabled
+                    if (useTreeClustering && leftSideTrees.length >= clusterThreshold) {
                         const clusterCenter = this.calculateCenter(leftSideTrees);
                         pathClusters.push({
                             position: clusterCenter,
                             treePositions: leftSideTrees,
-                            clusterName: `path_${pathIndex}_segment_${index}_left`
+                            clusterName: `path_${pathIndex}_segment_${index}_left`,
+                            useTreeClustering: true,
+                            clusterThreshold: clusterThreshold,
+                            clusterRadius: clusterRadius,
+                            maxTreesPerCluster: maxTreesPerCluster
                         });
                     } else {
-                        // Add individual trees if not enough for a cluster
+                        // Add individual trees if clustering is disabled or not enough for a cluster
                         leftSideTrees.forEach(treePos => {
                             this.mapData.environment.push({
                                 type: 'tree',
@@ -2162,15 +2174,19 @@ class MapGenerator {
                         });
                     }
                     
-                    if (rightSideTrees.length >= 5) {
+                    if (useTreeClustering && rightSideTrees.length >= clusterThreshold) {
                         const clusterCenter = this.calculateCenter(rightSideTrees);
                         pathClusters.push({
                             position: clusterCenter,
                             treePositions: rightSideTrees,
-                            clusterName: `path_${pathIndex}_segment_${index}_right`
+                            clusterName: `path_${pathIndex}_segment_${index}_right`,
+                            useTreeClustering: true,
+                            clusterThreshold: clusterThreshold,
+                            clusterRadius: clusterRadius,
+                            maxTreesPerCluster: maxTreesPerCluster
                         });
                     } else {
-                        // Add individual trees if not enough for a cluster
+                        // Add individual trees if clustering is disabled or not enough for a cluster
                         rightSideTrees.forEach(treePos => {
                             this.mapData.environment.push({
                                 type: 'tree',
@@ -2293,9 +2309,17 @@ class MapGenerator {
      * Optimized to use tree_cluster objects for better performance
      */
     generateForestClusters(density, theme) {
+        // Check if tree clustering is enabled in the theme features
+        const useTreeClustering = theme.features?.useTreeClustering === true;
+        const clusterThreshold = theme.features?.clusterThreshold || 5;
+        const clusterRadius = theme.features?.clusterRadius || 20;
+        const maxTreesPerCluster = theme.features?.maxTreesPerCluster || 25;
+        
         // Number of forest clusters based on map size and density
         // Reduce the number of clusters but make each one larger for better performance
         const clusterCount = Math.floor((this.mapSize / 100) * density * 0.7); // 30% fewer clusters
+        
+        console.debug(`Generating ${clusterCount} forest clusters with tree clustering ${useTreeClustering ? 'enabled' : 'disabled'}`);
         
         for (let i = 0; i < clusterCount; i++) {
             // Create forest clusters away from paths and structures
@@ -2307,8 +2331,15 @@ class MapGenerator {
             }
             
             // Determine forest cluster size - larger clusters for better performance
-            const clusterSize = 15 + Math.floor(this.rng() * 20); // 15-35 trees per cluster (reduced)
-            const clusterRadius = 15 + this.rng() * 25; // 15-40 units radius
+            // If tree clustering is enabled, we can have more trees per cluster
+            const clusterSize = useTreeClustering 
+                ? clusterThreshold + Math.floor(this.rng() * (maxTreesPerCluster - clusterThreshold))
+                : 15 + Math.floor(this.rng() * 20); // 15-35 trees per cluster (reduced)
+            
+            // If tree clustering is enabled, we can have larger clusters
+            const forestClusterRadius = useTreeClustering
+                ? clusterRadius + this.rng() * 10 // 20-30 units radius
+                : 15 + this.rng() * 25; // 15-40 units radius
             
             // Create a tree cluster object with tree positions
             const treePositions = [];
@@ -2317,7 +2348,7 @@ class MapGenerator {
             // Generate trees in the cluster with tight spacing
             for (let j = 0; j < clusterSize; j++) {
                 // Trees get denser toward the center of the cluster
-                const distanceFromCenter = this.rng() * this.rng() * clusterRadius; // Squared distribution
+                const distanceFromCenter = this.rng() * this.rng() * forestClusterRadius; // Squared distribution
                 const angle = this.rng() * Math.PI * 2;
                 
                 const treePosition = {
@@ -2362,7 +2393,11 @@ class MapGenerator {
                     theme: theme.name,
                     treePositions: treePositions,
                     clusterName: `forest_${i}`,
-                    clusterRadius: clusterRadius
+                    clusterRadius: forestClusterRadius,
+                    // Add clustering parameters for the renderer
+                    useTreeClustering: useTreeClustering,
+                    clusterThreshold: clusterThreshold,
+                    maxTreesPerCluster: maxTreesPerCluster
                 });
                 
                 // Add undergrowth objects separately
@@ -2372,11 +2407,11 @@ class MapGenerator {
             }
             
             // Add some clearings within the forest
-            if (this.rng() < 0.4 && clusterRadius > 25) {
+            if (this.rng() < 0.4 && forestClusterRadius > 25) {
                 const clearingCount = 1 + Math.floor(this.rng() * 2);
                 
                 for (let c = 0; c < clearingCount; c++) {
-                    const clearingPosition = this.getNearbyPosition(clusterCenter, 5, clusterRadius * 0.7);
+                    const clearingPosition = this.getNearbyPosition(clusterCenter, 5, forestClusterRadius * 0.7);
                     const clearingRadius = 3 + this.rng() * 5;
                     
                     // Add special features to clearings
