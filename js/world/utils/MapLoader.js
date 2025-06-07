@@ -144,9 +144,6 @@ export class MapLoader {
         if (this.worldManager.lastPathGenerationPosition) {
             this.worldManager.lastPathGenerationPosition.set(0, 0, 0);
         }
-        
-        // Re-enable procedural path generation for when returning to procedural maps
-        this.enableProceduralPathGeneration();
     }
 
     /**
@@ -224,9 +221,6 @@ export class MapLoader {
      */
     async loadPaths(paths) {
         console.debug(`Loading ${paths.length} paths...`);
-        
-        // Disable procedural path generation while loading map paths
-        this.disableProceduralPathGeneration();
         
         paths.forEach(pathData => {
             const pathGroup = this.createPath(pathData);
@@ -382,41 +376,6 @@ export class MapLoader {
         geometry.computeVertexNormals();
         
         return geometry;
-    }
-
-    /**
-     * Disable procedural path generation to prevent conflicts with loaded paths
-     */
-    disableProceduralPathGeneration() {
-        if (this.worldManager) {
-            // Set a flag to indicate that map paths are loaded
-            this.worldManager.mapPathsLoaded = true;
-            
-            // Increase the path generation distance to effectively disable it
-            this.worldManager.originalPathGenerationDistance = this.worldManager.pathGenerationDistance;
-            this.worldManager.pathGenerationDistance = Number.MAX_SAFE_INTEGER;
-            
-            console.debug('Procedural path generation disabled - using map paths');
-        }
-    }
-
-    /**
-     * Re-enable procedural path generation (for when returning to procedural maps)
-     */
-    enableProceduralPathGeneration() {
-        if (this.worldManager) {
-            // Clear the flag
-            this.worldManager.mapPathsLoaded = false;
-            
-            // Restore original path generation distance
-            if (this.worldManager.originalPathGenerationDistance !== undefined) {
-                this.worldManager.pathGenerationDistance = this.worldManager.originalPathGenerationDistance;
-            } else {
-                this.worldManager.pathGenerationDistance = 30; // Default value
-            }
-            
-            console.debug('Procedural path generation re-enabled');
-        }
     }
 
     /**
@@ -775,15 +734,6 @@ export class MapLoader {
         return pathGroup;
     }
     
-    /**
-     * Create stairs for terraced villages
-     * @param {Object} data - Stairs data
-     * @returns {THREE.Mesh} - Stairs mesh
-     */
-    // Methods createStairs, createPlaza, createSquare, and createMarket have been refactored
-    // into dedicated classes: Stairs.js, Plaza.js, Square.js, and Market.js
-    // These are now registered and used through the EnvironmentFactory
-
     /**
      * Load environment objects from map data
      * @param {Array} environment - Environment data array

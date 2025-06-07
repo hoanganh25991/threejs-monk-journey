@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { TerrainManager } from './terrain/TerrainManager.js';
 import { StructureManager } from './structures/StructureManager.js';
 import { EnvironmentManager } from './environment/EnvironmentManager.js';
+import { EnvironmentFactory } from './environment/EnvironmentFactory.js';
 import { InteractiveObjectManager } from './interactive/InteractiveObjectManager.js';
 import { ZoneManager } from './zones/ZoneManager.js';
 import { LightingManager } from './lighting/LightingManager.js';
@@ -27,6 +28,7 @@ export class WorldManager {
         this.terrainManager = new TerrainManager(scene, this, game);
         this.structureManager = new StructureManager(scene, this, game);
         this.environmentManager = new EnvironmentManager(scene, this, game);
+        this.environmentFactory = new EnvironmentFactory(scene, this);
         this.interactiveManager = new InteractiveObjectManager(scene, this, game);
         this.zoneManager = new ZoneManager(scene, this, game);
         this.teleportManager = new TeleportManager(scene, this, game);
