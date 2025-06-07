@@ -1210,6 +1210,62 @@ export class MapLoader {
     }
     
     /**
+     * Check for any missing chunks that should be loaded in the current radius
+     * @param {number} playerChunkX - Player's chunk X coordinate
+     * @param {number} playerChunkZ - Player's chunk Z coordinate
+     */
+    async checkForMissingChunks(playerChunkX, playerChunkZ) {
+        if (!this.currentMap || !this.currentMap.chunkedData) {
+            return; // No map loaded or not in chunked mode
+        }
+        
+        // Get map bounds if available
+        let minChunkX = -Infinity;
+        let maxChunkX = Infinity;
+        let minChunkZ = -Infinity;
+        let maxChunkZ = Infinity;
+        
+        if (this.currentMap.bounds) {
+            minChunkX = Math.floor(this.currentMap.bounds.minX / this.chunkSize);
+            maxChunkX = Math.ceil(this.currentMap.bounds.maxX / this.chunkSize);
+            minChunkZ = Math.floor(this.currentMap.bounds.minZ / this.chunkSize);
+            maxChunkZ = Math.ceil(this.currentMap.bounds.maxZ / this.chunkSize);
+        }
+        
+        // Use a smaller radius for periodic checks
+        const checkRadius = 2; // Just check the immediate surroundings
+        const chunksToCheck = {};
+        
+        // Check chunks in a square around player
+        for (let xOffset = -checkRadius; xOffset <= checkRadius; xOffset++) {
+            for (let zOffset = -checkRadius; zOffset <= checkRadius; zOffset++) {
+                const targetChunkX = playerChunkX + xOffset;
+                const targetChunkZ = playerChunkZ + zOffset;
+                
+                // Only check chunks within map bounds
+                if (targetChunkX >= minChunkX && targetChunkX <= maxChunkX && 
+                    targetChunkZ >= minChunkZ && targetChunkZ <= maxChunkZ) {
+                    const targetChunkKey = `${targetChunkX}_${targetChunkZ}`;
+                    chunksToCheck[targetChunkKey] = true;
+                }
+            }
+        }
+        
+        // Load any missing chunks
+        let missingChunksCount = 0;
+        for (const chunkKey in chunksToCheck) {
+            if (!this.loadedChunks[chunkKey]) {
+                await this.loadChunk(chunkKey);
+                missingChunksCount++;
+            }
+        }
+        
+        if (missingChunksCount > 0) {
+            console.debug(`Loaded ${missingChunksCount} missing chunks during periodic check`);
+        }
+    }
+
+    /**
      * Initial load of chunks around a position - used when first loading a map
      * @param {THREE.Vector3} position - Position to load chunks around
      */
@@ -1244,7 +1300,7 @@ export class MapLoader {
         }
         
         // Use a larger initial radius for first load
-        const initialRadius = this.loadRadius + 1;
+        const initialRadius = this.loadRadius + 2; // Increased from loadRadius + 1
         const chunksToLoad = {};
         
         // Load chunks in all directions for initial load
@@ -1317,15 +1373,22 @@ export class MapLoader {
             
         // Skip if player hasn't moved to a new chunk and direction hasn't changed significantly
         const directionChanged = playerDirection && this.lastPlayerDirection && 
-            playerDirection.angleTo(this.lastPlayerDirection) > 0.3; // ~17 degrees threshold
+            playerDirection.angleTo(this.lastPlayerDirection) > 0.2; // ~11 degrees threshold (reduced from 0.3)
             
         // Check if we should update chunks based on multiple criteria
         const inSameChunk = this.lastPlayerChunk === playerChunkKey;
         const tooSoon = timeSinceLastUpdate < this.updateCooldown;
         const notMovedEnough = distanceMoved < this.minMoveDistance;
         
+        // Only skip if ALL conditions are met (player hasn't moved much, is in same chunk, 
+        // it's too soon since last update, AND direction hasn't changed)
         if (inSameChunk && tooSoon && notMovedEnough && !directionChanged) {
-            return; // Skip update - no significant change in player state
+            // Even if we're skipping a full update, periodically check if we need to load any missing chunks
+            if (timeSinceLastUpdate > 2000) { // Every 2 seconds at minimum
+                // Force a check for any missing chunks in the current radius
+                this.checkForMissingChunks(playerChunkX, playerChunkZ);
+            }
+            return; // Skip full update - no significant change in player state
         }
         
         console.debug(`Updating chunks for player at ${playerPosition.x.toFixed(1)}, ${playerPosition.z.toFixed(1)} (chunk ${playerChunkKey})`);
@@ -1454,13 +1517,12 @@ export class MapLoader {
         console.debug(`Loading chunk ${chunkKey}...`);
         
         // Get chunk data directly from the chunked map data
-        const chunkData = this.currentMap.chunkedData?.chunks?.[chunkKey];
+        let chunkData = this.currentMap.chunkedData?.chunks?.[chunkKey];
         
+        // If no data exists for this chunk, create an empty chunk structure
         if (!chunkData) {
             console.debug(`No data found for chunk ${chunkKey}, creating empty chunk`);
-            // Mark as loaded even if empty to prevent repeated attempts
-            this.loadedChunks[chunkKey] = { paths: [], structures: [], environment: [] };
-            return;
+            chunkData = { paths: [], structures: [], environment: [] };
         }
         
         // Initialize tracking for this chunk
@@ -1482,6 +1544,9 @@ export class MapLoader {
         // Mark chunk as loaded
         this.loadedChunks[chunkKey] = chunkData;
         console.debug(`Chunk ${chunkKey} loaded successfully`);
+        
+        // Return true to indicate successful loading
+        return true;
     }
     
     /**
