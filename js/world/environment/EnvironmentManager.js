@@ -124,7 +124,7 @@ export class EnvironmentManager {
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
             
-            const tree = this.createTree(x, z);
+            const tree = this.createEnvironmentObject('tree', x, z);
             if (tree) {
                 startingAreaObjects.push({
                     type: 'tree',
@@ -142,7 +142,7 @@ export class EnvironmentManager {
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
             
-            const rock = this.createRock(x, z);
+            const rock = this.createEnvironmentObject('rock', x, z);
             if (rock) {
                 startingAreaObjects.push({
                     type: 'rock',
