@@ -1190,6 +1190,18 @@ export class MapLoader {
                 envObject = this.createMoss(position, envData.size || 1);
                 break;
                 
+            case 'oasis':
+                envObject = this.createOasis(position, envData.size || 8);
+                break;
+                
+            case 'obsidian_formation':
+                envObject = this.createObsidianFormation(position, envData.size || 5);
+                break;
+                
+            case 'desert_shrine':
+                envObject = this.createDesertShrine(position, envData.size || 6);
+                break;
+                
             default:
                 console.warn(`Unknown environment object type: ${envData.type}`);
         }
@@ -1258,6 +1270,314 @@ export class MapLoader {
         this.scene.add(moss);
         
         return moss;
+    }
+    
+    /**
+     * Create an oasis
+     * @param {Object} position - Position object
+     * @param {number} size - Size of the oasis
+     * @returns {THREE.Group} - Oasis group
+     */
+    createOasis(position, size) {
+        const group = new THREE.Group();
+        
+        // Create water pool
+        const waterGeometry = new THREE.CircleGeometry(size, 16);
+        const waterMaterial = new THREE.MeshLambertMaterial({
+            color: 0x4682B4, // Steel blue water
+            transparent: true,
+            opacity: 0.8
+        });
+        
+        const waterPool = new THREE.Mesh(waterGeometry, waterMaterial);
+        waterPool.rotation.x = -Math.PI / 2;
+        waterPool.position.set(
+            position.x,
+            this.worldManager.getTerrainHeight(position.x, position.z) + 0.1, // Slightly above terrain
+            position.z
+        );
+        
+        // Create sand border around the water
+        const sandGeometry = new THREE.RingGeometry(size, size + 2, 16);
+        const sandMaterial = new THREE.MeshLambertMaterial({
+            color: 0xE9BE62, // Desert sand color
+            transparent: false
+        });
+        
+        const sandBorder = new THREE.Mesh(sandGeometry, sandMaterial);
+        sandBorder.rotation.x = -Math.PI / 2;
+        sandBorder.position.set(
+            position.x,
+            this.worldManager.getTerrainHeight(position.x, position.z) + 0.05, // Slightly above terrain
+            position.z
+        );
+        
+        // Add palm trees around the oasis
+        const palmCount = 3 + Math.floor(Math.random() * 4); // 3-6 palm trees
+        
+        for (let i = 0; i < palmCount; i++) {
+            // Position palms around the oasis
+            const angle = (i / palmCount) * Math.PI * 2;
+            const distance = size + 1 + Math.random() * 2; // Place just outside the sand border
+            
+            const palmX = position.x + Math.cos(angle) * distance;
+            const palmZ = position.z + Math.sin(angle) * distance;
+            const palmY = this.worldManager.getTerrainHeight(palmX, palmZ);
+            
+            // Create palm tree trunk
+            const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.3, 2 + Math.random() * 2, 6);
+            const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 }); // Brown trunk
+            const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+            
+            // Create palm leaves
+            const leavesGroup = new THREE.Group();
+            const leafCount = 5 + Math.floor(Math.random() * 4); // 5-8 leaves
+            
+            for (let j = 0; j < leafCount; j++) {
+                const leafAngle = (j / leafCount) * Math.PI * 2;
+                const leafGeometry = new THREE.PlaneGeometry(1.5 + Math.random(), 0.5 + Math.random());
+                const leafMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x2E8B57, // Green leaves
+                    side: THREE.DoubleSide
+                });
+                
+                const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
+                
+                // Position and rotate leaf
+                leaf.position.y = 0.5;
+                leaf.position.x = Math.cos(leafAngle) * 0.5;
+                leaf.position.z = Math.sin(leafAngle) * 0.5;
+                
+                // Rotate leaf to point outward and downward
+                leaf.rotation.x = Math.PI / 4; // Tilt down
+                leaf.rotation.y = leafAngle; // Rotate around trunk
+                
+                leavesGroup.add(leaf);
+            }
+            
+            // Position leaves at top of trunk
+            leavesGroup.position.y = trunk.geometry.parameters.height / 2;
+            
+            // Create palm tree group
+            const palmTree = new THREE.Group();
+            palmTree.add(trunk);
+            palmTree.add(leavesGroup);
+            
+            // Position palm tree
+            palmTree.position.set(palmX, palmY, palmZ);
+            
+            // Add slight random rotation to palm tree
+            palmTree.rotation.y = Math.random() * Math.PI * 2;
+            
+            // Add palm tree to oasis group
+            group.add(palmTree);
+        }
+        
+        // Add water and sand to group
+        group.add(waterPool);
+        group.add(sandBorder);
+        
+        // Set position and user data
+        group.position.set(position.x, 0, position.z);
+        group.userData = { type: 'oasis' };
+        
+        this.scene.add(group);
+        
+        return group;
+    }
+    
+    /**
+     * Create an obsidian formation
+     * @param {Object} position - Position object
+     * @param {number} size - Size of the obsidian formation
+     * @returns {THREE.Group} - Obsidian formation group
+     */
+    createObsidianFormation(position, size) {
+        const group = new THREE.Group();
+        
+        // Create multiple obsidian shards
+        const numShards = Math.floor(4 + Math.random() * 5); // 4-8 shards
+        
+        for (let i = 0; i < numShards; i++) {
+            // Create a shard with random geometry
+            const shardHeight = 1 + Math.random() * 3;
+            const shardWidth = 0.5 + Math.random() * 1.5;
+            
+            // Use either a cone or a prism for variety
+            let shardGeometry;
+            if (Math.random() > 0.5) {
+                shardGeometry = new THREE.ConeGeometry(shardWidth, shardHeight, 5);
+            } else {
+                shardGeometry = new THREE.BoxGeometry(shardWidth, shardHeight, shardWidth);
+            }
+            
+            // Obsidian material - dark with slight reflection
+            const shardMaterial = new THREE.MeshStandardMaterial({
+                color: 0x111111, // Very dark gray, almost black
+                roughness: 0.3,
+                metalness: 0.7
+            });
+            
+            const shard = new THREE.Mesh(shardGeometry, shardMaterial);
+            
+            // Position shard within the formation
+            const angle = (i / numShards) * Math.PI * 2;
+            const distance = Math.random() * (size / 2);
+            
+            const shardX = Math.cos(angle) * distance;
+            const shardZ = Math.sin(angle) * distance;
+            const shardY = shardHeight / 2; // Position at half height to sit on ground
+            
+            shard.position.set(shardX, shardY, shardZ);
+            
+            // Random rotation for more natural look
+            shard.rotation.y = Math.random() * Math.PI * 2;
+            shard.rotation.x = Math.random() * 0.3; // Slight tilt
+            
+            group.add(shard);
+        }
+        
+        // Add a base/ground effect
+        const baseGeometry = new THREE.CircleGeometry(size / 2 + 1, 16);
+        const baseMaterial = new THREE.MeshLambertMaterial({
+            color: 0x333333, // Dark gray
+            transparent: true,
+            opacity: 0.7
+        });
+        
+        const base = new THREE.Mesh(baseGeometry, baseMaterial);
+        base.rotation.x = -Math.PI / 2; // Lay flat
+        base.position.y = 0.05; // Slightly above ground
+        
+        group.add(base);
+        
+        // Position the entire formation
+        group.position.set(
+            position.x,
+            this.worldManager.getTerrainHeight(position.x, position.z),
+            position.z
+        );
+        
+        group.userData = { type: 'obsidian_formation' };
+        
+        this.scene.add(group);
+        
+        return group;
+    }
+    
+    /**
+     * Create a desert shrine
+     * @param {Object} position - Position object
+     * @param {number} size - Size of the desert shrine
+     * @returns {THREE.Group} - Desert shrine group
+     */
+    createDesertShrine(position, size) {
+        const group = new THREE.Group();
+        
+        // Create main shrine structure (a small temple-like structure)
+        const baseHeight = 0.5;
+        const baseWidth = size;
+        const baseDepth = size;
+        
+        // Base/platform
+        const baseGeometry = new THREE.BoxGeometry(baseWidth, baseHeight, baseDepth);
+        const baseMaterial = new THREE.MeshStandardMaterial({
+            color: 0xD2B48C, // Tan/sandstone color
+            roughness: 0.8
+        });
+        
+        const base = new THREE.Mesh(baseGeometry, baseMaterial);
+        base.position.y = baseHeight / 2;
+        
+        group.add(base);
+        
+        // Create pillars
+        const pillarHeight = 3;
+        const pillarRadius = 0.3;
+        const pillarGeometry = new THREE.CylinderGeometry(pillarRadius, pillarRadius, pillarHeight, 8);
+        const pillarMaterial = new THREE.MeshStandardMaterial({
+            color: 0xD2B48C, // Same as base
+            roughness: 0.7
+        });
+        
+        // Create 4 pillars at corners
+        const pillarPositions = [
+            { x: baseWidth/2 - 0.5, z: baseDepth/2 - 0.5 },
+            { x: -baseWidth/2 + 0.5, z: baseDepth/2 - 0.5 },
+            { x: baseWidth/2 - 0.5, z: -baseDepth/2 + 0.5 },
+            { x: -baseWidth/2 + 0.5, z: -baseDepth/2 + 0.5 }
+        ];
+        
+        for (const pos of pillarPositions) {
+            const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+            pillar.position.set(pos.x, baseHeight + pillarHeight/2, pos.z);
+            group.add(pillar);
+        }
+        
+        // Create roof/top
+        const roofGeometry = new THREE.BoxGeometry(baseWidth + 1, 0.5, baseDepth + 1);
+        const roofMaterial = new THREE.MeshStandardMaterial({
+            color: 0xC19A6B, // Slightly darker than base
+            roughness: 0.7
+        });
+        
+        const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+        roof.position.y = baseHeight + pillarHeight + 0.25;
+        
+        group.add(roof);
+        
+        // Create altar in the center
+        const altarGeometry = new THREE.BoxGeometry(1.5, 1, 1.5);
+        const altarMaterial = new THREE.MeshStandardMaterial({
+            color: 0xA0522D, // Brown
+            roughness: 0.6
+        });
+        
+        const altar = new THREE.Mesh(altarGeometry, altarMaterial);
+        altar.position.y = baseHeight + 0.5;
+        
+        group.add(altar);
+        
+        // Add decorative elements - a glowing orb on the altar
+        const orbGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+        const orbMaterial = new THREE.MeshStandardMaterial({
+            color: 0xFFD700, // Gold
+            emissive: 0xFFD700,
+            emissiveIntensity: 0.5,
+            roughness: 0.3,
+            metalness: 0.8
+        });
+        
+        const orb = new THREE.Mesh(orbGeometry, orbMaterial);
+        orb.position.y = baseHeight + 1.2;
+        
+        group.add(orb);
+        
+        // Add sand circle around the shrine
+        const sandGeometry = new THREE.CircleGeometry(size + 2, 16);
+        const sandMaterial = new THREE.MeshLambertMaterial({
+            color: 0xE9BE62, // Desert sand color
+            transparent: false
+        });
+        
+        const sand = new THREE.Mesh(sandGeometry, sandMaterial);
+        sand.rotation.x = -Math.PI / 2;
+        sand.position.y = 0.05; // Slightly above ground
+        
+        group.add(sand);
+        
+        // Position the entire shrine
+        group.position.set(
+            position.x,
+            this.worldManager.getTerrainHeight(position.x, position.z),
+            position.z
+        );
+        
+        group.userData = { type: 'desert_shrine' };
+        
+        this.scene.add(group);
+        
+        return group;
     }
     
     /**

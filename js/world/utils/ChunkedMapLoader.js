@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+const logError = console.error;
+
 /**
  * Chunked Map Loader - Loads pre-generated maps into the world using a chunking system
  * Integrates with existing WorldManager, StructureManager, and EnvironmentManager
@@ -28,10 +30,6 @@ export class ChunkedMapLoader {
         this.lastPlayerPosition = null; // Last player position for distance-based updates
         this.minMoveDistance = 10; // Minimum distance player must move to trigger update
         
-        // Map storage settings
-        this.storageEnabled = true;
-        this.storageKeyPrefix = 'monk_journey_map_';
-        
         // Spatial index for quick lookup of objects by position
         this.spatialIndex = {
             zones: {},
@@ -52,21 +50,19 @@ export class ChunkedMapLoader {
         try {
             // Clear existing world content
             await this.clearWorld();
-            
-            // Store map metadata (theme, general info)
-            this.currentMapMetadata = {
-                theme: mapData.theme,
-                metadata: mapData.metadata || {},
-                bounds: this.calculateMapBounds(mapData)
-            };
+            logError("clearWorld")
             
             // Process and chunk the map data
             const chunkedData = this.chunkifyMapData(mapData);
+            logError({mapData, chunkedData})
             
-            // Store chunked data in localStorage if enabled
-            if (this.storageEnabled) {
-                this.storeChunkedMapData(chunkedData, mapData.theme.name);
-            }
+            // Store map metadata (theme, general info) and chunked data
+            this.currentMapMetadata = {
+                theme: mapData.theme,
+                metadata: mapData.metadata || {},
+                bounds: this.calculateMapBounds(mapData),
+                chunkedData: chunkedData // Store chunked data in memory
+            };
             
             // Set theme colors in zone manager if available
             if (mapData.theme && mapData.theme.colors) {
@@ -89,63 +85,10 @@ export class ChunkedMapLoader {
         }
     }
 
-    /**
-     * Load a map from a JSON file with chunking support
-     * @param {string} mapFilePath - Path to the map JSON file
-     * @returns {Promise<boolean>} - True if loading was successful
-     */
     async loadMapFromFile(mapFilePath) {
-        try {
-            // Check if we already have this map in localStorage
-            const mapName = this.extractMapNameFromPath(mapFilePath);
-            const cachedMetadata = this.getStoredMapMetadata(mapName);
-            
-            if (cachedMetadata) {
-                console.debug(`Loading map "${mapName}" from cache`);
-                
-                // Set the current map metadata
-                this.currentMapMetadata = cachedMetadata;
-                
-                // Set theme colors in zone manager if available
-                if (cachedMetadata.theme && cachedMetadata.theme.colors) {
-                    this.worldManager.zoneManager.setThemeColors(cachedMetadata.theme.colors);
-                }
-                
-                // Load zones from cache
-                const cachedZones = this.getStoredMapZones(mapName);
-                if (cachedZones) {
-                    await this.loadZones(cachedZones);
-                }
-                
-                // Initial load of chunks around starting position
-                const startPosition = new THREE.Vector3(0, 0, 0);
-                await this.initialChunkLoad(startPosition);
-                
-                console.debug(`Map "${mapName}" loaded from cache successfully`);
-                return true;
-            } else {
-                // Not in cache, load from file
-                console.debug(`Map "${mapName}" not found in cache, loading from file`);
-                const response = await fetch(mapFilePath);
-                const mapData = await response.json();
-                return await this.loadMap(mapData);
-            }
-        } catch (error) {
-            console.error('Error loading map file:', error);
-            return false;
-        }
-    }
-
-    /**
-     * Extract map name from file path
-     * @param {string} mapFilePath - Path to the map file
-     * @returns {string} - Map name
-     */
-    extractMapNameFromPath(mapFilePath) {
-        // Extract filename without extension
-        const parts = mapFilePath.split('/');
-        const filename = parts[parts.length - 1];
-        return filename.split('.')[0];
+        const response = await fetch(mapFilePath);
+        const mapData = await response.json();
+        return await this.loadMap(mapData);
     }
 
     /**
@@ -310,85 +253,6 @@ export class ChunkedMapLoader {
     }
 
     /**
-     * Store chunked map data in localStorage
-     * @param {Object} chunkedData - The chunked map data
-     * @param {string} mapName - Name of the map
-     */
-    storeChunkedMapData(chunkedData, mapName) {
-        try {
-            // Store metadata
-            localStorage.setItem(
-                `${this.storageKeyPrefix}${mapName}_metadata`, 
-                JSON.stringify(this.currentMapMetadata)
-            );
-            
-            // Store zones separately (they're global)
-            localStorage.setItem(
-                `${this.storageKeyPrefix}${mapName}_zones`, 
-                JSON.stringify(chunkedData.zones)
-            );
-            
-            // Store each chunk separately to avoid localStorage size limits
-            for (const chunkKey in chunkedData.chunks) {
-                localStorage.setItem(
-                    `${this.storageKeyPrefix}${mapName}_chunk_${chunkKey}`,
-                    JSON.stringify(chunkedData.chunks[chunkKey])
-                );
-            }
-            
-            console.debug(`Map "${mapName}" stored in localStorage (${Object.keys(chunkedData.chunks).length} chunks)`);
-        } catch (error) {
-            console.warn('Failed to store map data in localStorage:', error);
-        }
-    }
-
-    /**
-     * Get stored map metadata from localStorage
-     * @param {string} mapName - Name of the map
-     * @returns {Object|null} - Map metadata or null if not found
-     */
-    getStoredMapMetadata(mapName) {
-        try {
-            const metadata = localStorage.getItem(`${this.storageKeyPrefix}${mapName}_metadata`);
-            return metadata ? JSON.parse(metadata) : null;
-        } catch (error) {
-            console.warn('Failed to retrieve map metadata from localStorage:', error);
-            return null;
-        }
-    }
-
-    /**
-     * Get stored map zones from localStorage
-     * @param {string} mapName - Name of the map
-     * @returns {Array|null} - Map zones or null if not found
-     */
-    getStoredMapZones(mapName) {
-        try {
-            const zones = localStorage.getItem(`${this.storageKeyPrefix}${mapName}_zones`);
-            return zones ? JSON.parse(zones) : null;
-        } catch (error) {
-            console.warn('Failed to retrieve map zones from localStorage:', error);
-            return null;
-        }
-    }
-
-    /**
-     * Get stored map chunk from localStorage
-     * @param {string} mapName - Name of the map
-     * @param {string} chunkKey - Chunk key
-     * @returns {Object|null} - Chunk data or null if not found
-     */
-    getStoredMapChunk(mapName, chunkKey) {
-        try {
-            const chunk = localStorage.getItem(`${this.storageKeyPrefix}${mapName}_chunk_${chunkKey}`);
-            return chunk ? JSON.parse(chunk) : null;
-        } catch (error) {
-            console.warn(`Failed to retrieve map chunk ${chunkKey} from localStorage:`, error);
-            return null;
-        }
-    }
-
-    /**
      * Initial load of chunks around a position - used when first loading a map
      * This loads a larger area than regular updates to ensure the player has enough content
      * @param {THREE.Vector3} position - Position to load chunks around
@@ -441,6 +305,8 @@ export class ChunkedMapLoader {
                 }
             }
         }
+
+        logError({chunksToLoad})
         
         // Load all initial chunks
         for (const chunkKey in chunksToLoad) {
@@ -460,6 +326,8 @@ export class ChunkedMapLoader {
         if (!this.currentMapMetadata) {
             return; // No map loaded
         }
+
+        logError("updateLoadedChunksForPosition")
         
         // Special case for first load - initialize position tracking
         if (!this.lastPlayerPosition) {
@@ -591,7 +459,7 @@ export class ChunkedMapLoader {
         // Unload chunks that are no longer needed
         for (const chunkKey in this.loadedChunks) {
             if (!chunksToLoad[chunkKey]) {
-                await this.unloadChunk(chunkKey);
+                await this.unloadChunk(chunkKey).then(() => logError("unloadChunk", {chunkKey}));
             }
         }
         
@@ -611,6 +479,8 @@ export class ChunkedMapLoader {
         if (!this.currentMapMetadata || this.loadedChunks[chunkKey]) {
             return; // Already loaded or no map
         }
+
+        logError({chunkKey})
         
         // Check if chunk is within map bounds
         if (this.currentMapMetadata.bounds) {
@@ -630,11 +500,8 @@ export class ChunkedMapLoader {
         
         console.debug(`Loading chunk ${chunkKey}...`);
         
-        // Get map name from metadata
-        const mapName = this.currentMapMetadata.theme.name;
-        
-        // Get chunk data from localStorage
-        const chunkData = this.getStoredMapChunk(mapName, chunkKey);
+        // Get chunk data directly from the chunked map data
+        const chunkData = this.currentMapMetadata.chunkedData?.chunks?.[chunkKey];
         
         if (!chunkData) {
             console.debug(`No data found for chunk ${chunkKey}, creating empty chunk`);
