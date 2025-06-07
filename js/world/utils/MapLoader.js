@@ -1130,10 +1130,15 @@ export class MapLoader {
             // This is a safety check in case the object wasn't positioned correctly by the factory
             const terrainHeight = this.worldManager.getTerrainHeight(position.x, position.z);
             
-            // Only adjust if the object is significantly below the terrain
-            if (envObject.position.y < terrainHeight - 0.5) {
-                console.debug(`Adjusting height of ${envData.type} from ${envObject.position.y} to ${terrainHeight}`);
-                envObject.position.y = terrainHeight;
+            // Check if position exists before accessing it
+            if (envObject.position && envObject.position.y !== undefined) {
+                // Only adjust if the object is significantly below the terrain
+                if (envObject.position.y < terrainHeight - 0.5) {
+                    console.debug(`Adjusting height of ${envData.type} from ${envObject.position.y} to ${terrainHeight}`);
+                    envObject.position.y = terrainHeight;
+                }
+            } else {
+                console.warn(`Environment object of type ${envData.type} has no valid position property`);
             }
             
             envObject.userData = {
