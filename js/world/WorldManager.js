@@ -1722,48 +1722,6 @@ export class WorldManager {
     }
     
     /**
-     * Save the current world state
-     * @returns {object} - The saved world state
-     */
-    saveWorldState() {
-        const worldState = {
-            terrain: this.terrainManager.save(),
-            structures: this.structureManager.save(),
-            environment: this.environmentManager.save(),
-            interactive: this.interactiveManager.save(),
-            zones: this.zoneManager.save(),
-            teleport: this.teleportManager.save ? this.teleportManager.save() : null
-        };
-        
-        return worldState;
-    }
-    
-    /**
-     * Load a saved world state
-     * @param {object} worldState - The world state to load
-     */
-    loadWorldState(worldState) {
-        if (!worldState) return;
-        
-        this.savedData = worldState;
-        
-        // Clear existing world
-        this.clearWorldObjects();
-        
-        // Load saved state into each manager
-        this.terrainManager.load(worldState.terrain);
-        this.structureManager.load(worldState.structures);
-        this.environmentManager.load(worldState.environment);
-        this.interactiveManager.load(worldState.interactive);
-        this.zoneManager.load(worldState.zones);
-        
-        // Load teleport data if available
-        if (worldState.teleport && this.teleportManager.load) {
-            this.teleportManager.load(worldState.teleport);
-        }
-    }
-    
-    /**
      * Load a pre-generated map
      * @param {Object} mapData - The map data to load
      * @param {boolean} useChunking - Whether to use chunked loading (for large maps)

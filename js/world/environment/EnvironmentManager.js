@@ -5,8 +5,6 @@ import { Bush } from './Bush.js';
 import { Flower } from './Flower.js';
 import { TallGrass } from './TallGrass.js';
 import { AncientTree } from './AncientTree.js';
-import { Waterfall } from './Waterfall.js';
-import { CrystalFormation } from './CrystalFormation.js';
 import { TreeCluster } from './TreeCluster.js';
 import { RandomGenerator } from '../utils/RandomGenerator.js';
 import { EnvironmentFactory } from './EnvironmentFactory.js';
@@ -55,6 +53,7 @@ export class EnvironmentManager {
         this.stumps = [];
         this.waterfalls = [];
         this.crystalFormations = [];
+        this.mosses = [];
         
         // Performance optimization settings
         this.useTreeClustering = true; // Enable tree clustering by default
@@ -377,108 +376,8 @@ export class EnvironmentManager {
         }
     }
     
-    /**
-     * Generate environment objects for a specific chunk
-     * @param {number} chunkX - X chunk coordinate
-     * @param {number} chunkZ - Z chunk coordinate
-     */
-    generateEnvironmentObjects(chunkX, chunkZ) {
-        const chunkKey = `${chunkX},${chunkZ}`;
-        const environmentObjects = [];
-        
-        // Check if we have saved environment objects for this chunk
-        if (this.savedEnvironmentObjects && this.savedEnvironmentObjects[chunkKey]) {
-            // Restore saved environment objects
-            const savedObjects = this.savedEnvironmentObjects[chunkKey];
-            
-            for (const savedObj of savedObjects) {
-                // Create the object based on saved type and position
-                let object;
-                const x = savedObj.position.x;
-                const z = savedObj.position.z;
-                
-                // Get zone type for the position
-                const zoneType = this.getZoneTypeAt(x, z);
-                
-                switch (savedObj.type) {
-                    case 'tree':
-                        object = this.createTree(x, z, zoneType);
-                        break;
-                    case 'rock':
-                        object = this.createRock(x, z, zoneType);
-                        break;
-                    case 'bush':
-                        object = this.createBush(x, z, zoneType);
-                        break;
-                    case 'flower':
-                        object = this.createFlower(x, z, zoneType);
-                        break;
-                }
-                
-                if (object) {
-                    // Store object with its type and position for persistence
-                    environmentObjects.push({
-                        type: savedObj.type,
-                        object: object,
-                        position: new THREE.Vector3(x, this.worldManager.getTerrainHeight(x, z), z)
-                    });
-                }
-            }
-        } else {
-            // Generate new environment objects
-            // Calculate world coordinates for this chunk
-            const worldX = chunkX * this.chunkSize;
-            const worldZ = chunkZ * this.chunkSize;
-            
-            // Seed the random number generator based on chunk coordinates for consistency
-            const random = RandomGenerator.seededRandom(`${chunkX},${chunkZ}`);
-            
-            // Generate environment objects for each type
-            for (const objectType of this.environmentObjectTypes) {
-                // Determine number of objects to generate based on density
-                const density = this.environmentObjectDensity[objectType];
-                const numObjects = Math.floor(this.chunkSize * this.chunkSize * density);
-                
-                for (let i = 0; i < numObjects; i++) {
-                    // Random position within the chunk
-                    const x = worldX + random() * this.chunkSize;
-                    const z = worldZ + random() * this.chunkSize;
-                    
-                    // Get zone type for the position
-                    const zoneType = this.getZoneTypeAt(x, z);
-                    
-                    // Create the object based on type
-                    let object;
-                    switch (objectType) {
-                        case 'tree':
-                            object = this.createTree(x, z, zoneType);
-                            break;
-                        case 'rock':
-                            object = this.createRock(x, z, zoneType);
-                            break;
-                        case 'bush':
-                            object = this.createBush(x, z, zoneType);
-                            break;
-                        case 'flower':
-                            object = this.createFlower(x, z, zoneType);
-                            break;
-                    }
-                    
-                    if (object) {
-                        // Store object with its type and position for persistence
-                        environmentObjects.push({
-                            type: objectType,
-                            object: object,
-                            position: new THREE.Vector3(x, this.worldManager.getTerrainHeight(x, z), z)
-                        });
-                    }
-                }
-            }
-        }
-        
-        // Store environment objects for this chunk
-        this.environmentObjects[chunkKey] = environmentObjects;
-    }
+    // The generateEnvironmentObjects method has been removed
+    // Environment objects are now created using the factory system
     
     /**
      * Remove environment objects for a specific chunk
@@ -607,132 +506,23 @@ export class EnvironmentManager {
         return 'Forest';
     }
     
-    /**
-     * Create a tree at the specified position
-     * @param {number} x - X coordinate
-     * @param {number} z - Z coordinate
-     * @param {string} zoneType - The type of zone (Forest, Desert, etc.)
-     * @param {number} scaleFactor - Optional scale factor for natural variation
-     * @returns {THREE.Group} - The tree group
-     */
-    createTree(x, z, zoneType = 'Forest', scaleFactor = 1.0) {
-        const tree = new Tree(zoneType);
-        const treeGroup = tree.createMesh();
-        
-        // Apply scale factor for natural variation
-        if (scaleFactor !== 1.0) {
-            treeGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
-        }
-        
-        // Add some random rotation for natural look
-        treeGroup.rotation.y = Math.random() * Math.PI * 2;
-        
-        // Position tree on terrain
-        treeGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
-        
-        // Add to scene
-        this.scene.add(treeGroup);
-        
-        return treeGroup;
-    }
+    // The createTree method has been removed
+    // Trees are now created using the factory system
     
-    /**
-     * Create a rock at the specified position
-     * @param {number} x - X coordinate
-     * @param {number} z - Z coordinate
-     * @param {string} zoneType - The type of zone (Forest, Desert, etc.)
-     * @returns {THREE.Group} - The rock group
-     */
-    createRock(x, z, zoneType = 'Forest') {
-        const rock = new Rock(zoneType);
-        const rockGroup = rock.createMesh();
-        
-        // Position rock on terrain
-        rockGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
-        
-        // Add to scene
-        this.scene.add(rockGroup);
-        
-        return rockGroup;
-    }
+    // The createRock method has been removed
+    // Rocks are now created using the factory system
     
-    /**
-     * Create a bush at the specified position
-     * @param {number} x - X coordinate
-     * @param {number} z - Z coordinate
-     * @returns {THREE.Group} - The bush group
-     */
-    createBush(x, z) {
-        const bush = new Bush();
-        const bushGroup = bush.createMesh();
-        
-        // Position bush on terrain
-        bushGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
-        
-        // Add to scene
-        this.scene.add(bushGroup);
-        
-        return bushGroup;
-    }
+    // The createBush method has been removed
+    // Bushes are now created using the factory system
     
-    /**
-     * Create a flower at the specified position
-     * @param {number} x - X coordinate
-     * @param {number} z - Z coordinate
-     * @returns {THREE.Group} - The flower group
-     */
-    createFlower(x, z) {
-        const flower = new Flower();
-        const flowerGroup = flower.createMesh();
-        
-        // Position flower on terrain
-        flowerGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
-        
-        // Add to scene
-        this.scene.add(flowerGroup);
-        
-        return flowerGroup;
-    }
+    // The createFlower method has been removed
+    // Flowers are now created using the factory system
 
-    /**
-     * Create tall grass at the specified position
-     * @param {number} x - X coordinate
-     * @param {number} z - Z coordinate
-     * @param {string} zoneType - The type of zone (Forest, Desert, etc.)
-     * @returns {THREE.Group} - The tall grass group
-     */
-    createTallGrass(x, z, zoneType = 'Forest') {
-        const tallGrass = new TallGrass(zoneType);
-        const grassGroup = tallGrass.createMesh();
-        
-        // Position tall grass on terrain
-        grassGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
-        
-        // Add to scene
-        this.scene.add(grassGroup);
-        
-        return grassGroup;
-    }
+    // The createTallGrass method has been removed
+    // Tall grass is now created using the factory system
 
-    /**
-     * Create an ancient tree at the specified position
-     * @param {number} x - X coordinate
-     * @param {number} z - Z coordinate
-     * @param {string} zoneType - The type of zone (Forest, Desert, etc.)
-     * @returns {THREE.Group} - The ancient tree group
-     */
-    createAncientTree(x, z, zoneType = 'Forest') {
-        const ancientTree = new AncientTree(zoneType);
-        const treeGroup = ancientTree.createMesh();
-        
-        // Position ancient tree on terrain
-        treeGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
-        
-        // Add to scene
-        this.scene.add(treeGroup);
-        
-        return treeGroup;
-    }
+    // The createAncientTree method has been removed
+    // Ancient trees are now created using the factory system
     
     /**
      * Create an environment object using the factory
@@ -790,232 +580,15 @@ export class EnvironmentManager {
         return camelCase + 's';
     }
 
-    /**
-     * Create a small plant at the specified position
-     * @param {number} x - X coordinate
-     * @param {number} z - Z coordinate
-     * @returns {THREE.Group} - The small plant group
-     */
-    createSmallPlant(x, z) {
-        // Create a simple small plant using a scaled-down bush
-        const bush = new Bush();
-        const plantGroup = bush.createMesh();
-        
-        // Scale it down to make it a small plant
-        plantGroup.scale.set(0.3, 0.3, 0.3);
-        
-        // Position on terrain
-        plantGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
-        
-        // Add to scene
-        this.scene.add(plantGroup);
-        
-        // Add to tracking array
-        this.smallPlants.push(plantGroup);
-        
-        return plantGroup;
-    }
+    // The createSmallPlant method has been removed
+    // Small plants are now created using the factory system
 
-    /**
-     * Create a fallen log at the specified position
-     * @param {number} x - X coordinate
-     * @param {number} z - Z coordinate
-     * @returns {THREE.Group} - The fallen log group
-     */
-    createFallenLog(x, z) {
-        const logGroup = new THREE.Group();
-        
-        // Create a horizontal cylinder for the log
-        const logGeometry = new THREE.CylinderGeometry(0.3, 0.4, 4, 8);
-        const logMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-        const log = new THREE.Mesh(logGeometry, logMaterial);
-        
-        // Rotate to make it horizontal
-        log.rotation.z = Math.PI / 2;
-        log.rotation.y = Math.random() * Math.PI * 2;
-        
-        // Position on terrain
-        log.position.y = 0.2;
-        log.castShadow = true;
-        log.receiveShadow = true;
-        
-        logGroup.add(log);
-        logGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
-        
-        // Add to scene
-        this.scene.add(logGroup);
-        
-        // Add to tracking array
-        this.fallenLogs.push(logGroup);
-        
-        return logGroup;
-    }
+    // The createFallenLog method has been removed
+    // Fallen logs are now created using the factory system
 
-    /**
-     * Create a mushroom at the specified position
-     * @param {number} x - X coordinate
-     * @param {number} z - Z coordinate
-     * @returns {THREE.Group} - The mushroom group
-     */
-    createMushroom(x, z) {
-        const mushroomGroup = new THREE.Group();
-        
-        // Stem
-        const stemGeometry = new THREE.CylinderGeometry(0.05, 0.08, 0.4, 6);
-        const stemMaterial = new THREE.MeshLambertMaterial({ color: 0xF5DEB3 });
-        const stem = new THREE.Mesh(stemGeometry, stemMaterial);
-        stem.position.y = 0.2;
-        
-        // Cap
-        const capGeometry = new THREE.SphereGeometry(0.2, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2);
-        const capColors = [0x8B4513, 0xA0522D, 0xCD853F, 0xD2691E, 0xFF6347];
-        const capColor = capColors[Math.floor(Math.random() * capColors.length)];
-        const capMaterial = new THREE.MeshLambertMaterial({ color: capColor });
-        const cap = new THREE.Mesh(capGeometry, capMaterial);
-        cap.position.y = 0.4;
-        
-        mushroomGroup.add(stem);
-        mushroomGroup.add(cap);
-        
-        // Position on terrain
-        mushroomGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
-        
-        // Add to scene
-        this.scene.add(mushroomGroup);
-        
-        // Add to tracking array
-        this.mushrooms.push(mushroomGroup);
-        
-        return mushroomGroup;
-    }
+    // The createMushroom method has been removed
+    // Mushrooms are now created using the factory system
 
-    /**
-     * Create a rock formation at the specified position
-     * @param {number} x - X coordinate
-     * @param {number} z - Z coordinate
-     * @returns {THREE.Group} - The rock formation group
-     */
-    createRockFormation(x, z) {
-        const formationGroup = new THREE.Group();
-        
-        // Create multiple rocks in a formation
-        const rockCount = 3 + Math.floor(Math.random() * 4);
-        
-        for (let i = 0; i < rockCount; i++) {
-            const rock = new Rock();
-            const rockMesh = rock.createMesh();
-            
-            // Position rocks in a cluster
-            const angle = (i / rockCount) * Math.PI * 2;
-            const distance = Math.random() * 2;
-            rockMesh.position.x = Math.cos(angle) * distance;
-            rockMesh.position.z = Math.sin(angle) * distance;
-            
-            // Vary the scale
-            const scale = 0.8 + Math.random() * 0.6;
-            rockMesh.scale.set(scale, scale, scale);
-            
-            formationGroup.add(rockMesh);
-        }
-        
-        // Position on terrain
-        formationGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
-        
-        // Add to scene
-        this.scene.add(formationGroup);
-        
-        // Add to tracking array
-        this.rockFormations.push(formationGroup);
-        
-        return formationGroup;
-    }
-
-    /**
-     * Create a shrine at the specified position
-     * @param {number} x - X coordinate
-     * @param {number} z - Z coordinate
-     * @returns {THREE.Group} - The shrine group
-     */
-    createShrine(x, z) {
-        const shrineGroup = new THREE.Group();
-        
-        // Base
-        const baseGeometry = new THREE.CylinderGeometry(1, 1.2, 0.3, 8);
-        const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x696969 });
-        const base = new THREE.Mesh(baseGeometry, baseMaterial);
-        base.position.y = 0.15;
-        
-        // Pillar
-        const pillarGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1.5, 8);
-        const pillarMaterial = new THREE.MeshLambertMaterial({ color: 0x808080 });
-        const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
-        pillar.position.y = 1.05;
-        
-        // Top ornament
-        const ornamentGeometry = new THREE.SphereGeometry(0.3, 8, 6);
-        const ornamentMaterial = new THREE.MeshLambertMaterial({ 
-            color: 0xFFD700,
-            emissive: 0xFFD700,
-            emissiveIntensity: 0.1
-        });
-        const ornament = new THREE.Mesh(ornamentGeometry, ornamentMaterial);
-        ornament.position.y = 1.8;
-        
-        shrineGroup.add(base);
-        shrineGroup.add(pillar);
-        shrineGroup.add(ornament);
-        
-        // Position on terrain
-        shrineGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
-        
-        // Add to scene
-        this.scene.add(shrineGroup);
-        
-        // Add to tracking array
-        this.shrines.push(shrineGroup);
-        
-        return shrineGroup;
-    }
-
-    /**
-     * Create a stump at the specified position
-     * @param {number} x - X coordinate
-     * @param {number} z - Z coordinate
-     * @returns {THREE.Group} - The stump group
-     */
-    createStump(x, z) {
-        const stumpGroup = new THREE.Group();
-        
-        // Main stump
-        const stumpGeometry = new THREE.CylinderGeometry(0.6, 0.8, 0.8, 8);
-        const stumpMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-        const stump = new THREE.Mesh(stumpGeometry, stumpMaterial);
-        stump.position.y = 0.4;
-        
-        // Add some texture with rings
-        const ringGeometry = new THREE.CylinderGeometry(0.65, 0.65, 0.05, 8);
-        const ringMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
-        
-        for (let i = 0; i < 3; i++) {
-            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-            ring.position.y = 0.2 + i * 0.2;
-            stumpGroup.add(ring);
-        }
-        
-        stumpGroup.add(stump);
-        
-        // Position on terrain
-        stumpGroup.position.set(x, this.worldManager.getTerrainHeight(x, z), z);
-        
-        // Add to scene
-        this.scene.add(stumpGroup);
-        
-        // Add to tracking array
-        this.stumps.push(stumpGroup);
-        
-        return stumpGroup;
-    }
-    
     /**
      * Clear all environment objects
      */
@@ -1048,39 +621,8 @@ export class EnvironmentManager {
         this.stumps = [];
     }
     
-    /**
-     * Save environment state
-     * @returns {object} - The saved environment state
-     */
-    save() {
-        const environmentState = {
-            objects: {}
-        };
-        
-        // Save environment objects
-        for (const chunkKey in this.environmentObjects) {
-            environmentState.objects[chunkKey] = this.environmentObjects[chunkKey].map(item => ({
-                type: item.type,
-                position: {
-                    x: item.position.x,
-                    y: item.position.y,
-                    z: item.position.z
-                }
-            }));
-        }
-        
-        return environmentState;
-    }
-    
-    /**
-     * Load environment state
-     * @param {object} environmentState - The environment state to load
-     */
-    load(environmentState) {
-        if (!environmentState || !environmentState.objects) return;
-        
-        this.savedEnvironmentObjects = environmentState.objects;
-    }
+    // The save() and load() methods have been removed as they are no longer used
+    // Environment data is no longer saved to localStorage
     
     /**
      * Optimize forest map by converting individual trees into tree clusters

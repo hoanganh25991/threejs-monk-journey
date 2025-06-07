@@ -489,13 +489,8 @@ export class SaveManager extends ISaveSystem {
         this.loadProgress.update('Processing world data...', 85);
         await this.delay(10);
         
-        if (worldData.environmentObjects) {
-            if (world.environmentManager) {
-                world.environmentManager.savedObjects = worldData.environmentObjects;
-            } else {
-                world.savedEnvironmentObjects = worldData.environmentObjects;
-            }
-        }
+        // Environment objects are no longer saved or loaded
+        // This code has been removed as it's no longer needed
         
         if (worldData.terrainChunks) {
             if (world.terrainManager) {
