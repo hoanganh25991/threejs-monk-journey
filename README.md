@@ -36,6 +36,10 @@ Monk Journey is an action RPG game where you play as a monk with powerful martia
 ![monk-journey](screenshots/monk-journey-item-equip-20250530.jpg)
 ![monk-journey](screenshots/monk-journey-item-preview-20250530.jpg)
 
+### Map Selection
+![monk-journey](screenshots/monk-journey-map-selection-20250607.png)
+
+
 ## Features
 
 - **Powerful Monk Skills**: Master abilities like Wave Strike, Cyclone Strike, Seven-Sided Strike, and Inner Sanctuary
