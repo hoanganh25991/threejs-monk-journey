@@ -23,7 +23,7 @@ export class RarePlant extends EnvironmentObject {
         this.hasFlowers = Math.random() > 0.3; // 70% chance to have flowers
         
         // Get zone type from world manager if available
-        this.zoneType = worldManager?.getCurrentZoneType() || 'Forest';
+        this.zoneType = worldManager?.getCurrentZoneType(position) || 'Forest';
         
         // Create the plant
         this.object = this.create();

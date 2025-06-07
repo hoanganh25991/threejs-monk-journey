@@ -329,6 +329,19 @@ export class WorldManager {
     }
 
     /**
+     * Get the current zone type at a specific position
+     * @param {THREE.Vector3} position - The position to check (optional, defaults to origin)
+     * @returns {string} - The zone type name
+     */
+    getCurrentZoneType(position = new THREE.Vector3(0, 0, 0)) {
+        if (this.zoneManager && this.zoneManager.getZoneAt) {
+            const zone = this.zoneManager.getZoneAt(position);
+            return zone ? zone.name : 'Forest';
+        }
+        return 'Forest'; // Default fallback
+    }
+
+    /**
      * Hint the JavaScript engine to perform garbage collection
      * This is called after significant cleanup operations to help free memory
      */

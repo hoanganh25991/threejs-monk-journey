@@ -23,7 +23,7 @@ export class Oasis extends EnvironmentObject {
         this.hasRocks = Math.random() > 0.4; // 60% chance to have rocks
         
         // Get zone type from world manager if available
-        this.zoneType = worldManager?.getCurrentZoneType() || 'Desert';
+        this.zoneType = worldManager?.getCurrentZoneType(position) || 'Desert';
         
         // Create the oasis
         this.object = this.create();

@@ -23,7 +23,7 @@ export class ObsidianFormation extends EnvironmentObject {
         this.reflectivity = 0.3 + Math.random() * 0.4; // Random reflectivity between 0.3-0.7
         
         // Get zone type from world manager if available
-        this.zoneType = worldManager?.getCurrentZoneType() || 'Volcanic Wastes';
+        this.zoneType = worldManager?.getCurrentZoneType(position) || 'Volcanic Wastes';
         
         // Create the formation
         this.object = this.create();
