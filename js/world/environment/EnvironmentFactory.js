@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 
+// Import environment configuration
+import { ENVIRONMENT_OBJECTS } from '../../config/environment.js';
+
 // Import environment objects
 import { WaterFeature } from './WaterFeature.js';
 import { LavaFeature } from './LavaFeature.js';
@@ -42,23 +45,23 @@ export class EnvironmentFactory {
      * Register all environment object creators
      */
     registerEnvironmentObjects() {
-        // Register standard environment objects
-        this.register('water', (position, size) => new WaterFeature(this.scene, this.worldManager, position, size));
-        this.register('lava', (position, size) => new LavaFeature(this.scene, this.worldManager, position, size));
-        this.register('crystal_formation', (position, size) => new CrystalFormation(this.scene, this.worldManager, position, size));
-        this.register('rare_plant', (position, size) => new RarePlant(this.scene, this.worldManager, position, size));
-        this.register('magical_stone', (position, size) => new MagicalStone(this.scene, this.worldManager, position, size));
-        this.register('ancient_artifact', (position, size) => new AncientArtifact(this.scene, this.worldManager, position, size));
-        this.register('moss', (position, size) => new Moss(this.scene, this.worldManager, position, size));
-        this.register('oasis', (position, size) => new Oasis(this.scene, this.worldManager, position, size));
-        this.register('obsidian_formation', (position, size) => new ObsidianFormation(this.scene, this.worldManager, position, size));
-        this.register('desert_shrine', (position, size) => new DesertShrine(this.scene, this.worldManager, position, size));
-        this.register('tree_cluster', (data) => new TreeCluster(this.scene, this.worldManager, data));
-        this.register('small_peak', (position, size) => new SmallPeak(this.scene, this.worldManager, position, size));
-        this.register('snow_patch', (position, size) => new SnowPatch(this.scene, this.worldManager, position, size));
+        // Register environment objects with dedicated classes
+        this.register(ENVIRONMENT_OBJECTS.WATER, (position, size) => new WaterFeature(this.scene, this.worldManager, position, size));
+        this.register(ENVIRONMENT_OBJECTS.LAVA, (position, size) => new LavaFeature(this.scene, this.worldManager, position, size));
+        this.register(ENVIRONMENT_OBJECTS.CRYSTAL_FORMATION, (position, size) => new CrystalFormation(this.scene, this.worldManager, position, size));
+        this.register(ENVIRONMENT_OBJECTS.RARE_PLANT, (position, size) => new RarePlant(this.scene, this.worldManager, position, size));
+        this.register(ENVIRONMENT_OBJECTS.MAGICAL_STONE, (position, size) => new MagicalStone(this.scene, this.worldManager, position, size));
+        this.register(ENVIRONMENT_OBJECTS.ANCIENT_ARTIFACT, (position, size) => new AncientArtifact(this.scene, this.worldManager, position, size));
+        this.register(ENVIRONMENT_OBJECTS.MOSS, (position, size) => new Moss(this.scene, this.worldManager, position, size));
+        this.register(ENVIRONMENT_OBJECTS.OASIS, (position, size) => new Oasis(this.scene, this.worldManager, position, size));
+        this.register(ENVIRONMENT_OBJECTS.OBSIDIAN_FORMATION, (position, size) => new ObsidianFormation(this.scene, this.worldManager, position, size));
+        this.register(ENVIRONMENT_OBJECTS.DESERT_SHRINE, (position, size) => new DesertShrine(this.scene, this.worldManager, position, size));
+        this.register(ENVIRONMENT_OBJECTS.TREE_CLUSTER, (data) => new TreeCluster(this.scene, this.worldManager, data));
+        this.register(ENVIRONMENT_OBJECTS.SMALL_PEAK, (position, size) => new SmallPeak(this.scene, this.worldManager, position, size));
+        this.register(ENVIRONMENT_OBJECTS.SNOW_PATCH, (position, size) => new SnowPatch(this.scene, this.worldManager, position, size));
         
         // Register traditional environment objects
-        this.register('tree', (position, size) => {
+        this.register(ENVIRONMENT_OBJECTS.TREE, (position, size) => {
             const tree = new Tree();
             const treeGroup = tree.createMesh();
             treeGroup.position.copy(position);
@@ -69,7 +72,7 @@ export class EnvironmentFactory {
             return treeGroup;
         });
         
-        this.register('rock', (position, size) => {
+        this.register(ENVIRONMENT_OBJECTS.ROCK, (position, size) => {
             const rock = new Rock();
             const rockGroup = rock.createMesh();
             rockGroup.position.copy(position);
@@ -80,7 +83,7 @@ export class EnvironmentFactory {
             return rockGroup;
         });
         
-        this.register('bush', (position, size) => {
+        this.register(ENVIRONMENT_OBJECTS.BUSH, (position, size) => {
             const bush = new Bush();
             const bushGroup = bush.createMesh();
             bushGroup.position.copy(position);
@@ -91,7 +94,7 @@ export class EnvironmentFactory {
             return bushGroup;
         });
         
-        this.register('flower', (position, size) => {
+        this.register(ENVIRONMENT_OBJECTS.FLOWER, (position, size) => {
             const flower = new Flower();
             const flowerGroup = flower.createMesh();
             flowerGroup.position.copy(position);
@@ -102,7 +105,7 @@ export class EnvironmentFactory {
             return flowerGroup;
         });
         
-        this.register('tall_grass', (position, size) => {
+        this.register(ENVIRONMENT_OBJECTS.TALL_GRASS, (position, size) => {
             const tallGrass = new TallGrass();
             const grassGroup = tallGrass.createMesh();
             grassGroup.position.copy(position);
@@ -113,7 +116,7 @@ export class EnvironmentFactory {
             return grassGroup;
         });
         
-        this.register('ancient_tree', (position, size) => {
+        this.register(ENVIRONMENT_OBJECTS.ANCIENT_TREE, (position, size) => {
             const ancientTree = new AncientTree();
             const treeGroup = ancientTree.createMesh();
             treeGroup.position.copy(position);
@@ -124,7 +127,7 @@ export class EnvironmentFactory {
             return treeGroup;
         });
         
-        this.register('waterfall', (position, size) => {
+        this.register(ENVIRONMENT_OBJECTS.WATERFALL, (position, size) => {
             const waterfall = new Waterfall(this.scene, this.worldManager);
             const waterfallGroup = waterfall.createMesh(position);
             if (size !== 1) {
@@ -134,7 +137,7 @@ export class EnvironmentFactory {
         });
         
         // Register simple objects that don't have dedicated classes yet
-        this.register('small_plant', (position, size) => {
+        this.register(ENVIRONMENT_OBJECTS.SMALL_PLANT, (position, size) => {
             // Create a simple small plant using a scaled-down bush
             const bush = new Bush();
             const plantGroup = bush.createMesh();
@@ -146,7 +149,7 @@ export class EnvironmentFactory {
             return plantGroup;
         });
         
-        this.register('fallen_log', (position, size) => {
+        this.register(ENVIRONMENT_OBJECTS.FALLEN_LOG, (position, size) => {
             // Create a simple fallen log using a cylinder
             const geometry = new THREE.CylinderGeometry(0.5 * size, 0.4 * size, 4 * size, 8);
             const material = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
@@ -182,7 +185,7 @@ export class EnvironmentFactory {
             return logGroup;
         });
         
-        this.register('mushroom', (position, size) => {
+        this.register(ENVIRONMENT_OBJECTS.MUSHROOM, (position, size) => {
             // Create a simple mushroom
             const stemGeometry = new THREE.CylinderGeometry(0.1 * size, 0.15 * size, 0.5 * size, 8);
             const stemMaterial = new THREE.MeshLambertMaterial({ color: 0xECEFF1 });
@@ -209,7 +212,7 @@ export class EnvironmentFactory {
             return mushroomGroup;
         });
         
-        this.register('rock_formation', (position, size) => {
+        this.register(ENVIRONMENT_OBJECTS.ROCK_FORMATION, (position, size) => {
             // Create a rock formation with multiple rocks
             const rockFormationGroup = new THREE.Group();
             
@@ -244,7 +247,7 @@ export class EnvironmentFactory {
             return rockFormationGroup;
         });
         
-        this.register('shrine', (position, size) => {
+        this.register(ENVIRONMENT_OBJECTS.SHRINE, (position, size) => {
             // Create a simple shrine
             const baseGeometry = new THREE.BoxGeometry(2 * size, 0.5 * size, 2 * size);
             const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x9E9E9E });
@@ -297,7 +300,7 @@ export class EnvironmentFactory {
             return shrineGroup;
         });
         
-        this.register('stump', (position, size) => {
+        this.register(ENVIRONMENT_OBJECTS.STUMP, (position, size) => {
             // Create a tree stump
             const trunkGeometry = new THREE.CylinderGeometry(0.6 * size, 0.7 * size, 0.8 * size, 12);
             const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x8D6E63 });

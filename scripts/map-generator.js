@@ -1,132 +1,19 @@
 #!/usr/bin/env node
 
-/**
- * Meaningful Map Generator Script
- * Creates pre-defined themed maps with roads, villages, towers, and natural formations
- * Based on the existing WorldManager and structure systems
- */
-
-// Simple Vector3 implementation for Node.js (since we can't import THREE.js in Node)
-class Vector3 {
-    constructor(x = 0, y = 0, z = 0) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-    
-    clone() {
-        return new Vector3(this.x, this.y, this.z);
-    }
-    
-    distanceTo(v) {
-        const dx = this.x - v.x;
-        const dy = this.y - v.y;
-        const dz = this.z - v.z;
-        return Math.sqrt(dx * dx + dy * dy + dz * dz);
-    }
-    
-    add(v) {
-        this.x += v.x;
-        this.y += v.y;
-        this.z += v.z;
-        return this;
-    }
-    
-    sub(v) {
-        this.x -= v.x;
-        this.y -= v.y;
-        this.z -= v.z;
-        return this;
-    }
-    
-    multiplyScalar(scalar) {
-        this.x *= scalar;
-        this.y *= scalar;
-        this.z *= scalar;
-        return this;
-    }
-}
-
-// Enhanced color definitions with more distinctive zone colors
-const ZONE_COLORS = {
-    'Forest': {
-        'foliage': '#1E5631', // Deeper, richer green for forest foliage
-        'trunk': '#8B4513',   // Classic brown for trunks
-        'ground': '#5E7742',  // More vibrant forest floor green
-        'rock': '#708090',
-        'structure': '#36454F',
-        'accent': '#FFCC00',  // Golden accent for forest (sunlight through trees)
-        'path': '#A0522D'     // Brown dirt path
-    },
-    'Desert': {
-        'sand': '#E9BE62',    // Warmer, more vibrant sand color
-        'rock': '#A0522D',
-        'vegetation': '#7D9C42', // Brighter desert vegetation
-        'sky': '#87CEEB',
-        'structure': '#D2B48C', // Lighter sandstone structures
-        'accent': '#FF4500',    // Bright orange accent (desert sunset)
-        'path': '#D2B48C'       // Sandy path
-    },
-    'Mountains': {
-        'snow': '#FFFFFF',      // Pure white snow
-        'ice': '#A5D8E6',       // More vibrant ice blue
-        'rock': '#6D6552',      // Darker, more defined mountain rock
-        'structure': '#8CADD6', // Blueish mountain structures
-        'vegetation': '#2E8B57',
-        'accent': '#C9E4CA',    // Pale green accent (alpine meadows)
-        'path': '#8E7F6D'       // Rocky mountain path
-    },
-    'Swamp': {
-        'water': '#3A7D7D',     // Deeper, murkier swamp water
-        'vegetation': '#4A6C2F', // Darker swamp vegetation
-        'ground': '#4D5645',    // Darker, muddier swamp ground
-        'structure': '#708090',
-        'rock': '#36454F',
-        'accent': '#40E0D0',    // Cyan accent (glowing swamp elements)
-        'path': '#5D4037'       // Dark muddy path
-    },
-    'Ruins': {
-        'stone': '#7D7D7D',     // Darker stone for more dramatic ruins
-        'ground': '#6D7254',    // Darker ground around ruins
-        'vegetation': '#556B2F',
-        'structure': '#4A4A4A', // Darker structure color for ruins
-        'accent': '#9370DB',    // Purple accent (magical ruins elements)
-        'path': '#696969'       // Ancient stone path
-    },
-    'Dark Sanctum': {
-        'structure': '#0C0C0C',
-        'fire': '#FF4500',
-        'ground': '#3D2B22',    // Darker ground for more ominous feel
-        'accent': '#8B0000',
-        'glow': '#E3CF57',
-        'path': '#2A0A0A'       // Dark red-black path
-    },
-    'Terrant': {
-        'soil': '#E5C09A',
-        'rock': '#696969',
-        'vegetation': '#228B22',
-        'crystal': '#7B68EE',
-        'structure': '#4A4A4A',
-        'accent': '#DAA520',
-        'water': '#1E90FF',
-        'glow': '#32CD32',
-        'path': '#B8A888'       // Light dirt path
-    }
-};
-
-const HOT_ZONE_COLORS = {
-    'lava': '#FF5722',      // Brighter, more vibrant lava
-    'magma': '#FF8A65',     // Lighter magma for contrast
-    'ground': '#2D2D2D',    // Darker ground for contrast with lava
-    'ash': '#BEBEBE',
-    'glow': '#FFEB3B',      // Brighter yellow glow
-    'ember': '#FF9800',     // Brighter orange ember
-    'path': '#3E2723'       // Dark volcanic path
-};
-
-// Import Node.js modules
 import fs from 'fs';
 import path from 'path';
+
+// Import environment configuration
+import { 
+    ENVIRONMENT_OBJECTS, 
+    THEME_SPECIFIC_OBJECTS, 
+    CROSS_THEME_FEATURES, 
+} from '../js/config/environment.js';
+
+import { 
+    ZONE_COLORS, 
+    HOT_ZONE_COLORS, 
+} from '../js/config/colors.js';
 
 /**
  * Map themes with their characteristics
@@ -1271,77 +1158,38 @@ class MapGenerator {
      */
     getThemeSpecificScatteredObjects(theme) {
         // Common objects for all themes
-        const commonObjects = [
-            { type: 'rock', minSize: 0.4, maxSize: 1.2, weight: 5, variants: 5, canCluster: true, canGlow: false },
-            { type: 'bush', minSize: 0.5, maxSize: 1.5, weight: 5, variants: 3, canCluster: true, canGlow: false },
-            { type: 'flower', minSize: 0.3, maxSize: 0.8, weight: 4, variants: 6, canCluster: true, canGlow: true },
-            { type: 'tall_grass', minSize: 0.4, maxSize: 1.0, weight: 4, variants: 3, canCluster: true, canGlow: false },
-            { type: 'small_plant', minSize: 0.3, maxSize: 0.9, weight: 3, variants: 4, canCluster: true, canGlow: false }
-        ];
+        const commonObjects = THEME_SPECIFIC_OBJECTS.COMMON;
         
         // Theme-specific objects
         let themeObjects = [];
         
         switch (theme.primaryZone) {
             case 'Forest':
-                themeObjects = [
-                    { type: 'tree', minSize: 0.8, maxSize: 2.0, weight: 8, variants: 5, canCluster: false, canGlow: false },
-                    { type: 'stump', minSize: 0.5, maxSize: 1.2, weight: 3, variants: 3, canCluster: false, canGlow: false },
-                    { type: 'fern', minSize: 0.4, maxSize: 1.0, weight: 4, variants: 3, canCluster: true, canGlow: false },
-                    { type: 'mushroom', minSize: 0.3, maxSize: 0.7, weight: 5, variants: 4, canCluster: true, canGlow: true },
-                    { type: 'forest_debris', minSize: 0.4, maxSize: 0.9, weight: 3, variants: 3, canCluster: false, canGlow: false },
-                    { type: 'berry_bush', minSize: 0.5, maxSize: 1.2, weight: 3, variants: 2, canCluster: true, canGlow: false }
-                ];
+                themeObjects = THEME_SPECIFIC_OBJECTS.FOREST;
                 break;
                 
             case 'Mountains':
-                themeObjects = [
-                    { type: 'snow_patch', minSize: 0.6, maxSize: 1.8, weight: 6, variants: 3, canCluster: true, canGlow: false },
-                    { type: 'ice_shard', minSize: 0.5, maxSize: 1.5, weight: 4, variants: 3, canCluster: true, canGlow: true },
-                    { type: 'mountain_rock', minSize: 0.7, maxSize: 2.0, weight: 7, variants: 4, canCluster: true, canGlow: false },
-                    { type: 'pine_tree', minSize: 0.8, maxSize: 2.2, weight: 5, variants: 3, canCluster: false, canGlow: false },
-                    { type: 'alpine_flower', minSize: 0.3, maxSize: 0.6, weight: 3, variants: 4, canCluster: true, canGlow: false }
-                ];
+                themeObjects = THEME_SPECIFIC_OBJECTS.MOUNTAINS;
                 break;
                 
             case 'Desert':
-                themeObjects = [
-                    { type: 'lava_rock', minSize: 0.5, maxSize: 1.5, weight: 6, variants: 3, canCluster: true, canGlow: true },
-                    { type: 'obsidian', minSize: 0.4, maxSize: 1.2, weight: 4, variants: 2, canCluster: true, canGlow: false },
-                    { type: 'ember_vent', minSize: 0.3, maxSize: 0.8, weight: 3, variants: 2, canCluster: false, canGlow: true },
-                    { type: 'ash_pile', minSize: 0.5, maxSize: 1.3, weight: 5, variants: 3, canCluster: true, canGlow: false },
-                    { type: 'desert_plant', minSize: 0.4, maxSize: 1.0, weight: 3, variants: 3, canCluster: false, canGlow: false }
-                ];
+                themeObjects = THEME_SPECIFIC_OBJECTS.DESERT;
                 break;
                 
             case 'Swamp':
-                themeObjects = [
-                    { type: 'swamp_plant', minSize: 0.5, maxSize: 1.4, weight: 6, variants: 4, canCluster: true, canGlow: false },
-                    { type: 'lily_pad', minSize: 0.4, maxSize: 1.0, weight: 5, variants: 3, canCluster: true, canGlow: false },
-                    { type: 'cattail', minSize: 0.6, maxSize: 1.2, weight: 4, variants: 2, canCluster: true, canGlow: false },
-                    { type: 'swamp_mushroom', minSize: 0.3, maxSize: 0.9, weight: 5, variants: 4, canCluster: true, canGlow: true },
-                    { type: 'twisted_root', minSize: 0.5, maxSize: 1.5, weight: 3, variants: 3, canCluster: false, canGlow: false },
-                    { type: 'swamp_light', minSize: 0.3, maxSize: 0.7, weight: 2, variants: 2, canCluster: false, canGlow: true }
-                ];
+                themeObjects = THEME_SPECIFIC_OBJECTS.SWAMP;
                 break;
                 
             case 'Ruins':
-                themeObjects = [
-                    { type: 'rubble', minSize: 0.5, maxSize: 1.3, weight: 7, variants: 4, canCluster: true, canGlow: false },
-                    { type: 'broken_stone', minSize: 0.4, maxSize: 1.2, weight: 6, variants: 5, canCluster: true, canGlow: false },
-                    { type: 'ancient_debris', minSize: 0.3, maxSize: 0.9, weight: 5, variants: 3, canCluster: true, canGlow: false },
-                    { type: 'overgrown_statue', minSize: 0.7, maxSize: 1.8, weight: 3, variants: 2, canCluster: false, canGlow: false },
-                    { type: 'rune_stone', minSize: 0.5, maxSize: 1.0, weight: 4, variants: 3, canCluster: false, canGlow: true },
-                    { type: 'magical_remnant', minSize: 0.3, maxSize: 0.7, weight: 2, variants: 2, canCluster: false, canGlow: true }
-                ];
+                themeObjects = THEME_SPECIFIC_OBJECTS.RUINS;
                 break;
                 
             default: // Terrant or other zones
                 themeObjects = [
-                    { type: 'tree', minSize: 0.7, maxSize: 1.8, weight: 5, variants: 4, canCluster: false, canGlow: false },
+                    { type: ENVIRONMENT_OBJECTS.TREE, minSize: 0.7, maxSize: 1.8, weight: 5, variants: 4, canCluster: false, canGlow: false },
                     { type: 'crystal', minSize: 0.4, maxSize: 1.0, weight: 3, variants: 3, canCluster: true, canGlow: true },
                     { type: 'strange_plant', minSize: 0.5, maxSize: 1.2, weight: 4, variants: 4, canCluster: true, canGlow: true },
-                    { type: 'magical_stone', minSize: 0.6, maxSize: 1.5, weight: 3, variants: 2, canCluster: false, canGlow: true }
+                    { type: ENVIRONMENT_OBJECTS.MAGICAL_STONE, minSize: 0.6, maxSize: 1.5, weight: 3, variants: 2, canCluster: false, canGlow: true }
                 ];
                 break;
         }
@@ -2975,7 +2823,7 @@ class MapGenerator {
             // Generate a feature based on the selected zone
             switch (randomZone) {
                 case 'Forest':
-                    const forestTypes = ['ancient_tree', 'fairy_circle', 'mushroom_cluster', 'forest_shrine'];
+                    const forestTypes = CROSS_THEME_FEATURES.FOREST;
                     const forestType = forestTypes[Math.floor(this.rng() * forestTypes.length)];
                     this.mapData.environment.push({
                         type: forestType,
@@ -2988,7 +2836,7 @@ class MapGenerator {
                     break;
                     
                 case 'Mountains':
-                    const mountainTypes = ['ice_formation', 'crystal_outcrop', 'mountain_cave'];
+                    const mountainTypes = CROSS_THEME_FEATURES.MOUNTAINS;
                     const mountainType = mountainTypes[Math.floor(this.rng() * mountainTypes.length)];
                     this.mapData.environment.push({
                         type: mountainType,
@@ -3001,7 +2849,7 @@ class MapGenerator {
                     break;
                     
                 case 'Desert':
-                    const desertTypes = ['oasis', 'obsidian_formation', 'desert_shrine'];
+                    const desertTypes = CROSS_THEME_FEATURES.DESERT;
                     const desertType = desertTypes[Math.floor(this.rng() * desertTypes.length)];
                     this.mapData.environment.push({
                         type: desertType,
@@ -3014,7 +2862,7 @@ class MapGenerator {
                     break;
                     
                 case 'Swamp':
-                    const swampTypes = ['swamp_light', 'giant_mushroom', 'bog_pit'];
+                    const swampTypes = CROSS_THEME_FEATURES.SWAMP;
                     const swampType = swampTypes[Math.floor(this.rng() * swampTypes.length)];
                     this.mapData.environment.push({
                         type: swampType,
@@ -3028,7 +2876,7 @@ class MapGenerator {
                     break;
                     
                 case 'Ruins':
-                    const ruinsTypes = ['ancient_statue', 'ruined_arch', 'magic_circle'];
+                    const ruinsTypes = CROSS_THEME_FEATURES.RUINS;
                     const ruinsType = ruinsTypes[Math.floor(this.rng() * ruinsTypes.length)];
                     this.mapData.environment.push({
                         type: ruinsType,
