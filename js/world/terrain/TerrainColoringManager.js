@@ -20,7 +20,7 @@ export class TerrainColoringManager {
         const positions = terrain.geometry.attributes.position.array;
         
         // Get colors from theme colors if available, otherwise use config
-        const zoneColors = themeColors || ZONE_COLORS[zoneType] || ZONE_COLORS['Terrant'];
+        const zoneColors = (themeColors && themeColors[zoneType]) || ZONE_COLORS[zoneType] || ZONE_COLORS['Terrant'];
         
         // Define base colors for each zone type
         let baseColorHex;
