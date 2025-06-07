@@ -496,11 +496,17 @@ export class Skill {
      * @returns {boolean} - Whether the sound was played successfully
      */
     playSound(type) {
-        if (!this.game || !this.game.audioManager) return false;
+        if (!this.game || !this.game.audioManager) {
+            console.warn(`[${this.name}] Cannot play sound: game or audioManager not available`);
+            return false;
+        }
         
         const soundName = this.sounds && this.sounds[type];
         if (soundName) {
+            console.debug(`[${this.name}] Playing sound: ${type} (ID: ${soundName})`);
             return this.game.audioManager.playSound(soundName);
+        } else {
+            console.warn(`[${this.name}] Sound not found for type: ${type}`);
         }
         
         return false;

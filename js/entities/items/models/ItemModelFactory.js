@@ -6,6 +6,7 @@ import { HelmetModel } from './armor/HelmetModel.js';
 import { RobeModel } from './armor/RobeModel.js';
 import { AmuletModel } from './accessory/AmuletModel.js';
 import { PotionModel } from './consumable/PotionModel.js';
+import { FoodModel } from './consumable/FoodModel.js';
 
 /**
  * Factory class for creating item models
@@ -63,6 +64,8 @@ export class ItemModelFactory {
                 switch (subType) {
                     case 'potion':
                         return new PotionModel(item, modelGroup);
+                    case 'food':
+                        return new FoodModel(item, modelGroup);
                     // Add more consumable subtypes as they are implemented
                     default:
                         console.warn(`No specific model for consumable subtype: ${subType}, using default`);
