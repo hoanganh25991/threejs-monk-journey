@@ -1179,71 +1179,26 @@ export class ChunkedMapLoader {
         
         let envObject = null;
         
-        switch (envData.type) {
-            case 'tree':
-                envObject = environmentManager.createTree(position.x, position.z);
-                break;
-                
-            case 'rock':
-                envObject = environmentManager.createRock(position.x, position.z);
-                break;
-                
-            case 'bush':
-                envObject = environmentManager.createBush(position.x, position.z);
-                break;
-                
-            case 'flower':
-                envObject = environmentManager.createFlower(position.x, position.z);
-                break;
-                
-            case 'tall_grass':
-                envObject = environmentManager.createTallGrass(position.x, position.z);
-                break;
-                
-            case 'ancient_tree':
-                envObject = environmentManager.createAncientTree(position.x, position.z);
-                break;
-                
-            case 'mountain':
-                envObject = this.worldManager.structureManager.createMountain(position.x, position.z);
-                break;
-                
-            case 'tree_cluster':
-                envObject = this.createTreeCluster(envData);
-                break;
-                
-            case 'small_plant':
-                envObject = environmentManager.createSmallPlant(position.x, position.z);
-                break;
-                
-            case 'water':
-                // For now, we'll skip water objects as they require special handling
-                // This prevents the warning from appearing in the console
-                console.debug(`Skipping water object at position (${position.x}, ${position.z})`);
-                break;
-                
-            case 'fallen_log':
-                envObject = environmentManager.createFallenLog(position.x, position.z);
-                break;
-                
-            case 'mushroom':
-                envObject = environmentManager.createMushroom(position.x, position.z);
-                break;
-                
-            case 'rock_formation':
-                envObject = environmentManager.createRockFormation(position.x, position.z);
-                break;
-                
-            case 'shrine':
-                envObject = environmentManager.createShrine(position.x, position.z);
-                break;
-                
-            case 'stump':
-                envObject = environmentManager.createStump(position.x, position.z);
-                break;
-                
-            default:
-                console.warn(`Unknown environment object type: ${envData.type}`);
+        // Special case for tree_cluster which needs custom handling
+        if (envData.type === 'tree_cluster') {
+            envObject = this.createTreeCluster(envData);
+        }
+        // Special case for mountain which is handled by structureManager
+        else if (envData.type === 'mountain') {
+            envObject = this.worldManager.structureManager.createMountain(position.x, position.z);
+        }
+        // Special case for water which requires special handling
+        else if (envData.type === 'water') {
+            // For now, we'll skip water objects as they require special handling
+            console.debug(`Skipping water object at position (${position.x}, ${position.z})`);
+        }
+        // Use the factory pattern for all other environment objects
+        else {
+            envObject = environmentManager.createEnvironmentObject(envData.type, position.x, position.z);
+            
+            if (!envObject) {
+                console.warn(`Failed to create environment object of type: ${envData.type}`);
+            }
         }
         
         if (envObject) {
@@ -1273,10 +1228,10 @@ export class ChunkedMapLoader {
         if (clusterData.trees && clusterData.trees.length > 0) {
             // Use the stored tree positions from the map data
             clusterData.trees.forEach(treeData => {
-                const tree = environmentManager.createTree(
+                const tree = environmentManager.createEnvironmentObject(
+                    'tree',
                     treeData.relativePosition.x,
                     treeData.relativePosition.z,
-                    clusterData.theme || 'Forest',
                     treeData.size || 1.0
                 );
                 
@@ -1300,10 +1255,10 @@ export class ChunkedMapLoader {
                 const x = Math.cos(angle) * distance;
                 const z = Math.sin(angle) * distance;
                 
-                const tree = environmentManager.createTree(
+                const tree = environmentManager.createEnvironmentObject(
+                    'tree',
                     position.x + x,
                     position.z + z,
-                    clusterData.theme || 'Forest',
                     clusterData.avgSize || 1.0
                 );
                 

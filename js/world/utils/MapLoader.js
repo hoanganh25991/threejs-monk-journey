@@ -620,21 +620,23 @@ export class MapLoader {
                         decorMesh = this.createWell(decorData);
                         break;
                     case 'tree':
-                        decorMesh = this.worldManager.environmentManager.createTree(
+                        decorMesh = this.worldManager.environmentManager.createEnvironmentObject(
+                            'tree',
                             decorData.position.x, 
                             decorData.position.z,
-                            null,
                             decorData.size || 1
                         );
                         break;
                     case 'bush':
-                        decorMesh = this.worldManager.environmentManager.createBush(
+                        decorMesh = this.worldManager.environmentManager.createEnvironmentObject(
+                            'bush',
                             decorData.position.x, 
                             decorData.position.z
                         );
                         break;
                     case 'rock':
-                        decorMesh = this.worldManager.environmentManager.createRock(
+                        decorMesh = this.worldManager.environmentManager.createEnvironmentObject(
+                            'rock',
                             decorData.position.x, 
                             decorData.position.z,
                             decorData.size || 1
@@ -1758,10 +1760,10 @@ export class MapLoader {
         if (clusterData.trees && clusterData.trees.length > 0) {
             // Use the stored tree positions from the map data
             clusterData.trees.forEach(treeData => {
-                const tree = environmentManager.createTree(
+                const tree = environmentManager.createEnvironmentObject(
+                    'tree',
                     treeData.relativePosition.x,
                     treeData.relativePosition.z,
-                    clusterData.theme || 'Forest',
                     treeData.size || 1.0
                 );
                 
@@ -1785,10 +1787,10 @@ export class MapLoader {
                 const x = Math.cos(angle) * distance;
                 const z = Math.sin(angle) * distance;
                 
-                const tree = environmentManager.createTree(
+                const tree = environmentManager.createEnvironmentObject(
+                    'tree',
                     position.x + x,
                     position.z + z,
-                    clusterData.theme || 'Forest',
                     clusterData.avgSize || 1.0
                 );
                 

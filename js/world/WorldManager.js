@@ -910,24 +910,13 @@ export class WorldManager {
                     envData.position.z
                 );
                 
-                // Use the appropriate creation method based on object type
+                // Use the factory pattern to create environment objects
                 let envObject = null;
-                switch (envData.type) {
-                    case 'tree':
-                        envObject = this.environmentManager.createTree(position.x, position.z);
-                        if (envObject) this.environmentManager.trees.push(envObject);
-                        break;
-                    case 'rock':
-                        envObject = this.environmentManager.createRock(position.x, position.z);
-                        if (envObject) this.environmentManager.rocks.push(envObject);
-                        break;
-                    case 'bush':
-                        envObject = this.environmentManager.createBush(position.x, position.z);
-                        break;
-                    case 'flower':
-                        envObject = this.environmentManager.createFlower(position.x, position.z);
-                        break;
-                }
+                
+                // Use the createEnvironmentObject method from EnvironmentManager
+                envObject = this.environmentManager.createEnvironmentObject(envData.type, position.x, position.z);
+                
+                // The tracking arrays are now handled inside createEnvironmentObject method
                 
                 // If object was created, add it to tracking and mark as generated
                 if (envObject) {
