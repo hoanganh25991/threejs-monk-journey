@@ -50,11 +50,11 @@ export class ChunkedMapLoader {
         try {
             // Clear existing world content
             await this.clearWorld();
-            logError("clearWorld")
+            // logError("clearWorld")
             
             // Process and chunk the map data
             const chunkedData = this.chunkifyMapData(mapData);
-            logError({mapData, chunkedData})
+            // logError({mapData, chunkedData})
             
             // Store map metadata (theme, general info) and chunked data
             this.currentMapMetadata = {
@@ -306,7 +306,7 @@ export class ChunkedMapLoader {
             }
         }
 
-        logError({chunksToLoad})
+        // logError({chunksToLoad})
         
         // Load all initial chunks
         for (const chunkKey in chunksToLoad) {
@@ -327,7 +327,7 @@ export class ChunkedMapLoader {
             return; // No map loaded
         }
 
-        logError("updateLoadedChunksForPosition")
+        // logError("updateLoadedChunksForPosition")
         
         // Special case for first load - initialize position tracking
         if (!this.lastPlayerPosition) {
@@ -459,7 +459,7 @@ export class ChunkedMapLoader {
         // Unload chunks that are no longer needed
         for (const chunkKey in this.loadedChunks) {
             if (!chunksToLoad[chunkKey]) {
-                await this.unloadChunk(chunkKey).then(() => logError("unloadChunk", {chunkKey}));
+                this.unloadChunk(chunkKey).then(() => console.debug("unloadChunk", {chunkKey}));
             }
         }
         
@@ -480,7 +480,7 @@ export class ChunkedMapLoader {
             return; // Already loaded or no map
         }
 
-        logError({chunkKey})
+        // logError({chunkKey})
         
         // Check if chunk is within map bounds
         if (this.currentMapMetadata.bounds) {
