@@ -232,6 +232,12 @@ export class MapSelectorUI extends UIComponent {
         this.isVisible = true;
         this.element.style.display = 'flex';
         
+        // Pause the game when map selector is opened
+        if (this.game && typeof this.game.pause === 'function') {
+            this.game.pause(false);
+            console.debug('Game paused while map selector is open');
+        }
+        
         // Add show animation
         requestAnimationFrame(() => {
             this.element.classList.add('show');
@@ -246,6 +252,12 @@ export class MapSelectorUI extends UIComponent {
     hide() {
         this.isVisible = false;
         this.element.classList.remove('show');
+        
+        // Unpause the game when map selector is closed
+        if (this.game && typeof this.game.pause === 'function') {
+            this.game.resume(false);
+            console.debug('Game unpaused after map selector is closed');
+        }
         
         // Wait for animation to complete
         setTimeout(() => {
