@@ -405,6 +405,15 @@ export class EnvironmentFactory {
     }
     
     /**
+     * Check if the factory can create an environment object of the given type
+     * @param {string} type - The type to check
+     * @returns {boolean} - True if the factory can create the type
+     */
+    canCreate(type) {
+        return this.registry.has(type);
+    }
+    
+    /**
      * Get all registered environment object types
      * @returns {Array<string>} - Array of registered types
      */
