@@ -27,6 +27,15 @@ import { TallGrass } from './TallGrass.js';
 import { AncientTree } from './AncientTree.js';
 import { Waterfall } from './Waterfall.js';
 
+// Import village and urban environment objects
+import { Market } from './Market.js';
+import { Square } from './Square.js';
+import { Plaza } from './Plaza.js';
+import { Stairs } from './Stairs.js';
+import { Well } from './Well.js';
+import { Statue } from './Statue.js';
+import { Foutain } from './Foutain.js';
+
 /**
  * Environment Factory - Creates environment objects based on type
  * Centralizes environment object creation and provides a registry for all types
@@ -59,6 +68,39 @@ export class EnvironmentFactory {
         this.register(ENVIRONMENT_OBJECTS.TREE_CLUSTER, (data) => new TreeCluster(this.scene, this.worldManager, data));
         this.register(ENVIRONMENT_OBJECTS.SMALL_PEAK, (position, size) => new SmallPeak(this.scene, this.worldManager, position, size));
         this.register(ENVIRONMENT_OBJECTS.SNOW_PATCH, (position, size) => new SnowPatch(this.scene, this.worldManager, position, size));
+        
+        // Register village and urban environment objects
+        this.register(ENVIRONMENT_OBJECTS.MARKET, (position, size, data) => {
+            const market = new Market(this.scene, this.worldManager);
+            return market.createMesh({ position, size, ...data });
+        });
+        this.register(ENVIRONMENT_OBJECTS.SQUARE, (position, size, data) => {
+            const square = new Square(this.scene, this.worldManager);
+            return square.createMesh({ position, size, ...data });
+        });
+        this.register(ENVIRONMENT_OBJECTS.PLAZA, (position, size, data) => {
+            const plaza = new Plaza(this.scene, this.worldManager);
+            return plaza.createMesh({ position, size, ...data });
+        });
+        this.register(ENVIRONMENT_OBJECTS.STAIRS, (position, size, data) => {
+            const stairs = new Stairs(this.scene, this.worldManager);
+            return stairs.createMesh({ position, size, ...data });
+        });
+        
+        this.register(ENVIRONMENT_OBJECTS.WELL, (position, size, data) => {
+            const well = new Well(this.scene, this.worldManager);
+            return well.createMesh({ position, size, ...data });
+        });
+        
+        this.register(ENVIRONMENT_OBJECTS.STATUE, (position, size, data) => {
+            const statue = new Statue(this.scene, this.worldManager);
+            return statue.createMesh({ position, size, ...data });
+        });
+        
+        this.register(ENVIRONMENT_OBJECTS.FOUTAIN, (position, size, data) => {
+            const foutain = new Foutain(this.scene, this.worldManager);
+            return foutain.createMesh({ position, size, ...data });
+        });
         
         // Register traditional environment objects
         this.register(ENVIRONMENT_OBJECTS.TREE, (position, size) => {

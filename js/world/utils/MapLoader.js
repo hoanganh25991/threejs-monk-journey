@@ -611,13 +611,28 @@ export class MapLoader {
                 
                 switch (decorData.type) {
                     case 'statue':
-                        decorMesh = this.createStatue(decorData);
+                        decorMesh = this.worldManager.environmentManager.createEnvironmentObject(
+                            'statue',
+                            decorData.position.x, 
+                            decorData.position.z,
+                            decorData.size || 1
+                        );
                         break;
                     case 'fountain':
-                        decorMesh = this.createFountain(decorData);
+                        decorMesh = this.worldManager.environmentManager.createEnvironmentObject(
+                            'fountain',
+                            decorData.position.x, 
+                            decorData.position.z,
+                            decorData.size || 1
+                        );
                         break;
                     case 'well':
-                        decorMesh = this.createWell(decorData);
+                        decorMesh = this.worldManager.environmentManager.createEnvironmentObject(
+                            'well',
+                            decorData.position.x, 
+                            decorData.position.z,
+                            decorData.size || 1
+                        );
                         break;
                     case 'tree':
                         decorMesh = this.worldManager.environmentManager.createEnvironmentObject(
@@ -643,7 +658,12 @@ export class MapLoader {
                         );
                         break;
                     case 'stairs':
-                        decorMesh = this.createStairs(decorData);
+                        decorMesh = this.worldManager.environmentFactory.create(
+                            'stairs', 
+                            new THREE.Vector3(decorData.position.x, decorData.position.y || 0, decorData.position.z),
+                            decorData.width || 4,
+                            decorData
+                        );
                         break;
                 }
                 
@@ -669,13 +689,28 @@ export class MapLoader {
             
             switch (feature.type) {
                 case 'plaza':
-                    featureMesh = this.createPlaza(feature);
+                    featureMesh = this.worldManager.environmentFactory.create(
+                        'plaza', 
+                        new THREE.Vector3(feature.position.x, feature.position.y || 0, feature.position.z),
+                        feature.radius || 8,
+                        feature
+                    );
                     break;
                 case 'square':
-                    featureMesh = this.createSquare(feature);
+                    featureMesh = this.worldManager.environmentFactory.create(
+                        'square', 
+                        new THREE.Vector3(feature.position.x, feature.position.y || 0, feature.position.z),
+                        feature.size || 10,
+                        feature
+                    );
                     break;
                 case 'market':
-                    featureMesh = this.createMarket(feature);
+                    featureMesh = this.worldManager.environmentFactory.create(
+                        'market', 
+                        new THREE.Vector3(feature.position.x, feature.position.y || 0, feature.position.z),
+                        feature.size || 8,
+                        feature
+                    );
                     break;
                 case 'temple':
                     // Temple is already created as a building
@@ -741,343 +776,13 @@ export class MapLoader {
     }
     
     /**
-     * Create a statue decoration
-     * @param {Object} data - Statue data
-     * @returns {THREE.Mesh} - Statue mesh
-     */
-    createStatue(data) {
-        // Create a simple statue (can be enhanced later)
-        const baseGeometry = new THREE.CylinderGeometry(data.size * 0.5, data.size * 0.7, data.size * 0.5, 8);
-        const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.7 });
-        const base = new THREE.Mesh(baseGeometry, baseMaterial);
-        
-        const statueGeometry = new THREE.CylinderGeometry(data.size * 0.2, data.size * 0.2, data.size * 2, 8);
-        const statueMaterial = new THREE.MeshStandardMaterial({ color: 0xAAAAAA, roughness: 0.5 });
-        const statue = new THREE.Mesh(statueGeometry, statueMaterial);
-        statue.position.y = data.size * 1.25;
-        
-        const group = new THREE.Group();
-        group.add(base);
-        group.add(statue);
-        
-        group.position.set(data.position.x, 0, data.position.z);
-        group.userData = { type: 'statue' };
-        
-        return group;
-    }
-    
-    /**
-     * Create a fountain decoration
-     * @param {Object} data - Fountain data
-     * @returns {THREE.Mesh} - Fountain mesh
-     */
-    createFountain(data) {
-        // Create a simple fountain (can be enhanced later)
-        const baseGeometry = new THREE.CylinderGeometry(data.size * 1.5, data.size * 1.8, data.size * 0.5, 16);
-        const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.7 });
-        const base = new THREE.Mesh(baseGeometry, baseMaterial);
-        
-        const waterGeometry = new THREE.CylinderGeometry(data.size * 1.2, data.size * 1.2, data.size * 0.2, 16);
-        const waterMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x3399FF, 
-            roughness: 0.1,
-            metalness: 0.3,
-            transparent: true,
-            opacity: 0.8
-        });
-        const water = new THREE.Mesh(waterGeometry, waterMaterial);
-        water.position.y = data.size * 0.35;
-        
-        const centerGeometry = new THREE.CylinderGeometry(data.size * 0.3, data.size * 0.4, data.size * 0.8, 8);
-        const centerMaterial = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.6 });
-        const center = new THREE.Mesh(centerGeometry, centerMaterial);
-        center.position.y = data.size * 0.65;
-        
-        const group = new THREE.Group();
-        group.add(base);
-        group.add(water);
-        group.add(center);
-        
-        group.position.set(data.position.x, 0, data.position.z);
-        group.userData = { type: 'fountain' };
-        
-        return group;
-    }
-    
-    /**
-     * Create a well decoration
-     * @param {Object} data - Well data
-     * @returns {THREE.Mesh} - Well mesh
-     */
-    createWell(data) {
-        // Create a simple well
-        const wellSize = data.size || 1;
-        const wellGeometry = new THREE.CylinderGeometry(wellSize, wellSize, wellSize * 1.2, 12);
-        const wellMaterial = new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.9 });
-        const well = new THREE.Mesh(wellGeometry, wellMaterial);
-        
-        // Create water inside
-        const waterGeometry = new THREE.CylinderGeometry(wellSize * 0.8, wellSize * 0.8, 0.1, 12);
-        const waterMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x3377AA, 
-            roughness: 0.1,
-            transparent: true,
-            opacity: 0.7
-        });
-        const water = new THREE.Mesh(waterGeometry, waterMaterial);
-        water.position.y = wellSize * 0.5;
-        
-        // Create roof structure
-        const roofGeometry = new THREE.ConeGeometry(wellSize * 1.5, wellSize, 4);
-        const roofMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
-        const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-        roof.position.y = wellSize * 2.2;
-        
-        // Create support posts
-        const postGeometry = new THREE.BoxGeometry(0.3, wellSize * 2, 0.3);
-        const postMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
-        
-        const post1 = new THREE.Mesh(postGeometry, postMaterial);
-        post1.position.set(wellSize * 0.7, wellSize * 0.9, wellSize * 0.7);
-        
-        const post2 = new THREE.Mesh(postGeometry, postMaterial);
-        post2.position.set(-wellSize * 0.7, wellSize * 0.9, wellSize * 0.7);
-        
-        const post3 = new THREE.Mesh(postGeometry, postMaterial);
-        post3.position.set(wellSize * 0.7, wellSize * 0.9, -wellSize * 0.7);
-        
-        const post4 = new THREE.Mesh(postGeometry, postMaterial);
-        post4.position.set(-wellSize * 0.7, wellSize * 0.9, -wellSize * 0.7);
-        
-        const group = new THREE.Group();
-        group.add(well);
-        group.add(water);
-        group.add(roof);
-        group.add(post1);
-        group.add(post2);
-        group.add(post3);
-        group.add(post4);
-        
-        group.position.set(data.position.x, 0, data.position.z);
-        group.userData = { type: 'well' };
-        
-        return group;
-    }
-    
-    /**
      * Create stairs for terraced villages
      * @param {Object} data - Stairs data
      * @returns {THREE.Mesh} - Stairs mesh
      */
-    createStairs(data) {
-        const width = data.width || 4;
-        const height = data.height || 2;
-        const steps = 5; // Number of steps
-        const stepHeight = height / steps;
-        const stepDepth = width / steps;
-        
-        const stairsGroup = new THREE.Group();
-        
-        // Create each step
-        for (let i = 0; i < steps; i++) {
-            const stepGeometry = new THREE.BoxGeometry(width, stepHeight, stepDepth);
-            const stepMaterial = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.8 });
-            const step = new THREE.Mesh(stepGeometry, stepMaterial);
-            
-            // Position each step
-            step.position.set(
-                0,
-                i * stepHeight + stepHeight / 2,
-                i * stepDepth - width / 2 + stepDepth / 2
-            );
-            
-            stairsGroup.add(step);
-        }
-        
-        stairsGroup.position.set(data.position.x, data.position.y || 0, data.position.z);
-        
-        if (data.rotation !== undefined) {
-            stairsGroup.rotation.y = data.rotation;
-        }
-        
-        stairsGroup.userData = { type: 'stairs' };
-        
-        return stairsGroup;
-    }
-    
-    /**
-     * Create a plaza for circular villages
-     * @param {Object} data - Plaza data
-     * @returns {THREE.Mesh} - Plaza mesh
-     */
-    createPlaza(data) {
-        const radius = data.radius || 8;
-        
-        // Create plaza ground
-        const plazaGeometry = new THREE.CircleGeometry(radius, 32);
-        
-        // Get theme colors
-        let plazaColor = 0xCCCCCC; // Default plaza color
-        
-        if (this.currentMap && this.currentMap.theme) {
-            const themeColors = this.currentMap.theme.colors;
-            
-            // Use theme-specific path color if available
-            if (themeColors && themeColors.path) {
-                // Convert hex string to number
-                plazaColor = parseInt(themeColors.path.replace('#', '0x'), 16);
-            }
-        }
-        
-        const plazaMaterial = new THREE.MeshStandardMaterial({ 
-            color: plazaColor,
-            roughness: 0.7
-        });
-        
-        const plaza = new THREE.Mesh(plazaGeometry, plazaMaterial);
-        plaza.rotation.x = -Math.PI / 2; // Rotate to be horizontal
-        plaza.position.set(data.position.x, 0.05, data.position.z); // Slightly above ground
-        
-        plaza.userData = { type: 'plaza' };
-        
-        return plaza;
-    }
-    
-    /**
-     * Create a square for grid villages
-     * @param {Object} data - Square data
-     * @returns {THREE.Mesh} - Square mesh
-     */
-    createSquare(data) {
-        const size = data.size || 10;
-        
-        // Create square ground
-        const squareGeometry = new THREE.PlaneGeometry(size, size);
-        
-        // Get theme colors
-        let squareColor = 0xCCCCCC; // Default square color
-        
-        if (this.currentMap && this.currentMap.theme) {
-            const themeColors = this.currentMap.theme.colors;
-            
-            // Use theme-specific path color if available
-            if (themeColors && themeColors.path) {
-                // Convert hex string to number
-                squareColor = parseInt(themeColors.path.replace('#', '0x'), 16);
-            }
-        }
-        
-        const squareMaterial = new THREE.MeshStandardMaterial({ 
-            color: squareColor,
-            roughness: 0.7
-        });
-        
-        const square = new THREE.Mesh(squareGeometry, squareMaterial);
-        square.rotation.x = -Math.PI / 2; // Rotate to be horizontal
-        square.position.set(data.position.x, 0.05, data.position.z); // Slightly above ground
-        
-        square.userData = { type: 'square' };
-        
-        return square;
-    }
-    
-    /**
-     * Create a market for riverside villages
-     * @param {Object} data - Market data
-     * @returns {THREE.Group} - Market group
-     */
-    createMarket(data) {
-        const size = data.size || 8;
-        const marketGroup = new THREE.Group();
-        
-        // Create market ground
-        const groundGeometry = new THREE.PlaneGeometry(size, size);
-        
-        // Get theme colors
-        let groundColor = 0xCCCCCC; // Default ground color
-        
-        if (this.currentMap && this.currentMap.theme) {
-            const themeColors = this.currentMap.theme.colors;
-            
-            // Use theme-specific path color if available
-            if (themeColors && themeColors.path) {
-                // Convert hex string to number
-                groundColor = parseInt(themeColors.path.replace('#', '0x'), 16);
-            }
-        }
-        
-        const groundMaterial = new THREE.MeshStandardMaterial({ 
-            color: groundColor,
-            roughness: 0.7
-        });
-        
-        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-        ground.rotation.x = -Math.PI / 2; // Rotate to be horizontal
-        ground.position.y = 0.05; // Slightly above ground
-        
-        marketGroup.add(ground);
-        
-        // Add market stalls
-        const stallCount = 3 + Math.floor(Math.random() * 3);
-        
-        for (let i = 0; i < stallCount; i++) {
-            const stallSize = 1 + Math.random() * 0.5;
-            
-            // Create stall base
-            const baseGeometry = new THREE.BoxGeometry(stallSize * 2, stallSize * 0.5, stallSize * 2);
-            const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
-            const base = new THREE.Mesh(baseGeometry, baseMaterial);
-            
-            // Create stall roof
-            const roofGeometry = new THREE.BoxGeometry(stallSize * 2.5, stallSize * 0.2, stallSize * 2.5);
-            const roofMaterial = new THREE.MeshStandardMaterial({ color: 0xA52A2A, roughness: 0.7 });
-            const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-            roof.position.y = stallSize * 1.5;
-            
-            // Create stall posts
-            const postGeometry = new THREE.CylinderGeometry(stallSize * 0.1, stallSize * 0.1, stallSize * 1.5, 6);
-            const postMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
-            
-            const posts = [];
-            const postPositions = [
-                { x: stallSize * 0.8, z: stallSize * 0.8 },
-                { x: -stallSize * 0.8, z: stallSize * 0.8 },
-                { x: stallSize * 0.8, z: -stallSize * 0.8 },
-                { x: -stallSize * 0.8, z: -stallSize * 0.8 }
-            ];
-            
-            for (const pos of postPositions) {
-                const post = new THREE.Mesh(postGeometry, postMaterial);
-                post.position.set(pos.x, stallSize * 0.75, pos.z);
-                posts.push(post);
-            }
-            
-            // Create stall group
-            const stall = new THREE.Group();
-            stall.add(base);
-            stall.add(roof);
-            posts.forEach(post => stall.add(post));
-            
-            // Position stall in market
-            const angle = (i / stallCount) * Math.PI * 2;
-            const distance = size * 0.3;
-            stall.position.set(
-                Math.cos(angle) * distance,
-                0,
-                Math.sin(angle) * distance
-            );
-            
-            // Random rotation
-            stall.rotation.y = Math.random() * Math.PI * 2;
-            
-            marketGroup.add(stall);
-        }
-        
-        marketGroup.position.set(data.position.x, data.position.y || 0, data.position.z);
-        marketGroup.userData = { type: 'market' };
-        
-        return marketGroup;
-    }
+    // Methods createStairs, createPlaza, createSquare, and createMarket have been refactored
+    // into dedicated classes: Stairs.js, Plaza.js, Square.js, and Market.js
+    // These are now registered and used through the EnvironmentFactory
 
     /**
      * Load environment objects from map data
@@ -1148,341 +853,6 @@ export class MapLoader {
             
             this.loadedObjects.push(envObject);
         }
-    }
-
-    // Note: Water features are now created using the WaterFeature class through the EnvironmentFactory
-    
-    // Note: Moss patches are now created using the Moss class through the EnvironmentFactory
-    
-    // Note: Oasis features are now created using the Oasis class through the EnvironmentFactory
-    
-    // Note: Obsidian formations are now created using the ObsidianFormation class through the EnvironmentFactory
-    
-    /**
-     * Create a desert shrine
-     * @param {Object} position - Position object
-     * @param {number} size - Size of the desert shrine
-     * @returns {THREE.Group} - Desert shrine group
-     */
-    // Note: Desert shrines are now created using the DesertShrine class through the EnvironmentFactory
-    createDesertShrine(position, size) {
-        // Use the EnvironmentFactory to create a desert shrine
-        return this.worldManager.environmentManager.createEnvironmentObject(
-            'desert_shrine',
-            position.x,
-            position.z,
-            size
-        );
-    }
-    
-    /**
-     * Create a crystal formation
-     * @param {Object} position - Position object
-     * @param {number} size - Size of the crystal formation
-     * @returns {THREE.Group} - Crystal formation group
-     */
-    createCrystalFormation(position, size) {
-        const group = new THREE.Group();
-        
-        // Create multiple crystal shards
-        const numCrystals = Math.floor(3 + Math.random() * 5); // 3-7 crystals
-        
-        for (let i = 0; i < numCrystals; i++) {
-            // Create a crystal shard
-            const height = size * (0.5 + Math.random() * 1.5);
-            const geometry = new THREE.ConeGeometry(size * 0.3, height, 5);
-            
-            // Random crystal color (blue/purple hues)
-            const hue = 0.6 + Math.random() * 0.2; // Blue to purple
-            const saturation = 0.7 + Math.random() * 0.3;
-            const lightness = 0.5 + Math.random() * 0.3;
-            
-            const color = new THREE.Color().setHSL(hue, saturation, lightness);
-            
-            const material = new THREE.MeshStandardMaterial({
-                color: color,
-                transparent: true,
-                opacity: 0.8,
-                roughness: 0.2,
-                metalness: 0.8
-            });
-            
-            const crystal = new THREE.Mesh(geometry, material);
-            
-            // Position within the group
-            const angle = Math.random() * Math.PI * 2;
-            const distance = Math.random() * size * 0.7;
-            crystal.position.set(
-                Math.cos(angle) * distance,
-                height * 0.5,
-                Math.sin(angle) * distance
-            );
-            
-            // Random rotation
-            crystal.rotation.x = (Math.random() - 0.5) * 0.5;
-            crystal.rotation.z = (Math.random() - 0.5) * 0.5;
-            
-            group.add(crystal);
-        }
-        
-        // Position the group
-        group.position.set(
-            position.x,
-            this.worldManager.getTerrainHeight(position.x, position.z),
-            position.z
-        );
-        
-        group.userData = { type: 'crystal_formation' };
-        this.scene.add(group);
-        
-        return group;
-    }
-    
-    /**
-     * Create a rare plant
-     * @param {Object} position - Position object
-     * @param {number} size - Size of the rare plant
-     * @returns {THREE.Group} - Rare plant group
-     */
-    createRarePlant(position, size) {
-        const group = new THREE.Group();
-        
-        // Create stem
-        const stemHeight = size * 2;
-        const stemGeometry = new THREE.CylinderGeometry(size * 0.1, size * 0.15, stemHeight, 8);
-        const stemMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 });
-        const stem = new THREE.Mesh(stemGeometry, stemMaterial);
-        stem.position.y = stemHeight * 0.5;
-        group.add(stem);
-        
-        // Create flower/bloom
-        const bloomGeometry = new THREE.SphereGeometry(size * 0.5, 8, 8);
-        const bloomMaterial = new THREE.MeshLambertMaterial({ 
-            color: 0xFF1493, // Deep pink for rare flower
-            emissive: 0x800080,
-            emissiveIntensity: 0.3
-        });
-        const bloom = new THREE.Mesh(bloomGeometry, bloomMaterial);
-        bloom.position.y = stemHeight + size * 0.3;
-        group.add(bloom);
-        
-        // Add some leaves
-        const numLeaves = 3 + Math.floor(Math.random() * 3);
-        for (let i = 0; i < numLeaves; i++) {
-            const leafGeometry = new THREE.PlaneGeometry(size * 0.8, size * 0.4);
-            const leafMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x32CD32,
-                side: THREE.DoubleSide
-            });
-            const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
-            
-            // Position leaf along stem
-            const heightPercent = 0.3 + (i / numLeaves) * 0.7;
-            leaf.position.y = stemHeight * heightPercent;
-            
-            // Rotate leaf
-            const angle = (i / numLeaves) * Math.PI * 2;
-            leaf.rotation.y = angle;
-            leaf.rotation.x = Math.PI * 0.25;
-            
-            group.add(leaf);
-        }
-        
-        // Position the group
-        group.position.set(
-            position.x,
-            this.worldManager.getTerrainHeight(position.x, position.z),
-            position.z
-        );
-        
-        group.userData = { type: 'rare_plant' };
-        this.scene.add(group);
-        
-        return group;
-    }
-    
-    /**
-     * Create a magical stone
-     * @param {Object} position - Position object
-     * @param {number} size - Size of the magical stone
-     * @returns {THREE.Group} - Magical stone group
-     */
-    createMagicalStone(position, size) {
-        const group = new THREE.Group();
-        
-        // Create the main stone
-        const stoneGeometry = new THREE.DodecahedronGeometry(size, 0);
-        const stoneMaterial = new THREE.MeshStandardMaterial({
-            color: 0x696969,
-            roughness: 0.7,
-            metalness: 0.2
-        });
-        const stone = new THREE.Mesh(stoneGeometry, stoneMaterial);
-        
-        // Add some random rotation
-        stone.rotation.x = Math.random() * Math.PI;
-        stone.rotation.y = Math.random() * Math.PI;
-        stone.rotation.z = Math.random() * Math.PI;
-        
-        group.add(stone);
-        
-        // Add glowing runes/symbols
-        const runeGeometry = new THREE.TorusGeometry(size * 0.7, size * 0.05, 8, 16);
-        const runeMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00FFFF,
-            transparent: true,
-            opacity: 0.8
-        });
-        const rune = new THREE.Mesh(runeGeometry, runeMaterial);
-        rune.rotation.x = Math.PI * 0.5;
-        group.add(rune);
-        
-        // Position the group
-        group.position.set(
-            position.x,
-            this.worldManager.getTerrainHeight(position.x, position.z) + size * 0.5,
-            position.z
-        );
-        
-        group.userData = { type: 'magical_stone' };
-        this.scene.add(group);
-        
-        return group;
-    }
-    
-    /**
-     * Create an ancient artifact
-     * @param {Object} position - Position object
-     * @param {number} size - Size of the ancient artifact
-     * @returns {THREE.Group} - Ancient artifact group
-     */
-    createAncientArtifact(position, size) {
-        const group = new THREE.Group();
-        
-        // Create base/pedestal
-        const baseGeometry = new THREE.CylinderGeometry(size * 0.8, size, size * 0.5, 8);
-        const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-        const base = new THREE.Mesh(baseGeometry, baseMaterial);
-        base.position.y = size * 0.25;
-        group.add(base);
-        
-        // Create artifact
-        const artifactGeometry = new THREE.OctahedronGeometry(size * 0.5, 0);
-        const artifactMaterial = new THREE.MeshStandardMaterial({
-            color: 0xFFD700,
-            roughness: 0.3,
-            metalness: 0.8
-        });
-        const artifact = new THREE.Mesh(artifactGeometry, artifactMaterial);
-        artifact.position.y = size * 1.0;
-        artifact.rotation.y = Math.PI * 0.25;
-        group.add(artifact);
-        
-        // Position the group
-        group.position.set(
-            position.x,
-            this.worldManager.getTerrainHeight(position.x, position.z),
-            position.z
-        );
-        
-        group.userData = { type: 'ancient_artifact' };
-        this.scene.add(group);
-        
-        return group;
-    }
-
-    /**
-     * Create a lava feature
-     * @param {Object} position - Position object
-     * @param {number} size - Size of the lava feature
-     * @returns {THREE.Mesh} - Lava mesh
-     */
-    createLavaFeature(position, size) {
-        const geometry = new THREE.CircleGeometry(size, 16);
-        const material = new THREE.MeshLambertMaterial({
-            color: 0xFF4500,
-            emissive: 0xFF2200,
-            emissiveIntensity: 0.3
-        });
-        
-        const lava = new THREE.Mesh(geometry, material);
-        lava.rotation.x = -Math.PI / 2;
-        lava.position.set(
-            position.x,
-            this.worldManager.getTerrainHeight(position.x, position.z) + 0.1,
-            position.z
-        );
-        
-        lava.userData = { type: 'lava' };
-        this.scene.add(lava);
-        
-        return lava;
-    }
-
-    /**
-     * Create a tree cluster from map data
-     * @param {Object} clusterData - Tree cluster configuration
-     * @returns {THREE.Group} - Tree cluster group
-     */
-    createTreeCluster(clusterData) {
-        const clusterGroup = new THREE.Group();
-        const position = clusterData.position;
-        const environmentManager = this.worldManager.environmentManager;
-        
-        // Set cluster position
-        clusterGroup.position.set(position.x, position.y || 0, position.z);
-        
-        // Create individual trees based on the cluster data
-        if (clusterData.trees && clusterData.trees.length > 0) {
-            // Use the stored tree positions from the map data
-            clusterData.trees.forEach(treeData => {
-                const tree = environmentManager.createEnvironmentObject(
-                    'tree',
-                    treeData.relativePosition.x,
-                    treeData.relativePosition.z,
-                    treeData.size || 1.0
-                );
-                
-                // Position is relative to cluster center
-                tree.position.set(
-                    treeData.relativePosition.x,
-                    treeData.relativePosition.y || 0,
-                    treeData.relativePosition.z
-                );
-                
-                clusterGroup.add(tree);
-            });
-        } else {
-            // Fallback: create trees in a circular pattern if no tree data is provided
-            const treeCount = clusterData.treeCount || 5;
-            const radius = clusterData.radius || 10;
-            
-            for (let i = 0; i < treeCount; i++) {
-                const angle = (i / treeCount) * Math.PI * 2;
-                const distance = Math.random() * radius;
-                const x = Math.cos(angle) * distance;
-                const z = Math.sin(angle) * distance;
-                
-                const tree = environmentManager.createEnvironmentObject(
-                    'tree',
-                    position.x + x,
-                    position.z + z,
-                    clusterData.avgSize || 1.0
-                );
-                
-                tree.position.set(x, 0, z);
-                clusterGroup.add(tree);
-            }
-        }
-        
-        clusterGroup.userData = {
-            type: 'tree_cluster',
-            theme: clusterData.theme,
-            treeCount: clusterData.treeCount
-        };
-        
-        this.scene.add(clusterGroup);
-        return clusterGroup;
     }
 
     /**

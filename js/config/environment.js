@@ -87,6 +87,15 @@ export const ENVIRONMENT_OBJECTS = {
     SHRINE: 'shrine',
     FOREST_SHRINE: 'forest_shrine',
     
+    // Village and urban features
+    MARKET: 'market',
+    SQUARE: 'square',
+    PLAZA: 'plaza',
+    STAIRS: 'stairs',
+    WELL: 'well',
+    STATUE: 'statue',
+    FOUTAIN: 'foutain',
+    
     // Miscellaneous
     FALLEN_LOG: 'fallen_log',
     STUMP: 'stump',
