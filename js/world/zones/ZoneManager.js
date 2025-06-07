@@ -41,9 +41,12 @@ export class ZoneManager {
      * @returns {Object} - The theme colors for the zone type
      */
     getThemeColorsForZoneType(zoneType) {
-        // If we have theme colors and the zone type matches the primary zone in the theme,
-        // return the theme colors
+        // If we have theme colors, return them directly
+        // This ensures the map's theme colors are used for all zones
         if (this.currentThemeColors) {
+            // The map generator stores theme colors directly in the theme.colors property
+            // not as a nested object by zone type
+            console.debug(`Returning theme colors for zone ${zoneType}:`, this.currentThemeColors);
             return this.currentThemeColors;
         }
         return null;
@@ -87,6 +90,9 @@ export class ZoneManager {
             console.debug(`Main theme zone: ${mainZone.name} with radius ${mainZone.radius}`);
         }
         
+        // Log theme colors for debugging
+        console.debug('Current theme colors:', this.currentThemeColors);
+        
         // Update each terrain chunk's color based on its position
         Object.values(terrainChunks).forEach(chunk => {
             if (chunk && !chunk.isPlaceholder) {
@@ -127,8 +133,11 @@ export class ZoneManager {
                     }
                 }
                 
+                // Get theme colors for this zone
+                const themeColors = this.getThemeColorsForZoneType(zoneType);
+                
                 // Apply the zone-appropriate color to the terrain chunk
-                this.worldManager.terrainManager.colorTerrainUniform(chunk, zoneType, this.getThemeColorsForZoneType(zoneType));
+                this.worldManager.terrainManager.colorTerrainUniform(chunk, zoneType, themeColors);
             }
         });
         
@@ -136,7 +145,10 @@ export class ZoneManager {
         if (this.worldManager.terrainManager.terrain) {
             const baseTerrain = this.worldManager.terrainManager.terrain;
             const mainZoneType = mainZone ? mainZone.name : 'Terrant';
-            this.worldManager.terrainManager.colorTerrainUniform(baseTerrain, mainZoneType, this.getThemeColorsForZoneType(mainZoneType));
+            const themeColors = this.getThemeColorsForZoneType(mainZoneType);
+            
+            console.debug(`Coloring base terrain with zone type ${mainZoneType} and theme colors:`, themeColors);
+            this.worldManager.terrainManager.colorTerrainUniform(baseTerrain, mainZoneType, themeColors);
         }
         
         console.debug('Terrain colors updated successfully');

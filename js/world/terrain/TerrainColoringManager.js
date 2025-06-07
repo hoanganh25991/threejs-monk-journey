@@ -20,7 +20,19 @@ export class TerrainColoringManager {
         const positions = terrain.geometry.attributes.position.array;
         
         // Get colors from theme colors if available, otherwise use config
-        const zoneColors = (themeColors && themeColors[zoneType]) || ZONE_COLORS[zoneType] || ZONE_COLORS['Terrant'];
+        // First check if we have direct theme colors passed in
+        let zoneColors;
+        
+        if (themeColors) {
+            // Use theme colors directly if provided
+            // The map generator stores theme colors directly in the theme.colors property
+            zoneColors = themeColors;
+            console.debug(`Using theme colors for zone ${zoneType}:`, zoneColors);
+        } else {
+            // Fall back to config colors for the specific zone type
+            zoneColors = ZONE_COLORS[zoneType] || ZONE_COLORS['Terrant'];
+            console.debug(`Using config colors for zone ${zoneType}:`, zoneColors);
+        }
         
         // Define base colors for each zone type
         let baseColorHex;
@@ -33,28 +45,28 @@ export class TerrainColoringManager {
         switch (zoneType) {
             // Original zones
             case 'Terrant':
-                baseColorHex = zoneColors.soil;
+                baseColorHex = zoneColors.soil || zoneColors.ground;
                 break;
             case 'Forest':
-                baseColorHex = zoneColors.ground;
+                baseColorHex = zoneColors.ground || zoneColors.foliage;
                 break;
             case 'Desert':
-                baseColorHex = zoneColors.sand;
+                baseColorHex = zoneColors.sand || zoneColors.ground;
                 break;
             case 'Mountains':
-                baseColorHex = zoneColors.snow;
-                secondaryColorHex = zoneColors.ice;
+                baseColorHex = zoneColors.snow || zoneColors.rock;
+                secondaryColorHex = zoneColors.ice || zoneColors.rock;
                 useHeightGradient = true;
                 break;
             case 'Swamp':
-                baseColorHex = zoneColors.vegetation;
+                baseColorHex = zoneColors.vegetation || zoneColors.ground;
                 break;
             case 'Ruins':
-                baseColorHex = zoneColors.stone;
+                baseColorHex = zoneColors.stone || zoneColors.ground;
                 break;
             case 'Dark Sanctum':
                 baseColorHex = zoneColors.ground;
-                secondaryColorHex = zoneColors.fire;
+                secondaryColorHex = zoneColors.fire || zoneColors.accent;
                 useHeightGradient = true;
                 heightThreshold = 0.7;
                 break;

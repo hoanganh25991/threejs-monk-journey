@@ -54,11 +54,19 @@ export class FoodModel extends ItemModel {
         bread.castShadow = true;
         bread.receiveShadow = true;
         
-        // Add bread to group first
-        group.add(bread);
+        // Create a rounded version of the bread directly
+        const roundedGeometry = new THREE.SphereGeometry(0.25, 16, 16);
+        const roundedMesh = new THREE.Mesh(
+            roundedGeometry, 
+            breadMaterial.clone()
+        );
+        roundedMesh.scale.set(1.1, 0.7, 0.7);
+        roundedMesh.position.copy(bread.position);
+        roundedMesh.castShadow = true;
+        roundedMesh.receiveShadow = true;
         
-        // Round the edges of the bread
-        this.roundEdges(bread);
+        // Add the rounded bread to group
+        group.add(roundedMesh);
         
         // Add bread details (cuts on top)
         this.addBreadDetails(group);
@@ -164,6 +172,7 @@ export class FoodModel extends ItemModel {
     /**
      * Round the edges of a box mesh to make it look more natural
      * @param {THREE.Mesh} mesh - The mesh to round
+     * @returns {THREE.Mesh} - The rounded mesh (either modified original or new one)
      */
     roundEdges(mesh) {
         // We'll use scale to create a slight rounding effect
@@ -178,16 +187,21 @@ export class FoodModel extends ItemModel {
             );
             roundedMesh.scale.set(1.1, 0.7, 0.7);
             roundedMesh.position.copy(mesh.position);
+            roundedMesh.castShadow = mesh.castShadow;
+            roundedMesh.receiveShadow = mesh.receiveShadow;
             
-            // Replace the original mesh with the rounded one
-            // Check if mesh has a parent before trying to remove it
+            // Replace the original mesh with the rounded one if it has a parent
             if (mesh.parent) {
                 mesh.parent.remove(mesh);
                 mesh.parent.add(roundedMesh);
+                return roundedMesh;
             } else {
-                console.warn('Cannot round edges: mesh has no parent');
+                console.warn('Mesh has no parent, returning rounded mesh without adding to scene');
+                return roundedMesh;
             }
         }
+        
+        return mesh; // Return original mesh if not a BoxGeometry
     }
     
     updateAnimations(delta) {

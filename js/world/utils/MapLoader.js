@@ -56,7 +56,19 @@ export class MapLoader {
             
             // Set theme colors in zone manager if available
             if (mapData.theme && mapData.theme.colors) {
+                console.debug('Setting theme colors from map data:', mapData.theme.colors);
+                // The map generator stores theme colors directly in the theme.colors property
                 this.worldManager.zoneManager.setThemeColors(mapData.theme.colors);
+                
+                // Force an update of terrain colors after loading the map
+                setTimeout(() => {
+                    if (this.worldManager.zoneManager) {
+                        console.debug('Forcing terrain color update with theme colors');
+                        this.worldManager.zoneManager.updateTerrainColors();
+                    }
+                }, 100);
+            } else {
+                console.warn('No theme colors found in map data');
             }
             
             // Always load zones globally (zones affect the entire map and are usually small in data size)

@@ -72,7 +72,14 @@ export class Enemy {
         this.world = null;
         
         // Flag to control terrain height updates (useful for bosses with fixed positions)
-        this.allowTerrainHeightUpdates = true;
+        // Disable terrain height updates for bosses to prevent sinking
+        this.allowTerrainHeightUpdates = !this.isBoss;
+        
+        // Flag to track if initial position has been set (for bosses)
+        this.initialPositionSet = false;
+        
+        // Store the initial Y position for bosses to prevent sinking
+        this.initialYPosition = null;
     }
     
     init() {
@@ -162,6 +169,19 @@ export class Enemy {
         // Skip update if dead
         if (this.state.isDead) {
             return;
+        }
+        
+        // For bosses, ensure Y position is maintained at all times
+        if (this.isBoss && this.initialPositionSet && this.initialYPosition !== null) {
+            // Force Y position to always be the initial value
+            if (this.position.y !== this.initialYPosition) {
+                this.position.y = this.initialYPosition;
+                
+                // Also force the model's Y position
+                if (this.modelGroup) {
+                    this.modelGroup.position.y = this.initialYPosition;
+                }
+            }
         }
         
         // Handle knockback
@@ -698,8 +718,8 @@ export class Enemy {
         this.state.isKnockedBack = true;
         this.state.knockbackEndTime = Date.now() + 300; // 300ms knockback duration
         
-        // Apply knockback movement
-        if (direction) {
+        // Apply knockback movement only for non-boss enemies
+        if (direction && !this.isBoss) {
             const knockbackDistance = 1.0; // Knockback distance in units
             const newPosition = {
                 x: this.position.x + direction.x * knockbackDistance,
@@ -855,7 +875,40 @@ export class Enemy {
     }
 
     updateTerrainHeight() {
-        // Update position based on terrain height if world is available and terrain updates are allowed
+        // For bosses, we NEVER update Y position after initial setup
+        if (this.isBoss) {
+            if (this.modelGroup) {
+                // For bosses, only update rotation
+                this.modelGroup.rotation.y = this.rotation.y;
+                
+                // Set initial Y position only once
+                if (!this.initialPositionSet && this.world) {
+                    const terrainHeight = this.world.getTerrainHeight(this.position.x, this.position.z);
+                    if (terrainHeight !== null) {
+                        // Store the initial Y position for bosses
+                        this.initialYPosition = terrainHeight + this.heightOffset;
+                        this.position.y = this.initialYPosition;
+                        
+                        // Update model position with this Y value
+                        this.modelGroup.position.copy(this.position);
+                        
+                        // Mark as initialized
+                        this.initialPositionSet = true;
+                        console.debug(`Boss ${this.name} initial Y position set to ${this.initialYPosition}`);
+                    }
+                } else if (this.initialPositionSet) {
+                    // Always restore the Y position to the initial value for bosses
+                    // This ensures they never sink regardless of what other code might do
+                    this.position.y = this.initialYPosition;
+                    
+                    // Force the model's Y position to match
+                    this.modelGroup.position.y = this.initialYPosition;
+                }
+            }
+            return;
+        }
+        
+        // For non-boss enemies, update position based on terrain height if world is available and terrain updates are allowed
         if (this.world && this.allowTerrainHeightUpdates) {
             const terrainHeight = this.world.getTerrainHeight(this.position.x, this.position.z);
             if (terrainHeight !== null) {
@@ -874,7 +927,62 @@ export class Enemy {
     }
 
     setPosition(x, y, z) {
-        // Update position
+        // Special handling for bosses
+        if (this.isBoss) {
+            if (this.initialPositionSet && this.initialYPosition !== null) {
+                // For bosses with established position, only update X and Z
+                this.position.x = x;
+                this.position.z = z;
+                
+                // ALWAYS use the stored initial Y position to prevent sinking
+                this.position.y = this.initialYPosition;
+                
+                // Update model position, ensuring Y is correct
+                if (this.modelGroup) {
+                    this.modelGroup.position.x = this.position.x;
+                    this.modelGroup.position.z = this.position.z;
+                    this.modelGroup.position.y = this.initialYPosition;
+                }
+                
+                // Debug log to track boss position
+                if (Math.random() < 0.01) { // Log occasionally to avoid spam
+                    console.debug(`Boss ${this.name} position maintained at Y=${this.initialYPosition}`);
+                }
+                return;
+            } else if (!this.initialPositionSet) {
+                // For initial boss positioning, we'll set all coordinates
+                // but we'll also store the Y position for future reference
+                this.position.set(x, y, z);
+                
+                // If we have a world reference, get the terrain height
+                if (this.world) {
+                    const terrainHeight = this.world.getTerrainHeight(x, z);
+                    if (terrainHeight !== null) {
+                        // Use terrain height + offset for Y position
+                        this.initialYPosition = terrainHeight + this.heightOffset;
+                        this.position.y = this.initialYPosition;
+                    } else {
+                        // If terrain height is not available, use provided Y
+                        this.initialYPosition = y;
+                    }
+                } else {
+                    // No world reference, use provided Y
+                    this.initialYPosition = y;
+                }
+                
+                // Update model position
+                if (this.modelGroup) {
+                    this.modelGroup.position.copy(this.position);
+                }
+                
+                // Mark as initialized
+                this.initialPositionSet = true;
+                console.debug(`Boss ${this.name} initial position set at Y=${this.initialYPosition}`);
+                return;
+            }
+        }
+        
+        // For non-boss enemies, update all coordinates normally
         this.position.set(x, y, z);
         
         // Update model position
