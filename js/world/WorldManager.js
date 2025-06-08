@@ -162,9 +162,7 @@ export class WorldManager {
         }
         
         // Determine the map path
-        const mapPath = mapFilename.startsWith('/') 
-            ? mapFilename 
-            : `/assets/maps/${mapFilename}`;
+        const mapPath = `assets/maps/${mapFilename}`;
         
         // Load the map using the MapLoader
         const success = await this.mapLoader.loadMapFromFile(mapPath);
