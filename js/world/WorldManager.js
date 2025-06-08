@@ -57,7 +57,7 @@ export class WorldManager {
         this.currentMapFilename = null;
         
         // Default map path
-        this.defaultMapPath = '/assets/default-map.json';
+        this.defaultMapPath = 'assets/default-map.json';
     }
     
     /**
