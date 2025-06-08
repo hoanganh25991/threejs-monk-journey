@@ -212,7 +212,8 @@ export class MultiplayerManager {
         // Start the game - this will properly initialize the game state
         console.debug('[MultiplayerManager] Starting multiplayer game - calling game.start()');
         // Pass true to indicate this is a loaded game to preserve player position
-        this.game.start(true);
+        // For host, we want fullscreen mode, so pass true for requestFullscreenMode
+        this.game.start(true, true);
         
         // Restore player level and experience if we had them
         if (currentLevel !== null && this.game.player && this.game.player.stats) {
@@ -273,7 +274,10 @@ export class MultiplayerManager {
             
             // Start the game - this will properly initialize the game state
             // Pass true to indicate this is a loaded game to preserve player position
-            this.game.start(true);
+            // For members, we don't want to request fullscreen mode again (host already did it)
+            // so pass false for requestFullscreenMode
+            console.debug('[MultiplayerManager] Member starting game without fullscreen request');
+            this.game.start(true, false);
             
             // Restore player level and experience if we had them
             if (currentLevel !== null && this.game.player && this.game.player.stats) {

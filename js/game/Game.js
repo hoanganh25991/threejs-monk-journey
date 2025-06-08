@@ -566,8 +566,9 @@ export class Game {
     /**
      * Start the game
      * @param {boolean} isLoadedGame - Whether this is a loaded game or a new game
+     * @param {boolean} requestFullscreenMode - Whether to request fullscreen mode (default: true)
      */
-    start(isLoadedGame = false) {
+    start(isLoadedGame = false, requestFullscreenMode = true) {
         console.debug("Game starting...");
         
         // Make sure the canvas is visible
@@ -601,12 +602,19 @@ export class Game {
         // Start background music
         this.audioManager.playMusic();
         
-        // Request fullscreen mode after game is started
-        this.requestFullscreen().catch(error => {
-            console.warn("Could not enter fullscreen mode:", error);
-            // Even if fullscreen fails, make sure the renderer is properly sized
+        // Request fullscreen mode after game is started (if enabled)
+        if (requestFullscreenMode) {
+            console.debug("Requesting fullscreen mode as part of game start");
+            this.requestFullscreen().catch(error => {
+                console.warn("Could not enter fullscreen mode:", error);
+                // Even if fullscreen fails, make sure the renderer is properly sized
+                this.adjustRendererSize();
+            });
+        } else {
+            console.debug("Skipping fullscreen request as it was disabled");
+            // Make sure the renderer is properly sized even without fullscreen
             this.adjustRendererSize();
-        });
+        }
         
         // Dispatch event that game has started
         this.events.dispatch('gameStateChanged', 'running');
