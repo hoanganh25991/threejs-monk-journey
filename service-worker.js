@@ -4,7 +4,7 @@
  */
 
 const CACHE_NAME = 'monk-journey-cache';
-const CACHE_VERSION = '40';
+const CACHE_VERSION = '41';
 const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 
@@ -302,7 +302,7 @@ const ASSETS_TO_CACHE = [
   'assets/audio/bell_fade.mp3',
   'assets/audio/bell_ring.mp3',
   'assets/audio/boss_death.mp3',
-  'assets/audio/boss_theme.MP3',
+  'assets/audio/boss_theme.mp3',
   'assets/audio/breath_of_heaven.mp3',
   'assets/audio/button_click.mp3',
   'assets/audio/chain_impact.mp3',

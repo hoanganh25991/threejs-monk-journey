@@ -15,7 +15,7 @@ export const PLAYER_PROGRESSION = {
         health: 500,
         maxHealth: 500,
         mana: 200,
-        maxMana: 200,
+        maxMana: 200_000,
         
         // Base attributes
         strength: 10,
